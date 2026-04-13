@@ -28,14 +28,14 @@ const VALID_STATUSES = [
 ];
 
 const REQUIRED_FIELDS: Record<string, string[]> = {
-  "eventos": ["nome", "natureza"],
-  "artes-divulgacao": ["nome", "tipoMaterial"],
-  "atualizacao-material": ["nome"],
-  "conteudo-pdf-informativo": ["nome"],
-  "conteudo-pdf-ebook": ["nome"],
-  "apresentacao-nova": ["nome"],
-  "apresentacao-atualizar": ["nome"],
-  "pagina-assessores-dados": ["nome"],
+  "eventos": ["nome"],
+  "artes-divulgacao": ["nome", "titulo"],
+  "atualizacao-material": ["nome", "titulo"],
+  "conteudo-pdf-informativo": ["nome", "titulo"],
+  "conteudo-pdf-ebook": ["nome", "titulo"],
+  "apresentacao-nova": ["nome", "titulo"],
+  "apresentacao-atualizar": ["nome", "titulo"],
+  "pagina-assessores-dados": ["nome", "nomeCompleto"],
   "pagina-assessores-atualizacao": ["nome"],
 };
 
