@@ -197,10 +197,37 @@
 
       try {
         const res = await fetch('/api/solicitacoes', { method: 'POST', body: formData });
-        if (res.ok) { window.location.href = '/thankyou.html'; }
+        if (res.ok) { sessionStorage.removeItem('form-pdf'); window.location.href = '/thankyou.html'; }
         else { alert('Erro ao enviar.'); btn.disabled = false; btn.textContent = 'Enviar'; }
       } catch (e) { alert('Erro de conexao.'); btn.disabled = false; btn.textContent = 'Enviar'; }
     }
+
+    function saveDraft() {
+      try {
+        sessionStorage.setItem('form-pdf', JSON.stringify({
+          nome: document.getElementById('nome')?.value || '',
+          setor: document.getElementById('setor')?.value || '',
+          titulo: document.getElementById('titulo')?.value || '',
+          finalidade: document.getElementById('finalidade')?.value || '',
+          conteudo: document.getElementById('conteudo')?.value || '',
+          prazoEntrega: document.getElementById('prazoEntrega')?.value || '',
+          observacoes: document.getElementById('observacoes')?.value || '',
+        }));
+      } catch {}
+    }
+    function restoreDraft() {
+      try {
+        const raw = sessionStorage.getItem('form-pdf');
+        if (!raw) return;
+        const d = JSON.parse(raw);
+        for (const [k, v] of Object.entries(d)) {
+          const el = document.getElementById(k);
+          if (el) el.value = v;
+        }
+      } catch {}
+    }
+    document.querySelectorAll('input,textarea,select').forEach(el => el.addEventListener('change', saveDraft));
+    restoreDraft();
 
     init();
   </script>

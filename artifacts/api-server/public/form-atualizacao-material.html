@@ -144,6 +144,31 @@
       } catch (e) { alert('Erro de conexao.'); btn.disabled = false; btn.textContent = 'Enviar'; }
     }
 
+    function saveDraft() {
+      try {
+        sessionStorage.setItem('form-atualizacao', JSON.stringify({
+          nome: document.getElementById('nome')?.value || '',
+          setor: document.getElementById('setor')?.value || '',
+          titulo: document.getElementById('titulo')?.value || '',
+          finalidade: document.getElementById('finalidade')?.value || '',
+          descricao: document.getElementById('descricao')?.value || '',
+        }));
+      } catch {}
+    }
+    function restoreDraft() {
+      try {
+        const raw = sessionStorage.getItem('form-atualizacao');
+        if (!raw) return;
+        const d = JSON.parse(raw);
+        for (const [k, v] of Object.entries(d)) {
+          const el = document.getElementById(k);
+          if (el) el.value = v;
+        }
+      } catch {}
+    }
+    document.querySelectorAll('input,textarea,select').forEach(el => el.addEventListener('change', saveDraft));
+    restoreDraft();
+
     init();
   </script>
 </body>

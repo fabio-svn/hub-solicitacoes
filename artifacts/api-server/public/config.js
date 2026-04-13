@@ -8,20 +8,35 @@ const URL_SOLICITACOES = "solicitacoes.html";
 const URL_DASHBOARD = "dashboard.html";
 const URL_ADMIN = "admin.html";
 
-const URL_MANUAL = "https://pub-a2132f9b61f940659cc98265acfcf64c.r2.dev/Manual-de-Eventos-SVN.pdf";
-const URL_APRESENTACAO = "#";
-const URL_STORE = "#";
-const URL_TUTORIAL_TRANSMISSAO = "https://drive.google.com/file/d/1L36fFqFC-sEPWggNmlZOUNnY2DqxP8HK/view?usp=sharing";
+let URL_MANUAL = "https://pub-a2132f9b61f940659cc98265acfcf64c.r2.dev/Manual-de-Eventos-SVN.pdf";
+let URL_APRESENTACAO = "#";
+let URL_STORE = "#";
+let URL_TUTORIAL_TRANSMISSAO = "https://drive.google.com/file/d/1L36fFqFC-sEPWggNmlZOUNnY2DqxP8HK/view?usp=sharing";
 
-const URL_VIDEO_HERO = "https://pub-a2132f9b61f940659cc98265acfcf64c.r2.dev/bg-eventos-2.mp4";
-const URL_LOGO_BRANCA = "https://pub-a2132f9b61f940659cc98265acfcf64c.r2.dev/SVN-2.svg";
-const URL_LOGO_PRETA = "https://pub-a2132f9b61f940659cc98265acfcf64c.r2.dev/SVN-1.svg";
-const PACOTE_PADRAO_IMAGENS = [
+let URL_VIDEO_HERO = "https://pub-a2132f9b61f940659cc98265acfcf64c.r2.dev/bg-eventos-2.mp4";
+let URL_LOGO_BRANCA = "https://pub-a2132f9b61f940659cc98265acfcf64c.r2.dev/SVN-2.svg";
+let URL_LOGO_PRETA = "https://pub-a2132f9b61f940659cc98265acfcf64c.r2.dev/SVN-1.svg";
+let PACOTE_PADRAO_IMAGENS = [
   "https://pub-a2132f9b61f940659cc98265acfcf64c.r2.dev/Convite.png",
   "https://pub-a2132f9b61f940659cc98265acfcf64c.r2.dev/tela1.png"
 ];
 
-const EMAIL_UPLOAD = "gabriela.franca@svninvest.com.br";
+let EMAIL_UPLOAD = "gabriela.franca@svninvest.com.br";
+
+const _configReady = fetch('/api/config').then(r => r.json()).then(cfg => {
+  if (cfg.urlManual) URL_MANUAL = cfg.urlManual;
+  if (cfg.urlTutorialTransmissao) URL_TUTORIAL_TRANSMISSAO = cfg.urlTutorialTransmissao;
+  if (cfg.urlVideoHero) URL_VIDEO_HERO = cfg.urlVideoHero;
+  if (cfg.urlLogoBranca) URL_LOGO_BRANCA = cfg.urlLogoBranca;
+  if (cfg.urlLogoPreta) URL_LOGO_PRETA = cfg.urlLogoPreta;
+  if (cfg.emailUpload) EMAIL_UPLOAD = cfg.emailUpload;
+  if (cfg.r2PublicUrl) {
+    PACOTE_PADRAO_IMAGENS = [
+      cfg.r2PublicUrl + '/Convite.png',
+      cfg.r2PublicUrl + '/tela1.png'
+    ];
+  }
+}).catch(() => {});
 
 const MSG_THANKYOU_TITULO = "Solicitacao enviada com sucesso!";
 const MSG_THANKYOU_SUBTITULO = "Sua solicitacao foi recebida! Nossa equipe de Marketing analisara em breve e entrara em contato.";

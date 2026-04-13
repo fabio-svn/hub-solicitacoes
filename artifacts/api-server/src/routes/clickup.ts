@@ -3,13 +3,13 @@ import { logger } from "../lib/logger";
 const CLICKUP_API_TOKEN = process.env.CLICKUP_API_TOKEN || "";
 
 const CLICKUP_LISTS: Record<string, string> = {
-  "eventos": "901303299333",
-  "identidade-pessoal": "901300673533",
-  "marketing-conteudo": "901300673533",
-  "audiovisual": "901300673533",
-  "impressos": "901300673533",
-  "obras-manutencao": "901300673533",
-  "outros": "901300673533",
+  "eventos": process.env.CLICKUP_LIST_EVENTOS || "901303299333",
+  "identidade-pessoal": process.env.CLICKUP_LIST_GERAL || "901300673533",
+  "marketing-conteudo": process.env.CLICKUP_LIST_GERAL || "901300673533",
+  "audiovisual": process.env.CLICKUP_LIST_GERAL || "901300673533",
+  "impressos": process.env.CLICKUP_LIST_GERAL || "901300673533",
+  "obras-manutencao": process.env.CLICKUP_LIST_GERAL || "901300673533",
+  "outros": process.env.CLICKUP_LIST_GERAL || "901300673533",
 };
 
 const CLICKUP_LIST_MAP: Record<string, string> = {
