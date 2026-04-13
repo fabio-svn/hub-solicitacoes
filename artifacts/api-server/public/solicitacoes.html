@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Selecionar Solicitacao - Hub SVN</title>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="page-light">
+  <header class="header" id="mainHeader"></header>
+  <div class="container">
+    <h1 style="font-weight:300;font-size:1.3rem;margin-bottom:8px">Que tipo de solicitacao voce gostaria de realizar?</h1>
+    <button class="btn-secondary" onclick="window.history.back()" style="margin-bottom:24px;font-size:0.85rem;padding:8px 16px">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+      Voltar
+    </button>
+    <div id="categoriesContainer"></div>
+  </div>
+
+  <div class="sub-options-overlay" id="subOptionsOverlay" onclick="closeSubOptions(event)">
+    <div class="sub-options-card" id="subOptionsCard" onclick="event.stopPropagation()">
+      <h3 id="subOptionsTitle"></h3>
+      <div id="subOptionsList"></div>
+    </div>
+  </div>
+
+  <a href="/" class="float-home">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+    <span>Voltar a tela inicial</span>
+  </a>
+
+  <script src="config.js"></script>
+  <script src="auth.js"></script>
+  <script>
+    const ICONS = {
+      'icon-user': '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>',
+      'icon-mail': '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>',
+      'icon-credit-card': '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>',
+      'icon-handshake': '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20.42 4.58a5.4 5.4 0 00-7.65 0l-.77.78-.77-.78a5.4 5.4 0 00-7.65 0C1.46 6.7 1.33 10.28 4 13l8 8 8-8c2.67-2.72 2.54-6.3.42-8.42z"/></svg>',
+      'icon-heart': '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>',
+      'icon-star': '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>',
+      'icon-envelope': '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>',
+      'icon-image': '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>',
+      'icon-monitor': '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>',
+      'icon-file-pdf': '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>',
+      'icon-send': '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>',
+      'icon-newspaper': '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 22h16a2 2 0 002-2V4a2 2 0 00-2-2H8a2 2 0 00-2 2v16a2 2 0 01-2 2zm0 0a2 2 0 01-2-2v-9c0-1.1.9-2 2-2h2"/></svg>',
+      'icon-layout': '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>',
+      'icon-refresh': '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>',
+      'icon-calendar': '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>',
+      'icon-award': '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/></svg>',
+      'icon-flag': '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>',
+      'icon-gift': '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 010-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 000-5C13 2 12 7 12 7z"/></svg>',
+      'icon-package': '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="16.5" y1="9.4" x2="7.5" y2="4.21"/><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>',
+      'icon-globe': '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>',
+      'icon-video': '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>',
+      'icon-film': '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"/><line x1="7" y1="2" x2="7" y2="22"/><line x1="17" y1="2" x2="17" y2="22"/><line x1="2" y1="12" x2="22" y2="12"/><line x1="2" y1="7" x2="7" y2="7"/><line x1="2" y1="17" x2="7" y2="17"/><line x1="17" y1="17" x2="22" y2="17"/><line x1="17" y1="7" x2="22" y2="7"/></svg>',
+      'icon-printer': '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>',
+      'icon-tool': '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg>',
+      'icon-edit': '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>',
+    };
+
+    async function init() {
+      await Auth.init();
+      if (!Auth.isAuthenticated()) {
+        window.location.href = '/auth/login?redirect=/solicitacoes.html';
+        return;
+      }
+      Auth.renderHeader(document.getElementById('mainHeader'));
+      renderCategories();
+    }
+
+    function renderCategories() {
+      const container = document.getElementById('categoriesContainer');
+      let singleCats = [];
+
+      CATEGORIAS_SOLICITACAO.forEach(cat => {
+        if (cat.layout === 'single') {
+          singleCats.push(cat);
+          return;
+        }
+
+        const title = document.createElement('div');
+        title.className = 'category-title';
+        title.textContent = cat.categoria;
+        container.appendChild(title);
+
+        const grid = document.createElement('div');
+        grid.className = 'selection-grid';
+
+        cat.itens.forEach(item => {
+          const btn = document.createElement('button');
+          btn.className = 'selection-btn' + (item.ativo ? '' : ' disabled');
+          if (!item.ativo) btn.setAttribute('data-tooltip', 'Em breve');
+          btn.innerHTML = `<div class="btn-icon">${ICONS[item.icon] || ''}</div><div class="btn-label">${item.label}</div>`;
+          if (item.ativo) {
+            btn.onclick = () => handleItemClick(item);
+          }
+          grid.appendChild(btn);
+        });
+
+        container.appendChild(grid);
+      });
+
+      if (singleCats.length > 0) {
+        const singleGrid = document.createElement('div');
+        singleGrid.className = 'selection-grid';
+        singleGrid.style.marginTop = '28px';
+
+        singleCats.forEach(cat => {
+          cat.itens.forEach(item => {
+            const btn = document.createElement('button');
+            btn.className = 'selection-btn disabled';
+            btn.setAttribute('data-tooltip', 'Em breve');
+            btn.innerHTML = `<div class="btn-icon">${ICONS[item.icon] || ''}</div><div class="btn-label">${item.label}</div>`;
+            singleGrid.appendChild(btn);
+          });
+        });
+
+        container.appendChild(singleGrid);
+      }
+    }
+
+    function handleItemClick(item) {
+      if (item.subOpcoes) {
+        showSubOptions(item);
+      } else {
+        const route = FORM_ROUTES[item.id];
+        if (route) window.location.href = '/' + route;
+      }
+    }
+
+    function showSubOptions(item) {
+      document.getElementById('subOptionsTitle').textContent = item.label;
+      const list = document.getElementById('subOptionsList');
+      list.innerHTML = '';
+      item.subOpcoes.forEach(sub => {
+        const btn = document.createElement('button');
+        btn.className = 'sub-option-btn';
+        btn.textContent = sub.label;
+        btn.onclick = () => {
+          const route = FORM_ROUTES[sub.id];
+          if (route) window.location.href = '/' + route;
+        };
+        list.appendChild(btn);
+      });
+      document.getElementById('subOptionsOverlay').classList.add('visible');
+    }
+
+    function closeSubOptions(e) {
+      if (e.target === document.getElementById('subOptionsOverlay')) {
+        document.getElementById('subOptionsOverlay').classList.remove('visible');
+      }
+    }
+
+    init();
+  </script>
+</body>
+</html>

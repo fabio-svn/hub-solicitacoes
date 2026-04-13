@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Minhas Solicitacoes - Hub SVN</title>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="page-light">
+  <header class="header" id="mainHeader"></header>
+  <div class="container">
+    <div class="title-row">
+      <h1 class="page-title">Minhas solicitacoes</h1>
+      <a href="/solicitacoes.html" class="btn btn-primary">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Nova solicitacao
+      </a>
+    </div>
+
+    <div class="stats-row" id="statsRow">
+      <div class="stat-card" style="background:rgba(159,63,55,0.06);border-color:rgba(159,63,55,0.15)">
+        <div class="stat-number" style="color:var(--ruby-red)" id="statActive">0</div>
+        <div class="stat-label">Em andamento</div>
+      </div>
+      <div class="stat-card" style="background:rgba(111,135,123,0.06);border-color:rgba(111,135,123,0.15)">
+        <div class="stat-number" style="color:var(--sage-green)" id="statCompleted">0</div>
+        <div class="stat-label">Concluidas</div>
+      </div>
+    </div>
+
+    <div class="tabs">
+      <button class="tab active" data-tab="eventos" onclick="switchTab('eventos')">Eventos</button>
+      <button class="tab" data-tab="geral" onclick="switchTab('geral')">Solicitacoes gerais</button>
+    </div>
+
+    <div class="tab-content active" id="tab-eventos">
+      <div class="filters" id="filtersEventos">
+        <button class="filter-chip active" data-filter="periodo" data-value="" onclick="toggleFilter(this,'eventos')">Todos</button>
+        <button class="filter-chip" data-filter="periodo" data-value="hoje" onclick="toggleFilter(this,'eventos')">Hoje</button>
+        <button class="filter-chip" data-filter="periodo" data-value="7dias" onclick="toggleFilter(this,'eventos')">Ultimos 7 dias</button>
+        <button class="filter-chip" data-filter="periodo" data-value="30dias" onclick="toggleFilter(this,'eventos')">Ultimos 30 dias</button>
+      </div>
+      <div class="search-bar">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" opacity="0.4"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" placeholder="Buscar por nome do evento..." id="searchEventos" oninput="debounceSearch('eventos')">
+      </div>
+      <div id="listEventos"></div>
+      <div class="pagination" id="paginationEventos"></div>
+    </div>
+
+    <div class="tab-content" id="tab-geral">
+      <div class="filters" id="filtersGeral">
+        <button class="filter-chip active" data-filter="periodo" data-value="" onclick="toggleFilter(this,'geral')">Todos</button>
+        <button class="filter-chip" data-filter="periodo" data-value="hoje" onclick="toggleFilter(this,'geral')">Hoje</button>
+        <button class="filter-chip" data-filter="periodo" data-value="7dias" onclick="toggleFilter(this,'geral')">Ultimos 7 dias</button>
+        <button class="filter-chip" data-filter="periodo" data-value="30dias" onclick="toggleFilter(this,'geral')">Ultimos 30 dias</button>
+      </div>
+      <div class="search-bar">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" opacity="0.4"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" placeholder="Buscar..." id="searchGeral" oninput="debounceSearch('geral')">
+      </div>
+      <div id="listGeral"></div>
+      <div class="pagination" id="paginationGeral"></div>
+    </div>
+  </div>
+
+  <div class="drawer-overlay" id="drawerOverlay" onclick="closeDrawer()"></div>
+  <div class="drawer" id="drawer">
+    <div class="drawer-header">
+      <div>
+        <div id="drawerTitle" style="font-weight:700;font-size:1.1rem;margin-bottom:8px"></div>
+        <div id="drawerBadges" style="display:flex;gap:6px;flex-wrap:wrap"></div>
+      </div>
+      <button class="drawer-close" onclick="closeDrawer()">&times;</button>
+    </div>
+    <div class="drawer-body" id="drawerBody"></div>
+    <div class="drawer-footer" id="drawerFooter"></div>
+  </div>
+
+  <script src="config.js"></script>
+  <script src="auth.js"></script>
+  <script>
+    let currentTab = 'eventos';
+    let filters = { eventos: { periodo: '' }, geral: { periodo: '' } };
+    let pages = { eventos: 1, geral: 1 };
+    let searchTimeout;
+    let itemsCache = {};
+
+    function esc(str) {
+      if (!str) return '';
+      const d = document.createElement('div');
+      d.textContent = String(str);
+      return d.innerHTML;
+    }
+
+    async function init() {
+      await Auth.init();
+      if (!Auth.isAuthenticated()) {
+        window.location.href = '/auth/login?redirect=/dashboard.html';
+        return;
+      }
+      Auth.renderHeader(document.getElementById('mainHeader'));
+      loadStats();
+      loadList('eventos');
+      loadList('geral');
+    }
+
+    async function loadStats() {
+      try {
+        const res = await fetch('/api/solicitacoes/stats');
+        const data = await res.json();
+        animateNumber('statActive', data.active);
+        animateNumber('statCompleted', data.completed);
+      } catch (e) { console.error(e); }
+    }
+
+    function animateNumber(id, target) {
+      const el = document.getElementById(id);
+      let current = 0;
+      const duration = 600;
+      const step = target / (duration / 16);
+      const timer = setInterval(() => {
+        current += step;
+        if (current >= target) { current = target; clearInterval(timer); }
+        el.textContent = Math.round(current);
+      }, 16);
+    }
+
+    async function loadList(tab) {
+      const params = new URLSearchParams();
+      params.set('page', pages[tab]);
+      params.set('limit', '20');
+
+      if (tab === 'eventos') {
+        params.set('tipo_solicitacao', 'eventos');
+      }
+
+      const f = filters[tab];
+      if (f.periodo) params.set('periodo', f.periodo);
+
+      const searchEl = document.getElementById(tab === 'eventos' ? 'searchEventos' : 'searchGeral');
+      if (searchEl && searchEl.value.trim()) {
+        params.set('busca', searchEl.value.trim());
+      }
+
+      try {
+        const res = await fetch('/api/solicitacoes?' + params.toString());
+        const data = await res.json();
+        renderList(tab, data);
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    function renderList(tab, data) {
+      const container = document.getElementById(tab === 'eventos' ? 'listEventos' : 'listGeral');
+
+      if (!data.data || data.data.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <svg viewBox="0 0 80 80" fill="none" stroke="var(--ruby-red)" stroke-width="1.5"><rect x="12" y="8" width="56" height="64" rx="4"/><line x1="24" y1="24" x2="56" y2="24"/><line x1="24" y1="36" x2="56" y2="36"/><line x1="24" y1="48" x2="44" y2="48"/></svg>
+            <p>Voce ainda nao fez nenhuma solicitacao${tab === 'eventos' ? ' de evento' : ''}.</p>
+            <a href="/solicitacoes.html" class="btn btn-primary">Fazer primeira solicitacao</a>
+          </div>`;
+        document.getElementById(tab === 'eventos' ? 'paginationEventos' : 'paginationGeral').innerHTML = '';
+        return;
+      }
+
+      data.data.forEach((item, idx) => {
+        const cacheKey = tab + '_' + idx + '_' + pages[tab];
+        itemsCache[cacheKey] = item;
+      });
+
+      container.innerHTML = data.data.map((item, idx) => {
+        const cacheKey = tab + '_' + idx + '_' + pages[tab];
+        const dados = typeof item.dados === 'string' ? JSON.parse(item.dados) : (item.dados || {});
+        const titulo = dados.nomeEvento || dados.tituloEvento || dados.titulo || dados.nomeCompleto || item.tipo_solicitacao;
+        const tipoLabel = TIPO_SOLICITACAO_LABELS[item.tipo_solicitacao] || item.tipo_solicitacao;
+        const statusObj = STATUS_SOLICITACAO.find(s => s.id === item.status) || { label: item.status, cor: '--carbon-black' };
+        const date = new Date(item.created_at).toLocaleDateString('pt-BR');
+
+        return `<div class="request-card" data-cache="${esc(cacheKey)}" onclick="openDrawerByKey('${esc(cacheKey)}')">
+          <div class="request-info">
+            <div class="request-title">${esc(titulo)}</div>
+            <div class="request-meta">
+              <span>${esc(tipoLabel)}</span>
+              <span>${esc(date)}</span>
+            </div>
+          </div>
+          <div class="request-badges">
+            <span class="badge" style="background:var(${statusObj.cor});color:var(--paper-white)">${esc(statusObj.label)}</span>
+          </div>
+          <div class="request-chevron">&rsaquo;</div>
+        </div>`;
+      }).join('');
+
+      renderPagination(tab, data);
+    }
+
+    function renderPagination(tab, data) {
+      const container = document.getElementById(tab === 'eventos' ? 'paginationEventos' : 'paginationGeral');
+      if (data.totalPages <= 1) { container.innerHTML = ''; return; }
+
+      let html = '';
+      html += `<button ${data.page <= 1 ? 'disabled' : ''} onclick="goPage('${tab}',${data.page - 1})">&laquo;</button>`;
+      for (let i = 1; i <= data.totalPages; i++) {
+        html += `<button class="${i === data.page ? 'active' : ''}" onclick="goPage('${tab}',${i})">${i}</button>`;
+      }
+      html += `<button ${data.page >= data.totalPages ? 'disabled' : ''} onclick="goPage('${tab}',${data.page + 1})">&raquo;</button>`;
+      container.innerHTML = html;
+    }
+
+    function goPage(tab, page) { pages[tab] = page; loadList(tab); }
+
+    function switchTab(tab) {
+      currentTab = tab;
+      document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
+      document.querySelectorAll('.tab-content').forEach(c => c.classList.toggle('active', c.id === 'tab-' + tab));
+    }
+
+    function toggleFilter(el, tab) {
+      const siblings = el.parentElement.querySelectorAll('.filter-chip');
+      siblings.forEach(s => s.classList.remove('active'));
+      el.classList.add('active');
+      filters[tab].periodo = el.dataset.value;
+      pages[tab] = 1;
+      loadList(tab);
+    }
+
+    function debounceSearch(tab) {
+      clearTimeout(searchTimeout);
+      searchTimeout = setTimeout(() => { pages[tab] = 1; loadList(tab); }, 300);
+    }
+
+    function openDrawerByKey(key) {
+      const item = itemsCache[key];
+      if (!item) return;
+      openDrawer(item);
+    }
+
+    function openDrawer(item) {
+      const dados = typeof item.dados === 'string' ? JSON.parse(item.dados) : (item.dados || {});
+      const titulo = dados.nomeEvento || dados.tituloEvento || dados.titulo || dados.nomeCompleto || item.tipo_solicitacao;
+      const tipoLabel = TIPO_SOLICITACAO_LABELS[item.tipo_solicitacao] || item.tipo_solicitacao;
+      const statusObj = STATUS_SOLICITACAO.find(s => s.id === item.status) || { label: item.status, cor: '--carbon-black' };
+
+      document.getElementById('drawerTitle').textContent = titulo;
+      document.getElementById('drawerBadges').innerHTML = `
+        <span class="badge" style="background:var(--carbon-black);color:var(--paper-white)">${esc(tipoLabel)}</span>
+        <span class="badge" style="background:var(${statusObj.cor});color:var(--paper-white)">${esc(statusObj.label)}</span>
+      `;
+
+      let bodyHtml = '';
+      for (const [key, value] of Object.entries(dados)) {
+        if (value && typeof value !== 'object') {
+          bodyHtml += `<div class="drawer-field">
+            <div class="drawer-field-label">${esc(key)}</div>
+            <div class="drawer-field-value">${esc(value)}</div>
+          </div>`;
+        }
+      }
+      document.getElementById('drawerBody').innerHTML = bodyHtml || '<p style="opacity:0.5">Sem dados adicionais</p>';
+      document.getElementById('drawerFooter').textContent = `ID: ${item.id} | Criado em: ${new Date(item.created_at).toLocaleString('pt-BR')}`;
+
+      document.getElementById('drawerOverlay').classList.add('visible');
+      document.getElementById('drawer').classList.add('open');
+    }
+
+    function closeDrawer() {
+      document.getElementById('drawerOverlay').classList.remove('visible');
+      document.getElementById('drawer').classList.remove('open');
+    }
+
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeDrawer(); });
+
+    init();
+  </script>
+</body>
+</html>

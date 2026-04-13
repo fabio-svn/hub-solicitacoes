@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Atualizacao de Material - Hub SVN</title>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="page-light">
+  <header class="header" id="mainHeader"></header>
+  <div class="container-narrow" style="padding-top:32px;padding-bottom:80px">
+    <div class="form-card">
+      <div class="form-progress"><div class="form-progress-bar" id="progressBar" style="width:50%"></div></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px">
+        <img src="" id="formLogo" height="24" alt="SVN">
+        <span style="font-size:0.8rem;opacity:0.4" id="stepLabel">Etapa 1 de 2</span>
+      </div>
+
+      <div class="form-step active" id="step1">
+        <h2 style="font-weight:600;font-size:1.1rem;margin-bottom:20px">Dados do solicitante</h2>
+        <div class="field">
+          <label>Seu nome</label>
+          <input type="text" id="nome" placeholder="Seu nome completo">
+        </div>
+        <div class="field">
+          <label>Setor</label>
+          <select id="setor"></select>
+        </div>
+        <div class="field">
+          <label class="checkbox-option">
+            <input type="checkbox" id="checkPrazos">
+            <span class="checkbox-custom"></span>
+            <span>Confirmo que estou ciente dos prazos necessarios.</span>
+          </label>
+        </div>
+        <div class="form-nav">
+          <button class="btn btn-primary" id="btnNext1" disabled onclick="goStep(2)">Proximo</button>
+        </div>
+      </div>
+
+      <div class="form-step" id="step2">
+        <h2 style="font-weight:600;font-size:1.1rem;margin-bottom:20px">Informacoes do material</h2>
+        <div class="field">
+          <label>Titulo do material</label>
+          <input type="text" id="titulo" placeholder="Nome ou identificacao do material que sera atualizado">
+        </div>
+        <div class="field">
+          <label>Finalidade do material</label>
+          <textarea id="finalidade" placeholder="Para que e utilizado este material?"></textarea>
+        </div>
+        <div class="field">
+          <label>Descricao do que precisa ser atualizado</label>
+          <textarea id="descricao" placeholder="Descreva com clareza o que deve ser alterado, corrigido ou adicionado. Quanto mais detalhado, melhor."></textarea>
+        </div>
+        <div class="field">
+          <label>Material atual + arquivos de apoio</label>
+          <div class="file-input-wrapper">
+            <label class="file-input-btn" for="materialAtual">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+              Escolher arquivo
+            </label>
+            <input type="file" id="materialAtual">
+            <div class="file-name" id="materialAtualName"></div>
+          </div>
+          <div class="field-hint">Enviar o material original agiliza o processo e garante que as atualizacoes sejam aplicadas corretamente.</div>
+        </div>
+        <div class="form-nav">
+          <button class="btn btn-secondary" onclick="goStep(1)">Voltar</button>
+          <button class="btn btn-primary" id="btnSubmit" onclick="submitForm()">Enviar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <a href="/" class="float-home">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+    <span>Voltar a tela inicial</span>
+  </a>
+
+  <script src="config.js"></script>
+  <script src="auth.js"></script>
+  <script>
+    async function init() {
+      await Auth.init();
+      if (!Auth.isAuthenticated()) { window.location.href = '/auth/login?redirect=/form-atualizacao-material.html'; return; }
+      Auth.renderHeader(document.getElementById('mainHeader'));
+      document.getElementById('formLogo').src = URL_LOGO_PRETA;
+      document.getElementById('nome').value = Auth.getUserName();
+
+      const sel = document.getElementById('setor');
+      SETORES.forEach(s => { const o = document.createElement('option'); o.value = s; o.textContent = s; sel.appendChild(o); });
+
+      document.getElementById('nome').addEventListener('input', validateStep1);
+      document.getElementById('setor').addEventListener('change', validateStep1);
+      document.getElementById('checkPrazos').addEventListener('change', validateStep1);
+      document.getElementById('materialAtual').addEventListener('change', e => {
+        document.getElementById('materialAtualName').innerHTML = e.target.files[0] ? `<span class="check">&#10003;</span> ${e.target.files[0].name}` : '';
+      });
+      validateStep1();
+    }
+
+    function validateStep1() {
+      const valid = document.getElementById('nome').value.trim() &&
+        document.getElementById('setor').value !== SETORES[0] &&
+        document.getElementById('checkPrazos').checked;
+      document.getElementById('btnNext1').disabled = !valid;
+    }
+
+    function goStep(step) {
+      document.querySelectorAll('.form-step').forEach(s => s.classList.remove('active'));
+      document.getElementById('step' + step).classList.add('active');
+      document.getElementById('progressBar').style.width = (step / 2 * 100) + '%';
+      document.getElementById('stepLabel').textContent = `Etapa ${step} de 2`;
+      window.scrollTo(0, 0);
+    }
+
+    async function submitForm() {
+      if (!document.getElementById('titulo').value.trim() || !document.getElementById('finalidade').value.trim() || !document.getElementById('descricao').value.trim()) {
+        alert('Preencha todos os campos obrigatorios.'); return;
+      }
+      if (!document.getElementById('materialAtual').files[0]) {
+        alert('Envie o material atual.'); return;
+      }
+
+      const btn = document.getElementById('btnSubmit');
+      btn.disabled = true; btn.textContent = 'Enviando...';
+
+      const formData = new FormData();
+      formData.append('tipo_solicitacao', 'atualizacao-material');
+      formData.append('dados', JSON.stringify({
+        nome: document.getElementById('nome').value,
+        setor: document.getElementById('setor').value,
+        titulo: document.getElementById('titulo').value,
+        finalidade: document.getElementById('finalidade').value,
+        descricao: document.getElementById('descricao').value,
+      }));
+      formData.append('materialAtual', document.getElementById('materialAtual').files[0]);
+
+      try {
+        const res = await fetch('/api/solicitacoes', { method: 'POST', body: formData });
+        if (res.ok) { sessionStorage.removeItem('form-atualizacao'); window.location.href = '/thankyou.html'; }
+        else { alert('Erro ao enviar.'); btn.disabled = false; btn.textContent = 'Enviar'; }
+      } catch (e) { alert('Erro de conexao.'); btn.disabled = false; btn.textContent = 'Enviar'; }
+    }
+
+    init();
+  </script>
+</body>
+</html>

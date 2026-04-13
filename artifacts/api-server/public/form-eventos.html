@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Eventos - Hub SVN</title>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="page-light">
+  <header class="header" id="mainHeader"></header>
+  <div class="container" style="padding-top:32px;padding-bottom:80px">
+    <div class="form-split">
+      <div class="form-main">
+        <div class="form-card">
+          <div class="form-progress"><div class="form-progress-bar" id="progressBar" style="width:14%"></div></div>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px">
+            <img src="" id="formLogo" height="24" alt="SVN">
+            <span style="font-size:0.8rem;opacity:0.4" id="stepLabel">Etapa 1 de 7</span>
+          </div>
+
+          <!-- STEP 1: Dados do solicitante + Natureza -->
+          <div class="form-step active" id="step1">
+            <h2 style="font-weight:600;font-size:1.1rem;margin-bottom:20px">Dados do solicitante</h2>
+            <div class="field">
+              <label>Seu nome</label>
+              <input type="text" id="nome" placeholder="Seu nome completo">
+            </div>
+            <div class="field">
+              <label>Setor</label>
+              <select id="setor"></select>
+            </div>
+            <div class="field">
+              <label>O evento e presencial ou online?</label>
+              <div class="radio-cards">
+                <div class="radio-card" onclick="selectNatureza('presencial')" id="cardPresencial">
+                  <div class="card-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg></div>
+                  <div class="card-label">Presencial</div>
+                </div>
+                <div class="radio-card" onclick="selectNatureza('online')" id="cardOnline">
+                  <div class="card-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg></div>
+                  <div class="card-label">Online</div>
+                </div>
+              </div>
+            </div>
+            <div id="onlineTutorial" style="display:none;margin-top:12px">
+              <label class="checkbox-option">
+                <input type="checkbox" id="checkTutorial">
+                <span class="checkbox-custom"></span>
+                <span>Confirmo que assisti ao <a href="" id="tutorialLink" target="_blank">tutorial para transmissoes online</a></span>
+              </label>
+            </div>
+            <div class="field" style="margin-top:16px">
+              <label class="checkbox-option">
+                <input type="checkbox" id="checkPrazos">
+                <span class="checkbox-custom"></span>
+                <span>Confirmo que estou ciente dos prazos necessarios para a organizacao do evento.</span>
+              </label>
+            </div>
+            <div class="form-nav">
+              <button class="btn btn-primary" id="btnNext1" disabled onclick="goStep(2)">Proximo</button>
+            </div>
+          </div>
+
+          <!-- STEP 2: Maturidade -->
+          <div class="form-step" id="step2">
+            <h2 style="font-weight:600;font-size:1.1rem;margin-bottom:20px">Qual o nivel de informacao que voce tem sobre o evento?</h2>
+            <div class="radio-cards" style="margin-bottom:16px">
+              <div class="radio-card" onclick="selectMaturidade(1)" id="mat1">
+                <div class="card-icon" style="font-size:2rem;font-family:'Taviraj',serif;font-weight:300">1</div>
+                <div class="card-label">Tenho a maioria das informacoes</div>
+                <div class="card-desc">Evento com data, local e detalhes definidos</div>
+              </div>
+              <div class="radio-card" onclick="selectMaturidade(2)" id="mat2">
+                <div class="card-icon" style="font-size:2rem;font-family:'Taviraj',serif;font-weight:300">2</div>
+                <div class="card-label">Tenho algumas informacoes</div>
+                <div class="card-desc">Algumas informacoes definidas, outras em aberto</div>
+              </div>
+              <div class="radio-card" onclick="selectMaturidade(3)" id="mat3">
+                <div class="card-icon" style="font-size:2rem;font-family:'Taviraj',serif;font-weight:300">3</div>
+                <div class="card-label">Ainda estou estruturando</div>
+                <div class="card-desc">Tenho uma ideia, preciso de apoio para estruturar</div>
+              </div>
+            </div>
+            <a href="#" onclick="event.preventDefault();openOrientationModal()" style="font-size:0.85rem">Qual opcao devo escolher?</a>
+            <div id="maturityFields" style="margin-top:24px"></div>
+            <div class="form-nav" id="nav2" style="display:none">
+              <button class="btn btn-secondary" onclick="goStep(1)">Voltar</button>
+              <button class="btn btn-primary" onclick="goStep(3)">Proximo</button>
+            </div>
+          </div>
+
+          <!-- STEP 3: Materiais -->
+          <div class="form-step" id="step3">
+            <div class="alert-card alert-danger">
+              <div class="alert-title">Obrigatorio</div>
+              <div class="alert-text">Clique nas opcoes que fazem parte da solicitacao para esse evento</div>
+            </div>
+            <div class="alert-card alert-info">
+              <div class="alert-title">Dica</div>
+              <div class="alert-text">Se os materiais de apoio nao estiverem definidos, marque a opcao "Pacote Padrao", pois e utilizado na grande maioria dos eventos.</div>
+            </div>
+            <h2 style="font-weight:600;font-size:1.1rem;margin-bottom:20px">Materiais e servicos</h2>
+            <div class="pills-wrap" id="materiaisContainer"></div>
+            <div id="materiaisCondFields" style="margin-top:16px"></div>
+            <div class="field-error" id="materiaisError">Selecione pelo menos um item para continuar.</div>
+            <div class="form-nav">
+              <button class="btn btn-secondary" onclick="goStep(2)">Voltar</button>
+              <button class="btn btn-primary" onclick="validateMateriais() && goStep(4)">Proximo</button>
+            </div>
+          </div>
+
+          <!-- STEP 4: Palestrantes -->
+          <div class="form-step" id="step4">
+            <h2 style="font-weight:600;font-size:1.1rem;margin-bottom:20px">Palestrantes</h2>
+            <div class="field">
+              <label>O evento tera palestrante(s)?</label>
+              <div class="radio-group">
+                <label class="radio-option"><input type="radio" name="temPalestrante" value="sim" onchange="handlePalestrante(true)"><span class="radio-custom"></span><span>Sim</span></label>
+                <label class="radio-option"><input type="radio" name="temPalestrante" value="nao" onchange="handlePalestrante(false)"><span class="radio-custom"></span><span>Nao</span></label>
+              </div>
+            </div>
+            <div id="palestranteQtd" style="display:none">
+              <div class="field">
+                <label>Quantidade de palestrantes</label>
+                <div class="radio-group" style="flex-direction:row;gap:16px">
+                  <label class="radio-option"><input type="radio" name="qtdPalestrante" value="1" onchange="renderPalestrantes(1)"><span class="radio-custom"></span><span>1</span></label>
+                  <label class="radio-option"><input type="radio" name="qtdPalestrante" value="2" onchange="renderPalestrantes(2)"><span class="radio-custom"></span><span>2</span></label>
+                  <label class="radio-option"><input type="radio" name="qtdPalestrante" value="3" onchange="renderPalestrantes(3)"><span class="radio-custom"></span><span>3</span></label>
+                  <label class="radio-option"><input type="radio" name="qtdPalestrante" value="4" onchange="renderPalestrantes(4)"><span class="radio-custom"></span><span>4</span></label>
+                </div>
+              </div>
+            </div>
+            <div id="palestranteBlocos"></div>
+            <div class="form-nav">
+              <button class="btn btn-secondary" onclick="goStep(3)">Voltar</button>
+              <button class="btn btn-primary" id="btnNext4" onclick="goStep(formState.natureza==='presencial'&&formState.maturidade!==3?5:6)">Proximo</button>
+            </div>
+          </div>
+
+          <!-- STEP 5: Custos (presencial only) -->
+          <div class="form-step" id="step5">
+            <h2 style="font-weight:600;font-size:1.1rem;margin-bottom:20px">Custos</h2>
+            <div class="field">
+              <label>Custo estimado (em R$)</label>
+              <input type="text" id="custoEstimado" placeholder="R$ 0,00" oninput="handleCusto()">
+            </div>
+            <div id="rateioField" style="display:none">
+              <div class="field">
+                <label>Rateio</label>
+                <select id="rateio"></select>
+              </div>
+            </div>
+            <div class="form-nav">
+              <button class="btn btn-secondary" onclick="goStep(4)">Voltar</button>
+              <button class="btn btn-primary" onclick="goStep(6)">Proximo</button>
+            </div>
+          </div>
+
+          <!-- STEP 6: Anexos e observacoes -->
+          <div class="form-step" id="step6">
+            <h2 style="font-weight:600;font-size:1.1rem;margin-bottom:20px">Anexos e observacoes</h2>
+            <div class="field">
+              <label>Logo complementar de parceiro (opcional)</label>
+              <div class="file-input-wrapper">
+                <label class="file-input-btn" for="logoFile"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg> Escolher arquivo</label>
+                <input type="file" id="logoFile" accept=".png,.jpg,.jpeg,.svg,.ai,.pdf">
+                <div class="file-name" id="logoFileName"></div>
+              </div>
+              <div class="field-hint">Caso nao consiga, envie para o e-mail: ${EMAIL_UPLOAD}</div>
+            </div>
+            <div class="field">
+              <label>Imagem complementar (opcional)</label>
+              <div class="file-input-wrapper">
+                <label class="file-input-btn" for="imgFile"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg> Escolher arquivo</label>
+                <input type="file" id="imgFile" accept=".png,.jpg,.jpeg,.webp">
+                <div class="file-name" id="imgFileName"></div>
+              </div>
+            </div>
+            <div class="field">
+              <label>Demais arquivos de apoio (opcional)</label>
+              <div class="file-input-wrapper">
+                <label class="file-input-btn" for="demaisFile"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg> Escolher arquivo</label>
+                <input type="file" id="demaisFile">
+                <div class="file-name" id="demaisFileName"></div>
+              </div>
+            </div>
+            <div class="field">
+              <label>Observacoes gerais (opcional)</label>
+              <input type="text" id="observacoes" placeholder="Algo mais que voce queira informar?">
+            </div>
+            <div class="form-nav">
+              <button class="btn btn-secondary" onclick="goStep(formState.natureza==='presencial'&&formState.maturidade!==3?5:4)">Voltar</button>
+              <button class="btn btn-primary" id="btnSubmit" onclick="submitForm()">Enviar</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SIDEBAR PREVIEW -->
+      <div class="form-sidebar">
+        <div class="preview-panel">
+          <h4><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> Resumo do pedido</h4>
+          <div id="previewRows">
+            <div class="preview-row"><span class="preview-label">Evento</span><span class="preview-value empty" id="pvEvento">—</span></div>
+            <div class="preview-row"><span class="preview-label">Solicitante</span><span class="preview-value empty" id="pvSolicitante">—</span></div>
+            <div class="preview-row"><span class="preview-label">Setor</span><span class="preview-value empty" id="pvSetor">—</span></div>
+            <div class="preview-row"><span class="preview-label">Data</span><span class="preview-value empty" id="pvData">—</span></div>
+            <div class="preview-row" id="pvLocalRow"><span class="preview-label">Local</span><span class="preview-value empty" id="pvLocal">—</span></div>
+            <div class="preview-row" id="pvCanalRow" style="display:none"><span class="preview-label">Canal</span><span class="preview-value empty" id="pvCanal">—</span></div>
+            <div class="preview-row"><span class="preview-label">Custo</span><span class="preview-value empty" id="pvCusto">—</span></div>
+            <div class="preview-row"><span class="preview-label">Palestrantes</span><span class="preview-value empty" id="pvPalestrantes">—</span></div>
+          </div>
+          <div style="margin-top:12px;border-top:1px solid var(--border-light);padding-top:12px">
+            <div style="font-size:0.75rem;font-weight:600;opacity:0.4;margin-bottom:8px">Itens selecionados</div>
+            <div id="pvItens" style="display:flex;flex-wrap:wrap;gap:6px"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Orientation Modal -->
+  <div class="modal-overlay" id="orientModal" onclick="closeOrientationModal(event)">
+    <div class="modal-card" style="background:var(--carbon-black);color:var(--paper-white)" onclick="event.stopPropagation()">
+      <button class="modal-close" onclick="closeOrientationModal()">&times;</button>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:16px">
+        <div style="text-align:center;padding:16px">
+          <div style="font-family:'Taviraj',serif;font-size:3rem;font-weight:300;margin-bottom:8px">1</div>
+          <span class="badge" style="background:var(--ruby-red);color:white;margin-bottom:8px">Tenho a maioria das informacoes</span>
+          <p style="font-size:0.82rem;opacity:0.7;margin-top:8px">Quando as informacoes mais basicas do evento estiverem pre-definidas.</p>
+          <p style="font-size:0.78rem;font-style:italic;opacity:0.5;margin-top:4px">Ex.: Tenho Nome, Data, Local, Formato, etc</p>
+        </div>
+        <div style="text-align:center;padding:16px">
+          <div style="font-family:'Taviraj',serif;font-size:3rem;font-weight:300;margin-bottom:8px">2</div>
+          <span class="badge" style="background:var(--sage-green);color:white;margin-bottom:8px">Tenho algumas informacoes</span>
+          <p style="font-size:0.82rem;opacity:0.7;margin-top:8px">Quando algumas informacoes estiverem definidas, mas voce precisa de apoio para fechar outros pontos.</p>
+          <p style="font-size:0.78rem;font-style:italic;opacity:0.5;margin-top:4px">Ex.: Quero realizar uma palestra sobre FIIs no dia 7, mas ainda preciso definir o local.</p>
+        </div>
+        <div style="text-align:center;padding:16px">
+          <div style="font-family:'Taviraj',serif;font-size:3rem;font-weight:300;margin-bottom:8px">3</div>
+          <span class="badge" style="background:var(--leather-brown);color:white;margin-bottom:8px">Ainda estou estruturando</span>
+          <p style="font-size:0.82rem;opacity:0.7;margin-top:8px">Quando voce tiver uma ideia para um evento, mas precisa de apoio para estruturar.</p>
+          <p style="font-size:0.78rem;font-style:italic;opacity:0.5;margin-top:4px">Ex.: Gostaria de realizar uma experiencia com clientes, mas preciso de assistencia.</p>
+        </div>
+      </div>
+      <hr style="border-color:rgba(255,248,243,0.1);margin:16px 0">
+      <p style="font-size:0.78rem;opacity:0.5;font-style:italic">Para que o processo ocorra de forma eficiente, escolha a opcao que mais se adequa a realidade do seu evento. Quanto mais informacoes forem preenchidas, mais rapido sera o processo.</p>
+    </div>
+  </div>
+
+  <!-- Pacote Padrao Preview Modal -->
+  <div class="modal-overlay" id="pacoteModal" onclick="closePacoteModal(event)">
+    <div class="modal-card" style="background:var(--carbon-black);color:var(--paper-white)" onclick="event.stopPropagation()">
+      <button class="modal-close" onclick="closePacoteModal()">&times;</button>
+      <h3 style="margin-bottom:16px">Previa do Pacote Padrao</h3>
+      <div style="display:flex;gap:16px;flex-wrap:wrap;justify-content:center" id="pacoteImgs"></div>
+    </div>
+  </div>
+
+  <a href="/" class="float-home">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+    <span>Voltar a tela inicial</span>
+  </a>
+
+  <script src="config.js"></script>
+  <script src="auth.js"></script>
+  <script>
+    const formState = { natureza: null, maturidade: null, materiais: new Set(), palestrantes: [] };
+    let totalSteps = 7;
+    let estados = [];
+
+    async function init() {
+      await Auth.init();
+      if (!Auth.isAuthenticated()) { window.location.href = '/auth/login?redirect=/form-eventos.html'; return; }
+      Auth.renderHeader(document.getElementById('mainHeader'));
+      document.getElementById('formLogo').src = URL_LOGO_PRETA;
+      document.getElementById('nome').value = Auth.getUserName();
+      document.getElementById('tutorialLink').href = URL_TUTORIAL_TRANSMISSAO;
+
+      const sel = document.getElementById('setor');
+      SETORES.forEach(s => { const o = document.createElement('option'); o.value = s; o.textContent = s; sel.appendChild(o); });
+
+      const ratSel = document.getElementById('rateio');
+      OPCOES_RATEIO.forEach(r => { const o = document.createElement('option'); o.value = r; o.textContent = r; ratSel.appendChild(o); });
+
+      document.getElementById('nome').addEventListener('input', () => { validateStep1(); updatePreview('pvSolicitante', document.getElementById('nome').value); });
+      document.getElementById('setor').addEventListener('change', () => { validateStep1(); updatePreview('pvSetor', document.getElementById('setor').value); });
+      document.getElementById('checkPrazos').addEventListener('change', validateStep1);
+      document.getElementById('checkTutorial')?.addEventListener('change', validateStep1);
+
+      ['logoFile','imgFile','demaisFile'].forEach(id => {
+        document.getElementById(id).addEventListener('change', e => {
+          document.getElementById(id.replace('File','FileName')).innerHTML = e.target.files[0] ? `<span class="check">&#10003;</span> ${e.target.files[0].name}` : '';
+        });
+      });
+
+      const imgs = document.getElementById('pacoteImgs');
+      PACOTE_PADRAO_IMAGENS.forEach(url => { imgs.innerHTML += `<img src="${url}" style="max-width:280px;border-radius:8px">`; });
+
+      updatePreview('pvSolicitante', Auth.getUserName());
+      validateStep1();
+    }
+
+    function updatePreview(id, val) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.textContent = val || '—';
+      el.classList.toggle('empty', !val);
+    }
+
+    function selectNatureza(nat) {
+      formState.natureza = nat;
+      document.getElementById('cardPresencial').className = 'radio-card' + (nat === 'presencial' ? ' selected' : '');
+      document.getElementById('cardOnline').className = 'radio-card' + (nat === 'online' ? ' selected-green' : '');
+      document.getElementById('onlineTutorial').style.display = nat === 'online' ? 'block' : 'none';
+      document.getElementById('pvLocalRow').style.display = nat === 'presencial' ? 'flex' : 'none';
+      document.getElementById('pvCanalRow').style.display = nat === 'online' ? 'flex' : 'none';
+      if (nat === 'presencial') document.getElementById('checkTutorial').checked = false;
+      validateStep1();
+    }
+
+    function validateStep1() {
+      const nome = document.getElementById('nome').value.trim();
+      const setor = document.getElementById('setor').value !== SETORES[0];
+      const prazos = document.getElementById('checkPrazos').checked;
+      const nat = !!formState.natureza;
+      let tutorial = true;
+      if (formState.natureza === 'online') tutorial = document.getElementById('checkTutorial').checked;
+      document.getElementById('btnNext1').disabled = !(nome && setor && prazos && nat && tutorial);
+    }
+
+    function selectMaturidade(m) {
+      formState.maturidade = m;
+      [1,2,3].forEach(i => document.getElementById('mat' + i).className = 'radio-card' + (i === m ? ' selected' : ''));
+      renderMaturityFields();
+      document.getElementById('nav2').style.display = 'flex';
+    }
+
+    function renderMaturityFields() {
+      const container = document.getElementById('maturityFields');
+      const nat = formState.natureza;
+      const mat = formState.maturidade;
+      let html = '';
+
+      if (nat === 'presencial' && mat === 1) {
+        html = buildPresencial1Fields();
+      } else if (nat === 'presencial' && mat === 2) {
+        html = buildPresencial2Fields();
+      } else if (nat === 'presencial' && mat === 3) {
+        html = buildPresencial3Fields();
+      } else if (nat === 'online' && mat === 1) {
+        html = buildOnline1Fields();
+      } else if (nat === 'online' && mat === 2) {
+        html = buildOnline2Fields();
+      } else if (nat === 'online' && mat === 3) {
+        html = buildOnline3Fields();
+      }
+
+      container.innerHTML = html;
+      container.style.animation = 'fadeSlide 0.3s ease';
+      setupDynamicListeners();
+    }
+
+    function buildPresencial1Fields() {
+      return `
+        <div class="field"><label>Nome do evento</label><input type="text" id="nomeEvento" placeholder="Nome do evento" oninput="updatePreview('pvEvento',this.value)"></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div class="field"><label>Data do evento</label><input type="date" id="dataEvento" onchange="updatePreview('pvData',this.value)"></div>
+          <div class="field"><label>Horario</label><input type="time" id="horario"></div>
+        </div>
+        <div class="field"><label>Horario de Brasilia?</label><div class="radio-group" style="flex-direction:row;gap:16px"><label class="radio-option"><input type="radio" name="horBrasilia" value="sim"><span class="radio-custom"></span><span>Sim</span></label><label class="radio-option"><input type="radio" name="horBrasilia" value="nao"><span class="radio-custom"></span><span>Nao</span></label></div></div>
+        <div class="field"><label>Breve descricao do evento</label><textarea id="descricao" placeholder="Ex.: evento voltado para relacionamento com clientes que se interessam por vinhos"></textarea><div class="field-hint">Fale sobre aspectos como organizacao e topicos do conteudo que sera abordado.</div></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div class="field"><label>Origem do evento</label><select id="origem">${ORIGENS_EVENTO.map(o=>`<option>${o}</option>`).join('')}</select></div>
+          <div class="field"><label>Tipo de evento</label><select id="tipoEvento">${TIPOS_EVENTO.map(t=>`<option>${t}</option>`).join('')}</select></div>
+        </div>
+        <div class="field"><label>Publico do evento</label><select id="publico"><option>Selecione</option><option>Fechado para convidados</option><option>Aberto ao publico em geral</option></select></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div class="field"><label>Estado</label><select id="estado" onchange="loadCidades()"><option>Carregando...</option></select></div>
+          <div class="field"><label>Cidade</label><select id="cidade" disabled><option>Selecione o estado</option></select></div>
+        </div>
+        <div class="field"><label>Local do evento</label><select id="localEvento" onchange="handleLocal()"><option>Selecione</option><option value="unidade">Unidade SVN</option><option value="externo">Local externo</option><option value="nao-definido">Local ainda nao definido</option></select></div>
+        <div id="localConditional"></div>
+        <div class="field"><label>Numero de convidados</label><input type="number" id="convidados" min="1" placeholder="Contando com assessores e palestrantes"></div>
+      `;
+    }
+
+    function buildPresencial2Fields() {
+      const pills = CAMPOS_ETAPA2_FORM2.map(c => `<button class="pill" data-campo="${c.id}" onclick="toggleCampo('${c.id}','${c.label}')">${c.label}</button>`).join('');
+      return `
+        <div class="alert-card alert-info"><div class="alert-title">Opcional</div><div class="alert-text">Selecione os campos que voce ja tem informacao para preencher.</div></div>
+        <div class="pills-wrap">${pills}</div>
+        <div id="camposDinamicos" style="margin-top:16px"></div>
+      `;
+    }
+
+    function buildPresencial3Fields() {
+      return `
+        <div class="field"><label>Descricao do evento</label><textarea id="descricao" placeholder="Descreva sua ideia para o evento..."></textarea></div>
+        <div class="field"><label>Tipo aproximado de evento</label>
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
+            ${TIPOS_EVENTO_FORM3.map(t => `<label class="radio-option" style="padding:8px 12px;border:1px solid var(--border-light);border-radius:8px"><input type="radio" name="tipoAprox" value="${t}"><span class="radio-custom"></span><span style="font-size:0.85rem">${t}</span></label>`).join('')}
+          </div>
+        </div>
+        <div class="field"><label>Ideia de quando realizar (opcional)</label><input type="text" id="ideaQuando" placeholder="Ex.: segundo semestre, proximo trimestre..."></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div class="field"><label>Estado (opcional)</label><select id="estado" onchange="loadCidades()"><option>Selecione</option></select></div>
+          <div class="field"><label>Cidade (opcional)</label><select id="cidade" disabled><option>Selecione o estado</option></select></div>
+        </div>
+        <div class="field"><label>Numero esperado de convidados (opcional)</label><input type="number" id="convidados" min="1"></div>
+      `;
+    }
+
+    function buildOnline1Fields() {
+      return `
+        <div class="field"><label>Titulo do evento</label><input type="text" id="nomeEvento" placeholder="Titulo do evento" oninput="updatePreview('pvEvento',this.value)"></div>
+        <div class="field"><label>Descricao</label><textarea id="descricao" placeholder="Descreva o evento..."></textarea></div>
+        <div class="field"><label>Publico do evento</label><select id="publico"><option>Selecione</option><option>Fechado para convidados</option><option>Aberto ao publico em geral</option></select></div>
+        <div class="field"><label>Objetivos de retorno</label><textarea id="objetivos" placeholder="Quais sao os objetivos esperados?"></textarea></div>
+        <div class="field"><label>Canal de transmissao</label><select id="canal" onchange="handleCanal()">${CANAIS_TRANSMISSAO.map(c=>`<option>${c}</option>`).join('')}</select></div>
+        <div class="field" id="linkTransmissaoField"><label>Link da transmissao</label><input type="url" id="linkTransmissao" placeholder="https://..."><div id="canalAviso" class="alert-card alert-info" style="display:none;margin-top:8px"><div class="alert-text">O link pode ser informado posteriormente.</div></div></div>
+        <div class="field"><label>Origem do evento</label><select id="origem">${ORIGENS_EVENTO_ONLINE.map(o=>`<option>${o}</option>`).join('')}</select></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div class="field"><label>Data do evento</label><input type="date" id="dataEvento" onchange="updatePreview('pvData',this.value)"></div>
+          <div class="field"><label>Horario</label><input type="time" id="horario"></div>
+        </div>
+        <div class="field"><label>Horario de Brasilia?</label><div class="radio-group" style="flex-direction:row;gap:16px"><label class="radio-option"><input type="radio" name="horBrasilia" value="sim"><span class="radio-custom"></span><span>Sim</span></label><label class="radio-option"><input type="radio" name="horBrasilia" value="nao"><span class="radio-custom"></span><span>Nao</span></label></div></div>
+      `;
+    }
+
+    function buildOnline2Fields() {
+      const pills = CAMPOS_ETAPA2_FORM2_ONLINE.map(c => `<button class="pill" data-campo="${c.id}" onclick="toggleCampo('${c.id}','${c.label}')">${c.label}</button>`).join('');
+      return `
+        <div class="alert-card alert-info"><div class="alert-title">Opcional</div><div class="alert-text">Selecione os campos que voce ja tem informacao para preencher.</div></div>
+        <div class="pills-wrap">${pills}</div>
+        <div id="camposDinamicos" style="margin-top:16px"></div>
+      `;
+    }
+
+    function buildOnline3Fields() {
+      const tiposOnline = ['Webinar','Live no YouTube','Aula online','Reuniao aberta','Transmissao de evento presencial','Workshop online','Painel de discussao','Outro'];
+      return `
+        <div class="field"><label>Descricao</label><textarea id="descricao" placeholder="Descreva sua ideia..."></textarea></div>
+        <div class="field"><label>Tipo online aproximado</label>
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
+            ${tiposOnline.map(t => `<label class="radio-option" style="padding:8px 12px;border:1px solid var(--border-light);border-radius:8px"><input type="radio" name="tipoAprox" value="${t}"><span class="radio-custom"></span><span style="font-size:0.85rem">${t}</span></label>`).join('')}
+          </div>
+        </div>
+        <div class="field"><label>Ideia de quando realizar (opcional)</label><input type="text" id="ideaQuando" placeholder="Ex.: proximo mes..."></div>
+        <div class="field"><label>Canal provavel (opcional)</label><select id="canal">${CANAIS_TRANSMISSAO.map(c=>`<option>${c}</option>`).join('')}</select></div>
+        <div class="field"><label>Numero esperado de participantes (opcional)</label><input type="number" id="convidados" min="1"></div>
+      `;
+    }
+
+    function setupDynamicListeners() {
+      const estadoEl = document.getElementById('estado');
+      if (estadoEl && estadoEl.options[0]?.text === 'Carregando...') loadEstados();
+      else if (estadoEl) {
+        estadoEl.innerHTML = '<option>Selecione</option>';
+        loadEstados();
+      }
+    }
+
+    async function loadEstados() {
+      try {
+        const res = await fetch('https://servicodados.ibge.gov.br/api/v1/localidades/estados?orderBy=nome');
+        estados = await res.json();
+        const sel = document.getElementById('estado');
+        if (!sel) return;
+        sel.innerHTML = '<option>Selecione</option>';
+        estados.forEach(e => { sel.innerHTML += `<option value="${e.id}">${e.sigla} — ${e.nome}</option>`; });
+      } catch (e) { console.error('IBGE error:', e); }
+    }
+
+    async function loadCidades() {
+      const estadoId = document.getElementById('estado').value;
+      const cidSel = document.getElementById('cidade');
+      if (!estadoId || estadoId === 'Selecione') { cidSel.disabled = true; cidSel.innerHTML = '<option>Selecione o estado</option>'; return; }
+      cidSel.innerHTML = '<option>Carregando...</option>';
+      try {
+        const res = await fetch(`https://servicodados.ibge.gov.br/api/v1/localidades/estados/${estadoId}/municipios?orderBy=nome`);
+        const cidades = await res.json();
+        cidSel.innerHTML = '<option>Selecione</option>';
+        cidades.forEach(c => { cidSel.innerHTML += `<option>${c.nome}</option>`; });
+        cidSel.disabled = false;
+      } catch (e) { console.error(e); }
+    }
+
+    function handleLocal() {
+      const val = document.getElementById('localEvento').value;
+      const container = document.getElementById('localConditional');
+      if (val === 'unidade') {
+        container.innerHTML = `<div class="field"><label>Unidade SVN</label><select id="unidadeSVN" onchange="showUnidadeEndereco()">${UNIDADES_SVN.map(u => `<option value="${u.nome}">${u.nome}</option>`).join('<option value="">Selecione</option>')}</select></div><div id="unidadeEndereco"></div>`;
+        updatePreview('pvLocal', 'Unidade SVN');
+      } else if (val === 'externo') {
+        container.innerHTML = `<div class="field"><label>Nome do local</label><input type="text" id="localNome" oninput="updatePreview('pvLocal',this.value)"></div><div class="field"><label>Endereco</label><input type="text" id="localEndereco"></div>`;
+        updatePreview('pvLocal', 'Local externo');
+      } else if (val === 'nao-definido') {
+        container.innerHTML = `<div class="field"><label>Aponte suas ideias e sugestoes (opcional)</label><textarea id="localSugestoes"></textarea></div>`;
+        updatePreview('pvLocal', 'Nao definido');
+      } else { container.innerHTML = ''; updatePreview('pvLocal', ''); }
+    }
+
+    function showUnidadeEndereco() {
+      const nome = document.getElementById('unidadeSVN').value;
+      const u = UNIDADES_SVN.find(x => x.nome === nome);
+      document.getElementById('unidadeEndereco').innerHTML = u ? `<div class="address-pill"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--ruby-red)" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>${u.endereco}</div>` : '';
+      updatePreview('pvLocal', nome);
+    }
+
+    function handleCanal() {
+      const canal = document.getElementById('canal')?.value;
+      updatePreview('pvCanal', canal);
+      const aviso = document.getElementById('canalAviso');
+      if (aviso) aviso.style.display = CANAIS_SEM_LINK_OBRIGATORIO.includes(canal) ? 'block' : 'none';
+    }
+
+    const activeCampos = new Set();
+    function toggleCampo(id, label) {
+      const pills = document.querySelectorAll(`[data-campo="${id}"]`);
+      if (activeCampos.has(id)) {
+        activeCampos.delete(id);
+        pills.forEach(p => p.classList.remove('selected'));
+      } else {
+        activeCampos.add(id);
+        pills.forEach(p => p.classList.add('selected'));
+      }
+      renderDynamicCampos();
+    }
+
+    function renderDynamicCampos() {
+      const container = document.getElementById('camposDinamicos');
+      if (!container) return;
+      const allCampos = formState.natureza === 'online' ? CAMPOS_ETAPA2_FORM2_ONLINE : CAMPOS_ETAPA2_FORM2;
+      let html = '';
+      allCampos.forEach(c => {
+        if (!activeCampos.has(c.id)) return;
+        html += buildCampoField(c);
+      });
+      container.innerHTML = html;
+      setupDynamicListeners();
+    }
+
+    function buildCampoField(campo) {
+      switch(campo.id) {
+        case 'nome-evento': case 'titulo-evento': return `<div class="field"><label>${campo.label}</label><input type="text" id="nomeEvento" oninput="updatePreview('pvEvento',this.value)"></div>`;
+        case 'data-evento': return `<div class="field"><label>${campo.label}</label><input type="date" id="dataEvento" onchange="updatePreview('pvData',this.value)"></div>`;
+        case 'horario': return `<div class="field"><label>${campo.label}</label><input type="time" id="horario"></div>`;
+        case 'descricao': return `<div class="field"><label>${campo.label}</label><textarea id="descricao"></textarea></div>`;
+        case 'origem': return `<div class="field"><label>${campo.label}</label><select id="origem">${(formState.natureza==='online'?ORIGENS_EVENTO_ONLINE:ORIGENS_EVENTO).map(o=>`<option>${o}</option>`).join('')}</select></div>`;
+        case 'tipo-evento': return `<div class="field"><label>${campo.label}</label><select id="tipoEvento">${TIPOS_EVENTO.map(t=>`<option>${t}</option>`).join('')}</select></div>`;
+        case 'publico': return `<div class="field"><label>${campo.label}</label><select id="publico"><option>Selecione</option><option>Fechado para convidados</option><option>Aberto ao publico em geral</option></select></div>`;
+        case 'estado-cidade': return `<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px"><div class="field"><label>Estado</label><select id="estado" onchange="loadCidades()"><option>Carregando...</option></select></div><div class="field"><label>Cidade</label><select id="cidade" disabled><option>Selecione o estado</option></select></div></div>`;
+        case 'local': return `<div class="field"><label>${campo.label}</label><select id="localEvento" onchange="handleLocal()"><option>Selecione</option><option value="unidade">Unidade SVN</option><option value="externo">Local externo</option><option value="nao-definido">Nao definido</option></select></div><div id="localConditional"></div>`;
+        case 'convidados': return `<div class="field"><label>${campo.label}</label><input type="number" id="convidados" min="1"></div>`;
+        case 'objetivos': return `<div class="field"><label>${campo.label}</label><textarea id="objetivos"></textarea></div>`;
+        case 'canal': return `<div class="field"><label>${campo.label}</label><select id="canal" onchange="handleCanal()">${CANAIS_TRANSMISSAO.map(c=>`<option>${c}</option>`).join('')}</select></div>`;
+        case 'link-transmissao': return `<div class="field"><label>${campo.label}</label><input type="url" id="linkTransmissao"></div>`;
+        default: return `<div class="field"><label>${campo.label}</label><input type="text" id="${campo.id}"></div>`;
+      }
+    }
+
+    function goStep(step) {
+      document.querySelectorAll('.form-step').forEach(s => s.classList.remove('active'));
+      document.getElementById('step' + step).classList.add('active');
+      const steps = getStepCount();
+      document.getElementById('progressBar').style.width = (step / steps * 100) + '%';
+      document.getElementById('stepLabel').textContent = `Etapa ${step} de ${steps}`;
+      if (step === 3) renderMateriais();
+      window.scrollTo(0, 0);
+    }
+
+    function getStepCount() {
+      if (formState.natureza === 'online') return 6;
+      if (formState.maturidade === 3) return 6;
+      return 7;
+    }
+
+    function renderMateriais() {
+      const items = formState.natureza === 'online' ? ITENS_MATERIAIS_ONLINE : ITENS_MATERIAIS;
+      const container = document.getElementById('materiaisContainer');
+      container.innerHTML = items.map(item => `
+        <div class="material-block">
+          <button class="pill ${formState.materiais.has(item.id)?'selected':''}" data-material="${item.id}" onclick="toggleMaterial('${item.id}')">
+            ${item.label}
+          </button>
+          <div class="conditional-fields ${formState.materiais.has(item.id)?'open':''}" id="cond-${item.id}">
+            ${getMaterialConditional(item.id)}
+          </div>
+          <hr class="block-divider">
+        </div>
+      `).join('');
+      updateMateriaisPreview();
+    }
+
+    function toggleMaterial(id) {
+      if (formState.materiais.has(id)) formState.materiais.delete(id);
+      else formState.materiais.add(id);
+      renderMateriais();
+    }
+
+    function getMaterialConditional(id) {
+      switch(id) {
+        case 'pacote-padrao': case 'pacote-padrao-online':
+          return `<div style="margin-top:8px"><button class="btn btn-secondary" style="font-size:0.8rem" onclick="openPacoteModal()">Ver previa do material</button></div>`;
+        case 'pacote-personalizado': case 'pacote-personalizado-online':
+          return `<div class="field" style="margin-top:8px"><input type="text" id="matPersonConvite" placeholder="O que gostaria de incluir ou personalizar no convite?"></div><div class="field"><input type="text" id="matPersonPagina" placeholder="O que gostaria de incluir na pagina de inscricao?"></div>`;
+        case 'banner-impresso':
+          return `<div class="field" style="margin-top:8px"><input type="text" id="matBannerTam" placeholder="Tamanho do banner (ex: 60x90cm)"></div><div class="field"><input type="text" id="matBannerConteudo" placeholder="O que incluir no banner?"></div>`;
+        case 'flyer':
+          return `<div class="field" style="margin-top:8px"><div class="radio-group"><label class="radio-option"><input type="radio" name="flyerTipo" value="institucional"><span class="radio-custom"></span><span>Institucional Padrao (A5)</span></label><label class="radio-option"><input type="radio" name="flyerTipo" value="personalizado"><span class="radio-custom"></span><span>Personalizado</span></label></div></div><div class="field"><input type="text" id="matFlyerTam" placeholder="Tamanho do flyer"></div><div class="field"><input type="text" id="matFlyerConteudo" placeholder="Conteudo do flyer"></div>`;
+        case 'brindes-store':
+          return `<div style="margin-top:8px"><a href="${URL_STORE}" target="_blank" class="btn btn-secondary" style="font-size:0.8rem">Ir para a Store</a></div>`;
+        case 'brindes-personalizados':
+          return `<div class="field" style="margin-top:8px"><textarea id="matBrindeDesc" placeholder="Descreva o brinde personalizado"></textarea></div>`;
+        case 'captacao-audiovisual':
+          return `<div class="field" style="margin-top:8px"><div class="radio-group"><label class="radio-option"><input type="radio" name="captacao" value="fotos"><span class="radio-custom"></span><span>Sessao de fotos</span></label><label class="radio-option"><input type="radio" name="captacao" value="video"><span class="radio-custom"></span><span>Gravacao de video</span></label></div></div>`;
+        case 'instagram': case 'instagram-online':
+          return `<div class="field" style="margin-top:8px"><div class="radio-group"><label class="radio-option"><input type="radio" name="igTipo" value="mencao"><span class="radio-custom"></span><span>Mencao</span></label><label class="radio-option"><input type="radio" name="igTipo" value="colab"><span class="radio-custom"></span><span>Colab</span></label></div></div><div class="field"><input type="text" id="matIgArroba" placeholder="@perfil"></div>`;
+        case 'email-marketing': case 'email-marketing-online':
+          return `<div class="field" style="margin-top:8px"><input type="text" id="matEmailConteudo" placeholder="Conteudo do e-mail"></div><div class="field"><div class="file-input-wrapper"><label class="file-input-btn" for="matEmailBase">Base de e-mail (opcional)</label><input type="file" id="matEmailBase" accept=".xlsx,.csv,.xls"></div></div>`;
+        case 'apoio-live-online':
+          return `<div class="field" style="margin-top:8px"><textarea id="matApoioDesc" placeholder="Descreva o tipo de apoio que vai precisar"></textarea></div>`;
+        case 'pagina-sorteio':
+          return `<div class="field" style="margin-top:8px"><label>Tera premios?</label><div class="radio-group"><label class="radio-option"><input type="radio" name="sorteio1" value="sim"><span class="radio-custom"></span><span>Sim</span></label><label class="radio-option"><input type="radio" name="sorteio1" value="nao"><span class="radio-custom"></span><span>Nao</span></label></div></div><div class="field"><label>Tera regulamento?</label><div class="radio-group"><label class="radio-option"><input type="radio" name="sorteio2" value="sim"><span class="radio-custom"></span><span>Sim</span></label><label class="radio-option"><input type="radio" name="sorteio2" value="nao"><span class="radio-custom"></span><span>Nao</span></label></div></div>`;
+        case 'projeto-stand':
+          return `<div class="field" style="margin-top:8px"><input type="text" id="matStandMat" placeholder="Materiais necessarios para o stand"></div>`;
+        default: return '';
+      }
+    }
+
+    function validateMateriais() {
+      if (formState.materiais.size === 0) {
+        document.getElementById('materiaisError').classList.add('visible');
+        return false;
+      }
+      document.getElementById('materiaisError').classList.remove('visible');
+      return true;
+    }
+
+    function updateMateriaisPreview() {
+      const container = document.getElementById('pvItens');
+      const items = formState.natureza === 'online' ? ITENS_MATERIAIS_ONLINE : ITENS_MATERIAIS;
+      container.innerHTML = [...formState.materiais].map(id => {
+        const item = items.find(i => i.id === id);
+        const prazo = PRAZOS_MATERIAIS[id];
+        return item ? `<div style="background:var(--icon-bg);border-radius:8px;padding:6px 10px;font-size:0.75rem;font-weight:600">${item.label}${prazo ? `<div style="font-size:0.65rem;color:var(--ruby-red);opacity:0.8">${prazo.label}</div>` : ''}</div>` : '';
+      }).join('');
+    }
+
+    function handlePalestrante(has) {
+      document.getElementById('palestranteQtd').style.display = has ? 'block' : 'none';
+      if (!has) { document.getElementById('palestranteBlocos').innerHTML = ''; updatePreview('pvPalestrantes', 'Sem palestrantes'); }
+    }
+
+    function renderPalestrantes(n) {
+      const container = document.getElementById('palestranteBlocos');
+      let html = '';
+      for (let i = 1; i <= n; i++) {
+        html += `
+          <div style="margin-top:16px;animation:fadeSlide 0.3s ease ${i*0.08}s both">
+            <hr class="block-divider"><h3 style="font-weight:600;font-size:0.95rem;margin-bottom:12px">Palestrante ${i}</h3>
+            <div class="field"><label>O palestrante ${i} e colaborador da SVN?</label>
+              <div class="radio-group"><label class="radio-option"><input type="radio" name="palSvn${i}" value="sim" onchange="showPalFields(${i},true)"><span class="radio-custom"></span><span>Sim</span></label><label class="radio-option"><input type="radio" name="palSvn${i}" value="nao" onchange="showPalFields(${i},false)"><span class="radio-custom"></span><span>Nao</span></label></div>
+            </div>
+            <div id="palFields${i}"></div>
+          </div>
+        `;
+      }
+      container.innerHTML = html;
+      updatePreview('pvPalestrantes', n + ' palestrante(s)');
+    }
+
+    function showPalFields(i, isSvn) {
+      const container = document.getElementById('palFields' + i);
+      if (isSvn) {
+        container.innerHTML = `
+          <div class="field"><label>Nome do palestrante ${i}</label><input type="text" id="palNome${i}" oninput="updatePalPreview(${i})"></div>
+          <div class="field"><label>Cargo do palestrante ${i}</label><input type="text" id="palCargo${i}" oninput="updatePalPreview(${i})"></div>
+          <div class="field"><label>Foto (opcional)</label><div class="file-input-wrapper"><label class="file-input-btn" for="palFoto${i}">Escolher foto</label><input type="file" id="palFoto${i}" accept=".jpg,.jpeg,.png,.webp"></div><div class="field-hint">Caso nao consiga, envie para: ${EMAIL_UPLOAD}</div></div>
+          <div id="palPreview${i}"></div>
+        `;
+      } else {
+        container.innerHTML = `<div class="alert-card alert-danger"><div class="alert-title">Atencao</div><div class="alert-text">Sera enviado por e-mail um link para o cadastro do palestrante. Esse passo e obrigatorio para o andamento do evento.</div></div>`;
+      }
+    }
+
+    function updatePalPreview(i) {
+      const nome = document.getElementById('palNome' + i)?.value || '';
+      const cargo = document.getElementById('palCargo' + i)?.value || '';
+      const container = document.getElementById('palPreview' + i);
+      if (!container || (!nome && !cargo)) { if (container) container.innerHTML = ''; return; }
+      const initials = nome.split(' ').filter(Boolean).map(w => w[0]).join('').substring(0, 2).toUpperCase();
+      container.innerHTML = `<div class="speaker-preview"><div class="speaker-avatar">${initials || '?'}</div><div class="speaker-info"><div class="speaker-name">${nome}</div><div class="speaker-cargo">${cargo}</div></div><span class="badge-svn">SVN</span></div>`;
+    }
+
+    function handleCusto() {
+      const val = document.getElementById('custoEstimado').value.replace(/\D/g, '');
+      const num = parseInt(val) || 0;
+      const formatted = (num / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+      document.getElementById('custoEstimado').value = formatted;
+      document.getElementById('rateioField').style.display = num > 0 ? 'block' : 'none';
+      updatePreview('pvCusto', formatted);
+    }
+
+    function openOrientationModal() { document.getElementById('orientModal').classList.add('visible'); }
+    function closeOrientationModal(e) { if (!e || e.target === document.getElementById('orientModal')) document.getElementById('orientModal').classList.remove('visible'); }
+    function openPacoteModal() { document.getElementById('pacoteModal').classList.add('visible'); }
+    function closePacoteModal(e) { if (!e || e.target === document.getElementById('pacoteModal')) document.getElementById('pacoteModal').classList.remove('visible'); }
+
+    async function submitForm() {
+      const btn = document.getElementById('btnSubmit');
+      btn.disabled = true; btn.textContent = 'Enviando...';
+
+      const dados = {
+        nome: document.getElementById('nome')?.value || '',
+        setor: document.getElementById('setor')?.value || '',
+        natureza: formState.natureza,
+        maturidade: formState.maturidade,
+        nomeEvento: document.getElementById('nomeEvento')?.value || '',
+        dataEvento: document.getElementById('dataEvento')?.value || '',
+        horario: document.getElementById('horario')?.value || '',
+        descricao: document.getElementById('descricao')?.value || '',
+        origem: document.getElementById('origem')?.value || '',
+        tipoEvento: document.getElementById('tipoEvento')?.value || '',
+        publico: document.getElementById('publico')?.value || '',
+        estado: document.getElementById('estado')?.value || '',
+        cidade: document.getElementById('cidade')?.value || '',
+        localEvento: document.getElementById('localEvento')?.value || '',
+        convidados: document.getElementById('convidados')?.value || '',
+        canal: document.getElementById('canal')?.value || '',
+        linkTransmissao: document.getElementById('linkTransmissao')?.value || '',
+        objetivos: document.getElementById('objetivos')?.value || '',
+        custoEstimado: document.getElementById('custoEstimado')?.value || '',
+        rateio: document.getElementById('rateio')?.value || '',
+        observacoes: document.getElementById('observacoes')?.value || '',
+        materiais: [...formState.materiais],
+        tipoAprox: document.querySelector('input[name="tipoAprox"]:checked')?.value || '',
+      };
+
+      const formData = new FormData();
+      formData.append('tipo_solicitacao', 'eventos');
+      formData.append('subtipo', formState.natureza);
+      formData.append('maturidade', formState.maturidade);
+      formData.append('dados', JSON.stringify(dados));
+
+      ['logoFile','imgFile','demaisFile'].forEach(id => {
+        const f = document.getElementById(id)?.files[0];
+        if (f) formData.append(id, f);
+      });
+
+      for (let i = 1; i <= 4; i++) {
+        const f = document.getElementById('palFoto' + i)?.files[0];
+        if (f) formData.append('palFoto' + i, f);
+      }
+
+      try {
+        const res = await fetch('/api/solicitacoes', { method: 'POST', body: formData });
+        if (res.ok) { window.location.href = '/thankyou.html'; }
+        else { alert('Erro ao enviar.'); btn.disabled = false; btn.textContent = 'Enviar'; }
+      } catch (e) { alert('Erro de conexao.'); btn.disabled = false; btn.textContent = 'Enviar'; }
+    }
+
+    init();
+  </script>
+</body>
+</html>

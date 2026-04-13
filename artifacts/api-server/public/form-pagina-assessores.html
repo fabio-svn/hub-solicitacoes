@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pagina de Assessores - Hub SVN</title>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="page-light">
+  <header class="header" id="mainHeader"></header>
+  <div class="container-narrow" style="padding-top:32px;padding-bottom:80px">
+    <div class="form-card">
+      <div class="form-progress"><div class="form-progress-bar" id="progressBar" style="width:50%"></div></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px">
+        <img src="" id="formLogo" height="24" alt="SVN">
+        <span style="font-size:0.8rem;opacity:0.4" id="stepLabel">Etapa 1 de 2</span>
+      </div>
+      <h2 style="font-weight:300;font-size:1.1rem;margin-bottom:4px;opacity:0.6" id="formTitle"></h2>
+      <div class="field-hint" style="margin-bottom:20px">Validacao interna: ate 3 dias uteis | Publicacao/Atualizacao apos aprovacao: ate 2 dias uteis</div>
+
+      <div class="form-step active" id="step1">
+        <h2 style="font-weight:600;font-size:1.1rem;margin-bottom:20px">Dados do solicitante</h2>
+        <div class="field">
+          <label>Seu nome</label>
+          <input type="text" id="nome" placeholder="Seu nome completo">
+        </div>
+        <div class="field">
+          <label>Setor</label>
+          <select id="setor"></select>
+        </div>
+        <div class="field">
+          <label class="checkbox-option">
+            <input type="checkbox" id="checkPrazos">
+            <span class="checkbox-custom"></span>
+            <span>Confirmo que estou ciente dos prazos necessarios.</span>
+          </label>
+        </div>
+        <div class="form-nav">
+          <button class="btn btn-primary" id="btnNext1" disabled onclick="goStep(2)">Proximo</button>
+        </div>
+      </div>
+
+      <div class="form-step" id="step2">
+        <div id="updateCard" style="display:none" class="alert-card alert-info">
+          <div class="alert-title">Atualizacao</div>
+          <div class="alert-text">Preencha apenas os campos que deseja atualizar. Os demais permanecerao como estao no seu perfil atual.</div>
+        </div>
+
+        <h2 style="font-weight:600;font-size:1.1rem;margin-bottom:20px">Informacoes do assessor</h2>
+        <div class="field">
+          <label>Nome completo</label>
+          <input type="text" id="nomeCompleto" placeholder="Nome completo do assessor">
+        </div>
+        <div class="field">
+          <label>Codigo de assessor</label>
+          <input type="text" id="codigoAssessor" placeholder="Codigo do assessor">
+        </div>
+        <div class="field">
+          <label>Unidade</label>
+          <select id="unidade">
+            <option value="">Selecione a unidade</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Contrato social</label>
+          <select id="contratoSocial">
+            <option value="">Selecione</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Foto de perfil</label>
+          <div class="file-input-wrapper">
+            <label class="file-input-btn" for="fotoPerfil">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+              Escolher foto
+            </label>
+            <input type="file" id="fotoPerfil" accept=".jpg,.jpeg,.png,.webp">
+            <div class="file-name" id="fotoPerfilName"></div>
+          </div>
+          <div class="field-hint">Dimensao recomendada: 580 x 756px. Enquadramento profissional, boa iluminacao.</div>
+        </div>
+        <div class="field">
+          <label>Perfil do LinkedIn</label>
+          <input type="url" id="linkedin" placeholder="https://linkedin.com/in/seu-perfil">
+        </div>
+        <div class="field">
+          <label>Perfil do Instagram (opcional)</label>
+          <input type="text" id="instagram" placeholder="@seuinstagram">
+        </div>
+        <div class="field">
+          <label>Mini bio</label>
+          <textarea id="miniBio" placeholder="Escreva uma bio profissional seguindo o padrao institucional SVN..."></textarea>
+        </div>
+        <div class="field">
+          <label>Selos e certificacoes (opcional)</label>
+          <div class="pills-wrap" id="selosContainer"></div>
+        </div>
+
+        <div class="field" style="margin-top:24px">
+          <label>Depoimentos de clientes (opcional, ate 3)</label>
+          <div id="depoimentosContainer"></div>
+          <button class="btn btn-secondary" id="addDepoimento" onclick="addDepoimento()" style="margin-top:8px">+ Adicionar depoimento</button>
+        </div>
+
+        <div style="margin-top:24px;margin-bottom:12px">
+          <button class="btn btn-dark" onclick="openPreview()" style="gap:8px">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            Ver previa da pagina
+          </button>
+        </div>
+
+        <div class="form-nav">
+          <button class="btn btn-secondary" onclick="goStep(1)">Voltar</button>
+          <button class="btn btn-primary" id="btnSubmit" onclick="submitForm()">Enviar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="previewModal" onclick="closePreview(event)">
+    <div class="modal-card" style="max-width:760px" onclick="event.stopPropagation()">
+      <button class="modal-close" onclick="closePreview()">&times;</button>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:20px">
+        <span style="font-weight:700;font-size:1rem">Previa da pagina</span>
+        <span style="background:rgba(111,135,123,0.12);color:var(--sage-green);font-size:0.7rem;padding:3px 10px;border-radius:999px">Atualiza em tempo real</span>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px" id="previewContent">
+        <div>
+          <div id="previewSelos" style="margin-bottom:12px;display:flex;flex-wrap:wrap;gap:6px"></div>
+          <h2 style="font-family:'Taviraj',serif;font-weight:300;font-size:2rem;margin-bottom:12px" id="previewName">Nome do Assessor</h2>
+          <p style="font-size:0.95rem;opacity:0.8;margin-bottom:16px;max-width:440px" id="previewBio">A bio aparecera aqui...</p>
+          <div id="previewLinkedin" style="display:none;margin-bottom:16px">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="#0A66C2"><path d="M16 8a6 6 0 016 6v7h-4v-7a2 2 0 00-2-2 2 2 0 00-2 2v7h-4v-7a6 6 0 016-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>
+          </div>
+          <div style="display:flex;gap:8px">
+            <span class="btn btn-dark" style="font-size:0.8rem;padding:8px 16px;pointer-events:none">Abrir conta</span>
+            <span class="btn btn-secondary" style="font-size:0.8rem;padding:8px 16px;pointer-events:none">Falar com assessor</span>
+          </div>
+        </div>
+        <div>
+          <div id="previewPhoto" style="width:100%;height:320px;border-radius:12px;background:var(--icon-bg);display:flex;align-items:center;justify-content:center;overflow:hidden">
+            <span style="opacity:0.3;font-size:0.85rem">Foto aparecera aqui</span>
+          </div>
+        </div>
+      </div>
+      <div id="previewDepoimentos" style="margin-top:24px;display:none">
+        <h3 style="font-weight:600;margin-bottom:12px">Depoimentos</h3>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px" id="previewDepoList"></div>
+      </div>
+      <p style="text-align:center;margin-top:20px;font-size:0.75rem;opacity:0.35">Esta e uma simulacao visual. O layout final pode variar conforme o site institucional do assessor.</p>
+      <div style="text-align:center;margin-top:12px">
+        <button class="btn btn-dark" onclick="closePreview()">Fechar</button>
+      </div>
+    </div>
+  </div>
+
+  <a href="/" class="float-home">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+    <span>Voltar a tela inicial</span>
+  </a>
+
+  <script src="config.js"></script>
+  <script src="auth.js"></script>
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const subtipo = params.get('subtipo') || 'dados';
+    const isAtualizacao = subtipo === 'atualizacao';
+    const TITLES = { dados: 'Pagina de Assessores — Dados', atualizacao: 'Pagina de Assessores — Atualizacao' };
+    const TIPOS = { dados: 'pagina-assessores-dados', atualizacao: 'pagina-assessores-atualizacao' };
+    let depoimentos = [];
+    let selectedSelos = new Set();
+
+    async function init() {
+      await Auth.init();
+      if (!Auth.isAuthenticated()) { window.location.href = '/auth/login?redirect=/form-pagina-assessores.html?subtipo=' + subtipo; return; }
+      Auth.renderHeader(document.getElementById('mainHeader'));
+      document.getElementById('formLogo').src = URL_LOGO_PRETA;
+      document.getElementById('formTitle').textContent = TITLES[subtipo] || TITLES.dados;
+      document.getElementById('nome').value = Auth.getUserName();
+
+      if (isAtualizacao) document.getElementById('updateCard').style.display = 'block';
+
+      const sel = document.getElementById('setor');
+      SETORES.forEach(s => { const o = document.createElement('option'); o.value = s; o.textContent = s; sel.appendChild(o); });
+
+      const unSel = document.getElementById('unidade');
+      UNIDADES_SVN.forEach(u => { const o = document.createElement('option'); o.value = u.nome; o.textContent = u.nome; unSel.appendChild(o); });
+
+      const csSel = document.getElementById('contratoSocial');
+      CONTRATOS_SOCIAIS.forEach(c => { const o = document.createElement('option'); o.value = c; o.textContent = c; csSel.appendChild(o); });
+
+      renderSelos();
+
+      document.getElementById('nome').addEventListener('input', validate1);
+      document.getElementById('setor').addEventListener('change', validate1);
+      document.getElementById('checkPrazos').addEventListener('change', validate1);
+      document.getElementById('fotoPerfil').addEventListener('change', handlePhoto);
+      validate1();
+    }
+
+    function renderSelos() {
+      const container = document.getElementById('selosContainer');
+      container.innerHTML = SELOS_ASSESSOR.map(s => `
+        <button class="pill" data-selo="${s.id}" onclick="toggleSelo('${s.id}')">
+          ${s.icon_url ? `<img src="${s.icon_url}" height="16" alt="${s.label}">` : ''}
+          ${s.label}
+        </button>
+      `).join('');
+    }
+
+    function toggleSelo(id) {
+      if (selectedSelos.has(id)) selectedSelos.delete(id);
+      else selectedSelos.add(id);
+      document.querySelectorAll('#selosContainer .pill').forEach(p => {
+        p.classList.toggle('selected', selectedSelos.has(p.dataset.selo));
+      });
+    }
+
+    function validate1() {
+      const valid = document.getElementById('nome').value.trim() && document.getElementById('setor').value !== SETORES[0] && document.getElementById('checkPrazos').checked;
+      document.getElementById('btnNext1').disabled = !valid;
+    }
+
+    function goStep(step) {
+      document.querySelectorAll('.form-step').forEach(s => s.classList.remove('active'));
+      document.getElementById('step' + step).classList.add('active');
+      document.getElementById('progressBar').style.width = (step / 2 * 100) + '%';
+      document.getElementById('stepLabel').textContent = `Etapa ${step} de 2`;
+      window.scrollTo(0, 0);
+    }
+
+    function handlePhoto(e) {
+      const file = e.target.files[0];
+      document.getElementById('fotoPerfilName').innerHTML = file ? `<span class="check">&#10003;</span> ${file.name}` : '';
+    }
+
+    function addDepoimento() {
+      if (depoimentos.length >= 3) return;
+      const idx = depoimentos.length;
+      depoimentos.push({ nome: '', texto: '' });
+      renderDepoimentos();
+    }
+
+    function removeDepoimento(idx) {
+      depoimentos.splice(idx, 1);
+      renderDepoimentos();
+    }
+
+    function renderDepoimentos() {
+      const container = document.getElementById('depoimentosContainer');
+      container.innerHTML = depoimentos.map((d, i) => `
+        <div style="background:var(--icon-bg);border-radius:10px;padding:16px;margin-bottom:10px;position:relative">
+          <button onclick="removeDepoimento(${i})" style="position:absolute;top:8px;right:8px;background:none;border:none;cursor:pointer;opacity:0.4;font-size:1.2rem">&times;</button>
+          <div class="field" style="margin-bottom:8px">
+            <label style="font-size:0.8rem">Nome do cliente</label>
+            <input type="text" value="${d.nome}" oninput="depoimentos[${i}].nome=this.value" placeholder="Nome abreviado">
+          </div>
+          <div class="field" style="margin-bottom:0">
+            <label style="font-size:0.8rem">Depoimento</label>
+            <textarea oninput="depoimentos[${i}].texto=this.value" placeholder="Depoimento do cliente..." style="min-height:80px">${d.texto}</textarea>
+          </div>
+        </div>
+      `).join('');
+      document.getElementById('addDepoimento').style.display = depoimentos.length >= 3 ? 'none' : '';
+    }
+
+    function openPreview() {
+      const name = document.getElementById('nomeCompleto').value || 'Nome do Assessor';
+      const bio = document.getElementById('miniBio').value || 'A bio aparecera aqui...';
+      const linkedin = document.getElementById('linkedin').value;
+
+      document.getElementById('previewName').textContent = name;
+      document.getElementById('previewName').style.opacity = document.getElementById('nomeCompleto').value ? '1' : '0.25';
+      document.getElementById('previewBio').textContent = bio;
+      document.getElementById('previewBio').style.opacity = document.getElementById('miniBio').value ? '0.8' : '0.3';
+      document.getElementById('previewLinkedin').style.display = linkedin ? 'block' : 'none';
+
+      const selosDiv = document.getElementById('previewSelos');
+      selosDiv.innerHTML = [...selectedSelos].map(id => {
+        const selo = SELOS_ASSESSOR.find(s => s.id === id);
+        if (!selo) return '';
+        return selo.icon_url
+          ? `<img src="${selo.icon_url}" height="28" alt="${selo.label}">`
+          : `<span style="background:var(--icon-bg);border:1px solid var(--border-light);padding:4px 10px;border-radius:6px;font-size:0.75rem;font-weight:600">${selo.label}</span>`;
+      }).join('');
+
+      const photoFile = document.getElementById('fotoPerfil').files[0];
+      const photoDiv = document.getElementById('previewPhoto');
+      if (photoFile) {
+        const url = URL.createObjectURL(photoFile);
+        photoDiv.innerHTML = `<img src="${url}" style="width:100%;height:100%;object-fit:cover">`;
+      }
+
+      const validDepos = depoimentos.filter(d => d.nome && d.texto);
+      const depoSection = document.getElementById('previewDepoimentos');
+      if (validDepos.length > 0) {
+        depoSection.style.display = 'block';
+        document.getElementById('previewDepoList').innerHTML = validDepos.map(d => `
+          <div style="background:var(--card-white);border:1px solid var(--border-light);border-radius:12px;padding:20px">
+            <p style="font-size:0.875rem;margin-bottom:8px">${d.texto}</p>
+            <strong style="font-size:0.85rem">${d.nome}</strong>
+          </div>
+        `).join('');
+      } else {
+        depoSection.style.display = 'none';
+      }
+
+      document.getElementById('previewModal').classList.add('visible');
+    }
+
+    function closePreview(e) {
+      if (e && e.target !== document.getElementById('previewModal')) return;
+      document.getElementById('previewModal').classList.remove('visible');
+    }
+
+    async function submitForm() {
+      const required = isAtualizacao ? ['nomeCompleto', 'codigoAssessor'] : ['nomeCompleto', 'codigoAssessor', 'unidade', 'contratoSocial', 'linkedin', 'miniBio'];
+      for (const id of required) {
+        if (!document.getElementById(id).value.trim()) {
+          alert('Preencha todos os campos obrigatorios.'); return;
+        }
+      }
+      if (!isAtualizacao && !document.getElementById('fotoPerfil').files[0]) {
+        alert('Envie a foto de perfil.'); return;
+      }
+
+      const btn = document.getElementById('btnSubmit');
+      btn.disabled = true; btn.textContent = 'Enviando...';
+
+      const validDepos = depoimentos.filter(d => d.nome && d.texto);
+      const formData = new FormData();
+      formData.append('tipo_solicitacao', TIPOS[subtipo] || TIPOS.dados);
+      formData.append('subtipo', subtipo);
+      formData.append('dados', JSON.stringify({
+        nome: document.getElementById('nome').value,
+        setor: document.getElementById('setor').value,
+        nomeCompleto: document.getElementById('nomeCompleto').value,
+        codigoAssessor: document.getElementById('codigoAssessor').value,
+        unidade: document.getElementById('unidade').value,
+        contratoSocial: document.getElementById('contratoSocial').value,
+        linkedin: document.getElementById('linkedin').value,
+        instagram: document.getElementById('instagram').value,
+        miniBio: document.getElementById('miniBio').value,
+        selos: [...selectedSelos],
+        depoimentos: validDepos,
+      }));
+
+      const photo = document.getElementById('fotoPerfil').files[0];
+      if (photo) formData.append('fotoPerfil', photo);
+
+      try {
+        const res = await fetch('/api/solicitacoes', { method: 'POST', body: formData });
+        if (res.ok) { window.location.href = '/thankyou.html'; }
+        else { alert('Erro ao enviar.'); btn.disabled = false; btn.textContent = 'Enviar'; }
+      } catch (e) { alert('Erro de conexao.'); btn.disabled = false; btn.textContent = 'Enviar'; }
+    }
+
+    init();
+  </script>
+</body>
+</html>

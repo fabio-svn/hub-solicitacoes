@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Painel Administrativo - Hub SVN</title>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="page-light">
+  <header class="header" id="mainHeader"></header>
+  <div class="container">
+    <div class="title-row">
+      <h1 class="page-title">Painel Administrativo</h1>
+      <div style="display:flex;gap:8px">
+        <a href="/dashboard.html" class="btn btn-secondary">Meu painel</a>
+        <a href="/solicitacoes.html" class="btn btn-primary">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Nova solicitacao
+        </a>
+      </div>
+    </div>
+
+    <div class="stats-row" style="grid-template-columns:repeat(4,1fr)" id="adminStats">
+      <div class="stat-card" style="border-color:var(--border-light)">
+        <div class="stat-number" id="statTotal">0</div>
+        <div class="stat-label">Total</div>
+      </div>
+      <div class="stat-card" style="background:rgba(159,63,55,0.06);border-color:rgba(159,63,55,0.15)">
+        <div class="stat-number" style="color:var(--ruby-red)" id="statActive">0</div>
+        <div class="stat-label">Em andamento</div>
+      </div>
+      <div class="stat-card" style="background:rgba(111,135,123,0.06);border-color:rgba(111,135,123,0.15)">
+        <div class="stat-number" style="color:var(--sage-green)" id="statCompleted">0</div>
+        <div class="stat-label">Concluidas</div>
+      </div>
+      <div class="stat-card" style="border-color:var(--border-light)">
+        <div class="stat-number" id="statMonth">0</div>
+        <div class="stat-label">Este mes</div>
+      </div>
+    </div>
+
+    <div class="tabs">
+      <button class="tab active" data-tab="eventos" onclick="switchTab('eventos')">Eventos</button>
+      <button class="tab" data-tab="geral" onclick="switchTab('geral')">Solicitacoes gerais</button>
+    </div>
+
+    <div class="tab-content active" id="tab-eventos">
+      <div class="filters">
+        <button class="filter-chip active" data-value="" onclick="setFilter(this,'eventos','periodo')">Todos</button>
+        <button class="filter-chip" data-value="hoje" onclick="setFilter(this,'eventos','periodo')">Hoje</button>
+        <button class="filter-chip" data-value="7dias" onclick="setFilter(this,'eventos','periodo')">7 dias</button>
+        <button class="filter-chip" data-value="30dias" onclick="setFilter(this,'eventos','periodo')">30 dias</button>
+      </div>
+      <div class="search-bar">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" opacity="0.4"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" placeholder="Buscar por nome, solicitante..." id="searchEventos" oninput="debounceLoad('eventos')">
+      </div>
+      <div id="tableEventos"></div>
+      <div class="pagination" id="paginationEventos"></div>
+    </div>
+
+    <div class="tab-content" id="tab-geral">
+      <div class="filters">
+        <button class="filter-chip active" data-value="" onclick="setFilter(this,'geral','periodo')">Todos</button>
+        <button class="filter-chip" data-value="hoje" onclick="setFilter(this,'geral','periodo')">Hoje</button>
+        <button class="filter-chip" data-value="7dias" onclick="setFilter(this,'geral','periodo')">7 dias</button>
+        <button class="filter-chip" data-value="30dias" onclick="setFilter(this,'geral','periodo')">30 dias</button>
+      </div>
+      <div class="search-bar">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" opacity="0.4"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" placeholder="Buscar..." id="searchGeral" oninput="debounceLoad('geral')">
+      </div>
+      <div id="tableGeral"></div>
+      <div class="pagination" id="paginationGeral"></div>
+    </div>
+
+    <div id="usersSection" style="margin-top:40px;display:none">
+      <div class="collapsible-header" onclick="toggleUsers()">
+        <h2 style="font-size:1.1rem;font-weight:600">Gestao de usuarios</h2>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" id="usersChevron"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+      <div class="collapsible-content" id="usersList"></div>
+    </div>
+  </div>
+
+  <div class="drawer-overlay" id="drawerOverlay" onclick="closeDrawer()"></div>
+  <div class="drawer" id="drawer">
+    <div class="drawer-header">
+      <div>
+        <div id="drawerTitle" style="font-weight:700;font-size:1.1rem;margin-bottom:8px"></div>
+        <div id="drawerBadges" style="display:flex;gap:6px;flex-wrap:wrap"></div>
+      </div>
+      <button class="drawer-close" onclick="closeDrawer()">&times;</button>
+    </div>
+    <div class="drawer-body" id="drawerBody"></div>
+    <div class="drawer-footer" id="drawerFooter"></div>
+  </div>
+
+  <script src="config.js"></script>
+  <script src="auth.js"></script>
+  <script>
+    let currentTab = 'eventos';
+    let adminFilters = { eventos: { periodo: '' }, geral: { periodo: '' } };
+    let adminPages = { eventos: 1, geral: 1 };
+    let searchTimeout;
+    let adminItemsCache = {};
+
+    function esc(str) {
+      if (!str) return '';
+      const d = document.createElement('div');
+      d.textContent = String(str);
+      return d.innerHTML;
+    }
+
+    async function init() {
+      await Auth.init();
+      if (!Auth.isAuthenticated()) {
+        window.location.href = '/auth/login?redirect=/admin.html';
+        return;
+      }
+      if (Auth.getUserRole() === 'colaborador') {
+        window.location.href = '/dashboard.html';
+        return;
+      }
+      Auth.renderHeader(document.getElementById('mainHeader'));
+      loadStats();
+      loadTable('eventos');
+      loadTable('geral');
+      if (Auth.getUserRole() === 'admin') {
+        document.getElementById('usersSection').style.display = 'block';
+        loadUsers();
+      }
+    }
+
+    async function loadStats() {
+      try {
+        const res = await fetch('/api/solicitacoes/stats');
+        const data = await res.json();
+        animateNum('statTotal', data.total);
+        animateNum('statActive', data.active);
+        animateNum('statCompleted', data.completed);
+        animateNum('statMonth', data.thisMonth);
+      } catch (e) { console.error(e); }
+    }
+
+    function animateNum(id, target) {
+      const el = document.getElementById(id);
+      let c = 0;
+      const s = Math.max(target / 37, 1);
+      const t = setInterval(() => {
+        c += s;
+        if (c >= target) { c = target; clearInterval(t); }
+        el.textContent = Math.round(c);
+      }, 16);
+    }
+
+    async function loadTable(tab) {
+      const params = new URLSearchParams();
+      params.set('page', adminPages[tab]);
+      params.set('limit', '20');
+      if (tab === 'eventos') params.set('tipo_solicitacao', 'eventos');
+      if (adminFilters[tab].periodo) params.set('periodo', adminFilters[tab].periodo);
+      const search = document.getElementById(tab === 'eventos' ? 'searchEventos' : 'searchGeral');
+      if (search && search.value.trim()) params.set('busca', search.value.trim());
+
+      try {
+        const res = await fetch('/api/solicitacoes?' + params.toString());
+        const data = await res.json();
+        renderTable(tab, data);
+      } catch (e) { console.error(e); }
+    }
+
+    function renderTable(tab, data) {
+      const container = document.getElementById(tab === 'eventos' ? 'tableEventos' : 'tableGeral');
+      if (!data.data || data.data.length === 0) {
+        container.innerHTML = '<div class="empty-state"><p>Nenhuma solicitacao encontrada.</p></div>';
+        return;
+      }
+      let html = '<table class="admin-table"><thead><tr><th>Tipo</th><th>Titulo</th><th>Solicitante</th><th>Data</th><th>Status</th></tr></thead><tbody>';
+      data.data.forEach((item, idx) => {
+        const cacheKey = tab + '_' + idx + '_' + adminPages[tab];
+        adminItemsCache[cacheKey] = item;
+        const dados = typeof item.dados === 'string' ? JSON.parse(item.dados) : (item.dados || {});
+        const titulo = dados.nomeEvento || dados.tituloEvento || dados.titulo || dados.nomeCompleto || '-';
+        const tipoLabel = TIPO_SOLICITACAO_LABELS[item.tipo_solicitacao] || item.tipo_solicitacao;
+        const statusObj = STATUS_SOLICITACAO.find(s => s.id === item.status) || { label: item.status, cor: '--carbon-black' };
+        const date = new Date(item.created_at).toLocaleDateString('pt-BR');
+        html += `<tr onclick="openDrawerByKey('${esc(cacheKey)}')">
+          <td>${esc(tipoLabel)}</td><td>${esc(titulo)}</td><td>${esc(item.user_email)}</td><td>${esc(date)}</td>
+          <td><span class="badge" style="background:var(${statusObj.cor});color:var(--paper-white)">${esc(statusObj.label)}</span></td>
+        </tr>`;
+      });
+      html += '</tbody></table>';
+      container.innerHTML = html;
+
+      const pgContainer = document.getElementById(tab === 'eventos' ? 'paginationEventos' : 'paginationGeral');
+      if (data.totalPages > 1) {
+        let pg = `<button ${data.page<=1?'disabled':''} onclick="goPage('${tab}',${data.page-1})">&laquo;</button>`;
+        for (let i = 1; i <= data.totalPages; i++) pg += `<button class="${i===data.page?'active':''}" onclick="goPage('${tab}',${i})">${i}</button>`;
+        pg += `<button ${data.page>=data.totalPages?'disabled':''} onclick="goPage('${tab}',${data.page+1})">&raquo;</button>`;
+        pgContainer.innerHTML = pg;
+      } else pgContainer.innerHTML = '';
+    }
+
+    function goPage(tab, page) { adminPages[tab] = page; loadTable(tab); }
+
+    function switchTab(tab) {
+      currentTab = tab;
+      document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
+      document.querySelectorAll('.tab-content').forEach(c => c.classList.toggle('active', c.id === 'tab-' + tab));
+    }
+
+    function setFilter(el, tab, key) {
+      el.parentElement.querySelectorAll('.filter-chip').forEach(s => s.classList.remove('active'));
+      el.classList.add('active');
+      adminFilters[tab][key] = el.dataset.value;
+      adminPages[tab] = 1;
+      loadTable(tab);
+    }
+
+    function debounceLoad(tab) {
+      clearTimeout(searchTimeout);
+      searchTimeout = setTimeout(() => { adminPages[tab] = 1; loadTable(tab); }, 300);
+    }
+
+    async function loadUsers() {
+      try {
+        const res = await fetch('/api/admin/users');
+        const users = await res.json();
+        const container = document.getElementById('usersList');
+        container.innerHTML = users.map(u => {
+          const roleColors = { admin: 'var(--ruby-red)', gestor: 'var(--sage-green)', colaborador: 'var(--carbon-black)' };
+          const isSelf = u.email === Auth.getUserEmail();
+          const uid = parseInt(u.id, 10);
+          return `<div class="user-row">
+            <div class="user-info">
+              <div style="font-weight:600">${esc(u.name || u.email)}</div>
+              <div class="user-email">${esc(u.email)}</div>
+            </div>
+            <span class="role-badge" style="background:${roleColors[u.role]||'gray'};color:var(--paper-white)">${esc(u.role)}</span>
+            ${isSelf ? '' : `<div class="role-actions">
+              ${u.role !== 'admin' ? `<button class="role-btn" onclick="changeRole(${uid},'admin')">Admin</button>` : ''}
+              ${u.role !== 'gestor' ? `<button class="role-btn" onclick="changeRole(${uid},'gestor')">Gestor</button>` : ''}
+              ${u.role !== 'colaborador' ? `<button class="role-btn" onclick="changeRole(${uid},'colaborador')">Colaborador</button>` : ''}
+            </div>`}
+          </div>`;
+        }).join('');
+      } catch (e) { console.error(e); }
+    }
+
+    async function changeRole(userId, role) {
+      if (!confirm(`Alterar role para ${role}?`)) return;
+      try {
+        await fetch(`/api/admin/users/${userId}/role`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ role }),
+        });
+        loadUsers();
+      } catch (e) { alert('Erro ao alterar role'); }
+    }
+
+    function toggleUsers() {
+      const content = document.getElementById('usersList');
+      content.classList.toggle('open');
+      const chevron = document.getElementById('usersChevron');
+      chevron.style.transform = content.classList.contains('open') ? 'rotate(180deg)' : '';
+    }
+
+    function openDrawerByKey(key) {
+      const item = adminItemsCache[key];
+      if (!item) return;
+      openDrawer(item);
+    }
+
+    function openDrawer(item) {
+      const dados = typeof item.dados === 'string' ? JSON.parse(item.dados) : (item.dados || {});
+      const titulo = dados.nomeEvento || dados.tituloEvento || dados.titulo || dados.nomeCompleto || item.tipo_solicitacao;
+      const tipoLabel = TIPO_SOLICITACAO_LABELS[item.tipo_solicitacao] || item.tipo_solicitacao;
+      const statusObj = STATUS_SOLICITACAO.find(s => s.id === item.status) || { label: item.status, cor: '--carbon-black' };
+
+      document.getElementById('drawerTitle').textContent = titulo;
+      document.getElementById('drawerBadges').innerHTML = `
+        <span class="badge" style="background:var(--carbon-black);color:var(--paper-white)">${esc(tipoLabel)}</span>
+        <span class="badge" style="background:var(${statusObj.cor});color:var(--paper-white)">${esc(statusObj.label)}</span>`;
+
+      let body = '';
+      body += `<div class="drawer-section"><div class="drawer-section-title">Solicitante</div>
+        <div class="drawer-field"><div class="drawer-field-label">E-mail</div><div class="drawer-field-value">${esc(item.user_email)}</div></div></div>`;
+
+      body += '<div class="drawer-section"><div class="drawer-section-title">Dados</div>';
+      for (const [key, value] of Object.entries(dados)) {
+        if (value && typeof value !== 'object') {
+          body += `<div class="drawer-field"><div class="drawer-field-label">${esc(key)}</div><div class="drawer-field-value">${esc(value)}</div></div>`;
+        }
+      }
+      body += '</div>';
+      document.getElementById('drawerBody').innerHTML = body;
+      document.getElementById('drawerFooter').textContent = `ID: ${item.id} | Criado em: ${new Date(item.created_at).toLocaleString('pt-BR')}`;
+
+      document.getElementById('drawerOverlay').classList.add('visible');
+      document.getElementById('drawer').classList.add('open');
+    }
+
+    function closeDrawer() {
+      document.getElementById('drawerOverlay').classList.remove('visible');
+      document.getElementById('drawer').classList.remove('open');
+    }
+
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeDrawer(); });
+    init();
+  </script>
+</body>
+</html>
