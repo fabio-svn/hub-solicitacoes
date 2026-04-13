@@ -41,7 +41,7 @@ function sanitizeRedirect(url: string): string {
 
 router.get("/login", async (req, res) => {
   try {
-    const redirectTo = sanitizeRedirect((req.query.redirect as string) || "/solicitacoes.html");
+    const redirectTo = sanitizeRedirect(String(req.query.redirect || "/solicitacoes.html"));
     const nonce = randomBytes(16).toString("hex");
 
     req.session.authNonce = nonce;
@@ -63,11 +63,12 @@ router.get("/login", async (req, res) => {
 
 router.get("/callback", async (req, res) => {
   try {
-    const code = req.query.code as string;
-    const stateNonce = req.query.state as string;
+    const code = String(req.query.code || "");
+    const stateNonce = String(req.query.state || "");
 
     if (!code) {
-      return res.redirect("/?error=no_code");
+      res.redirect("/?error=no_code");
+      return;
     }
 
     const expectedNonce = req.session.authNonce;
@@ -78,7 +79,8 @@ router.get("/callback", async (req, res) => {
 
     if (!expectedNonce || stateNonce !== expectedNonce) {
       logger.warn("OAuth state mismatch - possible CSRF");
-      return res.redirect("/?error=invalid_state");
+      res.redirect("/?error=invalid_state");
+      return;
     }
 
     const client = getMsalClient();
@@ -90,12 +92,14 @@ router.get("/callback", async (req, res) => {
 
     const account = tokenResponse.account;
     if (!account) {
-      return res.redirect("/?error=no_account");
+      res.redirect("/?error=no_account");
+      return;
     }
 
     const email = (account.username || "").toLowerCase();
     if (!email.endsWith("@svninvest.com.br")) {
-      return res.redirect("/?error=domain_not_allowed");
+      res.redirect("/?error=domain_not_allowed");
+      return;
     }
 
     const name = account.name || email.split("@")[0];
@@ -129,10 +133,11 @@ router.get("/logout", (req, res) => {
   });
 });
 
-router.get("/me", (req, res) => {
+router.get("/me", (req, res): void => {
   const user = req.session?.user;
   if (!user) {
-    return res.json({ authenticated: false });
+    res.json({ authenticated: false });
+    return;
   }
   res.json({ authenticated: true, user });
 });

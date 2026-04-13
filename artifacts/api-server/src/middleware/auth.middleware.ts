@@ -18,21 +18,24 @@ export function getSessionUser(req: Request): SessionUser | undefined {
   return req.session?.user;
 }
 
-export function requireAuth(req: Request, res: Response, next: NextFunction) {
+export function requireAuth(req: Request, res: Response, next: NextFunction): void {
   if (!req.session?.user) {
-    return res.status(401).json({ error: "Autenticacao necessaria" });
+    res.status(401).json({ error: "Autenticacao necessaria" });
+    return;
   }
   next();
 }
 
 export function requireRole(...roles: string[]) {
-  return (req: Request, res: Response, next: NextFunction) => {
+  return (req: Request, res: Response, next: NextFunction): void => {
     const user = req.session?.user;
     if (!user) {
-      return res.status(401).json({ error: "Autenticacao necessaria" });
+      res.status(401).json({ error: "Autenticacao necessaria" });
+      return;
     }
     if (!roles.includes(user.role)) {
-      return res.status(403).json({ error: "Acesso negado" });
+      res.status(403).json({ error: "Acesso negado" });
+      return;
     }
     next();
   };

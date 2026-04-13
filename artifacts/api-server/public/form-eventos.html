@@ -167,7 +167,7 @@
                 <input type="file" id="logoFile" accept=".png,.jpg,.jpeg,.svg,.ai,.pdf">
                 <div class="file-name" id="logoFileName"></div>
               </div>
-              <div class="field-hint">Caso nao consiga, envie para o e-mail: ${EMAIL_UPLOAD}</div>
+              <div class="field-hint">Caso nao consiga, envie para o e-mail: gabriela.franca@svninvest.com.br</div>
             </div>
             <div class="field">
               <label>Imagem complementar (opcional)</label>
@@ -266,9 +266,54 @@
   <script src="config.js"></script>
   <script src="auth.js"></script>
   <script>
+    const STORAGE_KEY = 'hub_form_eventos';
     const formState = { natureza: null, maturidade: null, materiais: new Set(), palestrantes: [] };
     let totalSteps = 7;
     let estados = [];
+
+    function saveFormState() {
+      const fields = ['nome','setor','nomeEvento','dataEvento','horario','descricao',
+        'origem','tipoEvento','publico','convidados','canal','linkTransmissao',
+        'objetivos','custoEstimado','rateio','observacoes','localNome','localEndereco',
+        'localSugestoes','ideaQuando'];
+      const data = {};
+      fields.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) data[id] = el.value;
+      });
+      data._natureza = formState.natureza;
+      data._maturidade = formState.maturidade;
+      data._materiais = [...formState.materiais];
+      data._checkPrazos = document.getElementById('checkPrazos')?.checked || false;
+      data._checkTutorial = document.getElementById('checkTutorial')?.checked || false;
+      const tipoAprox = document.querySelector('input[name="tipoAprox"]:checked');
+      if (tipoAprox) data._tipoAprox = tipoAprox.value;
+      try { sessionStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch {}
+    }
+
+    function restoreFormState() {
+      try {
+        const raw = sessionStorage.getItem(STORAGE_KEY);
+        if (!raw) return;
+        const data = JSON.parse(raw);
+        const fields = ['nome','setor','nomeEvento','dataEvento','horario','descricao',
+          'origem','tipoEvento','publico','convidados','canal','linkTransmissao',
+          'objetivos','custoEstimado','rateio','observacoes'];
+        fields.forEach(id => {
+          const el = document.getElementById(id);
+          if (el && data[id]) el.value = data[id];
+        });
+        if (data._checkPrazos) { const el = document.getElementById('checkPrazos'); if (el) el.checked = true; }
+        if (data._checkTutorial) { const el = document.getElementById('checkTutorial'); if (el) el.checked = true; }
+        if (data._natureza) formState.natureza = data._natureza;
+        if (data._maturidade) formState.maturidade = data._maturidade;
+        if (data._materiais) data._materiais.forEach(m => formState.materiais.add(m));
+      } catch {}
+    }
+
+    function clearFormStorage() {
+      try { sessionStorage.removeItem(STORAGE_KEY); } catch {}
+    }
 
     async function init() {
       await Auth.init();
@@ -284,10 +329,12 @@
       const ratSel = document.getElementById('rateio');
       OPCOES_RATEIO.forEach(r => { const o = document.createElement('option'); o.value = r; o.textContent = r; ratSel.appendChild(o); });
 
-      document.getElementById('nome').addEventListener('input', () => { validateStep1(); updatePreview('pvSolicitante', document.getElementById('nome').value); });
-      document.getElementById('setor').addEventListener('change', () => { validateStep1(); updatePreview('pvSetor', document.getElementById('setor').value); });
-      document.getElementById('checkPrazos').addEventListener('change', validateStep1);
-      document.getElementById('checkTutorial')?.addEventListener('change', validateStep1);
+      restoreFormState();
+
+      document.getElementById('nome').addEventListener('input', () => { validateStep1(); updatePreview('pvSolicitante', document.getElementById('nome').value); saveFormState(); });
+      document.getElementById('setor').addEventListener('change', () => { validateStep1(); updatePreview('pvSetor', document.getElementById('setor').value); saveFormState(); });
+      document.getElementById('checkPrazos').addEventListener('change', () => { validateStep1(); saveFormState(); });
+      document.getElementById('checkTutorial')?.addEventListener('change', () => { validateStep1(); saveFormState(); });
 
       ['logoFile','imgFile','demaisFile'].forEach(id => {
         document.getElementById(id).addEventListener('change', e => {
@@ -491,7 +538,7 @@
       const val = document.getElementById('localEvento').value;
       const container = document.getElementById('localConditional');
       if (val === 'unidade') {
-        container.innerHTML = `<div class="field"><label>Unidade SVN</label><select id="unidadeSVN" onchange="showUnidadeEndereco()">${UNIDADES_SVN.map(u => `<option value="${u.nome}">${u.nome}</option>`).join('<option value="">Selecione</option>')}</select></div><div id="unidadeEndereco"></div>`;
+        container.innerHTML = `<div class="field"><label>Unidade SVN</label><select id="unidadeSVN" onchange="showUnidadeEndereco()"><option value="">Selecione</option>${UNIDADES_SVN.map(u => `<option value="${u.nome}">${u.nome}</option>`).join('')}</select></div><div id="unidadeEndereco"></div>`;
         updatePreview('pvLocal', 'Unidade SVN');
       } else if (val === 'externo') {
         container.innerHTML = `<div class="field"><label>Nome do local</label><input type="text" id="localNome" oninput="updatePreview('pvLocal',this.value)"></div><div class="field"><label>Endereco</label><input type="text" id="localEndereco"></div>`;
@@ -562,6 +609,7 @@
     }
 
     function goStep(step) {
+      saveFormState();
       document.querySelectorAll('.form-step').forEach(s => s.classList.remove('active'));
       document.getElementById('step' + step).classList.add('active');
       const steps = getStepCount();
@@ -757,7 +805,7 @@
 
       try {
         const res = await fetch('/api/solicitacoes', { method: 'POST', body: formData });
-        if (res.ok) { window.location.href = '/thankyou.html'; }
+        if (res.ok) { clearFormStorage(); window.location.href = '/thankyou.html'; }
         else { alert('Erro ao enviar.'); btn.disabled = false; btn.textContent = 'Enviar'; }
       } catch (e) { alert('Erro de conexao.'); btn.disabled = false; btn.textContent = 'Enviar'; }
     }

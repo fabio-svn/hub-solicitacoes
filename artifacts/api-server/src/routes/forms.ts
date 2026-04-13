@@ -27,23 +27,26 @@ const VALID_STATUSES = [
   "recebido", "em-analise", "em-producao", "aguardando", "concluido", "cancelado",
 ];
 
-router.post("/solicitacoes", requireAuth, upload.any(), async (req, res) => {
+router.post("/solicitacoes", requireAuth, upload.any(), async (req, res): Promise<void> => {
   try {
     const user = req.session.user!;
     const { tipo_solicitacao, subtipo, maturidade, ...dados } = req.body;
 
     if (!tipo_solicitacao || typeof tipo_solicitacao !== "string") {
-      return res.status(400).json({ error: "tipo_solicitacao e obrigatorio" });
+      res.status(400).json({ error: "tipo_solicitacao e obrigatorio" });
+      return;
     }
 
     if (!VALID_TIPOS.includes(tipo_solicitacao)) {
-      return res.status(400).json({ error: "tipo_solicitacao invalido" });
+      res.status(400).json({ error: "tipo_solicitacao invalido" });
+      return;
     }
 
     if (maturidade !== undefined && maturidade !== null && maturidade !== "") {
       const m = parseInt(maturidade);
       if (isNaN(m) || m < 1 || m > 3) {
-        return res.status(400).json({ error: "maturidade deve ser 1, 2 ou 3" });
+        res.status(400).json({ error: "maturidade deve ser 1, 2 ou 3" });
+        return;
       }
     }
 
@@ -238,11 +241,14 @@ router.get("/solicitacoes/stats", requireAuth, async (req, res) => {
   }
 });
 
-router.get("/solicitacoes/:id", requireAuth, async (req, res) => {
+router.get("/solicitacoes/:id", requireAuth, async (req, res): Promise<void> => {
   try {
     const user = req.session.user!;
-    const id = parseInt(req.params.id);
-    if (isNaN(id)) return res.status(400).json({ error: "ID invalido" });
+    const id = parseInt(String(req.params.id));
+    if (isNaN(id)) {
+      res.status(400).json({ error: "ID invalido" });
+      return;
+    }
 
     const isAdmin = user.role === "admin" || user.role === "gestor";
 
@@ -253,7 +259,8 @@ router.get("/solicitacoes/:id", requireAuth, async (req, res) => {
 
     const [solicitacao] = await db.select().from(solicitacoesTable).where(and(...conditions));
     if (!solicitacao) {
-      return res.status(404).json({ error: "Solicitacao nao encontrada" });
+      res.status(404).json({ error: "Solicitacao nao encontrada" });
+      return;
     }
 
     const arquivos = await db.select().from(arquivosTable).where(eq(arquivosTable.solicitacao_id, id));
@@ -265,11 +272,14 @@ router.get("/solicitacoes/:id", requireAuth, async (req, res) => {
   }
 });
 
-router.get("/solicitacoes/:id/status", requireAuth, async (req, res) => {
+router.get("/solicitacoes/:id/status", requireAuth, async (req, res): Promise<void> => {
   try {
     const user = req.session.user!;
-    const id = parseInt(req.params.id);
-    if (isNaN(id)) return res.status(400).json({ error: "ID invalido" });
+    const id = parseInt(String(req.params.id));
+    if (isNaN(id)) {
+      res.status(400).json({ error: "ID invalido" });
+      return;
+    }
 
     const isAdmin = user.role === "admin" || user.role === "gestor";
 
@@ -281,7 +291,8 @@ router.get("/solicitacoes/:id/status", requireAuth, async (req, res) => {
     const [solicitacao] = await db.select().from(solicitacoesTable).where(and(...conditions));
 
     if (!solicitacao) {
-      return res.status(404).json({ error: "Solicitacao nao encontrada" });
+      res.status(404).json({ error: "Solicitacao nao encontrada" });
+      return;
     }
 
     if (solicitacao.clickup_task_id) {
@@ -291,7 +302,8 @@ router.get("/solicitacoes/:id/status", requireAuth, async (req, res) => {
           await db.update(solicitacoesTable)
             .set({ status: clickupStatus, updated_at: new Date() })
             .where(eq(solicitacoesTable.id, id));
-          return res.json({ status: clickupStatus, updated: true });
+          res.json({ status: clickupStatus, updated: true });
+          return;
         }
       } catch (e) {
         logger.error({ err: e }, "ClickUp status check failed");

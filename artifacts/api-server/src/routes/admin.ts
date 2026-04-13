@@ -17,23 +17,26 @@ router.get("/users", requireAuth, requireRole("admin", "gestor"), async (req, re
   }
 });
 
-router.put("/users/:id/role", requireAuth, requireRole("admin"), async (req, res) => {
+router.put("/users/:id/role", requireAuth, requireRole("admin"), async (req, res): Promise<void> => {
   try {
-    const userId = parseInt(req.params.id);
-    const { role } = req.body;
+    const userId = parseInt(String(req.params.id));
+    const { role } = req.body as { role: string };
     const currentUser = req.session.user!;
 
     if (!["colaborador", "gestor", "admin"].includes(role)) {
-      return res.status(400).json({ error: "Role invalida" });
+      res.status(400).json({ error: "Role invalida" });
+      return;
     }
 
     const [targetUser] = await db.select().from(usersTable).where(eq(usersTable.id, userId));
     if (!targetUser) {
-      return res.status(404).json({ error: "Usuario nao encontrado" });
+      res.status(404).json({ error: "Usuario nao encontrado" });
+      return;
     }
 
     if (targetUser.email === currentUser.email) {
-      return res.status(400).json({ error: "Nao e possivel alterar sua propria role" });
+      res.status(400).json({ error: "Nao e possivel alterar sua propria role" });
+      return;
     }
 
     await db.update(usersTable).set({ role }).where(eq(usersTable.id, userId));
