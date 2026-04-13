@@ -52,6 +52,14 @@
         <button class="filter-chip" data-value="7dias" onclick="setFilter(this,'eventos','periodo')">7 dias</button>
         <button class="filter-chip" data-value="30dias" onclick="setFilter(this,'eventos','periodo')">30 dias</button>
       </div>
+      <div class="filters">
+        <span style="font-size:0.8rem;opacity:0.5;margin-right:4px">Status:</span>
+        <button class="filter-chip active" data-value="" onclick="setFilter(this,'eventos','status')">Todos</button>
+        <button class="filter-chip" data-value="recebido" onclick="setFilter(this,'eventos','status')">Recebido</button>
+        <button class="filter-chip" data-value="em-producao" onclick="setFilter(this,'eventos','status')">Em producao</button>
+        <button class="filter-chip" data-value="aguardando" onclick="setFilter(this,'eventos','status')">Aguardando</button>
+        <button class="filter-chip" data-value="concluido" onclick="setFilter(this,'eventos','status')">Concluido</button>
+      </div>
       <div class="search-bar">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" opacity="0.4"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
         <input type="text" placeholder="Buscar por nome, solicitante..." id="searchEventos" oninput="debounceLoad('eventos')">
@@ -66,6 +74,14 @@
         <button class="filter-chip" data-value="hoje" onclick="setFilter(this,'geral','periodo')">Hoje</button>
         <button class="filter-chip" data-value="7dias" onclick="setFilter(this,'geral','periodo')">7 dias</button>
         <button class="filter-chip" data-value="30dias" onclick="setFilter(this,'geral','periodo')">30 dias</button>
+      </div>
+      <div class="filters">
+        <span style="font-size:0.8rem;opacity:0.5;margin-right:4px">Status:</span>
+        <button class="filter-chip active" data-value="" onclick="setFilter(this,'geral','status')">Todos</button>
+        <button class="filter-chip" data-value="recebido" onclick="setFilter(this,'geral','status')">Recebido</button>
+        <button class="filter-chip" data-value="em-producao" onclick="setFilter(this,'geral','status')">Em producao</button>
+        <button class="filter-chip" data-value="aguardando" onclick="setFilter(this,'geral','status')">Aguardando</button>
+        <button class="filter-chip" data-value="concluido" onclick="setFilter(this,'geral','status')">Concluido</button>
       </div>
       <div class="search-bar">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" opacity="0.4"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
@@ -101,7 +117,7 @@
   <script src="auth.js"></script>
   <script>
     let currentTab = 'eventos';
-    let adminFilters = { eventos: { periodo: '' }, geral: { periodo: '' } };
+    let adminFilters = { eventos: { periodo: '', status: '' }, geral: { periodo: '', status: '' } };
     let adminPages = { eventos: 1, geral: 1 };
     let searchTimeout;
     let adminItemsCache = {};
@@ -161,6 +177,7 @@
       params.set('limit', '20');
       params.set('tipo_solicitacao', tab === 'eventos' ? 'eventos' : 'geral');
       if (adminFilters[tab].periodo) params.set('periodo', adminFilters[tab].periodo);
+      if (adminFilters[tab].status) params.set('status', adminFilters[tab].status);
       const search = document.getElementById(tab === 'eventos' ? 'searchEventos' : 'searchGeral');
       if (search && search.value.trim()) params.set('busca', search.value.trim());
 
@@ -274,7 +291,15 @@
       openDrawer(item);
     }
 
-    function openDrawer(item) {
+    async function openDrawer(item) {
+      try {
+        const syncRes = await fetch('/api/solicitacoes/' + item.id + '/status');
+        if (syncRes.ok) {
+          const syncData = await syncRes.json();
+          if (syncData.updated) item.status = syncData.status;
+        }
+      } catch {}
+
       const dados = typeof item.dados === 'string' ? JSON.parse(item.dados) : (item.dados || {});
       const titulo = dados.nomeEvento || dados.tituloEvento || dados.titulo || dados.nomeCompleto || item.tipo_solicitacao;
       const tipoLabel = TIPO_SOLICITACAO_LABELS[item.tipo_solicitacao] || item.tipo_solicitacao;

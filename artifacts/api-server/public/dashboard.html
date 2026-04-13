@@ -36,10 +36,18 @@
 
     <div class="tab-content active" id="tab-eventos">
       <div class="filters" id="filtersEventos">
-        <button class="filter-chip active" data-filter="periodo" data-value="" onclick="toggleFilter(this,'eventos')">Todos</button>
-        <button class="filter-chip" data-filter="periodo" data-value="hoje" onclick="toggleFilter(this,'eventos')">Hoje</button>
-        <button class="filter-chip" data-filter="periodo" data-value="7dias" onclick="toggleFilter(this,'eventos')">Ultimos 7 dias</button>
-        <button class="filter-chip" data-filter="periodo" data-value="30dias" onclick="toggleFilter(this,'eventos')">Ultimos 30 dias</button>
+        <button class="filter-chip active" data-filter="periodo" data-value="" onclick="toggleFilter(this,'eventos','periodo')">Todos</button>
+        <button class="filter-chip" data-filter="periodo" data-value="hoje" onclick="toggleFilter(this,'eventos','periodo')">Hoje</button>
+        <button class="filter-chip" data-filter="periodo" data-value="7dias" onclick="toggleFilter(this,'eventos','periodo')">7 dias</button>
+        <button class="filter-chip" data-filter="periodo" data-value="30dias" onclick="toggleFilter(this,'eventos','periodo')">30 dias</button>
+      </div>
+      <div class="filters">
+        <span style="font-size:0.8rem;opacity:0.5;margin-right:4px">Status:</span>
+        <button class="filter-chip active" data-filter="status" data-value="" onclick="toggleFilter(this,'eventos','status')">Todos</button>
+        <button class="filter-chip" data-filter="status" data-value="recebido" onclick="toggleFilter(this,'eventos','status')">Recebido</button>
+        <button class="filter-chip" data-filter="status" data-value="em-producao" onclick="toggleFilter(this,'eventos','status')">Em producao</button>
+        <button class="filter-chip" data-filter="status" data-value="aguardando" onclick="toggleFilter(this,'eventos','status')">Aguardando</button>
+        <button class="filter-chip" data-filter="status" data-value="concluido" onclick="toggleFilter(this,'eventos','status')">Concluido</button>
       </div>
       <div class="search-bar">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" opacity="0.4"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
@@ -51,10 +59,18 @@
 
     <div class="tab-content" id="tab-geral">
       <div class="filters" id="filtersGeral">
-        <button class="filter-chip active" data-filter="periodo" data-value="" onclick="toggleFilter(this,'geral')">Todos</button>
-        <button class="filter-chip" data-filter="periodo" data-value="hoje" onclick="toggleFilter(this,'geral')">Hoje</button>
-        <button class="filter-chip" data-filter="periodo" data-value="7dias" onclick="toggleFilter(this,'geral')">Ultimos 7 dias</button>
-        <button class="filter-chip" data-filter="periodo" data-value="30dias" onclick="toggleFilter(this,'geral')">Ultimos 30 dias</button>
+        <button class="filter-chip active" data-filter="periodo" data-value="" onclick="toggleFilter(this,'geral','periodo')">Todos</button>
+        <button class="filter-chip" data-filter="periodo" data-value="hoje" onclick="toggleFilter(this,'geral','periodo')">Hoje</button>
+        <button class="filter-chip" data-filter="periodo" data-value="7dias" onclick="toggleFilter(this,'geral','periodo')">7 dias</button>
+        <button class="filter-chip" data-filter="periodo" data-value="30dias" onclick="toggleFilter(this,'geral','periodo')">30 dias</button>
+      </div>
+      <div class="filters">
+        <span style="font-size:0.8rem;opacity:0.5;margin-right:4px">Status:</span>
+        <button class="filter-chip active" data-filter="status" data-value="" onclick="toggleFilter(this,'geral','status')">Todos</button>
+        <button class="filter-chip" data-filter="status" data-value="recebido" onclick="toggleFilter(this,'geral','status')">Recebido</button>
+        <button class="filter-chip" data-filter="status" data-value="em-producao" onclick="toggleFilter(this,'geral','status')">Em producao</button>
+        <button class="filter-chip" data-filter="status" data-value="aguardando" onclick="toggleFilter(this,'geral','status')">Aguardando</button>
+        <button class="filter-chip" data-filter="status" data-value="concluido" onclick="toggleFilter(this,'geral','status')">Concluido</button>
       </div>
       <div class="search-bar">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" opacity="0.4"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
@@ -82,7 +98,7 @@
   <script src="auth.js"></script>
   <script>
     let currentTab = 'eventos';
-    let filters = { eventos: { periodo: '' }, geral: { periodo: '' } };
+    let filters = { eventos: { periodo: '', status: '' }, geral: { periodo: '', status: '' } };
     let pages = { eventos: 1, geral: 1 };
     let searchTimeout;
     let itemsCache = {};
@@ -140,6 +156,7 @@
 
       const f = filters[tab];
       if (f.periodo) params.set('periodo', f.periodo);
+      if (f.status) params.set('status', f.status);
 
       const searchEl = document.getElementById(tab === 'eventos' ? 'searchEventos' : 'searchGeral');
       if (searchEl && searchEl.value.trim()) {
@@ -221,11 +238,11 @@
       document.querySelectorAll('.tab-content').forEach(c => c.classList.toggle('active', c.id === 'tab-' + tab));
     }
 
-    function toggleFilter(el, tab) {
+    function toggleFilter(el, tab, filterKey) {
       const siblings = el.parentElement.querySelectorAll('.filter-chip');
       siblings.forEach(s => s.classList.remove('active'));
       el.classList.add('active');
-      filters[tab].periodo = el.dataset.value;
+      filters[tab][filterKey] = el.dataset.value;
       pages[tab] = 1;
       loadList(tab);
     }
@@ -241,7 +258,15 @@
       openDrawer(item);
     }
 
-    function openDrawer(item) {
+    async function openDrawer(item) {
+      try {
+        const syncRes = await fetch('/api/solicitacoes/' + item.id + '/status');
+        if (syncRes.ok) {
+          const syncData = await syncRes.json();
+          if (syncData.updated) item.status = syncData.status;
+        }
+      } catch {}
+
       const dados = typeof item.dados === 'string' ? JSON.parse(item.dados) : (item.dados || {});
       const titulo = dados.nomeEvento || dados.tituloEvento || dados.titulo || dados.nomeCompleto || item.tipo_solicitacao;
       const tipoLabel = TIPO_SOLICITACAO_LABELS[item.tipo_solicitacao] || item.tipo_solicitacao;

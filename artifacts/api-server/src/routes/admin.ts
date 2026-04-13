@@ -7,7 +7,7 @@ import { logger } from "../lib/logger";
 
 const router = Router();
 
-router.get("/users", requireAuth, requireRole("admin", "gestor"), async (req, res) => {
+router.get("/users", requireAuth, requireRole("admin"), async (req, res) => {
   try {
     const users = await db.select().from(usersTable);
     res.json(users);

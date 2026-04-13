@@ -27,6 +27,30 @@ const VALID_STATUSES = [
   "recebido", "em-analise", "em-producao", "aguardando", "concluido", "cancelado",
 ];
 
+const REQUIRED_FIELDS: Record<string, string[]> = {
+  "eventos": ["nome", "natureza"],
+  "artes-divulgacao": ["nome", "tipoMaterial"],
+  "atualizacao-material": ["nome"],
+  "conteudo-pdf-informativo": ["nome"],
+  "conteudo-pdf-ebook": ["nome"],
+  "apresentacao-nova": ["nome"],
+  "apresentacao-atualizar": ["nome"],
+  "pagina-assessores-dados": ["nome"],
+  "pagina-assessores-atualizacao": ["nome"],
+};
+
+function validateFormDados(tipo: string, dados: Record<string, unknown>): string | null {
+  const required = REQUIRED_FIELDS[tipo];
+  if (!required) return null;
+  for (const field of required) {
+    const value = dados[field];
+    if (value === undefined || value === null || (typeof value === "string" && value.trim() === "")) {
+      return `Campo obrigatorio ausente: ${field}`;
+    }
+  }
+  return null;
+}
+
 router.post("/solicitacoes", requireAuth, upload.any(), async (req, res): Promise<void> => {
   try {
     const user = req.session.user!;
@@ -53,6 +77,12 @@ router.post("/solicitacoes", requireAuth, upload.any(), async (req, res): Promis
     let parsedDados = dados;
     if (typeof dados.dados === "string") {
       try { parsedDados = JSON.parse(dados.dados); } catch { parsedDados = dados; }
+    }
+
+    const validationError = validateFormDados(tipo_solicitacao, parsedDados);
+    if (validationError) {
+      res.status(400).json({ error: validationError });
+      return;
     }
 
     const [solicitacao] = await db.insert(solicitacoesTable).values({
