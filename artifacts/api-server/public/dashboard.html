@@ -134,6 +134,8 @@
 
       if (tab === 'eventos') {
         params.set('tipo_solicitacao', 'eventos');
+      } else {
+        params.set('tipo_solicitacao', 'geral');
       }
 
       const f = filters[tab];

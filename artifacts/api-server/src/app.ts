@@ -5,6 +5,7 @@ import pgSession from "connect-pg-simple";
 import pinoHttp from "pino-http";
 import path from "path";
 import { fileURLToPath } from "url";
+import { randomBytes } from "crypto";
 import router from "./routes";
 import authRouter from "./routes/auth";
 import formsRouter from "./routes/forms";
@@ -49,7 +50,13 @@ app.use(
       tableName: "session",
       createTableIfMissing: true,
     }),
-    secret: process.env.SESSION_SECRET || "hub-svn-dev-secret-change-in-prod",
+    secret: (() => {
+      const secret = process.env.SESSION_SECRET;
+      if (!secret && process.env.NODE_ENV === "production") {
+        throw new Error("SESSION_SECRET is required in production");
+      }
+      return secret || randomBytes(32).toString("hex");
+    })(),
     resave: false,
     saveUninitialized: false,
     cookie: {

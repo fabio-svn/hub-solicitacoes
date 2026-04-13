@@ -39,7 +39,28 @@ function getListId(tipoSolicitacao: string): string | null {
   return CLICKUP_LISTS[category] || null;
 }
 
-export async function createClickUpTask(solicitacao: any, user: any, dados: any): Promise<string | null> {
+interface SolicitacaoData {
+  tipo_solicitacao: string;
+  subtipo?: string | null;
+}
+
+interface UserData {
+  name: string;
+  email: string;
+}
+
+interface FormDados {
+  nomeEvento?: string;
+  titulo?: string;
+  nomeCompleto?: string;
+  [key: string]: unknown;
+}
+
+export async function createClickUpTask(
+  solicitacao: SolicitacaoData,
+  user: UserData,
+  dados: FormDados
+): Promise<string | null> {
   if (!CLICKUP_API_TOKEN) {
     logger.warn("CLICKUP_API_TOKEN not configured, skipping task creation");
     return null;
@@ -82,7 +103,7 @@ export async function createClickUpTask(solicitacao: any, user: any, dados: any)
       return null;
     }
 
-    const data = await response.json();
+    const data = await response.json() as { id?: string };
     return data.id || null;
   } catch (err) {
     logger.error({ err }, "ClickUp task creation failed");
@@ -100,7 +121,7 @@ export async function getClickUpTaskStatus(taskId: string): Promise<string | nul
 
     if (!response.ok) return null;
 
-    const data = await response.json();
+    const data = await response.json() as { status?: { status?: string } };
     const clickupStatus = data.status?.status?.toLowerCase() || "";
     return CLICKUP_STATUS_MAP[clickupStatus] || null;
   } catch {

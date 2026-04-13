@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { ConfidentialClientApplication } from "@azure/msal-node";
+import { randomBytes } from "crypto";
 import { db } from "@workspace/db";
 import { usersTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
@@ -41,11 +42,16 @@ function sanitizeRedirect(url: string): string {
 router.get("/login", async (req, res) => {
   try {
     const redirectTo = sanitizeRedirect((req.query.redirect as string) || "/solicitacoes.html");
+    const nonce = randomBytes(16).toString("hex");
+
+    req.session.authNonce = nonce;
+    req.session.authRedirect = redirectTo;
+
     const client = getMsalClient();
     const authUrl = await client.getAuthCodeUrl({
       scopes: SCOPES,
       redirectUri: REDIRECT_URI,
-      state: redirectTo,
+      state: nonce,
       prompt: "select_account",
     });
     res.redirect(authUrl);
@@ -58,10 +64,21 @@ router.get("/login", async (req, res) => {
 router.get("/callback", async (req, res) => {
   try {
     const code = req.query.code as string;
-    const state = sanitizeRedirect((req.query.state as string) || "/solicitacoes.html");
+    const stateNonce = req.query.state as string;
 
     if (!code) {
       return res.redirect("/?error=no_code");
+    }
+
+    const expectedNonce = req.session.authNonce;
+    const redirectTo = req.session.authRedirect || "/solicitacoes.html";
+
+    delete req.session.authNonce;
+    delete req.session.authRedirect;
+
+    if (!expectedNonce || stateNonce !== expectedNonce) {
+      logger.warn("OAuth state mismatch - possible CSRF");
+      return res.redirect("/?error=invalid_state");
     }
 
     const client = getMsalClient();
@@ -99,7 +116,7 @@ router.get("/callback", async (req, res) => {
       role: userRow[0]?.role || "colaborador",
     };
 
-    res.redirect(state);
+    res.redirect(sanitizeRedirect(redirectTo));
   } catch (err) {
     logger.error({ err }, "MSAL callback error");
     res.redirect("/?error=auth_failed");

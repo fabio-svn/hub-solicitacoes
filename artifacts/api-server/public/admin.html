@@ -159,7 +159,7 @@
       const params = new URLSearchParams();
       params.set('page', adminPages[tab]);
       params.set('limit', '20');
-      if (tab === 'eventos') params.set('tipo_solicitacao', 'eventos');
+      params.set('tipo_solicitacao', tab === 'eventos' ? 'eventos' : 'geral');
       if (adminFilters[tab].periodo) params.set('periodo', adminFilters[tab].periodo);
       const search = document.getElementById(tab === 'eventos' ? 'searchEventos' : 'searchGeral');
       if (search && search.value.trim()) params.set('busca', search.value.trim());

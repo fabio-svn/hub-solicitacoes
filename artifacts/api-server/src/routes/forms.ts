@@ -2,7 +2,7 @@ import { Router } from "express";
 import multer from "multer";
 import { db } from "@workspace/db";
 import { solicitacoesTable, arquivosTable } from "@workspace/db";
-import { eq, desc, and, sql, inArray } from "drizzle-orm";
+import { eq, desc, and, ne, sql, inArray } from "drizzle-orm";
 import { requireAuth } from "../middleware/auth.middleware";
 import { createClickUpTask, getClickUpTaskStatus } from "./clickup";
 import { uploadToR2 } from "./r2";
@@ -12,8 +12,15 @@ const router = Router();
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 50 * 1024 * 1024 } });
 
 const VALID_TIPOS = [
-  "eventos", "artes-divulgacao", "atualizacao-material",
-  "criacao-pdf", "apresentacoes", "pagina-assessores",
+  "eventos",
+  "artes-divulgacao",
+  "atualizacao-material",
+  "conteudo-pdf-informativo",
+  "conteudo-pdf-ebook",
+  "apresentacao-nova",
+  "apresentacao-atualizar",
+  "pagina-assessores-dados",
+  "pagina-assessores-atualizacao",
 ];
 
 const VALID_STATUSES = [
@@ -25,7 +32,11 @@ router.post("/solicitacoes", requireAuth, upload.any(), async (req, res) => {
     const user = req.session.user!;
     const { tipo_solicitacao, subtipo, maturidade, ...dados } = req.body;
 
-    if (!tipo_solicitacao || !VALID_TIPOS.includes(tipo_solicitacao)) {
+    if (!tipo_solicitacao || typeof tipo_solicitacao !== "string") {
+      return res.status(400).json({ error: "tipo_solicitacao e obrigatorio" });
+    }
+
+    if (!VALID_TIPOS.includes(tipo_solicitacao)) {
       return res.status(400).json({ error: "tipo_solicitacao invalido" });
     }
 
@@ -99,7 +110,11 @@ router.get("/solicitacoes", requireAuth, async (req, res) => {
 
     if (req.query.tipo_solicitacao) {
       const tipo = String(req.query.tipo_solicitacao);
-      if (VALID_TIPOS.includes(tipo)) {
+      if (tipo === "eventos") {
+        conditions.push(eq(solicitacoesTable.tipo_solicitacao, "eventos"));
+      } else if (tipo === "geral") {
+        conditions.push(ne(solicitacoesTable.tipo_solicitacao, "eventos"));
+      } else if (VALID_TIPOS.includes(tipo)) {
         conditions.push(eq(solicitacoesTable.tipo_solicitacao, tipo));
       }
     }
