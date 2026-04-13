@@ -45,7 +45,7 @@ const PgStore = pgSession(session);
 app.use(
   session({
     store: new PgStore({
-      pool: pool as any,
+      pool: pool as unknown as import("pg").Pool,
       tableName: "session",
       createTableIfMissing: true,
     }),

@@ -2,8 +2,8 @@ import { Router } from "express";
 import multer from "multer";
 import { db } from "@workspace/db";
 import { solicitacoesTable, arquivosTable } from "@workspace/db";
-import { eq, desc, and, ilike, sql, inArray } from "drizzle-orm";
-import { requireAuth, requireRole } from "../middleware/auth.middleware";
+import { eq, desc, and, sql, inArray } from "drizzle-orm";
+import { requireAuth } from "../middleware/auth.middleware";
 import { createClickUpTask, getClickUpTaskStatus } from "./clickup";
 import { uploadToR2 } from "./r2";
 import { logger } from "../lib/logger";
@@ -11,10 +11,30 @@ import { logger } from "../lib/logger";
 const router = Router();
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 50 * 1024 * 1024 } });
 
+const VALID_TIPOS = [
+  "eventos", "artes-divulgacao", "atualizacao-material",
+  "criacao-pdf", "apresentacoes", "pagina-assessores",
+];
+
+const VALID_STATUSES = [
+  "recebido", "em-analise", "em-producao", "aguardando", "concluido", "cancelado",
+];
+
 router.post("/solicitacoes", requireAuth, upload.any(), async (req, res) => {
   try {
-    const user = (req.session as any).user;
+    const user = req.session.user!;
     const { tipo_solicitacao, subtipo, maturidade, ...dados } = req.body;
+
+    if (!tipo_solicitacao || !VALID_TIPOS.includes(tipo_solicitacao)) {
+      return res.status(400).json({ error: "tipo_solicitacao invalido" });
+    }
+
+    if (maturidade !== undefined && maturidade !== null && maturidade !== "") {
+      const m = parseInt(maturidade);
+      if (isNaN(m) || m < 1 || m > 3) {
+        return res.status(400).json({ error: "maturidade deve ser 1, 2 ou 3" });
+      }
+    }
 
     let parsedDados = dados;
     if (typeof dados.dados === "string") {
@@ -68,30 +88,39 @@ router.post("/solicitacoes", requireAuth, upload.any(), async (req, res) => {
 
 router.get("/solicitacoes", requireAuth, async (req, res) => {
   try {
-    const user = (req.session as any).user;
+    const user = req.session.user!;
     const isAdmin = user.role === "admin" || user.role === "gestor";
 
-    const conditions: any[] = [];
+    const conditions: ReturnType<typeof eq>[] = [];
 
     if (!isAdmin) {
       conditions.push(eq(solicitacoesTable.user_email, user.email));
     }
 
     if (req.query.tipo_solicitacao) {
-      conditions.push(eq(solicitacoesTable.tipo_solicitacao, req.query.tipo_solicitacao as string));
+      const tipo = String(req.query.tipo_solicitacao);
+      if (VALID_TIPOS.includes(tipo)) {
+        conditions.push(eq(solicitacoesTable.tipo_solicitacao, tipo));
+      }
     }
     if (req.query.subtipo) {
-      conditions.push(eq(solicitacoesTable.subtipo, req.query.subtipo as string));
+      conditions.push(eq(solicitacoesTable.subtipo, String(req.query.subtipo)));
     }
     if (req.query.status) {
-      conditions.push(eq(solicitacoesTable.status, req.query.status as string));
+      const status = String(req.query.status);
+      if (VALID_STATUSES.includes(status)) {
+        conditions.push(eq(solicitacoesTable.status, status));
+      }
     }
     if (req.query.maturidade) {
-      conditions.push(eq(solicitacoesTable.maturidade, parseInt(req.query.maturidade as string)));
+      const m = parseInt(String(req.query.maturidade));
+      if (!isNaN(m) && m >= 1 && m <= 3) {
+        conditions.push(eq(solicitacoesTable.maturidade, m));
+      }
     }
 
     if (req.query.busca) {
-      const searchTerm = `%${req.query.busca}%`;
+      const searchTerm = `%${String(req.query.busca).replace(/%/g, "\\%")}%`;
       conditions.push(sql`(${solicitacoesTable.dados}::text ILIKE ${searchTerm})`);
     }
 
@@ -117,8 +146,8 @@ router.get("/solicitacoes", requireAuth, async (req, res) => {
       }
     }
 
-    const page = parseInt(req.query.page as string) || 1;
-    const limit = parseInt(req.query.limit as string) || 20;
+    const page = Math.max(1, parseInt(String(req.query.page)) || 1);
+    const limit = Math.min(100, Math.max(1, parseInt(String(req.query.limit)) || 20));
     const offset = (page - 1) * limit;
 
     const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
@@ -148,26 +177,26 @@ router.get("/solicitacoes", requireAuth, async (req, res) => {
 
 router.get("/solicitacoes/stats", requireAuth, async (req, res) => {
   try {
-    const user = (req.session as any).user;
+    const user = req.session.user!;
     const isAdmin = user.role === "admin" || user.role === "gestor";
     const baseCondition = isAdmin ? undefined : eq(solicitacoesTable.user_email, user.email);
 
     const activeStatuses = ["recebido", "em-analise", "em-producao", "aguardando"];
-    const activeConditions = [inArray(solicitacoesTable.status, activeStatuses)];
+    const activeConditions: ReturnType<typeof eq>[] = [inArray(solicitacoesTable.status, activeStatuses)];
     if (baseCondition) activeConditions.push(baseCondition);
 
     const [activeCount] = await db.select({ count: sql<number>`count(*)` })
       .from(solicitacoesTable)
       .where(and(...activeConditions));
 
-    const completedConditions = [eq(solicitacoesTable.status, "concluido")];
+    const completedConditions: ReturnType<typeof eq>[] = [eq(solicitacoesTable.status, "concluido")];
     if (baseCondition) completedConditions.push(baseCondition);
 
     const [completedCount] = await db.select({ count: sql<number>`count(*)` })
       .from(solicitacoesTable)
       .where(and(...completedConditions));
 
-    const totalConditions = baseCondition ? [baseCondition] : [];
+    const totalConditions: ReturnType<typeof eq>[] = baseCondition ? [baseCondition] : [];
     const [totalCount] = await db.select({ count: sql<number>`count(*)` })
       .from(solicitacoesTable)
       .where(totalConditions.length > 0 ? and(...totalConditions) : undefined);
@@ -175,7 +204,7 @@ router.get("/solicitacoes/stats", requireAuth, async (req, res) => {
     const startOfMonth = new Date();
     startOfMonth.setDate(1);
     startOfMonth.setHours(0, 0, 0, 0);
-    const monthConditions = [sql`${solicitacoesTable.created_at} >= ${startOfMonth.toISOString()}`];
+    const monthConditions: ReturnType<typeof eq>[] = [sql`${solicitacoesTable.created_at} >= ${startOfMonth.toISOString()}`];
     if (baseCondition) monthConditions.push(baseCondition);
 
     const [monthCount] = await db.select({ count: sql<number>`count(*)` })
@@ -196,11 +225,13 @@ router.get("/solicitacoes/stats", requireAuth, async (req, res) => {
 
 router.get("/solicitacoes/:id", requireAuth, async (req, res) => {
   try {
-    const user = (req.session as any).user;
+    const user = req.session.user!;
     const id = parseInt(req.params.id);
+    if (isNaN(id)) return res.status(400).json({ error: "ID invalido" });
+
     const isAdmin = user.role === "admin" || user.role === "gestor";
 
-    const conditions = [eq(solicitacoesTable.id, id)];
+    const conditions: ReturnType<typeof eq>[] = [eq(solicitacoesTable.id, id)];
     if (!isAdmin) {
       conditions.push(eq(solicitacoesTable.user_email, user.email));
     }
@@ -221,8 +252,18 @@ router.get("/solicitacoes/:id", requireAuth, async (req, res) => {
 
 router.get("/solicitacoes/:id/status", requireAuth, async (req, res) => {
   try {
+    const user = req.session.user!;
     const id = parseInt(req.params.id);
-    const [solicitacao] = await db.select().from(solicitacoesTable).where(eq(solicitacoesTable.id, id));
+    if (isNaN(id)) return res.status(400).json({ error: "ID invalido" });
+
+    const isAdmin = user.role === "admin" || user.role === "gestor";
+
+    const conditions: ReturnType<typeof eq>[] = [eq(solicitacoesTable.id, id)];
+    if (!isAdmin) {
+      conditions.push(eq(solicitacoesTable.user_email, user.email));
+    }
+
+    const [solicitacao] = await db.select().from(solicitacoesTable).where(and(...conditions));
 
     if (!solicitacao) {
       return res.status(404).json({ error: "Solicitacao nao encontrada" });

@@ -27,9 +27,20 @@ function getMsalClient() {
 const REDIRECT_URI = process.env.MSAL_REDIRECT_URI || "/auth/callback";
 const SCOPES = ["user.read", "openid", "profile", "email"];
 
+function isSafeRedirect(url: string): boolean {
+  if (!url) return false;
+  if (url.startsWith("/") && !url.startsWith("//")) return true;
+  return false;
+}
+
+function sanitizeRedirect(url: string): string {
+  if (isSafeRedirect(url)) return url;
+  return "/solicitacoes.html";
+}
+
 router.get("/login", async (req, res) => {
   try {
-    const redirectTo = (req.query.redirect as string) || "/solicitacoes.html";
+    const redirectTo = sanitizeRedirect((req.query.redirect as string) || "/solicitacoes.html");
     const client = getMsalClient();
     const authUrl = await client.getAuthCodeUrl({
       scopes: SCOPES,
@@ -47,7 +58,7 @@ router.get("/login", async (req, res) => {
 router.get("/callback", async (req, res) => {
   try {
     const code = req.query.code as string;
-    const state = (req.query.state as string) || "/solicitacoes.html";
+    const state = sanitizeRedirect((req.query.state as string) || "/solicitacoes.html");
 
     if (!code) {
       return res.redirect("/?error=no_code");
@@ -82,7 +93,7 @@ router.get("/callback", async (req, res) => {
 
     const userRow = await db.select().from(usersTable).where(eq(usersTable.email, email)).limit(1);
 
-    (req.session as any).user = {
+    req.session.user = {
       email,
       name,
       role: userRow[0]?.role || "colaborador",
@@ -102,7 +113,7 @@ router.get("/logout", (req, res) => {
 });
 
 router.get("/me", (req, res) => {
-  const user = (req.session as any)?.user;
+  const user = req.session?.user;
   if (!user) {
     return res.json({ authenticated: false });
   }

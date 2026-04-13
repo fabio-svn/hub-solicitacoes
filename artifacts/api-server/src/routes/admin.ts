@@ -21,7 +21,7 @@ router.put("/users/:id/role", requireAuth, requireRole("admin"), async (req, res
   try {
     const userId = parseInt(req.params.id);
     const { role } = req.body;
-    const currentUser = (req.session as any).user;
+    const currentUser = req.session.user!;
 
     if (!["colaborador", "gestor", "admin"].includes(role)) {
       return res.status(400).json({ error: "Role invalida" });
