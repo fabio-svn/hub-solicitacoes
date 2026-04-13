@@ -26,6 +26,10 @@ function getMsalClient() {
 }
 
 const REDIRECT_URI = process.env.MSAL_REDIRECT_URI || "/auth/callback";
+
+if (process.env.NODE_ENV === "production" && (!process.env.MSAL_REDIRECT_URI || !process.env.MSAL_REDIRECT_URI.startsWith("https://"))) {
+  throw new Error("MSAL_REDIRECT_URI must be set to an absolute HTTPS URL in production (e.g. https://yourdomain.com/auth/callback)");
+}
 const SCOPES = ["user.read", "openid", "profile", "email"];
 
 function isSafeRedirect(url: string): boolean {

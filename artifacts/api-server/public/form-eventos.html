@@ -305,8 +305,14 @@
         });
         if (data._checkPrazos) { const el = document.getElementById('checkPrazos'); if (el) el.checked = true; }
         if (data._checkTutorial) { const el = document.getElementById('checkTutorial'); if (el) el.checked = true; }
-        if (data._natureza) formState.natureza = data._natureza;
-        if (data._maturidade) formState.maturidade = data._maturidade;
+        if (data._natureza) {
+          formState.natureza = data._natureza;
+          selectNatureza(data._natureza);
+        }
+        if (data._maturidade) {
+          formState.maturidade = data._maturidade;
+          selectMaturidade(data._maturidade);
+        }
         if (data._materiais) data._materiais.forEach(m => formState.materiais.add(m));
       } catch {}
     }
