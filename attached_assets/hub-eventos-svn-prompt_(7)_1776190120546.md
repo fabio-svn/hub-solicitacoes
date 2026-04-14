@@ -1,0 +1,1725 @@
+# PROMPT — Hub de Solicitações SVN
+## Versão consolidada com todas as especificações
+
+Crie uma aplicação web completa chamada **"Hub de Solicitações SVN"**. Stack: Node.js + Express (backend) + HTML, CSS e JavaScript puro (frontend), organizado em múltiplos arquivos. Deploy no Railway. Alta qualidade visual e funcionalidade completa.
+
+---
+
+## 1. VISÃO GERAL DA ESTRUTURA
+
+O Hub é uma central de solicitações internas da SVN com dois fluxos principais acessíveis pela home:
+
+**Fluxo 1 — Fazer uma solicitação:** o usuário escolhe o tipo de solicitação em uma grade categorizada de botões, e é direcionado para o formulário correspondente. Na versão inicial, apenas **Eventos** está ativo. Os demais botões ficam visíveis com opacidade reduzida e exibem tooltip "Em breve" ao hover.
+
+**Fluxo 2 — Acompanhar uma solicitação:** redireciona para o dashboard autenticado onde o usuário vê o status das suas solicitações.
+
+A autenticação Microsoft MSAL é obrigatória para acessar qualquer formulário ou dashboard, mas a home é pública.
+
+---
+
+## 2. ARQUIVOS DO PROJETO
+
+```
+backend/
+  server.js                   → Express server principal
+  routes/
+    auth.js                   → Rotas Microsoft MSAL
+    forms.js                  → Recebimento e salvamento de formulários
+    clickup.js                → Integração ClickUp API
+    admin.js                  → Rotas do painel admin
+  middleware/
+    auth.middleware.js         → Verificação de sessão + role
+  db/
+    schema.sql                → Schema PostgreSQL
+    queries.js                → Queries reutilizáveis
+  uploads/
+    r2.js                     → Upload para Cloudflare R2 via AWS SDK
+
+frontend/
+  index.html                  → Home — escolha entre Fazer / Acompanhar solicitação
+  solicitacoes.html           → Tela de seleção do tipo de solicitação (grade categorizada)
+  form-eventos.html           → Formulário unificado de eventos (presencial + online, 3 maturidades)
+  form-pagina-assessores.html → Formulário de Página de Assessores (dados + atualização via subtipo URL)
+  form-apresentacoes.html     → Formulário de Apresentações
+  form-artes-divulgacao.html  → Formulário de Artes de Divulgação
+  form-atualizacao-material.html → Formulário de Atualização de Materiais
+  form-criacao-pdf.html       → Formulário de Criação de PDF
+  thankyou.html               → Thank You page pós-envio
+  dashboard.html              → Dashboard de acompanhamento (autenticado)
+  admin.html                  → Painel admin (role: admin ou gestor)
+  style.css                   → Estilos globais compartilhados
+  config.js                   → Todas as constantes e dados configuráveis
+  home.js                     → Lógica da home
+  solicitacoes.js             → Lógica da tela de seleção
+  form-eventos.js             → Lógica do formulário de eventos
+  form-pagina-assessores.js   → Lógica do formulário de página de assessores
+  form-apresentacoes.js       → Lógica do formulário de apresentações
+  form-artes-divulgacao.js    → Lógica do formulário de artes de divulgação
+  form-atualizacao-material.js → Lógica do formulário de atualização de materiais
+  form-criacao-pdf.js         → Lógica do formulário de criação de PDF
+  dashboard.js                → Lógica do dashboard
+  admin.js                    → Lógica do painel admin
+  auth.js                     → MSAL client-side helper
+```
+
+**Estrutura para formulários futuros** (adicionar conforme ativação):
+```
+  form-assinatura-email.html / .js
+  form-cartao-visita.html / .js
+  form-[tipo].html / .js       → padrão para todos os demais
+```
+
+---
+
+## 2. IDENTIDADE VISUAL GLOBAL
+
+### Fontes
+- **Nunito Sans** (Google Fonts) — pesos 300, 400, 600, 700 — corpo, labels, botões
+- **Taviraj** (Google Fonts) — pesos 300, 400 — títulos de página nos painéis de acompanhamento e admin
+
+Importar ambas no `<head>` de todas as páginas:
+```html
+<link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap" rel="stylesheet">
+```
+
+### Assets SVN
+Usar sempre nos lugares indicados — não substituir por texto ou placeholders:
+```
+Logo SVN branca: https://pub-a2132f9b61f940659cc98265acfcf64c.r2.dev/SVN-2.svg
+Logo SVN preta:  https://pub-a2132f9b61f940659cc98265acfcf64c.r2.dev/SVN-1.svg
+Vídeo hero:      https://pub-a2132f9b61f940659cc98265acfcf64c.r2.dev/bg-eventos-2.mp4
+Manual de eventos: https://pub-a2132f9b61f940659cc98265acfcf64c.r2.dev/Manual-de-Eventos-SVN.pdf
+Pacote padrão — imagem 1: https://pub-a2132f9b61f940659cc98265acfcf64c.r2.dev/Convite.png
+Pacote padrão — imagem 2: https://pub-a2132f9b61f940659cc98265acfcf64c.r2.dev/tela1.png
+```
+
+Regra de uso da logo:
+- **Logo branca** → fundos escuros (home, thankyou, modais, header dark)
+- **Logo preta** → fundos claros (formulários, dashboard, admin)
+
+Atualizar no `config.js`:
+```js
+const URL_MANUAL            = "https://pub-a2132f9b61f940659cc98265acfcf64c.r2.dev/Manual-de-Eventos-SVN.pdf";
+const URL_VIDEO_HERO        = "https://pub-a2132f9b61f940659cc98265acfcf64c.r2.dev/bg-eventos-2.mp4";
+const URL_LOGO_BRANCA       = "https://pub-a2132f9b61f940659cc98265acfcf64c.r2.dev/SVN-2.svg";
+const URL_LOGO_PRETA        = "https://pub-a2132f9b61f940659cc98265acfcf64c.r2.dev/SVN-1.svg";
+const PACOTE_PADRAO_IMAGENS = [
+  "https://pub-a2132f9b61f940659cc98265acfcf64c.r2.dev/Convite.png",
+  "https://pub-a2132f9b61f940659cc98265acfcf64c.r2.dev/tela1.png"
+];
+```
+
+### Variáveis CSS (definir em `:root` no `style.css`):
+
+```css
+:root {
+  /* Cores base */
+  --paper-white:    #fef8f4;
+  --icon-bg:        #f8f4f1;
+  --card-white:     #ffffff;
+  --carbon-black:   #221B19;
+  --ruby-red:       #9f3f37;
+  --leather-brown:  #381811;
+  --sage-green:     #6f877b;
+  --surface:        #1a1412;
+
+  /* Bordas */
+  --border:         rgba(255, 248, 243, 0.1);
+  --border-light:   rgba(34, 27, 25, 0.12);
+
+  /* Tema escuro (home, thankyou, modais) */
+  --dark-bg-from:   #221B19;
+  --dark-bg-to:     #0d0a09;
+}
+```
+
+### Scrollbar customizada (webkit):
+Largura: 6px | Cor: `--leather-brown` | Track: transparente
+
+### Seleção de texto:
+`background: --ruby-red` | `color: --paper-white`
+
+### Focus global:
+`outline: 2px solid --ruby-red` | `outline-offset: 2px`
+
+---
+
+## 3. AUTENTICAÇÃO MICROSOFT (MSAL)
+
+### Fluxo de autenticação:
+1. Home fica **publicamente acessível** — sem login obrigatório
+2. Ao clicar em **"Quero fazer uma solicitação"** ou **"Quero acompanhar uma solicitação"**, o sistema **intercepta o clique** e verifica se há sessão Microsoft ativa
+3. Se não houver sessão: redireciona para login Microsoft MSAL
+4. **Apenas contas `@svninvest.com.br`** são aceitas — rejeitar outros domínios com mensagem de erro clara
+5. Após autenticação: redirecionar para o destino escolhido (`solicitacoes.html` ou `dashboard.html`)
+6. O formulário **pré-preenche automaticamente** o campo "Seu nome" com o nome da conta Microsoft (editável)
+7. **Telefone e e-mail são removidos** de todos os formulários — o backend vincula a submissão ao e-mail da sessão Microsoft e consulta o telefone via banco de dados
+
+### Cabeçalho dos formulários (autenticado):
+- Avatar circular + nome do usuário logado no canto superior direito
+- Link "Sair" discreto ao lado
+
+### Sessão:
+- **Persistência entre sessões:** usar `cacheLocation: "localStorage"` na configuração do MSAL — o token persiste no navegador entre sessões, eliminando a necessidade de login repetido. O usuário loga uma vez e permanece autenticado por até 90 dias (padrão Azure) ou até fazer logout manualmente.
+- Adicionar `storeAuthStateInCookie: true` como fallback para Safari e iOS.
+- **Renovação silenciosa:** o MSAL renova o access token automaticamente em background quando necessário — sem interrupção para o usuário.
+- **Ao retornar à home:** verificar sessão ativa via `msalInstance.getAllAccounts()`. Se existir conta válida, pular o login e ir direto para `solicitacoes.html` ou `dashboard.html` conforme o botão clicado.
+- Se o token expirar durante preenchimento de formulário: salvar progresso completo em `sessionStorage` (incluindo `natureza`, `maturidade`, materiais selecionados e todos os campos de texto), redirecionar para reautenticação silenciosa, restaurar dados após retorno. O restore deve respeitar a ordem: primeiro restaurar `natureza` chamando `selectNatureza()`, depois `maturidade` chamando `selectMaturidade()` e `renderMaturityFields()`, e só então preencher os campos de texto — garantindo que o DOM esteja pronto antes de tentar preencher campos dinâmicos. Depoimentos dinâmicos (form de assessores) e materiais selecionados (form de eventos) devem ser explicitamente incluídos no save/restore — não dependem de `addEventListener('change')` padrão.
+- Logout manual: limpar `localStorage` + redirect para home.
+
+### Roles:
+```
+Colaborador  → acessa seus próprios formulários e dashboard pessoal
+Gestor       → painel admin com visão de todas as solicitações (sem gerenciar usuários)
+Admin        → tudo do Gestor + promover/rebaixar usuários
+```
+- Primeiro Admin definido manualmente no banco
+- Demais promovidos via interface pelo Admin
+
+---
+
+## 4. config.js — CONSTANTES CONFIGURÁVEIS
+
+```javascript
+// ── URLS PRINCIPAIS ──────────────────────────────────────────
+const URL_FORM_EVENTOS       = "form-eventos.html";
+const URL_SOLICITACOES       = "solicitacoes.html";
+const URL_DASHBOARD          = "dashboard.html";
+
+// URLs utilitárias
+const URL_MANUAL             = "https://pub-a2132f9b61f940659cc98265acfcf64c.r2.dev/Manual-de-Eventos-SVN.pdf";
+const URL_APRESENTACAO       = "#";
+const URL_STORE              = "#";
+const URL_TUTORIAL_TRANSMISSAO = "https://drive.google.com/file/d/1L36fFqFC-sEPWggNmlZOUNnY2DqxP8HK/view?usp=sharing";
+
+// Assets SVN
+const URL_VIDEO_HERO         = "https://pub-a2132f9b61f940659cc98265acfcf64c.r2.dev/bg-eventos-2.mp4";
+const URL_LOGO_BRANCA        = "https://pub-a2132f9b61f940659cc98265acfcf64c.r2.dev/SVN-2.svg";
+const URL_LOGO_PRETA         = "https://pub-a2132f9b61f940659cc98265acfcf64c.r2.dev/SVN-1.svg";
+const PACOTE_PADRAO_IMAGENS  = [
+  "https://pub-a2132f9b61f940659cc98265acfcf64c.r2.dev/Convite.png",
+  "https://pub-a2132f9b61f940659cc98265acfcf64c.r2.dev/tela1.png"
+];
+
+// E-mail para uploads alternativos
+const EMAIL_UPLOAD = "gabriela.franca@svninvest.com.br";
+
+// ── INTEGRAÇÃO ────────────────────────────────────────────────
+const CLICKUP_API_TOKEN  = ""; // preencher no ambiente Railway
+
+// IDs das listas ClickUp por categoria de solicitação (preencher no ambiente Railway)
+const CLICKUP_LISTS = {
+  "eventos":              "", // Lista: Eventos
+  "identidade-pessoal":  "", // Lista: Identidade e Materiais Pessoais
+  "marketing-conteudo":  "", // Lista: Marketing e Conteúdo
+  "audiovisual":         "", // Lista: Audiovisual
+  "impressos":           "", // Lista: Impressos
+  "obras-manutencao":    "", // Lista: Obras e Manutenções
+  "outros":              "", // Lista: Outros
+};
+
+// Mapeamento tipo de solicitação → lista ClickUp
+const CLICKUP_LIST_MAP = {
+  "eventos":                   "eventos",
+  "pagina-assessores-dados":   "identidade-pessoal",
+  "pagina-assessores-atualizacao": "identidade-pessoal",
+  "assinatura-email":          "identidade-pessoal",
+  "cartao-visita-fisico":      "identidade-pessoal",
+  "cartao-visita-digital":     "identidade-pessoal",
+  "cartao-boas-vindas":        "identidade-pessoal",
+  "cartao-comemorativo":       "identidade-pessoal",
+  "divulgacao-nps":            "identidade-pessoal",
+  "convite-fp":                "identidade-pessoal",
+  "artes-divulgacao":          "marketing-conteudo",
+  "apresentacao-nova":         "marketing-conteudo",
+  "apresentacao-atualizar":    "marketing-conteudo",
+  "conteudo-pdf-informativo":  "marketing-conteudo",
+  "conteudo-pdf-ebook":        "marketing-conteudo",
+  "atualizacao-material":      "marketing-conteudo",
+  "email-marketing":           "marketing-conteudo",
+  "materia-blog":              "marketing-conteudo",
+  "conteudos-central":         "marketing-conteudo",
+  "producao-video":            "audiovisual",
+  "analise-gravacoes":         "audiovisual",
+  "materiais-impressos":       "impressos",
+  "obras-manutencao":          "obras-manutencao",
+  "outro":                     "outros",
+  // Eventos e relacionamento → lista eventos
+  "certificado-eventos":       "eventos",
+  "patrocinio":                "eventos",
+  "brindes":                   "eventos",
+  "correios":                  "eventos",
+  "pagina-online":             "eventos",
+};
+
+const R2_BUCKET     = "";
+const R2_PUBLIC_URL = "https://pub-5bcbae1bfa0b4fae862dc042f8f1eaa8.r2.dev/";
+
+// ── MENSAGENS ─────────────────────────────────────────────────
+const MSG_THANKYOU_TITULO    = "Solicitação enviada com sucesso!";
+const MSG_THANKYOU_SUBTITULO = "Sua solicitação foi recebida! Nossa equipe de Marketing analisará em breve e entrará em contato.";
+const MSG_THANKYOU_BOTAO     = "Ver minha solicitação";
+
+// ── GRADE DE SOLICITAÇÕES ─────────────────────────────────────
+// Estrutura de categorias e tipos de solicitação.
+// "ativo: true" = formulário disponível. "ativo: false" = visível mas bloqueado ("Em breve").
+// "subOpcoes" = abre sub-menu antes do forms.
+const CATEGORIAS_SOLICITACAO = [
+  {
+    categoria: "Identidade e materiais pessoais",
+    itens: [
+      { id: "pagina-assessores",   label: "Página de Assessores",    icon: "icon-user",        ativo: true,
+        subOpcoes: [
+          { id: "pagina-assessores-dados",       label: "Dados para página de assessores" },
+          { id: "pagina-assessores-atualizacao", label: "Atualização de dados para página de assessores" },
+        ]
+      },
+      { id: "assinatura-email",    label: "Assinatura de E-mail",    icon: "icon-mail",        ativo: false },
+      { id: "cartao-visita",       label: "Cartão de Visita",        icon: "icon-credit-card", ativo: false,
+        subOpcoes: [
+          { id: "cartao-visita-fisico",  label: "Físico"  },
+          { id: "cartao-visita-digital", label: "Digital" },
+        ]
+      },
+      { id: "cartao-boas-vindas",  label: "Cartão de Boas-vindas",  icon: "icon-handshake",   ativo: false },
+      { id: "cartao-comemorativo", label: "Cartão Comemorativo",    icon: "icon-heart",       ativo: false },
+      { id: "divulgacao-nps",      label: "Divulgação NPS",         icon: "icon-star",        ativo: false },
+      { id: "convite-fp",          label: "Convite Financial Planning", icon: "icon-envelope", ativo: false },
+    ]
+  },
+  {
+    categoria: "Marketing e conteúdo",
+    itens: [
+      { id: "artes-divulgacao",    label: "Artes de Divulgação",               icon: "icon-image",       ativo: true  },
+      { id: "apresentacao",        label: "Apresentação",                      icon: "icon-monitor",     ativo: true,
+        subOpcoes: [
+          { id: "apresentacao-nova",      label: "Nova apresentação" },
+          { id: "apresentacao-atualizar", label: "Atualizar apresentação" },
+        ]
+      },
+      { id: "conteudo-pdf",        label: "Conteúdo em PDF",                   icon: "icon-file-pdf",    ativo: true,
+        subOpcoes: [
+          { id: "conteudo-pdf-informativo", label: "Informativo" },
+          { id: "conteudo-pdf-ebook",       label: "Ebook"       },
+        ]
+      },
+      { id: "email-marketing",     label: "E-mail Marketing",                  icon: "icon-send",        ativo: false },
+      { id: "materia-blog",        label: "Matéria para blog, jornal ou revista", icon: "icon-newspaper", ativo: false },
+      { id: "conteudos-central",   label: "Conteúdos Central SVN",             icon: "icon-layout",      ativo: false },
+      { id: "atualizacao-material", label: "Atualização de material",            icon: "icon-refresh",      ativo: true  },
+    ]
+  },
+  {
+    categoria: "Eventos e relacionamento",
+    itens: [
+      { id: "eventos",             label: "Eventos",                           icon: "icon-calendar",    ativo: true  },
+      { id: "certificado-eventos", label: "Certificado para Eventos",          icon: "icon-award",       ativo: false },
+      { id: "patrocinio",          label: "Patrocínio",                        icon: "icon-flag",        ativo: false },
+      { id: "brindes",             label: "Brindes",                           icon: "icon-gift",        ativo: false },
+      { id: "correios",            label: "Envio de itens pelos Correios",     icon: "icon-package",     ativo: false },
+      { id: "pagina-online",       label: "Página Online",                     icon: "icon-globe",       ativo: false },
+    ]
+  },
+  {
+    categoria: "Audiovisual",
+    itens: [
+      { id: "producao-video",      label: "Produção de Vídeo",                 icon: "icon-video",       ativo: false },
+      { id: "analise-gravacoes",   label: "Análise de Elegibilidade para Gravações", icon: "icon-film",  ativo: false },
+    ]
+  },
+  {
+    // Categorias de botão único — exibidas lado a lado em 3 colunas na tela de seleção
+    categoria: "Impressos",
+    layout: "single",
+    itens: [
+      { id: "materiais-impressos", label: "Materiais Impressos",               icon: "icon-printer",     ativo: false },
+    ]
+  },
+  {
+    categoria: "Obras e manutenções",
+    layout: "single",
+    itens: [
+      { id: "obras-manutencao",    label: "Obras, mudanças, manutenção e demandas estruturais", icon: "icon-tool", ativo: false },
+    ]
+  },
+  {
+    categoria: "Outros",
+    layout: "single",
+    itens: [
+      { id: "outro",               label: "Outro",                             icon: "icon-edit",        ativo: false },
+    ]
+  },
+// Nota: "Atualização de material" está em Marketing e conteúdo
+];
+
+// ── TIPOS DE SOLICITAÇÃO (para identificação no dashboard) ────
+const TIPO_SOLICITACAO_LABELS = {
+  // Ativos
+  "eventos":                        "Evento",
+  "pagina-assessores-dados":        "Página de Assessores — Dados",
+  "pagina-assessores-atualizacao":  "Página de Assessores — Atualização",
+  "apresentacao-nova":              "Apresentação — Nova",
+  "apresentacao-atualizar":         "Apresentação — Atualização",
+  "artes-divulgacao":               "Arte de Divulgação",
+  "conteudo-pdf-informativo":       "PDF — Informativo",
+  "conteudo-pdf-ebook":             "PDF — Ebook",
+  "atualizacao-material":           "Atualização de Material",
+  // Em breve
+  "assinatura-email":               "Assinatura de E-mail",
+  "cartao-visita-fisico":           "Cartão de Visita — Físico",
+  "cartao-visita-digital":          "Cartão de Visita — Digital",
+  "cartao-boas-vindas":             "Cartão de Boas-vindas",
+  "cartao-comemorativo":            "Cartão Comemorativo",
+  "divulgacao-nps":                 "Divulgação NPS",
+  "convite-fp":                     "Convite Financial Planning",
+  "email-marketing":                "E-mail Marketing",
+  "materia-blog":                   "Matéria para Blog/Jornal/Revista",
+  "conteudos-central":              "Conteúdos Central SVN",
+  "certificado-eventos":            "Certificado para Eventos",
+  "patrocinio":                     "Patrocínio",
+  "brindes":                        "Brindes",
+  "correios":                       "Envio pelos Correios",
+  "pagina-online":                  "Página Online",
+  "producao-video":                 "Produção de Vídeo",
+  "analise-gravacoes":              "Análise de Elegibilidade para Gravações",
+  "materiais-impressos":            "Materiais Impressos",
+  "obras-manutencao":               "Obras e Manutenções",
+  "outro":                          "Outro",
+};
+
+// ── CONTRATOS SOCIAIS ────────────────────────────────────────
+const CONTRATOS_SOCIAIS = [
+  "SVN Capital",
+  "SVN Connect",
+  "SVN Investimentos",
+];
+
+// ── SELOS DE ASSESSOR ────────────────────────────────────────
+const SELOS_ASSESSOR = [
+  { id: "ancord",     label: "Ancord",    icon_url: "" }, // preencher URL do ícone posteriormente
+  { id: "cea",        label: "CEA",       icon_url: "" },
+  { id: "cfa",        label: "CFA®",      icon_url: "" },
+  { id: "cfp",        label: "CFP®",      icon_url: "" },
+  { id: "cga",        label: "CGA",       icon_url: "" },
+  { id: "cnpi",       label: "CNPI",      icon_url: "" },
+  { id: "cpa10",      label: "CPA-10",    icon_url: "" },
+  { id: "cpa20",      label: "CPA-20",    icon_url: "" },
+  { id: "xp-private", label: "XP Private",icon_url: "" },
+];
+
+// ── STATUS DAS SOLICITAÇÕES ───────────────────────────────────
+
+// Status das solicitações (mapeados para status do ClickUp)
+const STATUS_SOLICITACAO = [
+  { id: "recebido",    label: "Recebido",            cor: "--sage-green"    },
+  { id: "em-analise",  label: "Em análise",           cor: "--ruby-red"      },
+  { id: "em-producao", label: "Em produção",          cor: "--ruby-red"      },
+  { id: "aguardando",  label: "Aguardando informação",cor: "--leather-brown" },
+  { id: "concluido",   label: "Concluído",            cor: "--sage-green"    },
+  { id: "cancelado",   label: "Cancelado",            cor: "--carbon-black"  },
+];
+
+// Mapeamento ClickUp status → status interno
+const CLICKUP_STATUS_MAP = {
+  "recebido":      "to do",
+  "em-analise":    "in progress",
+  "em-producao":   "in progress",
+  "aguardando":    "waiting",
+  "aguardando-rh": "waiting on rh",  // ajustar conforme nome exato do status na lista ClickUp
+  "concluido":     "complete",
+  "cancelado":     "cancelled",
+};
+
+// Prazos dos materiais presenciais
+const PRAZOS_MATERIAIS = {
+  "pacote-padrao":          { label: "15 dias de antecedência" },
+  "pacote-personalizado":   { label: "20 dias de antecedência" },
+  "banner-impresso":        { label: "30 dias de antecedência" },
+  "flyer":                  { label: "30 dias de antecedência" },
+  "brindes-store":          { label: "30 dias de antecedência" },
+  "brindes-personalizados": { label: "45 dias de antecedência" },
+  "captacao-audiovisual":   { label: "15 dias de antecedência" },
+  "coffee-break":           { label: "15 dias de antecedência" },
+  "instagram":              { label: "15 dias de antecedência" },
+  "email-marketing":        { label: "15 dias de antecedência" },
+  "equipe-staff":           { label: "15 dias de antecedência" },
+  "jantar-almoco":          { label: "30 dias de antecedência" },
+  "pagina-sorteio":         { label: "15 dias de antecedência" },
+  "projeto-stand":          { label: "45 dias de antecedência" },
+
+  // Prazos dos materiais online
+  "pacote-padrao-online":        { label: "2 dias úteis"   },
+  "pacote-personalizado-online": { label: "7 dias"         },
+  "instagram-online":            { label: "1 dia útil"     },
+  "link-youtube-online":         { label: "2 dias úteis"   },
+  "apoio-live-online":           { label: "5 dias úteis"   },
+  "email-marketing-online":      { label: "3-5 dias úteis" },
+};
+
+// Itens de materiais presenciais
+const ITENS_MATERIAIS = [
+  { id: "pacote-padrao",          label: "Pacote de Divulgação Padrão (convite + página de inscrição)",        icon: "icon-envelope-star" },
+  { id: "pacote-personalizado",   label: "Pacote de Divulgação Personalizado (convite + página de inscrição)", icon: "icon-palette"       },
+  { id: "banner-impresso",        label: "Banner Impresso",                                                    icon: "icon-image"         },
+  { id: "flyer",                  label: "Flyer",                                                              icon: "icon-file-text"     },
+  { id: "brindes-store",          label: "Brindes (solicitar na Store)",                                       icon: "icon-gift"          },
+  { id: "brindes-personalizados", label: "Brindes Personalizados",                                             icon: "icon-gift"          },
+  { id: "captacao-audiovisual",   label: "Captação Audiovisual",                                               icon: "icon-video"         },
+  { id: "coffee-break",           label: "Coffee Break ou Coquetel",                                           icon: "icon-coffee"        },
+  { id: "instagram",              label: "Divulgação no Instagram da SVN",                                     icon: "icon-instagram"     },
+  { id: "email-marketing",        label: "E-mail Marketing",                                                   icon: "icon-mail"          },
+  { id: "equipe-staff",           label: "Equipe Staff (Marketing)",                                           icon: "icon-users"         },
+  { id: "jantar-almoco",          label: "Jantar / Almoço (Restaurante)",                                      icon: "icon-utensils"      },
+  { id: "pagina-sorteio",         label: "Página para Sorteio",                                                icon: "icon-star"          },
+  { id: "projeto-stand",          label: "Projeto de Stand",                                                   icon: "icon-layout"        },
+];
+
+// Itens de materiais online
+const ITENS_MATERIAIS_ONLINE = [
+  { id: "pacote-padrao-online",        label: "Pacote de Divulgação Padrão (convite + página de inscrição) — 2 dias úteis",   icon: "icon-envelope-star" },
+  { id: "pacote-personalizado-online", label: "Pacote de Divulgação Personalizado (convite + página de inscrição) — 7 dias",  icon: "icon-palette"       },
+  { id: "instagram-online",            label: "Divulgação no Instagram da SVN (Sujeito a aprovação) — 1 dia útil",            icon: "icon-instagram"     },
+  { id: "link-youtube-online",         label: "Link da live no Youtube — 2 dias úteis",                                       icon: "icon-youtube"       },
+  { id: "apoio-live-online",           label: "Apoio em live — 5 dias úteis",                                                 icon: "icon-video"         },
+  { id: "email-marketing-online",      label: "E-mail Marketing — 3-5 dias úteis",                                            icon: "icon-mail"          },
+];
+
+// Unidades SVN com endereços
+const UNIDADES_SVN = [
+  { nome: "SVN Aracaju",              endereco: "R. Francisco Duarte Ramos, 34 – Jardins, Aracaju – SE, 49025-210" },
+  { nome: "SVN Campo Grande",         endereco: "Edifício Atrium – R. Euclides da Cunha, 1039 – Loja 3 – Jardim dos Estados" },
+  { nome: "SVN Cascavel",             endereco: "Av. Piquiri, 17 – Salas 01 e 02 – Centro" },
+  { nome: "SVN Cuiabá",               endereco: "R. Pres. Castelo Branco, 277 – Quilombo" },
+  { nome: "SVN Curitiba",             endereco: "Praça São Paulo da Cruz, 50 – Sala 1605 – Juvevê, Curitiba – PR, 80030-480" },
+  { nome: "SVN Foz do Iguaçu",        endereco: "R. Alm. Barroso, 1139 – Centro" },
+  { nome: "SVN Londrina",             endereco: "Av. Higienópolis, 602 – Sala 2 – Centro, Londrina – PR, 86020-080" },
+  { nome: "SVN Maringá",              endereco: "Av. Cerro Azul, 123 – Zona 2, Maringá – PR, 87010-000" },
+  { nome: "SVN Salvador",             endereco: "Torre Nova York, Av. Tancredo Neves, 2539 – Sala 2104 – Caminho das Árvores, Salvador – BA, 41820-021" },
+  { nome: "SVN São Paulo",            endereco: "Condomínio Edifício Brasílio Machado Neto – Av. Dr. Cardoso de Melo, 1855 – Conjunto 51 – Vila Olímpia, São Paulo – SP, 04548-005" },
+  { nome: "SVN Toledo",               endereco: "Rua Nossa Senhora do Rocio, 2279 – Sala 02 – Jardim La Salle, Toledo – PR, 85900-180 (esquina com R. Coronel Vicente, 2440)" },
+  { nome: "SVN Vitória da Conquista", endereco: "Av. Jorge Teixeira, 29 – Salas 16 e 17, CEP 45028-536" },
+];
+
+// Setores
+const SETORES = [
+  "Selecione seu setor",
+  "Administração",
+  "Alocação",
+  "Câmbio",
+  "Commodities",
+  "Capital Humano",
+  "Corporate",
+  "Digital",
+  "Financeiro",
+  "Institucional",
+  "Jurídico",
+  "Marketing",
+  "Performance",
+  "Middle",
+  "Proteção Patrimonial",
+  "Renda Fixa",
+  "Renda Variável",
+  "SVN Gestão",
+  "SVN Global",
+  "SVN Investment & Merchant Banking (M&A)",
+  "Universidade SVN",
+  "Wealth Planning",
+];
+
+// Origens do evento presencial
+const ORIGENS_EVENTO = [
+  "Selecione a origem",
+  "Iniciativa interna", "Demanda de cliente",
+  "Parceria externa", "Calendário corporativo",
+];
+
+// Origens do evento online
+const ORIGENS_EVENTO_ONLINE = [
+  "Selecione a origem",
+  "Parceria", "Independente", "Universidade SVN",
+];
+
+// Canais de transmissão online
+const CANAIS_TRANSMISSAO = [
+  "Selecione o canal",
+  "Meet", "YouTube", "Zoom",
+];
+
+// Canais que não exigem link obrigatório
+const CANAIS_SEM_LINK_OBRIGATORIO = ["Meet", "Zoom"];
+
+// Tipos de evento presencial (Forms 1 e 2)
+const TIPOS_EVENTO = [
+  "Selecione o tipo", "Palestra", "Workshop",
+  "Confraternização", "Reunião", "Experiência com clientes",
+  "Treinamento",
+];
+
+// Tipos de evento aproximado (Form 3 presencial)
+const TIPOS_EVENTO_FORM3 = [
+  "Palestra", "Café da Manhã", "Almoço", "Jantar",
+  "Palestra com coffee break", "Palestra com coquetel",
+  "Evento esportivo", "Evento beneficente", "Feira de Exposição",
+];
+
+// Opções de rateio (apenas presencial)
+const OPCOES_RATEIO = [
+  "Selecione o rateio",
+  "100% Unidade",
+  "100% Assessor",
+  "50% Unidade – 50% Assessores",
+  "Área",
+  "Outros",
+];
+
+// Campos selecionáveis da Etapa 2 do Form 2 presencial
+const CAMPOS_ETAPA2_FORM2 = [
+  { id: "nome-evento",   label: "Nome do evento"      },
+  { id: "data-evento",   label: "Data do evento"      },
+  { id: "horario",       label: "Horário do evento"   },
+  { id: "descricao",     label: "Descrição do evento" },
+  { id: "origem",        label: "Origem do evento"    },
+  { id: "tipo-evento",   label: "Tipo de evento"      },
+  { id: "publico",       label: "Público do evento"   },
+  { id: "estado-cidade", label: "Estado e Cidade"     },
+  { id: "local",         label: "Local do evento"     },
+  { id: "convidados",    label: "Número de convidados"},
+];
+
+// Campos selecionáveis da Etapa 2 do Form 2 online
+const CAMPOS_ETAPA2_FORM2_ONLINE = [
+  { id: "titulo-evento",  label: "Título do evento"        },
+  { id: "descricao",      label: "Descrição do evento"     },
+  { id: "publico",        label: "Público do evento"       },
+  { id: "objetivos",      label: "Objetivos de retorno"    },
+  { id: "canal",          label: "Canal de transmissão"    },
+  { id: "link-transmissao", label: "Link da transmissão"   },
+  { id: "origem",         label: "Origem do evento"        },
+  { id: "data-evento",    label: "Data do evento"          },
+  { id: "horario",        label: "Horário do evento"       },
+];
+
+// Ícones SVG das plataformas online (para painel lateral)
+const PLATAFORMA_ICONES = {
+  "Meet":    "icon-meet",
+  "YouTube": "icon-youtube",
+  "Zoom":    "icon-zoom",
+};
+```
+
+---
+
+## 5. BANCO DE DADOS (PostgreSQL)
+
+```sql
+-- Usuários (populado automaticamente via MSAL)
+CREATE TABLE users (
+  id          SERIAL PRIMARY KEY,
+  email       VARCHAR(255) UNIQUE NOT NULL,
+  name        VARCHAR(255),
+  role        VARCHAR(20) DEFAULT 'colaborador', -- colaborador | gestor | admin
+  created_at  TIMESTAMP DEFAULT NOW()
+);
+
+-- Solicitações (tabela unificada para todos os tipos)
+CREATE TABLE solicitacoes (
+  id               SERIAL PRIMARY KEY,
+  user_email       VARCHAR(255) REFERENCES users(email),
+  tipo_solicitacao VARCHAR(50)  NOT NULL,  -- "eventos", "pagina-assessores", "cartao-visita", etc.
+  subtipo          VARCHAR(50),            -- ex: "presencial" | "online" para eventos; "fisico" | "digital" para cartão
+  maturidade       INTEGER,               -- 1 | 2 | 3 (apenas para eventos)
+  dados            JSONB NOT NULL,         -- todos os campos do formulário
+  clickup_task_id  VARCHAR(100),
+  status           VARCHAR(30) DEFAULT 'recebido',
+  created_at       TIMESTAMP DEFAULT NOW(),
+  updated_at       TIMESTAMP DEFAULT NOW()
+);
+
+-- Arquivos anexados
+CREATE TABLE arquivos (
+  id               SERIAL PRIMARY KEY,
+  solicitacao_id   INTEGER REFERENCES solicitacoes(id),
+  campo            VARCHAR(100),
+  url_r2           TEXT NOT NULL,
+  nome_original    VARCHAR(255),
+  created_at       TIMESTAMP DEFAULT NOW()
+);
+```
+
+---
+
+## 6. HOME (index.html)
+
+### TEMA: Escuro
+Fundo: gradiente radial do `--dark-bg-from` para `--dark-bg-to` com noise texture sutil via SVG filter.
+Layout: container max-width 700px, centralizado, coluna, padding lateral 24px, min-height 100vh, flex center vertical e horizontal.
+
+---
+
+### SEÇÃO 1: HERO COM DOIS BOTÕES PRINCIPAIS
+
+Card com border-radius 16px, overflow hidden, height 340px, max-width 640px, position relative.
+
+**Vídeo de fundo:** `<video>` autoplay loop muted playsinline, src=`URL_VIDEO_HERO`, object-fit cover, position absolute, inset 0, width/height 100%.
+
+**Overlay escuro:** `position: absolute; inset: 0; background: rgba(20,12,10,0.72); mix-blend-mode: multiply`.
+
+**Conteúdo centralizado** (position relative, z-index 1, flex column, align-items center, justify-content center, text-align center, padding 32px):
+
+- Subtítulo discreto acima: "O que você gostaria de fazer?" — Nunito Sans 300, 0.9rem, `--paper-white` opacidade 0.6, margin-bottom 20px
+- Dois botões lado a lado (gap 16px, flex-wrap em mobile):
+  - **"Quero fazer uma solicitação"** — ícone SVG de documento/plus à esquerda — `btn-ghost-dark`; hover: borda `--ruby-red`, scale 1.03
+  - **"Quero acompanhar uma solicitação"** — ícone SVG de lista/check à esquerda — `btn-ghost-dark`; hover: borda `--sage-green`, scale 1.03
+- Ao clicar em qualquer botão: verificar sessão Microsoft → se não autenticado, redirecionar para login MSAL → após autenticação, redirecionar para destino:
+  - "Fazer uma solicitação" → `solicitacoes.html`
+  - "Acompanhar uma solicitação" → `dashboard.html`
+
+### SEÇÃO 2: LOGO
+`<img>` src=`URL_LOGO_BRANCA`, height 28px, opacity 0.55, centralizado, margin-top 32px.
+
+---
+
+### MODAIS DA HOME
+
+**MODAL DE PRAZOS** (acessível a partir da tela de solicitações):
+Mesmo estilo de overlay e card dark. 3 colunas com ícone SVG no topo.
+- Coluna 1 (ícone calendário): "A solicitação deve ser feita com no mínimo 15 dias de antecedência..."
+- Coluna 2 (ícone relógio): "Materiais impressos ou brindes: mínimo 30 dias. Stand ou parcerias: 45 dias."
+- Coluna 3 (ícone documento): "Revisão de apresentação: solicite pelo link [solicitação de apresentação → URL_APRESENTACAO]."
+
+---
+
+## 7. TELA DE SELEÇÃO DE SOLICITAÇÕES (solicitacoes.html)
+
+### TEMA: Claro — fundo `--paper-white`
+Acesso: autenticado (qualquer role).
+
+### HEADER
+Logo SVN preta à esquerda + avatar + nome do usuário logado à direita + "Sair".
+Fundo `--card-white`, border-bottom `1px solid --border-light`, sticky top, height 60px.
+
+### CONTEÚDO PRINCIPAL
+Container max-width 960px, centralizado, padding 32px 24px.
+
+**Título:** "Que tipo de solicitação você gostaria de realizar?" — Nunito Sans 300, ~1.3rem, `--carbon-black`, margin-bottom 8px.
+
+**Botão "Voltar"** discreto abaixo do título — ícone chevron-left + "Voltar" — ao clicar: `window.history.back()`.
+
+**Grade de solicitações por categoria:**
+
+Renderizar dinamicamente a partir de `CATEGORIAS_SOLICITACAO` do `config.js`.
+
+Para cada categoria:
+- Título da categoria — Nunito Sans 600, 0.75rem, letter-spacing 0.08em, text-transform uppercase, `--carbon-black` opacidade 0.4, margin-bottom 12px
+- Grid de botões: `grid-template-columns: repeat(3, 1fr)`, gap 12px. Em tablet: 2 colunas. Em mobile: 1 coluna.
+
+**Estilo de cada botão de solicitação:**
+- Fundo `--card-white`, border: `1px solid --border-light`, border-radius 12px
+- Layout: flex column, align-items center, justify-content center, gap 10px
+- Altura: 100px, padding 16px
+- Ícone SVG 28px em `--carbon-black` no topo
+- Label: Nunito Sans 600, 0.875rem, `--carbon-black`, text-align center
+- Hover (apenas ativos): border-color `--ruby-red`, box-shadow `0 4px 12px rgba(159,63,55,0.1)`, transform translateY(-2px), transition 0.2s
+
+**Botões desativados** (`ativo: false`):
+- Opacidade: 0.45
+- cursor: not-allowed
+- Ao hover: exibir tooltip pill "Em breve" centralizado abaixo do botão — fundo `--carbon-black`, texto `--paper-white`, font-size 0.7rem, border-radius 999px, padding 3px 10px, animação fadeIn 0.15s
+- NÃO aplicar hover de borda nem translateY
+
+**Botões com sub-opções** (`subOpcoes` definido, `ativo: true` no futuro):
+- Ao clicar: o botão some com fadeOut e aparecem os sub-botões com fadeIn no mesmo espaço, com botão "Voltar" para retornar à grade
+- Sub-botões com mesmo estilo mas menor (altura 80px)
+
+**Botão Eventos** → `form-eventos.html`
+
+**Botões de Página de Assessores** (sub-menu):
+- "Dados para página de assessores" → `form-pagina-assessores.html?subtipo=dados`
+- "Atualização de dados para página de assessores" → `form-pagina-assessores.html?subtipo=atualizacao`
+
+**Botões de Apresentação** (sub-menu):
+- "Nova apresentação" → `form-apresentacoes.html?subtipo=nova`
+- "Atualizar apresentação" → `form-apresentacoes.html?subtipo=atualizar`
+  - Diferença entre subtipos: em "Atualizar", o upload do arquivo base é **obrigatório**; em "Nova", é opcional.
+
+**Botões de Conteúdo em PDF** (sub-menu):
+- "Informativo" → `form-criacao-pdf.html?subtipo=informativo`
+- "Ebook" → `form-criacao-pdf.html?subtipo=ebook`
+  - Os campos são idênticos entre os dois subtipos — o subtipo é registrado apenas para identificação no dashboard e no ClickUp.
+
+**Botão Artes de Divulgação** → `form-artes-divulgacao.html`
+
+**Botão Atualização de material** → `form-atualizacao-material.html`
+
+**Layout especial — últimas 3 categorias (botão único cada):**
+As categorias "Impressos", "Obras e manutenções" e "Outros" são exibidas **lado a lado em 3 colunas iguais**, cada uma com seu título de categoria e seu único botão. Identificadas no `config.js` pela propriedade `layout: "single"`. Em mobile (<768px): empilhadas em coluna única.
+
+**Informações utilitárias** (abaixo da grade, separadas por `<hr>`):
+- Link "Manual de Eventos" — ícone documento → `window.open(URL_MANUAL, '_blank')`
+- Link "Informações sobre prazos" — ícone "i" → abre MODAL DE PRAZOS
+
+---
+
+### MODAL DE ORIENTAÇÃO
+Overlay `rgba(0,0,0,0.75)`, fecha ao clicar fora ou no ×.
+Card: fundo `--carbon-black`, border-radius 16px, border: `1px solid rgba(255,248,243,0.12)`.
+Botão × no canto superior direito em `--paper-white`.
+Animação: fadeIn + scale 0.95→1, 0.25s ease.
+
+3 cards lado a lado:
+
+**Card 1** — número grande "1":
+Badge: "Tenho a maioria das informações"
+Descrição: "Quando as informações mais básicas do evento estiverem pré-definidas."
+Itálico: "Ex.: Tenho Nome do evento, Data, Local, Formato, etc"
+
+**Card 2** — número grande "2":
+Badge: "Tenho algumas informações"
+Descrição: "Quando algumas informações estiverem definidas, mas você precisa de algum apoio para fechar outros pontos."
+Itálico: "Ex.: Quero realizar uma palestra sobre FIIs no dia 7 do mês que vem, mas ainda preciso definir o local e outros detalhes."
+
+**Card 3** — número grande "3":
+Badge: "Ainda estou estruturando"
+Descrição: "Quando você tiver uma ideia para um evento, mas precisa de apoio para estruturar."
+Itálico: "Ex.: Gostaria de realizar uma experiência com clientes, mas preciso de assistência para definir o formato e informações."
+
+Rodapé (separado por linha):
+*"Para que o processo ocorra de forma eficiente, é importante que você escolha a opção que mais se adequa à realidade do seu evento. Reforçamos que quanto mais informações forem preenchidas nos formulários, mais rápido será o processo de aprovação com as áreas, bem como a aprovação dos materiais de apoio. Em caso de dúvidas, entre em contato com a equipe de Marketing SVN."*
+
+---
+
+### MODAL DE PRAZOS
+Mesmo estilo de overlay e card. 3 colunas com ícone SVG no topo.
+
+**Coluna 1** — ícone calendário:
+"A solicitação deve ser feita com no mínimo 15 dias de antecedência, para que possamos entregar o enxoval com link de inscrição e convite em tempo hábil para ser realizada a divulgação do evento."
+
+**Coluna 2** — ícone relógio:
+"Caso sejam necessários materiais impressos ou brindes, é necessário solicitar no Hub com pelo menos 30 dias de antecedência. E, caso envolva contrato com parcerias, patrocinadores, stand, etc., o prazo de antecedência se estende para pelo menos 45 dias."
+
+**Coluna 3** — ícone documento:
+"Caso seja necessária a revisão da sua apresentação, solicite pelo link: [âncora 'solicitação de apresentação' em `--ruby-red`, href=URL_APRESENTACAO, target='_blank'], com o máximo de antecedência."
+
+---
+
+## 7. PADRÕES GLOBAIS DOS FORMULÁRIOS
+
+### TEMA: Claro
+Fundo da página: `--paper-white` com noise texture sutil.
+Container: max-width 960px, centralizado, padding 24px.
+Layout split 2 colunas: 65% formulário | 35% painel de prévia.
+Mobile (<768px): coluna única, prévia acima do formulário.
+
+### PERSISTÊNCIA DO FORMULÁRIO
+Salvar progresso automaticamente em `sessionStorage` a cada mudança de campo. Ao recarregar ou retornar após login: restaurar dados salvos com uma notificação discreta "Seus dados foram restaurados." Se o usuário clicar em "Enviar" com sucesso: limpar `sessionStorage`.
+
+### CARD DO FORMULÁRIO
+Fundo: `--card-white` | Border: `1px solid --border-light` | Border-radius: 16px | Box-shadow: `0 2px 16px rgba(34,27,25,0.06)` | Padding: 32px
+
+### LOGO NOS FORMULÁRIOS
+`<img>` src=`URL_LOGO_PRETA`, height 24px, no canto superior esquerdo do card do formulário (dentro do form-header), acima do nome do usuário logado.
+
+### TÍTULO DINÂMICO NA BARRA DE PROGRESSO
+O título exibido no topo de cada formulário deve refletir o subtipo escolhido, lido do parâmetro URL. Exemplos:
+
+### SINCRONIZAÇÃO DO LABEL DE ETAPAS
+O label "Etapa X de Y" e a largura da barra de progresso devem ser recalculados toda vez que `natureza` ou `maturidade` mudar — não apenas ao chamar `goStep()`. Implementar `updateStepLabel()` e chamá-la sempre que `selectNatureza()` ou `selectMaturidade()` for chamado. O total de etapas varia: online = 6 etapas, presencial maturidade 3 = 6 etapas, presencial maturidade 1 ou 2 = 7 etapas.
+- `form-apresentacoes.html?subtipo=nova` → exibir "Nova Apresentação"
+- `form-apresentacoes.html?subtipo=atualizar` → exibir "Atualizar Apresentação"
+- `form-criacao-pdf.html?subtipo=informativo` → exibir "PDF — Informativo"
+- `form-criacao-pdf.html?subtipo=ebook` → exibir "PDF — Ebook"
+- `form-pagina-assessores.html?subtipo=dados` → exibir "Página de Assessores — Dados"
+- `form-pagina-assessores.html?subtipo=atualizacao` → exibir "Página de Assessores — Atualização"
+Formulários sem subtipo (Artes, Atualização de material, Eventos) exibem seu nome completo normalmente.
+
+### BARRA DE PROGRESSO
+Linha fina 4px no topo do card. Trilha: `rgba(34,27,25,0.1)`. Preenchimento: `--ruby-red`. Transição suave ao avançar etapas. Proporcional ao número de etapas de cada form.
+
+### ESTILO DOS INPUTS, SELECTS E TEXTAREAS
+Border: `1px solid rgba(34,27,25,0.2)` | Border-radius: 6px | Padding: 12px 14px | Font: Nunito Sans 400, `--carbon-black`
+Focus: border-color `--ruby-red`, box-shadow `0 0 0 3px rgba(159,63,55,0.15)`, outline none
+Placeholder: `--carbon-black` opacidade 0.35 | Transition: border-color 0.15s ease
+Selects: chevron SVG customizado, appearance none, cursor pointer.
+Textareas: resize vertical, min-height 120px.
+Number inputs: sem spinners.
+
+### LABELS
+Nunito Sans 600, `--carbon-black`, font-size 0.9rem, margin-bottom 6px, display block.
+
+### TOOLTIPS / DICAS
+Todos os tooltips e textos de dica dos campos devem ser exibidos de forma discreta e menor:
+- Font-size: 0.75rem
+- Cor: `--carbon-black` opacidade 0.45
+- Nunito Sans 400, line-height 1.4
+- Sem card ou borda — apenas texto simples abaixo do campo ou do label
+- Não usar cards "Dica" com borda para dicas de campo individual — reservar o card "Dica" apenas para a instrução geral da Etapa 3 de materiais
+
+### RADIO BUTTONS CUSTOMIZADOS
+Círculo 18×18px. Default: borda 1.5px `rgba(34,27,25,0.3)`, fundo branco. Selecionado: círculo interno 10px `--ruby-red`, borda `--ruby-red`. Transition 0.15s ease.
+
+### CHECKBOXES CUSTOMIZADOS
+Quadrado 18×18px, border-radius 4px. Default: borda 1.5px `rgba(34,27,25,0.3)`, fundo branco. Marcado: fundo `--ruby-red`, checkmark SVG branco centralizado.
+
+### MENSAGENS DE ERRO
+Cor: `--ruby-red` | font-size 0.8rem | margin-top 4px. Exibir apenas após submit ou blur.
+
+### NAVEGAÇÃO ENTRE ETAPAS
+Animação slide horizontal suave. Avançar: direita→esquerda. Voltar: esquerda→direita. Dados preservados ao navegar.
+
+**Botão "Voltar":** fundo `rgba(34,27,25,0.08)`, borda `1px solid rgba(34,27,25,0.2)`, texto `--carbon-black`, Nunito Sans 600. Hover: fundo levemente mais escuro.
+
+**Botão "Próximo" / "Enviar":** fundo `--ruby-red`, texto `--paper-white`, Nunito Sans 700. Hover: fundo `#8f2c28`. Disabled: opacidade 0.5, cursor not-allowed.
+
+**Enviar:** mostra barra de progresso real do envio (formulário → backend → ClickUp) → redirect `thankyou.html`.
+
+### CAMPOS CONDICIONAIS — POSICIONAMENTO
+**CRÍTICO:** cada campo condicional deve aparecer **imediatamente abaixo do seu campo pai** (a pill ou opção que o ativou), não ao final de todos os itens. A estrutura de cada item selecionável deve ser:
+
+```
+[Pill/opção selecionável]
+  └── [Campo condicional — slideDown logo abaixo]
+  └── [Divider fino]  ← separa visualmente cada bloco
+```
+
+Cada bloco de item selecionável + seus campos condicionais deve ser encapsulado em um `<div class="material-block">` com um `<hr class="block-divider">` ao final (1px, `rgba(34,27,25,0.08)`, visível apenas quando o item está selecionado ou quando há mais de um item).
+
+Animação dos condicionais: max-height 0→auto + opacity 0→1, transition 0.3s ease. Saída: reverso, valores limpos.
+
+### CARD DE ATENÇÃO (palestrante externo)
+Aparece ao selecionar "Não" no radio "É colaborador da SVN?".
+Borda esquerda: 4px `--ruby-red` | Fundo: `rgba(159,63,55,0.06)` | Border-radius: 8px | Padding: 14px 16px.
+Título: **"Atenção"** — Nunito Sans 700, `--carbon-black`, font-size 0.875rem.
+Texto: "Será enviado por e-mail um link para o cadastro do palestrante. Esse passo é obrigatório para o andamento do evento."
+Animação: slideDown + fadeIn 0.3s ease.
+
+### CARD "OBRIGATÓRIO" (Etapa de materiais)
+Borda esquerda: 4px `--ruby-red` | Fundo: `rgba(159,63,55,0.06)` | Border-radius: 8px | Padding: 14px 16px.
+Título: **"Obrigatório"** — Nunito Sans 700, `--ruby-red`.
+Texto: "Clique nas opções que fazem parte da solicitação para esse evento"
+
+### CARD "DICA" (Etapa de materiais)
+Borda esquerda: 4px `rgba(34,27,25,0.2)` | Fundo: `rgba(34,27,25,0.04)` | Border-radius: 8px | Padding: 14px 16px.
+Label: **"Dica"** — Nunito Sans 600, `--carbon-black` opacidade 0.5, font-size 0.8rem.
+Texto: "Se os materiais de apoio não estiverem definidos, marque a opção 'Pacote Padrão', pois é utilizado na grande maioria dos eventos." — font-size 0.82rem.
+
+### BOTÃO FLUTUANTE "VOLTAR À TELA INICIAL"
+Position: fixed, bottom 24px, right 24px, z-index 1000.
+Estilo: pill, fundo `--card-white`, box-shadow `0 4px 16px rgba(0,0,0,0.15)`.
+Ícone SVG casa + texto "Voltar à tela inicial". Nunito Sans 600, `--carbon-black`, 0.875rem. Padding: 10px 18px.
+Hover: translateY(-1px) + sombra maior. Mobile: só ícone.
+
+### ENDEREÇO DA UNIDADE SVN (pill de localização)
+Quando o usuário selecionar uma unidade SVN, exibir o endereço em um pill com:
+- Fundo: `--paper-white` (claro, não escuro)
+- Border: `1px solid var(--border-light)`
+- Border-radius: 8px | Padding: 8px 12px
+- Ícone SVG de pin/localização em `--ruby-red` (16px) à esquerda
+- Texto do endereço: Nunito Sans 400, 0.8rem, `--carbon-black`
+- Animação: fadeIn 0.2s ease
+
+### PAINEL DE PRÉVIA (sidebar direita)
+**Exclusivo do formulário de Eventos.** Os demais formulários (Apresentações, Artes, PDF, Atualização de material, Página de Assessores) **não têm painel lateral de prévia** — o layout é de coluna única (100% de largura), sem split.
+
+Card: fundo `--card-white`, border-radius 16px, border `1px solid --border-light`.
+Position: sticky, top 24px.
+Cabeçalho: ícone SVG calendário + "Resumo do pedido" — Nunito Sans 700, `--carbon-black`. Linha divisória abaixo.
+Campos vazios: "—" em `--carbon-black` opacidade 0.3.
+Campos preenchidos: valor em `--carbon-black`, Nunito Sans 600. Transição: fadeIn 0.2s.
+
+Linhas do painel presencial: Evento | Solicitante | Setor | Data | Local | Cidade/Estado | Custo estimado | Palestrantes | Itens selecionados
+
+Linhas do painel online: Evento | Solicitante | Setor | Data | Canal (com ícone SVG da plataforma: Meet/YouTube/Zoom) | Palestrantes | Itens selecionados
+
+**Ícone da plataforma online no painel:** ao selecionar o canal de transmissão, exibir o ícone SVG correspondente (Meet = ícone Google Meet colorido, YouTube = ícone YouTube vermelho, Zoom = ícone Zoom azul) ao lado do nome do canal no painel lateral.
+
+**Itens selecionados (Etapa 3):** grid de cards de ícone, 3-4 por linha. Cada item deve ter seu **ícone SVG exclusivo e representativo** — não usar ícone genérico igual para todos. Mapeamento obrigatório:
+
+| Item | Ícone SVG |
+|------|-----------|
+| Pacote Padrão | envelope com estrela |
+| Pacote Personalizado | pincel/paleta |
+| Banner Impresso | imagem/retângulo |
+| Flyer | documento/folha |
+| Brindes Store | presente/caixa |
+| Brindes Personalizados | presente com laço |
+| Captação Audiovisual | câmera de vídeo |
+| Coffee Break / Coquetel | xícara de café |
+| Instagram | logo Instagram (câmera arredondada) |
+| E-mail Marketing | envelope |
+| Equipe Staff | grupo de pessoas |
+| Jantar / Almoço | garfo e faca |
+| Página para Sorteio | estrela/troféu |
+| Projeto de Stand | grade/layout |
+| Link Live YouTube | play circle |
+| Apoio em Live | headset/fone |
+
+Cada card no painel: ícone SVG 28px em `--ruby-red`, nome do item (0.7rem, 2 linhas max), prazo (0.65rem, `--ruby-red` opacidade 0.8).
+Animação entrada: fadeIn + scale 0.8→1, 0.2s ease. Ao desselecionar: fadeOut e remoção.
+
+---
+
+## 8. FORMULÁRIO DE EVENTOS UNIFICADO (form-eventos.html)
+
+Este é o único formulário ativo na versão inicial. Ele substitui os 6 formulários separados anteriores (form-1 a form-3 e form-online-1 a form-online-3), unificando tudo em uma única página que adapta seu conteúdo dinamicamente com base nas escolhas do usuário.
+
+### Fluxo do formulário:
+
+```
+Etapa 1: Dados do solicitante + Natureza do evento (Presencial/Online)
+    ↓
+Etapa 2: Escolha da maturidade (3 opções)
+    ↓ (campos aparecem inline abaixo dos botões de maturidade)
+Etapa 3: Campos do evento (variam por natureza + maturidade)
+    ↓
+Etapa 4: Materiais e serviços
+    ↓
+Etapa 5: Palestrantes
+    ↓
+Etapa 6: Custos (apenas presencial)
+    ↓
+Etapa 7: Anexos e observações
+```
+
+**6 combinações possíveis de campos:**
+- Presencial × Maioria das informações
+- Presencial × Algumas informações
+- Presencial × Estruturando
+- Online × Maioria das informações
+- Online × Algumas informações
+- Online × Estruturando
+
+---
+
+## 9. ETAPA 1 — DADOS DO SOLICITANTE + NATUREZA
+
+Campos obrigatórios:
+
+1. **Seu nome** (text) — pré-preenchido com nome da conta Microsoft (editável) → atualiza painel "Solicitante"
+2. **Setor** (select — array SETORES) → atualiza painel "Setor"
+3. **O evento é presencial ou online?** (radio cards visuais, obrigatório):
+   - Card "Presencial" — ícone pin SVG — ao selecionar: borda `--ruby-red`, fundo `rgba(159,63,55,0.05)`
+   - Card "Online" — ícone câmera SVG — ao selecionar: borda `--sage-green`, fundo `rgba(111,135,123,0.05)`
+   - Ao selecionar Online: exibir checkbox adicional abaixo (slideDown): "Confirmo que assisti ao tutorial para transmissões online no link: [âncora 'assistir tutorial' → URL_TUTORIAL_TRANSMISSAO, target='_blank']" — obrigatório marcar para avançar
+4. **Checkbox:** "Confirmo que estou ciente dos [link 'prazos necessários' → abre Modal de Prazos] para a organização do evento." — obrigatório marcar para avançar
+
+**Campo removido:** WhatsApp/telefone — consultado via banco de dados pelo backend.
+
+Botão "Próximo": disabled até nome, setor, natureza e checkbox(es) preenchidos.
+
+---
+
+## 10. ETAPA 2 — ESCOLHA DA MATURIDADE
+
+Exibir três cards clicáveis lado a lado:
+
+**Card 1 — "Tenho a maioria das informações"**
+Ícone SVG de documento completo + descrição curta: "Evento com data, local e detalhes definidos"
+
+**Card 2 — "Tenho algumas informações"**
+Ícone SVG de documento parcial + descrição curta: "Algumas informações definidas, outras em aberto"
+
+**Card 3 — "Ainda estou estruturando"**
+Ícone SVG de ideia/lâmpada + descrição curta: "Tenho uma ideia, preciso de apoio para estruturar"
+
+Estilo dos cards: fundo `--card-white`, border `1px solid --border-light`, border-radius 12px, padding 20px, texto centralizado. Selecionado: borda `--ruby-red`, fundo `rgba(159,63,55,0.04)`.
+
+Link "Qual opção devo escolher?" abaixo dos cards → abre MODAL DE ORIENTAÇÃO.
+
+Ao selecionar um card: os campos correspondentes aparecem **inline abaixo dos cards de maturidade** com animação slideDown + fadeIn (sem navegação para nova "página" — tudo na mesma tela). Os campos são removidos/substituídos ao trocar a seleção.
+
+Botão "Próximo" aparece abaixo dos campos dinâmicos após maturidade selecionada.
+Todos os campos obrigatórios.
+
+1. Nome do evento (text) → atualiza painel "Evento"
+2. Data do evento (date) → formato DD/MM/AAAA
+3. Horário do evento (time)
+4. Horário de Brasília? (radio: Sim | Não)
+5. Breve descrição do evento (textarea)
+   Label: "Breve descrição do evento (fale sobre aspectos como organização e tópicos do conteúdo que será abordado. Essas informações vão influenciar na qualidade dos materiais):"
+   Placeholder: "Ex.: evento voltado para relacionamento com clientes que se interessam por vinhos"
+6. Origem do evento (select — array ORIGENS_EVENTO)
+7. Tipo de evento (select — array TIPOS_EVENTO)
+8. Público do evento (select): "Fechado para convidados" | "Aberto ao público em geral"
+9. Estado (select via API IBGE): `GET https://servicodados.ibge.gov.br/api/v1/localidades/estados?orderBy=nome` — formato "UF — Nome"
+10. Cidade (select via API IBGE): desabilitado até estado selecionado. Loading: "Carregando..."
+11. Local do evento (select): "Unidade SVN" | "Local externo" | "Local ainda não definido"
+    - SE "Unidade SVN": select de unidade (array UNIDADES_SVN) + pill com endereço claro e ícone pin vermelho
+    - SE "Local externo": input "Nome do local" + input "Endereço" (ambos obrigatórios)
+    - SE "Local ainda não definido": textarea "Aponte suas ideias e sugestões" (não obrigatório)
+12. Número de convidados (number, min 1) — Label: "Número de convidados (contando com assessores e palestrantes)"
+
+Painel: atualizar Evento, Data, Local, Cidade/Estado.
+
+---
+
+## 11. ETAPA 3 — MATERIAIS E SERVIÇOS (presencial e online)
+
+Cards "Obrigatório" e "Dica" conforme especificação global.
+
+**Para Presencial:** pills do array ITENS_MATERIAIS.
+**Para Online:** pills do array ITENS_MATERIAIS_ONLINE.
+
+Pills selecionáveis:
+Default: fundo branco, borda `rgba(34,27,25,0.25)`, border-radius 999px. Hover: borda `--ruby-red`.
+Selecionado: fundo `--carbon-black`, texto `--paper-white`. Transition 0.15s ease.
+Validação: mínimo 1 item. Erro: "Selecione pelo menos um item para continuar."
+
+**IMPORTANTE:** cada campo condicional aparece imediatamente abaixo da pill que o ativou, seguido de divider fino. Ver "CAMPOS CONDICIONAIS — POSICIONAMENTO" nos padrões globais.
+
+Campos condicionais por item (presencial):
+
+**PACOTE PADRÃO:**
+- Botão "Ver prévia do material" — ao clicar: abre modal com `PACOTE_PADRAO_IMAGENS` lado a lado, overlay `rgba(0,0,0,0.85)`, card `--carbon-black`, botão × para fechar.
+- Se `PACOTE_PADRAO_IMAGENS` estiver vazio ou as URLs não carregarem: exibir mensagem fallback dentro do modal: "As imagens do pacote padrão ainda não estão disponíveis." com ícone de imagem e link discreto para contato.
+
+**PACOTE PERSONALIZADO:**
+- Input "O que gostaria de incluir ou personalizar no convite?" (obrigatório) — placeholder: "Ex.: usar uma imagem de fundo relacionada ao setor agro"
+- Input "O que gostaria de incluir na página de inscrição?" (obrigatório) — placeholder: "Ex.: adicionar bio de assessor"
+
+**BANNER IMPRESSO:**
+- Input "Qual o tamanho do banner?" (obrigatório) — placeholder: "Ex.: 60x90cm, 80x120cm"
+- Input "O que gostaria de incluir no banner?" (obrigatório)
+
+**FLYER:**
+- Radio "Tipo de flyer": "Institucional Padrão (A5)" | "Personalizado" (obrigatório)
+- Input "Qual o tamanho do flyer?" (obrigatório)
+- Input "Qual o conteúdo do flyer?" (obrigatório)
+
+**BRINDES (STORE):** pill-link "Ir para a Store" (abre URL_STORE)
+
+**BRINDES PERSONALIZADOS:** Textarea "Descreva o brinde personalizado" (obrigatório)
+
+**CAPTAÇÃO AUDIOVISUAL:** Radio "Sessão de fotos" | "Gravação de vídeo" (obrigatório)
+
+**COFFEE BREAK OU COQUETEL:** sem campos adicionais
+
+**INSTAGRAM:** Radio "Menção" | "Colab" (obrigatório) + Input "@" (obrigatório)
+
+**E-MAIL MARKETING:** Input conteúdo (obrigatório) + File input base de e-mail (.xlsx,.csv,.xls — opcional)
+
+**EQUIPE STAFF:** sem campos adicionais
+
+**JANTAR / ALMOÇO:** sem campos adicionais
+
+**PÁGINA PARA SORTEIO:** 2 radios Sim/Não + input condicional se Sim na segunda
+
+**PROJETO DE STAND:** Input materiais necessários (obrigatório)
+
+Campos condicionais por item (online):
+
+**PACOTE PADRÃO ONLINE:** mesmo popup de prévia
+
+**PACOTE PERSONALIZADO ONLINE:** idêntico ao presencial
+
+**INSTAGRAM ONLINE:** Radio "Menção" | "Colab" + Input "@"
+
+**LINK DA LIVE NO YOUTUBE:** sem campos adicionais
+
+**APOIO EM LIVE:** Textarea "Descreva o tipo de apoio que vai precisar" (obrigatório)
+
+**E-MAIL MARKETING ONLINE:** idêntico ao presencial
+
+---
+
+## 12. ETAPA 4 — PALESTRANTES (presencial e online)
+
+Radio "O evento terá palestrante(s)?": Sim | Não
+
+SE "Não": avançar sem validações adicionais.
+
+SE "Sim":
+- Radio "Quantidade de palestrantes": 1 | 2 | 3 | 4
+- O número selecionado determina quantos blocos são renderizados
+- Renderizar N blocos com entrada escalonada (delay 0.08s entre blocos)
+
+Cada bloco (separado por `<hr>` + subtítulo "Palestrante N"):
+
+**Passo 1 — Radio "O palestrante N é colaborador da SVN?"**: Sim | Não (obrigatório)
+
+**SE "Sim":** abrir campos de dados:
+- Input "Nome do palestrante N" (obrigatório)
+- Input "Cargo do palestrante N" (obrigatório)
+- File input "Upload da foto" — aceitar: .jpg, .jpeg, .png, .webp (não obrigatório) — Label: "Faça upload do(a) palestrante N aqui. Caso não consiga, envie para o e-mail: EMAIL_UPLOAD"
+- Card de prévia (aparece ao preencher Nome + Cargo):
+  - Fundo `--paper-white`, border: `1px solid --border-light`, border-radius 12px, padding 10px 14px
+  - Avatar: foto em círculo 40px ou iniciais em círculo `--leather-brown`
+  - Nome: `--carbon-black`, Nunito Sans 700, 0.875rem
+  - Cargo: `--carbon-black` opacidade 0.6, Nunito Sans 400, 0.8rem
+  - Badge "SVN": fundo `--ruby-red`, texto `--paper-white`, Nunito Sans 700, 0.65rem, border-radius 999px
+  - Animação: fadeIn + scale 0.92→1, 0.25s ease
+
+**SE "Não":** exibir CARD DE ATENÇÃO (sem campos de dados):
+- Borda esquerda 4px `--ruby-red`, fundo `rgba(159,63,55,0.06)`, border-radius 8px, padding 14px 16px
+- Título: **"Atenção"** — Nunito Sans 700, `--carbon-black`, 0.875rem
+- Texto: "Será enviado por e-mail um link para o cadastro do palestrante. Esse passo é obrigatório para o andamento do evento."
+- Animação: slideDown + fadeIn 0.3s ease
+
+Painel: "N palestrante(s)" ou "Sem palestrantes".
+
+### ETAPA 5: CUSTOS
+
+Campo "Custo estimado (em R$)" (text, obrigatório) — máscara monetária brasileira. Placeholder: "R$ 0,00"
+
+SE valor = R$ 0,00: sem campos adicionais.
+SE valor > R$ 0,00:
+- Select "Rateio" (array OPCOES_RATEIO, obrigatório)
+
+Painel: "Custo estimado" com valor + rateio.
+
+### ETAPA 6: ANEXOS E OBSERVAÇÕES (última etapa)
+
+Todos opcionais.
+
+- File input 1: Logo complementar de parceiro — aceitar: .png, .jpg, .jpeg, .svg, .ai, .pdf
+  Label: "Anexe aqui caso tenha uma logo complementar de parceiro para incluir nos materiais do evento. Caso não consiga, envie para o e-mail: EMAIL_UPLOAD"
+- File input 2: Imagem complementar — aceitar: .png, .jpg, .jpeg, .webp
+  Label: "Anexe aqui caso tenha uma imagem complementar para incluir nos materiais do evento. Caso não consiga, envie para o e-mail: EMAIL_UPLOAD"
+- File input 3: Demais arquivos — aceitar: qualquer tipo
+  Label: "Faça o upload dos demais arquivos de apoio aqui, caso necessário. Caso não consiga, envie para o e-mail: EMAIL_UPLOAD"
+- Input "Observações gerais (opcional)" (text)
+
+Estilo file inputs: botão "Escolher Arquivo" customizado + nome do arquivo com ícone check em `--ruby-red`.
+
+Botão "Enviar":
+1. Validação global de todos os campos obrigatórios de todas as etapas
+2. Se inválido: voltar à primeira etapa com erro, destacar campos faltantes
+3. Se válido: barra de progresso real (formulário → backend → ClickUp) → redirect `thankyou.html`
+
+---
+
+## 13. CAMPOS DE EVENTO POR COMBINAÇÃO NATUREZA × MATURIDADE
+
+Estes são os campos que aparecem inline após a seleção na Etapa 2 (maturidade). Os campos variam conforme a combinação escolhida na Etapa 1 (natureza) + Etapa 2 (maturidade).
+
+### PRESENCIAL × MAIORIA DAS INFORMAÇÕES
+Todos obrigatórios, exceto indicado:
+1. Nome do evento → painel "Evento"
+2. Data (date) + Horário (time) + Horário de Brasília? (radio Sim/Não)
+3. Descrição do evento (textarea)
+4. Origem (select ORIGENS_EVENTO) + Tipo (select TIPOS_EVENTO)
+5. Público (select: Fechado / Aberto)
+6. Estado + Cidade (API IBGE)
+7. Local (select: Unidade SVN / Externo / Não definido) + campos condicionais de local
+8. Número de convidados
+
+### PRESENCIAL × ALGUMAS INFORMAÇÕES
+Card "Opcional" + Card "Dica" no topo.
+Pills selecionáveis (array CAMPOS_ETAPA2_FORM2) — ao clicar exibe o campo inline. Sem obrigatoriedade. "Próximo" sempre habilitado.
+
+### PRESENCIAL × ESTRUTURANDO
+1. Descrição do evento (textarea, obrigatório)
+2. Tipo aproximado (radio grid TIPOS_EVENTO_FORM3 — 3/col desktop, 2/col tablet, 1/col mobile, obrigatório)
+3. Ideia de quando realizar (text, opcional)
+4. Estado + Cidade (API IBGE, opcionais)
+5. Local definido? (select opcional) + input condicional
+6. Número esperado de convidados (number, opcional)
+Botão "Enviar" valida apenas os obrigatórios.
+
+### ONLINE × MAIORIA DAS INFORMAÇÕES
+Todos obrigatórios, exceto indicado:
+1. Título do evento → painel "Evento"
+2. Descrição + Público + Objetivos de retorno
+3. Canal de transmissão (select CANAIS_TRANSMISSAO)
+4. Link da transmissão — obrigatório se YouTube, opcional com card atenção se Meet/Zoom
+5. Origem (select ORIGENS_EVENTO_ONLINE)
+6. Data + Horário + Horário de Brasília?
+
+### ONLINE × ALGUMAS INFORMAÇÕES
+Pills selecionáveis (array CAMPOS_ETAPA2_FORM2_ONLINE) — mesmo padrão do presencial "Algumas informações".
+
+### ONLINE × ESTRUTURANDO
+1. Descrição (textarea, obrigatório)
+2. Tipo online aproximado (radio grid: Webinar | Live no YouTube | Aula online | Reunião aberta | Transmissão de evento presencial | Workshop online | Painel de discussão | Outro — obrigatório)
+3. Ideia de quando realizar (text, opcional)
+4. Canal provável (select CANAIS_TRANSMISSAO, opcional)
+5. Número esperado de participantes (number, opcional)
+
+---
+
+## 14. ETAPAS FINAIS — CUSTOS, ANEXOS E OBSERVAÇÕES
+
+### ETAPA DE CUSTOS (apenas presencial — exceto "Estruturando")
+Campo "Custo estimado (em R$)" (text, obrigatório) — máscara monetária brasileira.
+SE valor > R$ 0,00: select "Rateio" (array OPCOES_RATEIO, obrigatório).
+
+### ETAPA DE ANEXOS E OBSERVAÇÕES (última etapa — todos os fluxos)
+Todos opcionais.
+- File input 1: Logo complementar de parceiro (.png, .jpg, .jpeg, .svg, .ai, .pdf)
+- File input 2: Imagem complementar (.png, .jpg, .jpeg, .webp)
+- File input 3: Demais arquivos de apoio (qualquer tipo)
+- Input "Observações gerais"
+
+Label de cada file input inclui: "Caso não consiga, envie para o e-mail: EMAIL_UPLOAD"
+
+Botão "Enviar":
+1. Validação global de todos os campos obrigatórios de todas as etapas antes do envio — não confiar apenas que o usuário passou pelos botões "Próximo"
+2. Se inválido: destacar campos faltantes com borda vermelha + scroll até o primeiro erro
+3. Se válido: barra de progresso real (formulário → backend → ClickUp) → redirect `thankyou.html`
+4. Se o backend retornar erro: exibir card de erro inline acima do botão de envio (estilo `.alert-card.alert-danger`), nunca usar `alert()` nativo. O card deve exibir a mensagem de erro e um link "Tentar novamente". O botão "Enviar" volta ao estado normal.
+
+---
+
+## 15. FORMULÁRIOS DE PÁGINA DE ASSESSORES
+
+### PADRÕES COMPARTILHADOS — AMBOS OS FORMULÁRIOS
+Arquivo: `form-pagina-assessores.html` (subtipo definido via parâmetro URL: `?subtipo=dados` ou `?subtipo=atualizacao`)
+Layout padrão de formulário do hub: 2 colunas (65% form / 35% prévia), tema claro, barra de progresso, botão flutuante.
+
+**Etapa 1 — Dados do solicitante** (padrão do hub):
+- Seu nome (text, pré-preenchido via Microsoft, editável, obrigatório)
+- Setor (select SETORES, obrigatório)
+- Checkbox prazos (obrigatório)
+- **WhatsApp não é solicitado** — o backend consulta o telefone do colaborador via banco de dados
+SLA: "Validação interna: até 3 dias úteis | Publicação/Atualização após aprovação: até 2 dias úteis"
+
+---
+
+### FORM — DADOS DE DIVULGAÇÃO DE ASSESSORES (subtipo: dados)
+Título na barra: "Página de Assessores — Dados"
+**2 etapas no total.**
+
+**Etapa 2 — Informações do assessor** (todos obrigatórios exceto indicado):
+1. Nome completo (text, obrigatório)
+2. Código de assessor (text, obrigatório)
+3. Unidade (select UNIDADES_SVN — apenas nomes, sem endereço, obrigatório)
+4. Contrato social (select — array CONTRATOS_SOCIAIS, obrigatório)
+5. Foto de perfil (file upload, obrigatório) — aceitar: .jpg, .jpeg, .png, .webp — dica discreta: "Dimensão recomendada: 580 × 756px. Enquadramento profissional, boa iluminação."
+6. Perfil do LinkedIn (url, obrigatório) — placeholder: "https://linkedin.com/in/seu-perfil"
+7. Perfil do Instagram (text, opcional) — placeholder: "@seuinstagram"
+8. Mini bio (textarea, obrigatório) — placeholder: "Escreva uma bio profissional seguindo o padrão institucional SVN..."
+9. **Seleção de selos** (chips múltiplos, opcional):
+   Renderizar a partir de `SELOS_ASSESSOR` do `config.js` como chips selecionáveis no padrão visual do hub.
+   Cada chip: ícone do selo (quando `icon_url` preenchido) + label. Default: fundo `--icon-bg`, borda `--border-light`. Selecionado: fundo `--carbon-black`, texto `--paper-white`.
+   Os `icon_url` de cada selo ficam vazios no `config.js` por ora — serão preenchidos posteriormente pelo time técnico com as imagens oficiais de cada certificação.
+
+10. **Seção de depoimentos (opcional — até 3):**
+    Card "Opcional" com instrução: "Você pode adicionar até 3 depoimentos de clientes."
+    Botão "+ Adicionar depoimento" — ao clicar: exibe bloco com slideDown:
+    - Nome abreviado do cliente (text, obrigatório se bloco aberto)
+    - Depoimento (textarea, obrigatório se bloco aberto)
+    - Botão "Remover" discreto no canto do bloco
+    Máximo 3 blocos. Botão "+ Adicionar" some ao atingir 3.
+
+**Botão "Ver prévia da página":**
+Posicionado abaixo de todos os campos da Etapa 2, antes do botão "Enviar".
+Estilo: pill, fundo `--carbon-black`, texto `--paper-white`, ícone SVG de olho à esquerda, Nunito Sans 600.
+Ao clicar: abre MODAL DE PRÉVIA DO ASSESSOR.
+
+---
+
+### MODAL DE PRÉVIA DO ASSESSOR
+
+Overlay `rgba(0,0,0,0.82)`. Fecha com botão × ou clique fora.
+Card: fundo `--paper-white`, border-radius 16px, max-width 760px, max-height 90vh, overflow-y auto.
+Animação: fadeIn + scale 0.95→1, 0.25s ease.
+
+Cabeçalho do modal: "Prévia da página" — Nunito Sans 700, `--carbon-black` + badge "Atualiza em tempo real" (pill pequeno, fundo `rgba(111,135,123,0.12)`, texto `--sage-green`, 0.7rem) + botão × no canto.
+
+**Conteúdo da prévia** — simula o layout real da página do assessor conforme print de referência:
+
+**Bloco superior (layout 2 colunas):**
+
+Coluna esquerda:
+- **Selos selecionados:** linha de ícones dos selos. Se `icon_url` estiver vazio: exibir badge texto com o label do selo (fundo `--icon-bg`, border `--border-light`, font-size 0.75rem, Nunito Sans 600). Se `icon_url` preenchido: exibir imagem do ícone (height 28px). Atualiza ao selecionar/desselecionar selos.
+- **Nome completo** — Taviraj 300, ~2rem, `--carbon-black`. Atualiza ao digitar o nome. Placeholder: "Nome do Assessor" em opacidade 0.25.
+- **Mini bio** — Nunito Sans 400, 0.95rem, `--carbon-black` opacidade 0.8, text-align center, max-width 440px. Atualiza ao digitar a bio. Placeholder: "A bio aparecerá aqui..." em opacidade 0.3.
+- **Ícone LinkedIn** — ícone SVG do LinkedIn (azul `#0A66C2`), 32px. Visível apenas se campo LinkedIn preenchido. Ao clicar no modal: abre link em nova aba.
+- **Botões:** dois botões pill lado a lado — "Abrir conta" (fundo `--carbon-black`, texto branco) e "Falar com assessor" (fundo branco, borda `--carbon-black`) — meramente visuais na prévia, sem ação.
+
+Coluna direita:
+- **Foto de perfil:** se foto uploadada, exibir em retângulo com border-radius 12px, object-fit cover, height 320px, width 100%. Se não uploadada: placeholder cinza com ícone SVG de pessoa centralizado + texto "Foto aparecerá aqui" em opacidade 0.3.
+
+**Bloco de depoimentos** (abaixo, se ao menos 1 depoimento preenchido):
+Título: "Depoimentos" — Nunito Sans 600, `--carbon-black`, margin-bottom 16px.
+Cards de depoimentos lado a lado (grid 2 colunas), mesmo estilo do print de referência:
+- Fundo `--card-white`, border `1px solid --border-light`, border-radius 12px, padding 20px
+- Texto do depoimento — Nunito Sans 400, 0.875rem, `--carbon-black`
+- Nome do cliente em bold abaixo
+
+**Nota de rodapé do modal** (discreta):
+"Esta é uma simulação visual. O layout final pode variar conforme o site institucional do assessor."
+Font-size 0.75rem, `--carbon-black` opacidade 0.35, text-align center, margin-top 16px.
+
+Botão "Fechar" ao final do modal — pill, fundo `--carbon-black`, texto `--paper-white`.
+
+---
+
+### FORM — ATUALIZAÇÃO DE DADOS DE DIVULGAÇÃO DE ASSESSORES (subtipo: atualizacao)
+Título na barra: "Página de Assessores — Atualização"
+
+**Idêntico ao formulário de Dados**, com duas diferenças:
+1. Card de instrução no topo da Etapa 2:
+   - Estilo "Opcional" (borda esquerda carbon, fundo `rgba(34,27,25,0.04)`)
+   - Título: **"Atualização"** — Nunito Sans 700
+   - Texto: "Preencha apenas os campos que deseja atualizar. Os demais permanecerão como estão no seu perfil atual."
+2. Todos os campos da Etapa 2 são **opcionais** (exceto Nome completo e Código de assessor, que são obrigatórios para identificar o perfil existente)
+
+---
+
+## 16. FORMULÁRIO DE APRESENTAÇÕES (form-apresentacoes.html)
+
+Layout padrão. **3 etapas no total.**
+
+**Etapa 1 — Dados do solicitante** (padrão do hub):
+- Seu nome + Setor + Checkbox prazos
+
+**Etapa 2 — Informações do material** (todos obrigatórios exceto indicado):
+1. Título do material (text, obrigatório)
+2. Finalidade da apresentação (textarea, obrigatório) — placeholder: "Para que será utilizada? Ex.: apresentação para clientes, treinamento interno..."
+3. Tamanho da apresentação (radio, obrigatório):
+   - "Menos de 30 páginas" — SLA: até 5 dias úteis
+   - "Menos de 100 páginas" — SLA: até 10 dias úteis
+   - "Mais de 100 páginas" — SLA: até 15 dias úteis
+   Ao selecionar: exibir pill de prazo discreto abaixo do radio selecionado: "Prazo estimado: até X dias úteis"
+4. Tipo de criação (radio, obrigatório):
+   - "Já existe uma base" → exibir campo condicional: file upload "Envie o arquivo base" (aceitar: .pptx, .pdf, .key — obrigatório se esta opção selecionada)
+   - "Será criada do zero"
+5. Elementos obrigatórios (checkboxes múltiplos, opcional): "Logotipos" | "Assinaturas" | "Imagens específicas" | "Gráficos" | "Outro"
+   - SE "Outro" ou qualquer item marcado: textarea "Descreva os elementos obrigatórios" (obrigatório se ao menos um marcado)
+6. Upload de arquivos de apoio ou referências (file, opcional) — aceitar: qualquer tipo
+
+**Etapa 3 — Informações adicionais** (todos obrigatórios exceto indicado):
+1. Público-alvo (checkboxes múltiplos, obrigatório — mínimo 1):
+   "Clientes" | "Parceiros" | "Interno" | "Leads" | "Divulgação externa em massa"
+2. Prazo desejado para entrega (date picker, obrigatório)
+3. Observações finais (textarea, opcional)
+
+Card aviso no topo da Etapa 3:
+Borda esquerda `--ruby-red`, fundo `rgba(159,63,55,0.06)`.
+Título: "Atenção" | Texto: "O prazo de entrega pode variar conforme o tamanho e complexidade da apresentação. Em caso de dúvidas, o time entrará em contato via WhatsApp."
+
+Botão "Enviar" → barra de progresso → `thankyou.html`.
+
+---
+
+## 17. FORMULÁRIO DE ARTES DE DIVULGAÇÃO (form-artes-divulgacao.html)
+
+Layout padrão. **3 etapas no total.**
+
+Card aviso fixo no topo do formulário (todas as etapas):
+Borda esquerda `--ruby-red`, fundo `rgba(159,63,55,0.06)`.
+Título: "⚠️ Atenção" | Texto: "Este formulário é destinado a artes de comunicação interna/institucional. Para convites de eventos (online ou presenciais), utilize o formulário de Eventos."
+
+**Etapa 1 — Dados do solicitante** (padrão do hub)
+
+**Etapa 2 — Informações do material** (todos obrigatórios exceto indicado):
+1. Título do material (text, obrigatório)
+2. Finalidade da arte (textarea, obrigatório) — placeholder: "Para que será utilizada? O que deseja comunicar?"
+3. Canal de compartilhamento (checkboxes múltiplos, obrigatório — mínimo 1):
+   "E-mail" | "Feed do Instagram" | "LinkedIn" | "Stories" | "WhatsApp" | "Outro"
+   - SE "Outro": input "Qual canal?" (obrigatório)
+4. Conteúdo que deve estar presente na arte (textarea, obrigatório) — placeholder: "Descreva o texto e informações que devem aparecer na arte..."
+5. Upload de arquivos de apoio ou referência (file, opcional)
+
+**Etapa 3 — Informações adicionais**:
+1. Público-alvo (checkboxes múltiplos, obrigatório — mínimo 1):
+   "Clientes" | "Parceiros" | "Interno" | "Leads" | "Divulgação externa em massa"
+2. Prazo desejado para entrega (date picker, obrigatório)
+   Dica discreta abaixo: "Prazo mínimo de produção: 3 dias úteis"
+3. Observações finais (textarea, opcional)
+
+Botão "Enviar" → barra de progresso → `thankyou.html`.
+
+---
+
+## 18. FORMULÁRIO DE ATUALIZAÇÃO DE MATERIAIS (form-atualizacao-material.html)
+
+Layout padrão. **2 etapas no total.**
+
+**Etapa 1 — Dados do solicitante** (padrão do hub)
+
+**Etapa 2 — Informações do material** (todos obrigatórios exceto indicado):
+1. Título do material (text, obrigatório) — placeholder: "Nome ou identificação do material que será atualizado"
+2. Finalidade do material (textarea, obrigatório) — placeholder: "Para que é utilizado este material?"
+3. Descrição do que precisa ser atualizado (textarea, obrigatório) — placeholder: "Descreva com clareza o que deve ser alterado, corrigido ou adicionado. Quanto mais detalhado, melhor."
+4. Upload do material atual + arquivos de apoio (file, obrigatório) — aceitar: qualquer tipo — Label: "Envie a versão atual do material e qualquer referência útil para a atualização"
+
+Card dica discreto após o campo de upload:
+"Enviar o material original agiliza o processo e garante que as atualizações sejam aplicadas corretamente."
+
+Botão "Enviar" → barra de progresso → `thankyou.html`.
+
+---
+
+## 19. FORMULÁRIO DE CRIAÇÃO DE PDF (form-criacao-pdf.html)
+
+Layout padrão. **3 etapas no total.**
+
+**Etapa 1 — Dados do solicitante** (padrão do hub)
+
+**Etapa 2 — Informações do material** (todos obrigatórios exceto indicado):
+1. Título do material (text, obrigatório)
+2. Finalidade do material (textarea, obrigatório) — placeholder: "Para que será utilizado? Ex.: material de apoio para reunião, apostila para treinamento, documento para envio a clientes..."
+3. Onde pretende compartilhar? (checkboxes múltiplos, obrigatório — mínimo 1):
+   "E-mail" | "Feed do Instagram" | "LinkedIn" | "Stories" | "WhatsApp" | "Outro"
+   - SE "Outro": input "Qual canal?" (obrigatório)
+4. Conteúdo que deve estar presente no material (textarea, obrigatório) — placeholder: "Descreva o conteúdo, estrutura e informações que devem compor o PDF..."
+5. Upload de arquivos de apoio ou referência (file, opcional)
+
+**Etapa 3 — Informações adicionais**:
+1. Público-alvo (checkboxes múltiplos, obrigatório — mínimo 1):
+   "Clientes" | "Parceiros" | "Interno" | "Leads" | "Divulgação externa em massa"
+2. Prazo desejado para entrega (date picker, obrigatório)
+   Dica discreta: "Prazo mínimo de produção: 3 dias úteis"
+3. Observações finais (textarea, opcional)
+
+Botão "Enviar" → barra de progresso → `thankyou.html`.
+
+---
+
+### TEMA: Escuro — idêntico à home
+Fundo: mesmo gradiente radial e noise. Layout: 100vh, flex center total.
+
+**Vídeo de fundo:** mesmo `URL_VIDEO_HERO` da home, autoplay loop muted playsinline, position fixed inset 0, object-fit cover, z-index 0. Overlay escuro sobre o vídeo: `rgba(20,12,10,0.80)` com mix-blend-mode multiply.
+
+Card central: position relative, z-index 1, max-width 560px. Fundo: `rgba(255,248,243,0.04)`. Border: `1px solid rgba(255,248,243,0.1)`. Border-radius: 16px. Padding: 48px 40px. Text-align: center.
+
+Conteúdo:
+1. **Ícone check animado** (SVG stroke-dashoffset): círculo + checkmark, cor `--ruby-red`, 56px.
+2. **Título:** MSG_THANKYOU_TITULO — Nunito Sans 700, `--paper-white`, ~1.6rem.
+3. **Subtítulo:** MSG_THANKYOU_SUBTITULO — Nunito Sans 400, `--paper-white` opacidade 0.7.
+4. **Botão "Ver minha solicitação":** pill, fundo `--ruby-red`, texto `--paper-white`. Ao clicar: redirect `dashboard.html`.
+5. **Logo SVN:** `<img>` src=`URL_LOGO_BRANCA`, height 24px, opacity 0.4, margin-top 40px.
+
+Animações de entrada escalonadas: Card 0.5s/0.1s | Check 0.4s | Título 0.7s | Subtítulo 0.9s | Botão 1.0s | Logo 1.1s.
+
+---
+
+## 21. DASHBOARD DE ACOMPANHAMENTO (dashboard.html)
+
+### TEMA: Claro — fundo `--paper-white`
+Acesso: apenas usuários autenticados (qualquer role). Redirecionar para home se não autenticado.
+
+### HEADER
+Logo SVN preta à esquerda + avatar + nome do usuário logado à direita + "Sair".
+Fundo `--card-white`, border-bottom `1px solid --border-light`, sticky top, height 60px.
+
+### TÍTULO + BOTÃO NOVA SOLICITAÇÃO
+Linha flexível com título à esquerda e botão à direita:
+
+- **Título:** "Minhas solicitações" — Taviraj 300, ~1.6rem, `--carbon-black`. Padding-top 32px.
+- **Botão "Nova solicitação"** (destaque principal, não flutuante):
+  - Fundo `--ruby-red`, texto `--paper-white`, Nunito Sans 700, border-radius 999px
+  - Ícone SVG de "+" à esquerda
+  - Padding: 12px 24px, font-size 0.9rem
+  - Box-shadow: `0 4px 14px rgba(159,63,55,0.35)` — sombra colorida para dar destaque
+  - Hover: fundo `#8f2c28`, transform translateY(-2px), shadow maior
+  - Ao clicar: redirect `solicitacoes.html`
+  - Em mobile: botão ocupa largura total abaixo do título
+
+**Remover** o botão flutuante fixo no canto — substituído por este botão destacado no topo.
+
+### INDICADORES RESUMIDOS
+Linha de 2 cards de métricas abaixo do título, antes das abas:
+
+**Card "Ativas":**
+- Número em destaque: contagem de solicitações com status "recebido" + "em-analise" + "em-producao" + "aguardando"
+- Label: "Em andamento"
+- Ícone SVG de relógio/pulse em `--ruby-red`
+- Fundo `rgba(159,63,55,0.06)`, border `1px solid rgba(159,63,55,0.15)`, border-radius 12px
+
+**Card "Concluídas":**
+- Número em destaque: contagem de solicitações com status "concluido"
+- Label: "Concluídas"
+- Ícone SVG de check-circle em `--sage-green`
+- Fundo `rgba(111,135,123,0.06)`, border `1px solid rgba(111,135,123,0.15)`, border-radius 12px
+
+Os indicadores refletem os filtros ativos (se filtrou por "Eventos", mostrar apenas contagens de eventos).
+Animação: número conta de 0 até o valor real ao carregar (duration 0.6s, easing ease-out).
+
+### ABAS (sistema de tabs)
+Duas abas horizontais abaixo dos indicadores:
+- **"Eventos"** — exibe somente solicitações de tipo "eventos"
+- **"Solicitações gerais"** — exibe todos os demais tipos de solicitação
+
+Estilo: linha inferior 2px `--ruby-red` na aba ativa. Inativa: sem linha, texto `--carbon-black` opacidade 0.5. Nunito Sans 600, 0.9rem. Transição suave ao trocar aba.
+
+Cada aba tem sua própria lista, busca e filtros independentes.
+
+### FILTROS (por aba) — Sistema colapsável
+
+Os filtros usam o padrão **colapsável com badges ativos**:
+
+**Barra de filtros (sempre visível):**
+- Botão "Filtrar" com ícone de funil — ao clicar abre/fecha o painel de filtros
+- Se houver filtros ativos: badge vermelho com contagem no botão + badges inline removíveis (com ×) para cada filtro ativo + botão "Limpar tudo"
+- Por padrão o painel começa fechado
+
+**Painel de filtros (colapsável):**
+Card com fundo `--card-white`, border-radius 12px, border `--border-light`. Cada categoria de filtro em uma linha com label à esquerda e chips à direita.
+
+**Aba Eventos — filtros no painel:**
+- Período: Todos | Hoje | 7 dias | 30 dias
+- Natureza: Todos | Presencial | Online
+- Status: Todos | lista dinâmica de STATUS_SOLICITACAO
+
+**Aba Solicitações gerais — filtros no painel:**
+- Período: Todos | Hoje | 7 dias | 30 dias
+- Tipo: Todos | lista dinâmica de TIPO_SOLICITACAO_LABELS ativos
+- Status: Todos | lista dinâmica de STATUS_SOLICITACAO
+
+No painel admin/gestor, ambas as abas adicionam filtro por **Solicitante** (input de busca por nome).
+
+**Comportamento dos badges:**
+- Ao selecionar um filtro, um badge com o label legível aparece na barra (ex: "Presencial ×")
+- Clicar no × do badge remove aquele filtro e reseta o chip correspondente
+- "Limpar tudo" remove todos os filtros ativos da aba de uma vez
+- Os badges refletem o estado atual — se "Todos" estiver selecionado, nenhum badge aparece
+
+Estilo dos chips dentro do painel: mesmo padrão `.filter-chip` existente.
+
+### ESTADO DE CARREGAMENTO
+Enquanto o fetch da lista está em andamento, exibir **skeleton loader** no lugar dos cards:
+- 3 cards placeholder com fundo `--icon-bg`, border-radius 12px, altura 64px
+- Animação de shimmer: `background: linear-gradient(90deg, --icon-bg 25%, rgba(255,255,255,0.5) 50%, --icon-bg 75%)` com `background-size: 200%` e `animation: shimmer 1.2s infinite`
+- Substituídos pelos cards reais assim que o fetch conclui
+
+### BARRA DE BUSCA
+Input de busca por nome — ícone lupa, fundo `--card-white`. Filtra em tempo real combinado com todos os filtros ativos.
+
+### ESTADO VAZIO
+Ilustração SVG (calendário vazio, `--ruby-red` como acento).
+Texto: "Você ainda não fez nenhuma solicitação."
+Botão CTA: "Fazer primeira solicitação" com mesmo estilo do botão "Nova solicitação" → redirect `solicitacoes.html`.
+
+### LISTA DE SOLICITAÇÕES (por aba)
+
+**Aba Eventos — cada card:**
+- Badge de tipo: "Evento" com ícone calendário
+- Indicador de natureza: ícone pin em `--ruby-red` (Presencial) ou câmera em `--sage-green` (Online) + label
+- Nome do evento
+- Data de envio
+- Badge de maturidade
+- Badge de status com ícone SVG (inbox / lupa / engrenagem / relógio / check-circle / x-circle)
+- Chevron à direita
+
+**Aba Solicitações gerais — cada card:**
+- Badge do tipo com ícone correspondente
+- Título ou identificação da solicitação
+- Data de envio
+- Badge de status com ícone SVG
+- Chevron à direita
+
+Ao clicar em qualquer card: abre DRAWER LATERAL.
+
+### DRAWER LATERAL
+Desliza da direita, largura 420px. Overlay semi-transparente. Fecha com × ou clique fora.
+Mobile: bottom sheet full width.
+
+Cabeçalho: nome/título da solicitação + badge tipo + badge status.
+
+Body: todas as informações preenchidas no formulário, organizadas em seções com títulos humanizados. Os campos exibidos devem usar um mapa de labels legíveis — nunca exibir chaves brutas do banco (`nomeEvento`, `setor`, etc.). Definir em `config.js` um objeto `DRAWER_FIELD_LABELS` mapeando cada chave para seu label em português:
+```js
+const DRAWER_FIELD_LABELS = {
+  nome: "Solicitante", setor: "Setor", natureza: "Natureza",
+  maturidade: "Maturidade", nomeEvento: "Nome do evento",
+  dataEvento: "Data", horario: "Horário", descricao: "Descrição",
+  origem: "Origem", tipoEvento: "Tipo de evento", publico: "Público",
+  estado: "Estado", cidade: "Cidade", localEvento: "Local",
+  convidados: "Nº de convidados", canal: "Canal de transmissão",
+  linkTransmissao: "Link da transmissão", objetivos: "Objetivos",
+  custoEstimado: "Custo estimado", rateio: "Rateio",
+  observacoes: "Observações", materiais: "Materiais solicitados",
+  nomeCompleto: "Nome completo", codigoAssessor: "Código de assessor",
+  unidade: "Unidade", contratoSocial: "Contrato social",
+  linkedin: "LinkedIn", instagram: "Instagram", miniBio: "Mini bio",
+  selos: "Selos e certificações", depoimentos: "Depoimentos",
+  // demais campos adicionados conforme novos formulários
+};
+```
+Arrays (como `selos`, `materiais`) devem ser exibidos como lista com separador " · ". Arrays de objetos (como `depoimentos`) devem ser exibidos como cards compactos com nome + texto. Campos não preenchidos e campos com valor `null`/`undefined`/`""` são omitidos.
+
+Badges de status nos cards da lista devem usar a cor definida em `STATUS_SOLICITACAO[n].cor` — não usar `--ruby-red` fixo para todos.
+
+Rodapé: ID da solicitação + data de criação (discretos, opacidade 0.4).
+
+---
+
+## 22. PAINEL ADMIN (admin.html)
+
+Acesso: apenas roles `gestor` e `admin`. Redirecionar para `dashboard.html` se role = colaborador.
+
+### HEADER
+Logo SVN preta + nome, avatar e badge de role ("Gestor" ou "Admin") + link "Meu painel" + "Sair".
+
+### TÍTULO
+"Painel Administrativo" — **Taviraj 300**, ~1.6rem, `--carbon-black`.
+
+### MÉTRICAS (cards no topo, 4 em linha)
+- **Total de solicitações** — ícone documento, `--carbon-black`
+- **Em andamento** — ícone relógio/pulse, fundo `rgba(159,63,55,0.06)`, ícone `--ruby-red` — contagem de status ativos (recebido + em-analise + em-producao + aguardando)
+- **Concluídas** — ícone check-circle, fundo `rgba(111,135,123,0.06)`, ícone `--sage-green`
+- **Solicitações este mês** — ícone calendário, `--carbon-black`
+
+Estilo: fundo `--card-white`, border-radius 12px, border `--border-light`, padding 20px. Ícone em `--icon-bg` (40px pill) + número grande (Taviraj 300, 2rem) + label (Nunito Sans 400, 0.8rem).
+Animação: número conta de 0 ao valor real (0.6s ease-out) ao carregar.
+
+### ABAS
+Mesmas duas abas do dashboard (Eventos / Solicitações gerais).
+
+### FILTROS (por aba)
+Incluem todos os filtros do dashboard de usuário + **filtro de período** (Todos | Hoje | Últimos 7 dias | Últimos 30 dias | Este mês) + **filtro por Solicitante** (input de busca por nome).
+
+### TABELA DE SOLICITAÇÕES
+Colunas: Tipo (ícone + label) | Nome/Título | Solicitante | Data | Status (com ícone SVG)
+Paginação: 20 por página.
+Ao clicar: abre drawer lateral (mesmo padrão do dashboard).
+
+### GESTÃO DE USUÁRIOS (apenas `admin`)
+Seção colapsável abaixo da tabela, com título "Gestão de usuários" + chevron.
+Lista de usuários com nome, e-mail, role atual e botões de promoção/rebaixamento com confirmação modal.
+Não é possível rebaixar a si mesmo.
+
+### DRAWER LATERAL
+Mesmo padrão do dashboard — cabeçalho com nome/título + badge tipo + badge status + data. Body com seções. Rodapé com ID + data (opacidade 0.4).
+
+---
+
+## 23. BACKEND (Node.js + Express)
+
+### Endpoints principais:
+
+```
+GET  /auth/login               → redirect Microsoft MSAL
+GET  /auth/callback            → callback MSAL, criar/atualizar user no banco, setar sessão
+GET  /auth/logout              → destruir sessão, redirect home
+GET  /auth/me                  → retornar dados do usuário logado
+
+GET  /api/solicitacoes/tipos   → retornar CATEGORIAS_SOLICITACAO (para renderizar a grade)
+POST /api/solicitacoes         → receber formulário, salvar no PostgreSQL, criar task no ClickUp, upload arquivos R2
+GET  /api/solicitacoes         → listar solicitações do usuário logado (colaborador) ou todas (gestor/admin)
+                                 Query params: tipo_solicitacao, subtipo, maturidade, status, setor, unidade, solicitante, busca
+GET  /api/solicitacoes/:id     → buscar solicitação + status atual do ClickUp
+GET  /api/solicitacoes/:id/status → consultar status na ClickUp API e atualizar banco
+
+GET  /admin/users              → listar usuários (apenas gestor/admin)
+PUT  /admin/users/:id/role     → alterar role de usuário (apenas admin)
+```
+
+### Integração ClickUp:
+- Ao receber formulário: criar task via `POST https://api.clickup.com/api/v2/list/{CLICKUP_LIST_ID}/task`
+- Task name: "[Tipo] [Subtipo/Natureza] Nome — Solicitante" (ex: "[Evento Presencial] Palestra Renda Fixa — Fábio Santos")
+- Task description: JSON formatado com todos os campos do formulário
+- Salvar `clickup_task_id` no banco
+- Ao consultar status: `GET https://api.clickup.com/api/v2/task/{task_id}` → mapear via CLICKUP_STATUS_MAP
+
+### Upload R2:
+- Usar AWS SDK v3 com endpoint R2 (S3-compatible)
+- Organizar por pasta: `solicitacoes/{id}/{campo}/{arquivo}`
+- Retornar URL pública para salvar no banco
+
+---
+
+## 24. RESPONSIVIDADE
+
+- **Desktop (>960px):** layout split 65/35 no formulário de eventos, drawer 420px, grade de solicitações 3 colunas
+- **Tablet (768px–960px):** coluna única, prévia acima, grade de solicitações 2 colunas
+- **Mobile (<768px):**
+  - Prévia acima do formulário de eventos
+  - Botões flutuantes: só ícone (sem texto), empilhados verticalmente com gap 12px — verificar que não colidem com o teclado virtual ao preencher campos (usar `padding-bottom: 120px` no container do formulário em mobile para garantir espaço)
+  - Drawer: bottom sheet full width
+  - Grade de solicitações: 1 coluna
+  - Botões de maturidade: empilhados em coluna
+  - Abas do dashboard: scroll horizontal se necessário
+  - Filtros: scroll horizontal em linha única
+  - Hero da home: height 280px
