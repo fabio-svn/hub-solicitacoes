@@ -100,7 +100,7 @@
               <div class="alert-text">Se os materiais de apoio nao estiverem definidos, marque a opcao "Pacote Padrao", pois e utilizado na grande maioria dos eventos.</div>
             </div>
             <h2 style="font-weight:600;font-size:1.1rem;margin-bottom:20px">Materiais e servicos</h2>
-            <div class="pills-wrap" id="materiaisContainer"></div>
+            <div id="materiaisContainer"></div>
             <div id="materiaisCondFields" style="margin-top:16px"></div>
             <div class="field-error" id="materiaisError">Selecione pelo menos um item para continuar.</div>
             <div class="form-nav">
@@ -201,7 +201,10 @@
         <div class="preview-panel">
           <h4><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> Resumo do pedido</h4>
           <div id="previewRows">
-            <div class="preview-row"><span class="preview-label">Evento</span><span class="preview-value empty" id="pvEvento">—</span></div>
+            <div style="padding:12px 0;border-bottom:1px solid var(--border-light)">
+              <div style="font-size:0.7rem;font-weight:600;opacity:0.4;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px">Evento</div>
+              <div style="font-family:'Taviraj',serif;font-weight:300;font-size:1.1rem;color:var(--carbon-black)" id="pvEvento">—</div>
+            </div>
             <div class="preview-row"><span class="preview-label">Solicitante</span><span class="preview-value empty" id="pvSolicitante">—</span></div>
             <div class="preview-row"><span class="preview-label">Setor</span><span class="preview-value empty" id="pvSetor">—</span></div>
             <div class="preview-row"><span class="preview-label">Data</span><span class="preview-value empty" id="pvData">—</span></div>
@@ -257,9 +260,9 @@
     </div>
   </div>
 
-  <a href="/dashboard.html" class="float-home" style="bottom:78px">
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
-    <span>Minhas solicitações</span>
+  <a href="/solicitacoes.html" class="float-home" style="bottom:78px">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>
+    <span>Menu de solicitações</span>
   </a>
   <a href="/" class="float-home">
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
@@ -699,10 +702,42 @@
     function updateMateriaisPreview() {
       const container = document.getElementById('pvItens');
       const items = formState.natureza === 'online' ? ITENS_MATERIAIS_ONLINE : ITENS_MATERIAIS;
+
+      const ICONS = {
+        'pacote-padrao': `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>`,
+        'pacote-personalizado': `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>`,
+        'banner-impresso': `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>`,
+        'flyer': `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>`,
+        'brindes-store': `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 010-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 000-5C13 2 12 7 12 7z"/></svg>`,
+        'brindes-personalizados': `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 010-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 000-5C13 2 12 7 12 7z"/></svg>`,
+        'captacao-audiovisual': `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>`,
+        'coffee-break': `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8h1a4 4 0 010 8h-1"/><path d="M2 8h16v9a4 4 0 01-4 4H6a4 4 0 01-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>`,
+        'instagram': `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>`,
+        'email-marketing': `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>`,
+        'equipe-staff': `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>`,
+        'jantar-almoco': `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="2" x2="18" y2="22"/><path d="M14 6c0 2.21 1.79 4 4 4s4-1.79 4-4V2H14v4z"/><path d="M6 2v6c0 2.21-1.79 4-4 4v8a2 2 0 004 0V2"/></svg>`,
+        'pagina-sorteio': `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`,
+        'projeto-stand': `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>`,
+        'pacote-padrao-online': `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>`,
+        'pacote-personalizado-online': `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>`,
+        'instagram-online': `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>`,
+        'link-youtube-online': `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8" fill="currentColor" stroke="none"/></svg>`,
+        'apoio-live-online': `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 18v-6a9 9 0 0118 0v6"/><path d="M21 19a2 2 0 01-2 2h-1a2 2 0 01-2-2v-3a2 2 0 012-2h3zM3 19a2 2 0 002 2h1a2 2 0 002-2v-3a2 2 0 00-2-2H3z"/></svg>`,
+        'email-marketing-online': `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>`,
+      };
+
       container.innerHTML = [...formState.materiais].map(id => {
         const item = items.find(i => i.id === id);
         const prazo = PRAZOS_MATERIAIS[id];
-        return item ? `<div style="background:var(--icon-bg);border-radius:8px;padding:6px 10px;font-size:0.75rem;font-weight:600">${item.label}${prazo ? `<div style="font-size:0.65rem;color:var(--ruby-red);opacity:0.8">${prazo.label}</div>` : ''}</div>` : '';
+        const icon = ICONS[id] || '';
+        if (!item) return '';
+        return `<div style="background:var(--icon-bg);border-radius:8px;padding:8px 10px;font-size:0.75rem;font-weight:600;display:flex;align-items:flex-start;gap:6px">
+          <span style="color:var(--ruby-red);flex-shrink:0;margin-top:1px">${icon}</span>
+          <div>
+            <div>${item.label}</div>
+            ${prazo ? `<div style="font-size:0.65rem;color:var(--ruby-red);opacity:0.8;margin-top:2px">${prazo.label}</div>` : ''}
+          </div>
+        </div>`;
       }).join('');
     }
 
@@ -735,9 +770,46 @@
         container.innerHTML = `
           <div class="field"><label>Nome do palestrante ${i}</label><input type="text" id="palNome${i}" oninput="updatePalPreview(${i})"></div>
           <div class="field"><label>Cargo do palestrante ${i}</label><input type="text" id="palCargo${i}" oninput="updatePalPreview(${i})"></div>
-          <div class="field"><label>Foto (opcional)</label><div class="file-input-wrapper"><label class="file-input-btn" for="palFoto${i}">Escolher foto</label><input type="file" id="palFoto${i}" accept=".jpg,.jpeg,.png,.webp"></div><div class="field-hint">Caso nao consiga, envie para: ${EMAIL_UPLOAD}</div></div>
+          <div class="field">
+            <label>Foto (opcional)</label>
+            <div class="file-input-wrapper">
+              <label class="file-input-btn" for="palFoto${i}">Escolher foto</label>
+              <input type="file" id="palFoto${i}" accept=".jpg,.jpeg,.png,.webp">
+            </div>
+            <span id="palFotoStatus${i}" style="display:none;font-size:0.8rem;margin-top:4px"></span>
+            <div class="field-hint">Caso nao consiga, envie para: ${EMAIL_UPLOAD}</div>
+          </div>
           <div id="palPreview${i}"></div>
         `;
+
+        const fotoInput = document.getElementById('palFoto' + i);
+        const statusEl = document.getElementById('palFotoStatus' + i);
+        if (fotoInput) {
+          fotoInput.addEventListener('change', function() {
+            if (!this.files || !this.files[0]) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+              updatePalPreview(i);
+              const avatarEl = document.querySelector('#palPreview' + i + ' .speaker-avatar');
+              if (avatarEl) {
+                avatarEl.innerHTML = `<img src="${e.target.result}" alt="foto" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`;
+              }
+            };
+            reader.onerror = function() {
+              if (statusEl) {
+                statusEl.textContent = '✗ Erro ao carregar foto. Tente novamente.';
+                statusEl.style.color = 'var(--ruby-red)';
+                statusEl.style.display = 'block';
+              }
+            };
+            reader.readAsDataURL(this.files[0]);
+            if (statusEl) {
+              statusEl.textContent = '✓ Foto carregada com sucesso';
+              statusEl.style.color = 'var(--sage-green)';
+              statusEl.style.display = 'block';
+            }
+          });
+        }
       } else {
         container.innerHTML = `<div class="alert-card alert-danger"><div class="alert-title">Atencao</div><div class="alert-text">Sera enviado por e-mail um link para o cadastro do palestrante. Esse passo e obrigatorio para o andamento do evento.</div></div>`;
       }

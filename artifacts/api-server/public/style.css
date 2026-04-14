@@ -920,19 +920,24 @@ input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
   object-position: top;
   border-radius: 12px;
   border: 1px solid var(--carbon-black);
+  display: block;
 }
 .preview-depoimento-card {
   background: transparent;
   border: 1px solid var(--carbon-black);
   border-radius: 12px;
   padding: 20px 24px;
+}
+.preview-depoimento-card p {
   font-style: italic;
+  font-size: 0.875rem;
+  line-height: 1.6;
 }
 .preview-depoimento-autor {
   font-style: normal;
   font-weight: 600;
   margin-top: 12px;
-  font-size: 0.9rem;
+  font-size: 0.875rem;
 }
 
 /* Pacote padrao images in modal */

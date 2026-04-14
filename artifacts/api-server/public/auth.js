@@ -57,15 +57,42 @@ const Auth = {
     const { dark = false } = options;
     const logoUrl = dark ? URL_LOGO_BRANCA : URL_LOGO_PRETA;
     if (!this.user) return;
+    const initials = this.getInitials();
+    const name = this.getUserName();
     container.innerHTML = `
       <div class="header-inner">
         <a href="/" class="header-logo"><img src="${logoUrl}" alt="SVN" height="24"></a>
-        <div class="header-user">
-          <div class="avatar">${this.getInitials()}</div>
-          <span class="user-name">${this.getUserName()}</span>
-          <a href="/auth/logout" class="logout-link">Sair</a>
+        <div class="header-user" style="position:relative">
+          <div id="userMenuTrigger" style="display:flex;align-items:center;gap:8px;cursor:pointer" onclick="toggleUserMenu()">
+            <div class="avatar">${initials}</div>
+            <span class="user-name">${name}</span>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="opacity:0.4"><polyline points="6 9 12 15 18 9"/></svg>
+          </div>
+          <div id="userDropdown" style="display:none;position:absolute;top:calc(100% + 8px);right:0;background:var(--card-white);border:1px solid var(--border-light);border-radius:10px;box-shadow:0 4px 16px rgba(0,0,0,0.12);min-width:160px;z-index:200;overflow:hidden">
+            <a href="/dashboard.html" style="display:flex;align-items:center;gap:8px;padding:10px 16px;font-size:0.85rem;font-weight:600;color:var(--carbon-black);text-decoration:none;border-bottom:1px solid var(--border-light)" onmouseover="this.style.background='var(--icon-bg)'" onmouseout="this.style.background='transparent'">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+              Minhas solicitações
+            </a>
+            <button onclick="Auth.logout()" style="display:flex;align-items:center;gap:8px;padding:10px 16px;font-size:0.85rem;font-weight:600;color:var(--carbon-black);background:none;border:none;cursor:pointer;width:100%;text-align:left" onmouseover="this.style.background='var(--icon-bg)'" onmouseout="this.style.background='transparent'">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+              Sair
+            </button>
+          </div>
         </div>
       </div>
     `;
   }
 };
+
+window.toggleUserMenu = function() {
+  const dd = document.getElementById('userDropdown');
+  if (dd) dd.style.display = dd.style.display === 'none' ? 'block' : 'none';
+};
+
+document.addEventListener('click', function(e) {
+  const trigger = document.getElementById('userMenuTrigger');
+  const dd = document.getElementById('userDropdown');
+  if (dd && trigger && !trigger.contains(e.target) && !dd.contains(e.target)) {
+    dd.style.display = 'none';
+  }
+});

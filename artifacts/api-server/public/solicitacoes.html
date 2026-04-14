@@ -150,21 +150,27 @@
       }
 
       if (singleCats.length > 0) {
-        const singleGrid = document.createElement('div');
-        singleGrid.className = 'selection-grid';
-        singleGrid.style.marginTop = '28px';
-
         singleCats.forEach(cat => {
+          const wrapper = document.createElement('div');
+          wrapper.style.marginTop = '28px';
+
+          const title = document.createElement('div');
+          title.className = 'category-title';
+          title.textContent = cat.categoria;
+          wrapper.appendChild(title);
+
           cat.itens.forEach(item => {
             const btn = document.createElement('button');
-            btn.className = 'selection-btn disabled';
-            btn.setAttribute('data-tooltip', 'Em breve');
+            btn.className = 'selection-btn' + (item.ativo ? '' : ' disabled');
+            btn.style.cssText = 'width:100%;height:80px;flex-direction:row;gap:12px;justify-content:center';
+            if (!item.ativo) btn.setAttribute('data-tooltip', 'Em breve');
             btn.innerHTML = `<div class="btn-icon">${ICONS[item.icon] || ''}</div><div class="btn-label">${item.label}</div>`;
-            singleGrid.appendChild(btn);
+            if (item.ativo) btn.onclick = () => handleItemClick(item);
+            wrapper.appendChild(btn);
           });
-        });
 
-        container.appendChild(singleGrid);
+          container.appendChild(wrapper);
+        });
       }
     }
 
