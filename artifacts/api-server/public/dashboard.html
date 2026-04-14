@@ -6,7 +6,6 @@
   <title>Minhas Solicitações - Hub SVN</title>
   <link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
-  <script src="transitions.js"></script>
 </head>
 <body class="page-light">
   <header class="header" id="mainHeader"></header>
@@ -177,6 +176,8 @@
 
     function animateNumber(id, target) {
       const el = document.getElementById(id);
+      if (!el) return;
+      if (!target || target === 0) { el.textContent = '0'; return; }
       let current = 0;
       const duration = 600;
       const step = target / (duration / 16);
@@ -246,7 +247,8 @@
 
       container.innerHTML = data.data.map((item, idx) => {
         const cacheKey = tab + '_' + idx + '_' + pages[tab];
-        const dados = typeof item.dados === 'string' ? JSON.parse(item.dados) : (item.dados || {});
+        let dados = {};
+        try { dados = typeof item.dados === 'string' ? JSON.parse(item.dados) : (item.dados || {}); } catch { dados = {}; }
         const titulo = dados.nomeEvento || dados.tituloEvento || dados.titulo || dados.nomeCompleto || item.tipo_solicitacao;
         const tipoLabel = TIPO_SOLICITACAO_LABELS[item.tipo_solicitacao] || item.tipo_solicitacao;
         const statusObj = STATUS_SOLICITACAO.find(s => s.id === item.status) || { label: item.status, cor: '--carbon-black' };
@@ -295,6 +297,8 @@
       currentTab = tab;
       document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
       document.querySelectorAll('.tab-content').forEach(c => c.classList.toggle('active', c.id === 'tab-' + tab));
+      const otherTab = tab === 'eventos' ? 'geral' : 'eventos';
+      Object.keys(itemsCache).forEach(k => { if (k.startsWith(otherTab + '_')) delete itemsCache[k]; });
     }
 
     function toggleFilter(el, tab, filterKey) {
@@ -389,7 +393,11 @@
         }
       } catch {}
 
-      const dados = typeof item.dados === 'string' ? JSON.parse(item.dados) : (item.dados || {});
+      let dados = {};
+      try {
+        dados = typeof item.dados === 'string' ? JSON.parse(item.dados) : (item.dados || {});
+      } catch { dados = {}; }
+
       const titulo = dados.nomeEvento || dados.tituloEvento || dados.titulo || dados.nomeCompleto || item.tipo_solicitacao;
       const tipoLabel = TIPO_SOLICITACAO_LABELS[item.tipo_solicitacao] || item.tipo_solicitacao;
       const statusObj = STATUS_SOLICITACAO.find(s => s.id === item.status) || { label: item.status, cor: '--carbon-black' };
@@ -402,13 +410,41 @@
 
       let bodyHtml = '';
       for (const [key, value] of Object.entries(dados)) {
-        if (value && typeof value !== 'object') {
-          bodyHtml += `<div class="drawer-field">
-            <div class="drawer-field-label">${esc(key)}</div>
-            <div class="drawer-field-value">${esc(value)}</div>
-          </div>`;
+        if (value === null || value === undefined || value === '') continue;
+
+        const label = (typeof DRAWER_FIELD_LABELS !== 'undefined' && DRAWER_FIELD_LABELS[key])
+          ? DRAWER_FIELD_LABELS[key]
+          : key;
+
+        if (Array.isArray(value)) {
+          if (value.length === 0) continue;
+          if (typeof value[0] === 'object') {
+            bodyHtml += `<div class="drawer-field">
+              <div class="drawer-field-label">${esc(label)}</div>
+              ${value.map(dep => `
+                <div style="background:var(--icon-bg);border-radius:8px;padding:10px 12px;margin-top:6px;font-size:0.85rem">
+                  ${dep.texto ? `<div style="font-style:italic;margin-bottom:4px">${esc(dep.texto)}</div>` : ''}
+                  ${dep.nome ? `<div style="font-weight:600;font-size:0.8rem">${esc(dep.nome)}</div>` : ''}
+                </div>
+              `).join('')}
+            </div>`;
+          } else {
+            bodyHtml += `<div class="drawer-field">
+              <div class="drawer-field-label">${esc(label)}</div>
+              <div class="drawer-field-value">${value.map(v => esc(String(v))).join(' · ')}</div>
+            </div>`;
+          }
+          continue;
         }
+
+        if (typeof value === 'object') continue;
+
+        bodyHtml += `<div class="drawer-field">
+          <div class="drawer-field-label">${esc(label)}</div>
+          <div class="drawer-field-value">${esc(String(value))}</div>
+        </div>`;
       }
+
       document.getElementById('drawerBody').innerHTML = bodyHtml || '<p style="opacity:0.5">Sem dados adicionais</p>';
       document.getElementById('drawerFooter').textContent = `ID: ${item.id} | Criado em: ${new Date(item.created_at).toLocaleString('pt-BR')}`;
 
