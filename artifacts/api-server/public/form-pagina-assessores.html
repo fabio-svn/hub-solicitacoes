@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Pagina de Assessores - Hub SVN</title>
+  <title>Página de Assessores - Hub SVN</title>
   <link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
   <script src="transitions.js"></script>
@@ -17,7 +17,7 @@
         <span style="font-size:0.8rem;opacity:0.4" id="stepLabel">Etapa 1 de 2</span>
       </div>
       <h2 style="font-weight:300;font-size:1.1rem;margin-bottom:4px;opacity:0.6" id="formTitle"></h2>
-      <div class="field-hint" style="margin-bottom:20px">Validacao interna: ate 3 dias uteis | Publicacao/Atualizacao apos aprovacao: ate 2 dias uteis</div>
+      <div class="field-hint" style="margin-bottom:20px">Validacao interna: ate 3 dias úteis | Publicação/Atualização após aprovação: ate 2 dias úteis</div>
 
       <div class="form-step active" id="step1">
         <h2 style="font-weight:600;font-size:1.1rem;margin-bottom:20px">Dados do solicitante</h2>
@@ -33,28 +33,28 @@
           <label class="checkbox-option">
             <input type="checkbox" id="checkPrazos">
             <span class="checkbox-custom"></span>
-            <span>Confirmo que estou ciente dos prazos necessarios.</span>
+            <span>Confirmo que estou ciente dos prazos necessários.</span>
           </label>
         </div>
         <div class="form-nav">
-          <button class="btn btn-primary" id="btnNext1" disabled onclick="goStep(2)">Proximo</button>
+          <button class="btn btn-primary" id="btnNext1" disabled onclick="goStep(2)">Próximo</button>
         </div>
       </div>
 
       <div class="form-step" id="step2">
         <div id="updateCard" style="display:none" class="alert-card alert-info">
-          <div class="alert-title">Atualizacao</div>
-          <div class="alert-text">Preencha apenas os campos que deseja atualizar. Os demais permanecerao como estao no seu perfil atual.</div>
+          <div class="alert-title">Atualização</div>
+          <div class="alert-text">Preencha apenas os campos que deseja atualizar. Os demais permanecerao como estão no seu perfil atual.</div>
         </div>
 
-        <h2 style="font-weight:600;font-size:1.1rem;margin-bottom:20px">Informacoes do assessor</h2>
+        <h2 style="font-weight:600;font-size:1.1rem;margin-bottom:20px">Informações do assessor</h2>
         <div class="field">
           <label>Nome completo</label>
           <input type="text" id="nomeCompleto" placeholder="Nome completo do assessor">
         </div>
         <div class="field">
-          <label>Codigo de assessor</label>
-          <input type="text" id="codigoAssessor" placeholder="Codigo do assessor">
+          <label>Código de assessor</label>
+          <input type="text" id="codigoAssessor" placeholder="Código do assessor">
         </div>
         <div class="field">
           <label>Unidade</label>
@@ -106,7 +106,7 @@
         <div style="margin-top:24px;margin-bottom:12px">
           <button class="btn btn-dark" onclick="openPreview()" style="gap:8px">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-            Ver previa da pagina
+            Ver prévia da página
           </button>
         </div>
 
@@ -184,9 +184,9 @@
   <script>
     const params = new URLSearchParams(window.location.search);
     const subtipo = params.get('subtipo') || 'dados';
-    const isAtualizacao = subtipo === 'atualizacao';
-    const TITLES = { dados: 'Pagina de Assessores — Dados', atualizacao: 'Pagina de Assessores — Atualizacao' };
-    const TIPOS = { dados: 'pagina-assessores-dados', atualizacao: 'pagina-assessores-atualizacao' };
+    const isAtualizacao = subtipo === 'atualização';
+    const TITLES = { dados: 'Página de Assessores — Dados', atualização: 'Página de Assessores — Atualização' };
+    const TIPOS = { dados: 'pagina-assessores-dados', atualização: 'pagina-assessores-atualizacao' };
     let depoimentos = [];
     let selectedSelos = new Set();
 
@@ -364,7 +364,7 @@
       const required = isAtualizacao ? ['nomeCompleto', 'codigoAssessor'] : ['nomeCompleto', 'codigoAssessor', 'unidade', 'contratoSocial', 'linkedin', 'miniBio'];
       for (const id of required) {
         if (!document.getElementById(id).value.trim()) {
-          alert('Preencha todos os campos obrigatorios.'); return;
+          alert('Preencha todos os campos obrigatórios.'); return;
         }
       }
       if (!isAtualizacao && !document.getElementById('fotoPerfil').files[0]) {
@@ -378,7 +378,7 @@
       const formData = new FormData();
       formData.append('tipo_solicitacao', TIPOS[subtipo] || TIPOS.dados);
       formData.append('subtipo', subtipo);
-      formData.append('dados', JSON.stringify({
+      const dados = {
         nome: document.getElementById('nome').value,
         setor: document.getElementById('setor').value,
         nomeCompleto: document.getElementById('nomeCompleto').value,
@@ -390,16 +390,34 @@
         miniBio: document.getElementById('miniBio').value,
         selos: [...selectedSelos],
         depoimentos: validDepos,
-      }));
+      };
+      formData.append('dados', JSON.stringify(dados));
 
       const photo = document.getElementById('fotoPerfil').files[0];
       if (photo) formData.append('fotoPerfil', photo);
 
       try {
         const res = await fetch('/api/solicitacoes', { method: 'POST', body: formData });
-        if (res.ok) { sessionStorage.removeItem('form-assessores'); window.location.href = '/thankyou.html'; }
+        if (res.ok) {
+          sessionStorage.removeItem('form-assessores');
+          try {
+            const resumo = {
+              tipo: TIPO_SOLICITACAO_LABELS[formData.get('tipo_solicitacao')] || formData.get('tipo_solicitacao'),
+              subtipo: formData.get('subtipo') || '', titulo: dados.nomeEvento || dados.tituloEvento || dados.titulo || dados.nomeCompleto || '',
+              solicitante: dados.nome || Auth.getUserName(),
+              setor: dados.setor || '',
+              data: new Date().toLocaleDateString('pt-BR'),
+              hora: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+              materiais: dados.materiais || [],
+              natureza: dados.natureza || '',
+              maturidade: dados.maturidade || '',
+            };
+            sessionStorage.setItem('svn_ultimo_resumo', JSON.stringify(resumo));
+          } catch {}
+          window.location.href = '/thankyou.html';
+        }
         else { alert('Erro ao enviar.'); btn.disabled = false; btn.textContent = 'Enviar'; }
-      } catch (e) { alert('Erro de conexao.'); btn.disabled = false; btn.textContent = 'Enviar'; }
+      } catch (e) { alert('Erro de conexão.'); btn.disabled = false; btn.textContent = 'Enviar'; }
     }
 
     function saveDraft() {

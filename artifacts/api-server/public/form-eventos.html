@@ -54,27 +54,27 @@
               <label class="checkbox-option">
                 <input type="checkbox" id="checkPrazos">
                 <span class="checkbox-custom"></span>
-                <span>Confirmo que estou ciente dos prazos necessarios para a organizacao do evento.</span>
+                <span>Confirmo que estou ciente dos prazos necessários para a organização do evento.</span>
               </label>
             </div>
             <div class="form-nav">
-              <button class="btn btn-primary" id="btnNext1" disabled onclick="goStep(2)">Proximo</button>
+              <button class="btn btn-primary" id="btnNext1" disabled onclick="goStep(2)">Próximo</button>
             </div>
           </div>
 
           <!-- STEP 2: Maturidade -->
           <div class="form-step" id="step2">
-            <h2 style="font-weight:600;font-size:1.1rem;margin-bottom:20px">Qual o nivel de informacao que voce tem sobre o evento?</h2>
+            <h2 style="font-weight:600;font-size:1.1rem;margin-bottom:20px">Qual o nível de informação que você tem sobre o evento?</h2>
             <div class="radio-cards" style="margin-bottom:16px">
               <div class="radio-card" onclick="selectMaturidade(1)" id="mat1">
                 <div class="card-icon" style="font-size:2rem;font-family:'Taviraj',serif;font-weight:300">1</div>
-                <div class="card-label">Tenho a maioria das informacoes</div>
+                <div class="card-label">Tenho a maioria das informações</div>
                 <div class="card-desc">Evento com data, local e detalhes definidos</div>
               </div>
               <div class="radio-card" onclick="selectMaturidade(2)" id="mat2">
                 <div class="card-icon" style="font-size:2rem;font-family:'Taviraj',serif;font-weight:300">2</div>
-                <div class="card-label">Tenho algumas informacoes</div>
-                <div class="card-desc">Algumas informacoes definidas, outras em aberto</div>
+                <div class="card-label">Tenho algumas informações</div>
+                <div class="card-desc">Algumas informações definidas, outras em aberto</div>
               </div>
               <div class="radio-card" onclick="selectMaturidade(3)" id="mat3">
                 <div class="card-icon" style="font-size:2rem;font-family:'Taviraj',serif;font-weight:300">3</div>
@@ -82,23 +82,23 @@
                 <div class="card-desc">Tenho uma ideia, preciso de apoio para estruturar</div>
               </div>
             </div>
-            <a href="#" onclick="event.preventDefault();openOrientationModal()" style="font-size:0.85rem">Qual opcao devo escolher?</a>
+            <a href="#" onclick="event.preventDefault();openOrientationModal()" style="font-size:0.85rem">Qual opção devo escolher?</a>
             <div id="maturityFields" style="margin-top:24px"></div>
             <div class="form-nav" id="nav2" style="display:none">
               <button class="btn btn-secondary" onclick="goStep(1)">Voltar</button>
-              <button class="btn btn-primary" onclick="goStep(3)">Proximo</button>
+              <button class="btn btn-primary" onclick="goStep(3)">Próximo</button>
             </div>
           </div>
 
           <!-- STEP 3: Materiais -->
           <div class="form-step" id="step3">
             <div class="alert-card alert-danger">
-              <div class="alert-title">Obrigatorio</div>
-              <div class="alert-text">Clique nas opcoes que fazem parte da solicitacao para esse evento</div>
+              <div class="alert-title">Obrigatório</div>
+              <div class="alert-text">Clique nas opções que fazem parte da solicitação para esse evento</div>
             </div>
             <div class="alert-card alert-info">
               <div class="alert-title">Dica</div>
-              <div class="alert-text">Se os materiais de apoio nao estiverem definidos, marque a opcao "Pacote Padrao", pois e utilizado na grande maioria dos eventos.</div>
+              <div class="alert-text">Se os materiais de apoio nao estiverem definidos, marque a opção "Pacote Padrão", pois e utilizado na grande maioria dos eventos.</div>
             </div>
             <h2 style="font-weight:600;font-size:1.1rem;margin-bottom:20px">Materiais e servicos</h2>
             <div id="materiaisContainer"></div>
@@ -106,7 +106,7 @@
             <div class="field-error" id="materiaisError">Selecione pelo menos um item para continuar.</div>
             <div class="form-nav">
               <button class="btn btn-secondary" onclick="goStep(2)">Voltar</button>
-              <button class="btn btn-primary" onclick="validateMateriais() && goStep(4)">Proximo</button>
+              <button class="btn btn-primary" onclick="validateMateriais() && goStep(4)">Próximo</button>
             </div>
           </div>
 
@@ -134,7 +134,7 @@
             <div id="palestranteBlocos"></div>
             <div class="form-nav">
               <button class="btn btn-secondary" onclick="goStep(3)">Voltar</button>
-              <button class="btn btn-primary" id="btnNext4" onclick="goStep(formState.natureza==='presencial'&&formState.maturidade!==3?5:6)">Proximo</button>
+              <button class="btn btn-primary" id="btnNext4" onclick="goStep(formState.natureza==='presencial'&&formState.maturidade!==3?5:6)">Próximo</button>
             </div>
           </div>
 
@@ -153,7 +153,7 @@
             </div>
             <div class="form-nav">
               <button class="btn btn-secondary" onclick="goStep(4)">Voltar</button>
-              <button class="btn btn-primary" onclick="goStep(6)">Proximo</button>
+              <button class="btn btn-primary" onclick="goStep(6)">Próximo</button>
             </div>
           </div>
 
@@ -230,33 +230,33 @@
       <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:16px">
         <div style="text-align:center;padding:16px">
           <div style="font-family:'Taviraj',serif;font-size:3rem;font-weight:300;margin-bottom:8px">1</div>
-          <span class="badge" style="background:var(--ruby-red);color:white;margin-bottom:8px">Tenho a maioria das informacoes</span>
-          <p style="font-size:0.82rem;opacity:0.7;margin-top:8px">Quando as informacoes mais basicas do evento estiverem pre-definidas.</p>
+          <span class="badge" style="background:var(--ruby-red);color:white;margin-bottom:8px">Tenho a maioria das informações</span>
+          <p style="font-size:0.82rem;opacity:0.7;margin-top:8px">Quando as informações mais basicas do evento estiverem pre-definidas.</p>
           <p style="font-size:0.78rem;font-style:italic;opacity:0.5;margin-top:4px">Ex.: Tenho Nome, Data, Local, Formato, etc</p>
         </div>
         <div style="text-align:center;padding:16px">
           <div style="font-family:'Taviraj',serif;font-size:3rem;font-weight:300;margin-bottom:8px">2</div>
-          <span class="badge" style="background:var(--sage-green);color:white;margin-bottom:8px">Tenho algumas informacoes</span>
-          <p style="font-size:0.82rem;opacity:0.7;margin-top:8px">Quando algumas informacoes estiverem definidas, mas voce precisa de apoio para fechar outros pontos.</p>
+          <span class="badge" style="background:var(--sage-green);color:white;margin-bottom:8px">Tenho algumas informações</span>
+          <p style="font-size:0.82rem;opacity:0.7;margin-top:8px">Quando algumas informações estiverem definidas, mas você precisa de apoio para fechar outros pontos.</p>
           <p style="font-size:0.78rem;font-style:italic;opacity:0.5;margin-top:4px">Ex.: Quero realizar uma palestra sobre FIIs no dia 7, mas ainda preciso definir o local.</p>
         </div>
         <div style="text-align:center;padding:16px">
           <div style="font-family:'Taviraj',serif;font-size:3rem;font-weight:300;margin-bottom:8px">3</div>
           <span class="badge" style="background:var(--leather-brown);color:white;margin-bottom:8px">Ainda estou estruturando</span>
-          <p style="font-size:0.82rem;opacity:0.7;margin-top:8px">Quando voce tiver uma ideia para um evento, mas precisa de apoio para estruturar.</p>
+          <p style="font-size:0.82rem;opacity:0.7;margin-top:8px">Quando você tiver uma ideia para um evento, mas precisa de apoio para estruturar.</p>
           <p style="font-size:0.78rem;font-style:italic;opacity:0.5;margin-top:4px">Ex.: Gostaria de realizar uma experiencia com clientes, mas preciso de assistencia.</p>
         </div>
       </div>
       <hr style="border-color:rgba(255,248,243,0.1);margin:16px 0">
-      <p style="font-size:0.78rem;opacity:0.5;font-style:italic">Para que o processo ocorra de forma eficiente, escolha a opcao que mais se adequa a realidade do seu evento. Quanto mais informacoes forem preenchidas, mais rapido sera o processo.</p>
+      <p style="font-size:0.78rem;opacity:0.5;font-style:italic">Para que o processo ocorra de forma eficiente, escolha a opção que mais se adequa a realidade do seu evento. Quanto mais informações forem preenchidas, mais rápido será o processo.</p>
     </div>
   </div>
 
-  <!-- Pacote Padrao Preview Modal -->
+  <!-- Pacote Padrão Preview Modal -->
   <div class="modal-overlay" id="pacoteModal" onclick="closePacoteModal(event)">
     <div class="modal-card" style="background:var(--carbon-black);color:var(--paper-white)" onclick="event.stopPropagation()">
       <button class="modal-close" onclick="closePacoteModal()">&times;</button>
-      <h3 style="margin-bottom:16px">Previa do Pacote Padrao</h3>
+      <h3 style="margin-bottom:16px">Prévia do Pacote Padrão</h3>
       <div style="display:flex;gap:16px;flex-wrap:wrap;justify-content:center" id="pacoteImgs"></div>
     </div>
   </div>
@@ -279,8 +279,8 @@
     let estados = [];
 
     function saveFormState() {
-      const fields = ['nome','setor','nomeEvento','dataEvento','horario','descricao',
-        'origem','tipoEvento','publico','convidados','canal','linkTransmissao',
+      const fields = ['nome','setor','nomeEvento','dataEvento','horario','descrição',
+        'origem','tipoEvento','público','convidados','canal','linkTransmissao',
         'objetivos','custoEstimado','rateio','observacoes','localNome','localEndereco',
         'localSugestoes','ideaQuando'];
       const data = {};
@@ -303,8 +303,8 @@
         const raw = sessionStorage.getItem(STORAGE_KEY);
         if (!raw) return;
         const data = JSON.parse(raw);
-        const fields = ['nome','setor','nomeEvento','dataEvento','horario','descricao',
-          'origem','tipoEvento','publico','convidados','canal','linkTransmissao',
+        const fields = ['nome','setor','nomeEvento','dataEvento','horario','descrição',
+          'origem','tipoEvento','público','convidados','canal','linkTransmissao',
           'objetivos','custoEstimado','rateio','observacoes'];
         fields.forEach(id => {
           const el = document.getElementById(id);
@@ -446,26 +446,26 @@
           <div class="field"><label>Horário</label><input type="time" id="horario"></div>
         </div>
         <div class="field"><label>Horário de Brasília?</label><div class="radio-group" style="flex-direction:row;gap:16px"><label class="radio-option"><input type="radio" name="horBrasilia" value="sim"><span class="radio-custom"></span><span>Sim</span></label><label class="radio-option"><input type="radio" name="horBrasilia" value="nao"><span class="radio-custom"></span><span>Não</span></label></div></div>
-        <div class="field"><label>Breve descrição do evento</label><textarea id="descricao" placeholder="Ex.: evento voltado para relacionamento com clientes que se interessam por vinhos"></textarea><div class="field-hint">Fale sobre aspectos como organização e tópicos do conteúdo que será abordado.</div></div>
+        <div class="field"><label>Breve descrição do evento</label><textarea id="descrição" placeholder="Ex.: evento voltado para relacionamento com clientes que se interessam por vinhos"></textarea><div class="field-hint">Fale sobre aspectos como organização e tópicos do conteúdo que será abordado.</div></div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
           <div class="field"><label>Origem do evento</label><select id="origem">${ORIGENS_EVENTO.map(o=>`<option>${o}</option>`).join('')}</select></div>
           <div class="field"><label>Tipo de evento</label><select id="tipoEvento">${TIPOS_EVENTO.map(t=>`<option>${t}</option>`).join('')}</select></div>
         </div>
-        <div class="field"><label>Publico do evento</label><select id="publico"><option>Selecione</option><option>Fechado para convidados</option><option>Aberto ao publico em geral</option></select></div>
+        <div class="field"><label>Público do evento</label><select id="público"><option>Selecione</option><option>Fechado para convidados</option><option>Aberto ao público em geral</option></select></div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
           <div class="field"><label>Estado</label><select id="estado" onchange="loadCidades()"><option>Carregando...</option></select></div>
           <div class="field"><label>Cidade</label><select id="cidade" disabled><option>Selecione o estado</option></select></div>
         </div>
         <div class="field"><label>Local do evento</label><select id="localEvento" onchange="handleLocal()"><option>Selecione</option><option value="unidade">Unidade SVN</option><option value="externo">Local externo</option><option value="nao-definido">Local ainda nao definido</option></select></div>
         <div id="localConditional"></div>
-        <div class="field"><label>Numero de convidados</label><input type="number" id="convidados" min="1" placeholder="Contando com assessores e palestrantes"></div>
+        <div class="field"><label>Número de convidados</label><input type="number" id="convidados" min="1" placeholder="Contando com assessores e palestrantes"></div>
       `;
     }
 
     function buildPresencial2Fields() {
       const pills = CAMPOS_ETAPA2_FORM2.map(c => `<button class="pill" data-campo="${c.id}" onclick="toggleCampo('${c.id}','${c.label}')">${c.label}</button>`).join('');
       return `
-        <div class="alert-card alert-info"><div class="alert-title">Opcional</div><div class="alert-text">Selecione os campos que voce ja tem informacao para preencher.</div></div>
+        <div class="alert-card alert-info"><div class="alert-title">Opcional</div><div class="alert-text">Selecione os campos que você ja tem informação para preencher.</div></div>
         <div class="pills-wrap">${pills}</div>
         <div id="camposDinamicos" style="margin-top:16px"></div>
       `;
@@ -473,7 +473,7 @@
 
     function buildPresencial3Fields() {
       return `
-        <div class="field"><label>Descricao do evento</label><textarea id="descricao" placeholder="Descreva sua ideia para o evento..."></textarea></div>
+        <div class="field"><label>Descrição do evento</label><textarea id="descrição" placeholder="Descreva sua ideia para o evento..."></textarea></div>
         <div class="field"><label>Tipo aproximado de evento</label>
           <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
             ${TIPOS_EVENTO_FORM3.map(t => `<label class="radio-option" style="padding:8px 12px;border:1px solid var(--border-light);border-radius:8px"><input type="radio" name="tipoAprox" value="${t}"><span class="radio-custom"></span><span style="font-size:0.85rem">${t}</span></label>`).join('')}
@@ -484,7 +484,7 @@
           <div class="field"><label>Estado (opcional)</label><select id="estado" onchange="loadCidades()"><option>Selecione</option></select></div>
           <div class="field"><label>Cidade (opcional)</label><select id="cidade" disabled><option>Selecione o estado</option></select></div>
         </div>
-        <div class="field"><label>Numero esperado de convidados (opcional)</label><input type="number" id="convidados" min="1"></div>
+        <div class="field"><label>Número esperado de convidados (opcional)</label><input type="number" id="convidados" min="1"></div>
       `;
     }
 
@@ -496,8 +496,8 @@
           <div class="field"><label>Horário</label><input type="time" id="horario"></div>
         </div>
         <div class="field"><label>Horário de Brasília?</label><div class="radio-group" style="flex-direction:row;gap:16px"><label class="radio-option"><input type="radio" name="horBrasilia" value="sim"><span class="radio-custom"></span><span>Sim</span></label><label class="radio-option"><input type="radio" name="horBrasilia" value="nao"><span class="radio-custom"></span><span>Não</span></label></div></div>
-        <div class="field"><label>Descrição</label><textarea id="descricao" placeholder="Descreva o evento..."></textarea></div>
-        <div class="field"><label>Público do evento</label><select id="publico"><option>Selecione</option><option>Fechado para convidados</option><option>Aberto ao público em geral</option></select></div>
+        <div class="field"><label>Descrição</label><textarea id="descrição" placeholder="Descreva o evento..."></textarea></div>
+        <div class="field"><label>Público do evento</label><select id="público"><option>Selecione</option><option>Fechado para convidados</option><option>Aberto ao público em geral</option></select></div>
         <div class="field"><label>Objetivos de retorno</label><textarea id="objetivos" placeholder="Quais são os objetivos esperados com este evento?"></textarea></div>
         <div class="field"><label>Canal de transmissão</label><select id="canal" onchange="handleCanal()">${CANAIS_TRANSMISSAO.map(c=>`<option>${c}</option>`).join('')}</select></div>
         <div class="field" id="linkTransmissaoField"><label>Link da transmissão</label><input type="url" id="linkTransmissao" placeholder="https://..."><div id="canalAviso" class="alert-card alert-info" style="display:none;margin-top:8px"><div class="alert-text">O link pode ser informado posteriormente.</div></div></div>
@@ -508,16 +508,16 @@
     function buildOnline2Fields() {
       const pills = CAMPOS_ETAPA2_FORM2_ONLINE.map(c => `<button class="pill" data-campo="${c.id}" onclick="toggleCampo('${c.id}','${c.label}')">${c.label}</button>`).join('');
       return `
-        <div class="alert-card alert-info"><div class="alert-title">Opcional</div><div class="alert-text">Selecione os campos que voce ja tem informacao para preencher.</div></div>
+        <div class="alert-card alert-info"><div class="alert-title">Opcional</div><div class="alert-text">Selecione os campos que você ja tem informação para preencher.</div></div>
         <div class="pills-wrap">${pills}</div>
         <div id="camposDinamicos" style="margin-top:16px"></div>
       `;
     }
 
     function buildOnline3Fields() {
-      const tiposOnline = ['Webinar','Live no YouTube','Aula online','Reuniao aberta','Transmissao de evento presencial','Workshop online','Painel de discussao','Outro'];
+      const tiposOnline = ['Webinar','Live no YouTube','Aula online','Reuniao aberta','Transmissão de evento presencial','Workshop online','Painel de discussao','Outro'];
       return `
-        <div class="field"><label>Descricao</label><textarea id="descricao" placeholder="Descreva sua ideia..."></textarea></div>
+        <div class="field"><label>Descrição</label><textarea id="descrição" placeholder="Descreva sua ideia..."></textarea></div>
         <div class="field"><label>Tipo online aproximado</label>
           <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
             ${tiposOnline.map(t => `<label class="radio-option" style="padding:8px 12px;border:1px solid var(--border-light);border-radius:8px"><input type="radio" name="tipoAprox" value="${t}"><span class="radio-custom"></span><span style="font-size:0.85rem">${t}</span></label>`).join('')}
@@ -525,7 +525,7 @@
         </div>
         <div class="field"><label>Ideia de quando realizar (opcional)</label><input type="text" id="ideaQuando" placeholder="Ex.: próximo mês..."></div>
         <div class="field"><label>Canal provavel (opcional)</label><select id="canal">${CANAIS_TRANSMISSAO.map(c=>`<option>${c}</option>`).join('')}</select></div>
-        <div class="field"><label>Numero esperado de participantes (opcional)</label><input type="number" id="convidados" min="1"></div>
+        <div class="field"><label>Número esperado de participantes (opcional)</label><input type="number" id="convidados" min="1"></div>
       `;
     }
 
@@ -623,16 +623,16 @@
         case 'nome-evento': case 'titulo-evento': return `<div class="field"><label>${campo.label}</label><input type="text" id="nomeEvento" oninput="updatePreview('pvEvento',this.value)"></div>`;
         case 'data-evento': return `<div class="field"><label>${campo.label}</label><input type="date" id="dataEvento" onchange="updatePreview('pvData',this.value)"></div>`;
         case 'horario': return `<div class="field"><label>${campo.label}</label><input type="time" id="horario"></div>`;
-        case 'descricao': return `<div class="field"><label>${campo.label}</label><textarea id="descricao"></textarea></div>`;
+        case 'descrição': return `<div class="field"><label>${campo.label}</label><textarea id="descrição"></textarea></div>`;
         case 'origem': return `<div class="field"><label>${campo.label}</label><select id="origem">${(formState.natureza==='online'?ORIGENS_EVENTO_ONLINE:ORIGENS_EVENTO).map(o=>`<option>${o}</option>`).join('')}</select></div>`;
         case 'tipo-evento': return `<div class="field"><label>${campo.label}</label><select id="tipoEvento">${TIPOS_EVENTO.map(t=>`<option>${t}</option>`).join('')}</select></div>`;
-        case 'publico': return `<div class="field"><label>${campo.label}</label><select id="publico"><option>Selecione</option><option>Fechado para convidados</option><option>Aberto ao publico em geral</option></select></div>`;
+        case 'público': return `<div class="field"><label>${campo.label}</label><select id="público"><option>Selecione</option><option>Fechado para convidados</option><option>Aberto ao público em geral</option></select></div>`;
         case 'estado-cidade': return `<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px"><div class="field"><label>Estado</label><select id="estado" onchange="loadCidades()"><option>Carregando...</option></select></div><div class="field"><label>Cidade</label><select id="cidade" disabled><option>Selecione o estado</option></select></div></div>`;
         case 'local': return `<div class="field"><label>${campo.label}</label><select id="localEvento" onchange="handleLocal()"><option>Selecione</option><option value="unidade">Unidade SVN</option><option value="externo">Local externo</option><option value="nao-definido">Nao definido</option></select></div><div id="localConditional"></div>`;
         case 'convidados': return `<div class="field"><label>${campo.label}</label><input type="number" id="convidados" min="1"></div>`;
         case 'objetivos': return `<div class="field"><label>${campo.label}</label><textarea id="objetivos"></textarea></div>`;
         case 'canal': return `<div class="field"><label>${campo.label}</label><select id="canal" onchange="handleCanal()">${CANAIS_TRANSMISSAO.map(c=>`<option>${c}</option>`).join('')}</select></div>`;
-        case 'link-transmissao': return `<div class="field"><label>${campo.label}</label><input type="url" id="linkTransmissao"></div>`;
+        case 'link-transmissão': return `<div class="field"><label>${campo.label}</label><input type="url" id="linkTransmissao"></div>`;
         default: return `<div class="field"><label>${campo.label}</label><input type="text" id="${campo.id}"></div>`;
       }
     }
@@ -691,7 +691,7 @@
 
     function getMaterialConditional(id) {
       switch(id) {
-        case 'pacote-padrao': case 'pacote-padrao-online':
+        case 'pacote-padrão': case 'pacote-padrão-online':
           return `<div style="margin-top:8px"><button class="btn btn-secondary" style="font-size:0.8rem" onclick="openPacoteModal()">Ver prévia do material</button></div>`;
         case 'pacote-personalizado': case 'pacote-personalizado-online':
           return `
@@ -754,15 +754,15 @@
                 <textarea id="matBrindeDesc" placeholder="Descreva o brinde que deseja..."></textarea>
               </div>
             </div>`;
-        case 'captacao-audiovisual':
-          return `<div class="field" style="margin-top:8px"><div class="radio-group"><label class="radio-option"><input type="radio" name="captacao" value="fotos"><span class="radio-custom"></span><span>Sessão de fotos</span></label><label class="radio-option"><input type="radio" name="captacao" value="video"><span class="radio-custom"></span><span>Gravação de vídeo</span></label></div></div>`;
+        case 'captação-audiovisual':
+          return `<div class="field" style="margin-top:8px"><div class="radio-group"><label class="radio-option"><input type="radio" name="captação" value="fotos"><span class="radio-custom"></span><span>Sessão de fotos</span></label><label class="radio-option"><input type="radio" name="captação" value="video"><span class="radio-custom"></span><span>Gravação de vídeo</span></label></div></div>`;
         case 'instagram': case 'instagram-online':
           return `
             <div style="margin-top:12px">
               <div class="field">
                 <label>Forma de divulgação</label>
                 <div class="radio-group">
-                  <label class="radio-option"><input type="radio" name="igTipo" value="mencao"><span class="radio-custom"></span><span>Menção</span></label>
+                  <label class="radio-option"><input type="radio" name="igTipo" value="menção"><span class="radio-custom"></span><span>Menção</span></label>
                   <label class="radio-option"><input type="radio" name="igTipo" value="colab"><span class="radio-custom"></span><span>Colab</span></label>
                 </div>
               </div>
@@ -854,13 +854,13 @@
       const items = formState.natureza === 'online' ? ITENS_MATERIAIS_ONLINE : ITENS_MATERIAIS;
 
       const ICONS = {
-        'pacote-padrao': `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>`,
+        'pacote-padrão': `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>`,
         'pacote-personalizado': `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>`,
         'banner-impresso': `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>`,
         'flyer': `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>`,
         'brindes-store': `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 010-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 000-5C13 2 12 7 12 7z"/></svg>`,
         'brindes-personalizados': `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 010-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 000-5C13 2 12 7 12 7z"/></svg>`,
-        'captacao-audiovisual': `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>`,
+        'captação-audiovisual': `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>`,
         'coffee-break': `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8h1a4 4 0 010 8h-1"/><path d="M2 8h16v9a4 4 0 01-4 4H6a4 4 0 01-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>`,
         'instagram': `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>`,
         'email-marketing': `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>`,
@@ -868,7 +868,7 @@
         'jantar-almoco': `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="2" x2="18" y2="22"/><path d="M14 6c0 2.21 1.79 4 4 4s4-1.79 4-4V2H14v4z"/><path d="M6 2v6c0 2.21-1.79 4-4 4v8a2 2 0 004 0V2"/></svg>`,
         'pagina-sorteio': `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`,
         'projeto-stand': `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>`,
-        'pacote-padrao-online': `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>`,
+        'pacote-padrão-online': `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>`,
         'pacote-personalizado-online': `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>`,
         'instagram-online': `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>`,
         'link-youtube-online': `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8" fill="currentColor" stroke="none"/></svg>`,
@@ -961,7 +961,7 @@
           });
         }
       } else {
-        container.innerHTML = `<div class="alert-card alert-danger"><div class="alert-title">Atencao</div><div class="alert-text">Sera enviado por e-mail um link para o cadastro do palestrante. Esse passo e obrigatorio para o andamento do evento.</div></div>`;
+        container.innerHTML = `<div class="alert-card alert-danger"><div class="alert-title">Atenção</div><div class="alert-text">Será enviado por e-mail um link para o cadastro do palestrante. Esse passo e obrigatório para o andamento do evento.</div></div>`;
       }
     }
 
@@ -990,7 +990,7 @@
       if (!imgs.hasChildNodes()) {
         const pacoteItems = [
           { url: 'https://pub-a2132f9b61f940659cc98265acfcf64c.r2.dev/Convite.png', titulo: 'Modelo padrão de convite' },
-          { url: 'https://pub-a2132f9b61f940659cc98265acfcf64c.r2.dev/tela1.png',   titulo: 'Modelo padrão de LP' },
+          { url: 'https://pub-a2132f9b61f940659cc98265acfcf64c.r2.dev/tela1.png', titulo: 'Modelo padrão de LP' },
         ];
         imgs.innerHTML = pacoteItems.map(item => `
           <div style="flex:1;min-width:200px;max-width:320px">
@@ -1017,10 +1017,10 @@
         nomeEvento: document.getElementById('nomeEvento')?.value || '',
         dataEvento: document.getElementById('dataEvento')?.value || '',
         horario: document.getElementById('horario')?.value || '',
-        descricao: document.getElementById('descricao')?.value || '',
+        descrição: document.getElementById('descricao')?.value || '',
         origem: document.getElementById('origem')?.value || '',
         tipoEvento: document.getElementById('tipoEvento')?.value || '',
-        publico: document.getElementById('publico')?.value || '',
+        público: document.getElementById('publico')?.value || '',
         estado: document.getElementById('estado')?.value || '',
         cidade: document.getElementById('cidade')?.value || '',
         localEvento: document.getElementById('localEvento')?.value || '',
@@ -1053,9 +1053,26 @@
 
       try {
         const res = await fetch('/api/solicitacoes', { method: 'POST', body: formData });
-        if (res.ok) { clearFormStorage(); window.location.href = '/thankyou.html'; }
+        if (res.ok) {
+          clearFormStorage();
+          try {
+            const resumo = {
+              tipo: TIPO_SOLICITACAO_LABELS[formData.get('tipo_solicitacao')] || formData.get('tipo_solicitacao'),
+              subtipo: formData.get('subtipo') || '', titulo: dados.nomeEvento || dados.tituloEvento || dados.titulo || dados.nomeCompleto || '',
+              solicitante: dados.nome || Auth.getUserName(),
+              setor: dados.setor || '',
+              data: new Date().toLocaleDateString('pt-BR'),
+              hora: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+              materiais: dados.materiais || [],
+              natureza: dados.natureza || '',
+              maturidade: dados.maturidade || '',
+            };
+            sessionStorage.setItem('svn_ultimo_resumo', JSON.stringify(resumo));
+          } catch {}
+          window.location.href = '/thankyou.html';
+        }
         else { alert('Erro ao enviar.'); btn.disabled = false; btn.textContent = 'Enviar'; }
-      } catch (e) { alert('Erro de conexao.'); btn.disabled = false; btn.textContent = 'Enviar'; }
+      } catch (e) { alert('Erro de conexão.'); btn.disabled = false; btn.textContent = 'Enviar'; }
     }
 
     init();

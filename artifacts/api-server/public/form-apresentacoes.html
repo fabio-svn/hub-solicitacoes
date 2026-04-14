@@ -32,23 +32,23 @@
           <label class="checkbox-option">
             <input type="checkbox" id="checkPrazos">
             <span class="checkbox-custom"></span>
-            <span>Confirmo que estou ciente dos prazos necessarios.</span>
+            <span>Confirmo que estou ciente dos prazos necessários.</span>
           </label>
         </div>
         <div class="form-nav">
-          <button class="btn btn-primary" id="btnNext1" disabled onclick="goStep(2)">Proximo</button>
+          <button class="btn btn-primary" id="btnNext1" disabled onclick="goStep(2)">Próximo</button>
         </div>
       </div>
 
       <div class="form-step" id="step2">
-        <h2 style="font-weight:600;font-size:1.1rem;margin-bottom:20px">Informacoes do material</h2>
+        <h2 style="font-weight:600;font-size:1.1rem;margin-bottom:20px">Informações do material</h2>
         <div class="field">
-          <label>Titulo do material</label>
-          <input type="text" id="titulo" placeholder="Titulo da apresentacao">
+          <label>Título do material</label>
+          <input type="text" id="titulo" placeholder="Título da apresentacao">
         </div>
         <div class="field">
           <label>Finalidade da apresentacao</label>
-          <textarea id="finalidade" placeholder="Para que sera utilizada? Ex.: apresentacao para clientes, treinamento interno..."></textarea>
+          <textarea id="finalidade" placeholder="Para que será utilizada? Ex.: apresentacao para clientes, treinamento interno..."></textarea>
         </div>
         <div class="field">
           <label>Tamanho da apresentacao</label>
@@ -60,10 +60,10 @@
           <div class="field-hint" id="slaPrazo" style="display:none"></div>
         </div>
         <div class="field">
-          <label>Tipo de criacao</label>
+          <label>Tipo de criação</label>
           <div class="radio-group">
             <label class="radio-option"><input type="radio" name="tipoCriacao" value="base-existente"><span class="radio-custom"></span><span>Ja existe uma base</span></label>
-            <label class="radio-option"><input type="radio" name="tipoCriacao" value="do-zero"><span class="radio-custom"></span><span>Sera criada do zero</span></label>
+            <label class="radio-option"><input type="radio" name="tipoCriacao" value="do-zero"><span class="radio-custom"></span><span>Será criada do zero</span></label>
           </div>
           <div id="uploadBase" style="display:none;margin-top:12px">
             <label>Envie o arquivo base</label>
@@ -78,7 +78,7 @@
           </div>
         </div>
         <div class="field">
-          <label>Elementos obrigatorios (opcional)</label>
+          <label>Elementos obrigatórios (opcional)</label>
           <div class="checkbox-group" id="elementos">
             <label class="checkbox-option"><input type="checkbox" value="Logotipos"><span class="checkbox-custom"></span><span>Logotipos</span></label>
             <label class="checkbox-option"><input type="checkbox" value="Assinaturas"><span class="checkbox-custom"></span><span>Assinaturas</span></label>
@@ -87,7 +87,7 @@
             <label class="checkbox-option"><input type="checkbox" value="Outro"><span class="checkbox-custom"></span><span>Outro</span></label>
           </div>
           <div id="elementosDesc" style="display:none;margin-top:8px">
-            <textarea id="elementosDescricao" placeholder="Descreva os elementos obrigatorios..."></textarea>
+            <textarea id="elementosDescricao" placeholder="Descreva os elementos obrigatórios..."></textarea>
           </div>
         </div>
         <div class="field">
@@ -103,16 +103,16 @@
         </div>
         <div class="form-nav">
           <button class="btn btn-secondary" onclick="goStep(1)">Voltar</button>
-          <button class="btn btn-primary" onclick="goStep(3)">Proximo</button>
+          <button class="btn btn-primary" onclick="goStep(3)">Próximo</button>
         </div>
       </div>
 
       <div class="form-step" id="step3">
         <div class="alert-card alert-danger">
-          <div class="alert-title">Atencao</div>
-          <div class="alert-text">O prazo de entrega pode variar conforme o tamanho e complexidade da apresentacao. Em caso de duvidas, o time entrara em contato via WhatsApp.</div>
+          <div class="alert-title">Atenção</div>
+          <div class="alert-text">O prazo de entrega pode variar conforme o tamanho e complexidade da apresentacao. Em caso de dúvidas, o time entrara em contato via WhatsApp.</div>
         </div>
-        <h2 style="font-weight:600;font-size:1.1rem;margin-bottom:20px">Informacoes adicionais</h2>
+        <h2 style="font-weight:600;font-size:1.1rem;margin-bottom:20px">Informações adicionais</h2>
         <div class="field">
           <label>Publico-alvo</label>
           <div class="checkbox-group" id="publico">
@@ -120,7 +120,7 @@
             <label class="checkbox-option"><input type="checkbox" value="Parceiros"><span class="checkbox-custom"></span><span>Parceiros</span></label>
             <label class="checkbox-option"><input type="checkbox" value="Interno"><span class="checkbox-custom"></span><span>Interno</span></label>
             <label class="checkbox-option"><input type="checkbox" value="Leads"><span class="checkbox-custom"></span><span>Leads</span></label>
-            <label class="checkbox-option"><input type="checkbox" value="Divulgacao externa em massa"><span class="checkbox-custom"></span><span>Divulgacao externa em massa</span></label>
+            <label class="checkbox-option"><input type="checkbox" value="Divulgacao externa em massa"><span class="checkbox-custom"></span><span>Divulgação externa em massa</span></label>
           </div>
         </div>
         <div class="field">
@@ -129,7 +129,7 @@
         </div>
         <div class="field">
           <label>Observacoes finais (opcional)</label>
-          <textarea id="observacoes" placeholder="Informacoes adicionais..."></textarea>
+          <textarea id="observacoes" placeholder="Informações adicionais..."></textarea>
         </div>
         <div class="form-nav">
           <button class="btn btn-secondary" onclick="goStep(2)">Voltar</button>
@@ -156,7 +156,7 @@
     const isAtualizar = subtipo === 'atualizar';
     const TITLES = { nova: 'Nova Apresentacao', atualizar: 'Atualizar Apresentacao' };
     const TIPOS = { nova: 'apresentacao-nova', atualizar: 'apresentacao-atualizar' };
-    const SLA = { menos30: 'ate 5 dias uteis', menos100: 'ate 10 dias uteis', mais100: 'ate 15 dias uteis' };
+    const SLA = { menos30: 'ate 5 dias úteis', menos100: 'ate 10 dias úteis', mais100: 'ate 15 dias úteis' };
 
     async function init() {
       await _configReady;
@@ -217,17 +217,17 @@
     }
 
     async function submitForm() {
-      const publico = [...document.querySelectorAll('#publico input:checked')].map(c => c.value);
+      const público = [...document.querySelectorAll('#público input:checked')].map(c => c.value);
       if (!document.getElementById('titulo').value.trim() || !document.getElementById('finalidade').value.trim()) {
-        alert('Preencha todos os campos obrigatorios da Etapa 2.'); goStep(2); return;
+        alert('Preencha todos os campos obrigatórios da Etapa 2.'); goStep(2); return;
       }
-      if (publico.length === 0 || !document.getElementById('prazoEntrega').value) {
+      if (público.length === 0 || !document.getElementById('prazoEntrega').value) {
         alert('Preencha publico-alvo e prazo.'); return;
       }
 
       const tipoCriacao = document.querySelector('input[name="tipoCriacao"]:checked')?.value;
       if (isAtualizar && tipoCriacao === 'base-existente' && !document.getElementById('arquivoBase').files[0]) {
-        alert('Envie o arquivo base para atualizacao.'); goStep(2); return;
+        alert('Envie o arquivo base para atualização.'); goStep(2); return;
       }
 
       const btn = document.getElementById('btnSubmit');
@@ -237,19 +237,19 @@
       const formData = new FormData();
       formData.append('tipo_solicitacao', TIPOS[subtipo] || TIPOS.nova);
       formData.append('subtipo', subtipo);
-      formData.append('dados', JSON.stringify({
+      const dados = {
         nome: document.getElementById('nome').value,
-        setor: document.getElementById('setor').value,
-        titulo: document.getElementById('titulo').value,
+        setor: document.getElementById('setor').value, titulo: document.getElementById('titulo').value,
         finalidade: document.getElementById('finalidade').value,
         tamanho: document.querySelector('input[name="tamanho"]:checked')?.value || '',
         tipoCriacao: tipoCriacao || '',
         elementos: elementos.join(', '),
         elementosDescricao: document.getElementById('elementosDescricao')?.value || '',
-        publico: publico.join(', '),
+        público: público.join(', '),
         prazoEntrega: document.getElementById('prazoEntrega').value,
         observacoes: document.getElementById('observacoes').value,
-      }));
+      };
+      formData.append('dados', JSON.stringify(dados));
 
       const base = document.getElementById('arquivoBase').files[0];
       if (base) formData.append('arquivoBase', base);
@@ -258,17 +258,33 @@
 
       try {
         const res = await fetch('/api/solicitacoes', { method: 'POST', body: formData });
-        if (res.ok) { sessionStorage.removeItem('form-apresentacoes'); window.location.href = '/thankyou.html'; }
+        if (res.ok) {
+          sessionStorage.removeItem('form-apresentacoes');
+          try {
+            const resumo = {
+              tipo: TIPO_SOLICITACAO_LABELS[formData.get('tipo_solicitacao')] || formData.get('tipo_solicitacao'),
+              subtipo: formData.get('subtipo') || '', titulo: dados.nomeEvento || dados.tituloEvento || dados.titulo || dados.nomeCompleto || '',
+              solicitante: dados.nome || Auth.getUserName(),
+              setor: dados.setor || '',
+              data: new Date().toLocaleDateString('pt-BR'),
+              hora: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+              materiais: dados.materiais || [],
+              natureza: dados.natureza || '',
+              maturidade: dados.maturidade || '',
+            };
+            sessionStorage.setItem('svn_ultimo_resumo', JSON.stringify(resumo));
+          } catch {}
+          window.location.href = '/thankyou.html';
+        }
         else { alert('Erro ao enviar.'); btn.disabled = false; btn.textContent = 'Enviar'; }
-      } catch (e) { alert('Erro de conexao.'); btn.disabled = false; btn.textContent = 'Enviar'; }
+      } catch (e) { alert('Erro de conexão.'); btn.disabled = false; btn.textContent = 'Enviar'; }
     }
 
     function saveDraft() {
       try {
         sessionStorage.setItem('form-apresentacoes', JSON.stringify({
           nome: document.getElementById('nome')?.value || '',
-          setor: document.getElementById('setor')?.value || '',
-          titulo: document.getElementById('titulo')?.value || '',
+          setor: document.getElementById('setor')?.value || '', titulo: document.getElementById('titulo')?.value || '',
           finalidade: document.getElementById('finalidade')?.value || '',
           prazoEntrega: document.getElementById('prazoEntrega')?.value || '',
           observacoes: document.getElementById('observacoes')?.value || '',

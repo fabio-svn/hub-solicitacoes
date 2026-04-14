@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Artes de Divulgacao - Hub SVN</title>
+  <title>Artes de Divulgação - Hub SVN</title>
   <link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
   <script src="transitions.js"></script>
@@ -12,7 +12,7 @@
   <header class="header" id="mainHeader"></header>
   <div class="container-narrow" style="padding-top:32px;padding-bottom:80px">
     <div class="alert-card alert-danger" style="margin-bottom:20px">
-      <div class="alert-title">Atencao</div>
+      <div class="alert-title">Atenção</div>
       <div class="alert-text">Este formulario e destinado a artes de comunicacao interna/institucional. Para convites de eventos (online ou presenciais), utilize o formulario de Eventos.</div>
     </div>
 
@@ -36,23 +36,23 @@
           <label class="checkbox-option">
             <input type="checkbox" id="checkPrazos">
             <span class="checkbox-custom"></span>
-            <span>Confirmo que estou ciente dos prazos necessarios para a organizacao.</span>
+            <span>Confirmo que estou ciente dos prazos necessários para a organização.</span>
           </label>
         </div>
         <div class="form-nav">
-          <button class="btn btn-primary" id="btnNext1" disabled onclick="goStep(2)">Proximo</button>
+          <button class="btn btn-primary" id="btnNext1" disabled onclick="goStep(2)">Próximo</button>
         </div>
       </div>
 
       <div class="form-step" id="step2">
-        <h2 style="font-weight:600;font-size:1.1rem;margin-bottom:20px">Informacoes do material</h2>
+        <h2 style="font-weight:600;font-size:1.1rem;margin-bottom:20px">Informações do material</h2>
         <div class="field">
-          <label>Titulo do material</label>
-          <input type="text" id="titulo" placeholder="Nome ou titulo da arte">
+          <label>Título do material</label>
+          <input type="text" id="titulo" placeholder="Nome ou título da arte">
         </div>
         <div class="field">
           <label>Finalidade da arte</label>
-          <textarea id="finalidade" placeholder="Para que sera utilizada? O que deseja comunicar?"></textarea>
+          <textarea id="finalidade" placeholder="Para que será utilizada? O que deseja comunicar?"></textarea>
         </div>
         <div class="field">
           <label>Canal de compartilhamento</label>
@@ -69,8 +69,8 @@
           </div>
         </div>
         <div class="field">
-          <label>Conteudo que deve estar presente na arte</label>
-          <textarea id="conteudo" placeholder="Descreva o texto e informacoes que devem aparecer na arte..."></textarea>
+          <label>Conteúdo que deve estar presente na arte</label>
+          <textarea id="conteudo" placeholder="Descreva o texto e informações que devem aparecer na arte..."></textarea>
         </div>
         <div class="field">
           <label>Arquivos de apoio ou referencia (opcional)</label>
@@ -85,16 +85,16 @@
         </div>
         <div class="form-nav">
           <button class="btn btn-secondary" onclick="goStep(1)">Voltar</button>
-          <button class="btn btn-primary" id="btnNext2" onclick="goStep(3)">Proximo</button>
+          <button class="btn btn-primary" id="btnNext2" onclick="goStep(3)">Próximo</button>
         </div>
       </div>
 
       <div class="form-step" id="step3">
         <div class="alert-card alert-danger">
-          <div class="alert-title">Atencao</div>
+          <div class="alert-title">Atenção</div>
           <div class="alert-text">O prazo de entrega pode variar conforme a complexidade do material.</div>
         </div>
-        <h2 style="font-weight:600;font-size:1.1rem;margin-bottom:20px">Informacoes adicionais</h2>
+        <h2 style="font-weight:600;font-size:1.1rem;margin-bottom:20px">Informações adicionais</h2>
         <div class="field">
           <label>Publico-alvo</label>
           <div class="checkbox-group" id="publico">
@@ -102,17 +102,17 @@
             <label class="checkbox-option"><input type="checkbox" value="Parceiros"><span class="checkbox-custom"></span><span>Parceiros</span></label>
             <label class="checkbox-option"><input type="checkbox" value="Interno"><span class="checkbox-custom"></span><span>Interno</span></label>
             <label class="checkbox-option"><input type="checkbox" value="Leads"><span class="checkbox-custom"></span><span>Leads</span></label>
-            <label class="checkbox-option"><input type="checkbox" value="Divulgacao externa em massa"><span class="checkbox-custom"></span><span>Divulgacao externa em massa</span></label>
+            <label class="checkbox-option"><input type="checkbox" value="Divulgacao externa em massa"><span class="checkbox-custom"></span><span>Divulgação externa em massa</span></label>
           </div>
         </div>
         <div class="field">
           <label>Prazo desejado para entrega</label>
           <input type="date" id="prazoEntrega">
-          <div class="field-hint">Prazo minimo de producao: 3 dias uteis</div>
+          <div class="field-hint">Prazo mínimo de produção: 3 dias úteis</div>
         </div>
         <div class="field">
           <label>Observacoes finais (opcional)</label>
-          <textarea id="observacoes" placeholder="Informacoes adicionais..."></textarea>
+          <textarea id="observacoes" placeholder="Informações adicionais..."></textarea>
         </div>
         <div class="form-nav">
           <button class="btn btn-secondary" onclick="goStep(2)">Voltar</button>
@@ -181,10 +181,9 @@
     function saveSession() {
       const data = {
         nome: document.getElementById('nome').value,
-        setor: document.getElementById('setor').value,
-        titulo: document.getElementById('titulo')?.value || '',
+        setor: document.getElementById('setor').value, titulo: document.getElementById('titulo')?.value || '',
         finalidade: document.getElementById('finalidade')?.value || '',
-        conteudo: document.getElementById('conteudo')?.value || '',
+        conteúdo: document.getElementById('conteudo')?.value || '',
         observacoes: document.getElementById('observacoes')?.value || '',
       };
       sessionStorage.setItem('form-artes', JSON.stringify(data));
@@ -205,12 +204,12 @@
 
     async function submitForm() {
       const canais = [...document.querySelectorAll('#canais input:checked')].map(c => c.value);
-      const publico = [...document.querySelectorAll('#publico input:checked')].map(c => c.value);
+      const público = [...document.querySelectorAll('#público input:checked')].map(c => c.value);
       if (!document.getElementById('titulo').value.trim() || !document.getElementById('finalidade').value.trim() || !document.getElementById('conteudo').value.trim() || canais.length === 0) {
-        alert('Preencha todos os campos obrigatorios da Etapa 2.'); goStep(2); return;
+        alert('Preencha todos os campos obrigatórios da Etapa 2.'); goStep(2); return;
       }
-      if (publico.length === 0 || !document.getElementById('prazoEntrega').value) {
-        alert('Preencha todos os campos obrigatorios.'); return;
+      if (público.length === 0 || !document.getElementById('prazoEntrega').value) {
+        alert('Preencha todos os campos obrigatórios.'); return;
       }
 
       const btn = document.getElementById('btnSubmit');
@@ -220,13 +219,12 @@
       formData.append('tipo_solicitacao', 'artes-divulgacao');
       const dados = {
         nome: document.getElementById('nome').value,
-        setor: document.getElementById('setor').value,
-        titulo: document.getElementById('titulo').value,
+        setor: document.getElementById('setor').value, titulo: document.getElementById('titulo').value,
         finalidade: document.getElementById('finalidade').value,
         canais: canais.join(', '),
         canalOutro: document.getElementById('canalOutro')?.value || '',
-        conteudo: document.getElementById('conteudo').value,
-        publico: publico.join(', '),
+        conteúdo: document.getElementById('conteudo').value,
+        público: público.join(', '),
         prazoEntrega: document.getElementById('prazoEntrega').value,
         observacoes: document.getElementById('observacoes').value,
       };
@@ -237,9 +235,26 @@
 
       try {
         const res = await fetch('/api/solicitacoes', { method: 'POST', body: formData });
-        if (res.ok) { sessionStorage.removeItem('form-artes'); window.location.href = '/thankyou.html'; }
+        if (res.ok) {
+          sessionStorage.removeItem('form-artes');
+          try {
+            const resumo = {
+              tipo: TIPO_SOLICITACAO_LABELS[formData.get('tipo_solicitacao')] || formData.get('tipo_solicitacao'),
+              subtipo: formData.get('subtipo') || '', titulo: dados.nomeEvento || dados.tituloEvento || dados.titulo || dados.nomeCompleto || '',
+              solicitante: dados.nome || Auth.getUserName(),
+              setor: dados.setor || '',
+              data: new Date().toLocaleDateString('pt-BR'),
+              hora: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+              materiais: dados.materiais || [],
+              natureza: dados.natureza || '',
+              maturidade: dados.maturidade || '',
+            };
+            sessionStorage.setItem('svn_ultimo_resumo', JSON.stringify(resumo));
+          } catch {}
+          window.location.href = '/thankyou.html';
+        }
         else { alert('Erro ao enviar. Tente novamente.'); btn.disabled = false; btn.textContent = 'Enviar'; }
-      } catch (e) { alert('Erro de conexao.'); btn.disabled = false; btn.textContent = 'Enviar'; }
+      } catch (e) { alert('Erro de conexão.'); btn.disabled = false; btn.textContent = 'Enviar'; }
     }
 
     init();

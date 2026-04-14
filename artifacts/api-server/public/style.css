@@ -957,8 +957,8 @@ input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
   font-size: 0.875rem;
 }
 
-/* Pacote padrao images in modal */
-.pacote-padrao-img {
+/* Pacote padrão images in modal */
+.pacote-padrão-img {
   width: 100%;
   height: auto;
   max-height: 500px;

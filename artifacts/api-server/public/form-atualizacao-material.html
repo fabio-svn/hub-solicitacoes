@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Atualizacao de Material - Hub SVN</title>
+  <title>Atualização de Material - Hub SVN</title>
   <link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
   <script src="transitions.js"></script>
@@ -31,26 +31,26 @@
           <label class="checkbox-option">
             <input type="checkbox" id="checkPrazos">
             <span class="checkbox-custom"></span>
-            <span>Confirmo que estou ciente dos prazos necessarios.</span>
+            <span>Confirmo que estou ciente dos prazos necessários.</span>
           </label>
         </div>
         <div class="form-nav">
-          <button class="btn btn-primary" id="btnNext1" disabled onclick="goStep(2)">Proximo</button>
+          <button class="btn btn-primary" id="btnNext1" disabled onclick="goStep(2)">Próximo</button>
         </div>
       </div>
 
       <div class="form-step" id="step2">
-        <h2 style="font-weight:600;font-size:1.1rem;margin-bottom:20px">Informacoes do material</h2>
+        <h2 style="font-weight:600;font-size:1.1rem;margin-bottom:20px">Informações do material</h2>
         <div class="field">
-          <label>Titulo do material</label>
-          <input type="text" id="titulo" placeholder="Nome ou identificacao do material que sera atualizado">
+          <label>Título do material</label>
+          <input type="text" id="titulo" placeholder="Nome ou identificacao do material que será atualizado">
         </div>
         <div class="field">
           <label>Finalidade do material</label>
           <textarea id="finalidade" placeholder="Para que e utilizado este material?"></textarea>
         </div>
         <div class="field">
-          <label>Descricao do que precisa ser atualizado</label>
+          <label>Descrição do que precisa ser atualizado</label>
           <textarea id="descricao" placeholder="Descreva com clareza o que deve ser alterado, corrigido ou adicionado. Quanto mais detalhado, melhor."></textarea>
         </div>
         <div class="field">
@@ -122,7 +122,7 @@
 
     async function submitForm() {
       if (!document.getElementById('titulo').value.trim() || !document.getElementById('finalidade').value.trim() || !document.getElementById('descricao').value.trim()) {
-        alert('Preencha todos os campos obrigatorios.'); return;
+        alert('Preencha todos os campos obrigatórios.'); return;
       }
       if (!document.getElementById('materialAtual').files[0]) {
         alert('Envie o material atual.'); return;
@@ -133,30 +133,46 @@
 
       const formData = new FormData();
       formData.append('tipo_solicitacao', 'atualizacao-material');
-      formData.append('dados', JSON.stringify({
+      const dados = {
         nome: document.getElementById('nome').value,
-        setor: document.getElementById('setor').value,
-        titulo: document.getElementById('titulo').value,
+        setor: document.getElementById('setor').value, titulo: document.getElementById('titulo').value,
         finalidade: document.getElementById('finalidade').value,
-        descricao: document.getElementById('descricao').value,
-      }));
+        descrição: document.getElementById('descricao').value,
+      };
+      formData.append('dados', JSON.stringify(dados));
       formData.append('materialAtual', document.getElementById('materialAtual').files[0]);
 
       try {
         const res = await fetch('/api/solicitacoes', { method: 'POST', body: formData });
-        if (res.ok) { sessionStorage.removeItem('form-atualizacao'); window.location.href = '/thankyou.html'; }
+        if (res.ok) {
+          sessionStorage.removeItem('form-atualizacao');
+          try {
+            const resumo = {
+              tipo: TIPO_SOLICITACAO_LABELS[formData.get('tipo_solicitacao')] || formData.get('tipo_solicitacao'),
+              subtipo: formData.get('subtipo') || '', titulo: dados.nomeEvento || dados.tituloEvento || dados.titulo || dados.nomeCompleto || '',
+              solicitante: dados.nome || Auth.getUserName(),
+              setor: dados.setor || '',
+              data: new Date().toLocaleDateString('pt-BR'),
+              hora: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+              materiais: dados.materiais || [],
+              natureza: dados.natureza || '',
+              maturidade: dados.maturidade || '',
+            };
+            sessionStorage.setItem('svn_ultimo_resumo', JSON.stringify(resumo));
+          } catch {}
+          window.location.href = '/thankyou.html';
+        }
         else { alert('Erro ao enviar.'); btn.disabled = false; btn.textContent = 'Enviar'; }
-      } catch (e) { alert('Erro de conexao.'); btn.disabled = false; btn.textContent = 'Enviar'; }
+      } catch (e) { alert('Erro de conexão.'); btn.disabled = false; btn.textContent = 'Enviar'; }
     }
 
     function saveDraft() {
       try {
         sessionStorage.setItem('form-atualizacao', JSON.stringify({
           nome: document.getElementById('nome')?.value || '',
-          setor: document.getElementById('setor')?.value || '',
-          titulo: document.getElementById('titulo')?.value || '',
+          setor: document.getElementById('setor')?.value || '', titulo: document.getElementById('titulo')?.value || '',
           finalidade: document.getElementById('finalidade')?.value || '',
-          descricao: document.getElementById('descricao')?.value || '',
+          descrição: document.getElementById('descricao')?.value || '',
         }));
       } catch {}
     }

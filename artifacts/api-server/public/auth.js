@@ -74,7 +74,7 @@ const Auth = {
 
     container.innerHTML = `
       <div class="header-inner">
-        <a href="/" class="header-logo"><img src="${logoUrl}" alt="SVN" height="24"></a>
+        <a href="/solicitacoes.html" class="header-logo"><img src="${logoUrl}" alt="SVN" height="24"></a>
         <div class="header-user" style="position:relative">
           <div id="userMenuTrigger" style="display:flex;align-items:center;gap:8px;cursor:pointer" onclick="Auth.toggleUserMenu()">
             <div class="avatar">${initials}</div>

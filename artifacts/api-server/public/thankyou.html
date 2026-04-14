@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Solicitacao Enviada - Hub SVN</title>
+  <title>Solicitação Enviada - Hub SVN</title>
   <link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
   <script src="transitions.js"></script>
@@ -23,6 +23,12 @@
       <h1 style="font-weight:700;font-size:1.6rem;margin-bottom:12px;opacity:0" id="title"></h1>
       <p style="font-weight:400;opacity:0;color:rgba(255,248,243,0.7);margin-bottom:28px" id="subtitle"></p>
       <a href="/dashboard.html" class="btn btn-primary" style="opacity:0" id="ctaBtn"></a>
+      <div id="resumoCard" style="opacity:0;margin-top:28px;text-align:left;width:100%">
+        <div style="border-top:1px solid rgba(255,248,243,0.12);padding-top:24px;margin-bottom:16px">
+          <p style="font-size:0.7rem;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;opacity:0.4;margin-bottom:12px;color:var(--paper-white)">Resumo da solicitação</p>
+          <div id="resumoItens"></div>
+        </div>
+      </div>
       <div style="margin-top:40px;opacity:0" id="logoWrap">
         <img id="logo" style="height:24px;opacity:1" alt="SVN">
       </div>
@@ -58,9 +64,40 @@
       setTimeout(() => {
         const el = document.getElementById(id);
         el.style.transition = 'opacity 0.4s ease';
-        el.style.opacity = id === 'logoWrap' ? '1' : '1';
+        el.style.opacity = '1';
       }, 700 + i * 200);
     });
+
+    try {
+      const raw = sessionStorage.getItem('svn_ultimo_resumo');
+      if (raw) {
+        const resumo = JSON.parse(raw);
+        const itens = [];
+        if (resumo.tipo)        itens.push({ label: 'Tipo',             valor: resumo.tipo });
+        if (resumo.titulo)      itens.push({ label: 'Identificação',    valor: resumo.titulo });
+        if (resumo.natureza)    itens.push({ label: 'Natureza',         valor: resumo.natureza === 'presencial' ? 'Presencial' : 'Online' });
+        if (resumo.solicitante) itens.push({ label: 'Solicitante',      valor: resumo.solicitante });
+        if (resumo.setor)       itens.push({ label: 'Setor',            valor: resumo.setor });
+        if (resumo.data)        itens.push({ label: 'Enviado em',       valor: resumo.data + ' às ' + resumo.hora });
+        if (resumo.materiais && resumo.materiais.length > 0) {
+          itens.push({ label: 'Itens solicitados', valor: resumo.materiais.length + ' item(ns)' });
+        }
+        if (itens.length > 0) {
+          document.getElementById('resumoItens').innerHTML = itens.map(item => `
+            <div style="display:flex;justify-content:space-between;align-items:baseline;padding:7px 0;border-bottom:1px solid rgba(255,248,243,0.07);font-size:0.82rem">
+              <span style="color:rgba(255,248,243,0.45);font-weight:400">${item.label}</span>
+              <span style="color:var(--paper-white);font-weight:600;text-align:right;max-width:60%">${item.valor}</span>
+            </div>
+          `).join('');
+          setTimeout(() => {
+            const card = document.getElementById('resumoCard');
+            card.style.transition = 'opacity 0.4s ease';
+            card.style.opacity = '1';
+          }, 1200);
+          sessionStorage.removeItem('svn_ultimo_resumo');
+        }
+      }
+    } catch {}
   </script>
 </body>
 </html>

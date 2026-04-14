@@ -129,6 +129,7 @@
       </div>
       <button class="drawer-close" onclick="closeDrawer()">&times;</button>
     </div>
+    <div id="drawerFluxo" style="padding:16px 24px;border-bottom:1px solid var(--border-light)"></div>
     <div class="drawer-body" id="drawerBody"></div>
     <div class="drawer-footer" id="drawerFooter"></div>
   </div>
@@ -407,6 +408,45 @@
         <span class="badge" style="background:var(--carbon-black);color:var(--paper-white)">${esc(tipoLabel)}</span>
         <span class="badge" style="background:var(${statusObj.cor || '--carbon-black'});color:var(--paper-white)">${esc(statusObj.label)}</span>
       `;
+
+      const tipoBase = item.tipo_solicitacao === 'eventos' ? 'eventos' : '_default';
+      const fluxo = (typeof FLUXOS_ETAPAS !== 'undefined' && FLUXOS_ETAPAS[item.tipo_solicitacao])
+        ? FLUXOS_ETAPAS[item.tipo_solicitacao]
+        : (FLUXOS_ETAPAS[tipoBase] || FLUXOS_ETAPAS['_default']);
+      const statusAtual = item.status;
+      const etapasVisiveis = fluxo.filter(e => e.visivel);
+      const etapaExcepcional = fluxo.find(e => !e.visivel && e.id === statusAtual);
+      const idxAtual = etapasVisiveis.findIndex(e => e.id === statusAtual);
+      const fluxoEl = document.getElementById('drawerFluxo');
+      if (fluxoEl && fluxo.length > 0) {
+        if (etapaExcepcional) {
+          fluxoEl.innerHTML = `<div style="background:rgba(159,63,55,0.08);border:1px solid rgba(159,63,55,0.2);border-radius:8px;padding:10px 14px;font-size:0.85rem;font-weight:600;color:var(--ruby-red);display:flex;align-items:center;gap:8px">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            ${etapaExcepcional.label}</div>`;
+        } else {
+          fluxoEl.innerHTML = `<div style="margin-bottom:8px">
+            <p style="font-size:0.7rem;font-weight:600;letter-spacing:0.07em;text-transform:uppercase;opacity:0.4;margin-bottom:12px">Andamento da solicitação</p>
+            <div style="display:flex;align-items:flex-start;gap:0;overflow-x:auto;padding-bottom:4px">
+              ${etapasVisiveis.map((etapa, idx) => {
+                const isConcluida = idx < idxAtual;
+                const isAtual = idx === idxAtual;
+                const isUltima = idx === etapasVisiveis.length - 1;
+                const corCirculo = isConcluida ? 'var(--sage-green)' : isAtual ? 'var(--ruby-red)' : 'rgba(34,27,25,0.15)';
+                const corTexto = isAtual ? 'var(--carbon-black)' : isConcluida ? 'var(--sage-green)' : 'rgba(34,27,25,0.35)';
+                const pesoTexto = isAtual ? '700' : '400';
+                const iconeCirculo = isConcluida
+                  ? `<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>`
+                  : isAtual ? `<div style="width:6px;height:6px;border-radius:50%;background:white"></div>` : '';
+                return `<div style="display:flex;flex-direction:column;align-items:center;flex:1;min-width:60px;position:relative">
+                  ${!isUltima ? `<div style="position:absolute;top:10px;left:50%;width:100%;height:2px;background:${isConcluida ? 'var(--sage-green)' : 'rgba(34,27,25,0.1)'}"></div>` : ''}
+                  <div style="width:20px;height:20px;border-radius:50%;background:${corCirculo};display:flex;align-items:center;justify-content:center;flex-shrink:0;position:relative;z-index:1;transition:0.2s">${iconeCirculo}</div>
+                  <span style="font-size:0.65rem;font-weight:${pesoTexto};color:${corTexto};text-align:center;margin-top:6px;line-height:1.3;max-width:64px">${etapa.label}</span>
+                </div>`;
+              }).join('')}
+            </div>
+          </div>`;
+        }
+      }
 
       let bodyHtml = '';
       for (const [key, value] of Object.entries(dados)) {
