@@ -4,13 +4,13 @@ document.addEventListener('click', function(e) {
   const href = link.getAttribute('href');
   if (!href || href.startsWith('#') || href.startsWith('http') || href.startsWith('mailto') || link.target === '_blank') return;
   e.preventDefault();
-  document.body.classList.add('page-leaving');
-  setTimeout(() => { window.location.href = href; }, 200);
+  document.body.style.transition = 'opacity 0.15s ease';
+  document.body.style.opacity = '0';
+  setTimeout(() => { window.location.href = href; }, 150);
 });
 
 window.addEventListener('pageshow', function(e) {
   if (e.persisted) {
-    document.body.classList.remove('page-leaving');
     document.body.style.opacity = '1';
   }
 });

@@ -25,16 +25,6 @@ body {
   color: var(--carbon-black);
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
-  opacity: 0;
-  animation: pageEnter 0.25s ease forwards;
-}
-body.page-leaving {
-  opacity: 0;
-  transition: opacity 0.2s ease;
-}
-@keyframes pageEnter {
-  from { opacity: 0; transform: translateY(6px); }
-  to   { opacity: 1; transform: translateY(0); }
 }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
