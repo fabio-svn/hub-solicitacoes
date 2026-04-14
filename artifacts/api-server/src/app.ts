@@ -48,7 +48,7 @@ app.use(
     store: new PgStore({
       pool,
       tableName: "session",
-      createTableIfMissing: true,
+      createTableIfMissing: false,
     }),
     secret: (() => {
       const secret = process.env.SESSION_SECRET;
