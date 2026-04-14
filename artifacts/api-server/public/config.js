@@ -10,7 +10,7 @@ const URL_ADMIN = "admin.html";
 
 let URL_MANUAL = "https://pub-a2132f9b61f940659cc98265acfcf64c.r2.dev/Manual-de-Eventos-SVN.pdf";
 let URL_APRESENTACAO = "#";
-let URL_STORE = "#";
+let URL_STORE = "https://store.portalsvn.com.br/";
 let URL_TUTORIAL_TRANSMISSAO = "https://drive.google.com/file/d/1L36fFqFC-sEPWggNmlZOUNnY2DqxP8HK/view?usp=sharing";
 
 let URL_VIDEO_HERO = "https://pub-a2132f9b61f940659cc98265acfcf64c.r2.dev/bg-eventos-2.mp4";

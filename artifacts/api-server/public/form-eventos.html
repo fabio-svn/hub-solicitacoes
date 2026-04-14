@@ -6,6 +6,7 @@
   <title>Eventos - Hub SVN</title>
   <link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
+  <script src="transitions.js"></script>
 </head>
 <body class="page-light">
   <header class="header" id="mainHeader"></header>
@@ -186,7 +187,7 @@
             </div>
             <div class="field">
               <label>Observacoes gerais (opcional)</label>
-              <input type="text" id="observacoes" placeholder="Algo mais que voce queira informar?">
+              <input type="text" id="observacoes" placeholder="Algo mais que você queira informar?">
             </div>
             <div class="form-nav">
               <button class="btn btn-secondary" onclick="goStep(formState.natureza==='presencial'&&formState.maturidade!==3?5:4)">Voltar</button>
@@ -354,8 +355,23 @@
         });
       });
 
-      const imgs = document.getElementById('pacoteImgs');
-      PACOTE_PADRAO_IMAGENS.forEach(url => { imgs.innerHTML += `<img src="${url}" style="max-width:280px;border-radius:8px">`; });
+      const dataInput = document.getElementById('dataEvento');
+      if (dataInput) {
+        const hoje = new Date().toISOString().split('T')[0];
+        dataInput.min = hoje;
+        dataInput.addEventListener('change', function() {
+          const diasAte = Math.ceil((new Date(this.value) - new Date()) / (1000 * 60 * 60 * 24));
+          const avisoEl = document.getElementById('dataAvisoMinimo');
+          if (avisoEl) {
+            if (diasAte < 15) {
+              avisoEl.textContent = '⚠️ Atenção: o prazo mínimo para organização é de 15 dias. Verifique se a data escolhida é viável.';
+              avisoEl.style.display = 'block';
+            } else {
+              avisoEl.style.display = 'none';
+            }
+          }
+        });
+      }
 
       updatePreview('pvSolicitante', Auth.getUserName());
       validateStep1();
@@ -425,11 +441,11 @@
       return `
         <div class="field"><label>Nome do evento</label><input type="text" id="nomeEvento" placeholder="Nome do evento" oninput="updatePreview('pvEvento',this.value)"></div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-          <div class="field"><label>Data do evento</label><input type="date" id="dataEvento" onchange="updatePreview('pvData',this.value)"></div>
-          <div class="field"><label>Horario</label><input type="time" id="horario"></div>
+          <div class="field"><label>Data do evento</label><input type="date" id="dataEvento" onchange="updatePreview('pvData',this.value)"><div id="dataAvisoMinimo" class="field-error" style="display:none;color:var(--ruby-red);font-size:0.8rem;margin-top:4px"></div></div>
+          <div class="field"><label>Horário</label><input type="time" id="horario"></div>
         </div>
-        <div class="field"><label>Horario de Brasilia?</label><div class="radio-group" style="flex-direction:row;gap:16px"><label class="radio-option"><input type="radio" name="horBrasilia" value="sim"><span class="radio-custom"></span><span>Sim</span></label><label class="radio-option"><input type="radio" name="horBrasilia" value="nao"><span class="radio-custom"></span><span>Nao</span></label></div></div>
-        <div class="field"><label>Breve descricao do evento</label><textarea id="descricao" placeholder="Ex.: evento voltado para relacionamento com clientes que se interessam por vinhos"></textarea><div class="field-hint">Fale sobre aspectos como organizacao e topicos do conteudo que sera abordado.</div></div>
+        <div class="field"><label>Horário de Brasília?</label><div class="radio-group" style="flex-direction:row;gap:16px"><label class="radio-option"><input type="radio" name="horBrasilia" value="sim"><span class="radio-custom"></span><span>Sim</span></label><label class="radio-option"><input type="radio" name="horBrasilia" value="nao"><span class="radio-custom"></span><span>Não</span></label></div></div>
+        <div class="field"><label>Breve descrição do evento</label><textarea id="descricao" placeholder="Ex.: evento voltado para relacionamento com clientes que se interessam por vinhos"></textarea><div class="field-hint">Fale sobre aspectos como organização e tópicos do conteúdo que será abordado.</div></div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
           <div class="field"><label>Origem do evento</label><select id="origem">${ORIGENS_EVENTO.map(o=>`<option>${o}</option>`).join('')}</select></div>
           <div class="field"><label>Tipo de evento</label><select id="tipoEvento">${TIPOS_EVENTO.map(t=>`<option>${t}</option>`).join('')}</select></div>
@@ -462,7 +478,7 @@
             ${TIPOS_EVENTO_FORM3.map(t => `<label class="radio-option" style="padding:8px 12px;border:1px solid var(--border-light);border-radius:8px"><input type="radio" name="tipoAprox" value="${t}"><span class="radio-custom"></span><span style="font-size:0.85rem">${t}</span></label>`).join('')}
           </div>
         </div>
-        <div class="field"><label>Ideia de quando realizar (opcional)</label><input type="text" id="ideaQuando" placeholder="Ex.: segundo semestre, proximo trimestre..."></div>
+        <div class="field"><label>Ideia de quando realizar (opcional)</label><input type="text" id="ideaQuando" placeholder="Ex.: segundo semestre, próximo trimestre..."></div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
           <div class="field"><label>Estado (opcional)</label><select id="estado" onchange="loadCidades()"><option>Selecione</option></select></div>
           <div class="field"><label>Cidade (opcional)</label><select id="cidade" disabled><option>Selecione o estado</option></select></div>
@@ -473,18 +489,18 @@
 
     function buildOnline1Fields() {
       return `
-        <div class="field"><label>Titulo do evento</label><input type="text" id="nomeEvento" placeholder="Titulo do evento" oninput="updatePreview('pvEvento',this.value)"></div>
-        <div class="field"><label>Descricao</label><textarea id="descricao" placeholder="Descreva o evento..."></textarea></div>
-        <div class="field"><label>Publico do evento</label><select id="publico"><option>Selecione</option><option>Fechado para convidados</option><option>Aberto ao publico em geral</option></select></div>
-        <div class="field"><label>Objetivos de retorno</label><textarea id="objetivos" placeholder="Quais sao os objetivos esperados?"></textarea></div>
-        <div class="field"><label>Canal de transmissao</label><select id="canal" onchange="handleCanal()">${CANAIS_TRANSMISSAO.map(c=>`<option>${c}</option>`).join('')}</select></div>
-        <div class="field" id="linkTransmissaoField"><label>Link da transmissao</label><input type="url" id="linkTransmissao" placeholder="https://..."><div id="canalAviso" class="alert-card alert-info" style="display:none;margin-top:8px"><div class="alert-text">O link pode ser informado posteriormente.</div></div></div>
-        <div class="field"><label>Origem do evento</label><select id="origem">${ORIGENS_EVENTO_ONLINE.map(o=>`<option>${o}</option>`).join('')}</select></div>
+        <div class="field"><label>Título do evento</label><input type="text" id="nomeEvento" placeholder="Título do evento" oninput="updatePreview('pvEvento',this.value)"></div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-          <div class="field"><label>Data do evento</label><input type="date" id="dataEvento" onchange="updatePreview('pvData',this.value)"></div>
-          <div class="field"><label>Horario</label><input type="time" id="horario"></div>
+          <div class="field"><label>Data do evento</label><input type="date" id="dataEvento" onchange="updatePreview('pvData',this.value)"><div id="dataAvisoMinimo" class="field-error" style="display:none;color:var(--ruby-red);font-size:0.8rem;margin-top:4px"></div></div>
+          <div class="field"><label>Horário</label><input type="time" id="horario"></div>
         </div>
-        <div class="field"><label>Horario de Brasilia?</label><div class="radio-group" style="flex-direction:row;gap:16px"><label class="radio-option"><input type="radio" name="horBrasilia" value="sim"><span class="radio-custom"></span><span>Sim</span></label><label class="radio-option"><input type="radio" name="horBrasilia" value="nao"><span class="radio-custom"></span><span>Nao</span></label></div></div>
+        <div class="field"><label>Horário de Brasília?</label><div class="radio-group" style="flex-direction:row;gap:16px"><label class="radio-option"><input type="radio" name="horBrasilia" value="sim"><span class="radio-custom"></span><span>Sim</span></label><label class="radio-option"><input type="radio" name="horBrasilia" value="nao"><span class="radio-custom"></span><span>Não</span></label></div></div>
+        <div class="field"><label>Descrição</label><textarea id="descricao" placeholder="Descreva o evento..."></textarea></div>
+        <div class="field"><label>Público do evento</label><select id="publico"><option>Selecione</option><option>Fechado para convidados</option><option>Aberto ao público em geral</option></select></div>
+        <div class="field"><label>Objetivos de retorno</label><textarea id="objetivos" placeholder="Quais são os objetivos esperados com este evento?"></textarea></div>
+        <div class="field"><label>Canal de transmissão</label><select id="canal" onchange="handleCanal()">${CANAIS_TRANSMISSAO.map(c=>`<option>${c}</option>`).join('')}</select></div>
+        <div class="field" id="linkTransmissaoField"><label>Link da transmissão</label><input type="url" id="linkTransmissao" placeholder="https://..."><div id="canalAviso" class="alert-card alert-info" style="display:none;margin-top:8px"><div class="alert-text">O link pode ser informado posteriormente.</div></div></div>
+        <div class="field"><label>Origem do evento</label><select id="origem">${ORIGENS_EVENTO_ONLINE.map(o=>`<option>${o}</option>`).join('')}</select></div>
       `;
     }
 
@@ -506,7 +522,7 @@
             ${tiposOnline.map(t => `<label class="radio-option" style="padding:8px 12px;border:1px solid var(--border-light);border-radius:8px"><input type="radio" name="tipoAprox" value="${t}"><span class="radio-custom"></span><span style="font-size:0.85rem">${t}</span></label>`).join('')}
           </div>
         </div>
-        <div class="field"><label>Ideia de quando realizar (opcional)</label><input type="text" id="ideaQuando" placeholder="Ex.: proximo mes..."></div>
+        <div class="field"><label>Ideia de quando realizar (opcional)</label><input type="text" id="ideaQuando" placeholder="Ex.: próximo mês..."></div>
         <div class="field"><label>Canal provavel (opcional)</label><select id="canal">${CANAIS_TRANSMISSAO.map(c=>`<option>${c}</option>`).join('')}</select></div>
         <div class="field"><label>Numero esperado de participantes (opcional)</label><input type="number" id="convidados" min="1"></div>
       `;
@@ -622,13 +638,25 @@
 
     function goStep(step) {
       saveFormState();
-      document.querySelectorAll('.form-step').forEach(s => s.classList.remove('active'));
+      const currentStep = document.querySelector('.form-step.active');
+      if (currentStep) {
+        currentStep.classList.add('leaving');
+        setTimeout(() => {
+          currentStep.classList.remove('active', 'leaving');
+          activateStep(step);
+        }, 180);
+      } else {
+        activateStep(step);
+      }
+    }
+
+    function activateStep(step) {
       document.getElementById('step' + step).classList.add('active');
       const steps = getStepCount();
       document.getElementById('progressBar').style.width = (step / steps * 100) + '%';
       document.getElementById('stepLabel').textContent = `Etapa ${step} de ${steps}`;
       if (step === 3) renderMateriais();
-      window.scrollTo(0, 0);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
     function getStepCount() {
@@ -663,31 +691,152 @@
     function getMaterialConditional(id) {
       switch(id) {
         case 'pacote-padrao': case 'pacote-padrao-online':
-          return `<div style="margin-top:8px"><button class="btn btn-secondary" style="font-size:0.8rem" onclick="openPacoteModal()">Ver previa do material</button></div>`;
+          return `<div style="margin-top:8px"><button class="btn btn-secondary" style="font-size:0.8rem" onclick="openPacoteModal()">Ver prévia do material</button></div>`;
         case 'pacote-personalizado': case 'pacote-personalizado-online':
-          return `<div class="field" style="margin-top:8px"><input type="text" id="matPersonConvite" placeholder="O que gostaria de incluir ou personalizar no convite?"></div><div class="field"><input type="text" id="matPersonPagina" placeholder="O que gostaria de incluir na pagina de inscricao?"></div>`;
+          return `
+            <div style="margin-top:12px">
+              <div class="field">
+                <label>O que personalizar no convite?</label>
+                <input type="text" id="matPersonConvite" placeholder="Ex.: usar imagem de fundo relacionada ao setor agro">
+              </div>
+              <div class="field">
+                <label>O que incluir na página de inscrição?</label>
+                <input type="text" id="matPersonPagina" placeholder="Ex.: adicionar bio do assessor">
+              </div>
+            </div>`;
         case 'banner-impresso':
-          return `<div class="field" style="margin-top:8px"><input type="text" id="matBannerTam" placeholder="Tamanho do banner (ex: 60x90cm)"></div><div class="field"><input type="text" id="matBannerConteudo" placeholder="O que incluir no banner?"></div>`;
+          return `
+            <div style="margin-top:12px">
+              <div class="field">
+                <label>Tamanho do banner</label>
+                <input type="text" id="matBannerTam" placeholder="Ex.: 60×90cm, 80×120cm">
+              </div>
+              <div class="field">
+                <label>O que incluir no banner?</label>
+                <input type="text" id="matBannerConteudo" placeholder="Ex.: números institucionais, descrição de um produto...">
+              </div>
+            </div>`;
         case 'flyer':
-          return `<div class="field" style="margin-top:8px"><div class="radio-group"><label class="radio-option"><input type="radio" name="flyerTipo" value="institucional"><span class="radio-custom"></span><span>Institucional Padrao (A5)</span></label><label class="radio-option"><input type="radio" name="flyerTipo" value="personalizado"><span class="radio-custom"></span><span>Personalizado</span></label></div></div><div class="field"><input type="text" id="matFlyerTam" placeholder="Tamanho do flyer"></div><div class="field"><input type="text" id="matFlyerConteudo" placeholder="Conteudo do flyer"></div>`;
+          return `
+            <div style="margin-top:12px">
+              <div class="field">
+                <label>Tipo de flyer</label>
+                <div class="radio-group">
+                  <label class="radio-option">
+                    <input type="radio" name="flyerTipo" value="institucional" onchange="handleFlyerTipo()">
+                    <span class="radio-custom"></span><span>Institucional Padrão (A5)</span>
+                  </label>
+                  <label class="radio-option">
+                    <input type="radio" name="flyerTipo" value="personalizado" onchange="handleFlyerTipo()">
+                    <span class="radio-custom"></span><span>Personalizado</span>
+                  </label>
+                </div>
+              </div>
+              <div id="flyerPersonalizadoFields" style="display:none">
+                <div class="field">
+                  <label>Tamanho do flyer</label>
+                  <input type="text" id="matFlyerTam" placeholder="Ex.: A5, A4...">
+                </div>
+                <div class="field">
+                  <label>Conteúdo do flyer</label>
+                  <input type="text" id="matFlyerConteudo" placeholder="Ex.: gostaria de falar sobre um serviço específico">
+                </div>
+              </div>
+            </div>`;
         case 'brindes-store':
           return `<div style="margin-top:8px"><a href="${URL_STORE}" target="_blank" class="btn btn-secondary" style="font-size:0.8rem">Ir para a Store</a></div>`;
         case 'brindes-personalizados':
-          return `<div class="field" style="margin-top:8px"><textarea id="matBrindeDesc" placeholder="Descreva o brinde personalizado"></textarea></div>`;
+          return `
+            <div style="margin-top:12px">
+              <div class="field">
+                <label>Descreva o brinde personalizado</label>
+                <textarea id="matBrindeDesc" placeholder="Descreva o brinde que deseja..."></textarea>
+              </div>
+            </div>`;
         case 'captacao-audiovisual':
-          return `<div class="field" style="margin-top:8px"><div class="radio-group"><label class="radio-option"><input type="radio" name="captacao" value="fotos"><span class="radio-custom"></span><span>Sessao de fotos</span></label><label class="radio-option"><input type="radio" name="captacao" value="video"><span class="radio-custom"></span><span>Gravacao de video</span></label></div></div>`;
+          return `<div class="field" style="margin-top:8px"><div class="radio-group"><label class="radio-option"><input type="radio" name="captacao" value="fotos"><span class="radio-custom"></span><span>Sessão de fotos</span></label><label class="radio-option"><input type="radio" name="captacao" value="video"><span class="radio-custom"></span><span>Gravação de vídeo</span></label></div></div>`;
         case 'instagram': case 'instagram-online':
-          return `<div class="field" style="margin-top:8px"><div class="radio-group"><label class="radio-option"><input type="radio" name="igTipo" value="mencao"><span class="radio-custom"></span><span>Mencao</span></label><label class="radio-option"><input type="radio" name="igTipo" value="colab"><span class="radio-custom"></span><span>Colab</span></label></div></div><div class="field"><input type="text" id="matIgArroba" placeholder="@perfil"></div>`;
+          return `
+            <div style="margin-top:12px">
+              <div class="field">
+                <label>Forma de divulgação</label>
+                <div class="radio-group">
+                  <label class="radio-option"><input type="radio" name="igTipo" value="mencao"><span class="radio-custom"></span><span>Menção</span></label>
+                  <label class="radio-option"><input type="radio" name="igTipo" value="colab"><span class="radio-custom"></span><span>Colab</span></label>
+                </div>
+              </div>
+              <div class="field">
+                <label>Perfil do Instagram</label>
+                <input type="text" id="matIgArroba" placeholder="@perfil">
+              </div>
+            </div>`;
         case 'email-marketing': case 'email-marketing-online':
-          return `<div class="field" style="margin-top:8px"><input type="text" id="matEmailConteudo" placeholder="Conteudo do e-mail"></div><div class="field"><div class="file-input-wrapper"><label class="file-input-btn" for="matEmailBase">Base de e-mail (opcional)</label><input type="file" id="matEmailBase" accept=".xlsx,.csv,.xls"></div></div>`;
+          return `
+            <div style="margin-top:12px">
+              <div class="field">
+                <label>Conteúdo do e-mail</label>
+                <input type="text" id="matEmailConteudo" placeholder="Descreva o conteúdo que deseja incluir no e-mail">
+              </div>
+              <div class="field">
+                <label>Base para disparo (opcional)</label>
+                <div class="file-input-wrapper">
+                  <label class="file-input-btn" for="matEmailBase">Escolher arquivo (.xlsx, .csv)</label>
+                  <input type="file" id="matEmailBase" accept=".xlsx,.csv,.xls">
+                </div>
+              </div>
+            </div>`;
         case 'apoio-live-online':
-          return `<div class="field" style="margin-top:8px"><textarea id="matApoioDesc" placeholder="Descreva o tipo de apoio que vai precisar"></textarea></div>`;
+          return `
+            <div style="margin-top:12px">
+              <div class="field">
+                <label>Tipo de apoio necessário</label>
+                <textarea id="matApoioDesc" placeholder="Ex.: moderação do chat, suporte técnico, apresentação dos slides..."></textarea>
+              </div>
+            </div>`;
         case 'pagina-sorteio':
-          return `<div class="field" style="margin-top:8px"><label>Tera premios?</label><div class="radio-group"><label class="radio-option"><input type="radio" name="sorteio1" value="sim"><span class="radio-custom"></span><span>Sim</span></label><label class="radio-option"><input type="radio" name="sorteio1" value="nao"><span class="radio-custom"></span><span>Nao</span></label></div></div><div class="field"><label>Tera regulamento?</label><div class="radio-group"><label class="radio-option"><input type="radio" name="sorteio2" value="sim"><span class="radio-custom"></span><span>Sim</span></label><label class="radio-option"><input type="radio" name="sorteio2" value="nao"><span class="radio-custom"></span><span>Nao</span></label></div></div>`;
+          return `
+            <div style="margin-top:12px">
+              <div class="field">
+                <label>O prêmio já foi definido?</label>
+                <div class="radio-group">
+                  <label class="radio-option">
+                    <input type="radio" name="sorteio1" value="sim" onchange="handleSorteioPremioDefined(true)">
+                    <span class="radio-custom"></span><span>Sim</span>
+                  </label>
+                  <label class="radio-option">
+                    <input type="radio" name="sorteio1" value="nao" onchange="handleSorteioPremioDefined(false)">
+                    <span class="radio-custom"></span><span>Não</span>
+                  </label>
+                </div>
+              </div>
+              <div id="sorteioDescField" style="display:none">
+                <div class="field">
+                  <label>Descreva o prêmio</label>
+                  <input type="text" id="matSorteioDesc" placeholder="Ex.: kit de vinhos, jantar para dois...">
+                </div>
+              </div>
+            </div>`;
         case 'projeto-stand':
-          return `<div class="field" style="margin-top:8px"><input type="text" id="matStandMat" placeholder="Materiais necessarios para o stand"></div>`;
+          return `
+            <div style="margin-top:12px">
+              <div class="field">
+                <label>Materiais necessários para o stand</label>
+                <input type="text" id="matStandMat" placeholder="Ex.: testeira, banner balcão, adesivo de fundo...">
+              </div>
+            </div>`;
         default: return '';
       }
+    }
+
+    function handleFlyerTipo() {
+      const tipo = document.querySelector('input[name="flyerTipo"]:checked')?.value;
+      const fields = document.getElementById('flyerPersonalizadoFields');
+      if (fields) fields.style.display = tipo === 'personalizado' ? 'block' : 'none';
+    }
+
+    function handleSorteioPremioDefined(defined) {
+      const field = document.getElementById('sorteioDescField');
+      if (field) field.style.display = defined ? 'block' : 'none';
     }
 
     function validateMateriais() {
@@ -731,10 +880,10 @@
         const prazo = PRAZOS_MATERIAIS[id];
         const icon = ICONS[id] || '';
         if (!item) return '';
-        return `<div style="background:var(--icon-bg);border-radius:8px;padding:8px 10px;font-size:0.75rem;font-weight:600;display:flex;align-items:flex-start;gap:6px">
-          <span style="color:var(--ruby-red);flex-shrink:0;margin-top:1px">${icon}</span>
-          <div>
-            <div>${item.label}</div>
+        return `<div style="background:var(--icon-bg);border-radius:8px;padding:8px 10px;font-size:0.75rem;font-weight:600;display:flex;align-items:flex-start;gap:6px;margin-bottom:4px">
+          <span style="color:var(--ruby-red);flex-shrink:0;line-height:1.4;margin-top:1px">${icon}</span>
+          <div style="min-width:0">
+            <div style="line-height:1.4">${item.label}</div>
             ${prazo ? `<div style="font-size:0.65rem;color:var(--ruby-red);opacity:0.8;margin-top:2px">${prazo.label}</div>` : ''}
           </div>
         </div>`;
@@ -835,7 +984,24 @@
 
     function openOrientationModal() { document.getElementById('orientModal').classList.add('visible'); }
     function closeOrientationModal(e) { if (!e || e.target === document.getElementById('orientModal')) document.getElementById('orientModal').classList.remove('visible'); }
-    function openPacoteModal() { document.getElementById('pacoteModal').classList.add('visible'); }
+    function openPacoteModal() {
+      const imgs = document.getElementById('pacoteImgs');
+      if (!imgs.hasChildNodes()) {
+        const pacoteItems = [
+          { url: 'https://pub-a2132f9b61f940659cc98265acfcf64c.r2.dev/Convite.png', titulo: 'Modelo padrão de convite' },
+          { url: 'https://pub-a2132f9b61f940659cc98265acfcf64c.r2.dev/tela1.png',   titulo: 'Modelo padrão de LP' },
+        ];
+        imgs.innerHTML = pacoteItems.map(item => `
+          <div style="flex:1;min-width:200px;max-width:320px">
+            <p style="font-size:0.8rem;font-weight:600;color:var(--paper-white);opacity:0.7;margin-bottom:8px;text-align:center">${item.titulo}</p>
+            <img src="${item.url}"
+                 style="width:100%;height:auto;border-radius:8px;object-fit:contain;display:block"
+                 onerror="this.parentElement.innerHTML='<p style=\\'opacity:0.4;font-size:0.8rem;text-align:center;padding:20px\\'>Imagem não disponível</p>'">
+          </div>
+        `).join('');
+      }
+      document.getElementById('pacoteModal').classList.add('visible');
+    }
     function closePacoteModal(e) { if (!e || e.target === document.getElementById('pacoteModal')) document.getElementById('pacoteModal').classList.remove('visible'); }
 
     async function submitForm() {
