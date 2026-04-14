@@ -165,8 +165,27 @@ const STATUS_SOLICITACAO = [
 
 const SETORES = [
   "Selecione seu setor",
-  "Marketing", "Comercial", "Operações",
-  "Tecnologia", "RH", "Financeiro", "Diretoria",
+  "Administração",
+  "Alocação",
+  "Câmbio",
+  "Commodities",
+  "Capital Humano",
+  "Corporate",
+  "Digital",
+  "Financeiro",
+  "Institucional",
+  "Jurídico",
+  "Marketing",
+  "Performance",
+  "Middle",
+  "Proteção Patrimonial",
+  "Renda Fixa",
+  "Renda Variável",
+  "SVN Gestão",
+  "SVN Global",
+  "SVN Investment & Merchant Banking (M&A)",
+  "Universidade SVN",
+  "Wealth Planning",
 ];
 
 const ORIGENS_EVENTO = [
