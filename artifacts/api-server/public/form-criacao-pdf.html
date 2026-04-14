@@ -132,6 +132,7 @@
     const TIPOS = { informativo: 'conteudo-pdf-informativo', ebook: 'conteudo-pdf-ebook' };
 
     async function init() {
+      await _configReady;
       await Auth.init();
       if (!Auth.isAuthenticated()) { window.location.href = '/auth/login?redirect=/form-criacao-pdf.html?subtipo=' + subtipo; return; }
       Auth.renderHeader(document.getElementById('mainHeader'));

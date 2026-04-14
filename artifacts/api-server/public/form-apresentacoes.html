@@ -159,6 +159,7 @@
     const SLA = { menos30: 'ate 5 dias uteis', menos100: 'ate 10 dias uteis', mais100: 'ate 15 dias uteis' };
 
     async function init() {
+      await _configReady;
       await Auth.init();
       if (!Auth.isAuthenticated()) { window.location.href = '/auth/login?redirect=/form-apresentacoes.html?subtipo=' + subtipo; return; }
       Auth.renderHeader(document.getElementById('mainHeader'));
