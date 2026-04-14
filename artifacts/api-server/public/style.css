@@ -121,14 +121,15 @@ img { max-width: 100%; height: auto; }
 .btn-dark:hover { background: #332a27; }
 
 .btn-ghost-dark {
-  background: transparent;
+  background: rgba(56, 24, 17, 0.55);
+  backdrop-filter: blur(4px);
   border: 1px solid var(--border);
   color: var(--paper-white);
   padding: 14px 28px;
   border-radius: 12px;
   font-weight: 600;
 }
-.btn-ghost-dark:hover { transform: scale(1.03); text-decoration: none; }
+.btn-ghost-dark:hover { transform: scale(1.03); text-decoration: none; background: rgba(56, 24, 17, 0.72); }
 .btn-ghost-dark.red:hover { border-color: var(--ruby-red); }
 .btn-ghost-dark.green:hover { border-color: var(--sage-green); }
 
@@ -729,17 +730,26 @@ input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
   background: var(--paper-white);
   border: 1px solid var(--border-light);
   border-radius: 8px;
-  padding: 8px 12px;
-  font-size: 0.8rem;
+  padding: 12px 16px;
+  font-size: 0.875rem;
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-top: 8px;
+  margin-top: 12px;
+  margin-bottom: 20px;
   animation: fadeIn 0.2s ease;
 }
 
 /* Material block */
+.materials-list { display: flex; flex-direction: column; gap: 4px; }
 .material-block { margin-bottom: 8px; }
+.material-block .pill {
+  width: 100%;
+  justify-content: flex-start;
+  border-radius: 8px;
+  padding: 12px 16px;
+  text-align: left;
+}
 .block-divider { border: none; border-top: 1px solid rgba(34,27,25,0.08); margin: 12px 0; }
 .conditional-fields {
   max-height: 0;
@@ -845,6 +855,94 @@ input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
   white-space: nowrap;
   z-index: 10;
   pointer-events: none;
+}
+
+/* Gold submit button */
+.btn-submit-gold {
+  background: linear-gradient(135deg, #c9a84c 0%, #f0d080 40%, #c9a84c 60%, #a07830 100%);
+  background-size: 200% 200%;
+  color: #221B19;
+  font-weight: 700;
+  border: none;
+  animation: goldShimmer 2.5s ease infinite;
+  box-shadow: 0 4px 20px rgba(201,168,76,0.4);
+}
+.btn-submit-gold:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 28px rgba(201,168,76,0.55);
+  text-decoration: none;
+}
+@keyframes goldShimmer {
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* Selo chip (assessores form) */
+.selo-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border: 1px solid var(--border-light);
+  border-radius: 999px;
+  cursor: pointer;
+  transition: 0.15s;
+  background: var(--card-white);
+  font-family: 'Nunito Sans', sans-serif;
+  font-size: 0.85rem;
+}
+.selo-chip:hover { border-color: var(--ruby-red); }
+.selo-chip.selected {
+  background: #ede8e4;
+  border-color: rgba(34,27,25,0.35);
+  color: var(--carbon-black);
+}
+.selo-chip img {
+  height: 28px;
+  width: auto;
+  max-width: 80px;
+  object-fit: contain;
+}
+
+/* Preview assessor modal */
+.preview-assessor-left {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  justify-content: center;
+}
+.preview-assessor-photo {
+  width: 100%;
+  height: 380px;
+  object-fit: cover;
+  object-position: top;
+  border-radius: 12px;
+  border: 1px solid var(--carbon-black);
+}
+.preview-depoimento-card {
+  background: transparent;
+  border: 1px solid var(--carbon-black);
+  border-radius: 12px;
+  padding: 20px 24px;
+  font-style: italic;
+}
+.preview-depoimento-autor {
+  font-style: normal;
+  font-weight: 600;
+  margin-top: 12px;
+  font-size: 0.9rem;
+}
+
+/* Pacote padrao images in modal */
+.pacote-padrao-img {
+  width: 100%;
+  height: auto;
+  max-height: 500px;
+  object-fit: contain;
+  border-radius: 8px;
+  display: block;
 }
 
 /* Thank you page */

@@ -83,6 +83,9 @@ export async function createClickUpTask(
 
   const description = JSON.stringify(dados, null, 2);
 
+  const category = CLICKUP_LIST_MAP[tipo] || "";
+  const taskStatus = category === "eventos" ? "Solicitações" : "Para fazer";
+
   try {
     const response = await fetch(`https://api.clickup.com/api/v2/list/${listId}/task`, {
       method: "POST",
@@ -93,7 +96,7 @@ export async function createClickUpTask(
       body: JSON.stringify({
         name: taskName,
         description,
-        status: "to do",
+        status: taskStatus,
       }),
     });
 

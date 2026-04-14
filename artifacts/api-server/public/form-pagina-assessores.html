@@ -12,8 +12,7 @@
   <div class="container-narrow" style="padding-top:32px;padding-bottom:80px">
     <div class="form-card">
       <div class="form-progress"><div class="form-progress-bar" id="progressBar" style="width:50%"></div></div>
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px">
-        <img src="" id="formLogo" height="24" alt="SVN">
+      <div style="display:flex;align-items:center;justify-content:flex-end;margin-bottom:24px">
         <span style="font-size:0.8rem;opacity:0.4" id="stepLabel">Etapa 1 de 2</span>
       </div>
       <h2 style="font-weight:300;font-size:1.1rem;margin-bottom:4px;opacity:0.6" id="formTitle"></h2>
@@ -112,7 +111,7 @@
 
         <div class="form-nav">
           <button class="btn btn-secondary" onclick="goStep(1)">Voltar</button>
-          <button class="btn btn-primary" id="btnSubmit" onclick="submitForm()">Enviar</button>
+          <button class="btn btn-primary btn-submit-gold" id="btnSubmit" onclick="submitForm()">Enviar</button>
         </div>
       </div>
     </div>
@@ -155,9 +154,13 @@
     </div>
   </div>
 
+  <a href="/dashboard.html" class="float-home" style="bottom:78px">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+    <span>Minhas solicitações</span>
+  </a>
   <a href="/" class="float-home">
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-    <span>Voltar a tela inicial</span>
+    <span>Início</span>
   </a>
 
   <script src="config.js"></script>
@@ -175,7 +178,7 @@
       await Auth.init();
       if (!Auth.isAuthenticated()) { window.location.href = '/auth/login?redirect=/form-pagina-assessores.html?subtipo=' + subtipo; return; }
       Auth.renderHeader(document.getElementById('mainHeader'));
-      document.getElementById('formLogo').src = URL_LOGO_PRETA;
+      const _fl = document.getElementById('formLogo'); if (_fl) _fl.src = URL_LOGO_PRETA;
       document.getElementById('formTitle').textContent = TITLES[subtipo] || TITLES.dados;
       document.getElementById('nome').value = Auth.getUserName();
 
@@ -201,10 +204,13 @@
 
     function renderSelos() {
       const container = document.getElementById('selosContainer');
+      container.style.display = 'flex';
+      container.style.flexWrap = 'wrap';
+      container.style.gap = '8px';
       container.innerHTML = SELOS_ASSESSOR.map(s => `
-        <button class="pill" data-selo="${s.id}" onclick="toggleSelo('${s.id}')">
-          ${s.icon_url ? `<img src="${s.icon_url}" height="16" alt="${s.label}">` : ''}
-          ${s.label}
+        <button class="selo-chip" data-selo="${s.id}" onclick="toggleSelo('${s.id}')">
+          ${s.icon_url ? `<img src="${s.icon_url}" alt="${s.label}">` : ''}
+          <span>${s.label}</span>
         </button>
       `).join('');
     }
@@ -212,7 +218,7 @@
     function toggleSelo(id) {
       if (selectedSelos.has(id)) selectedSelos.delete(id);
       else selectedSelos.add(id);
-      document.querySelectorAll('#selosContainer .pill').forEach(p => {
+      document.querySelectorAll('#selosContainer .selo-chip').forEach(p => {
         p.classList.toggle('selected', selectedSelos.has(p.dataset.selo));
       });
     }
@@ -289,7 +295,9 @@
       const photoDiv = document.getElementById('previewPhoto');
       if (photoFile) {
         const url = URL.createObjectURL(photoFile);
-        photoDiv.innerHTML = `<img src="${url}" style="width:100%;height:100%;object-fit:cover">`;
+        photoDiv.innerHTML = `<img src="${url}" class="preview-assessor-photo" alt="Foto de perfil">`;
+      } else {
+        photoDiv.innerHTML = '<span style="opacity:0.3;font-size:0.85rem">Foto aparecerá aqui</span>';
       }
 
       const validDepos = depoimentos.filter(d => d.nome && d.texto);
@@ -297,9 +305,9 @@
       if (validDepos.length > 0) {
         depoSection.style.display = 'block';
         document.getElementById('previewDepoList').innerHTML = validDepos.map(d => `
-          <div style="background:var(--card-white);border:1px solid var(--border-light);border-radius:12px;padding:20px">
+          <div class="preview-depoimento-card">
             <p style="font-size:0.875rem;margin-bottom:8px">${d.texto}</p>
-            <strong style="font-size:0.85rem">${d.nome}</strong>
+            <div class="preview-depoimento-autor">${d.nome}</div>
           </div>
         `).join('');
       } else {

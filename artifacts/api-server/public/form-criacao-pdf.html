@@ -12,8 +12,7 @@
   <div class="container-narrow" style="padding-top:32px;padding-bottom:80px">
     <div class="form-card">
       <div class="form-progress"><div class="form-progress-bar" id="progressBar" style="width:33%"></div></div>
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px">
-        <img src="" id="formLogo" height="24" alt="SVN">
+      <div style="display:flex;align-items:center;justify-content:flex-end;margin-bottom:24px">
         <span style="font-size:0.8rem;opacity:0.4" id="stepLabel">Etapa 1 de 3</span>
       </div>
       <h2 style="font-weight:300;font-size:1.1rem;margin-bottom:20px;opacity:0.6" id="formTitle"></h2>
@@ -108,15 +107,19 @@
         </div>
         <div class="form-nav">
           <button class="btn btn-secondary" onclick="goStep(2)">Voltar</button>
-          <button class="btn btn-primary" id="btnSubmit" onclick="submitForm()">Enviar</button>
+          <button class="btn btn-primary btn-submit-gold" id="btnSubmit" onclick="submitForm()">Enviar</button>
         </div>
       </div>
     </div>
   </div>
 
+  <a href="/dashboard.html" class="float-home" style="bottom:78px">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+    <span>Minhas solicitações</span>
+  </a>
   <a href="/" class="float-home">
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-    <span>Voltar a tela inicial</span>
+    <span>Início</span>
   </a>
 
   <script src="config.js"></script>
@@ -131,7 +134,7 @@
       await Auth.init();
       if (!Auth.isAuthenticated()) { window.location.href = '/auth/login?redirect=/form-criacao-pdf.html?subtipo=' + subtipo; return; }
       Auth.renderHeader(document.getElementById('mainHeader'));
-      document.getElementById('formLogo').src = URL_LOGO_PRETA;
+      const _fl = document.getElementById('formLogo'); if (_fl) _fl.src = URL_LOGO_PRETA;
       document.getElementById('formTitle').textContent = TITLES[subtipo] || TITLES.informativo;
       document.getElementById('nome').value = Auth.getUserName();
 

@@ -1,0 +1,404 @@
+# Ajustes do Hub de Solicitações SVN
+
+Preciso que você aplique os seguintes ajustes no projeto. Leia tudo antes de começar e aplique todas as alterações de uma vez.
+
+---
+
+## 1. ACENTUAÇÃO — PRIORIDADE MÁXIMA
+
+Verifique se todos os arquivos HTML possuem `<meta charset="UTF-8">` no `<head>`. Em seguida, revise **todos os textos visíveis ao usuário** em todos os arquivos HTML e JS e corrija a acentuação. Exemplos do que corrigir:
+
+- "solicitacao" → "solicitação"
+- "Pagina" → "Página"
+- "inscricao" → "inscrição"
+- "nao" → "não"
+- "Atualizacao" → "Atualização"
+- "voce" → "você"
+- "tambem" → "também"
+- "informacoes" → "informações"
+- "historico" → "histórico"
+- "publico" → "público"
+- "prazo" → "prazo" (já correto, manter)
+- Qualquer outra palavra com acento, cedilha ou til ausente
+
+---
+
+## 2. HOME (index.html)
+
+- **Hero:** aumentar a altura do card com vídeo de 340px para 420px
+- **Texto "O que você gostaria de fazer?":** aumentar para `font-size: 1.15rem`, aumentar opacidade para `0.92` (estava muito apagado)
+- **Botões:** adicionar fundo marrom semitransparente `background: rgba(56, 24, 17, 0.55)` com `backdrop-filter: blur(4px)`. No hover, escurecer para `rgba(56, 24, 17, 0.72)`. Isso garante legibilidade sem deixar os botões totalmente transparentes
+- **Ícones dos botões:** garantir alinhamento vertical correto com o texto usando `align-items: center` e `vertical-align: middle` no SVG. Atualmente os ícones aparecem levemente acima do texto
+
+---
+
+## 3. TELA DE SELEÇÃO DE SOLICITAÇÕES (solicitacoes.html)
+
+### 3.1 Header
+Adicionar no header, à direita do nome do usuário, um botão para acessar o dashboard:
+```html
+<a href="/dashboard.html" class="btn btn-secondary" style="font-size:0.8rem;padding:8px 16px;display:inline-flex;align-items:center;gap:6px">
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+  Minhas solicitações
+</a>
+```
+
+### 3.2 Remover botão "Voltar"
+Remover o botão "Voltar" que aparece logo abaixo do título "Que tipo de solicitação você gostaria de realizar?". O botão flutuante já cobre essa função.
+
+### 3.3 Remover botões da grade
+Remover completamente os seguintes itens da grade de solicitações:
+- **Envio de itens pelos Correios** (id: `correios`)
+- **Análise de Elegibilidade para Gravações** (id: `analise-gravacoes`)
+
+### 3.4 Reorganizar últimas categorias em 3 colunas
+As categorias **Impressos**, **Audiovisual** e **Obras e manutenções** devem aparecer lado a lado em 3 colunas iguais, cada uma com seu próprio título de categoria acima e seu botão único abaixo. Estrutura:
+
+```html
+<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:24px;margin-top:28px">
+  <div>
+    <div class="category-title">Impressos</div>
+    <!-- botão Materiais Impressos -->
+  </div>
+  <div>
+    <div class="category-title">Audiovisual</div>
+    <!-- botão Produção de Vídeo (apenas este) -->
+  </div>
+  <div>
+    <div class="category-title">Obras e manutenções</div>
+    <!-- botão Obras, mudanças, manutenção e demandas estruturais -->
+  </div>
+</div>
+```
+
+Em mobile (`max-width: 768px`): `grid-template-columns: 1fr` (empilhados).
+
+---
+
+## 4. TODOS OS FORMULÁRIOS (form-*.html)
+
+### 4.1 Remover logo gigante do topo
+Em todos os formulários, remover o elemento que exibe a logo SVN grande dentro do card do formulário (ela já aparece no header, não precisa ser repetida dentro do form).
+
+### 4.2 Segundo botão flutuante
+Adicionar em todos os formulários um segundo botão flutuante para voltar ao menu de solicitações, posicionado **acima** do botão "Voltar à tela inicial":
+
+```html
+<button class="float-home" onclick="window.location.href='/solicitacoes.html'"
+  style="bottom:80px;right:24px;background:var(--card-white)">
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+    <rect x="3" y="3" width="7" height="7" rx="1"/>
+    <rect x="14" y="3" width="7" height="7" rx="1"/>
+    <rect x="14" y="14" width="7" height="7" rx="1"/>
+    <rect x="3" y="14" width="7" height="7" rx="1"/>
+  </svg>
+  <span>Menu de solicitações</span>
+</button>
+```
+
+### 4.3 Botão "Enviar" com efeito dourado
+Adicionar no `style.css`:
+
+```css
+.btn-submit-gold {
+  background: linear-gradient(135deg, #c9a84c 0%, #f0d080 40%, #c9a84c 60%, #a07830 100%);
+  background-size: 200% 200%;
+  color: #221B19;
+  font-weight: 700;
+  border: none;
+  animation: goldShimmer 2.5s ease infinite;
+  box-shadow: 0 4px 20px rgba(201,168,76,0.4);
+}
+.btn-submit-gold:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 28px rgba(201,168,76,0.55);
+  text-decoration: none;
+}
+@keyframes goldShimmer {
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+```
+
+Aplicar a classe `btn btn-submit-gold` no botão de envio final de **todos os formulários**, substituindo a classe anterior (`btn-primary` ou equivalente).
+
+---
+
+## 5. FORMULÁRIO DE PÁGINA DE ASSESSORES (form-pagina-assessores.html)
+*(Aplicar também ao formulário de atualização de dados de assessores)*
+
+### 5.1 Selos com tamanho fixo
+Aplicar tamanho fixo nas imagens dos selos para evitar logos gigantes:
+
+```css
+.selo-chip img {
+  height: 28px;
+  width: auto;
+  max-width: 80px;
+  object-fit: contain;
+}
+.selo-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border: 1px solid var(--border-light);
+  border-radius: 999px;
+  cursor: pointer;
+  transition: 0.15s;
+  background: var(--card-white);
+}
+.selo-chip:hover { border-color: var(--ruby-red); }
+```
+
+### 5.2 Estado selecionado dos selos — off-white claro
+Quando um selo estiver selecionado, o fundo deve ser um off-white levemente mais escuro que o background da página, **não preto**:
+
+```css
+.selo-chip.selected {
+  background: #ede8e4;
+  border-color: rgba(34,27,25,0.35);
+  color: var(--carbon-black);
+}
+```
+
+### 5.3 Modal de prévia — ajustes visuais
+No modal que exibe a prévia da página do assessor, aplicar os seguintes ajustes para ficar mais fiel ao layout real dos assessores SVN:
+
+**a) Container esquerdo centralizado:**
+```css
+.preview-assessor-left {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  justify-content: center;
+}
+```
+
+**b) Selos acima do nome:** mover o bloco que exibe os selos selecionados para antes do elemento com o nome do assessor no HTML do modal.
+
+**c) Ícones LinkedIn e Instagram preenchidos (filled), não outline:**
+```html
+<!-- LinkedIn filled -->
+<a id="previewLinkedin" href="#" target="_blank"
+   style="display:inline-flex;width:36px;height:36px;background:#0A66C2;border-radius:6px;align-items:center;justify-content:center;text-decoration:none">
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="white">
+    <path d="M16 8a6 6 0 016 6v7h-4v-7a2 2 0 00-2-2 2 2 0 00-2 2v7h-4v-7a6 6 0 016-6z"/>
+    <rect x="2" y="9" width="4" height="12" fill="white"/>
+    <circle cx="4" cy="4" r="2" fill="white"/>
+  </svg>
+</a>
+
+<!-- Instagram filled -->
+<a id="previewInstagram" href="#" target="_blank"
+   style="display:inline-flex;width:36px;height:36px;background:linear-gradient(135deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888);border-radius:8px;align-items:center;justify-content:center;text-decoration:none">
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+    <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/>
+    <circle cx="12" cy="12" r="4"/>
+    <circle cx="17.5" cy="6.5" r="1.5" fill="white" stroke="none"/>
+  </svg>
+</a>
+```
+Exibir o ícone do LinkedIn apenas se o campo LinkedIn estiver preenchido. Exibir o ícone do Instagram apenas se o campo Instagram estiver preenchido.
+
+**d) Foto vertical com borda preta 1px:**
+```css
+.preview-assessor-photo {
+  width: 100%;
+  height: 380px;
+  object-fit: cover;
+  object-position: top;
+  border-radius: 12px;
+  border: 1px solid var(--carbon-black);
+}
+```
+
+**e) Cards de depoimentos — fundo transparente com borda preta 1px:**
+```css
+.preview-depoimento-card {
+  background: transparent;
+  border: 1px solid var(--carbon-black);
+  border-radius: 12px;
+  padding: 20px 24px;
+  font-style: italic;
+}
+.preview-depoimento-autor {
+  font-style: normal;
+  font-weight: 600;
+  margin-top: 12px;
+  font-size: 0.9rem;
+}
+```
+
+---
+
+## 6. FORMULÁRIO DE EVENTOS (form-eventos.html)
+
+### 6.1 Pill de endereço da unidade
+Aumentar padding e adicionar espaçamento inferior:
+```css
+.address-pill {
+  padding: 12px 16px;
+  font-size: 0.875rem;
+  margin-top: 12px;
+  margin-bottom: 20px;
+}
+```
+
+### 6.2 Materiais — cada item em linha separada
+Na etapa de seleção de materiais, cada item deve ocupar sua própria linha (não agrupados aleatoriamente em colunas). Alterar o container:
+
+```css
+.materials-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.material-block .pill {
+  width: 100%;
+  justify-content: flex-start;
+  border-radius: 8px;
+  padding: 12px 16px;
+  text-align: left;
+}
+```
+
+### 6.3 Popup de prévia do Pacote Padrão — corrigir proporção das imagens
+As imagens dentro do popup estão achatadas. Corrigir:
+
+```css
+.pacote-padrao-img {
+  width: 100%;
+  height: auto;
+  max-height: 500px;
+  object-fit: contain;
+  border-radius: 8px;
+  display: block;
+}
+```
+As duas imagens devem ficar lado a lado em desktop e empilhadas em mobile, **sem distorção**.
+
+### 6.4 Painel lateral — ícones exclusivos por item
+No painel lateral de prévia da solicitação, cada item selecionado deve exibir seu próprio ícone SVG representativo. Usar o seguinte mapeamento no JS que renderiza os itens:
+
+```js
+const MATERIAL_ICONS_SVG = {
+  'pacote-padrao': `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/><path d="M12 2l2 2-2 2-2-2z" fill="currentColor" stroke="none"/></svg>`,
+  'pacote-personalizado': `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>`,
+  'banner-impresso': `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>`,
+  'flyer': `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>`,
+  'brindes-store': `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 010-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 000-5C13 2 12 7 12 7z"/></svg>`,
+  'brindes-personalizados': `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 010-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 000-5C13 2 12 7 12 7z"/><circle cx="12" cy="4" r="1" fill="currentColor" stroke="none"/></svg>`,
+  'captacao-audiovisual': `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>`,
+  'coffee-break': `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M18 8h1a4 4 0 010 8h-1"/><path d="M2 8h16v9a4 4 0 01-4 4H6a4 4 0 01-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>`,
+  'instagram': `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>`,
+  'email-marketing': `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>`,
+  'equipe-staff': `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>`,
+  'jantar-almoco': `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><line x1="18" y1="2" x2="18" y2="22"/><line x1="22" y1="6" x2="22" y2="2"/><line x1="14" y1="6" x2="14" y2="2"/><path d="M14 6c0 2.21 1.79 4 4 4s4-1.79 4-4"/><path d="M6 2v6c0 2.21-1.79 4-4 4v8a2 2 0 004 0V2"/></svg>`,
+  'pagina-sorteio': `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`,
+  'projeto-stand': `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>`,
+  'pacote-padrao-online': `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>`,
+  'pacote-personalizado-online': `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>`,
+  'instagram-online': `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>`,
+  'link-youtube-online': `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8" fill="currentColor" stroke="none"/></svg>`,
+  'apoio-live-online': `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 18v-6a9 9 0 0118 0v6"/><path d="M21 19a2 2 0 01-2 2h-1a2 2 0 01-2-2v-3a2 2 0 012-2h3zM3 19a2 2 0 002 2h1a2 2 0 002-2v-3a2 2 0 00-2-2H3z"/></svg>`,
+  'email-marketing-online': `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>`,
+};
+```
+
+Na função que adiciona itens ao painel lateral, usar `MATERIAL_ICONS_SVG[item.id]` para exibir o ícone correto ao lado do nome de cada item.
+
+### 6.5 Upload de foto do palestrante — corrigir preview e adicionar feedback
+Corrigir o handler de upload para atualizar o avatar corretamente e adicionar mensagem de status:
+
+```js
+// Para cada bloco de palestrante, usar este padrão:
+fotoInput.addEventListener('change', function() {
+  if (!this.files || !this.files[0]) return;
+  const file = this.files[0];
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    // Atualizar o avatar com a foto
+    const avatarEl = document.getElementById('speakerAvatar_' + speakerIndex);
+    if (avatarEl) {
+      avatarEl.innerHTML = `<img src="${e.target.result}" alt="foto" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`;
+    }
+  };
+  reader.onerror = function() {
+    statusEl.textContent = '✗ Erro ao carregar foto. Tente novamente.';
+    statusEl.style.color = 'var(--ruby-red)';
+  };
+  reader.readAsDataURL(file);
+  // Feedback imediato
+  const statusEl = document.getElementById('speakerPhotoStatus_' + speakerIndex);
+  if (statusEl) {
+    statusEl.textContent = '✓ Foto carregada com sucesso';
+    statusEl.style.color = 'var(--sage-green)';
+    statusEl.style.fontSize = '0.8rem';
+    statusEl.style.marginTop = '4px';
+    statusEl.style.display = 'block';
+  }
+});
+```
+
+Adicionar um elemento `<span id="speakerPhotoStatus_N" style="display:none"></span>` abaixo de cada input de foto de palestrante.
+
+---
+
+## 7. DASHBOARD (dashboard.html)
+
+### 7.1 Label "Período:" antes dos filtros de período
+```html
+<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px">
+  <span style="font-size:0.8rem;font-weight:600;color:var(--carbon-black);opacity:0.5;white-space:nowrap">Período:</span>
+  <div style="display:flex;gap:8px;flex-wrap:wrap">
+    <button class="filter-chip active" data-period="all">Todos</button>
+    <button class="filter-chip" data-period="today">Hoje</button>
+    <button class="filter-chip" data-period="7d">Últimos 7 dias</button>
+    <button class="filter-chip" data-period="30d">Últimos 30 dias</button>
+    <button class="filter-chip" data-period="month">Este mês</button>
+  </div>
+</div>
+```
+
+### 7.2 Aba Eventos — adicionar filtro de natureza
+Na seção de filtros da aba Eventos, adicionar uma linha de filtro Presencial/Online:
+```html
+<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px">
+  <span style="font-size:0.8rem;font-weight:600;color:var(--carbon-black);opacity:0.5;white-space:nowrap">Natureza:</span>
+  <div style="display:flex;gap:8px;flex-wrap:wrap">
+    <button class="filter-chip active" data-natureza="">Todos</button>
+    <button class="filter-chip" data-natureza="presencial">Presencial</button>
+    <button class="filter-chip" data-natureza="online">Online</button>
+  </div>
+</div>
+```
+
+### 7.3 Aba Solicitações gerais — adicionar filtro por tipo
+Na seção de filtros da aba Solicitações gerais, adicionar filtro por tipo de solicitação (apenas os tipos ativos, excluindo eventos):
+```html
+<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px">
+  <span style="font-size:0.8rem;font-weight:600;color:var(--carbon-black);opacity:0.5;white-space:nowrap">Tipo:</span>
+  <div style="display:flex;gap:8px;flex-wrap:wrap">
+    <button class="filter-chip active" data-tipo="">Todos</button>
+    <button class="filter-chip" data-tipo="pagina-assessores">Página de Assessores</button>
+    <button class="filter-chip" data-tipo="apresentacao">Apresentação</button>
+    <button class="filter-chip" data-tipo="artes-divulgacao">Artes de Divulgação</button>
+    <button class="filter-chip" data-tipo="conteudo-pdf">PDF</button>
+    <button class="filter-chip" data-tipo="atualizacao-material">Atualização de Material</button>
+  </div>
+</div>
+```
+
+Garantir que a lógica de filtragem no JS da aba Solicitações gerais use o atributo `data-tipo` para filtrar as solicitações exibidas.
+
+---
+
+## OBSERVAÇÕES FINAIS
+
+- Aplicar **todos** os ajustes acima de uma vez
+- Não remover funcionalidades existentes, apenas modificar as indicadas
+- Manter o visual geral do sistema (cores, fontes, espaçamentos) consistente com o que já existe
+- Após aplicar, revisar visualmente cada página para garantir que nenhum elemento ficou quebrado

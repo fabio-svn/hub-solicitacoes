@@ -3,18 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Selecionar Solicitacao - Hub SVN</title>
+  <title>Selecionar Solicitação - Hub SVN</title>
   <link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
 <body class="page-light">
   <header class="header" id="mainHeader"></header>
   <div class="container">
-    <h1 style="font-weight:300;font-size:1.3rem;margin-bottom:8px">Que tipo de solicitacao voce gostaria de realizar?</h1>
-    <button class="btn-secondary" onclick="window.history.back()" style="margin-bottom:24px;font-size:0.85rem;padding:8px 16px">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
-      Voltar
-    </button>
+    <h1 style="font-weight:300;font-size:1.3rem;margin-bottom:24px">Que tipo de solicitação você gostaria de realizar?</h1>
     <div id="categoriesContainer"></div>
   </div>
 
@@ -27,7 +23,7 @@
 
   <a href="/" class="float-home">
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-    <span>Voltar a tela inicial</span>
+    <span>Voltar à tela inicial</span>
   </a>
 
   <script src="config.js"></script>
@@ -68,16 +64,33 @@
         return;
       }
       Auth.renderHeader(document.getElementById('mainHeader'));
+
+      const headerInner = document.querySelector('.header-inner');
+      if (headerInner) {
+        const dashBtn = document.createElement('a');
+        dashBtn.href = '/dashboard.html';
+        dashBtn.className = 'btn btn-secondary';
+        dashBtn.style.cssText = 'font-size:0.8rem;padding:8px 16px;display:inline-flex;align-items:center;gap:6px';
+        dashBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg> Minhas solicitações';
+        const userSection = headerInner.querySelector('.header-user');
+        if (userSection) headerInner.insertBefore(dashBtn, userSection);
+      }
+
       renderCategories();
     }
 
     function renderCategories() {
       const container = document.getElementById('categoriesContainer');
       let singleCats = [];
+      let trioCats = [];
 
       CATEGORIAS_SOLICITACAO.forEach(cat => {
         if (cat.layout === 'single') {
           singleCats.push(cat);
+          return;
+        }
+        if (cat.layout === 'trio') {
+          trioCats.push(cat);
           return;
         }
 
@@ -102,6 +115,39 @@
 
         container.appendChild(grid);
       });
+
+      if (trioCats.length > 0) {
+        const trioWrapper = document.createElement('div');
+        trioWrapper.style.cssText = 'display:grid;grid-template-columns:repeat(3,1fr);gap:24px;margin-top:28px';
+
+        trioCats.forEach(cat => {
+          const col = document.createElement('div');
+
+          const title = document.createElement('div');
+          title.className = 'category-title';
+          title.style.marginTop = '0';
+          title.textContent = cat.categoria;
+          col.appendChild(title);
+
+          cat.itens.forEach(item => {
+            const btn = document.createElement('button');
+            btn.className = 'selection-btn' + (item.ativo ? '' : ' disabled');
+            if (!item.ativo) btn.setAttribute('data-tooltip', 'Em breve');
+            btn.innerHTML = `<div class="btn-icon">${ICONS[item.icon] || ''}</div><div class="btn-label">${item.label}</div>`;
+            if (item.ativo) btn.onclick = () => handleItemClick(item);
+            col.appendChild(btn);
+          });
+
+          trioWrapper.appendChild(col);
+        });
+
+        container.appendChild(trioWrapper);
+
+        const trioStyle = document.createElement('style');
+        trioStyle.textContent = '@media(max-width:768px){.trio-grid{grid-template-columns:1fr!important}}';
+        trioWrapper.classList.add('trio-grid');
+        document.head.appendChild(trioStyle);
+      }
 
       if (singleCats.length > 0) {
         const singleGrid = document.createElement('div');
