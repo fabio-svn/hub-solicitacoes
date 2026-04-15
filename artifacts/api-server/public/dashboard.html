@@ -489,28 +489,38 @@
         } else if (etapasVisiveis.length > 0) {
           fluxoEl.innerHTML = `
             <p style="font-size:0.7rem;font-weight:600;letter-spacing:0.07em;text-transform:uppercase;opacity:0.4;margin-bottom:14px">Andamento da solicitação</p>
-            <div style="display:flex;align-items:center;gap:0;padding-bottom:28px">
+            <div style="display:flex;flex-direction:column">
               ${etapasVisiveis.map((etapa, idx) => {
                 const isConcluida = idx < idxAtual;
                 const isAtual = idx === idxAtual;
                 const isUltima = idx === etapasVisiveis.length - 1;
                 const cor = getStatusColor(etapa.id);
-                const bg = isConcluida ? '#065f46' : isAtual ? cor.bg : 'transparent';
-                const border = isConcluida ? '#065f46' : isAtual ? cor.text : 'rgba(34,27,25,0.15)';
+                const circBg = isConcluida ? '#065f46' : isAtual ? cor.bg : 'transparent';
+                const circBorder = isConcluida ? '#065f46' : isAtual ? cor.text : 'rgba(34,27,25,0.15)';
                 const icone = isConcluida
                   ? `<svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>`
                   : isAtual ? `<div style="width:6px;height:6px;border-radius:50%;background:${cor.text}"></div>` : '';
-                const labelAtual = isAtual
-                  ? `<div style="position:absolute;top:28px;left:50%;transform:translateX(-50%);white-space:nowrap;font-size:0.68rem;font-weight:700;color:${cor.text}">${etapa.label}</div>`
+                const lblColor = isConcluida ? '#065f46' : isAtual ? cor.text : 'rgba(34,27,25,0.35)';
+                const lblWeight = isAtual ? '700' : '400';
+                const estadoLabel = isConcluida
+                  ? `<span style="font-size:10px;color:#065f46;margin-left:auto">Concluído</span>`
+                  : isAtual
+                  ? `<span style="font-size:10px;font-weight:600;color:${cor.text};margin-left:auto">Atual</span>`
+                  : '';
+                const connector = !isUltima
+                  ? `<div style="width:2px;height:10px;background:${isConcluida ? '#065f46' : 'rgba(34,27,25,0.1)'};margin-left:9px;flex-shrink:0"></div>`
                   : '';
                 return `
-                  <div style="display:flex;align-items:center;flex:${isUltima ? '0' : '1'};position:relative">
-                    <div style="position:relative">
-                      <div title="${etapa.label}" style="width:22px;height:22px;border-radius:50%;background:${bg};border:2px solid ${border};display:flex;align-items:center;justify-content:center;flex-shrink:0;position:relative;z-index:1">${icone}</div>
-                      ${labelAtual}
+                  <div style="display:flex;align-items:center;gap:10px">
+                    <div style="width:20px;height:20px;border-radius:50%;background:${circBg};border:2px solid ${circBorder};display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                      ${icone}
                     </div>
-                    ${!isUltima ? `<div style="flex:1;height:2px;background:${isConcluida ? '#065f46' : 'rgba(34,27,25,0.1)'};min-width:8px"></div>` : ''}
-                  </div>`;
+                    <div style="flex:1;display:flex;align-items:center;justify-content:space-between">
+                      <span style="font-size:0.8rem;font-weight:${lblWeight};color:${lblColor};line-height:1.3">${etapa.label}</span>
+                      ${estadoLabel}
+                    </div>
+                  </div>
+                  ${connector}`;
               }).join('')}
             </div>`;
         } else {
