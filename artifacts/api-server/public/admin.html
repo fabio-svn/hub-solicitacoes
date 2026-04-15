@@ -206,7 +206,7 @@
         const date = new Date(item.created_at).toLocaleDateString('pt-BR');
         html += `<tr onclick="openDrawerByKey('${esc(cacheKey)}')">
           <td>${esc(tipoLabel)}</td><td>${esc(titulo)}</td><td>${esc(item.user_email)}</td><td>${esc(date)}</td>
-          <td><span class="badge" style="background:var(${statusObj.cor});color:var(--paper-white)">${esc(statusObj.label)}</span></td>
+          <td><span class="badge" style="background:${statusObj.bg || '#f1f5f9'};color:${statusObj.text || '#475569'}">${esc(statusObj.label)}</span></td>
         </tr>`;
       });
       html += '</tbody></table>';
@@ -309,7 +309,7 @@
       document.getElementById('drawerTitle').textContent = titulo;
       document.getElementById('drawerBadges').innerHTML = `
         <span class="badge" style="background:var(--carbon-black);color:var(--paper-white)">${esc(tipoLabel)}</span>
-        <span class="badge" style="background:var(${statusObj.cor});color:var(--paper-white)">${esc(statusObj.label)}</span>`;
+        <span class="badge" style="background:${statusObj.bg || '#f1f5f9'};color:${statusObj.text || '#475569'}">${esc(statusObj.label)}</span>`;
 
       let body = '';
       body += `<div class="drawer-section"><div class="drawer-section-title">Solicitante</div>

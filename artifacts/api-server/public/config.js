@@ -177,13 +177,20 @@ const SELOS_ASSESSOR = [
 ];
 
 const STATUS_SOLICITACAO = [
-  { id: "recebido",       label: "Recebido",                   cor: "--sage-green"    },
-  { id: "em-analise",     label: "Em análise",                 cor: "--ruby-red"      },
-  { id: "em-producao",    label: "Em produção",                cor: "--ruby-red"      },
-  { id: "aguardando",     label: "Aguardando informação",      cor: "--leather-brown" },
-  { id: "aguardando-rh",  label: "Aguardando aprovação do RH", cor: "--leather-brown" },
-  { id: "concluido",      label: "Concluído",                  cor: "--sage-green"    },
-  { id: "cancelado",      label: "Cancelado",                  cor: "--carbon-black"  },
+  { id: "recebido",               label: "Recebido",                   bg: "#e8f4ea", text: "#2d7a3a" },
+  { id: "alinhamentos",           label: "Alinhamentos",               bg: "#e8f0fb", text: "#1a56a0" },
+  { id: "em-analise",             label: "Em análise",                 bg: "#fff3e0", text: "#b45309" },
+  { id: "em-andamento",           label: "Em andamento",               bg: "#fff3e0", text: "#b45309" },
+  { id: "em-producao",            label: "Em produção",                bg: "#fff3e0", text: "#b45309" },
+  { id: "cotacao-aprovacao",      label: "Em cotação / aprovação",     bg: "#fef3c7", text: "#92660a" },
+  { id: "aguardando",             label: "Aguardando informação",      bg: "#fef3c7", text: "#92660a" },
+  { id: "aguardando-rh",          label: "Aguardando aprovação do RH", bg: "#fce8f3", text: "#9d174d" },
+  { id: "aguardando-pagamento",   label: "Aguardando pagamento",       bg: "#fce8f3", text: "#9d174d" },
+  { id: "aguardando-finalizacao", label: "Aguardando finalização",     bg: "#ede9fe", text: "#5b21b6" },
+  { id: "concluido",              label: "Concluído",                  bg: "#d1fae5", text: "#065f46" },
+  { id: "reprovado",              label: "Reprovado / Cancelado",      bg: "#fee2e2", text: "#991b1b" },
+  { id: "cancelado",              label: "Cancelado",                  bg: "#fee2e2", text: "#991b1b" },
+  { id: "em-espera",              label: "Em espera",                  bg: "#f1f5f9", text: "#475569" },
 ];
 
 const SETORES = [

@@ -602,8 +602,8 @@ input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
 .drawer {
   position: fixed;
   top: 0;
-  right: -440px;
-  width: 420px;
+  right: -500px;
+  width: 480px;
   height: 100vh;
   background: var(--card-white);
   z-index: 301;
