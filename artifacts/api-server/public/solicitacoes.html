@@ -69,15 +69,6 @@
       }
       Auth.renderHeader(document.getElementById('mainHeader'));
       renderCategories();
-
-      const totalItens = CATEGORIAS_SOLICITACAO.reduce((acc, cat) => acc + cat.itens.length, 0);
-      const totalAtivos = CATEGORIAS_SOLICITACAO.reduce((acc, cat) => acc + cat.itens.filter(i => i.ativo).length, 0);
-      const totalCats = CATEGORIAS_SOLICITACAO.length;
-      const subtexto = document.createElement('p');
-      subtexto.style.cssText = 'font-size:0.8rem;color:var(--carbon-black);opacity:0.4;margin-bottom:28px;margin-top:-8px;font-weight:400';
-      subtexto.textContent = `${totalCats} categorias \u00B7 ${totalAtivos} de ${totalItens} disponíveis`;
-      const titulo = document.querySelector('.container h1');
-      if (titulo) titulo.insertAdjacentElement('afterend', subtexto);
     }
 
     function renderCategories() {

@@ -24,11 +24,11 @@
         <h2 style="font-weight:600;font-size:1.1rem;margin-bottom:20px">Dados do solicitante</h2>
         <div class="field">
           <label>Seu nome</label>
-          <input type="text" id="nome" placeholder="Seu nome completo">
+          <input type="text" id="nome" placeholder="Seu nome completo" required>
         </div>
         <div class="field">
           <label>Setor</label>
-          <select id="setor"></select>
+          <select id="setor" required></select>
         </div>
         <div class="field">
           <label class="checkbox-option">
@@ -46,15 +46,15 @@
         <h2 style="font-weight:600;font-size:1.1rem;margin-bottom:20px">Informações do material</h2>
         <div class="field">
           <label>Título do material</label>
-          <input type="text" id="titulo" placeholder="Nome ou identificacao do material que será atualizado">
+          <input type="text" id="titulo" placeholder="Nome ou identificacao do material que será atualizado" required>
         </div>
         <div class="field">
           <label>Finalidade do material</label>
-          <textarea id="finalidade" placeholder="Para que e utilizado este material?"></textarea>
+          <textarea id="finalidade" placeholder="Para que e utilizado este material?" required></textarea>
         </div>
         <div class="field">
           <label>Descrição do que precisa ser atualizado</label>
-          <textarea id="descricao" placeholder="Descreva com clareza o que deve ser alterado, corrigido ou adicionado. Quanto mais detalhado, melhor."></textarea>
+          <textarea id="descricao" placeholder="Descreva com clareza o que deve ser alterado, corrigido ou adicionado. Quanto mais detalhado, melhor." required></textarea>
         </div>
         <div class="field">
           <label>Material atual + arquivos de apoio</label>
@@ -123,10 +123,41 @@
       window.scrollTo(0, 0);
     }
 
-    async function submitForm() {
-      if (!document.getElementById('titulo').value.trim() || !document.getElementById('finalidade').value.trim() || !document.getElementById('descricao').value.trim()) {
-        alert('Preencha todos os campos obrigatórios.'); return;
+    function validateRequiredFields() {
+      document.querySelectorAll('.field-invalid').forEach(el => el.classList.remove('field-invalid'));
+      const invalidFields = [];
+      document.querySelectorAll('input[required], select[required], textarea[required]').forEach(input => {
+        const step = input.closest('.form-step');
+        if (step && !step.classList.contains('active')) return;
+        const conditional = input.closest('.conditional-fields');
+        if (conditional && !conditional.classList.contains('open')) return;
+        const isEmpty = input.type === 'radio' || input.type === 'checkbox'
+          ? !document.querySelector(`input[name="${input.name}"]:checked`)
+          : !input.value.trim();
+        if (isEmpty) {
+          const fieldWrapper = input.closest('.field');
+          if (fieldWrapper) {
+            fieldWrapper.classList.add('field-invalid');
+            let errorEl = fieldWrapper.querySelector('.field-error');
+            if (!errorEl) {
+              errorEl = document.createElement('div');
+              errorEl.className = 'field-error';
+              input.parentElement.appendChild(errorEl);
+            }
+            errorEl.textContent = 'Este campo é obrigatório.';
+            invalidFields.push(fieldWrapper);
+          }
+        }
+      });
+      if (invalidFields.length > 0) {
+        invalidFields[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+        return false;
       }
+      return true;
+    }
+
+    async function submitForm() {
+      if (!validateRequiredFields()) return;
       if (!document.getElementById('materialAtual').files[0]) {
         alert('Envie o material atual.'); return;
       }
@@ -192,6 +223,19 @@
     }
     document.querySelectorAll('input,textarea,select').forEach(el => el.addEventListener('change', saveDraft));
     restoreDraft();
+
+    document.addEventListener('input', function(e) {
+      const field = e.target.closest('.field');
+      if (field && field.classList.contains('field-invalid') && e.target.value.trim()) {
+        field.classList.remove('field-invalid');
+      }
+    });
+    document.addEventListener('change', function(e) {
+      const field = e.target.closest('.field');
+      if (field && field.classList.contains('field-invalid')) {
+        field.classList.remove('field-invalid');
+      }
+    });
 
     init();
   </script>

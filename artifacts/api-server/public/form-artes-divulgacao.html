@@ -29,11 +29,11 @@
         <h2 style="font-weight:600;font-size:1.1rem;margin-bottom:20px">Dados do solicitante</h2>
         <div class="field">
           <label>Seu nome</label>
-          <input type="text" id="nome" placeholder="Seu nome completo">
+          <input type="text" id="nome" placeholder="Seu nome completo" required>
         </div>
         <div class="field">
           <label>Setor</label>
-          <select id="setor"></select>
+          <select id="setor" required></select>
         </div>
         <div class="field">
           <label class="checkbox-option">
@@ -51,11 +51,11 @@
         <h2 style="font-weight:600;font-size:1.1rem;margin-bottom:20px">Informações do material</h2>
         <div class="field">
           <label>Título do material</label>
-          <input type="text" id="titulo" placeholder="Nome ou título da arte">
+          <input type="text" id="titulo" placeholder="Nome ou título da arte" required>
         </div>
         <div class="field">
           <label>Finalidade da arte</label>
-          <textarea id="finalidade" placeholder="Para que será utilizada? O que deseja comunicar?"></textarea>
+          <textarea id="finalidade" placeholder="Para que será utilizada? O que deseja comunicar?" required></textarea>
         </div>
         <div class="field">
           <label>Canal de compartilhamento</label>
@@ -73,7 +73,7 @@
         </div>
         <div class="field">
           <label>Conteúdo que deve estar presente na arte</label>
-          <textarea id="conteudo" placeholder="Descreva o texto e informações que devem aparecer na arte..."></textarea>
+          <textarea id="conteudo" placeholder="Descreva o texto e informações que devem aparecer na arte..." required></textarea>
         </div>
         <div class="field">
           <label>Arquivos de apoio ou referencia (opcional)</label>
@@ -110,7 +110,7 @@
         </div>
         <div class="field">
           <label>Prazo desejado para entrega</label>
-          <input type="date" id="prazoEntrega">
+          <input type="date" id="prazoEntrega" required>
           <div class="field-hint">Prazo mínimo de produção: 3 dias úteis</div>
         </div>
         <div class="field">
@@ -205,15 +205,43 @@
       } catch (e) {}
     }
 
+    function validateRequiredFields() {
+      document.querySelectorAll('.field-invalid').forEach(el => el.classList.remove('field-invalid'));
+      const invalidFields = [];
+      document.querySelectorAll('input[required], select[required], textarea[required]').forEach(input => {
+        const step = input.closest('.form-step');
+        if (step && !step.classList.contains('active')) return;
+        const conditional = input.closest('.conditional-fields');
+        if (conditional && !conditional.classList.contains('open')) return;
+        const isEmpty = input.type === 'radio' || input.type === 'checkbox'
+          ? !document.querySelector(`input[name="${input.name}"]:checked`)
+          : !input.value.trim();
+        if (isEmpty) {
+          const fieldWrapper = input.closest('.field');
+          if (fieldWrapper) {
+            fieldWrapper.classList.add('field-invalid');
+            let errorEl = fieldWrapper.querySelector('.field-error');
+            if (!errorEl) {
+              errorEl = document.createElement('div');
+              errorEl.className = 'field-error';
+              input.parentElement.appendChild(errorEl);
+            }
+            errorEl.textContent = 'Este campo é obrigatório.';
+            invalidFields.push(fieldWrapper);
+          }
+        }
+      });
+      if (invalidFields.length > 0) {
+        invalidFields[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+        return false;
+      }
+      return true;
+    }
+
     async function submitForm() {
+      if (!validateRequiredFields()) return;
       const canais = [...document.querySelectorAll('#canais input:checked')].map(c => c.value);
       const público = [...document.querySelectorAll('#público input:checked')].map(c => c.value);
-      if (!document.getElementById('titulo').value.trim() || !document.getElementById('finalidade').value.trim() || !document.getElementById('conteudo').value.trim() || canais.length === 0) {
-        alert('Preencha todos os campos obrigatórios da Etapa 2.'); goStep(2); return;
-      }
-      if (público.length === 0 || !document.getElementById('prazoEntrega').value) {
-        alert('Preencha todos os campos obrigatórios.'); return;
-      }
 
       const btn = document.getElementById('btnSubmit');
       btn.disabled = true; btn.textContent = 'Enviando...';
@@ -259,6 +287,19 @@
         else { alert('Erro ao enviar. Tente novamente.'); btn.disabled = false; btn.textContent = 'Enviar'; }
       } catch (e) { alert('Erro de conexão.'); btn.disabled = false; btn.textContent = 'Enviar'; }
     }
+
+    document.addEventListener('input', function(e) {
+      const field = e.target.closest('.field');
+      if (field && field.classList.contains('field-invalid') && e.target.value.trim()) {
+        field.classList.remove('field-invalid');
+      }
+    });
+    document.addEventListener('change', function(e) {
+      const field = e.target.closest('.field');
+      if (field && field.classList.contains('field-invalid')) {
+        field.classList.remove('field-invalid');
+      }
+    });
 
     init();
   </script>

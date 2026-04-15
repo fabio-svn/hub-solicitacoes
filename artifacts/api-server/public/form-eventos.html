@@ -27,11 +27,11 @@
             <h2 style="font-weight:600;font-size:1.1rem;margin-bottom:20px">Dados do solicitante</h2>
             <div class="field">
               <label>Seu nome</label>
-              <input type="text" id="nome" placeholder="Seu nome completo">
+              <input type="text" id="nome" placeholder="Seu nome completo" required>
             </div>
             <div class="field">
               <label>Setor</label>
-              <select id="setor"></select>
+              <select id="setor" required></select>
             </div>
             <div class="field">
               <label>O evento e presencial ou online?</label>
@@ -443,9 +443,9 @@
 
     function buildPresencial1Fields() {
       return `
-        <div class="field"><label>Nome do evento</label><input type="text" id="nomeEvento" placeholder="Nome do evento" oninput="updatePreview('pvEvento',this.value)"></div>
+        <div class="field"><label>Nome do evento</label><input type="text" id="nomeEvento" placeholder="Nome do evento" oninput="updatePreview('pvEvento',this.value)" required></div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-          <div class="field"><label>Data do evento</label><input type="date" id="dataEvento" onchange="updatePreview('pvData',this.value)"><div id="dataAvisoMinimo" class="field-error" style="display:none;color:var(--ruby-red);font-size:0.8rem;margin-top:4px"></div></div>
+          <div class="field"><label>Data do evento</label><input type="date" id="dataEvento" onchange="updatePreview('pvData',this.value)" required><div id="dataAvisoMinimo" class="field-error" style="display:none;color:var(--ruby-red);font-size:0.8rem;margin-top:4px"></div></div>
           <div class="field"><label>Horário</label><input type="time" id="horario"></div>
         </div>
         <div class="field"><label>Horário de Brasília?</label><div class="radio-group" style="flex-direction:row;gap:16px"><label class="radio-option"><input type="radio" name="horBrasilia" value="sim"><span class="radio-custom"></span><span>Sim</span></label><label class="radio-option"><input type="radio" name="horBrasilia" value="nao"><span class="radio-custom"></span><span>Não</span></label></div></div>
@@ -493,9 +493,9 @@
 
     function buildOnline1Fields() {
       return `
-        <div class="field"><label>Título do evento</label><input type="text" id="nomeEvento" placeholder="Título do evento" oninput="updatePreview('pvEvento',this.value)"></div>
+        <div class="field"><label>Título do evento</label><input type="text" id="nomeEvento" placeholder="Título do evento" oninput="updatePreview('pvEvento',this.value)" required></div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-          <div class="field"><label>Data do evento</label><input type="date" id="dataEvento" onchange="updatePreview('pvData',this.value)"><div id="dataAvisoMinimo" class="field-error" style="display:none;color:var(--ruby-red);font-size:0.8rem;margin-top:4px"></div></div>
+          <div class="field"><label>Data do evento</label><input type="date" id="dataEvento" onchange="updatePreview('pvData',this.value)" required><div id="dataAvisoMinimo" class="field-error" style="display:none;color:var(--ruby-red);font-size:0.8rem;margin-top:4px"></div></div>
           <div class="field"><label>Horário</label><input type="time" id="horario"></div>
         </div>
         <div class="field"><label>Horário de Brasília?</label><div class="radio-group" style="flex-direction:row;gap:16px"><label class="radio-option"><input type="radio" name="horBrasilia" value="sim"><span class="radio-custom"></span><span>Sim</span></label><label class="radio-option"><input type="radio" name="horBrasilia" value="nao"><span class="radio-custom"></span><span>Não</span></label></div></div>
@@ -623,8 +623,8 @@
 
     function buildCampoField(campo) {
       switch(campo.id) {
-        case 'nome-evento': case 'titulo-evento': return `<div class="field"><label>${campo.label}</label><input type="text" id="nomeEvento" oninput="updatePreview('pvEvento',this.value)"></div>`;
-        case 'data-evento': return `<div class="field"><label>${campo.label}</label><input type="date" id="dataEvento" onchange="updatePreview('pvData',this.value)"></div>`;
+        case 'nome-evento': case 'titulo-evento': return `<div class="field"><label>${campo.label}</label><input type="text" id="nomeEvento" oninput="updatePreview('pvEvento',this.value)" required></div>`;
+        case 'data-evento': return `<div class="field"><label>${campo.label}</label><input type="date" id="dataEvento" onchange="updatePreview('pvData',this.value)" required></div>`;
         case 'horario': return `<div class="field"><label>${campo.label}</label><input type="time" id="horario"></div>`;
         case 'descrição': return `<div class="field"><label>${campo.label}</label><textarea id="descrição"></textarea></div>`;
         case 'origem': return `<div class="field"><label>${campo.label}</label><select id="origem">${(formState.natureza==='online'?ORIGENS_EVENTO_ONLINE:ORIGENS_EVENTO).map(o=>`<option>${o}</option>`).join('')}</select></div>`;
@@ -1008,7 +1008,41 @@
     }
     function closePacoteModal(e) { if (!e || e.target === document.getElementById('pacoteModal')) document.getElementById('pacoteModal').classList.remove('visible'); }
 
+    function validateRequiredFields() {
+      document.querySelectorAll('.field-invalid').forEach(el => el.classList.remove('field-invalid'));
+      const invalidFields = [];
+      document.querySelectorAll('input[required], select[required], textarea[required]').forEach(input => {
+        const step = input.closest('.form-step');
+        if (step && !step.classList.contains('active')) return;
+        const conditional = input.closest('.conditional-fields');
+        if (conditional && !conditional.classList.contains('open')) return;
+        const isEmpty = input.type === 'radio' || input.type === 'checkbox'
+          ? !document.querySelector(`input[name="${input.name}"]:checked`)
+          : !input.value.trim();
+        if (isEmpty) {
+          const fieldWrapper = input.closest('.field');
+          if (fieldWrapper) {
+            fieldWrapper.classList.add('field-invalid');
+            let errorEl = fieldWrapper.querySelector('.field-error');
+            if (!errorEl) {
+              errorEl = document.createElement('div');
+              errorEl.className = 'field-error';
+              input.parentElement.appendChild(errorEl);
+            }
+            errorEl.textContent = 'Este campo é obrigatório.';
+            invalidFields.push(fieldWrapper);
+          }
+        }
+      });
+      if (invalidFields.length > 0) {
+        invalidFields[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+        return false;
+      }
+      return true;
+    }
+
     async function submitForm() {
+      if (!validateRequiredFields()) return;
       const btn = document.getElementById('btnSubmit');
       btn.disabled = true; btn.textContent = 'Enviando...';
 
@@ -1077,6 +1111,19 @@
         else { alert('Erro ao enviar.'); btn.disabled = false; btn.textContent = 'Enviar'; }
       } catch (e) { alert('Erro de conexão.'); btn.disabled = false; btn.textContent = 'Enviar'; }
     }
+
+    document.addEventListener('input', function(e) {
+      const field = e.target.closest('.field');
+      if (field && field.classList.contains('field-invalid') && e.target.value.trim()) {
+        field.classList.remove('field-invalid');
+      }
+    });
+    document.addEventListener('change', function(e) {
+      const field = e.target.closest('.field');
+      if (field && field.classList.contains('field-invalid')) {
+        field.classList.remove('field-invalid');
+      }
+    });
 
     init();
   </script>

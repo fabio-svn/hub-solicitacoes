@@ -225,6 +225,30 @@ input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
 }
 .field-error.visible { display: block; }
 
+/* Campo com erro de validação */
+.field-invalid input,
+.field-invalid select,
+.field-invalid textarea {
+  border-color: var(--ruby-red) !important;
+  box-shadow: 0 0 0 3px rgba(159,63,55,0.12) !important;
+}
+.field-invalid .field-error {
+  display: block;
+}
+.field-invalid label {
+  color: var(--ruby-red);
+}
+@keyframes fieldShake {
+  0%, 100% { transform: translateX(0); }
+  20%       { transform: translateX(-4px); }
+  40%       { transform: translateX(4px); }
+  60%       { transform: translateX(-3px); }
+  80%       { transform: translateX(3px); }
+}
+.field-invalid {
+  animation: fieldShake 0.35s ease;
+}
+
 /* Radio & Checkbox */
 .radio-group, .checkbox-group { display: flex; flex-direction: column; gap: 10px; }
 .radio-option, .checkbox-option {
@@ -358,12 +382,24 @@ input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
   font-family: 'Nunito Sans', sans-serif;
   font-weight: 600;
   font-size: 0.75rem;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--carbon-black);
-  opacity: 0.4;
+  opacity: 0.65;
   margin-bottom: 12px;
   margin-top: 28px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.category-title::before {
+  content: '';
+  display: block;
+  width: 3px;
+  height: 14px;
+  background: var(--ruby-red);
+  border-radius: 2px;
+  flex-shrink: 0;
 }
 .category-title:first-child { margin-top: 0; }
 
