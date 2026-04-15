@@ -1,0 +1,266 @@
+Revise o projeto do Hub de Solicitações no Replit e aplique os ajustes abaixo **sem quebrar a lógica existente**.
+
+# Regras obrigatórias
+
+## NÃO alterar:
+
+* autenticação Microsoft
+* backend
+* banco de dados
+* endpoints
+* integrações
+* payloads enviados
+* nomes de campos persistidos
+* permissões
+* funcionamento do submit final
+
+## PODE alterar:
+
+* HTML estrutural
+* CSS
+* ordem visual de campos
+* steps dos formulários
+* progress bar
+* textos visíveis
+* validações front-end
+* layout
+* labels
+* títulos
+
+---
+
+# RODADA 2 — AJUSTES
+
+---
+
+# 1. Página de Assessores / Atualização de Dados
+
+## 1.1 Campo Foto de perfil
+
+Hoje o label fica acima e o botão abaixo.
+
+### Alterar para layout horizontal:
+
+```text id="2s0ow6"
+Foto de perfil                           [ Escolher foto ]
+```
+
+### Regras:
+
+* mesma linha no desktop
+* alinhamento vertical centralizado
+* responsivo no mobile
+* manter upload funcionando normalmente
+* manter preview/nome do arquivo funcionando
+
+---
+
+# 2. Todos os formulários — Títulos padronizados
+
+Hoje alguns forms possuem título superior e outros não.
+
+## Fazer auditoria geral e garantir:
+
+### Todo formulário deve possuir título superior padronizado.
+
+Exemplos:
+
+* Página de Assessores — Dados
+* Nova Apresentação
+* Atualizar Apresentação
+* Arte de Divulgação
+* Conteúdo em PDF
+* Atualização de Material
+* Eventos
+* demais formulários internos
+
+## Ajustar estilo dos títulos:
+
+Melhorar legibilidade aumentando peso da fonte.
+
+### Diretriz visual:
+
+#### Título superior da página:
+
+* font-weight: 400 ou 500
+* boa leitura
+* elegante
+* consistente
+
+#### Título interno de seção:
+
+* font-weight: 600
+
+### Objetivo:
+
+consistência visual entre todos os forms.
+
+---
+
+# 3. Remover etapa redundante “Dados do solicitante”
+
+Com autenticação Microsoft ativa, nome e setor já são conhecidos.
+
+---
+
+## 3.1 TODOS os formulários (exceto Eventos)
+
+Remover completamente a etapa inicial:
+
+**Dados do solicitante**
+
+Campos normalmente existentes:
+
+* Seu nome
+* Setor
+
+## Após remover:
+
+Ajustar automaticamente:
+
+* numeração das etapas
+* progress bar
+* labels “Etapa X de Y”
+* botões Voltar/Próximo
+* navegação entre steps
+* JS de steps
+
+---
+
+## 3.2 EXCEÇÃO — Formulário de Eventos
+
+Não remover a etapa inicial inteira.
+
+### Remover apenas:
+
+* campo Seu nome
+* campo Setor
+
+### Manter:
+
+* seleção Presencial / Online
+* checkboxes de confirmação
+* tutorial online
+* botão Próximo
+* lógica atual
+
+---
+
+# 4. Obrigatoriedade dos campos
+
+## Regra geral:
+
+Nos formulários abaixo:
+
+### Todo campo deve ser obrigatório
+
+**EXCETO** se o label/texto indicar:
+
+`(opcional)`
+
+---
+
+## 4.1 Nova Apresentação
+
+Aplicar obrigatoriedade total, exceto opcionais.
+
+Revisar:
+
+* inputs
+* textarea
+* radio
+* checkbox
+* selects
+* uploads
+
+---
+
+## 4.2 Atualizar Apresentação
+
+### Reorganizar layout:
+
+Mover campo de upload de arquivo/material atual para o topo.
+
+Deve virar o primeiro campo do formulário.
+
+### Também alterar:
+
+* remover texto `(opcional)`
+* tornar upload obrigatório
+
+### Depois aplicar:
+
+Todos os demais campos obrigatórios, exceto opcionais.
+
+### Ordem desejada:
+
+1. Upload arquivo atual
+2. Título do material
+3. Finalidade
+4. O que atualizar
+5. Demais campos
+
+---
+
+## 4.3 Arte de Divulgação
+
+Todos obrigatórios, exceto opcionais.
+
+---
+
+## 4.4 Conteúdo em PDF
+
+Todos obrigatórios, exceto opcionais.
+
+---
+
+## 4.5 Atualização de Material
+
+Todos obrigatórios, exceto opcionais.
+
+---
+
+# 5. Validação funcional
+
+Não apenas adicionar `required`.
+
+Revisar também JS dos steps para impedir avanço se faltarem campos obrigatórios.
+
+Checar:
+
+* botão Próximo
+* goStep()
+* validações customizadas
+* submitForm()
+
+---
+
+# 6. Qualidade visual geral
+
+Aproveitar para revisar:
+
+* alinhamentos quebrados
+* gaps excessivos após remoção de steps
+* espaçamento entre títulos e conteúdo
+* responsividade mobile
+* consistência dos botões
+
+---
+
+# 7. Entrega esperada
+
+Ao finalizar, informar:
+
+1. arquivos alterados
+2. formulários revisados
+3. steps removidos/ajustados
+4. campos tornados obrigatórios
+5. qualquer ponto que não pôde ser alterado sem afetar lógica
+
+---
+
+# Prioridade máxima
+
+Preservar funcionamento total do sistema.
+
+Mudanças devem parecer evolução profissional do produto, não redesign.

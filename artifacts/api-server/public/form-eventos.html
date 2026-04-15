@@ -18,23 +18,16 @@
       <div class="form-main">
         <div class="form-card">
           <div class="form-progress"><div class="form-progress-bar" id="progressBar" style="width:14%"></div></div>
-          <div style="display:flex;align-items:center;justify-content:flex-end;margin-bottom:24px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+            <h2 style="font-weight:500;font-size:1.1rem;margin:0">Eventos</h2>
             <span style="font-size:0.8rem;opacity:0.4" id="stepLabel">Etapa 1 de 7</span>
           </div>
+          <div style="height:1px;background:var(--border-light);margin-bottom:24px"></div>
 
-          <!-- STEP 1: Dados do solicitante + Natureza -->
+          <!-- STEP 1: Natureza -->
           <div class="form-step active" id="step1">
-            <h2 style="font-weight:600;font-size:1.1rem;margin-bottom:20px">Dados do solicitante</h2>
+            <h2 style="font-weight:600;font-size:1.1rem;margin-bottom:20px">O evento é presencial ou online?</h2>
             <div class="field">
-              <label>Seu nome</label>
-              <input type="text" id="nome" placeholder="Seu nome completo" required>
-            </div>
-            <div class="field">
-              <label>Setor</label>
-              <select id="setor" required></select>
-            </div>
-            <div class="field">
-              <label>O evento e presencial ou online?</label>
               <div class="radio-cards">
                 <div class="radio-card" onclick="selectNatureza('presencial')" id="cardPresencial">
                   <div class="card-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg></div>
@@ -212,7 +205,6 @@
               <div style="font-family:'Taviraj',serif;font-weight:300;font-size:1.1rem;color:var(--carbon-black)" id="pvEvento">—</div>
             </div>
             <div class="preview-row"><span class="preview-label">Solicitante</span><span class="preview-value empty" id="pvSolicitante">—</span></div>
-            <div class="preview-row"><span class="preview-label">Setor</span><span class="preview-value empty" id="pvSetor">—</span></div>
             <div class="preview-row"><span class="preview-label">Data</span><span class="preview-value empty" id="pvData">—</span></div>
             <div class="preview-row" id="pvLocalRow"><span class="preview-label">Local</span><span class="preview-value empty" id="pvLocal">—</span></div>
             <div class="preview-row" id="pvCanalRow" style="display:none"><span class="preview-label">Canal</span><span class="preview-value empty" id="pvCanal">—</span></div>
@@ -284,7 +276,7 @@
     let estados = [];
 
     function saveFormState() {
-      const fields = ['nome','setor','nomeEvento','dataEvento','horario','descrição',
+      const fields = ['nomeEvento','dataEvento','horario','descrição',
         'origem','tipoEvento','público','convidados','canal','linkTransmissao',
         'objetivos','custoEstimado','rateio','observacoes','localNome','localEndereco',
         'localSugestoes','ideaQuando'];
@@ -308,7 +300,7 @@
         const raw = sessionStorage.getItem(STORAGE_KEY);
         if (!raw) return;
         const data = JSON.parse(raw);
-        const fields = ['nome','setor','nomeEvento','dataEvento','horario','descrição',
+        const fields = ['nomeEvento','dataEvento','horario','descrição',
           'origem','tipoEvento','público','convidados','canal','linkTransmissao',
           'objetivos','custoEstimado','rateio','observacoes'];
         fields.forEach(id => {
@@ -339,19 +331,13 @@
       if (!Auth.isAuthenticated()) { window.location.href = '/auth/login?redirect=/form-eventos.html'; return; }
       Auth.renderHeader(document.getElementById('mainHeader'));
       const _fl = document.getElementById('formLogo'); if (_fl) _fl.src = URL_LOGO_PRETA;
-      document.getElementById('nome').value = Auth.getUserName();
       document.getElementById('tutorialLink').href = URL_TUTORIAL_TRANSMISSAO;
-
-      const sel = document.getElementById('setor');
-      SETORES.forEach(s => { const o = document.createElement('option'); o.value = s; o.textContent = s; sel.appendChild(o); });
 
       const ratSel = document.getElementById('rateio');
       OPCOES_RATEIO.forEach(r => { const o = document.createElement('option'); o.value = r; o.textContent = r; ratSel.appendChild(o); });
 
       restoreFormState();
 
-      document.getElementById('nome').addEventListener('input', () => { validateStep1(); updatePreview('pvSolicitante', document.getElementById('nome').value); saveFormState(); });
-      document.getElementById('setor').addEventListener('change', () => { validateStep1(); updatePreview('pvSetor', document.getElementById('setor').value); saveFormState(); });
       document.getElementById('checkPrazos').addEventListener('change', () => { validateStep1(); saveFormState(); });
       document.getElementById('checkTutorial')?.addEventListener('change', () => { validateStep1(); saveFormState(); });
 
@@ -404,13 +390,11 @@
     }
 
     function validateStep1() {
-      const nome = document.getElementById('nome').value.trim();
-      const setor = document.getElementById('setor').value !== SETORES[0];
       const prazos = document.getElementById('checkPrazos').checked;
       const nat = !!formState.natureza;
       let tutorial = true;
       if (formState.natureza === 'online') tutorial = document.getElementById('checkTutorial').checked;
-      document.getElementById('btnNext1').disabled = !(nome && setor && prazos && nat && tutorial);
+      document.getElementById('btnNext1').disabled = !(prazos && nat && tutorial);
     }
 
     function selectMaturidade(m) {
@@ -1220,8 +1204,8 @@
       btn.disabled = true; btn.textContent = 'Enviando...';
 
       const dados = {
-        nome: document.getElementById('nome')?.value || '',
-        setor: document.getElementById('setor')?.value || '',
+        nome: Auth.getUserName(),
+        setor: '',
         natureza: formState.natureza,
         maturidade: formState.maturidade,
         nomeEvento: document.getElementById('nomeEvento')?.value || '',
