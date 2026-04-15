@@ -47,25 +47,24 @@
             <option value="">Selecione</option>
           </select>
         </div>
-        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px;padding:10px 14px;background:var(--icon-bg);border:1px solid var(--border-light);border-radius:10px;flex-wrap:wrap">
-          <span style="font-size:0.82rem;font-weight:600;color:var(--carbon-black);opacity:0.8">Banco de fotos</span>
-          <a href="https://drive.google.com/drive/folders/19fMrHHqaLi09N-25fN1n8UCdRo-XRzZ9?usp=sharing"
-             target="_blank"
-             class="btn btn-secondary"
-             style="font-size:0.8rem;padding:7px 14px;white-space:nowrap">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-            Acessar banco de fotos
-          </a>
-        </div>
         <div class="field">
-          <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
             <label style="margin:0">Foto de perfil</label>
-            <div class="file-input-wrapper" style="margin:0;flex-shrink:0">
-              <label class="file-input-btn" for="fotoPerfil">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-                Escolher foto
-              </label>
-              <input type="file" id="fotoPerfil" accept=".jpg,.jpeg,.png,.webp">
+            <div style="display:flex;gap:8px;align-items:center;flex-shrink:0">
+              <div class="file-input-wrapper" style="margin:0">
+                <label class="file-input-btn" for="fotoPerfil">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                  Enviar foto
+                </label>
+                <input type="file" id="fotoPerfil" accept=".jpg,.jpeg,.png,.webp">
+              </div>
+              <a href="https://drive.google.com/drive/folders/19fMrHHqaLi09N-25fN1n8UCdRo-XRzZ9?usp=sharing"
+                 target="_blank"
+                 class="btn btn-secondary"
+                 style="font-size:0.8rem;padding:7px 14px;white-space:nowrap">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                Acessar banco de fotos
+              </a>
             </div>
           </div>
           <div class="file-name" id="fotoPerfilName" style="margin-top:6px"></div>
@@ -101,7 +100,7 @@
             </a>
           </div>
           <div id="depoimentosContainer"></div>
-          <button class="btn btn-secondary" id="addDepoimento" onclick="addDepoimento()" style="margin-top:8px">+ Adicionar depoimento</button>
+          <button id="addDepoimento" onclick="addDepoimento()" style="margin-top:10px;background:none;border:none;padding:0;font-size:0.88rem;color:var(--ruby-red);cursor:pointer;font-weight:600;text-decoration:underline;text-underline-offset:3px;opacity:0.85">+ Adicionar depoimento</button>
         </div>
 
         <div style="border-top:1px solid rgba(34,27,25,.08);margin:28px 0 20px;padding-top:22px">
