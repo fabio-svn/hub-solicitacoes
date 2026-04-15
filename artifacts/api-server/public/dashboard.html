@@ -249,24 +249,35 @@
         itemsCache[cacheKey] = item;
       });
 
+      let lastPeriodo = null;
+      const NATUREZA_LABEL = { presencial: 'Presencial', online: 'Online' };
       container.innerHTML = data.data.map((item, idx) => {
         const cacheKey = tab + '_' + idx + '_' + pages[tab];
         let dados = {};
         try { dados = typeof item.dados === 'string' ? JSON.parse(item.dados) : (item.dados || {}); } catch { dados = {}; }
         const titulo = dados.nomeEvento || dados.tituloEvento || dados.titulo || dados.nomeCompleto || item.tipo_solicitacao;
         const tipoLabel = TIPO_SOLICITACAO_LABELS[item.tipo_solicitacao] || item.tipo_solicitacao;
-        const statusObj = STATUS_SOLICITACAO.find(s => s.id === item.status) || { label: item.status, cor: '--carbon-black' };
-        const date = new Date(item.created_at).toLocaleDateString('pt-BR');
+        const statusObj = STATUS_SOLICITACAO.find(s => s.id === item.status) || { label: item.status, bg: '#f1f5f9', text: '#475569' };
+        const dataRel = dataRelativa(item.created_at);
+        const periodo = periodoGrupo(item.created_at);
+        const naturezaLabel = dados.natureza ? NATUREZA_LABEL[dados.natureza] : null;
 
-        return `<div class="request-card" data-cache="${esc(cacheKey)}" onclick="openDrawerByKey('${esc(cacheKey)}')">
+        let groupHeader = '';
+        if (periodo !== lastPeriodo) {
+          lastPeriodo = periodo;
+          groupHeader = `<div style="font-size:0.75rem;font-weight:600;opacity:0.4;text-transform:uppercase;letter-spacing:0.06em;margin:${idx === 0 ? '0' : '16px'} 0 8px;padding:0 2px">${periodo}</div>`;
+        }
+
+        return groupHeader + `<div class="request-card" data-cache="${esc(cacheKey)}" onclick="openDrawerByKey('${esc(cacheKey)}')">
           <div class="request-info">
             <div class="request-title">${esc(titulo)}</div>
             <div class="request-meta">
               <span>${esc(tipoLabel)}</span>
-              <span>${esc(date)}</span>
+              <span>${esc(dataRel)}</span>
             </div>
           </div>
           <div class="request-badges">
+            ${naturezaLabel ? `<span class="badge" style="background:var(--icon-bg);color:var(--carbon-black);opacity:0.7">${esc(naturezaLabel)}</span>` : ''}
             <span class="badge" style="background:${statusObj.bg || '#f1f5f9'};color:${statusObj.text || '#475569'}">${esc(statusObj.label)}</span>
           </div>
           <div class="request-chevron">&rsaquo;</div>
@@ -425,6 +436,7 @@
       if (typeof ITENS_MATERIAIS_ONLINE !== 'undefined') ITENS_MATERIAIS_ONLINE.forEach(i => { materiaisMap[i.id] = i.label; });
 
       if (key === 'materiais' && Array.isArray(value)) return value.map(v => materiaisMap[v] || v).join(', ');
+      if (key === 'materiais' && typeof value === 'string') return value.split(',').map(v => materiaisMap[v.trim()] || v.trim()).filter(Boolean).join(', ');
       if (key === 'selos' && Array.isArray(value)) {
         if (typeof SELOS_ASSESSOR !== 'undefined') {
           const selosMap = {};
@@ -435,6 +447,34 @@
       if (maps[key] && maps[key][value] !== undefined) return maps[key][value];
       if (typeof value === 'string' && value.includes('-') && !value.includes(' ') && materiaisMap[value]) return materiaisMap[value];
       return value;
+    }
+
+    function dataRelativa(dateStr) {
+      const d = new Date(dateStr);
+      const now = new Date();
+      const diffMs = now - d;
+      const diffDias = Math.floor(diffMs / 86400000);
+      if (diffDias === 0) return 'Hoje';
+      if (diffDias === 1) return 'Ontem';
+      if (diffDias < 7) return `Há ${diffDias} dias`;
+      if (diffDias < 14) return 'Há 1 semana';
+      if (diffDias < 30) return `Há ${Math.floor(diffDias / 7)} semanas`;
+      if (diffDias < 60) return 'Há 1 mês';
+      return d.toLocaleDateString('pt-BR');
+    }
+
+    function periodoGrupo(dateStr) {
+      const d = new Date(dateStr);
+      const now = new Date();
+      const diffMs = now - d;
+      const diffDias = Math.floor(diffMs / 86400000);
+      if (diffDias === 0) return 'Hoje';
+      if (diffDias <= 1) return 'Ontem';
+      const startOfWeek = new Date(now); startOfWeek.setHours(0,0,0,0); startOfWeek.setDate(now.getDate() - now.getDay());
+      if (d >= startOfWeek) return 'Esta semana';
+      const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+      if (d >= startOfMonth) return 'Este mês';
+      return 'Mais antigas';
     }
 
     async function openDrawer(item) {
@@ -551,7 +591,15 @@
       }
 
       document.getElementById('drawerBody').innerHTML = bodyHtml || '<p style="opacity:0.5">Sem dados adicionais</p>';
-      document.getElementById('drawerFooter').textContent = `ID: ${item.id} | Criado em: ${new Date(item.created_at).toLocaleString('pt-BR')}`;
+      document.getElementById('drawerFooter').innerHTML = `
+        <span style="display:flex;align-items:center;gap:5px">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+          ID&thinsp;${item.id}
+        </span>
+        <span style="display:flex;align-items:center;gap:5px">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          ${new Date(item.created_at).toLocaleString('pt-BR')}
+        </span>`;
     }
 
     function closeDrawer() {

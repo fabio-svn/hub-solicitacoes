@@ -15,36 +15,10 @@
   <header class="header" id="mainHeader"></header>
   <div class="container-narrow" style="padding-top:32px;padding-bottom:80px">
     <div class="form-card">
-      <div class="form-progress"><div class="form-progress-bar" id="progressBar" style="width:50%"></div></div>
-      <div style="display:flex;align-items:center;justify-content:flex-end;margin-bottom:24px">
-        <span style="font-size:0.8rem;opacity:0.4" id="stepLabel">Etapa 1 de 2</span>
-      </div>
-      <h2 style="font-weight:300;font-size:1.1rem;margin-bottom:4px;opacity:0.6" id="formTitle"></h2>
-      <div class="field-hint" style="margin-bottom:20px">Validacao interna: ate 3 dias úteis | Publicação/Atualização após aprovação: ate 2 dias úteis</div>
+      <div class="form-progress"><div class="form-progress-bar" id="progressBar" style="width:100%"></div></div>
+      <h2 style="font-weight:300;font-size:1.1rem;margin-bottom:20px;opacity:0.6" id="formTitle"></h2>
 
-      <div class="form-step active" id="step1">
-        <h2 style="font-weight:600;font-size:1.1rem;margin-bottom:20px">Dados do solicitante</h2>
-        <div class="field">
-          <label>Seu nome</label>
-          <input type="text" id="nome" placeholder="Seu nome completo" required>
-        </div>
-        <div class="field">
-          <label>Setor</label>
-          <select id="setor" required></select>
-        </div>
-        <div class="field">
-          <label class="checkbox-option">
-            <input type="checkbox" id="checkPrazos">
-            <span class="checkbox-custom"></span>
-            <span>Confirmo que estou ciente dos prazos necessários.</span>
-          </label>
-        </div>
-        <div class="form-nav">
-          <button class="btn btn-primary" id="btnNext1" disabled onclick="goStep(2)">Próximo</button>
-        </div>
-      </div>
-
-      <div class="form-step" id="step2">
+      <div class="form-step active" id="step2">
         <div id="updateCard" style="display:none" class="alert-card alert-info">
           <div class="alert-title">Atualização</div>
           <div class="alert-text">Preencha apenas os campos que deseja atualizar. Os demais permanecerao como estão no seu perfil atual.</div>
@@ -70,6 +44,18 @@
           <select id="contratoSocial" required>
             <option value="">Selecione</option>
           </select>
+        </div>
+        <div style="background:var(--icon-bg);border:1px solid var(--border-light);border-radius:10px;padding:14px 16px;margin-bottom:16px;display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap">
+          <p style="font-size:0.82rem;color:var(--carbon-black);opacity:0.7;margin:0;flex:1;min-width:200px;line-height:1.5">
+            Acesse o banco de fotos com as captações realizadas pela nossa equipe ao longo do tempo.
+          </p>
+          <a href="https://drive.google.com/drive/folders/19fMrHHqaLi09N-25fN1n8UCdRo-XRzZ9?usp=sharing"
+             target="_blank"
+             class="btn btn-secondary"
+             style="font-size:0.8rem;padding:8px 16px;white-space:nowrap;flex-shrink:0">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+            Acessar banco de fotos
+          </a>
         </div>
         <div class="field">
           <label>Foto de perfil</label>
@@ -100,7 +86,19 @@
           <div class="pills-wrap" id="selosContainer"></div>
         </div>
 
-        <div class="field" style="margin-top:24px">
+        <div style="background:var(--icon-bg);border:1px solid var(--border-light);border-radius:10px;padding:14px 16px;margin-bottom:16px;margin-top:24px;display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap">
+          <p style="font-size:0.82rem;color:var(--carbon-black);opacity:0.7;margin:0;flex:1;min-width:200px;line-height:1.5">
+            Encontre as respostas da pesquisa de NPS buscando pelo seu código de assessor e escolha os melhores depoimentos que recebeu.
+          </p>
+          <a href="https://svninvest-my.sharepoint.com/:x:/g/personal/fabio_santos_svninvest_com_br/Eb1y75XSWZBBvS0k0H7EgxYBxdsGbOUxjum0ok3MbOi6bQ?e=CLWxiR"
+             target="_blank"
+             class="btn btn-secondary"
+             style="font-size:0.8rem;padding:8px 16px;white-space:nowrap;flex-shrink:0">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+            Acessar pesquisa NPS
+          </a>
+        </div>
+        <div class="field" style="margin-top:0">
           <label>Depoimentos de clientes (opcional, ate 3)</label>
           <div id="depoimentosContainer"></div>
           <button class="btn btn-secondary" id="addDepoimento" onclick="addDepoimento()" style="margin-top:8px">+ Adicionar depoimento</button>
@@ -114,7 +112,6 @@
         </div>
 
         <div class="form-nav">
-          <button class="btn btn-secondary" onclick="goStep(1)">Voltar</button>
           <button class="btn btn-primary btn-submit-gold" id="btnSubmit" onclick="submitForm()">Enviar</button>
         </div>
       </div>
@@ -175,7 +172,7 @@
 
   <a href="/solicitacoes.html" class="float-home" style="bottom:78px">
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>
-    <span>Menu de solicitações</span>
+    <span>Menu</span>
   </a>
   <a href="/" class="float-home">
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
@@ -200,12 +197,7 @@
       Auth.renderHeader(document.getElementById('mainHeader'));
       const _fl = document.getElementById('formLogo'); if (_fl) _fl.src = URL_LOGO_PRETA;
       document.getElementById('formTitle').textContent = TITLES[subtipo] || TITLES.dados;
-      document.getElementById('nome').value = Auth.getUserName();
-
       if (isAtualizacao) document.getElementById('updateCard').style.display = 'block';
-
-      const sel = document.getElementById('setor');
-      SETORES.forEach(s => { const o = document.createElement('option'); o.value = s; o.textContent = s; sel.appendChild(o); });
 
       const unSel = document.getElementById('unidade');
       UNIDADES_SVN.forEach(u => { const o = document.createElement('option'); o.value = u.nome; o.textContent = u.nome; unSel.appendChild(o); });
@@ -215,11 +207,7 @@
 
       renderSelos();
 
-      document.getElementById('nome').addEventListener('input', validate1);
-      document.getElementById('setor').addEventListener('change', validate1);
-      document.getElementById('checkPrazos').addEventListener('change', validate1);
       document.getElementById('fotoPerfil').addEventListener('change', handlePhoto);
-      validate1();
     }
 
     function renderSelos() {
@@ -243,22 +231,22 @@
       });
     }
 
-    function validate1() {
-      const valid = document.getElementById('nome').value.trim() && document.getElementById('setor').value !== SETORES[0] && document.getElementById('checkPrazos').checked;
-      document.getElementById('btnNext1').disabled = !valid;
-    }
-
-    function goStep(step) {
-      document.querySelectorAll('.form-step').forEach(s => s.classList.remove('active'));
-      document.getElementById('step' + step).classList.add('active');
-      document.getElementById('progressBar').style.width = (step / 2 * 100) + '%';
-      document.getElementById('stepLabel').textContent = `Etapa ${step} de 2`;
-      window.scrollTo(0, 0);
-    }
-
     function handlePhoto(e) {
       const file = e.target.files[0];
-      document.getElementById('fotoPerfilName').innerHTML = file ? `<span class="check">&#10003;</span> ${file.name}` : '';
+      const nameEl = document.getElementById('fotoPerfilName');
+      if (file) {
+        nameEl.style.display = 'flex';
+        nameEl.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#065f46" stroke-width="2.5" style="flex-shrink:0"><polyline points="20 6 9 17 4 12"/></svg><span style="color:#065f46;font-weight:600">${file.name}</span><span style="font-size:0.75rem;color:#065f46;opacity:0.7">${(file.size/1024).toFixed(0)} KB</span>`;
+        nameEl.style.background = '#d1fae5';
+        nameEl.style.padding = '6px 10px';
+        nameEl.style.borderRadius = '6px';
+        nameEl.style.marginTop = '6px';
+        nameEl.style.gap = '6px';
+        nameEl.style.alignItems = 'center';
+      } else {
+        nameEl.style.display = 'none';
+        nameEl.innerHTML = '';
+      }
     }
 
     function addDepoimento() {
@@ -410,8 +398,8 @@
       formData.append('tipo_solicitacao', TIPOS[subtipo] || TIPOS.dados);
       formData.append('subtipo', subtipo);
       const dados = {
-        nome: document.getElementById('nome').value,
-        setor: document.getElementById('setor').value,
+        nome: Auth.getUserName(),
+        setor: '',
         nomeCompleto: document.getElementById('nomeCompleto').value,
         codigoAssessor: document.getElementById('codigoAssessor').value,
         unidade: document.getElementById('unidade').value,

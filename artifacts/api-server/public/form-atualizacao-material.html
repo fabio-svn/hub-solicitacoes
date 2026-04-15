@@ -30,13 +30,6 @@
           <label>Setor</label>
           <select id="setor" required></select>
         </div>
-        <div class="field">
-          <label class="checkbox-option">
-            <input type="checkbox" id="checkPrazos">
-            <span class="checkbox-custom"></span>
-            <span>Confirmo que estou ciente dos prazos necessários.</span>
-          </label>
-        </div>
         <div class="form-nav">
           <button class="btn btn-primary" id="btnNext1" disabled onclick="goStep(2)">Próximo</button>
         </div>
@@ -44,18 +37,6 @@
 
       <div class="form-step" id="step2">
         <h2 style="font-weight:600;font-size:1.1rem;margin-bottom:20px">Informações do material</h2>
-        <div class="field">
-          <label>Título do material</label>
-          <input type="text" id="titulo" placeholder="Nome ou identificacao do material que será atualizado" required>
-        </div>
-        <div class="field">
-          <label>Finalidade do material</label>
-          <textarea id="finalidade" placeholder="Para que e utilizado este material?" required></textarea>
-        </div>
-        <div class="field">
-          <label>Descrição do que precisa ser atualizado</label>
-          <textarea id="descricao" placeholder="Descreva com clareza o que deve ser alterado, corrigido ou adicionado. Quanto mais detalhado, melhor." required></textarea>
-        </div>
         <div class="field">
           <label>Material atual + arquivos de apoio</label>
           <div class="file-input-wrapper">
@@ -68,6 +49,18 @@
           </div>
           <div class="field-hint">Enviar o material original agiliza o processo e garante que as atualizacoes sejam aplicadas corretamente.</div>
         </div>
+        <div class="field">
+          <label>Título do material</label>
+          <input type="text" id="titulo" placeholder="Nome ou identificacao do material que será atualizado" required>
+        </div>
+        <div class="field">
+          <label>Finalidade do material</label>
+          <textarea id="finalidade" placeholder="Para que e utilizado este material?" required></textarea>
+        </div>
+        <div class="field">
+          <label>Descrição do que precisa ser atualizado</label>
+          <textarea id="descricao" placeholder="Descreva com clareza o que deve ser alterado, corrigido ou adicionado. Quanto mais detalhado, melhor." required></textarea>
+        </div>
         <div class="form-nav">
           <button class="btn btn-secondary" onclick="goStep(1)">Voltar</button>
           <button class="btn btn-primary btn-submit-gold" id="btnSubmit" onclick="submitForm()">Enviar</button>
@@ -78,7 +71,7 @@
 
   <a href="/solicitacoes.html" class="float-home" style="bottom:78px">
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>
-    <span>Menu de solicitações</span>
+    <span>Menu</span>
   </a>
   <a href="/" class="float-home">
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
@@ -101,17 +94,17 @@
 
       document.getElementById('nome').addEventListener('input', validateStep1);
       document.getElementById('setor').addEventListener('change', validateStep1);
-      document.getElementById('checkPrazos').addEventListener('change', validateStep1);
       document.getElementById('materialAtual').addEventListener('change', e => {
-        document.getElementById('materialAtualName').innerHTML = e.target.files[0] ? `<span class="check">&#10003;</span> ${e.target.files[0].name}` : '';
+        const f = e.target.files[0];
+        const el = document.getElementById('materialAtualName');
+        el.innerHTML = f ? `<span style="display:flex;align-items:center;gap:6px;background:#d1fae5;padding:6px 10px;border-radius:6px;margin-top:6px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#065f46" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg><span style="color:#065f46;font-weight:600">${f.name}</span><span style="font-size:0.75rem;color:#065f46;opacity:0.7">${(f.size/1024).toFixed(0)} KB</span></span>` : '';
       });
       validateStep1();
     }
 
     function validateStep1() {
       const valid = document.getElementById('nome').value.trim() &&
-        document.getElementById('setor').value !== SETORES[0] &&
-        document.getElementById('checkPrazos').checked;
+        document.getElementById('setor').value !== SETORES[0];
       document.getElementById('btnNext1').disabled = !valid;
     }
 

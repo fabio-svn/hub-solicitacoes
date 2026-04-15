@@ -57,7 +57,7 @@
               <label class="checkbox-option">
                 <input type="checkbox" id="checkPrazos">
                 <span class="checkbox-custom"></span>
-                <span>Confirmo que estou ciente dos prazos necessários para a organização do evento.</span>
+                <span>Confirmo que estou ciente dos <a href="#" onclick="event.preventDefault();openPrazosModal()" style="color:var(--ruby-red)">prazos necessários</a> para a organização do evento.</span>
               </label>
             </div>
             <div class="form-nav">
@@ -137,7 +137,7 @@
             <div id="palestranteBlocos"></div>
             <div class="form-nav">
               <button class="btn btn-secondary" onclick="goStep(3)">Voltar</button>
-              <button class="btn btn-primary" id="btnNext4" onclick="goStep(formState.natureza==='presencial'&&formState.maturidade!==3?5:6)">Próximo</button>
+              <button class="btn btn-primary" id="btnNext4" onclick="validateStep4() && goStep(formState.natureza==='presencial'&&formState.maturidade!==3?5:6)">Próximo</button>
             </div>
           </div>
 
@@ -156,7 +156,7 @@
             </div>
             <div class="form-nav">
               <button class="btn btn-secondary" onclick="goStep(4)">Voltar</button>
-              <button class="btn btn-primary" onclick="goStep(6)">Próximo</button>
+              <button class="btn btn-primary" onclick="validateStep5() && goStep(6)">Próximo</button>
             </div>
           </div>
 
@@ -266,7 +266,7 @@
 
   <a href="/solicitacoes.html" class="float-home" style="bottom:78px">
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>
-    <span>Menu de solicitações</span>
+    <span>Menu</span>
   </a>
   <a href="/" class="float-home">
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
@@ -355,7 +355,9 @@
 
       ['logoFile','imgFile','demaisFile'].forEach(id => {
         document.getElementById(id).addEventListener('change', e => {
-          document.getElementById(id.replace('File','FileName')).innerHTML = e.target.files[0] ? `<span class="check">&#10003;</span> ${e.target.files[0].name}` : '';
+          const f = e.target.files[0];
+          const el = document.getElementById(id.replace('File','FileName'));
+          el.innerHTML = f ? `<span style="display:flex;align-items:center;gap:6px;background:#d1fae5;padding:6px 10px;border-radius:6px;margin-top:6px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#065f46" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg><span style="color:#065f46;font-weight:600">${f.name}</span><span style="font-size:0.75rem;color:#065f46;opacity:0.7">${(f.size/1024).toFixed(0)} KB</span></span>` : '';
         });
       });
 
@@ -894,6 +896,29 @@
       }).join('');
     }
 
+    function validateStep4() {
+      const temPalestrante = document.querySelector('input[name="temPalestrante"]:checked');
+      if (!temPalestrante) {
+        const field = document.querySelector('#step4 .field');
+        if (field) { field.classList.add('field-invalid'); setTimeout(() => field.classList.remove('field-invalid'), 600); }
+        return false;
+      }
+      return true;
+    }
+
+    function validateStep5() {
+      const rateioField = document.getElementById('rateioField');
+      if (rateioField && rateioField.style.display !== 'none') {
+        const rateioVal = document.getElementById('rateio').value;
+        if (!rateioVal || rateioVal === OPCOES_RATEIO[0]) {
+          const field = document.querySelector('#rateioField .field');
+          if (field) { field.classList.add('field-invalid'); setTimeout(() => field.classList.remove('field-invalid'), 600); }
+          return false;
+        }
+      }
+      return true;
+    }
+
     function handlePalestrante(has) {
       document.getElementById('palestranteQtd').style.display = has ? 'block' : 'none';
       if (!has) { document.getElementById('palestranteBlocos').innerHTML = ''; updatePreview('pvPalestrantes', 'Sem palestrantes'); }
@@ -1125,7 +1150,46 @@
       }
     });
 
+    function openPrazosModal() {
+      document.getElementById('prazosModal').style.display = 'flex';
+      document.body.style.overflow = 'hidden';
+    }
+    function closePrazosModal() {
+      document.getElementById('prazosModal').style.display = 'none';
+      document.body.style.overflow = '';
+    }
+
     init();
   </script>
+
+  <div id="prazosModal" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(34,27,25,0.82);backdrop-filter:blur(4px);align-items:center;justify-content:center" onclick="closePrazosModal()">
+    <div onclick="event.stopPropagation()" style="background:var(--carbon-black);color:var(--paper-white);border-radius:16px;padding:32px;max-width:680px;width:92vw;max-height:85vh;overflow-y:auto;position:relative">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px">
+        <h2 style="font-weight:600;font-size:1.05rem;margin:0;color:var(--paper-white)">Prazos para organização de eventos</h2>
+        <button onclick="closePrazosModal()" style="background:none;border:none;cursor:pointer;color:var(--paper-white);opacity:0.5;font-size:1.6rem;line-height:1;padding:0 4px">×</button>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:20px">
+        <div style="background:rgba(255,255,255,0.07);border-radius:10px;padding:18px">
+          <div style="font-size:0.65rem;text-transform:uppercase;letter-spacing:0.07em;opacity:0.45;margin-bottom:8px">Online</div>
+          <div style="font-size:2.2rem;font-weight:700;font-family:'Taviraj',serif;color:var(--paper-white);line-height:1">15</div>
+          <div style="font-size:0.78rem;opacity:0.6;margin-top:2px">dias úteis de antecedência</div>
+          <div style="margin-top:10px;font-size:0.78rem;opacity:0.5;line-height:1.5">Webinars, lives, transmissoes internas. Inclui divulgação digital e convite.</div>
+        </div>
+        <div style="background:rgba(255,255,255,0.07);border-radius:10px;padding:18px">
+          <div style="font-size:0.65rem;text-transform:uppercase;letter-spacing:0.07em;opacity:0.45;margin-bottom:8px">Presencial simples</div>
+          <div style="font-size:2.2rem;font-weight:700;font-family:'Taviraj',serif;color:var(--paper-white);line-height:1">21</div>
+          <div style="font-size:0.78rem;opacity:0.6;margin-top:2px">dias úteis de antecedência</div>
+          <div style="margin-top:10px;font-size:0.78rem;opacity:0.5;line-height:1.5">Coffee, treinamentos e reuniões internas. Inclui logística e divulgação.</div>
+        </div>
+        <div style="background:rgba(255,255,255,0.07);border-radius:10px;padding:18px">
+          <div style="font-size:0.65rem;text-transform:uppercase;letter-spacing:0.07em;opacity:0.45;margin-bottom:8px">Presencial complexo</div>
+          <div style="font-size:2.2rem;font-weight:700;font-family:'Taviraj',serif;color:var(--paper-white);line-height:1">45</div>
+          <div style="font-size:0.78rem;opacity:0.6;margin-top:2px">dias úteis de antecedência</div>
+          <div style="margin-top:10px;font-size:0.78rem;opacity:0.5;line-height:1.5">Eventos externos, com palestrante, buffet, espacos locados ou cobertura jornalística.</div>
+        </div>
+      </div>
+      <p style="font-size:0.78rem;opacity:0.4;line-height:1.6;margin:0">Esses prazos garantem qualidade na entrega e organização adequada. Solicitações fora do prazo mínimo podem não ser atendidas ou terão escopo reduzido.</p>
+    </div>
+  </div>
 </body>
 </html>

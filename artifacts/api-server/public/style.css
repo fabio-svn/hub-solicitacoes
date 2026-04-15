@@ -360,8 +360,13 @@ input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
   border-left: 4px solid rgba(34,27,25,0.2);
   background: rgba(34,27,25,0.04);
 }
+.alert-card.alert-warning {
+  border-left: 4px solid #c07c2a;
+  background: rgba(192,124,42,0.07);
+}
 .alert-card .alert-title { font-weight: 700; font-size: 0.875rem; margin-bottom: 4px; }
 .alert-card.alert-danger .alert-title { color: var(--ruby-red); }
+.alert-card.alert-warning .alert-title { color: #9a6020; }
 .alert-card .alert-text { font-size: 0.82rem; opacity: 0.8; line-height: 1.5; }
 
 /* Status badges */
@@ -593,6 +598,7 @@ input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
   border-radius: 10px;
   padding: 10px 14px;
   margin-bottom: 20px;
+  max-width: 480px;
 }
 .search-bar input {
   border: none;
@@ -669,7 +675,7 @@ input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
 .drawer-field { margin-bottom: 12px; }
 .drawer-field-label { font-size: 0.75rem; opacity: 0.5; margin-bottom: 2px; }
 .drawer-field-value { font-weight: 600; font-size: 0.9rem; }
-.drawer-footer { padding: 16px 24px; border-top: 1px solid var(--border-light); font-size: 0.75rem; opacity: 0.4; }
+.drawer-footer { padding: 16px 24px; border-top: 1px solid var(--border-light); font-size: 0.75rem; opacity: 0.4; display:flex; flex-direction:column; gap:4px; }
 
 /* Admin table */
 .admin-table { width: 100%; border-collapse: collapse; }
@@ -911,9 +917,18 @@ input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
   box-shadow: 0 4px 20px rgba(201,168,76,0.4);
 }
 .btn-submit-gold:hover {
+  background: linear-gradient(135deg, #8f2c28 0%, #b83a35 40%, #8f2c28 60%, #6e1f1c 100%);
+  background-size: 200% 200%;
+  animation: redShimmer 1.8s ease infinite;
+  color: var(--paper-white);
   transform: translateY(-2px);
-  box-shadow: 0 6px 28px rgba(201,168,76,0.55);
+  box-shadow: 0 6px 28px rgba(159,63,55,0.45);
   text-decoration: none;
+}
+@keyframes redShimmer {
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
 }
 @keyframes goldShimmer {
   0%   { background-position: 0% 50%; }

@@ -14,9 +14,13 @@
 <body class="page-light">
   <header class="header" id="mainHeader"></header>
   <div class="container-narrow" style="padding-top:32px;padding-bottom:80px">
-    <div class="alert-card alert-danger" style="margin-bottom:20px">
+    <div class="alert-card alert-danger" style="margin-bottom:12px">
       <div class="alert-title">Atenção</div>
       <div class="alert-text">Este formulario e destinado a artes de comunicacao interna/institucional. Para convites de eventos (online ou presenciais), utilize o formulario de Eventos.</div>
+    </div>
+    <div class="alert-card alert-warning" style="margin-bottom:20px">
+      <div class="alert-title">Prazos de entrega</div>
+      <div class="alert-text">Artes simples (stories, posts, banners): <strong>2 dias úteis</strong>. Artes complexas (apresentacoes, kits, flyers): <strong>5 dias úteis</strong>. Urgências devem ser alinhadas com o time de marketing antes do envio.</div>
     </div>
 
     <div class="form-card">
@@ -34,13 +38,6 @@
         <div class="field">
           <label>Setor</label>
           <select id="setor" required></select>
-        </div>
-        <div class="field">
-          <label class="checkbox-option">
-            <input type="checkbox" id="checkPrazos">
-            <span class="checkbox-custom"></span>
-            <span>Confirmo que estou ciente dos prazos necessários para a organização.</span>
-          </label>
         </div>
         <div class="form-nav">
           <button class="btn btn-primary" id="btnNext1" disabled onclick="goStep(2)">Próximo</button>
@@ -127,7 +124,7 @@
 
   <a href="/solicitacoes.html" class="float-home" style="bottom:78px">
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>
-    <span>Menu de solicitações</span>
+    <span>Menu</span>
   </a>
   <a href="/" class="float-home">
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
@@ -152,12 +149,13 @@
 
       document.getElementById('nome').addEventListener('input', validateStep1);
       document.getElementById('setor').addEventListener('change', validateStep1);
-      document.getElementById('checkPrazos').addEventListener('change', validateStep1);
       document.getElementById('canalOutroCheck').addEventListener('change', () => {
         document.getElementById('canalOutroField').style.display = document.getElementById('canalOutroCheck').checked ? 'block' : 'none';
       });
       document.getElementById('arquivoApoio').addEventListener('change', e => {
-        document.getElementById('arquivoApoioName').innerHTML = e.target.files[0] ? `<span class="check">&#10003;</span> ${e.target.files[0].name}` : '';
+        const f = e.target.files[0];
+        const el = document.getElementById('arquivoApoioName');
+        el.innerHTML = f ? `<span style="display:flex;align-items:center;gap:6px;background:#d1fae5;padding:6px 10px;border-radius:6px;margin-top:6px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#065f46" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg><span style="color:#065f46;font-weight:600">${f.name}</span><span style="font-size:0.75rem;color:#065f46;opacity:0.7">${(f.size/1024).toFixed(0)} KB</span></span>` : '';
       });
 
       restoreSession();
@@ -166,8 +164,7 @@
 
     function validateStep1() {
       const valid = document.getElementById('nome').value.trim() &&
-        document.getElementById('setor').value !== SETORES[0] &&
-        document.getElementById('checkPrazos').checked;
+        document.getElementById('setor').value !== SETORES[0];
       document.getElementById('btnNext1').disabled = !valid;
     }
 
