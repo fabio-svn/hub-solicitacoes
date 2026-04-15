@@ -4,7 +4,10 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Selecionar Solicitação - Hub SVN</title>
-  <link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap" media="print" onload="this.media='all'">
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap"></noscript>
   <link rel="stylesheet" href="style.css">
 </head>
 <body class="page-light">
@@ -23,7 +26,7 @@
 
   <a href="/" class="float-home">
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-    <span>Voltar à tela inicial</span>
+    <span>Início</span>
   </a>
 
   <script src="config.js"></script>
@@ -66,6 +69,15 @@
       }
       Auth.renderHeader(document.getElementById('mainHeader'));
       renderCategories();
+
+      const totalItens = CATEGORIAS_SOLICITACAO.reduce((acc, cat) => acc + cat.itens.length, 0);
+      const totalAtivos = CATEGORIAS_SOLICITACAO.reduce((acc, cat) => acc + cat.itens.filter(i => i.ativo).length, 0);
+      const totalCats = CATEGORIAS_SOLICITACAO.length;
+      const subtexto = document.createElement('p');
+      subtexto.style.cssText = 'font-size:0.8rem;color:var(--carbon-black);opacity:0.4;margin-bottom:28px;margin-top:-8px;font-weight:400';
+      subtexto.textContent = `${totalCats} categorias \u00B7 ${totalAtivos} de ${totalItens} disponíveis`;
+      const titulo = document.querySelector('.container h1');
+      if (titulo) titulo.insertAdjacentElement('afterend', subtexto);
     }
 
     function renderCategories() {

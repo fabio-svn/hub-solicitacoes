@@ -4,7 +4,10 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Minhas Solicitações - Hub SVN</title>
-  <link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap" media="print" onload="this.media='all'">
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap"></noscript>
   <link rel="stylesheet" href="style.css">
 </head>
 <body class="page-light">
@@ -163,7 +166,7 @@
       Auth.renderHeader(document.getElementById('mainHeader'));
       loadStats();
       loadList('eventos');
-      loadList('geral');
+      setTimeout(() => loadList('geral'), 800);
     }
 
     async function loadStats() {
@@ -300,6 +303,8 @@
       document.querySelectorAll('.tab-content').forEach(c => c.classList.toggle('active', c.id === 'tab-' + tab));
       const otherTab = tab === 'eventos' ? 'geral' : 'eventos';
       Object.keys(itemsCache).forEach(k => { if (k.startsWith(otherTab + '_')) delete itemsCache[k]; });
+      const listEl = document.getElementById(tab === 'eventos' ? 'listEventos' : 'listGeral');
+      if (listEl && !listEl.hasChildNodes()) loadList(tab);
     }
 
     function toggleFilter(el, tab, filterKey) {
