@@ -103,7 +103,7 @@
               <div class="alert-title">Dica</div>
               <div class="alert-text">Se os materiais de apoio nao estiverem definidos, marque a opção "Pacote Padrão", pois e utilizado na grande maioria dos eventos.</div>
             </div>
-            <h2 style="font-weight:600;font-size:1.1rem;margin-bottom:20px">Materiais e servicos</h2>
+            <h2 style="font-weight:600;font-size:1.1rem;margin-bottom:20px">Materiais e serviços</h2>
             <div id="materiaisContainer"></div>
             <div id="materiaisCondFields" style="margin-top:16px"></div>
             <div class="field-error" id="materiaisError">Selecione pelo menos um item para continuar.</div>
@@ -117,7 +117,7 @@
           <div class="form-step" id="step4">
             <h2 style="font-weight:600;font-size:1.1rem;margin-bottom:20px">Palestrantes</h2>
             <div class="field">
-              <label>O evento tera palestrante(s)?</label>
+              <label>O evento terá palestrante(s)?</label>
               <div class="radio-group">
                 <label class="radio-option"><input type="radio" name="temPalestrante" value="sim" onchange="handlePalestrante(true)"><span class="radio-custom"></span><span>Sim</span></label>
                 <label class="radio-option"><input type="radio" name="temPalestrante" value="nao" onchange="handlePalestrante(false)"><span class="radio-custom"></span><span>Nao</span></label>
@@ -160,9 +160,9 @@
             </div>
           </div>
 
-          <!-- STEP 6: Anexos e observacoes -->
+          <!-- STEP 6: Anexos e observações -->
           <div class="form-step" id="step6">
-            <h2 style="font-weight:600;font-size:1.1rem;margin-bottom:20px">Anexos e observacoes</h2>
+            <h2 style="font-weight:600;font-size:1.1rem;margin-bottom:20px">Anexos e observações</h2>
             <div class="field">
               <label>Logo complementar de parceiro (opcional)</label>
               <div class="file-input-wrapper">
@@ -189,7 +189,7 @@
               </div>
             </div>
             <div class="field">
-              <label>Observacoes gerais (opcional)</label>
+              <label>Observações gerais (opcional)</label>
               <input type="text" id="observacoes" placeholder="Algo mais que você queira informar?">
             </div>
             <div class="form-nav">
@@ -579,7 +579,7 @@
         updatePreview('pvLocal', 'Local externo');
       } else if (val === 'nao-definido') {
         container.innerHTML = `<div class="field"><label>Aponte suas ideias e sugestoes (opcional)</label><textarea id="localSugestoes"></textarea></div>`;
-        updatePreview('pvLocal', 'Nao definido');
+        updatePreview('pvLocal', 'Não definido');
       } else { container.innerHTML = ''; updatePreview('pvLocal', ''); }
     }
 
@@ -1173,7 +1173,7 @@
           <div style="font-size:0.65rem;text-transform:uppercase;letter-spacing:0.07em;opacity:0.45;margin-bottom:8px">Online</div>
           <div style="font-size:2.2rem;font-weight:700;font-family:'Taviraj',serif;color:var(--paper-white);line-height:1">15</div>
           <div style="font-size:0.78rem;opacity:0.6;margin-top:2px">dias úteis de antecedência</div>
-          <div style="margin-top:10px;font-size:0.78rem;opacity:0.5;line-height:1.5">Webinars, lives, transmissoes internas. Inclui divulgação digital e convite.</div>
+          <div style="margin-top:10px;font-size:0.78rem;opacity:0.5;line-height:1.5">Webinars, lives, transmissões internas. Inclui divulgação digital e convite.</div>
         </div>
         <div style="background:rgba(255,255,255,0.07);border-radius:10px;padding:18px">
           <div style="font-size:0.65rem;text-transform:uppercase;letter-spacing:0.07em;opacity:0.45;margin-bottom:8px">Presencial simples</div>

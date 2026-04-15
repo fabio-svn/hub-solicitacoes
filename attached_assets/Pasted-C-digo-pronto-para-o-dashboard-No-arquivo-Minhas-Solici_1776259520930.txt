@@ -1,0 +1,152 @@
+Código pronto para o dashboard
+
+No arquivo Minhas Solicitações, substitua a função humanizeValue() atual por esta versão e adicione os helpers logo acima dela:
+
+function normalizeSlug(value) {
+  return String(value ?? '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .trim()
+    .toLowerCase();
+}
+
+function titleCasePtBr(text) {
+  return String(text)
+    .split(' ')
+    .filter(Boolean)
+    .map(word => {
+      const lower = word.toLowerCase();
+      const keepLower = ['de', 'da', 'do', 'das', 'dos', 'e', 'em', 'para', 'ao', 'aos'];
+      if (keepLower.includes(lower)) return lower;
+      return lower.charAt(0).toUpperCase() + lower.slice(1);
+    })
+    .join(' ')
+    .replace(/^./, c => c.toUpperCase());
+}
+
+function humanizeSlug(value) {
+  const raw = String(value ?? '').trim();
+  if (!raw) return raw;
+
+  const normalized = normalizeSlug(raw);
+
+  const directMap = {
+    'pacote-padrao': 'Pacote Padrão',
+    'pacote-padrao-online': 'Pacote Padrão Online',
+    'artes-divulgacao': 'Artes de Divulgação',
+    'conteudo-pdf': 'PDF',
+    'pagina-assessores': 'Página de Assessores',
+    'atualizacao-material': 'Atualização de Material',
+    'em-producao': 'Em produção',
+    'nao-definido': 'Não definido',
+    'aberto ao publico em geral': 'Aberto ao público em geral',
+  };
+
+  if (directMap[normalized]) return directMap[normalized];
+
+  const text = raw.replace(/[_-]+/g, ' ').trim();
+  let humanized = titleCasePtBr(text);
+
+  const replacements = [
+    [/\bPadrao\b/g, 'Padrão'],
+    [/\bProducao\b/g, 'Produção'],
+    [/\bNao\b/g, 'Não'],
+    [/\bPagina\b/g, 'Página'],
+    [/\bDivulgacao\b/g, 'Divulgação'],
+    [/\bAtualizacao\b/g, 'Atualização'],
+    [/\bPublico\b/g, 'Público'],
+  ];
+
+  replacements.forEach(([pattern, replacement]) => {
+    humanized = humanized.replace(pattern, replacement);
+  });
+
+  return humanized;
+}
+
+function humanizeValue(key, value) {
+  const maps = {
+    natureza: {
+      presencial: 'Presencial',
+      online: 'Online',
+    },
+    maturidade: {
+      1: 'Tenho a maioria das informações',
+      2: 'Tenho algumas informações',
+      3: 'Ainda estou estruturando',
+    },
+    localEvento: {
+      unidade: 'Unidade SVN',
+      externo: 'Local externo',
+      'nao-definido': 'Não definido',
+    },
+    publico: {
+      'Fechado para convidados': 'Fechado para convidados',
+      'Aberto ao publico em geral': 'Aberto ao público em geral',
+    },
+  };
+
+  const materiaisMap = {};
+
+  if (typeof ITENS_MATERIAIS !== 'undefined') {
+    ITENS_MATERIAIS.forEach(i => {
+      materiaisMap[normalizeSlug(i.id)] = i.label;
+    });
+  }
+
+  if (typeof ITENS_MATERIAIS_ONLINE !== 'undefined') {
+    ITENS_MATERIAIS_ONLINE.forEach(i => {
+      materiaisMap[normalizeSlug(i.id)] = i.label;
+    });
+  }
+
+  if (key === 'materiais' && Array.isArray(value)) {
+    return value
+      .map(v => materiaisMap[normalizeSlug(v)] || humanizeSlug(v))
+      .join(', ');
+  }
+
+  if (key === 'materiais' && typeof value === 'string') {
+    return value
+      .split(',')
+      .map(v => v.trim())
+      .filter(Boolean)
+      .map(v => materiaisMap[normalizeSlug(v)] || humanizeSlug(v))
+      .join(', ');
+  }
+
+  if (key === 'selos' && Array.isArray(value) && typeof SELOS_ASSESSOR !== 'undefined') {
+    const selosMap = {};
+    SELOS_ASSESSOR.forEach(s => {
+      selosMap[normalizeSlug(s.id)] = s.label;
+    });
+
+    return value
+      .map(v => selosMap[normalizeSlug(v)] || humanizeSlug(v))
+      .join(' · ');
+  }
+
+  if (maps[key]) {
+    const normalizedValue = normalizeSlug(value);
+
+    for (const [mapKey, mapLabel] of Object.entries(maps[key])) {
+      if (normalizeSlug(mapKey) === normalizedValue) {
+        return mapLabel;
+      }
+    }
+  }
+
+  if (typeof value === 'string') {
+    const normalizedValue = normalizeSlug(value);
+
+    if (materiaisMap[normalizedValue]) {
+      return materiaisMap[normalizedValue];
+    }
+
+    if (value.includes('-') || value.includes('_')) {
+      return humanizeSlug(value);
+    }
+  }
+
+  return value;
+}

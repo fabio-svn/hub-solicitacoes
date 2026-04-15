@@ -1,0 +1,140 @@
+Revise os arquivos do projeto com foco em **correção textual em português-BR** e **humanização de valores técnicos exibidos ao usuário**, sem quebrar a lógica existente.
+
+### Objetivo
+
+Corrigir:
+
+* ortografia
+* acentuação
+* gramática
+* pontuação
+* clareza dos textos
+* consistência entre labels, placeholders, alertas, hints e botões
+
+Além disso, impedir que o usuário veja valores brutos/técnicos como:
+
+* `pacote-padrao`
+* `artes-divulgacao`
+* `conteudo-pdf`
+* `pagina-assessores`
+* `atualizacao-material`
+* `em-producao`
+* `nao-definido`
+
+Esses valores devem aparecer de forma amigável, por exemplo:
+
+* `pacote-padrao` → `Pacote Padrão`
+* `artes-divulgacao` → `Artes de Divulgação`
+* `conteudo-pdf` → `PDF`
+* `pagina-assessores` → `Página de Assessores`
+* `atualizacao-material` → `Atualização de Material`
+* `em-producao` → `Em produção`
+* `nao-definido` → `Não definido`
+
+### Regras obrigatórias
+
+Não alterar:
+
+* `id=""`
+* `name=""`
+* `value=""` de inputs usados pela lógica
+* variáveis JS
+* chaves de objetos
+* payloads enviados ao backend
+* nomes de campos persistidos
+* endpoints
+* fetches
+* autenticação
+* navegação
+* lógica dos formulários
+
+Alterar apenas:
+
+* títulos
+* subtítulos
+* labels
+* placeholders
+* mensagens auxiliares
+* textos de alerta
+* textos de botão
+* textos renderizados ao usuário no dashboard, drawer, badges e resumo
+
+### Correções textuais esperadas
+
+Padronizar textos como:
+
+* "Apresentacao" → "Apresentação"
+* "apresentacao" → "apresentação"
+* "formulario" → "formulário"
+* "comunicacao" → "comunicação"
+* "referencia" / "referencias" → "referência" / "referências"
+* "publico" → "público"
+* "observacoes" → "observações"
+* "Graficos" → "Gráficos"
+* "Imagens especificas" → "Imagens específicas"
+* "Ja existe uma base" → "Já existe uma base"
+* "transmissoes online" → "transmissões online"
+* "Materiais e servicos" → "Materiais e serviços"
+* "O evento tera palestrante(s)?" → "O evento terá palestrante(s)?"
+* "Nao" → "Não"
+* "Anexos e observacoes" → "Anexos e observações"
+* "Dimensao recomendada" → "Dimensão recomendada"
+* "boa iluminacao" → "boa iluminação"
+* "certificacoes" → "certificações"
+* "atualizacoes" → "atualizações"
+* "reuniao" → "reunião"
+
+### Humanização de valores técnicos
+
+Fortaleça a função de humanização já existente no dashboard/listagem.
+
+Ela deve:
+
+1. Continuar usando os mapas já existentes
+2. Normalizar acentos para comparar chaves equivalentes
+3. Tratar hífens e underscores
+4. Ter fallback inteligente para transformar slugs em texto amigável
+5. Aplicar isso no dashboard, drawer lateral, cards, filtros, resumos e itens selecionados
+
+### Estratégia de implementação
+
+Criar helpers reutilizáveis, por exemplo:
+
+* `normalizeSlug(value)`
+* `titleCasePtBr(value)`
+* `humanizeSlug(value)`
+* `humanizeValue(key, value)`
+
+### Regras da humanização
+
+* `pacote-padrao` e `pacote-padrão` devem virar o mesmo rótulo visual: `Pacote Padrão`
+* o mesmo vale para `pacote-padrao-online` e `pacote-padrão-online`
+* se houver mapa explícito, ele deve ter prioridade
+* se não houver mapa, fazer fallback:
+
+  * trocar `_` e `-` por espaço
+  * aplicar capitalização
+  * corrigir termos comuns com um dicionário em português
+
+### Arquivos a revisar
+
+Revise especialmente os arquivos equivalentes a:
+
+* formulário de apresentação
+* formulário de artes de divulgação
+* formulário de atualização de material
+* formulário de PDF
+* formulário de eventos
+* formulário de página de assessores
+* seleção de solicitação
+* Minhas Solicitações / dashboard
+
+### Entrega esperada
+
+1. Aplicar as correções diretamente no código
+2. Preservar o funcionamento do sistema
+3. Exibir ao final:
+
+   * arquivos alterados
+   * principais correções textuais
+   * pontos em que a humanização foi melhorada
