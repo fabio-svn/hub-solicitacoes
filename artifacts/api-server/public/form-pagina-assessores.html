@@ -9,7 +9,6 @@
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap" media="print" onload="this.media='all'">
   <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap"></noscript>
   <link rel="stylesheet" href="style.css">
-  <script src="transitions.js"></script>
 </head>
 <body class="page-light">
   <header class="header" id="mainHeader"></header>
@@ -184,7 +183,7 @@
   <script>
     const params = new URLSearchParams(window.location.search);
     const subtipo = params.get('subtipo') || 'dados';
-    const isAtualizacao = subtipo === 'atualização';
+    const isAtualizacao = subtipo === 'atualização' || subtipo === 'atualizacao';
     const TITLES = { dados: 'Página de Assessores — Dados', atualização: 'Página de Assessores — Atualização' };
     const TIPOS = { dados: 'pagina-assessores-dados', atualização: 'pagina-assessores-atualizacao' };
     let depoimentos = [];
@@ -385,12 +384,25 @@
 
     async function submitForm() {
       if (!validateRequiredFields()) return;
-      if (!isAtualizacao && !document.getElementById('fotoPerfil').files[0]) {
-        alert('Envie a foto de perfil.'); return;
-      }
-
       const btn = document.getElementById('btnSubmit');
       btn.disabled = true; btn.textContent = 'Enviando...';
+
+      if (!isAtualizacao && !document.getElementById('fotoPerfil').files[0]) {
+        const fieldEl = document.getElementById('fotoPerfil').closest('.field');
+        if (fieldEl) {
+          fieldEl.classList.add('field-invalid');
+          let errorEl = fieldEl.querySelector('.field-error');
+          if (!errorEl) {
+            errorEl = document.createElement('div');
+            errorEl.className = 'field-error';
+            fieldEl.appendChild(errorEl);
+          }
+          errorEl.textContent = 'A foto de perfil é obrigatória.';
+          fieldEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+        btn.disabled = false; btn.textContent = 'Enviar';
+        return;
+      }
 
       const validDepos = depoimentos.filter(d => d.nome && d.texto);
       const formData = new FormData();
@@ -441,15 +453,13 @@
     function saveDraft() {
       try {
         sessionStorage.setItem('form-assessores', JSON.stringify({
-          nome: document.getElementById('nome')?.value || '',
-          setor: document.getElementById('setor')?.value || '',
-          nomeCompleto: document.getElementById('nomeCompleto')?.value || '',
+          nomeCompleto:   document.getElementById('nomeCompleto')?.value   || '',
           codigoAssessor: document.getElementById('codigoAssessor')?.value || '',
-          unidade: document.getElementById('unidade')?.value || '',
+          unidade:        document.getElementById('unidade')?.value        || '',
           contratoSocial: document.getElementById('contratoSocial')?.value || '',
-          linkedin: document.getElementById('linkedin')?.value || '',
-          instagram: document.getElementById('instagram')?.value || '',
-          miniBio: document.getElementById('miniBio')?.value || '',
+          linkedin:       document.getElementById('linkedin')?.value       || '',
+          instagram:      document.getElementById('instagram')?.value      || '',
+          miniBio:        document.getElementById('miniBio')?.value        || '',
         }));
       } catch {}
     }

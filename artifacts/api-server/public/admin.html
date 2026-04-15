@@ -9,7 +9,6 @@
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap" media="print" onload="this.media='all'">
   <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap"></noscript>
   <link rel="stylesheet" href="style.css">
-  <script src="transitions.js"></script>
 </head>
 <body class="page-light">
   <header class="header" id="mainHeader"></header>
@@ -36,11 +35,11 @@
       </div>
       <div class="stat-card" style="background:rgba(111,135,123,0.06);border-color:rgba(111,135,123,0.15)">
         <div class="stat-number" style="color:var(--sage-green)" id="statCompleted">0</div>
-        <div class="stat-label">Concluidas</div>
+        <div class="stat-label">Concluídas</div>
       </div>
       <div class="stat-card" style="border-color:var(--border-light)">
         <div class="stat-number" id="statMonth">0</div>
-        <div class="stat-label">Este mes</div>
+        <div class="stat-label">Este mês</div>
       </div>
     </div>
 
@@ -62,7 +61,7 @@
         <button class="filter-chip" data-value="recebido" onclick="setFilter(this,'eventos','status')">Recebido</button>
         <button class="filter-chip" data-value="em-producao" onclick="setFilter(this,'eventos','status')">Em produção</button>
         <button class="filter-chip" data-value="aguardando" onclick="setFilter(this,'eventos','status')">Aguardando</button>
-        <button class="filter-chip" data-value="concluido" onclick="setFilter(this,'eventos','status')">Concluido</button>
+        <button class="filter-chip" data-value="concluido" onclick="setFilter(this,'eventos','status')">Concluído</button>
       </div>
       <div class="search-bar">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" opacity="0.4"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
@@ -85,7 +84,7 @@
         <button class="filter-chip" data-value="recebido" onclick="setFilter(this,'geral','status')">Recebido</button>
         <button class="filter-chip" data-value="em-producao" onclick="setFilter(this,'geral','status')">Em produção</button>
         <button class="filter-chip" data-value="aguardando" onclick="setFilter(this,'geral','status')">Aguardando</button>
-        <button class="filter-chip" data-value="concluido" onclick="setFilter(this,'geral','status')">Concluido</button>
+        <button class="filter-chip" data-value="concluido" onclick="setFilter(this,'geral','status')">Concluído</button>
       </div>
       <div class="search-bar">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" opacity="0.4"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
@@ -97,7 +96,7 @@
 
     <div id="usersSection" style="margin-top:40px;display:none">
       <div class="collapsible-header" onclick="toggleUsers()">
-        <h2 style="font-size:1.1rem;font-weight:600">Gestao de usuarios</h2>
+        <h2 style="font-size:1.1rem;font-weight:600">Gestão de usuários</h2>
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" id="usersChevron"><polyline points="6 9 12 15 18 9"/></svg>
       </div>
       <div class="collapsible-content" id="usersList"></div>
@@ -134,6 +133,7 @@
     }
 
     async function init() {
+      await _configReady;
       await Auth.init();
       if (!Auth.isAuthenticated()) {
         window.location.href = '/auth/login?redirect=/admin.html';
@@ -295,24 +295,22 @@
       openDrawer(item);
     }
 
-    async function openDrawer(item) {
-      try {
-        const syncRes = await fetch('/api/solicitacoes/' + item.id + '/status');
-        if (syncRes.ok) {
-          const syncData = await syncRes.json();
-          if (syncData.updated) item.status = syncData.status;
-        }
-      } catch {}
+    function humanizeValue(key, value) {
+      if (!value) return value;
+      if (typeof value === 'boolean') return value ? 'Sim' : 'Não';
+      return value;
+    }
 
+    function renderAdminDrawer(item) {
       const dados = typeof item.dados === 'string' ? JSON.parse(item.dados) : (item.dados || {});
       const titulo = dados.nomeEvento || dados.tituloEvento || dados.titulo || dados.nomeCompleto || item.tipo_solicitacao;
       const tipoLabel = TIPO_SOLICITACAO_LABELS[item.tipo_solicitacao] || item.tipo_solicitacao;
-      const statusObj = STATUS_SOLICITACAO.find(s => s.id === item.status) || { label: item.status, cor: '--carbon-black' };
+      const statusObj = STATUS_SOLICITACAO.find(s => s.id === item.status) || { label: item.status, bg: '#f1f5f9', text: '#475569' };
 
       document.getElementById('drawerTitle').textContent = titulo;
       document.getElementById('drawerBadges').innerHTML = `
         <span class="badge" style="background:var(--carbon-black);color:var(--paper-white)">${esc(tipoLabel)}</span>
-        <span class="badge" style="background:${statusObj.bg || '#f1f5f9'};color:${statusObj.text || '#475569'}">${esc(statusObj.label)}</span>`;
+        <span class="badge" style="background:${statusObj.bg};color:${statusObj.text}">${esc(statusObj.label)}</span>`;
 
       let body = '';
       body += `<div class="drawer-section"><div class="drawer-section-title">Solicitante</div>
@@ -320,16 +318,40 @@
 
       body += '<div class="drawer-section"><div class="drawer-section-title">Dados</div>';
       for (const [key, value] of Object.entries(dados)) {
-        if (value && typeof value !== 'object') {
-          body += `<div class="drawer-field"><div class="drawer-field-label">${esc(key)}</div><div class="drawer-field-value">${esc(value)}</div></div>`;
+        if (value === null || value === undefined || value === '') continue;
+        const label = (typeof DRAWER_FIELD_LABELS !== 'undefined' && DRAWER_FIELD_LABELS[key])
+          ? DRAWER_FIELD_LABELS[key] : key;
+
+        if (Array.isArray(value)) {
+          if (value.length === 0) continue;
+          body += `<div class="drawer-field"><div class="drawer-field-label">${esc(label)}</div><div class="drawer-field-value">${value.map(v => esc(String(v))).join(' · ')}</div></div>`;
+          continue;
         }
+        if (typeof value === 'object') continue;
+
+        const displayValue = humanizeValue(key, value);
+        body += `<div class="drawer-field"><div class="drawer-field-label">${esc(label)}</div><div class="drawer-field-value">${esc(String(displayValue))}</div></div>`;
       }
       body += '</div>';
       document.getElementById('drawerBody').innerHTML = body;
       document.getElementById('drawerFooter').textContent = `ID: ${item.id} | Criado em: ${new Date(item.created_at).toLocaleString('pt-BR')}`;
+    }
 
+    async function openDrawer(item) {
       document.getElementById('drawerOverlay').classList.add('visible');
       document.getElementById('drawer').classList.add('open');
+      renderAdminDrawer(item);
+
+      try {
+        const syncRes = await fetch('/api/solicitacoes/' + item.id + '/status');
+        if (syncRes.ok) {
+          const syncData = await syncRes.json();
+          if (syncData.updated && syncData.status !== item.status) {
+            item.status = syncData.status;
+            renderAdminDrawer(item);
+          }
+        }
+      } catch {}
     }
 
     function closeDrawer() {

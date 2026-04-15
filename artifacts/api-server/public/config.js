@@ -9,7 +9,7 @@ const URL_DASHBOARD = "dashboard.html";
 const URL_ADMIN = "admin.html";
 
 let URL_MANUAL = "https://pub-a2132f9b61f940659cc98265acfcf64c.r2.dev/Manual-de-Eventos-SVN.pdf";
-let URL_APRESENTACAO = "#";
+let URL_APRESENTACAO = "https://hub.portalsvn.com.br/solicitacoes.html";
 let URL_STORE = "https://store.portalsvn.com.br/";
 let URL_TUTORIAL_TRANSMISSAO = "https://drive.google.com/file/d/1L36fFqFC-sEPWggNmlZOUNnY2DqxP8HK/view?usp=sharing";
 
@@ -177,20 +177,20 @@ const SELOS_ASSESSOR = [
 ];
 
 const STATUS_SOLICITACAO = [
-  { id: "recebido",               label: "Recebido",                   bg: "#e8f4ea", text: "#2d7a3a" },
-  { id: "alinhamentos",           label: "Alinhamentos",               bg: "#e8f0fb", text: "#1a56a0" },
-  { id: "em-analise",             label: "Em análise",                 bg: "#fff3e0", text: "#b45309" },
-  { id: "em-andamento",           label: "Em andamento",               bg: "#fff3e0", text: "#b45309" },
-  { id: "em-producao",            label: "Em produção",                bg: "#fff3e0", text: "#b45309" },
-  { id: "cotacao-aprovacao",      label: "Em cotação / aprovação",     bg: "#fef3c7", text: "#92660a" },
-  { id: "aguardando",             label: "Aguardando informação",      bg: "#fef3c7", text: "#92660a" },
-  { id: "aguardando-rh",          label: "Aguardando aprovação do RH", bg: "#fce8f3", text: "#9d174d" },
-  { id: "aguardando-pagamento",   label: "Aguardando pagamento",       bg: "#fce8f3", text: "#9d174d" },
-  { id: "aguardando-finalizacao", label: "Aguardando finalização",     bg: "#ede9fe", text: "#5b21b6" },
-  { id: "concluido",              label: "Concluído",                  bg: "#d1fae5", text: "#065f46" },
-  { id: "reprovado",              label: "Reprovado / Cancelado",      bg: "#fee2e2", text: "#991b1b" },
-  { id: "cancelado",              label: "Cancelado",                  bg: "#fee2e2", text: "#991b1b" },
-  { id: "em-espera",              label: "Em espera",                  bg: "#f1f5f9", text: "#475569" },
+  { id: "recebido",               label: "Recebido",                   bg: "#e8f4ea", text: "#2d7a3a",  cor: "--sage-green"    },
+  { id: "alinhamentos",           label: "Alinhamentos",               bg: "#e8f0fb", text: "#1a56a0",  cor: "--sage-green"    },
+  { id: "em-analise",             label: "Em análise",                 bg: "#fff3e0", text: "#b45309",  cor: "--ruby-red"      },
+  { id: "em-andamento",           label: "Em andamento",               bg: "#fff3e0", text: "#b45309",  cor: "--ruby-red"      },
+  { id: "em-producao",            label: "Em produção",                bg: "#fff3e0", text: "#b45309",  cor: "--ruby-red"      },
+  { id: "cotacao-aprovacao",      label: "Em cotação / aprovação",     bg: "#fef3c7", text: "#92660a",  cor: "--leather-brown" },
+  { id: "aguardando",             label: "Aguardando informação",      bg: "#fef3c7", text: "#92660a",  cor: "--leather-brown" },
+  { id: "aguardando-rh",          label: "Aguardando aprovação do RH", bg: "#fce8f3", text: "#9d174d",  cor: "--leather-brown" },
+  { id: "aguardando-pagamento",   label: "Aguardando pagamento",       bg: "#fce8f3", text: "#9d174d",  cor: "--leather-brown" },
+  { id: "aguardando-finalizacao", label: "Aguardando finalização",     bg: "#ede9fe", text: "#5b21b6",  cor: "--leather-brown" },
+  { id: "concluido",              label: "Concluído",                  bg: "#d1fae5", text: "#065f46",  cor: "--sage-green"    },
+  { id: "reprovado",              label: "Reprovado / Cancelado",      bg: "#fee2e2", text: "#991b1b",  cor: "--ruby-red"      },
+  { id: "cancelado",              label: "Cancelado",                  bg: "#fee2e2", text: "#991b1b",  cor: "--carbon-black"  },
+  { id: "em-espera",              label: "Em espera",                  bg: "#f1f5f9", text: "#475569",  cor: "--carbon-black"  },
 ];
 
 const SETORES = [
@@ -267,13 +267,13 @@ const UNIDADES_SVN = [
 ];
 
 const ITENS_MATERIAIS = [
-  { id: "pacote-padrão", label: "Pacote de Divulgação Padrão (convite + página de inscrição)", icon: "icon-envelope-star" },
+  { id: "pacote-padrao", label: "Pacote de Divulgação Padrão (convite + página de inscrição)", icon: "icon-envelope-star" },
   { id: "pacote-personalizado", label: "Pacote de Divulgação Personalizado", icon: "icon-palette" },
   { id: "banner-impresso", label: "Banner Impresso", icon: "icon-image" },
   { id: "flyer", label: "Flyer", icon: "icon-file-text" },
   { id: "brindes-store", label: "Brindes (solicitar na Store)", icon: "icon-gift" },
   { id: "brindes-personalizados", label: "Brindes Personalizados", icon: "icon-gift" },
-  { id: "captação-audiovisual", label: "Captação Audiovisual", icon: "icon-video" },
+  { id: "captacao-audiovisual", label: "Captação Audiovisual", icon: "icon-video" },
   { id: "coffee-break", label: "Coffee Break ou Coquetel", icon: "icon-coffee" },
   { id: "instagram", label: "Divulgação no Instagram da SVN", icon: "icon-instagram" },
   { id: "email-marketing", label: "E-mail Marketing", icon: "icon-mail" },
@@ -284,7 +284,7 @@ const ITENS_MATERIAIS = [
 ];
 
 const ITENS_MATERIAIS_ONLINE = [
-  { id: "pacote-padrão-online", label: "Pacote de Divulgação Padrão - 2 dias úteis", icon: "icon-envelope-star" },
+  { id: "pacote-padrao-online", label: "Pacote de Divulgação Padrão - 2 dias úteis", icon: "icon-envelope-star" },
   { id: "pacote-personalizado-online", label: "Pacote de Divulgação Personalizado - 7 dias", icon: "icon-palette" },
   { id: "instagram-online", label: "Divulgação no Instagram da SVN - 1 dia útil", icon: "icon-instagram" },
   { id: "link-youtube-online", label: "Link da live no Youtube - 2 dias úteis", icon: "icon-youtube" },
@@ -293,13 +293,13 @@ const ITENS_MATERIAIS_ONLINE = [
 ];
 
 const PRAZOS_MATERIAIS = {
-  "pacote-padrão": { label: "15 dias de antecedência" },
+  "pacote-padrao": { label: "15 dias de antecedência" },
   "pacote-personalizado": { label: "20 dias de antecedência" },
   "banner-impresso": { label: "30 dias de antecedência" },
   "flyer": { label: "30 dias de antecedência" },
   "brindes-store": { label: "30 dias de antecedência" },
   "brindes-personalizados": { label: "45 dias de antecedência" },
-  "captação-audiovisual": { label: "15 dias de antecedência" },
+  "captacao-audiovisual": { label: "15 dias de antecedência" },
   "coffee-break": { label: "15 dias de antecedência" },
   "instagram": { label: "15 dias de antecedência" },
   "email-marketing": { label: "15 dias de antecedência" },
@@ -307,7 +307,7 @@ const PRAZOS_MATERIAIS = {
   "jantar-almoco": { label: "30 dias de antecedência" },
   "pagina-sorteio": { label: "15 dias de antecedência" },
   "projeto-stand": { label: "45 dias de antecedência" },
-  "pacote-padrão-online": { label: "2 dias úteis" },
+  "pacote-padrao-online": { label: "2 dias úteis" },
   "pacote-personalizado-online": { label: "7 dias" },
   "instagram-online": { label: "1 dia útil" },
   "link-youtube-online": { label: "2 dias úteis" },
@@ -319,10 +319,10 @@ const CAMPOS_ETAPA2_FORM2 = [
   { id: "nome-evento", label: "Nome do evento" },
   { id: "data-evento", label: "Data do evento" },
   { id: "horario", label: "Horário do evento" },
-  { id: "descrição", label: "Descrição do evento" },
+  { id: "descricao", label: "Descrição do evento" },
   { id: "origem", label: "Origem do evento" },
   { id: "tipo-evento", label: "Tipo de evento" },
-  { id: "público", label: "Público do evento" },
+  { id: "publico", label: "Público do evento" },
   { id: "estado-cidade", label: "Estado e Cidade" },
   { id: "local", label: "Local do evento" },
   { id: "convidados", label: "Número de convidados" },
@@ -330,11 +330,11 @@ const CAMPOS_ETAPA2_FORM2 = [
 
 const CAMPOS_ETAPA2_FORM2_ONLINE = [
   { id: "titulo-evento", label: "Título do evento" },
-  { id: "descrição", label: "Descrição do evento" },
-  { id: "público", label: "Público do evento" },
+  { id: "descricao", label: "Descrição do evento" },
+  { id: "publico", label: "Público do evento" },
   { id: "objetivos", label: "Objetivos de retorno" },
   { id: "canal", label: "Canal de transmissão" },
-  { id: "link-transmissão", label: "Link da transmissão" },
+  { id: "link-transmissao", label: "Link da transmissão" },
   { id: "origem", label: "Origem do evento" },
   { id: "data-evento", label: "Data do evento" },
   { id: "horario", label: "Horário do evento" },
@@ -343,7 +343,7 @@ const CAMPOS_ETAPA2_FORM2_ONLINE = [
 const FORM_ROUTES = {
   "eventos": "form-eventos.html",
   "pagina-assessores-dados": "form-pagina-assessores.html?subtipo=dados",
-  "pagina-assessores-atualizacao": "form-pagina-assessores.html?subtipo=atualização",
+  "pagina-assessores-atualizacao": "form-pagina-assessores.html?subtipo=atualizacao",
   "artes-divulgacao": "form-artes-divulgacao.html",
   "apresentacao-nova": "form-apresentacoes.html?subtipo=nova",
   "apresentacao-atualizar": "form-apresentacoes.html?subtipo=atualizar",
@@ -382,10 +382,10 @@ const DRAWER_FIELD_LABELS = {
   dataEvento:           "Data",
   horario:              "Horário",
   horBrasilia:          "Horário de Brasília?",
-  descrição:            "Descrição",
+  descricao:            "Descrição",
   origem:               "Origem",
   tipoEvento:           "Tipo de evento",
-  público:              "Público",
+  publico:              "Público",
   estado:               "Estado",
   cidade:               "Cidade",
   localEvento:          "Local",
@@ -420,7 +420,7 @@ const DRAWER_FIELD_LABELS = {
   publicoAlvo:          "Público-alvo",
   prazoEntrega:         "Prazo desejado",
   canaisCompartilhar:   "Canais de compartilhamento",
-  conteúdo:             "Conteúdo",
+  conteudo:             "Conteúdo",
   observacoesFinais:    "Observações finais",
   descricaoAtualizacao: "O que atualizar",
 };

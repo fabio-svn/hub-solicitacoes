@@ -9,7 +9,6 @@
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap" media="print" onload="this.media='all'">
   <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap"></noscript>
   <link rel="stylesheet" href="style.css">
-  <script src="transitions.js"></script>
 </head>
 <body class="page-light">
   <header class="header" id="mainHeader"></header>
@@ -94,7 +93,7 @@
             </div>
             <div class="alert-card alert-info">
               <div class="alert-title">Dica</div>
-              <div class="alert-text">Se os materiais de apoio nao estiverem definidos, marque a opção "Pacote Padrão", pois e utilizado na grande maioria dos eventos.</div>
+              <div class="alert-text">Se os materiais de apoio não estiverem definidos, marque a opção "Pacote Padrão", pois é utilizado na grande maioria dos eventos.</div>
             </div>
             <h2 style="font-weight:600;font-size:1.1rem;margin-bottom:20px">Materiais e serviços</h2>
             <div id="materiaisContainer"></div>
@@ -113,7 +112,7 @@
               <label>O evento terá palestrante(s)?</label>
               <div class="radio-group">
                 <label class="radio-option"><input type="radio" name="temPalestrante" value="sim" onchange="handlePalestrante(true)"><span class="radio-custom"></span><span>Sim</span></label>
-                <label class="radio-option"><input type="radio" name="temPalestrante" value="nao" onchange="handlePalestrante(false)"><span class="radio-custom"></span><span>Nao</span></label>
+                <label class="radio-option"><input type="radio" name="temPalestrante" value="nao" onchange="handlePalestrante(false)"><span class="radio-custom"></span><span>Não</span></label>
               </div>
             </div>
             <div id="palestranteQtd" style="display:none">
@@ -228,7 +227,7 @@
         <div style="text-align:center;padding:16px">
           <div style="font-family:'Taviraj',serif;font-size:3rem;font-weight:300;margin-bottom:8px">1</div>
           <span class="badge" style="background:var(--ruby-red);color:white;margin-bottom:8px">Tenho a maioria das informações</span>
-          <p style="font-size:0.82rem;opacity:0.7;margin-top:8px">Quando as informações mais basicas do evento estiverem pre-definidas.</p>
+          <p style="font-size:0.82rem;opacity:0.7;margin-top:8px">Quando as informações mais básicas do evento estiverem pré-definidas.</p>
           <p style="font-size:0.78rem;font-style:italic;opacity:0.5;margin-top:4px">Ex.: Tenho Nome, Data, Local, Formato, etc</p>
         </div>
         <div style="text-align:center;padding:16px">
@@ -241,7 +240,7 @@
           <div style="font-family:'Taviraj',serif;font-size:3rem;font-weight:300;margin-bottom:8px">3</div>
           <span class="badge" style="background:var(--leather-brown);color:white;margin-bottom:8px">Ainda estou estruturando</span>
           <p style="font-size:0.82rem;opacity:0.7;margin-top:8px">Quando você tiver uma ideia para um evento, mas precisa de apoio para estruturar.</p>
-          <p style="font-size:0.78rem;font-style:italic;opacity:0.5;margin-top:4px">Ex.: Gostaria de realizar uma experiencia com clientes, mas preciso de assistencia.</p>
+          <p style="font-size:0.78rem;font-style:italic;opacity:0.5;margin-top:4px">Ex.: Gostaria de realizar uma experiencia com clientes, mas preciso de assistência.</p>
         </div>
       </div>
       <hr style="border-color:rgba(255,248,243,0.1);margin:16px 0">
@@ -276,8 +275,8 @@
     let estados = [];
 
     function saveFormState() {
-      const fields = ['nomeEvento','dataEvento','horario','descrição',
-        'origem','tipoEvento','público','convidados','canal','linkTransmissao',
+      const fields = ['nomeEvento','dataEvento','horario','descricao',
+        'origem','tipoEvento','publico','convidados','canal','linkTransmissao',
         'objetivos','custoEstimado','rateio','observacoes','localNome','localEndereco',
         'localSugestoes','ideaQuando'];
       const data = {};
@@ -300,8 +299,8 @@
         const raw = sessionStorage.getItem(STORAGE_KEY);
         if (!raw) return;
         const data = JSON.parse(raw);
-        const fields = ['nomeEvento','dataEvento','horario','descrição',
-          'origem','tipoEvento','público','convidados','canal','linkTransmissao',
+        const fields = ['nomeEvento','dataEvento','horario','descricao',
+          'origem','tipoEvento','publico','convidados','canal','linkTransmissao',
           'objetivos','custoEstimado','rateio','observacoes'];
         fields.forEach(id => {
           const el = document.getElementById(id);
@@ -437,17 +436,17 @@
           <div class="field"><label>Horário</label><input type="time" id="horario"></div>
         </div>
         <div class="field"><label>Horário de Brasília?</label><div class="radio-group" style="flex-direction:row;gap:16px"><label class="radio-option"><input type="radio" name="horBrasilia" value="sim"><span class="radio-custom"></span><span>Sim</span></label><label class="radio-option"><input type="radio" name="horBrasilia" value="nao"><span class="radio-custom"></span><span>Não</span></label></div></div>
-        <div class="field"><label>Breve descrição do evento</label><textarea id="descrição" placeholder="Ex.: evento voltado para relacionamento com clientes que se interessam por vinhos"></textarea><div class="field-hint">Fale sobre aspectos como organização e tópicos do conteúdo que será abordado.</div></div>
+        <div class="field"><label>Breve descrição do evento</label><textarea id="descricao" placeholder="Ex.: evento voltado para relacionamento com clientes que se interessam por vinhos"></textarea><div class="field-hint">Fale sobre aspectos como organização e tópicos do conteúdo que será abordado.</div></div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
           <div class="field"><label>Origem do evento</label><select id="origem">${ORIGENS_EVENTO.map(o=>`<option>${o}</option>`).join('')}</select></div>
           <div class="field"><label>Tipo de evento</label><select id="tipoEvento">${TIPOS_EVENTO.map(t=>`<option>${t}</option>`).join('')}</select></div>
         </div>
-        <div class="field"><label>Público do evento</label><select id="público"><option>Selecione</option><option>Fechado para convidados</option><option>Aberto ao público em geral</option></select></div>
+        <div class="field"><label>Público do evento</label><select id="publico"><option>Selecione</option><option>Fechado para convidados</option><option>Aberto ao público em geral</option></select></div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
           <div class="field"><label>Estado</label><select id="estado" onchange="loadCidades()"><option>Carregando...</option></select></div>
           <div class="field"><label>Cidade</label><select id="cidade" disabled><option>Selecione o estado</option></select></div>
         </div>
-        <div class="field"><label>Local do evento</label><select id="localEvento" onchange="handleLocal()"><option>Selecione</option><option value="unidade">Unidade SVN</option><option value="externo">Local externo</option><option value="nao-definido">Local ainda nao definido</option></select></div>
+        <div class="field"><label>Local do evento</label><select id="localEvento" onchange="handleLocal()"><option>Selecione</option><option value="unidade">Unidade SVN</option><option value="externo">Local externo</option><option value="nao-definido">Local ainda não definido</option></select></div>
         <div id="localConditional"></div>
         <div class="field"><label>Número de convidados</label><input type="number" id="convidados" min="1" placeholder="Contando com assessores e palestrantes"></div>
       `;
@@ -464,7 +463,7 @@
 
     function buildPresencial3Fields() {
       return `
-        <div class="field"><label>Descrição do evento</label><textarea id="descrição" placeholder="Descreva sua ideia para o evento..."></textarea></div>
+        <div class="field"><label>Descrição do evento</label><textarea id="descricao" placeholder="Descreva sua ideia para o evento..."></textarea></div>
         <div class="field"><label>Tipo aproximado de evento</label>
           <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
             ${TIPOS_EVENTO_FORM3.map(t => `<label class="radio-option" style="padding:8px 12px;border:1px solid var(--border-light);border-radius:8px"><input type="radio" name="tipoAprox" value="${t}"><span class="radio-custom"></span><span style="font-size:0.85rem">${t}</span></label>`).join('')}
@@ -487,8 +486,8 @@
           <div class="field"><label>Horário</label><input type="time" id="horario"></div>
         </div>
         <div class="field"><label>Horário de Brasília?</label><div class="radio-group" style="flex-direction:row;gap:16px"><label class="radio-option"><input type="radio" name="horBrasilia" value="sim"><span class="radio-custom"></span><span>Sim</span></label><label class="radio-option"><input type="radio" name="horBrasilia" value="nao"><span class="radio-custom"></span><span>Não</span></label></div></div>
-        <div class="field"><label>Descrição</label><textarea id="descrição" placeholder="Descreva o evento..."></textarea></div>
-        <div class="field"><label>Público do evento</label><select id="público"><option>Selecione</option><option>Fechado para convidados</option><option>Aberto ao público em geral</option></select></div>
+        <div class="field"><label>Descrição</label><textarea id="descricao" placeholder="Descreva o evento..."></textarea></div>
+        <div class="field"><label>Público do evento</label><select id="publico"><option>Selecione</option><option>Fechado para convidados</option><option>Aberto ao público em geral</option></select></div>
         <div class="field"><label>Objetivos de retorno</label><textarea id="objetivos" placeholder="Quais são os objetivos esperados com este evento?"></textarea></div>
         <div class="field"><label>Canal de transmissão</label><select id="canal" onchange="handleCanal()">${CANAIS_TRANSMISSAO.map(c=>`<option>${c}</option>`).join('')}</select></div>
         <div class="field" id="linkTransmissaoField"><label>Link da transmissão</label><input type="url" id="linkTransmissao" placeholder="https://..."><div id="canalAviso" class="alert-card alert-info" style="display:none;margin-top:8px"><div class="alert-text">O link pode ser informado posteriormente.</div></div></div>
@@ -506,9 +505,9 @@
     }
 
     function buildOnline3Fields() {
-      const tiposOnline = ['Webinar','Live no YouTube','Aula online','Reuniao aberta','Transmissão de evento presencial','Workshop online','Painel de discussao','Outro'];
+      const tiposOnline = ['Webinar','Live no YouTube','Aula online','Reunião aberta','Transmissão de evento presencial','Workshop online','Painel de discussão','Outro'];
       return `
-        <div class="field"><label>Descrição</label><textarea id="descrição" placeholder="Descreva sua ideia..."></textarea></div>
+        <div class="field"><label>Descrição</label><textarea id="descricao" placeholder="Descreva sua ideia..."></textarea></div>
         <div class="field"><label>Tipo online aproximado</label>
           <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
             ${tiposOnline.map(t => `<label class="radio-option" style="padding:8px 12px;border:1px solid var(--border-light);border-radius:8px"><input type="radio" name="tipoAprox" value="${t}"><span class="radio-custom"></span><span style="font-size:0.85rem">${t}</span></label>`).join('')}
@@ -614,10 +613,10 @@
         case 'nome-evento': case 'titulo-evento': return `<div class="field"><label>${campo.label}</label><input type="text" id="nomeEvento" oninput="updatePreview('pvEvento',this.value)" required></div>`;
         case 'data-evento': return `<div class="field"><label>${campo.label}</label><input type="date" id="dataEvento" onchange="updatePreview('pvData',this.value)" required></div>`;
         case 'horario': return `<div class="field"><label>${campo.label}</label><input type="time" id="horario"></div>`;
-        case 'descrição': return `<div class="field"><label>${campo.label}</label><textarea id="descrição"></textarea></div>`;
+        case 'descricao': return `<div class="field"><label>${campo.label}</label><textarea id="descricao"></textarea></div>`;
         case 'origem': return `<div class="field"><label>${campo.label}</label><select id="origem">${(formState.natureza==='online'?ORIGENS_EVENTO_ONLINE:ORIGENS_EVENTO).map(o=>`<option>${o}</option>`).join('')}</select></div>`;
         case 'tipo-evento': return `<div class="field"><label>${campo.label}</label><select id="tipoEvento">${TIPOS_EVENTO.map(t=>`<option>${t}</option>`).join('')}</select></div>`;
-        case 'público': return `<div class="field"><label>${campo.label}</label><select id="público"><option>Selecione</option><option>Fechado para convidados</option><option>Aberto ao público em geral</option></select></div>`;
+        case 'publico': return `<div class="field"><label>${campo.label}</label><select id="publico"><option>Selecione</option><option>Fechado para convidados</option><option>Aberto ao público em geral</option></select></div>`;
         case 'estado-cidade': return `<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px"><div class="field"><label>Estado</label><select id="estado" onchange="loadCidades()"><option>Carregando...</option></select></div><div class="field"><label>Cidade</label><select id="cidade" disabled><option>Selecione o estado</option></select></div></div>`;
         case 'local': return `<div class="field"><label>${campo.label}</label><select id="localEvento" onchange="handleLocal()"><option>Selecione</option><option value="unidade">Unidade SVN</option><option value="externo">Local externo</option><option value="nao-definido">Nao definido</option></select></div><div id="localConditional"></div>`;
         case 'convidados': return `<div class="field"><label>${campo.label}</label><input type="number" id="convidados" min="1"></div>`;
@@ -682,7 +681,7 @@
 
     function getMaterialConditional(id) {
       switch(id) {
-        case 'pacote-padrão': case 'pacote-padrão-online':
+        case 'pacote-padrao': case 'pacote-padrao-online':
           return `<div style="margin-top:8px"><button class="btn btn-secondary" style="font-size:0.8rem" onclick="openPacoteModal()">Ver prévia do material</button></div>`;
         case 'pacote-personalizado': case 'pacote-personalizado-online':
           return `
@@ -745,8 +744,8 @@
                 <textarea id="matBrindeDesc" placeholder="Descreva o brinde que deseja..."></textarea>
               </div>
             </div>`;
-        case 'captação-audiovisual':
-          return `<div class="field" style="margin-top:8px"><div class="radio-group"><label class="radio-option"><input type="radio" name="captação" value="fotos"><span class="radio-custom"></span><span>Sessão de fotos</span></label><label class="radio-option"><input type="radio" name="captação" value="video"><span class="radio-custom"></span><span>Gravação de vídeo</span></label></div></div>`;
+        case 'captacao-audiovisual':
+          return `<div class="field" style="margin-top:8px"><div class="radio-group"><label class="radio-option"><input type="radio" name="captacao" value="fotos"><span class="radio-custom"></span><span>Sessão de fotos</span></label><label class="radio-option"><input type="radio" name="captacao" value="video"><span class="radio-custom"></span><span>Gravação de vídeo</span></label></div></div>`;
         case 'instagram': case 'instagram-online':
           return `
             <div style="margin-top:12px">
@@ -882,7 +881,7 @@
           });
         }
       } else if (mat === 3) {
-        const descEl = document.getElementById('descrição');
+        const descEl = document.getElementById('descricao');
         if (descEl) {
           const fieldEl = descEl.closest('.field');
           if (!descEl.value.trim() && fieldEl) markInvalid(fieldEl);
@@ -952,13 +951,13 @@
       const items = formState.natureza === 'online' ? ITENS_MATERIAIS_ONLINE : ITENS_MATERIAIS;
 
       const ICONS = {
-        'pacote-padrão': `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>`,
+        'pacote-padrao': `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>`,
         'pacote-personalizado': `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>`,
         'banner-impresso': `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>`,
         'flyer': `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>`,
         'brindes-store': `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 010-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 000-5C13 2 12 7 12 7z"/></svg>`,
         'brindes-personalizados': `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 010-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 000-5C13 2 12 7 12 7z"/></svg>`,
-        'captação-audiovisual': `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>`,
+        'captacao-audiovisual': `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>`,
         'coffee-break': `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8h1a4 4 0 010 8h-1"/><path d="M2 8h16v9a4 4 0 01-4 4H6a4 4 0 01-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>`,
         'instagram': `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>`,
         'email-marketing': `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>`,
@@ -966,7 +965,7 @@
         'jantar-almoco': `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="2" x2="18" y2="22"/><path d="M14 6c0 2.21 1.79 4 4 4s4-1.79 4-4V2H14v4z"/><path d="M6 2v6c0 2.21-1.79 4-4 4v8a2 2 0 004 0V2"/></svg>`,
         'pagina-sorteio': `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`,
         'projeto-stand': `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>`,
-        'pacote-padrão-online': `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>`,
+        'pacote-padrao-online': `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>`,
         'pacote-personalizado-online': `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>`,
         'instagram-online': `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>`,
         'link-youtube-online': `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8" fill="currentColor" stroke="none"/></svg>`,
@@ -1039,6 +1038,15 @@
     }
 
     function validateStep5() {
+      const custo = document.getElementById('custoEstimado')?.value.trim();
+      if (!custo || custo === 'R$ 0,00') {
+        const field = document.querySelector('#step5 .field');
+        if (field) {
+          field.classList.add('field-invalid');
+          setTimeout(() => field.classList.remove('field-invalid'), 600);
+        }
+        return false;
+      }
       const rateioField = document.getElementById('rateioField');
       if (rateioField && rateioField.style.display !== 'none') {
         const rateioVal = document.getElementById('rateio').value;
@@ -1064,7 +1072,7 @@
           <div style="margin-top:16px;animation:fadeSlide 0.3s ease ${i*0.08}s both">
             <hr class="block-divider"><h3 style="font-weight:600;font-size:0.95rem;margin-bottom:12px">Palestrante ${i}</h3>
             <div class="field"><label>O palestrante ${i} é colaborador da SVN?</label>
-              <div class="radio-group"><label class="radio-option"><input type="radio" name="palSvn${i}" value="sim" onchange="showPalFields(${i},true)"><span class="radio-custom"></span><span>Sim</span></label><label class="radio-option"><input type="radio" name="palSvn${i}" value="nao" onchange="showPalFields(${i},false)"><span class="radio-custom"></span><span>Nao</span></label></div>
+              <div class="radio-group"><label class="radio-option"><input type="radio" name="palSvn${i}" value="sim" onchange="showPalFields(${i},true)"><span class="radio-custom"></span><span>Sim</span></label><label class="radio-option"><input type="radio" name="palSvn${i}" value="nao" onchange="showPalFields(${i},false)"><span class="radio-custom"></span><span>Não</span></label></div>
             </div>
             <div id="palFields${i}"></div>
           </div>
@@ -1211,10 +1219,10 @@
         nomeEvento: document.getElementById('nomeEvento')?.value || '',
         dataEvento: document.getElementById('dataEvento')?.value || '',
         horario: document.getElementById('horario')?.value || '',
-        descrição: document.getElementById('descricao')?.value || '',
+        descricao: document.getElementById('descricao')?.value || '',
         origem: document.getElementById('origem')?.value || '',
         tipoEvento: document.getElementById('tipoEvento')?.value || '',
-        público: document.getElementById('publico')?.value || '',
+        publico: document.getElementById('publico')?.value || '',
         estado: document.getElementById('estado')?.value || '',
         cidade: document.getElementById('cidade')?.value || '',
         localEvento: document.getElementById('localEvento')?.value || '',
