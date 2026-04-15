@@ -9,33 +9,14 @@
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap" media="print" onload="this.media='all'">
   <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap"></noscript>
   <link rel="stylesheet" href="style.css">
-  <script src="transitions.js"></script>
 </head>
 <body class="page-light">
   <header class="header" id="mainHeader"></header>
   <div class="container-narrow" style="padding-top:32px;padding-bottom:80px">
     <div class="form-card">
-      <div class="form-progress"><div class="form-progress-bar" id="progressBar" style="width:50%"></div></div>
-      <div style="display:flex;align-items:center;justify-content:flex-end;margin-bottom:24px">
-        <span style="font-size:0.8rem;opacity:0.4" id="stepLabel">Etapa 1 de 2</span>
-      </div>
+      <div class="form-progress"><div class="form-progress-bar" id="progressBar" style="width:100%"></div></div>
 
       <div class="form-step active" id="step1">
-        <h2 style="font-weight:600;font-size:1.1rem;margin-bottom:20px">Dados do solicitante</h2>
-        <div class="field">
-          <label>Seu nome</label>
-          <input type="text" id="nome" placeholder="Seu nome completo" required>
-        </div>
-        <div class="field">
-          <label>Setor</label>
-          <select id="setor" required></select>
-        </div>
-        <div class="form-nav">
-          <button class="btn btn-primary" id="btnNext1" disabled onclick="goStep(2)">Próximo</button>
-        </div>
-      </div>
-
-      <div class="form-step" id="step2">
         <h2 style="font-weight:600;font-size:1.1rem;margin-bottom:20px">Informações do material</h2>
         <div class="field">
           <label>Material atual + arquivos de apoio</label>
@@ -51,19 +32,18 @@
         </div>
         <div class="field">
           <label>Título do material</label>
-          <input type="text" id="titulo" placeholder="Nome ou identificacao do material que será atualizado" required>
+          <input type="text" id="titulo" placeholder="Nome ou identificação do material que será atualizado" required>
         </div>
         <div class="field">
           <label>Finalidade do material</label>
-          <textarea id="finalidade" placeholder="Para que e utilizado este material?" required></textarea>
+          <textarea id="finalidade" placeholder="Para que é utilizado este material?" required></textarea>
         </div>
         <div class="field">
           <label>Descrição do que precisa ser atualizado</label>
           <textarea id="descricao" placeholder="Descreva com clareza o que deve ser alterado, corrigido ou adicionado. Quanto mais detalhado, melhor." required></textarea>
         </div>
         <div style="border-top:1px solid rgba(34,27,25,.08);margin:28px 0 20px;padding-top:22px">
-          <div class="form-nav">
-            <button class="btn btn-secondary" onclick="goStep(1)">Voltar</button>
+          <div class="form-nav" style="justify-content:flex-end">
             <button class="btn btn-primary btn-submit-gold" id="btnSubmit" onclick="submitForm()">Enviar</button>
           </div>
         </div>
@@ -88,34 +68,12 @@
       await Auth.init();
       if (!Auth.isAuthenticated()) { window.location.href = '/auth/login?redirect=/form-atualizacao-material.html'; return; }
       Auth.renderHeader(document.getElementById('mainHeader'));
-      const _fl = document.getElementById('formLogo'); if (_fl) _fl.src = URL_LOGO_PRETA;
-      document.getElementById('nome').value = Auth.getUserName();
 
-      const sel = document.getElementById('setor');
-      SETORES.forEach(s => { const o = document.createElement('option'); o.value = s; o.textContent = s; sel.appendChild(o); });
-
-      document.getElementById('nome').addEventListener('input', validateStep1);
-      document.getElementById('setor').addEventListener('change', validateStep1);
       document.getElementById('materialAtual').addEventListener('change', e => {
         const f = e.target.files[0];
         const el = document.getElementById('materialAtualName');
         el.innerHTML = f ? `<span style="display:flex;align-items:center;gap:6px;background:#d1fae5;padding:6px 10px;border-radius:6px;margin-top:6px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#065f46" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg><span style="color:#065f46;font-weight:600">${f.name}</span><span style="font-size:0.75rem;color:#065f46;opacity:0.7">${(f.size/1024).toFixed(0)} KB</span></span>` : '';
       });
-      validateStep1();
-    }
-
-    function validateStep1() {
-      const valid = document.getElementById('nome').value.trim() &&
-        document.getElementById('setor').value !== SETORES[0];
-      document.getElementById('btnNext1').disabled = !valid;
-    }
-
-    function goStep(step) {
-      document.querySelectorAll('.form-step').forEach(s => s.classList.remove('active'));
-      document.getElementById('step' + step).classList.add('active');
-      document.getElementById('progressBar').style.width = (step / 2 * 100) + '%';
-      document.getElementById('stepLabel').textContent = `Etapa ${step} de 2`;
-      window.scrollTo(0, 0);
     }
 
     function validateRequiredFields() {
@@ -124,8 +82,6 @@
       document.querySelectorAll('input[required], select[required], textarea[required]').forEach(input => {
         const step = input.closest('.form-step');
         if (step && !step.classList.contains('active')) return;
-        const conditional = input.closest('.conditional-fields');
-        if (conditional && !conditional.classList.contains('open')) return;
         const isEmpty = input.type === 'radio' || input.type === 'checkbox'
           ? !document.querySelector(`input[name="${input.name}"]:checked`)
           : !input.value.trim();
@@ -154,7 +110,19 @@
     async function submitForm() {
       if (!validateRequiredFields()) return;
       if (!document.getElementById('materialAtual').files[0]) {
-        alert('Envie o material atual.'); return;
+        const fieldEl = document.getElementById('materialAtual').closest('.field');
+        if (fieldEl) {
+          fieldEl.classList.add('field-invalid');
+          let errorEl = fieldEl.querySelector('.field-error');
+          if (!errorEl) {
+            errorEl = document.createElement('div');
+            errorEl.className = 'field-error';
+            fieldEl.appendChild(errorEl);
+          }
+          errorEl.textContent = 'Envie o material atual para continuar.';
+          fieldEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+        return;
       }
 
       const btn = document.getElementById('btnSubmit');
@@ -163,10 +131,11 @@
       const formData = new FormData();
       formData.append('tipo_solicitacao', 'atualizacao-material');
       const dados = {
-        nome: document.getElementById('nome').value,
-        setor: document.getElementById('setor').value, titulo: document.getElementById('titulo').value,
+        nome: Auth.getUserName(),
+        setor: '',
+        titulo: document.getElementById('titulo').value,
         finalidade: document.getElementById('finalidade').value,
-        descrição: document.getElementById('descricao').value,
+        descricao: document.getElementById('descricao').value,
       };
       formData.append('dados', JSON.stringify(dados));
       formData.append('materialAtual', document.getElementById('materialAtual').files[0]);
@@ -178,14 +147,11 @@
           try {
             const resumo = {
               tipo: TIPO_SOLICITACAO_LABELS[formData.get('tipo_solicitacao')] || formData.get('tipo_solicitacao'),
-              subtipo: formData.get('subtipo') || '', titulo: dados.nomeEvento || dados.tituloEvento || dados.titulo || dados.nomeCompleto || '',
-              solicitante: dados.nome || Auth.getUserName(),
-              setor: dados.setor || '',
+              subtipo: '',
+              titulo: dados.titulo || '',
+              solicitante: dados.nome,
               data: new Date().toLocaleDateString('pt-BR'),
               hora: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
-              materiais: dados.materiais || [],
-              natureza: dados.natureza || '',
-              maturidade: dados.maturidade || '',
             };
             sessionStorage.setItem('svn_ultimo_resumo', JSON.stringify(resumo));
           } catch {}
@@ -198,10 +164,9 @@
     function saveDraft() {
       try {
         sessionStorage.setItem('form-atualizacao', JSON.stringify({
-          nome: document.getElementById('nome')?.value || '',
-          setor: document.getElementById('setor')?.value || '', titulo: document.getElementById('titulo')?.value || '',
+          titulo:    document.getElementById('titulo')?.value    || '',
           finalidade: document.getElementById('finalidade')?.value || '',
-          descrição: document.getElementById('descricao')?.value || '',
+          descricao: document.getElementById('descricao')?.value || '',
         }));
       } catch {}
     }
