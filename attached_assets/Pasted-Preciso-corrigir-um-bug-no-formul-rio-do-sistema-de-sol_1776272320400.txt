@@ -1,0 +1,89 @@
+Preciso corrigir um bug no formulário do sistema de solicitações.
+
+## Problema
+
+Em etapas com seleção de múltiplas opções, cada opção pode revelar campos condicionais próprios. Esses campos devem:
+
+* aparecer quando a opção pai é selecionada;
+* se tornar obrigatórios somente enquanto estiverem visíveis;
+* deixar de ser obrigatórios quando a opção pai for desmarcada.
+
+Essa parte já funciona.
+
+## Bug atual
+
+Quando seleciono uma segunda opção, os valores já preenchidos nos campos condicionais da opção anterior são apagados.
+
+### Exemplo
+
+* Seleciono **Banner impresso**;
+* preencho os 2 campos condicionais dessa opção;
+* depois seleciono **Flyer**;
+* no momento do clique, os campos de **Banner impresso** são zerados.
+
+## Objetivo da correção
+
+Ao marcar novas opções, o sistema deve **preservar todos os valores já digitados** nos campos das opções anteriormente selecionadas.
+
+## Comportamento esperado
+
+1. Selecionar uma nova opção **não pode limpar** os campos das opções já marcadas.
+2. Os valores dos campos condicionais devem permanecer salvos enquanto a opção pai continuar selecionada.
+3. Apenas ao **desmarcar** a opção pai, os campos filhos dessa opção podem:
+
+   * deixar de ser obrigatórios;
+   * opcionalmente ser limpos, mas somente os daquela opção específica.
+4. O restante da etapa não pode ser resetado.
+5. Não recriar o estado completo do formulário a cada clique; fazer atualização incremental/merge.
+6. Evitar desmontagem desnecessária dos componentes condicionais se isso estiver causando perda de estado.
+7. Garantir que campos escondidos não bloqueiem validação.
+8. Garantir que múltiplas opções funcionem simultaneamente sem interferir umas nas outras.
+
+## O que revisar no código
+
+Verifique especialmente se existe algum destes padrões causando o bug:
+
+* atualização do estado com sobrescrita total em vez de merge;
+* `setState({...})` usando objeto incompleto;
+* `reset()` sendo chamado ao alterar seleção;
+* `useEffect` limpando campos quando `selectedOptions` muda;
+* componentes condicionais sendo desmontados e remontados com `key` dinâmica;
+* uso de índice como `key`;
+* lógica que reconstrói o schema/initialValues inteiro a cada clique;
+* chamada de `setValue` ou equivalente limpando campos de todas as opções em vez de apenas da opção desmarcada.
+
+## Diretriz técnica
+
+Implemente a correção para que:
+
+* o estado dos campos condicionais seja mantido por opção;
+* a seleção de novas opções apenas adicione a visibilidade/validação dos novos campos;
+* a desmarcação de uma opção afete somente os campos ligados àquela opção;
+* a obrigatoriedade seja dinâmica, mas sem apagar valores de outros grupos.
+
+## Entrega esperada
+
+Quero que você:
+
+1. identifique a causa exata do bug no código;
+2. corrija a lógica;
+3. mostre claramente quais arquivos foram alterados;
+4. explique de forma objetiva o que causava o reset;
+5. garanta que a solução seja reutilizável para outros formulários com o mesmo padrão.
+
+## Critérios de aceite
+
+Considere concluído somente se este fluxo funcionar:
+
+* marcar opção A;
+* preencher campos da opção A;
+* marcar opção B;
+* os campos da opção A permanecem intactos;
+* preencher campos da opção B;
+* marcar opção C;
+* A e B continuam preservados;
+* desmarcar apenas A;
+* somente os campos de A deixam de ser obrigatórios e, se a regra decidir limpar, apenas A é limpo;
+* B e C continuam intactos.
+
+Se houver mais de uma forma de corrigir, prefira a solução mais estável, reutilizável e segura para outros forms do sistema.

@@ -274,6 +274,19 @@
     let totalSteps = 7;
     let estados = [];
 
+    const COND_MATERIAL_FIELDS = [
+      'matPersonConvite','matPersonPagina',
+      'matBannerTam','matBannerConteudo',
+      'matFlyerTam','matFlyerConteudo',
+      'matBrindeDesc',
+      'matIgArroba',
+      'matEmailConteudo',
+      'matApoioDesc',
+      'matSorteioDesc',
+      'matStandMat',
+    ];
+    const COND_MATERIAL_RADIOS = ['flyerTipo','captacao','igTipo','sorteio1'];
+
     function saveFormState() {
       const fields = ['nomeEvento','dataEvento','horario','descricao',
         'origem','tipoEvento','publico','convidados','canal','linkTransmissao',
@@ -291,8 +304,17 @@
       data._checkTutorial = document.getElementById('checkTutorial')?.checked || false;
       const tipoAprox = document.querySelector('input[name="tipoAprox"]:checked');
       if (tipoAprox) data._tipoAprox = tipoAprox.value;
+      const condVals = {};
+      COND_MATERIAL_FIELDS.forEach(id => { const el = document.getElementById(id); if (el) condVals[id] = el.value; });
+      COND_MATERIAL_RADIOS.forEach(name => {
+        const checked = document.querySelector(`input[name="${name}"]:checked`);
+        if (checked) condVals['_r_' + name] = checked.value;
+      });
+      data._condMaterial = condVals;
       try { sessionStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch {}
     }
+
+    let _pendingCondMaterial = null;
 
     function restoreFormState() {
       try {
@@ -317,7 +339,28 @@
           selectMaturidade(data._maturidade);
         }
         if (data._materiais) data._materiais.forEach(m => formState.materiais.add(m));
+        if (data._condMaterial) _pendingCondMaterial = data._condMaterial;
       } catch {}
+    }
+
+    function restoreCondMaterialFields() {
+      let vals = null;
+      try {
+        const raw = sessionStorage.getItem(STORAGE_KEY);
+        if (raw) vals = JSON.parse(raw)._condMaterial || null;
+      } catch {}
+      if (!vals) vals = _pendingCondMaterial;
+      if (!vals) return;
+      COND_MATERIAL_FIELDS.forEach(id => {
+        if (vals[id]) { const el = document.getElementById(id); if (el) el.value = vals[id]; }
+      });
+      COND_MATERIAL_RADIOS.forEach(name => {
+        const val = vals['_r_' + name];
+        if (val) {
+          const radio = document.querySelector(`input[name="${name}"][value="${val}"]`);
+          if (radio) { radio.checked = true; radio.dispatchEvent(new Event('change')); }
+        }
+      });
     }
 
     function clearFormStorage() {
@@ -646,7 +689,7 @@
       const steps = getStepCount();
       document.getElementById('progressBar').style.width = (step / steps * 100) + '%';
       document.getElementById('stepLabel').textContent = `Etapa ${step} de ${steps}`;
-      if (step === 3) renderMateriais();
+      if (step === 3) { renderMateriais(); restoreCondMaterialFields(); }
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
@@ -674,9 +717,30 @@
     }
 
     function toggleMaterial(id) {
-      if (formState.materiais.has(id)) formState.materiais.delete(id);
-      else formState.materiais.add(id);
-      renderMateriais();
+      const removing = formState.materiais.has(id);
+      if (removing) {
+        formState.materiais.delete(id);
+      } else {
+        formState.materiais.add(id);
+      }
+
+      const btn = document.querySelector(`[data-material="${id}"]`);
+      if (btn) btn.classList.toggle('selected', !removing);
+
+      const condBlock = document.getElementById('cond-' + id);
+      if (condBlock) {
+        if (removing) {
+          condBlock.classList.remove('open');
+          condBlock.querySelectorAll('input:not([type="file"]), textarea, select').forEach(el => {
+            if (el.type === 'radio' || el.type === 'checkbox') el.checked = false;
+            else el.value = '';
+          });
+        } else {
+          condBlock.classList.add('open');
+        }
+      }
+
+      updateMateriaisPreview();
     }
 
     function getMaterialConditional(id) {
