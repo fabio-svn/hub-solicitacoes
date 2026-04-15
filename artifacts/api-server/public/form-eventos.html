@@ -89,7 +89,7 @@
             <div id="maturityFields" style="margin-top:24px"></div>
             <div class="form-nav" id="nav2" style="display:none">
               <button class="btn btn-secondary" onclick="goStep(1)">Voltar</button>
-              <button class="btn btn-primary" onclick="goStep(3)">Próximo</button>
+              <button class="btn btn-primary" onclick="validateStep2() && goStep(3)">Próximo</button>
             </div>
           </div>
 
@@ -847,12 +847,119 @@
       if (field) field.style.display = defined ? 'block' : 'none';
     }
 
+    function validateStep2() {
+      const mat = formState.maturidade;
+      if (!mat) {
+        alert('Selecione um nível de maturidade para continuar.');
+        return false;
+      }
+
+      document.querySelectorAll('#maturityFields .field-invalid').forEach(el => el.classList.remove('field-invalid'));
+      const errors = [];
+
+      function markInvalid(fieldEl) {
+        if (!fieldEl) return;
+        fieldEl.classList.add('field-invalid');
+        errors.push(fieldEl);
+      }
+
+      function checkField(inputEl) {
+        if (!inputEl) return;
+        const fieldEl = inputEl.closest('.field');
+        if (!fieldEl) return;
+        const label = fieldEl.querySelector('label');
+        if (label && label.textContent.toLowerCase().includes('opcional')) return;
+        let empty = false;
+        if (inputEl.type === 'radio') {
+          if (inputEl !== [...document.querySelectorAll(`input[name="${inputEl.name}"]`)][0]) return;
+          empty = !document.querySelector(`input[name="${inputEl.name}"]:checked`);
+        } else if (inputEl.tagName === 'SELECT') {
+          empty = !inputEl.value || /^selecione/i.test(inputEl.value) || /^carregando/i.test(inputEl.value);
+        } else {
+          empty = !inputEl.value.trim();
+        }
+        if (empty) markInvalid(fieldEl);
+      }
+
+      if (mat === 1) {
+        const container = document.getElementById('maturityFields');
+        if (container) {
+          container.querySelectorAll('input:not([type="file"]), select, textarea').forEach(input => {
+            if (input.id === 'cidade' && input.disabled) return;
+            checkField(input);
+          });
+        }
+      } else if (mat === 2) {
+        const camposDinamicos = document.getElementById('camposDinamicos');
+        if (camposDinamicos) {
+          camposDinamicos.querySelectorAll('input:not([type="file"]), select, textarea').forEach(input => {
+            if (input.id === 'cidade' && input.disabled) return;
+            checkField(input);
+          });
+        }
+      } else if (mat === 3) {
+        const descEl = document.getElementById('descrição');
+        if (descEl) {
+          const fieldEl = descEl.closest('.field');
+          if (!descEl.value.trim() && fieldEl) markInvalid(fieldEl);
+        }
+        const tipoRadios = document.querySelectorAll('input[name="tipoAprox"]');
+        if (tipoRadios.length > 0 && !document.querySelector('input[name="tipoAprox"]:checked')) {
+          markInvalid(tipoRadios[0].closest('.field'));
+        }
+      }
+
+      if (errors.length > 0) {
+        errors[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+        return false;
+      }
+      return true;
+    }
+
     function validateMateriais() {
       if (formState.materiais.size === 0) {
         document.getElementById('materiaisError').classList.add('visible');
         return false;
       }
       document.getElementById('materiaisError').classList.remove('visible');
+
+      document.querySelectorAll('#materiaisCondFields .field-invalid, #materiaisContainer .field-invalid').forEach(el => el.classList.remove('field-invalid'));
+      const errors = [];
+
+      function checkCondField(inputEl) {
+        if (!inputEl) return;
+        const fieldEl = inputEl.closest('.field');
+        if (!fieldEl) return;
+        const label = fieldEl.querySelector('label');
+        if (label && label.textContent.toLowerCase().includes('opcional')) return;
+        let empty = false;
+        if (inputEl.type === 'file') return;
+        if (inputEl.type === 'radio') {
+          if (inputEl !== [...document.querySelectorAll(`input[name="${inputEl.name}"]`)][0]) return;
+          empty = !document.querySelector(`input[name="${inputEl.name}"]:checked`);
+        } else if (inputEl.tagName === 'SELECT') {
+          empty = !inputEl.value || /^selecione/i.test(inputEl.value);
+        } else {
+          empty = !inputEl.value.trim();
+        }
+        if (empty) {
+          fieldEl.classList.add('field-invalid');
+          errors.push(fieldEl);
+        }
+      }
+
+      document.querySelectorAll('.conditional-fields.open').forEach(condBlock => {
+        condBlock.querySelectorAll('input:not([type="file"]), select, textarea').forEach(input => {
+          const hiddenParent = input.closest('[style*="display:none"], [style*="display: none"]');
+          if (hiddenParent) return;
+          checkCondField(input);
+        });
+      });
+
+      if (errors.length > 0) {
+        errors[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+        return false;
+      }
       return true;
     }
 
@@ -899,10 +1006,49 @@
     }
 
     function validateStep4() {
+      document.querySelectorAll('#step4 .field-invalid').forEach(el => el.classList.remove('field-invalid'));
+      const errors = [];
+
+      function markField(el) {
+        if (!el) return;
+        const fieldEl = el.closest ? (el.closest('.field') || el) : el;
+        fieldEl.classList.add('field-invalid');
+        errors.push(fieldEl);
+      }
+
       const temPalestrante = document.querySelector('input[name="temPalestrante"]:checked');
       if (!temPalestrante) {
-        const field = document.querySelector('#step4 .field');
-        if (field) { field.classList.add('field-invalid'); setTimeout(() => field.classList.remove('field-invalid'), 600); }
+        markField(document.querySelector('input[name="temPalestrante"]'));
+        if (errors.length > 0) errors[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+        return false;
+      }
+
+      if (temPalestrante.value === 'sim') {
+        const qtd = document.querySelector('input[name="qtdPalestrante"]:checked');
+        if (!qtd) {
+          markField(document.querySelector('input[name="qtdPalestrante"]'));
+          if (errors.length > 0) errors[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+          return false;
+        }
+
+        const n = parseInt(qtd.value);
+        for (let i = 1; i <= n; i++) {
+          const palSvn = document.querySelector(`input[name="palSvn${i}"]:checked`);
+          if (!palSvn) {
+            markField(document.querySelector(`input[name="palSvn${i}"]`));
+            continue;
+          }
+          if (palSvn.value === 'sim') {
+            const nome = document.getElementById('palNome' + i);
+            const cargo = document.getElementById('palCargo' + i);
+            if (nome && !nome.value.trim()) markField(nome);
+            if (cargo && !cargo.value.trim()) markField(cargo);
+          }
+        }
+      }
+
+      if (errors.length > 0) {
+        errors[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
         return false;
       }
       return true;
@@ -933,7 +1079,7 @@
         html += `
           <div style="margin-top:16px;animation:fadeSlide 0.3s ease ${i*0.08}s both">
             <hr class="block-divider"><h3 style="font-weight:600;font-size:0.95rem;margin-bottom:12px">Palestrante ${i}</h3>
-            <div class="field"><label>O palestrante ${i} e colaborador da SVN?</label>
+            <div class="field"><label>O palestrante ${i} é colaborador da SVN?</label>
               <div class="radio-group"><label class="radio-option"><input type="radio" name="palSvn${i}" value="sim" onchange="showPalFields(${i},true)"><span class="radio-custom"></span><span>Sim</span></label><label class="radio-option"><input type="radio" name="palSvn${i}" value="nao" onchange="showPalFields(${i},false)"><span class="radio-custom"></span><span>Nao</span></label></div>
             </div>
             <div id="palFields${i}"></div>
