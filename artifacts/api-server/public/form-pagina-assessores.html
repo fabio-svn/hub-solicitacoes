@@ -175,6 +175,7 @@
     <span>Início</span>
   </a>
 
+  <script src="upload-feedback.js"></script>
   <script src="config.js"></script>
   <script src="auth.js"></script>
   <script>
@@ -203,7 +204,9 @@
 
       renderSelos();
 
-      document.getElementById('fotoPerfil').addEventListener('change', handlePhoto);
+      FileUpload.bind('fotoPerfil', 'fotoPerfilName', {
+        accept: '.jpg,.jpeg,.png,.webp'
+      });
     }
 
     function renderSelos() {
@@ -224,24 +227,6 @@
       document.querySelectorAll('#selosContainer .selo-chip').forEach(p => {
         p.classList.toggle('selected', selectedSelos.has(p.dataset.selo));
       });
-    }
-
-    function handlePhoto(e) {
-      const file = e.target.files[0];
-      const nameEl = document.getElementById('fotoPerfilName');
-      if (file) {
-        nameEl.style.display = 'flex';
-        nameEl.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#065f46" stroke-width="2.5" style="flex-shrink:0"><polyline points="20 6 9 17 4 12"/></svg><span style="color:#065f46;font-weight:600">${file.name}</span><span style="font-size:0.75rem;color:#065f46;opacity:0.7">${(file.size/1024).toFixed(0)} KB</span>`;
-        nameEl.style.background = '#d1fae5';
-        nameEl.style.padding = '6px 10px';
-        nameEl.style.borderRadius = '6px';
-        nameEl.style.marginTop = '6px';
-        nameEl.style.gap = '6px';
-        nameEl.style.alignItems = 'center';
-      } else {
-        nameEl.style.display = 'none';
-        nameEl.innerHTML = '';
-      }
     }
 
     function addDepoimento() {

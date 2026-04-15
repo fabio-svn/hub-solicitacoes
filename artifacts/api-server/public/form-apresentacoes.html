@@ -145,6 +145,7 @@
     <span>Início</span>
   </a>
 
+  <script src="upload-feedback.js"></script>
   <script src="config.js"></script>
   <script src="auth.js"></script>
   <script>
@@ -186,14 +187,7 @@
       }));
 
       ['arquivoBase', 'arquivoBaseNova', 'arquivoApoio'].forEach(id => {
-        const el = document.getElementById(id);
-        if (!el) return;
-        el.addEventListener('change', e => {
-          const f = e.target.files[0];
-          const nameEl = document.getElementById(id + 'Name');
-          if (!nameEl) return;
-          nameEl.innerHTML = f ? `<span style="display:flex;align-items:center;gap:6px;background:#d1fae5;padding:6px 10px;border-radius:6px;margin-top:6px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#065f46" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg><span style="color:#065f46;font-weight:600">${f.name}</span><span style="font-size:0.75rem;color:#065f46;opacity:0.7">${(f.size/1024).toFixed(0)} KB</span></span>` : '';
-        });
+        FileUpload.bind(id, id + 'Name');
       });
 
       restoreDraft();

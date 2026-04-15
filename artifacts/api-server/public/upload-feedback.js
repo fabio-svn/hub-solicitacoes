@@ -1,0 +1,61 @@
+const FileUpload = {
+  success(nameEl, file) {
+    if (!nameEl) return;
+    const size = file.size >= 1024 * 1024
+      ? (file.size / (1024 * 1024)).toFixed(1) + ' MB'
+      : Math.round(file.size / 1024) + ' KB';
+    nameEl.innerHTML =
+      `<div class="upload-feedback upload-feedback--success">` +
+        `<svg class="upload-feedback__icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>` +
+        `<span class="upload-feedback__name" title="${file.name}">${file.name}</span>` +
+        `<span class="upload-feedback__meta">${size}</span>` +
+      `</div>`;
+  },
+
+  error(nameEl, message) {
+    if (!nameEl) return;
+    nameEl.innerHTML =
+      `<div class="upload-feedback upload-feedback--error">` +
+        `<svg class="upload-feedback__icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>` +
+        `<span>${message}</span>` +
+      `</div>`;
+  },
+
+  clear(nameEl) {
+    if (!nameEl) return;
+    nameEl.innerHTML = '';
+  },
+
+  bind(inputId, nameElId, options) {
+    const input   = typeof inputId  === 'string' ? document.getElementById(inputId)  : inputId;
+    const nameEl  = typeof nameElId === 'string' ? document.getElementById(nameElId) : nameElId;
+    if (!input) return;
+    options = options || {};
+
+    input.addEventListener('change', function(e) {
+      const f = e.target.files[0];
+      if (!f) { FileUpload.clear(nameEl); return; }
+
+      if (options.accept) {
+        const allowed = options.accept.split(',')
+          .map(function(x) { return x.trim().toLowerCase().replace(/^\./,''); })
+          .filter(Boolean);
+        const ext = f.name.split('.').pop().toLowerCase();
+        if (allowed.length && !allowed.includes(ext)) {
+          FileUpload.error(nameEl, 'Formato não permitido. Use: ' + allowed.map(function(x){ return x.toUpperCase(); }).join(', '));
+          input.value = '';
+          return;
+        }
+      }
+
+      if (options.maxMB && f.size > options.maxMB * 1024 * 1024) {
+        FileUpload.error(nameEl, 'Arquivo excede o tamanho máximo de ' + options.maxMB + ' MB');
+        input.value = '';
+        return;
+      }
+
+      FileUpload.success(nameEl, f);
+      if (options.onChange) options.onChange(f, nameEl, input);
+    });
+  }
+};
