@@ -137,10 +137,7 @@
 
         container.appendChild(trioWrapper);
 
-        const trioStyle = document.createElement('style');
-        trioStyle.textContent = '@media(max-width:768px){.trio-grid{grid-template-columns:1fr!important}}';
         trioWrapper.classList.add('trio-grid');
-        document.head.appendChild(trioStyle);
       }
 
       if (singleCats.length > 0) {

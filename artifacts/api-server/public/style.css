@@ -1024,7 +1024,7 @@ input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
 }
 
 /* Pacote padrão images in modal */
-.pacote-padrão-img {
+.pacote-padrao-img {
   width: 100%;
   height: auto;
   max-height: 500px;
@@ -1080,9 +1080,7 @@ input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
   .title-row .btn { width: 100%; justify-content: center; }
   .float-home span { display: none; }
   .tabs { overflow-x: auto; }
-  .filters { overflow-x: auto; flex-wrap: nowrap; }
-  .hero-card { height: 280px; }
-  .hero-buttons { flex-direction: column; }
+  .trio-grid { grid-template-columns: 1fr !important; }
   .form-card,
   .container,
   .container-narrow { padding-bottom: 120px; }

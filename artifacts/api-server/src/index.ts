@@ -32,12 +32,13 @@ async function start() {
     logger.warn({ err }, "Session table setup warning (may already exist)");
   }
 
-  app.listen(port, (err) => {
-    if (err) {
-      logger.error({ err }, "Error listening on port");
-      process.exit(1);
-    }
+  const server = app.listen(port, () => {
     logger.info({ port }, "Server listening");
+  });
+
+  server.on('error', (err) => {
+    logger.error({ err }, "Error listening on port");
+    process.exit(1);
   });
 }
 

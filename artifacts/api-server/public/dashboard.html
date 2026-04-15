@@ -234,6 +234,8 @@
       }
     }
 
+    const NATUREZA_LABEL = { presencial: 'Presencial', online: 'Online' };
+
     function renderList(tab, data) {
       const container = document.getElementById(tab === 'eventos' ? 'listEventos' : 'listGeral');
 
@@ -254,7 +256,6 @@
       });
 
       let lastPeriodo = null;
-      const NATUREZA_LABEL = { presencial: 'Presencial', online: 'Online' };
       container.innerHTML = data.data.map((item, idx) => {
         const cacheKey = tab + '_' + idx + '_' + pages[tab];
         let dados = {};
@@ -403,26 +404,6 @@
       const item = itemsCache[key];
       if (!item) return;
       openDrawer(item);
-    }
-
-    function getStatusColor(statusId) {
-      const map = {
-        'recebido':               { bg: '#e8f4ea', text: '#2d7a3a' },
-        'alinhamentos':           { bg: '#e8f0fb', text: '#1a56a0' },
-        'em-andamento':           { bg: '#fff3e0', text: '#b45309' },
-        'cotacao-aprovacao':      { bg: '#fef3c7', text: '#92660a' },
-        'aguardando-pagamento':   { bg: '#fce8f3', text: '#9d174d' },
-        'aguardando-finalizacao': { bg: '#ede9fe', text: '#5b21b6' },
-        'concluido':              { bg: '#d1fae5', text: '#065f46' },
-        'reprovado':              { bg: '#fee2e2', text: '#991b1b' },
-        'cancelado':              { bg: '#fee2e2', text: '#991b1b' },
-        'em-espera':              { bg: '#f1f5f9', text: '#475569' },
-        'em-analise':             { bg: '#fff3e0', text: '#b45309' },
-        'em-producao':            { bg: '#fff3e0', text: '#b45309' },
-        'aguardando':             { bg: '#fef3c7', text: '#92660a' },
-        'aguardando-rh':          { bg: '#fce8f3', text: '#9d174d' },
-      };
-      return map[statusId] || { bg: '#f1f5f9', text: '#475569' };
     }
 
     function normalizeSlug(value) {
@@ -618,7 +599,8 @@
                 const isConcluida = idx < idxAtual;
                 const isAtual = idx === idxAtual;
                 const isUltima = idx === etapasVisiveis.length - 1;
-                const cor = getStatusColor(etapa.id);
+                const statusEntry = STATUS_SOLICITACAO.find(s => s.id === etapa.id);
+                const cor = statusEntry ? { bg: statusEntry.bg, text: statusEntry.text } : { bg: 'transparent', text: 'rgba(34,27,25,0.15)' };
                 const circBg = isConcluida ? '#065f46' : isAtual ? cor.bg : 'transparent';
                 const circBorder = isConcluida ? '#065f46' : isAtual ? cor.text : 'rgba(34,27,25,0.15)';
                 const icone = isConcluida
