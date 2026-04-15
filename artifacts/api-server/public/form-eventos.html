@@ -495,7 +495,7 @@
     function buildPresencial2Fields() {
       const pills = CAMPOS_ETAPA2_FORM2.map(c => `<button class="pill" data-campo="${c.id}" onclick="toggleCampo('${c.id}','${c.label}')">${c.label}</button>`).join('');
       return `
-        <div class="alert-card alert-info"><div class="alert-title">Opcional</div><div class="alert-text">Selecione os campos que você ja tem informação para preencher.</div></div>
+        <div class="alert-card alert-info"><div class="alert-title">Opcional</div><div class="alert-text">Selecione os campos que você já tem informação para preencher.</div></div>
         <div class="pills-wrap">${pills}</div>
         <div id="camposDinamicos" style="margin-top:16px"></div>
       `;
@@ -538,7 +538,7 @@
     function buildOnline2Fields() {
       const pills = CAMPOS_ETAPA2_FORM2_ONLINE.map(c => `<button class="pill" data-campo="${c.id}" onclick="toggleCampo('${c.id}','${c.label}')">${c.label}</button>`).join('');
       return `
-        <div class="alert-card alert-info"><div class="alert-title">Opcional</div><div class="alert-text">Selecione os campos que você ja tem informação para preencher.</div></div>
+        <div class="alert-card alert-info"><div class="alert-title">Opcional</div><div class="alert-text">Selecione os campos que você já tem informação para preencher.</div></div>
         <div class="pills-wrap">${pills}</div>
         <div id="camposDinamicos" style="margin-top:16px"></div>
       `;
@@ -658,7 +658,7 @@
         case 'tipo-evento': return `<div class="field"><label>${campo.label}</label><select id="tipoEvento">${TIPOS_EVENTO.map(t=>`<option>${t}</option>`).join('')}</select></div>`;
         case 'publico': return `<div class="field"><label>${campo.label}</label><select id="publico"><option>Selecione</option><option>Fechado para convidados</option><option>Aberto ao público em geral</option></select></div>`;
         case 'estado-cidade': return `<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px"><div class="field"><label>Estado</label><select id="estado" onchange="loadCidades()"><option>Carregando...</option></select></div><div class="field"><label>Cidade</label><select id="cidade" disabled><option>Selecione o estado</option></select></div></div>`;
-        case 'local': return `<div class="field"><label>${campo.label}</label><select id="localEvento" onchange="handleLocal()"><option>Selecione</option><option value="unidade">Unidade SVN</option><option value="externo">Local externo</option><option value="nao-definido">Nao definido</option></select></div><div id="localConditional"></div>`;
+        case 'local': return `<div class="field"><label>${campo.label}</label><select id="localEvento" onchange="handleLocal()"><option>Selecione</option><option value="unidade">Unidade SVN</option><option value="externo">Local externo</option><option value="nao-definido">Não definido</option></select></div><div id="localConditional"></div>`;
         case 'convidados': return `<div class="field"><label>${campo.label}</label><input type="number" id="convidados" min="1"></div>`;
         case 'objetivos': return `<div class="field"><label>${campo.label}</label><textarea id="objetivos"></textarea></div>`;
         case 'canal': return `<div class="field"><label>${campo.label}</label><select id="canal" onchange="handleCanal()">${CANAIS_TRANSMISSAO.map(c=>`<option>${c}</option>`).join('')}</select></div>`;
@@ -1197,7 +1197,7 @@
           });
         }
       } else {
-        container.innerHTML = `<div class="alert-card alert-danger"><div class="alert-title">Atenção</div><div class="alert-text">Será enviado por e-mail um link para o cadastro do palestrante. Esse passo e obrigatório para o andamento do evento.</div></div>`;
+        container.innerHTML = `<div class="alert-card alert-danger"><div class="alert-title">Atenção</div><div class="alert-text">Será enviado por e-mail um link para o cadastro do palestrante. Esse passo é obrigatório para o andamento do evento.</div></div>`;
       }
     }
 
@@ -1280,36 +1280,48 @@
       btn.disabled = true; btn.textContent = 'Enviando...';
 
       const dados = {
-        nome: Auth.getUserName(),
-        setor: '',
-        natureza: formState.natureza,
-        maturidade: formState.maturidade,
-        nomeEvento: document.getElementById('nomeEvento')?.value || '',
-        dataEvento: document.getElementById('dataEvento')?.value || '',
-        horario: document.getElementById('horario')?.value || '',
-        descricao: document.getElementById('descricao')?.value || '',
-        origem: document.getElementById('origem')?.value || '',
-        tipoEvento: document.getElementById('tipoEvento')?.value || '',
-        publico: document.getElementById('publico')?.value || '',
-        estado: document.getElementById('estado')?.value || '',
-        cidade: document.getElementById('cidade')?.value || '',
-        localEvento: document.getElementById('localEvento')?.value || '',
-        convidados: document.getElementById('convidados')?.value || '',
-        canal: document.getElementById('canal')?.value || '',
-        linkTransmissao: document.getElementById('linkTransmissao')?.value || '',
-        objetivos: document.getElementById('objetivos')?.value || '',
-        custoEstimado: document.getElementById('custoEstimado')?.value || '',
-        rateio: document.getElementById('rateio')?.value || '',
-        observacoes: document.getElementById('observacoes')?.value || '',
-        materiais: [...formState.materiais],
-        tipoAprox: document.querySelector('input[name="tipoAprox"]:checked')?.value || '',
+        nome:           Auth.getUserName(),
+        natureza:       formState.natureza,
+        maturidade:     formState.maturidade === 1 ? 'Tenho a maioria das informações'
+                      : formState.maturidade === 2 ? 'Tenho algumas informações'
+                      : formState.maturidade === 3 ? 'Ainda estou estruturando' : '',
+        nomeEvento:     document.getElementById('nomeEvento')?.value     || '',
+        dataEvento:     document.getElementById('dataEvento')?.value     || '',
+        horario:        document.getElementById('horario')?.value        || '',
+        descricao:      document.getElementById('descricao')?.value      || '',
+        origem:         document.getElementById('origem')?.value         || '',
+        tipoEvento:     document.getElementById('tipoEvento')?.value     || '',
+        publico:        document.getElementById('publico')?.value        || '',
+        estado:         document.getElementById('estado')?.value         || '',
+        cidade:         document.getElementById('cidade')?.value         || '',
+        localEvento:    document.getElementById('localEvento')?.value    || '',
+        unidadeSVN:     document.getElementById('unidadeSVN')?.value     || '',
+        localNome:      document.getElementById('localNome')?.value      || '',
+        localEndereco:  document.getElementById('localEndereco')?.value  || '',
+        convidados:     document.getElementById('convidados')?.value     || '',
+        custoEstimado:  document.getElementById('custoEstimado')?.value  || '',
+        rateio:         document.getElementById('rateio')?.value         || '',
+        canal:          document.getElementById('canal')?.value          || '',
+        linkTransmissao:document.getElementById('linkTransmissao')?.value|| '',
+        objetivos:      document.getElementById('objetivos')?.value      || '',
+        materiais:      [...formState.materiais],
+        tipoAprox:      document.querySelector('input[name="tipoAprox"]:checked')?.value || '',
+        ideaQuando:     document.getElementById('ideaQuando')?.value     || '',
+        observacoes:    document.getElementById('observacoes')?.value    || '',
       };
+
+      const dadosLimpos = Object.fromEntries(
+        Object.entries(dados).filter(([_, v]) => {
+          if (Array.isArray(v)) return v.length > 0;
+          return v !== '' && v !== null && v !== undefined;
+        })
+      );
 
       const formData = new FormData();
       formData.append('tipo_solicitacao', 'eventos');
       formData.append('subtipo', formState.natureza);
       formData.append('maturidade', formState.maturidade);
-      formData.append('dados', JSON.stringify(dados));
+      formData.append('dados', JSON.stringify(dadosLimpos));
 
       ['logoFile','imgFile','demaisFile'].forEach(id => {
         const f = document.getElementById(id)?.files[0];
