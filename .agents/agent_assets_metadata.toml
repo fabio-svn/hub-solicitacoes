@@ -6,3 +6,9 @@ id = "pI3p5kVmJkutS7QFX8dFw"
 uri = "file://attached_assets/api-documentacao.md"
 type = "text"
 title = "Documentação das APIs — Hub de Solicitações SVN"
+
+[[outputs]]
+id = "yNif6keKCqd6xWRzho4wc"
+uri = "file://attached_assets/clickup-campos-por-formulario.md"
+type = "text"
+title = "ClickUp — Campos por categoria de solicitação"
