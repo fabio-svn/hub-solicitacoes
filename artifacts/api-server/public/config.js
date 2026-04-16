@@ -181,7 +181,7 @@ const STATUS_SOLICITACAO = [
   { id: "alinhamentos",           label: "Alinhamentos",               bg: "#e8f0fb", text: "#1a56a0",  cor: "--sage-green"    },
   { id: "em-analise",             label: "Em análise",                 bg: "#fef9c3", text: "#854d0e",  cor: "--ruby-red"      },
   { id: "em-andamento",           label: "Em andamento",               bg: "#fef3c7", text: "#92660a",  cor: "--leather-brown" },
-  { id: "em-producao",            label: "Em produção",                bg: "#ffedd5", text: "#9a3412",  cor: "--ruby-red"      },
+  { id: "em-producao",            label: "Em produção",                bg: "#fcd9b0", text: "#7c2d12",  cor: "--ruby-red"      },
   { id: "em-revisao",             label: "Em revisão",                 bg: "#ede9fe", text: "#5b21b6",  cor: "--leather-brown" },
   { id: "em-aprovacao",           label: "Em aprovação",               bg: "#dbeafe", text: "#1e40af",  cor: "--sage-green"    },
   { id: "cotacao-aprovacao",      label: "Em cotação / aprovação",     bg: "#dbeafe", text: "#1e40af",  cor: "--leather-brown" },

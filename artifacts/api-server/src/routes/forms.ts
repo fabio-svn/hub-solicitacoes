@@ -49,24 +49,44 @@ function validateFormDados(tipo: string, dados: Record<string, unknown>): string
   for (const field of required) {
     const value = dados[field];
     if (value === undefined || value === null || (typeof value === "string" && value.trim() === "")) {
-      return `Campo obrigatorio ausente: ${field}`;
+      return `Campo obrigatório ausente: ${field}`;
     }
   }
   return null;
 }
 
+const submissionCounts = new Map<string, { count: number; resetAt: number }>();
+
+function checkRateLimit(email: string): boolean {
+  const now = Date.now();
+  const entry = submissionCounts.get(email);
+  if (!entry || now > entry.resetAt) {
+    submissionCounts.set(email, { count: 1, resetAt: now + 60 * 60 * 1000 });
+    return true;
+  }
+  if (entry.count >= 10) return false;
+  entry.count++;
+  return true;
+}
+
 router.post("/solicitacoes", requireAuth, upload.any(), async (req, res): Promise<void> => {
   try {
     const user = req.session.user!;
+
+    if (!checkRateLimit(user.email)) {
+      res.status(429).json({ error: "Muitas solicitações. Tente novamente em 1 hora." });
+      return;
+    }
+
     const { tipo_solicitacao, subtipo, maturidade, ...dados } = req.body;
 
     if (!tipo_solicitacao || typeof tipo_solicitacao !== "string") {
-      res.status(400).json({ error: "tipo_solicitacao e obrigatorio" });
+      res.status(400).json({ error: "tipo_solicitacao é obrigatório" });
       return;
     }
 
     if (!VALID_TIPOS.includes(tipo_solicitacao)) {
-      res.status(400).json({ error: "tipo_solicitacao invalido" });
+      res.status(400).json({ error: "tipo_solicitacao inválido" });
       return;
     }
 
@@ -132,7 +152,7 @@ router.post("/solicitacoes", requireAuth, upload.any(), async (req, res): Promis
     res.json({ success: true, id: solicitacao.id, clickup_task_id: clickupTaskId });
   } catch (err) {
     logger.error({ err }, "Form submission error");
-    res.status(500).json({ error: "Erro ao processar solicitacao" });
+    res.status(500).json({ error: "Erro ao processar solicitação" });
   }
 });
 
@@ -170,6 +190,20 @@ router.get("/solicitacoes", requireAuth, async (req, res) => {
       const m = parseInt(String(req.query.maturidade));
       if (!isNaN(m) && m >= 1 && m <= 3) {
         conditions.push(eq(solicitacoesTable.maturidade, m));
+      }
+    }
+
+    if (req.query.natureza) {
+      const natureza = String(req.query.natureza);
+      if (natureza === "presencial" || natureza === "online") {
+        conditions.push(sql`${solicitacoesTable.dados}->>'natureza' = ${natureza}`);
+      }
+    }
+
+    if (req.query.subtipo_filter) {
+      const subtipoFilter = String(req.query.subtipo_filter).replace(/[^a-z0-9-]/g, "");
+      if (subtipoFilter) {
+        conditions.push(sql`${solicitacoesTable.tipo_solicitacao} LIKE ${subtipoFilter + "%"}`);
       }
     }
 
@@ -225,7 +259,7 @@ router.get("/solicitacoes", requireAuth, async (req, res) => {
     });
   } catch (err) {
     logger.error({ err }, "Error listing solicitacoes");
-    res.status(500).json({ error: "Erro ao listar solicitacoes" });
+    res.status(500).json({ error: "Erro ao listar solicitações" });
   }
 });
 
@@ -279,7 +313,7 @@ router.get("/solicitacoes/stats", requireAuth, async (req, res) => {
     });
   } catch (err) {
     logger.error({ err }, "Error getting stats");
-    res.status(500).json({ error: "Erro ao obter estatisticas" });
+    res.status(500).json({ error: "Erro ao obter estatísticas" });
   }
 });
 
@@ -288,7 +322,7 @@ router.get("/solicitacoes/:id", requireAuth, async (req, res): Promise<void> => 
     const user = req.session.user!;
     const id = parseInt(String(req.params.id));
     if (isNaN(id)) {
-      res.status(400).json({ error: "ID invalido" });
+      res.status(400).json({ error: "ID inválido" });
       return;
     }
 
@@ -301,7 +335,7 @@ router.get("/solicitacoes/:id", requireAuth, async (req, res): Promise<void> => 
 
     const [solicitacao] = await db.select().from(solicitacoesTable).where(and(...conditions));
     if (!solicitacao) {
-      res.status(404).json({ error: "Solicitacao nao encontrada" });
+      res.status(404).json({ error: "Solicitação não encontrada" });
       return;
     }
 
@@ -310,7 +344,7 @@ router.get("/solicitacoes/:id", requireAuth, async (req, res): Promise<void> => 
     res.json({ ...solicitacao, arquivos });
   } catch (err) {
     logger.error({ err }, "Error getting solicitacao");
-    res.status(500).json({ error: "Erro ao buscar solicitacao" });
+    res.status(500).json({ error: "Erro ao buscar solicitação" });
   }
 });
 
@@ -319,7 +353,7 @@ router.get("/solicitacoes/:id/status", requireAuth, async (req, res): Promise<vo
     const user = req.session.user!;
     const id = parseInt(String(req.params.id));
     if (isNaN(id)) {
-      res.status(400).json({ error: "ID invalido" });
+      res.status(400).json({ error: "ID inválido" });
       return;
     }
 
@@ -333,7 +367,7 @@ router.get("/solicitacoes/:id/status", requireAuth, async (req, res): Promise<vo
     const [solicitacao] = await db.select().from(solicitacoesTable).where(and(...conditions));
 
     if (!solicitacao) {
-      res.status(404).json({ error: "Solicitacao nao encontrada" });
+      res.status(404).json({ error: "Solicitação não encontrada" });
       return;
     }
 

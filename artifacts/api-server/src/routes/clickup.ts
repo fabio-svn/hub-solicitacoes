@@ -60,6 +60,13 @@ const IBGE_STATE_MAP: Record<string, string> = {
   "35": "São Paulo", "28": "Sergipe", "17": "Tocantins",
 };
 
+const IBGE_SIGLA_MAP: Record<string, string> = {
+  "12":"AC","27":"AL","16":"AP","13":"AM","29":"BA","23":"CE","53":"DF",
+  "32":"ES","52":"GO","21":"MA","51":"MT","50":"MS","31":"MG","15":"PA",
+  "25":"PB","41":"PR","26":"PE","22":"PI","33":"RJ","24":"RN","43":"RS",
+  "11":"RO","14":"RR","42":"SC","35":"SP","28":"SE","17":"TO",
+};
+
 const REQUEST_TYPE_LABELS: Record<string, string> = {
   "artes-divulgacao":           "Arte de Divulgação",
   "atualizacao-material":       "Atualização de Material",
@@ -225,7 +232,7 @@ function humanizeEstado(raw: string | undefined): string | null {
   if (!s) return null;
   const mapped = IBGE_STATE_MAP[s];
   if (!mapped) {
-    logger.warn({ raw: s }, "ClickUp: estado nao encontrado no mapa IBGE, mantendo valor original");
+    logger.warn({ raw: s }, "ClickUp: estado não encontrado no mapa IBGE, mantendo valor original");
     return s;
   }
   return mapped;
@@ -251,7 +258,7 @@ function humanizeLocal(dados: FormDados): string | null {
 function getUserDepartment(user: UserData, dados: FormDados): string {
   const setor = str(dados.setor as string);
   if (setor) return setor;
-  logger.warn({ email: user.email }, "ClickUp: setor nao disponivel na sessao, usando fallback Geral");
+  logger.warn({ email: user.email }, "ClickUp: setor não disponível na sessão, usando fallback Geral");
   return "Geral";
 }
 
@@ -555,12 +562,6 @@ async function setEventosCustomFields(taskId: string, dados: FormDados, arquivos
   const cidadeRaw = str(dados.cidade as string);
   const estadoRaw = str(dados.estado as string);
   if (cidadeRaw) {
-    const IBGE_SIGLA_MAP: Record<string, string> = {
-      "12":"AC","27":"AL","16":"AP","13":"AM","29":"BA","23":"CE","53":"DF",
-      "32":"ES","52":"GO","21":"MA","51":"MT","50":"MS","31":"MG","15":"PA",
-      "25":"PB","41":"PR","26":"PE","22":"PI","33":"RJ","24":"RN","43":"RS",
-      "11":"RO","14":"RR","42":"SC","35":"SP","28":"SE","17":"TO",
-    };
     const sigla = IBGE_SIGLA_MAP[estadoRaw] || estadoRaw;
     (dados as Record<string, unknown>)._cidadeFormatada = sigla ? `${cidadeRaw} - ${sigla}` : cidadeRaw;
   }

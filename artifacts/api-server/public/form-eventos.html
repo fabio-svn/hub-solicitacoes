@@ -42,7 +42,7 @@
               <label class="checkbox-option">
                 <input type="checkbox" id="checkTutorial">
                 <span class="checkbox-custom"></span>
-                <span>Confirmo que assisti ao <a href="" id="tutorialLink" target="_blank">tutorial para transmissoes online</a></span>
+                <span>Confirmo que assisti ao <a href="" id="tutorialLink" target="_blank">tutorial para transmissões online</a></span>
               </label>
             </div>
             <div class="field" style="margin-top:16px">
@@ -162,7 +162,7 @@
                 <input type="file" id="logoFile" accept=".png,.jpg,.jpeg,.svg,.ai,.pdf">
                 <div class="file-name" id="logoFileName"></div>
               </div>
-              <div class="field-hint">Caso nao consiga, envie para o e-mail: gabriela.franca@svninvest.com.br</div>
+              <div class="field-hint">Caso não consiga, envie para o e-mail: gabriela.franca@svninvest.com.br</div>
             </div>
             <div class="field">
               <label>Imagem complementar (opcional)</label>
@@ -185,6 +185,7 @@
               <input type="text" id="observacoes" placeholder="Algo mais que você queira informar?">
             </div>
             <div style="border-top:1px solid rgba(34,27,25,.08);margin:28px 0 20px;padding-top:22px">
+              <div id="submitError" class="alert-card alert-danger" style="display:none;margin-bottom:16px"></div>
               <div class="form-nav">
                 <button class="btn btn-secondary" onclick="goStep(formState.natureza==='presencial'&&formState.maturidade!==3?5:4)">Voltar</button>
                 <button class="btn btn-primary btn-submit-gold" id="btnSubmit" onclick="submitForm()">Enviar</button>
@@ -244,7 +245,7 @@
         </div>
       </div>
       <hr style="border-color:rgba(255,248,243,0.1);margin:16px 0">
-      <p style="font-size:0.78rem;opacity:0.5;font-style:italic">Para que o processo ocorra de forma eficiente, escolha a opção que mais se adequa a realidade do seu evento. Quanto mais informações forem preenchidas, mais rápido será o processo.</p>
+      <p style="font-size:0.78rem;opacity:0.5;font-style:italic">Para que o processo ocorra de forma eficiente, escolha a opção que mais se adequa à realidade do seu evento. Quanto mais informações forem preenchidas, mais rápido será o processo.</p>
     </div>
   </div>
 
@@ -555,7 +556,7 @@
           </div>
         </div>
         <div class="field"><label>Ideia de quando realizar (opcional)</label><input type="text" id="ideaQuando" placeholder="Ex.: próximo mês..."></div>
-        <div class="field"><label>Canal provavel (opcional)</label><select id="canal">${CANAIS_TRANSMISSAO.map(c=>`<option>${c}</option>`).join('')}</select></div>
+        <div class="field"><label>Canal provável (opcional)</label><select id="canal">${CANAIS_TRANSMISSAO.map(c=>`<option>${c}</option>`).join('')}</select></div>
         <div class="field"><label>Número esperado de participantes (opcional)</label><input type="number" id="convidados" min="1"></div>
       `;
     }
@@ -601,10 +602,10 @@
         container.innerHTML = `<div class="field"><label>Unidade SVN</label><select id="unidadeSVN" onchange="showUnidadeEndereco()"><option value="">Selecione</option>${UNIDADES_SVN.map(u => `<option value="${u.nome}">${u.nome}</option>`).join('')}</select></div><div id="unidadeEndereco"></div>`;
         updatePreview('pvLocal', 'Unidade SVN');
       } else if (val === 'externo') {
-        container.innerHTML = `<div class="field"><label>Nome do local</label><input type="text" id="localNome" oninput="updatePreview('pvLocal',this.value)"></div><div class="field"><label>Endereco</label><input type="text" id="localEndereco"></div>`;
+        container.innerHTML = `<div class="field"><label>Nome do local</label><input type="text" id="localNome" oninput="updatePreview('pvLocal',this.value)"></div><div class="field"><label>Endereço</label><input type="text" id="localEndereco"></div>`;
         updatePreview('pvLocal', 'Local externo');
       } else if (val === 'nao-definido') {
-        container.innerHTML = `<div class="field"><label>Aponte suas ideias e sugestoes (opcional)</label><textarea id="localSugestoes"></textarea></div>`;
+        container.innerHTML = `<div class="field"><label>Aponte suas ideias e sugestões (opcional)</label><textarea id="localSugestoes"></textarea></div>`;
         updatePreview('pvLocal', 'Não definido');
       } else { container.innerHTML = ''; updatePreview('pvLocal', ''); }
     }
@@ -663,7 +664,7 @@
         case 'convidados': return `<div class="field"><label>${campo.label}</label><input type="number" id="convidados" min="1"></div>`;
         case 'objetivos': return `<div class="field"><label>${campo.label}</label><textarea id="objetivos"></textarea></div>`;
         case 'canal': return `<div class="field"><label>${campo.label}</label><select id="canal" onchange="handleCanal()">${CANAIS_TRANSMISSAO.map(c=>`<option>${c}</option>`).join('')}</select></div>`;
-        case 'link-transmissão': return `<div class="field"><label>${campo.label}</label><input type="url" id="linkTransmissao"></div>`;
+        case 'link-transmissao': return `<div class="field"><label>${campo.label}</label><input type="url" id="linkTransmissao"></div>`;
         default: return `<div class="field"><label>${campo.label}</label><input type="text" id="${campo.id}"></div>`;
       }
     }
@@ -902,7 +903,9 @@
     function validateStep2() {
       const mat = formState.maturidade;
       if (!mat) {
-        alert('Selecione um nível de maturidade para continuar.');
+        const cards = document.querySelectorAll('#step2 .radio-card');
+        cards.forEach(c => c.style.outline = '2px solid var(--ruby-red)');
+        setTimeout(() => cards.forEach(c => c.style.outline = ''), 1200);
         return false;
       }
 
@@ -1164,7 +1167,7 @@
               <input type="file" id="palFoto${i}" accept=".jpg,.jpeg,.png,.webp">
             </div>
             <div class="file-name" id="palFotoStatus${i}"></div>
-            <div class="field-hint">Caso nao consiga, envie para: ${EMAIL_UPLOAD}</div>
+            <div class="field-hint">Caso não consiga, envie para: ${EMAIL_UPLOAD}</div>
           </div>
           <div id="palPreview${i}"></div>
         `;
@@ -1440,8 +1443,16 @@
           } catch {}
           window.location.href = '/thankyou.html';
         }
-        else { alert('Erro ao enviar.'); btn.disabled = false; btn.textContent = 'Enviar'; }
-      } catch (e) { alert('Erro de conexão.'); btn.disabled = false; btn.textContent = 'Enviar'; }
+        else {
+          const errEl = document.getElementById('submitError');
+          if (errEl) { errEl.style.display = 'block'; errEl.textContent = 'Erro ao enviar. Tente novamente.'; }
+          btn.disabled = false; btn.textContent = 'Enviar';
+        }
+      } catch (e) {
+        const errEl = document.getElementById('submitError');
+        if (errEl) { errEl.style.display = 'block'; errEl.textContent = 'Erro de conexão. Verifique sua internet.'; }
+        btn.disabled = false; btn.textContent = 'Enviar';
+      }
     }
 
     document.addEventListener('input', function(e) {
@@ -1492,7 +1503,7 @@
           <div style="font-size:0.65rem;text-transform:uppercase;letter-spacing:0.07em;opacity:0.45;margin-bottom:8px">Presencial complexo</div>
           <div style="font-size:2.2rem;font-weight:700;font-family:'Taviraj',serif;color:var(--paper-white);line-height:1">45</div>
           <div style="font-size:0.78rem;opacity:0.6;margin-top:2px">dias úteis de antecedência</div>
-          <div style="margin-top:10px;font-size:0.78rem;opacity:0.5;line-height:1.5">Eventos externos, com palestrante, buffet, espacos locados ou cobertura jornalística.</div>
+          <div style="margin-top:10px;font-size:0.78rem;opacity:0.5;line-height:1.5">Eventos externos, com palestrante, buffet, espaços locados ou cobertura jornalística.</div>
         </div>
       </div>
       <p style="font-size:0.78rem;opacity:0.4;line-height:1.6;margin:0">Esses prazos garantem qualidade na entrega e organização adequada. Solicitações fora do prazo mínimo podem não ser atendidas ou terão escopo reduzido.</p>
