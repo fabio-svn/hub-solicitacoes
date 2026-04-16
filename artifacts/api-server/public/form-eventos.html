@@ -384,9 +384,10 @@
       document.getElementById('checkPrazos').addEventListener('change', () => { validateStep1(); saveFormState(); });
       document.getElementById('checkTutorial')?.addEventListener('change', () => { validateStep1(); saveFormState(); });
 
-      ['logoFile','imgFile','demaisFile'].forEach(id => {
+      ['logoFile','demaisFile'].forEach(id => {
         FileUpload.bind(id, id.replace('File','FileName'));
       });
+      FileUpload.bind('imgFile', 'imgFileName', { maxMB: 50 });
 
       const dataInput = document.getElementById('dataEvento');
       if (dataInput) {
@@ -1173,6 +1174,16 @@
         if (fotoInput) {
           fotoInput.addEventListener('change', function() {
             if (!this.files || !this.files[0]) return;
+            const f = this.files[0];
+            if (f.size > 50 * 1024 * 1024) {
+              if (statusEl) {
+                statusEl.textContent = '✗ Foto excede o tamanho máximo de 50 MB';
+                statusEl.style.color = 'var(--ruby-red)';
+                statusEl.style.display = 'block';
+              }
+              this.value = '';
+              return;
+            }
             const reader = new FileReader();
             reader.onload = function(e) {
               updatePalPreview(i);

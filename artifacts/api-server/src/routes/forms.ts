@@ -9,7 +9,7 @@ import { uploadToR2 } from "./r2";
 import { logger } from "../lib/logger";
 
 const router = Router();
-const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 50 * 1024 * 1024 } });
+const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 250 * 1024 * 1024 } });
 
 const VALID_TIPOS = [
   "eventos",
