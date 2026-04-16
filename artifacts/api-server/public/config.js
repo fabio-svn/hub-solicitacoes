@@ -187,6 +187,8 @@ const STATUS_SOLICITACAO = [
   { id: "aguardando-rh",          label: "Aguardando aprovação do RH", bg: "#fce8f3", text: "#9d174d",  cor: "--leather-brown" },
   { id: "aguardando-pagamento",   label: "Aguardando pagamento",       bg: "#fce8f3", text: "#9d174d",  cor: "--leather-brown" },
   { id: "aguardando-finalizacao", label: "Aguardando finalização",     bg: "#ede9fe", text: "#5b21b6",  cor: "--leather-brown" },
+  { id: "em-revisao",             label: "Em revisão",                 bg: "#f3e8ff", text: "#7c3aed",  cor: "--leather-brown" },
+  { id: "em-aprovacao",           label: "Em aprovação",               bg: "#dbeafe", text: "#1e40af",  cor: "--sage-green"    },
   { id: "concluido",              label: "Concluído",                  bg: "#d1fae5", text: "#065f46",  cor: "--sage-green"    },
   { id: "reprovado",              label: "Reprovado / Cancelado",      bg: "#fee2e2", text: "#991b1b",  cor: "--ruby-red"      },
   { id: "cancelado",              label: "Cancelado",                  bg: "#fee2e2", text: "#991b1b",  cor: "--carbon-black"  },
@@ -365,11 +367,14 @@ const FLUXOS_ETAPAS = {
     { id: "em-espera",              label: "Em espera",                 visivel: false },
   ],
   "_default": [
-    { id: "recebido",    label: "Recebido",    visivel: true  },
-    { id: "em-analise",  label: "Em análise",  visivel: true  },
-    { id: "em-producao", label: "Em produção", visivel: true  },
-    { id: "concluido",   label: "Concluído",   visivel: true  },
-    { id: "cancelado",   label: "Cancelado",   visivel: false },
+    { id: "recebido",     label: "Recebido",              visivel: true  },
+    { id: "em-analise",   label: "Em análise",            visivel: true  },
+    { id: "aguardando",   label: "Aguardando informação", visivel: true  },
+    { id: "em-producao",  label: "Em produção",           visivel: true  },
+    { id: "em-revisao",   label: "Em revisão",            visivel: true  },
+    { id: "em-aprovacao", label: "Em aprovação",          visivel: true  },
+    { id: "concluido",    label: "Concluído",             visivel: true  },
+    { id: "cancelado",    label: "Cancelado",             visivel: false },
   ],
 };
 

@@ -24,7 +24,11 @@ const VALID_TIPOS = [
 ];
 
 const VALID_STATUSES = [
-  "recebido", "em-analise", "em-producao", "aguardando", "concluido", "cancelado",
+  "recebido", "em-analise", "em-producao", "aguardando",
+  "em-revisao", "em-aprovacao", "concluido", "cancelado",
+  "alinhamentos", "em-andamento", "cotacao-aprovacao",
+  "aguardando-rh", "aguardando-pagamento", "aguardando-finalizacao",
+  "em-espera", "reprovado",
 ];
 
 const REQUIRED_FIELDS: Record<string, string[]> = {
@@ -231,7 +235,13 @@ router.get("/solicitacoes/stats", requireAuth, async (req, res) => {
     const isAdmin = user.role === "admin" || user.role === "gestor";
     const baseCondition = isAdmin ? undefined : eq(solicitacoesTable.user_email, user.email);
 
-    const activeStatuses = ["recebido", "em-analise", "em-producao", "aguardando"];
+    const activeStatuses = [
+      "recebido", "em-analise", "em-producao", "aguardando",
+      "em-revisao", "em-aprovacao",
+      "alinhamentos", "em-andamento", "cotacao-aprovacao",
+      "aguardando-rh", "aguardando-pagamento", "aguardando-finalizacao",
+      "em-espera",
+    ];
     const activeConditions: ReturnType<typeof eq>[] = [inArray(solicitacoesTable.status, activeStatuses)];
     if (baseCondition) activeConditions.push(baseCondition);
 

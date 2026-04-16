@@ -10,6 +10,7 @@ import router from "./routes";
 import authRouter from "./routes/auth";
 import formsRouter from "./routes/forms";
 import adminRouter from "./routes/admin";
+import webhookRouter from "./routes/webhook";
 import { logger } from "./lib/logger";
 import { pool } from "@workspace/db";
 
@@ -88,6 +89,7 @@ app.use("/api", router);
 app.use("/auth", authRouter);
 app.use("/api", formsRouter);
 app.use("/api/admin", adminRouter);
+app.use("/api", webhookRouter);
 
 const publicDir = path.resolve(__dirname, "../public");
 app.use(express.static(publicDir));

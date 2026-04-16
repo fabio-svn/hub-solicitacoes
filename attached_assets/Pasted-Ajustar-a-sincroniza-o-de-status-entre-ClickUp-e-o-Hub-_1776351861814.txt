@@ -1,0 +1,223 @@
+Ajustar a sincronização de status entre ClickUp e o Hub para as **solicitações gerais**.
+
+## Objetivo
+
+Atualizar o Hub para refletir automaticamente os novos status das tarefas da Lista Geral do ClickUp, com as novas cores e nova ordem de processo.
+
+A sincronização deve acontecer em tempo real sempre que o status da task mudar no ClickUp.
+
+---
+
+# NOVO FLUXO DE STATUS — SOLICITAÇÕES GERAIS
+
+## Ordem do processo visível no hub
+
+1. Recebido → cinza
+2. Em análise → amarelo
+3. Aguardando informação → marrom claro
+4. Em produção → laranja
+5. Em revisão → roxo
+6. Em aprovação → azul
+7. Concluído → verde
+
+## Status invisível no fluxo, mas visível quando ativo
+
+* Cancelado → vermelho
+
+### Regra:
+
+O status **Cancelado** não deve aparecer na régua/etapas padrão do processo.
+Ele só deve aparecer quando a solicitação estiver efetivamente cancelada.
+
+---
+
+# REGRAS DE SINCRONIZAÇÃO
+
+## 1. O Hub deve acompanhar o status da task no ClickUp
+
+Se a task no ClickUp mudar de status, o status da solicitação correspondente no hub deve ser atualizado automaticamente.
+
+## 2. Atualização em tempo real
+
+Implementar atualização em tempo real usando o mecanismo mais robusto disponível para ClickUp.
+
+### Preferência:
+
+* usar webhook do ClickUp para eventos de atualização de task/status
+
+### Se já existir polling:
+
+* substituir ou complementar por webhook
+* evitar polling desnecessário se webhook resolver
+
+## 3. Persistência
+
+Quando o status mudar no ClickUp, persistir a mudança no banco/local store do hub para que:
+
+* dashboard
+* lista de solicitações
+* drawer
+* timeline
+* badges
+* filtros
+
+reflitam o novo status corretamente.
+
+---
+
+# MAPEAMENTO DE STATUS
+
+Criar/ajustar o mapeamento de status da Lista Geral para este padrão interno do hub:
+
+* Recebido → `recebido`
+* Em análise → `em-analise`
+* Aguardando informação → `aguardando`
+* Em produção → `em-producao`
+* Em revisão → `em-revisao`
+* Em aprovação → `em-aprovacao`
+* Concluído → `concluido`
+* Cancelado → `cancelado`
+
+## IMPORTANTE
+
+Usar correspondência robusta:
+
+* ignorar diferenças pequenas de caixa
+* normalizar acentos se necessário
+* evitar falha por string levemente diferente
+
+---
+
+# CORES NO HUB
+
+Aplicar as seguintes cores visuais:
+
+* Recebido → cinza
+* Em análise → amarelo
+* Aguardando informação → marrom claro
+* Em produção → laranja
+* Em revisão → roxo
+* Em aprovação → azul
+* Concluído → verde
+* Cancelado → vermelho
+
+## IMPORTANTE
+
+Ajustar:
+
+* badge de status
+* cards
+* linha do tempo/processo
+* filtros de status
+* qualquer legenda visual associada ao status
+
+---
+
+# PROCESSO VISUAL NO HUB
+
+## Solicitações gerais
+
+Atualizar a régua/etapas padrão para ficar nesta ordem:
+
+Recebido
+→ Em análise
+→ Aguardando informação
+→ Em produção
+→ Em revisão
+→ Em aprovação
+→ Concluído
+
+### Regra do Cancelado
+
+* não mostrar na régua padrão
+* mostrar apenas se o status atual da solicitação for cancelado
+
+---
+
+# EVENTOS NÃO DEVEM SER AFETADOS
+
+Aplicar este ajuste apenas à **Lista Geral / solicitações gerais**.
+
+Não alterar o fluxo de status de eventos neste momento.
+
+---
+
+# IMPLEMENTAÇÃO TÉCNICA ESPERADA
+
+## 1. Ajustar o mapeamento interno
+
+Revisar o arquivo/configuração responsável por:
+
+* status do hub
+* fluxo visual das solicitações gerais
+* badge colors
+* labels de status
+
+## 2. Ajustar a integração ClickUp → Hub
+
+Quando a task do ClickUp mudar:
+
+* localizar a solicitação correspondente no hub
+* atualizar o status interno
+* salvar a mudança
+* refletir no front
+
+## 3. Se necessário, criar endpoint de webhook
+
+Criar rota segura para receber eventos do ClickUp.
+
+Essa rota deve:
+
+* validar a assinatura do webhook se já houver suporte/configuração
+* identificar task alterada
+* buscar status novo
+* sincronizar com a solicitação vinculada
+
+## 4. Se já existir integração de leitura de status
+
+Aproveitar o que já existe e apenas expandir o mapeamento.
+
+---
+
+# LOGS OBRIGATÓRIOS
+
+Registrar:
+
+* webhook recebido
+* task_id recebida
+* status antigo
+* status novo
+* solicitação do hub atualizada com sucesso
+* task sem vínculo encontrado
+* status do ClickUp sem mapeamento conhecido
+
+---
+
+# ROBUSTEZ
+
+## Se webhook falhar
+
+* não quebrar a aplicação
+* registrar erro claro
+
+## Se o status recebido não tiver mapeamento
+
+* logar aviso
+* não sobrescrever com valor incorreto
+
+## Se não encontrar a solicitação correspondente
+
+* logar claramente o task_id e seguir
+
+---
+
+# ENTREGA ESPERADA
+
+Ao finalizar, informar:
+
+1. arquivos alterados
+2. onde o mapeamento de status foi atualizado
+3. como a atualização em tempo real foi implementada
+4. como o hub identifica a solicitação a partir da task do ClickUp
+5. exemplo de sincronização real de status
+6. se foi necessário criar endpoint de webhook ou reutilizar lógica existente
