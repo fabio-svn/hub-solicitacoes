@@ -615,14 +615,17 @@ export async function createClickUpTask(
 
   logger.info({ tipo, listId, taskName, descriptionLength: description.length }, "ClickUp: criando task");
 
-  const taskStatus = tipo === "eventos" ? "Solicitações" : "Para fazer";
+  const taskPayload: Record<string, unknown> = { name: taskName, description };
+  if (tipo === "eventos") taskPayload.status = "Solicitações";
   let taskId: string | null = null;
+
+  logger.info({ tipo, listId, taskName, payload: taskPayload }, "ClickUp: payload final antes do POST");
 
   try {
     const response = await fetch(`https://api.clickup.com/api/v2/list/${listId}/task`, {
       method: "POST",
       headers: { "Authorization": CLICKUP_API_TOKEN, "Content-Type": "application/json" },
-      body: JSON.stringify({ name: taskName, description, status: taskStatus }),
+      body: JSON.stringify(taskPayload),
     });
     if (!response.ok) {
       const text = await response.text();
