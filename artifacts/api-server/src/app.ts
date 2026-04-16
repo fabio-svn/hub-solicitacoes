@@ -38,7 +38,10 @@ app.use(
   }),
 );
 
-app.use(cors());
+app.use(cors({
+  origin: process.env.ALLOWED_ORIGIN || 'https://hub.portalsvn.com.br',
+  credentials: true,
+}));
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ extended: true, limit: "50mb" }));
 
@@ -69,8 +72,9 @@ app.use(
 );
 
 app.get("/api/config", (_req, res) => {
+  res.set('Cache-Control', 'public, max-age=300');
   res.json({
-    r2PublicUrl: process.env.R2_PUBLIC_URL || "https://pub-5bcbae1bfa0b4fae862dc042f8f1eaa8.r2.dev",
+    r2PublicUrl: process.env.R2_PUBLIC_URL || "https://pub-a2132f9b61f940659cc98265acfcf64c.r2.dev",
     emailUpload: process.env.EMAIL_UPLOAD || "gabriela.franca@svninvest.com.br",
     urlVideoHero: process.env.URL_VIDEO_HERO || "https://pub-a2132f9b61f940659cc98265acfcf64c.r2.dev/bg-eventos-2.mp4",
     urlLogoBranca: process.env.URL_LOGO_BRANCA || "https://pub-a2132f9b61f940659cc98265acfcf64c.r2.dev/SVN-2.svg",

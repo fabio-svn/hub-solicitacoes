@@ -110,19 +110,18 @@ router.get("/callback", async (req, res) => {
 
     const existing = await db.select().from(usersTable).where(eq(usersTable.email, email)).limit(1);
 
+    let role = "colaborador";
+
     if (existing.length === 0) {
       await db.insert(usersTable).values({ email, name, role: "colaborador" });
-    } else if (existing[0].name !== name) {
-      await db.update(usersTable).set({ name }).where(eq(usersTable.email, email));
+    } else {
+      role = existing[0].role || "colaborador";
+      if (existing[0].name !== name) {
+        await db.update(usersTable).set({ name }).where(eq(usersTable.email, email));
+      }
     }
 
-    const userRow = await db.select().from(usersTable).where(eq(usersTable.email, email)).limit(1);
-
-    req.session.user = {
-      email,
-      name,
-      role: userRow[0]?.role || "colaborador",
-    };
+    req.session.user = { email, name, role };
 
     res.redirect(sanitizeRedirect(redirectTo));
   } catch (err) {

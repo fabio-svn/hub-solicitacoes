@@ -34,3 +34,8 @@ externalPort = 3000
 [[ports]]
 localPort = 9099
 externalPort = 3001
+
+[userenv]
+
+[userenv.shared]
+ALLOWED_ORIGIN = "https://hub.portalsvn.com.br"
