@@ -4,7 +4,7 @@ import { db } from "@workspace/db";
 import { solicitacoesTable, arquivosTable } from "@workspace/db";
 import { eq, desc, and, ne, sql, inArray } from "drizzle-orm";
 import { requireAuth } from "../middleware/auth.middleware";
-import { createClickUpTask, getClickUpTaskStatus } from "./clickup";
+import { createClickUpTask, getClickUpTaskStatus, type ArquivosMap } from "./clickup";
 import { uploadToR2 } from "./r2";
 import { logger } from "../lib/logger";
 
@@ -95,6 +95,7 @@ router.post("/solicitacoes", requireAuth, upload.any(), async (req, res): Promis
     }).returning();
 
     const files = req.files as Express.Multer.File[];
+    const arquivosMap: ArquivosMap = {};
     if (files && files.length > 0) {
       for (const file of files) {
         try {
@@ -105,6 +106,7 @@ router.post("/solicitacoes", requireAuth, upload.any(), async (req, res): Promis
             url_r2: url,
             nome_original: file.originalname,
           });
+          arquivosMap[file.fieldname] = url;
         } catch (uploadErr) {
           logger.error({ err: uploadErr }, "R2 upload failed, continuing");
         }
@@ -113,7 +115,7 @@ router.post("/solicitacoes", requireAuth, upload.any(), async (req, res): Promis
 
     let clickupTaskId: string | null = null;
     try {
-      clickupTaskId = await createClickUpTask(solicitacao, user, parsedDados);
+      clickupTaskId = await createClickUpTask(solicitacao, user, parsedDados, arquivosMap);
       if (clickupTaskId) {
         await db.update(solicitacoesTable)
           .set({ clickup_task_id: clickupTaskId })

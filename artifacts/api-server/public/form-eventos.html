@@ -1308,6 +1308,10 @@
         tipoAprox:      document.querySelector('input[name="tipoAprox"]:checked')?.value || '',
         ideaQuando:     document.getElementById('ideaQuando')?.value     || '',
         observacoes:    document.getElementById('observacoes')?.value    || '',
+        temPalestrante: (() => { const v = document.querySelector('input[name="temPalestrante"]:checked')?.value; return v === 'sim' ? 'Sim' : v === 'nao' ? 'Não' : ''; })(),
+        palSvn1:        (() => { const v = document.querySelector('input[name="palSvn1"]:checked')?.value;   return v === 'sim' ? 'Sim' : v === 'nao' ? 'Não' : ''; })(),
+        palNome1:       document.getElementById('palNome1')?.value       || '',
+        palCargo1:      document.getElementById('palCargo1')?.value      || '',
       };
 
       const dadosLimpos = Object.fromEntries(

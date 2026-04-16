@@ -1,0 +1,137 @@
+Revise a integração atual com o ClickUp e faça um teste controlado de preenchimento de custom fields para **solicitações de eventos**, sem alterar o restante do fluxo.
+
+## Objetivo
+
+Após criar a task no ClickUp para uma solicitação do tipo `eventos`, preencher também os custom fields abaixo usando os IDs reais informados.
+
+## Campos a testar
+
+Mapear os dados do formulário de eventos para estes custom fields do ClickUp:
+
+* Nome do solicitante → `92db4658-70d1-430e-98ec-5e27029136fd`
+* Data do evento → `361cb66a-8c99-43ec-a4fa-5a347e9a4fbd`
+* Origem do evento → `626bb697-d9eb-4e79-8277-8a7145e4b979`
+* Horário do evento → `45d8babe-a7dd-4a78-952f-1aa366bf34ed`
+* Título do evento → `b40d49f5-341d-4671-a4f0-7cef7a643d6b`
+* O evento terá palestrantes? → `8dbc39d5-f2e7-4669-be67-b1a24a53c2cf`
+* O palestrante 1 é colaborador da SVN? → `28491235-89d7-4384-819c-66ca974d04a0`
+* Nome do palestrante 1 → `5de3fdb1-3434-4820-92c8-6e7ee82cd3eb`
+* Cargo do palestrante 1 → `56fbcd07-eab1-465d-9055-8c5e6c0f39ac`
+* Foto do palestrante 1 → `73d010f4-fb4b-4e00-bcf1-f550487c18fd`
+
+## Regras obrigatórias
+
+### NÃO alterar:
+
+* autenticação
+* criação da task já existente
+* list mapping atual
+* status atual da task
+* fluxo de submit do hub
+* persistência atual
+* integração dos outros tipos de solicitação
+
+### PODE alterar:
+
+* arquivo da integração com ClickUp
+* helpers de mapeamento
+* logs
+* descrição da task
+* preenchimento dos custom fields após criação da task
+
+## Implementação desejada
+
+### 1. Manter a criação da task como está
+
+Primeiro criar a task normalmente.
+
+### 2. Depois da criação, preencher os custom fields
+
+Após obter o `taskId`, fazer chamadas para definir o valor dos custom fields da task recém-criada.
+
+### 3. Criar um helper reutilizável
+
+Criar uma função utilitária, algo como:
+
+* `setClickUpCustomField(taskId, fieldId, value)`
+  ou equivalente
+
+Essa função deve:
+
+* receber `taskId`
+* receber `fieldId`
+* receber `value`
+* chamar o endpoint correto do ClickUp para preencher custom field
+* fazer log claro de sucesso ou erro
+
+### 4. Fazer mapeamento seguro dos dados
+
+Usar os dados reais do formulário de eventos.
+
+Mapeamento esperado:
+
+* Nome do solicitante: preferir `user.name`, fallback para `user.email`
+* Data do evento: usar o valor do campo de data do evento
+* Origem do evento: usar o valor já salvo no payload do formulário
+* Horário do evento: usar o horário descrito no formulário
+* Título do evento: usar o título/nome principal do evento
+* O evento terá palestrantes?: preencher com “Sim” ou “Não”
+* O palestrante 1 é colaborador da SVN?: preencher com “Sim” ou “Não”
+* Nome do palestrante 1: preencher se existir
+* Cargo do palestrante 1: preencher se existir
+* Foto do palestrante 1: preencher com o valor disponível no payload; se não houver URL real e houver apenas nome/id interno do arquivo, ainda assim registrar tentativa e logar o valor enviado
+
+## IMPORTANTE SOBRE NOMES DE CAMPOS
+
+Não assumir nomes cegamente sem verificar o payload real do formulário de eventos.
+
+Antes de mapear, inspecione a estrutura real de `dados` recebida pela integração e use as chaves reais existentes.
+
+Se houver diferença entre o nome esperado e a chave real do payload, adaptar o mapeamento corretamente.
+
+## IMPORTANTE SOBRE TESTE
+
+Este é um teste inicial.
+
+Se algum campo estiver vindo vazio por ausência real no payload, não inventar valor.
+Apenas:
+
+* enviar quando houver valor
+* logar quando o valor não existir
+* não quebrar a criação da task
+
+## IMPORTANTE SOBRE TIPOS DE CAMPO
+
+Verificar o tipo real aceito pelo ClickUp para esses campos.
+Se forem campos de texto, enviar string.
+Se algum deles exigir outro formato, adaptar corretamente.
+
+Não assumir que todos funcionam do mesmo jeito sem checar.
+
+## Logs obrigatórios
+
+Adicionar logs claros para debug, por exemplo:
+
+* task criada com sucesso
+* tentando preencher field X
+* field X preenchido com sucesso
+* field X sem valor disponível no payload
+* erro ao preencher field X com resposta da API
+
+## Robustez
+
+Se um custom field falhar:
+
+* não falhar a criação da task
+* continuar tentando os demais campos
+* registrar erro de forma clara
+
+## Entrega esperada
+
+Ao final, informar:
+
+1. arquivo alterado
+2. função/helper criada
+3. quais chaves reais do payload foram encontradas para cada campo
+4. quais campos foram efetivamente mapeados
+5. se algum campo não pôde ser preenchido por falta de valor ou incompatibilidade de tipo
