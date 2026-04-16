@@ -93,8 +93,9 @@ const EVENTOS_CUSTOM_FIELDS: FieldDef[] = [
   { label: "Nome do solicitante",              id: "92db4658-70d1-430e-98ec-5e27029136fd", dadosKey: "nome",            clickupType: "short_text" },
   { label: "Data do evento",                   id: "361cb66a-8c99-43ec-a4fa-5a347e9a4fbd", dadosKey: "dataEvento",      clickupType: "short_text" },
   { label: "Origem do evento",                 id: "626bb697-d9eb-4e79-8277-8a7145e4b979", dadosKey: "origem",          clickupType: "short_text" },
-  { label: "Horário",                          id: "196f6d96-7ca9-4e88-bbf5-598cbf375146", dadosKey: "horario",         clickupType: "short_text" },
+  { label: "Horário do Evento",                id: "45d8babe-a7dd-4a78-952f-1aa366bf34ed", dadosKey: "horario",         clickupType: "short_text" },
   { label: "Horário descrito",                 id: "44c91638-ccb6-41fa-8f05-dcab3085f313", dadosKey: "horario",         clickupType: "short_text" },
+  { label: "Horário de Brasília?",             id: "af7d26c8-f228-4985-941a-20bb6905b6d5", dadosKey: "horBrasilia",     clickupType: "short_text" },
   { label: "Título do evento",                 id: "b40d49f5-341d-4671-a4f0-7cef7a643d6b", dadosKey: "nomeEvento",      clickupType: "short_text" },
   { label: "O evento terá palestrantes?",      id: "8dbc39d5-f2e7-4669-be67-b1a24a53c2cf", dadosKey: "temPalestrante",  clickupType: "short_text" },
   { label: "Palestrante 1 — colaborador SVN?", id: "28491235-89d7-4384-819c-66ca974d04a0", dadosKey: "palSvn1",         clickupType: "short_text" },
@@ -532,13 +533,28 @@ async function setClickUpCustomField(
   }
 }
 
-async function setEventosCustomFields(taskId: string, dados: FormDados, arquivos: ArquivosMap): Promise<void> {
-  // Campo computado: Local do evento (short_text)
+async function setEventosCustomFields(taskId: string, dados: FormDados, arquivos: ArquivosMap, user: UserData): Promise<void> {
+  // ── E-mail do solicitante (vem do user, não do dados) ───────────────────────
+  if (user.email) {
+    await setClickUpCustomField(taskId, "ae56f16a-8d97-40e0-9032-c357eb0793ca", user.email, "E-mail do Solicitante", { clickupType: "short_text", raw: user.email });
+  }
+
+  // ── Campo computado: Local do evento (short_text) ───────────────────────────
   const localHuman = humanizeLocal(dados);
   if (localHuman) {
     await setClickUpCustomField(taskId, "38ac133a-13b0-4428-98eb-adb5f8cdc23a", localHuman, "Local do evento", { clickupType: "short_text" });
   }
 
+  // ── Campo Solicitações: lista de materiais selecionados (text) ─────────────
+  const materiaisArr = dados.materiais as string[] | undefined;
+  if (Array.isArray(materiaisArr) && materiaisArr.length > 0) {
+    const materiaisText = materiaisArr
+      .map(id => `• ${MATERIAL_LABELS[id] || id}`)
+      .join("\n");
+    await setClickUpCustomField(taskId, "3266524c-febc-47ac-a76d-0d9c4256d9dc", materiaisText, "Solicitações", { clickupType: "text", raw: materiaisArr });
+  }
+
+  // ── Campos da lista EVENTOS_CUSTOM_FIELDS ───────────────────────────────────
   for (const field of EVENTOS_CUSTOM_FIELDS) {
     let value: string | null;
 
@@ -553,9 +569,13 @@ async function setEventosCustomFields(taskId: string, dados: FormDados, arquivos
         continue;
       }
 
-      // dataEvento: short_text → formatar como "DD/MM/YYYY" (NÃO timestamp)
       if (field.dadosKey === "dataEvento") {
+        // short_text → enviar como "DD/MM/YYYY", NÃO timestamp
         value = formatDate(String(raw)) ?? String(raw);
+      } else if (field.dadosKey === "natureza") {
+        // Capitalizar: "presencial" → "Presencial", "online" → "Online"
+        const n = str(raw as string).toLowerCase();
+        value = n === "presencial" ? "Presencial" : n === "online" ? "Online" : str(raw as string);
       } else {
         value = str(raw as string);
       }
@@ -709,7 +729,7 @@ export async function createClickUpTask(
   logger.info({ taskId, tipo, listId, taskName }, "ClickUp: task criada com sucesso");
 
   if (tipo === "eventos") {
-    await setEventosCustomFields(taskId, dados, safeArquivos);
+    await setEventosCustomFields(taskId, dados, safeArquivos, user);
   } else {
     await setGeneralCustomFields(taskId, tipo, subtipo, dados, safeArquivos);
   }
