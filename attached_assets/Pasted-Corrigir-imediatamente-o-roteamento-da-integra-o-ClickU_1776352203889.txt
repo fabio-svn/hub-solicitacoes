@@ -1,0 +1,117 @@
+Corrigir imediatamente o roteamento da integração ClickUp para a **Lista Geral**.
+
+## Contexto confirmado
+
+A lista correta para **todas as solicitações gerais** é:
+
+`901300673533`
+
+A lista de **eventos** já está funcionando corretamente e **não deve ser alterada**.
+
+## Regra correta de roteamento
+
+### Eventos
+
+* `eventos` → manter na lista de eventos atual
+
+### Todas as demais solicitações gerais devem ir para:
+
+* `901300673533`
+
+Isso inclui:
+
+* artes-divulgacao
+* atualizacao-material
+* conteudo-pdf-informativo
+* conteudo-pdf-ebook
+* apresentacao-nova
+* apresentacao-atualizar
+* pagina-assessores-dados
+* pagina-assessores-atualizacao
+
+---
+
+# Objetivo
+
+Garantir que qualquer solicitação geral crie task corretamente no ClickUp usando a Lista Geral `901300673533`.
+
+---
+
+# Ajustes obrigatórios
+
+## 1. Revisar o mapeamento de listas
+
+Ajustar a lógica que escolhe `listId` para que:
+
+* `eventos` continue na lista específica de eventos
+* qualquer um dos tipos gerais acima use `901300673533`
+
+## 2. Revisar variáveis / fallback
+
+Se houver:
+
+* `CLICKUP_LIST_GERAL`
+* `CLICKUP_LISTS`
+* `CLICKUP_LIST_MAP`
+
+garantir que o valor final usado para Lista Geral seja `901300673533`.
+
+## 3. Não depender de categoria ambígua se isso estiver causando falha
+
+Se necessário, simplificar a lógica:
+
+* `if tipo === "eventos"` → lista de eventos
+* `else` se tipo estiver no grupo geral → lista `901300673533`
+
+## 4. Adicionar logs claros
+
+Registrar:
+
+* tipo recebido
+* listId escolhido
+* nome final da task
+* resposta da API ClickUp
+* erro detalhado se a criação falhar
+
+## 5. Não falhar silenciosamente
+
+Se o sistema não encontrar `listId`, logar erro explícito.
+
+---
+
+# Teste obrigatório
+
+Depois da correção, validar com pelo menos uma solicitação de:
+
+* artes-divulgacao
+
+Confirmar no log:
+
+* tipo recebido = artes-divulgacao
+* listId usado = 901300673533
+* task criada com sucesso
+
+---
+
+# Importante
+
+Não alterar:
+
+* integração de eventos
+* status de eventos
+* custom fields de eventos
+* lógica já validada dos eventos
+
+Corrigir apenas o roteamento da Lista Geral.
+
+---
+
+# Entrega esperada
+
+Ao finalizar, informar:
+
+1. onde estava o erro
+2. qual função escolhe a lista do ClickUp
+3. qual listId final está sendo usado para Lista Geral
+4. exemplo real de criação de task de artes-divulgacao com sucesso
+5. arquivos alterados

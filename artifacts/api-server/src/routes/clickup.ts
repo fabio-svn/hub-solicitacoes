@@ -2,27 +2,8 @@ import { logger } from "../lib/logger";
 
 const CLICKUP_API_TOKEN = process.env.CLICKUP_API_TOKEN || "";
 
-const CLICKUP_LISTS: Record<string, string> = {
-  "eventos": process.env.CLICKUP_LIST_EVENTOS || "901303299333",
-  "identidade-pessoal": process.env.CLICKUP_LIST_GERAL || "901300673533",
-  "marketing-conteudo": process.env.CLICKUP_LIST_GERAL || "901300673533",
-  "audiovisual": process.env.CLICKUP_LIST_GERAL || "901300673533",
-  "impressos": process.env.CLICKUP_LIST_GERAL || "901300673533",
-  "obras-manutencao": process.env.CLICKUP_LIST_GERAL || "901300673533",
-  "outros": process.env.CLICKUP_LIST_GERAL || "901300673533",
-};
-
-const CLICKUP_LIST_MAP: Record<string, string> = {
-  "eventos": "eventos",
-  "pagina-assessores-dados": "identidade-pessoal",
-  "pagina-assessores-atualizacao": "identidade-pessoal",
-  "artes-divulgacao": "marketing-conteudo",
-  "apresentacao-nova": "marketing-conteudo",
-  "apresentacao-atualizar": "marketing-conteudo",
-  "conteudo-pdf-informativo": "marketing-conteudo",
-  "conteudo-pdf-ebook": "marketing-conteudo",
-  "atualizacao-material": "marketing-conteudo",
-};
+const CLICKUP_LIST_EVENTOS = process.env.CLICKUP_LIST_EVENTOS || "901303299333";
+const CLICKUP_LIST_GERAL   = process.env.CLICKUP_LIST_GERAL   || "901300673533";
 
 function normalizeStatusKey(raw: string): string {
   return raw
@@ -285,10 +266,10 @@ function buildGeneralTaskName(tipo: string, _subtipo: string, dados: FormDados, 
   const tipoHuman = humanizeRequestType(tipo);
   const setor = getUserDepartment(user, dados);
   const titulo = str(dados.titulo) || str(dados.nomeCompleto) || "";
-  logger.info({ tipo: tipoHuman, setor, titulo }, "ClickUp: nome da task geral gerado");
   let name = `[${tipoHuman}]`;
-  if (setor && setor !== "Geral") name += ` (${setor})`;
+  if (setor && setor !== "Geral") name += ` ${setor}`;
   if (titulo) name += ` - ${titulo}`;
+  logger.info({ tipo, tipoHuman, setor, titulo, taskName: name }, "ClickUp: nome da task geral gerado");
   return name;
 }
 
@@ -596,10 +577,13 @@ async function setGeneralCustomFields(
 // Core public functions
 // ─────────────────────────────────────────────
 
-function getListId(tipoSolicitacao: string): string | null {
-  const category = CLICKUP_LIST_MAP[tipoSolicitacao];
-  if (!category) return null;
-  return CLICKUP_LISTS[category] || null;
+function getListId(tipoSolicitacao: string): string {
+  if (tipoSolicitacao === "eventos") {
+    logger.info({ tipo: tipoSolicitacao, listId: CLICKUP_LIST_EVENTOS }, "ClickUp: roteando para Lista Eventos");
+    return CLICKUP_LIST_EVENTOS;
+  }
+  logger.info({ tipo: tipoSolicitacao, listId: CLICKUP_LIST_GERAL }, "ClickUp: roteando para Lista Geral");
+  return CLICKUP_LIST_GERAL;
 }
 
 export async function createClickUpTask(
@@ -613,15 +597,10 @@ export async function createClickUpTask(
     return null;
   }
 
-  const listId = getListId(solicitacao.tipo_solicitacao);
-  if (!listId) {
-    logger.warn({ tipo: solicitacao.tipo_solicitacao }, "No ClickUp list mapping found");
-    return null;
-  }
-
   const tipo = solicitacao.tipo_solicitacao;
   const subtipo = solicitacao.subtipo || "";
   const safeArquivos = arquivos || {};
+  const listId = getListId(tipo);
 
   let taskName: string;
   let description: string;
@@ -634,7 +613,7 @@ export async function createClickUpTask(
     description = buildGeneralDescription(tipo, subtipo, dados, user, safeArquivos);
   }
 
-  logger.info({ tipo, taskName, descriptionLength: description.length }, "ClickUp: criando task");
+  logger.info({ tipo, listId, taskName, descriptionLength: description.length }, "ClickUp: criando task");
 
   const taskStatus = tipo === "eventos" ? "Solicitações" : "Para fazer";
   let taskId: string | null = null;
@@ -647,18 +626,18 @@ export async function createClickUpTask(
     });
     if (!response.ok) {
       const text = await response.text();
-      logger.error({ status: response.status, body: text }, "ClickUp API error");
+      logger.error({ tipo, listId, taskName, httpStatus: response.status, body: text }, "ClickUp: erro ao criar task");
       return null;
     }
     const data = await response.json() as { id?: string };
     taskId = data.id || null;
   } catch (err) {
-    logger.error({ err }, "ClickUp task creation failed");
+    logger.error({ err, tipo, listId }, "ClickUp: falha na criação da task");
     return null;
   }
 
   if (!taskId) return null;
-  logger.info({ taskId, tipo, taskName }, "ClickUp: task criada com sucesso");
+  logger.info({ taskId, tipo, listId, taskName }, "ClickUp: task criada com sucesso");
 
   if (tipo === "eventos") {
     await setEventosCustomFields(taskId, dados, safeArquivos);
