@@ -1425,6 +1425,8 @@
         const f = document.getElementById(id)?.files[0];
         if (f) formData.append(id, f);
       });
+      const matEmailBaseFile = document.getElementById('matEmailBase')?.files[0];
+      if (matEmailBaseFile) formData.append('matEmailBase', matEmailBaseFile);
 
       for (let i = 1; i <= 4; i++) {
         const f = document.getElementById('palFoto' + i)?.files[0];

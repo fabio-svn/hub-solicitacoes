@@ -84,6 +84,7 @@ const ARQUIVO_LABELS: Record<string, string> = {
   materialAtual: "Material atual",
   fotoPerfil:    "Foto de perfil",
   logoFile:      "Logo complementar",
+  matEmailBase:  "Base para disparo de e-mail",
 };
 
 interface FieldDef {
