@@ -303,7 +303,7 @@ function buildRequesterSection(user: UserData): string {
   items.push(`• Solicitante: ${user.name}`);
   items.push(`• E-mail: ${user.email}`);
   logger.info({ nome: user.name, email: user.email }, "ClickUp: bloco solicitante montado");
-  return `## 👤 Solicitante\n\n${items.join("\n")}`;
+  return `━━━━━━━━━━━━━━━━━━━━━━\n👤 SOLICITANTE\n━━━━━━━━━━━━━━━━━━━━━━\n\n${items.join("\n")}`;
 }
 
 function buildResumoSection(dados: FormDados): string {
@@ -339,7 +339,7 @@ function buildResumoSection(dados: FormDados): string {
   addLine(items, "Objetivos", str(dados.objetivos));
   addLine(items, "Descrição", str(dados.descricao));
   logger.info({ itens: items.length }, "ClickUp: bloco de resumo montado");
-  return `## 🎯 Resumo da solicitação\n\n${items.join("\n")}`;
+  return `━━━━━━━━━━━━━━━━━━━━━━\n🎯 RESUMO DA SOLICITAÇÃO\n━━━━━━━━━━━━━━━━━━━━━━\n\n${items.join("\n")}`;
 }
 
 function buildPalestrantesSection(dados: FormDados): string | null {
@@ -365,7 +365,7 @@ function buildPalestrantesSection(dados: FormDados): string | null {
   }
   if (count === 0) return null;
   logger.info({ count }, "ClickUp: bloco de palestrantes montado");
-  return `## 🎤 Palestrantes\n\n${items.join("\n")}`;
+  return `━━━━━━━━━━━━━━━━━━━━━━\n🎤 PALESTRANTES\n━━━━━━━━━━━━━━━━━━━━━━\n\n${items.join("\n")}`;
 }
 
 function buildMateriaisSection(dados: FormDados): string | null {
@@ -387,7 +387,7 @@ function buildMateriaisSection(dados: FormDados): string | null {
     lines.push("");
   }
   logger.info({ count: materiais.length }, "ClickUp: bloco de materiais montado");
-  return `## 📦 Materiais solicitados\n\n${lines.join("\n").trimEnd()}`;
+  return `━━━━━━━━━━━━━━━━━━━━━━\n📦 MATERIAIS SOLICITADOS\n━━━━━━━━━━━━━━━━━━━━━━\n\n${lines.join("\n").trimEnd()}`;
 }
 
 function buildEventDescription(dados: FormDados, user: UserData): string {
@@ -399,7 +399,7 @@ function buildEventDescription(dados: FormDados, user: UserData): string {
   const materiais = buildMateriaisSection(dados);
   if (materiais) blocks.push(materiais);
   const obs = str(dados.observacoes);
-  if (obs) blocks.push(`## 📝 Observações gerais\n\n• ${obs}`);
+  if (obs) blocks.push(`━━━━━━━━━━━━━━━━━━━━━━\n📝 OBSERVAÇÕES GERAIS\n━━━━━━━━━━━━━━━━━━━━━━\n\n• ${obs}`);
   logger.info({ blocos: blocks.length }, "ClickUp: descricao humanizada de evento gerada, JSON bruto removido");
   return blocks.join("\n\n");
 }
@@ -459,7 +459,7 @@ function buildDetailsSection(tipo: string, dados: FormDados): string | null {
   }
 
   if (items.length === 0) return null;
-  return `## 📝 Detalhes\n\n${items.join("\n")}`;
+  return `━━━━━━━━━━━━━━━━━━━━━━\n📝 DETALHES\n━━━━━━━━━━━━━━━━━━━━━━\n\n${items.join("\n")}`;
 }
 
 function buildArquivosSection(arquivos: ArquivosMap): string | null {
@@ -470,7 +470,7 @@ function buildArquivosSection(arquivos: ArquivosMap): string | null {
     items.push(`• ${label}: ${url}`);
   }
   if (items.length === 0) return null;
-  return `## 📎 Arquivos\n\n${items.join("\n")}`;
+  return `━━━━━━━━━━━━━━━━━━━━━━\n📎 ARQUIVOS\n━━━━━━━━━━━━━━━━━━━━━━\n\n${items.join("\n")}`;
 }
 
 function buildGeneralDescription(
@@ -495,7 +495,7 @@ function buildGeneralDescription(
   addLine(resumoItems, "Prazo de entrega", str(dados.prazoEntrega));
   addLine(resumoItems, "Público-alvo", str(dados.publico as string) || str(dados.publicoAlvo));
   addLine(resumoItems, "Canais", str(dados.canais));
-  if (resumoItems.length > 0) blocks.push(`## 📌 Resumo\n\n${resumoItems.join("\n")}`);
+  if (resumoItems.length > 0) blocks.push(`━━━━━━━━━━━━━━━━━━━━━━\n📌 RESUMO\n━━━━━━━━━━━━━━━━━━━━━━\n\n${resumoItems.join("\n")}`);
 
   const detalhes = buildDetailsSection(tipo, dados);
   if (detalhes) blocks.push(detalhes);
@@ -504,7 +504,7 @@ function buildGeneralDescription(
   if (arquivosSection) blocks.push(arquivosSection);
 
   const obs = str(dados.observacoes);
-  if (obs) blocks.push(`## 📝 Observações gerais\n\n• ${obs}`);
+  if (obs) blocks.push(`━━━━━━━━━━━━━━━━━━━━━━\n📝 OBSERVAÇÕES GERAIS\n━━━━━━━━━━━━━━━━━━━━━━\n\n• ${obs}`);
 
   logger.info({ tipo, blocos: blocks.length }, "ClickUp: descricao geral humanizada gerada, JSON bruto removido");
   return blocks.join("\n\n");
