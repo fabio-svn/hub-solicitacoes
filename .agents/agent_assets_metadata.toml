@@ -1,0 +1,8 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "pI3p5kVmJkutS7QFX8dFw"
+uri = "file://attached_assets/api-documentacao.md"
+type = "text"
+title = "Documentação das APIs — Hub de Solicitações SVN"
