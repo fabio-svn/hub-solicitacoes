@@ -81,47 +81,51 @@ interface FieldDef {
   label: string;
   id: string;
   dadosKey: string;
+  clickupType: string;
   isArquivo?: boolean;
-  isDate?: boolean;
-  isNumber?: boolean;
 }
 
+// Todos os campos de eventos no ClickUp são do tipo short_text (string simples).
+// Data do evento: short_text → enviar string formatada (ex: "01/05/2026"), NÃO timestamp.
+// Número de convidados: short_text → enviar string, NÃO inteiro.
+// Horários: dois campos distintos; ambos recebem o mesmo valor de dados.horario.
 const EVENTOS_CUSTOM_FIELDS: FieldDef[] = [
-  { label: "Nome do solicitante",              id: "92db4658-70d1-430e-98ec-5e27029136fd", dadosKey: "nome" },
-  { label: "Data do evento",                   id: "361cb66a-8c99-43ec-a4fa-5a347e9a4fbd", dadosKey: "dataEvento",       isDate: true },
-  { label: "Origem do evento",                 id: "626bb697-d9eb-4e79-8277-8a7145e4b979", dadosKey: "origem" },
-  { label: "Horário do evento",                id: "45d8babe-a7dd-4a78-952f-1aa366bf34ed", dadosKey: "horario" },
-  { label: "Título do evento",                 id: "b40d49f5-341d-4671-a4f0-7cef7a643d6b", dadosKey: "nomeEvento" },
-  { label: "O evento terá palestrantes?",      id: "8dbc39d5-f2e7-4669-be67-b1a24a53c2cf", dadosKey: "temPalestrante" },
-  { label: "Palestrante 1 — colaborador SVN?", id: "28491235-89d7-4384-819c-66ca974d04a0", dadosKey: "palSvn1" },
-  { label: "Palestrante 1 — Nome",             id: "5de3fdb1-3434-4820-92c8-6e7ee82cd3eb", dadosKey: "palNome1" },
-  { label: "Palestrante 1 — Cargo",            id: "56fbcd07-eab1-465d-9055-8c5e6c0f39ac", dadosKey: "palCargo1" },
-  { label: "Palestrante 1 — Foto",             id: "73d010f4-fb4b-4e00-bcf1-f550487c18fd", dadosKey: "palFoto1",         isArquivo: true },
-  { label: "Natureza",                         id: "1e31ee81-8b88-4cfc-b8c1-754a94f5f084", dadosKey: "natureza" },
-  { label: "Nível de maturidade",              id: "1fe629c6-9cf4-4576-8828-bc93aae0d335", dadosKey: "maturidade" },
-  { label: "Tipo de evento",                   id: "b0261bc8-2ead-4820-9df9-6475c35cb182", dadosKey: "tipoEvento" },
-  { label: "Público-alvo",                     id: "5ffdf7e3-cde1-465c-a186-1b24d0f6b395", dadosKey: "publico" },
-  { label: "Número de convidados",             id: "d676846e-b66c-4c71-8173-7378d9db1f95", dadosKey: "convidados",       isNumber: true },
-  { label: "Custo estimado",                   id: "de09cf5f-3e69-48de-bb7f-bececcf55f95", dadosKey: "custoEstimado" },
-  { label: "Rateio",                           id: "7ce379f3-fc8c-4ba4-a814-829694df1d07", dadosKey: "rateio" },
-  { label: "Endereço do local externo",        id: "78816dd7-89b1-470b-a812-8716cd4b8ebf", dadosKey: "localEndereco" },
-  { label: "Canal de transmissão",             id: "83420339-a502-4a47-ac02-17c5cb5f17c2", dadosKey: "canal" },
-  { label: "Link de transmissão",              id: "d4964071-a1f6-4089-9e0c-4d7723de3c1b", dadosKey: "linkTransmissao" },
-  { label: "Ideia / Quando",                   id: "ee61335f-97d0-4f9a-91db-675aa7697671", dadosKey: "ideaQuando" },
-  { label: "Logo complementar de parceiro",    id: "245f050b-1827-45cb-a983-a8b6ab1596ae", dadosKey: "logoFile",         isArquivo: true },
-  { label: "Sugestão de local",               id: "a91901e2-25e0-4224-9d23-8fe13a903ac6", dadosKey: "localSugestoes" },
-  { label: "Palestrante 2 — colaborador SVN?", id: "9c1d3dbe-39cf-4a84-a67b-2d33ffd6bffe", dadosKey: "palSvn2" },
-  { label: "Palestrante 2 — Nome",             id: "281def01-58e4-4d21-8b0e-f8bd792d947e", dadosKey: "palNome2" },
-  { label: "Palestrante 2 — Cargo",            id: "52391024-c4f3-4999-983a-53492e8069a5", dadosKey: "palCargo2" },
-  { label: "Palestrante 2 — Foto",             id: "00b1cf20-bb99-4f93-bd7b-6e06cf28e84a", dadosKey: "palFoto2",         isArquivo: true },
-  { label: "Palestrante 3 — colaborador SVN?", id: "6467fb48-b972-40ab-a9b2-79cdc0173167", dadosKey: "palSvn3" },
-  { label: "Palestrante 3 — Nome",             id: "ea476985-2ec4-4a06-8e33-9d6a70ddd07a", dadosKey: "palNome3" },
-  { label: "Palestrante 3 — Cargo",            id: "f32b20cc-01a6-443e-a5ac-91aaee4fa9b2", dadosKey: "palCargo3" },
-  { label: "Palestrante 3 — Foto",             id: "53981c0c-20ef-45e9-bf11-8f95261dd4ce", dadosKey: "palFoto3",         isArquivo: true },
-  { label: "Palestrante 4 — colaborador SVN?", id: "c70cc18e-82b7-48f4-b5db-1cc1e1fa18cb", dadosKey: "palSvn4" },
-  { label: "Palestrante 4 — Nome",             id: "a128e306-f734-423c-8971-9fd4ca66e354", dadosKey: "palNome4" },
-  { label: "Palestrante 4 — Cargo",            id: "e76af56c-0cf8-4274-970c-93333c6c2f86", dadosKey: "palCargo4" },
-  { label: "Palestrante 4 — Foto",             id: "2ad7d8c4-bc0d-4925-818e-cc24bedca0bc", dadosKey: "palFoto4",         isArquivo: true },
+  { label: "Nome do solicitante",              id: "92db4658-70d1-430e-98ec-5e27029136fd", dadosKey: "nome",            clickupType: "short_text" },
+  { label: "Data do evento",                   id: "361cb66a-8c99-43ec-a4fa-5a347e9a4fbd", dadosKey: "dataEvento",      clickupType: "short_text" },
+  { label: "Origem do evento",                 id: "626bb697-d9eb-4e79-8277-8a7145e4b979", dadosKey: "origem",          clickupType: "short_text" },
+  { label: "Horário",                          id: "196f6d96-7ca9-4e88-bbf5-598cbf375146", dadosKey: "horario",         clickupType: "short_text" },
+  { label: "Horário descrito",                 id: "44c91638-ccb6-41fa-8f05-dcab3085f313", dadosKey: "horario",         clickupType: "short_text" },
+  { label: "Título do evento",                 id: "b40d49f5-341d-4671-a4f0-7cef7a643d6b", dadosKey: "nomeEvento",      clickupType: "short_text" },
+  { label: "O evento terá palestrantes?",      id: "8dbc39d5-f2e7-4669-be67-b1a24a53c2cf", dadosKey: "temPalestrante",  clickupType: "short_text" },
+  { label: "Palestrante 1 — colaborador SVN?", id: "28491235-89d7-4384-819c-66ca974d04a0", dadosKey: "palSvn1",         clickupType: "short_text" },
+  { label: "Palestrante 1 — Nome",             id: "5de3fdb1-3434-4820-92c8-6e7ee82cd3eb", dadosKey: "palNome1",        clickupType: "short_text" },
+  { label: "Palestrante 1 — Cargo",            id: "56fbcd07-eab1-465d-9055-8c5e6c0f39ac", dadosKey: "palCargo1",       clickupType: "short_text" },
+  { label: "Palestrante 1 — Foto",             id: "73d010f4-fb4b-4e00-bcf1-f550487c18fd", dadosKey: "palFoto1",        clickupType: "short_text", isArquivo: true },
+  { label: "Natureza",                         id: "1e31ee81-8b88-4cfc-b8c1-754a94f5f084", dadosKey: "natureza",        clickupType: "short_text" },
+  { label: "Nível de maturidade",              id: "1fe629c6-9cf4-4576-8828-bc93aae0d335", dadosKey: "maturidade",      clickupType: "short_text" },
+  { label: "Tipo de evento",                   id: "b0261bc8-2ead-4820-9df9-6475c35cb182", dadosKey: "tipoEvento",      clickupType: "short_text" },
+  { label: "Público-alvo",                     id: "5ffdf7e3-cde1-465c-a186-1b24d0f6b395", dadosKey: "publico",         clickupType: "short_text" },
+  { label: "Número de convidados",             id: "d676846e-b66c-4c71-8173-7378d9db1f95", dadosKey: "convidados",      clickupType: "short_text" },
+  { label: "Custo estimado",                   id: "de09cf5f-3e69-48de-bb7f-bececcf55f95", dadosKey: "custoEstimado",   clickupType: "short_text" },
+  { label: "Rateio",                           id: "7ce379f3-fc8c-4ba4-a814-829694df1d07", dadosKey: "rateio",          clickupType: "short_text" },
+  { label: "Endereço do local externo",        id: "78816dd7-89b1-470b-a812-8716cd4b8ebf", dadosKey: "localEndereco",   clickupType: "short_text" },
+  { label: "Canal de transmissão",             id: "83420339-a502-4a47-ac02-17c5cb5f17c2", dadosKey: "canal",           clickupType: "short_text" },
+  { label: "Link de transmissão",              id: "d4964071-a1f6-4089-9e0c-4d7723de3c1b", dadosKey: "linkTransmissao", clickupType: "short_text" },
+  { label: "Ideia / Quando",                   id: "ee61335f-97d0-4f9a-91db-675aa7697671", dadosKey: "ideaQuando",      clickupType: "short_text" },
+  { label: "Logo complementar de parceiro",    id: "245f050b-1827-45cb-a983-a8b6ab1596ae", dadosKey: "logoFile",        clickupType: "short_text", isArquivo: true },
+  { label: "Sugestão de local",                id: "a91901e2-25e0-4224-9d23-8fe13a903ac6", dadosKey: "localSugestoes",  clickupType: "short_text" },
+  { label: "Palestrante 2 — colaborador SVN?", id: "9c1d3dbe-39cf-4a84-a67b-2d33ffd6bffe", dadosKey: "palSvn2",         clickupType: "short_text" },
+  { label: "Palestrante 2 — Nome",             id: "281def01-58e4-4d21-8b0e-f8bd792d947e", dadosKey: "palNome2",        clickupType: "short_text" },
+  { label: "Palestrante 2 — Cargo",            id: "52391024-c4f3-4999-983a-53492e8069a5", dadosKey: "palCargo2",       clickupType: "short_text" },
+  { label: "Palestrante 2 — Foto",             id: "00b1cf20-bb99-4f93-bd7b-6e06cf28e84a", dadosKey: "palFoto2",        clickupType: "short_text", isArquivo: true },
+  { label: "Palestrante 3 — colaborador SVN?", id: "6467fb48-b972-40ab-a9b2-79cdc0173167", dadosKey: "palSvn3",         clickupType: "short_text" },
+  { label: "Palestrante 3 — Nome",             id: "ea476985-2ec4-4a06-8e33-9d6a70ddd07a", dadosKey: "palNome3",        clickupType: "short_text" },
+  { label: "Palestrante 3 — Cargo",            id: "f32b20cc-01a6-443e-a5ac-91aaee4fa9b2", dadosKey: "palCargo3",       clickupType: "short_text" },
+  { label: "Palestrante 3 — Foto",             id: "53981c0c-20ef-45e9-bf11-8f95261dd4ce", dadosKey: "palFoto3",        clickupType: "short_text", isArquivo: true },
+  { label: "Palestrante 4 — colaborador SVN?", id: "c70cc18e-82b7-48f4-b5db-1cc1e1fa18cb", dadosKey: "palSvn4",         clickupType: "short_text" },
+  { label: "Palestrante 4 — Nome",             id: "a128e306-f734-423c-8971-9fd4ca66e354", dadosKey: "palNome4",        clickupType: "short_text" },
+  { label: "Palestrante 4 — Cargo",            id: "e76af56c-0cf8-4274-970c-93333c6c2f86", dadosKey: "palCargo4",       clickupType: "short_text" },
+  { label: "Palestrante 4 — Foto",             id: "2ad7d8c4-bc0d-4925-818e-cc24bedca0bc", dadosKey: "palFoto4",        clickupType: "short_text", isArquivo: true },
 ];
 
 const MATERIAL_LABELS: Record<string, string> = {
@@ -475,7 +479,7 @@ function buildGeneralDescription(
   addLine(resumoItems, "Título", str(dados.titulo) || str(dados.nomeCompleto));
   addLine(resumoItems, "Finalidade", str(dados.finalidade));
   addLine(resumoItems, "Prazo de entrega", str(dados.prazoEntrega));
-  addLine(resumoItems, "Público-alvo", str(dados.publicoAlvo));
+  addLine(resumoItems, "Público-alvo", str(dados.publico as string) || str(dados.publicoAlvo));
   addLine(resumoItems, "Canais", str(dados.canais));
   if (resumoItems.length > 0) blocks.push(`📌 Resumo\n\n${resumoItems.join("\n")}`);
 
@@ -496,8 +500,21 @@ function buildGeneralDescription(
 // ClickUp API helpers
 // ─────────────────────────────────────────────
 
-async function setClickUpCustomField(taskId: string, fieldId: string, value: unknown, label: string): Promise<void> {
-  logger.info({ taskId, fieldId, label, value }, "ClickUp: tentando preencher custom field");
+async function setClickUpCustomField(
+  taskId: string,
+  fieldId: string,
+  value: unknown,
+  label: string,
+  opts?: { clickupType?: string; raw?: unknown }
+): Promise<void> {
+  logger.info({
+    taskId,
+    fieldId,
+    label,
+    clickupType: opts?.clickupType ?? "unknown",
+    rawValue: opts?.raw !== undefined ? opts.raw : value,
+    convertedValue: value,
+  }, "ClickUp: enviando custom field");
   try {
     const response = await fetch(`https://api.clickup.com/api/v2/task/${taskId}/field/${fieldId}`, {
       method: "POST",
@@ -506,9 +523,9 @@ async function setClickUpCustomField(taskId: string, fieldId: string, value: unk
     });
     if (!response.ok) {
       const text = await response.text();
-      logger.error({ taskId, fieldId, label, status: response.status, body: text }, "ClickUp: erro ao preencher custom field");
+      logger.error({ taskId, fieldId, label, clickupType: opts?.clickupType, httpStatus: response.status, body: text }, "ClickUp: ERRO ao preencher custom field");
     } else {
-      logger.info({ taskId, fieldId, label }, "ClickUp: custom field preenchido com sucesso");
+      logger.info({ taskId, fieldId, label, clickupType: opts?.clickupType }, "ClickUp: custom field preenchido com sucesso");
     }
   } catch (err) {
     logger.error({ err, taskId, fieldId, label }, "ClickUp: excecao ao preencher custom field");
@@ -516,36 +533,53 @@ async function setClickUpCustomField(taskId: string, fieldId: string, value: unk
 }
 
 async function setEventosCustomFields(taskId: string, dados: FormDados, arquivos: ArquivosMap): Promise<void> {
+  // Campo computado: Local do evento (short_text)
   const localHuman = humanizeLocal(dados);
   if (localHuman) {
-    await setClickUpCustomField(taskId, "38ac133a-13b0-4428-98eb-adb5f8cdc23a", localHuman, "Local do evento");
+    await setClickUpCustomField(taskId, "38ac133a-13b0-4428-98eb-adb5f8cdc23a", localHuman, "Local do evento", { clickupType: "short_text" });
   }
 
   for (const field of EVENTOS_CUSTOM_FIELDS) {
-    let value: unknown;
+    let value: string | null;
+
     if (field.isArquivo) {
-      value = arquivos[field.dadosKey] || null;
-      if (!value) { logger.warn({ taskId, label: field.label }, "ClickUp: arquivo sem URL, pulando"); continue; }
+      const url = arquivos[field.dadosKey] || null;
+      if (!url) { logger.warn({ taskId, label: field.label }, "ClickUp: arquivo sem URL, pulando"); continue; }
+      value = url;
     } else {
       const raw = dados[field.dadosKey];
       if (raw === undefined || raw === null || str(raw as string) === "") {
-        logger.warn({ taskId, label: field.label }, "ClickUp: campo sem valor, pulando");
+        logger.warn({ taskId, label: field.label, dadosKey: field.dadosKey }, "ClickUp: campo sem valor, pulando");
         continue;
       }
-      if (field.isDate) {
-        const ts = new Date(String(raw)).getTime();
-        value = isNaN(ts) ? String(raw) : ts;
-      } else if (field.isNumber) {
-        const n = parseInt(String(raw).replace(/\D/g, ""));
-        if (isNaN(n)) { logger.warn({ taskId, label: field.label, raw }, "ClickUp: valor numerico invalido, pulando"); continue; }
-        value = n;
+
+      // dataEvento: short_text → formatar como "DD/MM/YYYY" (NÃO timestamp)
+      if (field.dadosKey === "dataEvento") {
+        value = formatDate(String(raw)) ?? String(raw);
       } else {
-        value = String(raw);
+        value = str(raw as string);
       }
     }
-    await setClickUpCustomField(taskId, field.id, value, field.label);
+
+    await setClickUpCustomField(taskId, field.id, value, field.label, {
+      clickupType: field.clickupType,
+      raw: dados[field.dadosKey],
+    });
   }
 }
+
+// Mapa de tipo de solicitação → orderindex do dropdown "Tipo de Demanda" no ClickUp.
+// Todos os tipos da Lista Geral são classificados como "Conteúdo" (orderindex 3).
+const TIPO_DEMANDA_ORDERINDEX: Record<string, number> = {
+  "artes-divulgacao":              3,
+  "atualizacao-material":          3,
+  "conteudo-pdf-informativo":      3,
+  "conteudo-pdf-ebook":            3,
+  "apresentacao-nova":             3,
+  "apresentacao-atualizar":        3,
+  "pagina-assessores-dados":       3,
+  "pagina-assessores-atualizacao": 3,
+};
 
 async function setGeneralCustomFields(
   taskId: string,
@@ -554,30 +588,54 @@ async function setGeneralCustomFields(
   dados: FormDados,
   arquivos: ArquivosMap
 ): Promise<void> {
-  const tipoHuman = humanizeRequestType(tipo);
   const titulo = str(dados.titulo) || str(dados.nomeCompleto) || null;
+  const publicoAlvo = str(dados.publico as string) || str(dados.publicoAlvo as string) || null;
   const arquivoPrincipal = arquivos.materialAtual || arquivos.arquivoBase || null;
   const arquivoApoio = arquivos.arquivoApoio || arquivos.fotoPerfil || null;
 
-  const fields: Array<{ id: string; value: unknown; label: string }> = [
-    { id: "6e36326f-2501-4ce2-9894-13d4ddf222d4", value: str(dados.nome) || null,     label: "Nome do solicitante" },
-    { id: "ea901547-2f65-42ee-ab6c-5fbf0ceaa79b", value: tipoHuman,                   label: "Tipo de solicitação" },
-    { id: "ba1bccb2-5c82-43cc-a20c-79b74f2f5b38", value: subtipo || null,              label: "Subtipo" },
-    { id: "b727b647-0da1-43a5-a82d-70c33dedf0fd", value: titulo,                       label: "Título" },
-    { id: "5d7ae6e5-8528-4df3-bf0c-ed3bb05ebee1", value: str(dados.finalidade) || null, label: "Finalidade" },
-    { id: "c7585104-7f53-4dcb-95d6-c75d55c4c57b", value: str(dados.publicoAlvo) || null, label: "Público-alvo" },
-    { id: "33c5d4c5-1e0d-48ba-b0a5-6decdea6e138", value: str(dados.prazoEntrega) || null, label: "Prazo de entrega" },
-    { id: "ea38779d-385c-410b-972e-ba97499e9252", value: str(dados.canais) || null,    label: "Canais" },
-    { id: "294f47eb-82a7-416e-998e-ea79b77d296b", value: arquivoPrincipal,             label: "Arquivo principal" },
-    { id: "67d565fd-ca4f-472b-969b-4b5228459e0f", value: arquivoApoio,                label: "Arquivo de apoio" },
+  // ── Campos short_text e text ───────────────────────────────────────────────
+  const textFields: Array<{ id: string; value: unknown; label: string; clickupType: string }> = [
+    { id: "6e36326f-2501-4ce2-9894-13d4ddf222d4", value: str(dados.nome) || null,        label: "Nome do solicitante", clickupType: "short_text" },
+    { id: "b727b647-0da1-43a5-a82d-70c33dedf0fd", value: titulo,                         label: "Título",              clickupType: "short_text" },
+    { id: "5d7ae6e5-8528-4df3-bf0c-ed3bb05ebee1", value: str(dados.finalidade) || null,  label: "Finalidade",          clickupType: "text" },
+    { id: "c7585104-7f53-4dcb-95d6-c75d55c4c57b", value: publicoAlvo,                    label: "Público-alvo",        clickupType: "short_text" },
+    { id: "ea38779d-385c-410b-972e-ba97499e9252", value: str(dados.canais) || null,       label: "Canais",              clickupType: "short_text" },
+    { id: "f80ba423-ccae-464c-9d20-6665c7f1da00", value: str(dados.observacoes) || null, label: "Observações",         clickupType: "text" },
   ];
 
-  for (const { id, value, label } of fields) {
-    if (!value) {
-      logger.warn({ taskId, fieldId: id, label }, "ClickUp: campo geral sem valor, pulando");
-      continue;
+  for (const { id, value, label, clickupType } of textFields) {
+    if (!value) { logger.warn({ taskId, fieldId: id, label }, "ClickUp: campo geral sem valor, pulando"); continue; }
+    await setClickUpCustomField(taskId, id, value, label, { clickupType, raw: value });
+  }
+
+  // ── Dropdown: Tipo de Demanda (drop_down) → enviar orderindex numérico ─────
+  // Subtipo (ba1bccb2) omitido: opções ainda são placeholder ("Option 1", "Option 2")
+  const tipoDemandaOrderindex = TIPO_DEMANDA_ORDERINDEX[tipo] ?? 3;
+  await setClickUpCustomField(
+    taskId, "ea901547-2f65-42ee-ab6c-5fbf0ceaa79b", tipoDemandaOrderindex, "Tipo de Demanda",
+    { clickupType: "drop_down", raw: tipo }
+  );
+
+  // ── Date: Prazo de entrega → enviar Unix timestamp em milissegundos ─────────
+  const prazoRaw = str(dados.prazoEntrega as string);
+  if (prazoRaw) {
+    const d = new Date(prazoRaw + "T12:00:00");
+    if (!isNaN(d.getTime())) {
+      await setClickUpCustomField(
+        taskId, "33c5d4c5-1e0d-48ba-b0a5-6decdea6e138", d.getTime(), "Prazo de entrega",
+        { clickupType: "date", raw: prazoRaw }
+      );
+    } else {
+      logger.warn({ taskId, prazoRaw }, "ClickUp: data de prazo inválida, pulando");
     }
-    await setClickUpCustomField(taskId, id, value, label);
+  }
+
+  // ── URL: Arquivo principal e arquivo de apoio ──────────────────────────────
+  if (arquivoPrincipal) {
+    await setClickUpCustomField(taskId, "294f47eb-82a7-416e-998e-ea79b77d296b", arquivoPrincipal, "Arquivo principal", { clickupType: "url" });
+  }
+  if (arquivoApoio) {
+    await setClickUpCustomField(taskId, "67d565fd-ca4f-472b-969b-4b5228459e0f", arquivoApoio, "Arquivo de apoio", { clickupType: "url" });
   }
 }
 
