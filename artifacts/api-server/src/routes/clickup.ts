@@ -547,18 +547,9 @@ async function setClickUpCustomField(
 }
 
 async function setEventosCustomFields(taskId: string, dados: FormDados, arquivos: ArquivosMap, user: UserData): Promise<void> {
-  // ── E-mail do solicitante (vem do user, não do dados) ───────────────────────
-  if (user.email) {
-    await setClickUpCustomField(taskId, "ae56f16a-8d97-40e0-9032-c357eb0793ca", user.email, "E-mail do Solicitante", { clickupType: "short_text", raw: user.email });
-  }
-
-  // ── Campo computado: Local do evento (short_text) ───────────────────────────
+  // ── Campos computados: calcular antes do Promise.all ──────────────────────
   const localHuman = humanizeLocal(dados);
-  if (localHuman) {
-    await setClickUpCustomField(taskId, "38ac133a-13b0-4428-98eb-adb5f8cdc23a", localHuman, "Local do evento", { clickupType: "short_text" });
-  }
 
-  // ── Campo computado: Cidade - UF ────────────────────────────────────────────
   const cidadeRaw = str(dados.cidade as string);
   const estadoRaw = str(dados.estado as string);
   if (cidadeRaw) {
@@ -566,7 +557,6 @@ async function setEventosCustomFields(taskId: string, dados: FormDados, arquivos
     (dados as Record<string, unknown>)._cidadeFormatada = sigla ? `${cidadeRaw} - ${sigla}` : cidadeRaw;
   }
 
-  // ── Campo computado: endereço da unidade SVN ─────────────────────────────────
   const localEvento = str(dados.localEvento as string);
   if (localEvento === "unidade") {
     const UNIDADES_ENDERECOS: Record<string, string> = {
@@ -591,16 +581,27 @@ async function setEventosCustomFields(taskId: string, dados: FormDados, arquivos
     }
   }
 
-  // ── Campo Solicitações: lista de materiais selecionados (text) ─────────────
   const materiaisArr = dados.materiais as string[] | undefined;
-  if (Array.isArray(materiaisArr) && materiaisArr.length > 0) {
-    const materiaisText = materiaisArr
-      .map(id => `• ${MATERIAL_LABELS[id] || id}`)
-      .join("\n");
-    await setClickUpCustomField(taskId, "3266524c-febc-47ac-a76d-0d9c4256d9dc", materiaisText, "Solicitações", { clickupType: "text", raw: materiaisArr });
-  }
+  const materiaisText = (Array.isArray(materiaisArr) && materiaisArr.length > 0)
+    ? materiaisArr.map(id => `• ${MATERIAL_LABELS[id] || id}`).join("\n")
+    : null;
 
-  // ── Campos da lista EVENTOS_CUSTOM_FIELDS ───────────────────────────────────
+  // ── Campos fixos computados em paralelo ────────────────────────────────────
+  await Promise.all([
+    user.email
+      ? setClickUpCustomField(taskId, "ae56f16a-8d97-40e0-9032-c357eb0793ca", user.email, "E-mail do Solicitante", { clickupType: "short_text", raw: user.email })
+      : Promise.resolve(),
+    localHuman
+      ? setClickUpCustomField(taskId, "38ac133a-13b0-4428-98eb-adb5f8cdc23a", localHuman, "Local do evento", { clickupType: "short_text" })
+      : Promise.resolve(),
+    materiaisText
+      ? setClickUpCustomField(taskId, "3266524c-febc-47ac-a76d-0d9c4256d9dc", materiaisText, "Solicitações", { clickupType: "text", raw: materiaisArr })
+      : Promise.resolve(),
+  ]);
+
+  // ── Campos da lista EVENTOS_CUSTOM_FIELDS — paralelo em lotes de 10 ────────
+  const fieldPromises: Array<Promise<void>> = [];
+
   for (const field of EVENTOS_CUSTOM_FIELDS) {
     let value: string | null;
 
@@ -614,12 +615,9 @@ async function setEventosCustomFields(taskId: string, dados: FormDados, arquivos
         logger.warn({ taskId, label: field.label, dadosKey: field.dadosKey }, "ClickUp: campo sem valor, pulando");
         continue;
       }
-
       if (field.dadosKey === "dataEvento") {
-        // short_text → enviar como "DD/MM/YYYY", NÃO timestamp
         value = formatDate(String(raw)) ?? String(raw);
       } else if (field.dadosKey === "natureza") {
-        // Capitalizar: "presencial" → "Presencial", "online" → "Online"
         const n = str(raw as string).toLowerCase();
         value = n === "presencial" ? "Presencial" : n === "online" ? "Online" : str(raw as string);
       } else {
@@ -627,10 +625,17 @@ async function setEventosCustomFields(taskId: string, dados: FormDados, arquivos
       }
     }
 
-    await setClickUpCustomField(taskId, field.id, value, field.label, {
-      clickupType: field.clickupType,
-      raw: dados[field.dadosKey],
-    });
+    fieldPromises.push(
+      setClickUpCustomField(taskId, field.id, value, field.label, {
+        clickupType: field.clickupType,
+        raw: dados[field.dadosKey],
+      })
+    );
+  }
+
+  const BATCH_SIZE = 10;
+  for (let i = 0; i < fieldPromises.length; i += BATCH_SIZE) {
+    await Promise.all(fieldPromises.slice(i, i + BATCH_SIZE));
   }
 }
 
@@ -669,40 +674,41 @@ async function setGeneralCustomFields(
     { id: "f80ba423-ccae-464c-9d20-6665c7f1da00", value: str(dados.observacoes) || null, label: "Observações",         clickupType: "text" },
   ];
 
-  for (const { id, value, label, clickupType } of textFields) {
-    if (!value) { logger.warn({ taskId, fieldId: id, label }, "ClickUp: campo geral sem valor, pulando"); continue; }
-    await setClickUpCustomField(taskId, id, value, label, { clickupType, raw: value });
-  }
-
-  // ── Dropdown: Tipo de Demanda (drop_down) → enviar orderindex numérico ─────
-  // Subtipo (ba1bccb2) omitido: opções ainda são placeholder ("Option 1", "Option 2")
-  const tipoDemandaOrderindex = TIPO_DEMANDA_ORDERINDEX[tipo] ?? 3;
-  await setClickUpCustomField(
-    taskId, "ea901547-2f65-42ee-ab6c-5fbf0ceaa79b", tipoDemandaOrderindex, "Tipo de Demanda",
-    { clickupType: "drop_down", raw: tipo }
+  // ── Campos short_text e text — paralelo ───────────────────────────────────
+  await Promise.all(
+    textFields
+      .filter(({ value }) => {
+        if (!value) { logger.warn({ taskId, label: "campo geral" }, "ClickUp: campo geral sem valor, pulando"); return false; }
+        return true;
+      })
+      .map(({ id, value, label, clickupType }) =>
+        setClickUpCustomField(taskId, id, value, label, { clickupType, raw: value })
+      )
   );
 
-  // ── Date: Prazo de entrega → enviar Unix timestamp em milissegundos ─────────
+  // ── Dropdown, prazo e arquivos — paralelo ──────────────────────────────────
+  const tipoDemandaOrderindex = TIPO_DEMANDA_ORDERINDEX[tipo] ?? 3;
   const prazoRaw = str(dados.prazoEntrega as string);
-  if (prazoRaw) {
-    const d = new Date(prazoRaw + "T12:00:00");
-    if (!isNaN(d.getTime())) {
-      await setClickUpCustomField(
-        taskId, "33c5d4c5-1e0d-48ba-b0a5-6decdea6e138", d.getTime(), "Prazo de entrega",
-        { clickupType: "date", raw: prazoRaw }
-      );
-    } else {
-      logger.warn({ taskId, prazoRaw }, "ClickUp: data de prazo inválida, pulando");
-    }
+  const prazoDate = prazoRaw ? new Date(prazoRaw + "T12:00:00") : null;
+  if (prazoRaw && prazoDate && isNaN(prazoDate.getTime())) {
+    logger.warn({ taskId, prazoRaw }, "ClickUp: data de prazo inválida, pulando");
   }
 
-  // ── URL: Arquivo principal e arquivo de apoio ──────────────────────────────
-  if (arquivoPrincipal) {
-    await setClickUpCustomField(taskId, "294f47eb-82a7-416e-998e-ea79b77d296b", arquivoPrincipal, "Arquivo principal", { clickupType: "url" });
-  }
-  if (arquivoApoio) {
-    await setClickUpCustomField(taskId, "67d565fd-ca4f-472b-969b-4b5228459e0f", arquivoApoio, "Arquivo de apoio", { clickupType: "url" });
-  }
+  await Promise.all([
+    setClickUpCustomField(
+      taskId, "ea901547-2f65-42ee-ab6c-5fbf0ceaa79b", tipoDemandaOrderindex, "Tipo de Demanda",
+      { clickupType: "drop_down", raw: tipo }
+    ),
+    prazoDate && !isNaN(prazoDate.getTime())
+      ? setClickUpCustomField(taskId, "33c5d4c5-1e0d-48ba-b0a5-6decdea6e138", prazoDate.getTime(), "Prazo de entrega", { clickupType: "date", raw: prazoRaw })
+      : Promise.resolve(),
+    arquivoPrincipal
+      ? setClickUpCustomField(taskId, "294f47eb-82a7-416e-998e-ea79b77d296b", arquivoPrincipal, "Arquivo principal", { clickupType: "url" })
+      : Promise.resolve(),
+    arquivoApoio
+      ? setClickUpCustomField(taskId, "67d565fd-ca4f-472b-969b-4b5228459e0f", arquivoApoio, "Arquivo de apoio", { clickupType: "url" })
+      : Promise.resolve(),
+  ]);
 }
 
 // ─────────────────────────────────────────────

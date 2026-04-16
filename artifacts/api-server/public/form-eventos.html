@@ -1268,7 +1268,15 @@
     async function submitForm() {
       if (!validateRequiredFields()) return;
       const btn = document.getElementById('btnSubmit');
-      btn.disabled = true; btn.textContent = 'Enviando...';
+      btn.disabled = true;
+      const loadingMessages = ['Enviando...', 'Processando arquivos...', 'Registrando solicitação...', 'Quase pronto...'];
+      let msgIdx = 0;
+      btn.textContent = loadingMessages[0];
+      const msgInterval = setInterval(() => {
+        msgIdx = Math.min(msgIdx + 1, loadingMessages.length - 1);
+        if (!btn.disabled) { clearInterval(msgInterval); return; }
+        btn.textContent = loadingMessages[msgIdx];
+      }, 3000);
 
       const dados = {
         nome:           Auth.getUserName(),
@@ -1441,14 +1449,17 @@
             };
             sessionStorage.setItem('svn_ultimo_resumo', JSON.stringify(resumo));
           } catch {}
+          clearInterval(msgInterval);
           window.location.href = '/thankyou.html';
         }
         else {
+          clearInterval(msgInterval);
           const errEl = document.getElementById('submitError');
           if (errEl) { errEl.style.display = 'block'; errEl.textContent = 'Erro ao enviar. Tente novamente.'; }
           btn.disabled = false; btn.textContent = 'Enviar';
         }
       } catch (e) {
+        clearInterval(msgInterval);
         const errEl = document.getElementById('submitError');
         if (errEl) { errEl.style.display = 'block'; errEl.textContent = 'Erro de conexão. Verifique sua internet.'; }
         btn.disabled = false; btn.textContent = 'Enviar';
