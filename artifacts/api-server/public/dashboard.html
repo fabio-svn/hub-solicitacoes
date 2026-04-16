@@ -638,8 +638,42 @@
       }
 
       let bodyHtml = '';
-      for (const [key, value] of Object.entries(dados)) {
+      const dadosEntries = Object.entries(dados);
+      const palKeysProcessed = new Set();
+
+      for (const [key, value] of dadosEntries) {
         if (value === null || value === undefined || value === '') continue;
+
+        // Ocultar URLs de fotos de palestrantes (são links internos, não úteis no drawer)
+        if (/^palFoto\d$/.test(key)) continue;
+
+        // Detectar e agrupar campos de palestrante numerado
+        const palMatch = key.match(/^pal(Svn|Nome|Cargo)(\d)$/);
+        if (palMatch) {
+          const n = palMatch[2];
+          if (palKeysProcessed.has('pal_' + n)) continue;
+          palKeysProcessed.add('pal_' + n);
+
+          const nome  = String(dados['palNome'  + n] || '').trim();
+          const cargo = String(dados['palCargo' + n] || '').trim();
+          const svn   = String(dados['palSvn'   + n] || '').trim();
+          if (!nome) continue;
+
+          const svnBadge = svn.toLowerCase() === 'sim'
+            ? `<span style="background:var(--ruby-red);color:var(--paper-white);font-size:0.65rem;padding:2px 8px;border-radius:999px;font-weight:700;margin-left:6px">SVN</span>`
+            : '';
+
+          bodyHtml += `
+            <div class="drawer-field" style="background:var(--icon-bg);border-radius:8px;padding:10px 14px;margin-bottom:8px">
+              <div style="font-size:0.75rem;opacity:0.45;margin-bottom:4px">Palestrante ${n}</div>
+              <div style="font-weight:700;font-size:0.9rem;display:flex;align-items:center">
+                ${esc(nome)}${svnBadge}
+              </div>
+              ${cargo ? `<div style="font-size:0.8rem;opacity:0.6;margin-top:2px">${esc(cargo)}</div>` : ''}
+            </div>`;
+          continue;
+        }
+
         const label = (typeof DRAWER_FIELD_LABELS !== 'undefined' && DRAWER_FIELD_LABELS[key]) ? DRAWER_FIELD_LABELS[key] : key;
 
         if (Array.isArray(value)) {

@@ -1163,27 +1163,16 @@
               <label class="file-input-btn" for="palFoto${i}">Escolher foto</label>
               <input type="file" id="palFoto${i}" accept=".jpg,.jpeg,.png,.webp">
             </div>
-            <span id="palFotoStatus${i}" style="display:none;font-size:0.8rem;margin-top:4px"></span>
+            <div class="file-name" id="palFotoStatus${i}"></div>
             <div class="field-hint">Caso nao consiga, envie para: ${EMAIL_UPLOAD}</div>
           </div>
           <div id="palPreview${i}"></div>
         `;
 
-        const fotoInput = document.getElementById('palFoto' + i);
-        const statusEl = document.getElementById('palFotoStatus' + i);
-        if (fotoInput) {
-          fotoInput.addEventListener('change', function() {
-            if (!this.files || !this.files[0]) return;
-            const f = this.files[0];
-            if (f.size > 50 * 1024 * 1024) {
-              if (statusEl) {
-                statusEl.textContent = '✗ Foto excede o tamanho máximo de 50 MB';
-                statusEl.style.color = 'var(--ruby-red)';
-                statusEl.style.display = 'block';
-              }
-              this.value = '';
-              return;
-            }
+        FileUpload.bind('palFoto' + i, 'palFotoStatus' + i, {
+          accept: '.jpg,.jpeg,.png,.webp',
+          maxMB: 50,
+          onChange: function(file) {
             const reader = new FileReader();
             reader.onload = function(e) {
               updatePalPreview(i);
@@ -1192,21 +1181,9 @@
                 avatarEl.innerHTML = `<img src="${e.target.result}" alt="foto" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`;
               }
             };
-            reader.onerror = function() {
-              if (statusEl) {
-                statusEl.textContent = '✗ Erro ao carregar foto. Tente novamente.';
-                statusEl.style.color = 'var(--ruby-red)';
-                statusEl.style.display = 'block';
-              }
-            };
-            reader.readAsDataURL(this.files[0]);
-            if (statusEl) {
-              statusEl.textContent = '✓ Foto carregada com sucesso';
-              statusEl.style.color = 'var(--sage-green)';
-              statusEl.style.display = 'block';
-            }
-          });
-        }
+            reader.readAsDataURL(file);
+          }
+        });
       } else {
         container.innerHTML = `<div class="alert-card alert-danger"><div class="alert-title">Atenção</div><div class="alert-text">Será enviado por e-mail um link para o cadastro do palestrante. Esse passo é obrigatório para o andamento do evento.</div></div>`;
       }

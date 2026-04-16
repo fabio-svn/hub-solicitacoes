@@ -22,7 +22,9 @@ const CLICKUP_STATUS_MAP: Record<string, string> = {
   "em producao":                "em-producao",
   "em producao.":               "em-producao",
   "em revisao":                 "em-revisao",
+  "em revisão":                 "em-revisao",
   "em aprovacao":               "em-aprovacao",
+  "em aprovação":               "em-aprovacao",
   "alinhamentos":               "alinhamentos",
   "cotacao-aprovacao":          "cotacao-aprovacao",
   "cotacao aprovacao":          "cotacao-aprovacao",
@@ -104,7 +106,11 @@ const EVENTOS_CUSTOM_FIELDS: FieldDef[] = [
   { label: "Palestrante 1 — Foto",             id: "73d010f4-fb4b-4e00-bcf1-f550487c18fd", dadosKey: "palFoto1",        clickupType: "short_text", isArquivo: true },
   { label: "Natureza",                         id: "1e31ee81-8b88-4cfc-b8c1-754a94f5f084", dadosKey: "natureza",        clickupType: "short_text" },
   { label: "Nível de maturidade",              id: "1fe629c6-9cf4-4576-8828-bc93aae0d335", dadosKey: "maturidade",      clickupType: "short_text" },
-  { label: "Tipo de evento",                   id: "b0261bc8-2ead-4820-9df9-6475c35cb182", dadosKey: "tipoEvento",      clickupType: "short_text" },
+  { label: "Tipo de evento",                   id: "c81a416c-a09d-41f4-a003-5261bf6edce6", dadosKey: "tipoEvento",      clickupType: "short_text" },
+  { label: "Breve descrição do evento",        id: "4930db39-8924-4121-b432-1068e15068db", dadosKey: "descricao",       clickupType: "text"       },
+  { label: "Cidade",                           id: "ded0be23-c50e-4f82-8b81-66a73dcc42a8", dadosKey: "_cidadeFormatada",clickupType: "short_text" },
+  { label: "Imagem complementar de parceiro",  id: "2d45b87d-dfd0-4f8d-92d2-0a6efc27eec7", dadosKey: "imgFile",         clickupType: "short_text", isArquivo: true },
+  { label: "Arquivo adicional",                id: "35d6d98f-e139-444a-a32a-699a24fe544a", dadosKey: "demaisFile",      clickupType: "short_text", isArquivo: true },
   { label: "Público-alvo",                     id: "5ffdf7e3-cde1-465c-a186-1b24d0f6b395", dadosKey: "publico",         clickupType: "short_text" },
   { label: "Número de convidados",             id: "d676846e-b66c-4c71-8173-7378d9db1f95", dadosKey: "convidados",      clickupType: "short_text" },
   { label: "Custo estimado",                   id: "de09cf5f-3e69-48de-bb7f-bececcf55f95", dadosKey: "custoEstimado",   clickupType: "short_text" },
@@ -543,6 +549,45 @@ async function setEventosCustomFields(taskId: string, dados: FormDados, arquivos
   const localHuman = humanizeLocal(dados);
   if (localHuman) {
     await setClickUpCustomField(taskId, "38ac133a-13b0-4428-98eb-adb5f8cdc23a", localHuman, "Local do evento", { clickupType: "short_text" });
+  }
+
+  // ── Campo computado: Cidade - UF ────────────────────────────────────────────
+  const cidadeRaw = str(dados.cidade as string);
+  const estadoRaw = str(dados.estado as string);
+  if (cidadeRaw) {
+    const IBGE_SIGLA_MAP: Record<string, string> = {
+      "12":"AC","27":"AL","16":"AP","13":"AM","29":"BA","23":"CE","53":"DF",
+      "32":"ES","52":"GO","21":"MA","51":"MT","50":"MS","31":"MG","15":"PA",
+      "25":"PB","41":"PR","26":"PE","22":"PI","33":"RJ","24":"RN","43":"RS",
+      "11":"RO","14":"RR","42":"SC","35":"SP","28":"SE","17":"TO",
+    };
+    const sigla = IBGE_SIGLA_MAP[estadoRaw] || estadoRaw;
+    (dados as Record<string, unknown>)._cidadeFormatada = sigla ? `${cidadeRaw} - ${sigla}` : cidadeRaw;
+  }
+
+  // ── Campo computado: endereço da unidade SVN ─────────────────────────────────
+  const localEvento = str(dados.localEvento as string);
+  if (localEvento === "unidade") {
+    const UNIDADES_ENDERECOS: Record<string, string> = {
+      "SVN Aracaju":              "R. Francisco Duarte Ramos, 34 - Jardins, Aracaju - SE",
+      "SVN Campo Grande":         "Edifício Atrium - R. Euclides da Cunha, 1039 - Loja 3 - Jardim dos Estados",
+      "SVN Cascavel":             "Av. Piquiri, 17 - Salas 01 e 02 - Centro",
+      "SVN Cuiabá":               "R. Pres. Castelo Branco, 277 - Quilombo",
+      "SVN Curitiba":             "Praça São Paulo da Cruz, 50 - Sala 1605 - Juveve, Curitiba - PR",
+      "SVN Foz do Iguaçu":        "R. Alm. Barroso, 1139 - Centro",
+      "SVN Londrina":             "Av. Higienópolis, 602 - Sala 2 - Centro, Londrina - PR",
+      "SVN Maringá":              "Av. Cerro Azul, 123 - Zona 2, Maringá - PR",
+      "SVN Salvador":             "Torre Nova York, Av. Tancredo Neves, 2539 - Sala 2104, Salvador - BA",
+      "SVN São Paulo":            "Av. Dr. Cardoso de Melo, 1855 - Conjunto 51 - Vila Olímpia, São Paulo - SP",
+      "SVN Toledo":               "Rua Nossa Senhora do Rocio, 2279 - Sala 02 - Jardim La Salle, Toledo - PR",
+      "SVN Vitória da Conquista":  "Av. Jorge Teixeira, 29 - Salas 16 e 17",
+    };
+    const unidade = str(dados.unidadeSVN as string);
+    const enderecoUnidade = UNIDADES_ENDERECOS[unidade];
+    if (enderecoUnidade) {
+      (dados as Record<string, unknown>).localEndereco = enderecoUnidade;
+      logger.info({ unidade, endereco: enderecoUnidade }, "ClickUp: endereço da unidade SVN injetado");
+    }
   }
 
   // ── Campo Solicitações: lista de materiais selecionados (text) ─────────────
