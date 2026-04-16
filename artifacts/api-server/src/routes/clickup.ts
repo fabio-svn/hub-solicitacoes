@@ -43,6 +43,25 @@ const IBGE_STATE_MAP: Record<string, string> = {
   "35": "São Paulo", "28": "Sergipe", "17": "Tocantins",
 };
 
+const REQUEST_TYPE_LABELS: Record<string, string> = {
+  "artes-divulgacao":           "Arte de Divulgação",
+  "atualizacao-material":       "Atualização de Material",
+  "conteudo-pdf-informativo":   "PDF Informativo",
+  "conteudo-pdf-ebook":         "PDF Ebook",
+  "apresentacao-nova":          "Apresentação Nova",
+  "apresentacao-atualizar":     "Atualização de Apresentação",
+  "pagina-assessores-dados":    "Página de Assessores",
+  "pagina-assessores-atualizacao": "Página de Assessores",
+};
+
+const ARQUIVO_LABELS: Record<string, string> = {
+  arquivoBase:   "Arquivo base",
+  arquivoApoio:  "Arquivo de apoio",
+  materialAtual: "Material atual",
+  fotoPerfil:    "Foto de perfil",
+  logoFile:      "Logo complementar",
+};
+
 interface FieldDef {
   label: string;
   id: string;
@@ -150,6 +169,10 @@ export interface ArquivosMap {
   [campo: string]: string;
 }
 
+// ─────────────────────────────────────────────
+// Utility helpers
+// ─────────────────────────────────────────────
+
 function str(v: unknown): string {
   if (v === undefined || v === null) return "";
   return String(v).trim();
@@ -192,17 +215,58 @@ function humanizeLocal(dados: FormDados): string | null {
     const parts = [nome, endereco].filter(Boolean);
     return parts.length ? parts.join(" — ") : "Local externo (não especificado)";
   }
-  if (localEvento === "nao-definido") {
-    return "Local ainda não definido";
-  }
+  if (localEvento === "nao-definido") return "Local ainda não definido";
   return null;
 }
+
+function getUserDepartment(user: UserData, dados: FormDados): string {
+  const setor = str(dados.setor as string);
+  if (setor) return setor;
+  logger.warn({ email: user.email }, "ClickUp: setor nao disponivel na sessao, usando fallback Geral");
+  return "Geral";
+}
+
+function humanizeRequestType(tipo: string): string {
+  return REQUEST_TYPE_LABELS[tipo] || tipo;
+}
+
+// ─────────────────────────────────────────────
+// Task name builders
+// ─────────────────────────────────────────────
+
+function buildClickUpEventTaskName(dados: FormDados): string {
+  const naturezaRaw = str(dados.natureza);
+  const natureza = naturezaRaw === "presencial" ? "Presencial"
+    : naturezaRaw === "online" ? "Online"
+    : naturezaRaw || "Evento";
+  const titulo = str(dados.nomeEvento) || "Evento sem título";
+  const cidade = str(dados.cidade);
+  logger.info({ natureza, titulo, cidade }, "ClickUp: nome da task de evento gerado");
+  return cidade
+    ? `[Evento ${natureza}] ${titulo} - ${cidade}`
+    : `[Evento ${natureza}] ${titulo}`;
+}
+
+function buildGeneralTaskName(tipo: string, _subtipo: string, dados: FormDados, user: UserData): string {
+  const tipoHuman = humanizeRequestType(tipo);
+  const setor = getUserDepartment(user, dados);
+  const titulo = str(dados.titulo) || str(dados.nomeCompleto) || "";
+  logger.info({ tipo: tipoHuman, setor, titulo }, "ClickUp: nome da task geral gerado");
+  let name = `[${tipoHuman}]`;
+  if (setor && setor !== "Geral") name += ` (${setor})`;
+  if (titulo) name += ` - ${titulo}`;
+  return name;
+}
+
+// ─────────────────────────────────────────────
+// Description section builders — Eventos
+// ─────────────────────────────────────────────
 
 function buildRequesterSection(user: UserData): string {
   const items: string[] = [];
   items.push(`• Solicitante: ${user.name}`);
   items.push(`• E-mail: ${user.email}`);
-  logger.info({ nome: user.name, email: user.email }, "ClickUp: bloco solicitante montado (telefone e unidade nao disponivel na sessao atual)");
+  logger.info({ nome: user.name, email: user.email }, "ClickUp: bloco solicitante montado");
   return `👤 Solicitante\n\n${items.join("\n")}`;
 }
 
@@ -238,25 +302,20 @@ function buildResumoSection(dados: FormDados): string {
   addLine(items, "Ideia / Quando", str(dados.ideaQuando));
   addLine(items, "Objetivos", str(dados.objetivos));
   addLine(items, "Descrição", str(dados.descricao));
-
   logger.info({ itens: items.length }, "ClickUp: bloco de resumo montado");
   return `🎯 Resumo da solicitação\n\n${items.join("\n")}`;
 }
 
 function buildPalestrantesSection(dados: FormDados): string | null {
-  const tem = str(dados.temPalestrante).toLowerCase();
-  if (tem !== "sim") return null;
-
+  if (str(dados.temPalestrante).toLowerCase() !== "sim") return null;
   const items: string[] = [];
   items.push("• O evento terá palestrantes?: Sim");
-
   const lista = [
     { svn: dados.palSvn1, nome: dados.palNome1, cargo: dados.palCargo1, n: 1 },
     { svn: dados.palSvn2, nome: dados.palNome2, cargo: dados.palCargo2, n: 2 },
     { svn: dados.palSvn3, nome: dados.palNome3, cargo: dados.palCargo3, n: 3 },
     { svn: dados.palSvn4, nome: dados.palNome4, cargo: dados.palCargo4, n: 4 },
   ];
-
   let count = 0;
   for (const { svn, nome, cargo, n } of lista) {
     const nomeStr = str(nome as string);
@@ -268,27 +327,19 @@ function buildPalestrantesSection(dados: FormDados): string | null {
     const cargoStr = str(cargo as string);
     if (cargoStr) items.push(`• Cargo do palestrante ${n}: ${cargoStr}`);
   }
-
   if (count === 0) return null;
-
   logger.info({ count }, "ClickUp: bloco de palestrantes montado");
   return `🎤 Palestrantes\n\n${items.join("\n")}`;
 }
 
 function buildMateriaisSection(dados: FormDados): string | null {
   const materiais = dados.materiais as string[] | undefined;
-  if (!materiais || !Array.isArray(materiais) || materiais.length === 0) {
-    logger.warn("ClickUp: nenhum material encontrado no payload para secao de materiais");
-    return null;
-  }
-
+  if (!materiais || !Array.isArray(materiais) || materiais.length === 0) return null;
   const detalhes = (dados.materiaisDetalhes || {}) as Record<string, Record<string, string>>;
   const lines: string[] = [];
-
   for (const materialId of materiais) {
     const label = MATERIAL_LABELS[materialId] || materialId;
     lines.push(`✅ ${label}`);
-
     const condLabels = MATERIAL_COND_LABELS[materialId];
     const condValues = detalhes[materialId];
     if (condLabels && condValues && typeof condValues === "object") {
@@ -299,53 +350,133 @@ function buildMateriaisSection(dados: FormDados): string | null {
     }
     lines.push("");
   }
-
   logger.info({ count: materiais.length }, "ClickUp: bloco de materiais montado");
   return `📦 Materiais solicitados\n\n${lines.join("\n").trimEnd()}`;
 }
 
 function buildEventDescription(dados: FormDados, user: UserData): string {
   const blocks: string[] = [];
-
   blocks.push(buildRequesterSection(user));
   blocks.push(buildResumoSection(dados));
-
   const palestrantes = buildPalestrantesSection(dados);
   if (palestrantes) blocks.push(palestrantes);
-
   const materiais = buildMateriaisSection(dados);
   if (materiais) blocks.push(materiais);
-
   const obs = str(dados.observacoes);
-  if (obs) {
-    blocks.push(`📝 Observações gerais\n\n• ${obs}`);
-  }
-
-  logger.info({ blocos: blocks.length }, "ClickUp: descricao humanizada gerada com sucesso, JSON bruto removido");
+  if (obs) blocks.push(`📝 Observações gerais\n\n• ${obs}`);
+  logger.info({ blocos: blocks.length }, "ClickUp: descricao humanizada de evento gerada, JSON bruto removido");
   return blocks.join("\n\n");
 }
 
-function buildClickUpEventTaskName(dados: FormDados): string {
-  const naturezaRaw = str(dados.natureza);
-  const natureza = naturezaRaw === "presencial" ? "Presencial"
-    : naturezaRaw === "online" ? "Online"
-    : naturezaRaw || "Evento";
+// ─────────────────────────────────────────────
+// Description section builders — Lista Geral
+// ─────────────────────────────────────────────
 
-  const titulo = str(dados.nomeEvento) || "Evento sem título";
-  const cidade = str(dados.cidade);
+function buildDetailsSection(tipo: string, dados: FormDados): string | null {
+  const items: string[] = [];
 
-  logger.info({ natureza, titulo, cidade }, "ClickUp: nome da task de evento gerado");
+  if (["artes-divulgacao", "conteudo-pdf-informativo", "conteudo-pdf-ebook"].includes(tipo)) {
+    const conteudo = str(dados.conteudo);
+    if (conteudo) items.push(`• Conteúdo / Briefing:\n${conteudo}`);
+    const canalOutro = str(dados.canalOutro);
+    if (canalOutro) items.push(`• Canal personalizado: ${canalOutro}`);
 
-  return cidade
-    ? `[Evento ${natureza}] ${titulo} - ${cidade}`
-    : `[Evento ${natureza}] ${titulo}`;
+  } else if (tipo === "atualizacao-material") {
+    const descricao = str(dados.descricao);
+    if (descricao) items.push(`• Descrição das atualizações:\n${descricao}`);
+
+  } else if (["apresentacao-nova", "apresentacao-atualizar"].includes(tipo)) {
+    const tamanho = str(dados.tamanho);
+    if (tamanho) items.push(`• Formato / Tamanho: ${tamanho}`);
+    const tipoCriacao = str(dados.tipoCriacao);
+    if (tipoCriacao) {
+      const tipoHuman = tipoCriacao === "do-zero" ? "Do zero"
+        : tipoCriacao === "base-existente" ? "Com base existente"
+        : tipoCriacao;
+      items.push(`• Tipo de criação: ${tipoHuman}`);
+    }
+    const elementos = str(dados.elementos);
+    if (elementos) items.push(`• Elementos desejados: ${elementos}`);
+    const elementosDesc = str(dados.elementosDescricao);
+    if (elementosDesc) items.push(`• Descrição dos elementos:\n${elementosDesc}`);
+
+  } else if (["pagina-assessores-dados", "pagina-assessores-atualizacao"].includes(tipo)) {
+    addLine(items, "Nome completo", str(dados.nomeCompleto));
+    addLine(items, "Código do assessor", str(dados.codigoAssessor));
+    addLine(items, "Unidade", str(dados.unidade));
+    addLine(items, "Contrato social", str(dados.contratoSocial));
+    addLine(items, "LinkedIn", str(dados.linkedin));
+    addLine(items, "Instagram", str(dados.instagram));
+    const miniBio = str(dados.miniBio);
+    if (miniBio) items.push(`• Mini bio:\n${miniBio}`);
+    const selos = dados.selos as string[] | undefined;
+    if (selos && Array.isArray(selos) && selos.length > 0) {
+      items.push(`• Selos: ${selos.join(", ")}`);
+    }
+    const depos = dados.depoimentos as Array<{ nome: string; texto: string }> | undefined;
+    if (depos && Array.isArray(depos) && depos.length > 0) {
+      items.push("• Depoimentos:");
+      depos.forEach((d, i) => {
+        if (d.nome && d.texto) items.push(`  ${i + 1}. ${d.nome}: "${d.texto}"`);
+      });
+    }
+  }
+
+  if (items.length === 0) return null;
+  return `📝 Detalhes\n\n${items.join("\n")}`;
 }
 
-function getListId(tipoSolicitacao: string): string | null {
-  const category = CLICKUP_LIST_MAP[tipoSolicitacao];
-  if (!category) return null;
-  return CLICKUP_LISTS[category] || null;
+function buildArquivosSection(arquivos: ArquivosMap): string | null {
+  const items: string[] = [];
+  for (const [campo, url] of Object.entries(arquivos)) {
+    if (!url) continue;
+    const label = ARQUIVO_LABELS[campo] || campo;
+    items.push(`• ${label}: ${url}`);
+  }
+  if (items.length === 0) return null;
+  return `📎 Arquivos\n\n${items.join("\n")}`;
 }
+
+function buildGeneralDescription(
+  tipo: string,
+  subtipo: string,
+  dados: FormDados,
+  user: UserData,
+  arquivos: ArquivosMap
+): string {
+  const blocks: string[] = [];
+
+  blocks.push(buildRequesterSection(user));
+
+  const tipoHuman = humanizeRequestType(tipo);
+  const setor = getUserDepartment(user, dados);
+  const resumoItems: string[] = [];
+  addLine(resumoItems, "Tipo", tipoHuman);
+  if (subtipo) addLine(resumoItems, "Subtipo", subtipo);
+  if (setor && setor !== "Geral") addLine(resumoItems, "Setor", setor);
+  addLine(resumoItems, "Título", str(dados.titulo) || str(dados.nomeCompleto));
+  addLine(resumoItems, "Finalidade", str(dados.finalidade));
+  addLine(resumoItems, "Prazo de entrega", str(dados.prazoEntrega));
+  addLine(resumoItems, "Público-alvo", str(dados.publicoAlvo));
+  addLine(resumoItems, "Canais", str(dados.canais));
+  if (resumoItems.length > 0) blocks.push(`📌 Resumo\n\n${resumoItems.join("\n")}`);
+
+  const detalhes = buildDetailsSection(tipo, dados);
+  if (detalhes) blocks.push(detalhes);
+
+  const arquivosSection = buildArquivosSection(arquivos);
+  if (arquivosSection) blocks.push(arquivosSection);
+
+  const obs = str(dados.observacoes);
+  if (obs) blocks.push(`📝 Observações gerais\n\n• ${obs}`);
+
+  logger.info({ tipo, blocos: blocks.length }, "ClickUp: descricao geral humanizada gerada, JSON bruto removido");
+  return blocks.join("\n\n");
+}
+
+// ─────────────────────────────────────────────
+// ClickUp API helpers
+// ─────────────────────────────────────────────
 
 async function setClickUpCustomField(taskId: string, fieldId: string, value: unknown, label: string): Promise<void> {
   logger.info({ taskId, fieldId, label, value }, "ClickUp: tentando preencher custom field");
@@ -369,17 +500,13 @@ async function setClickUpCustomField(taskId: string, fieldId: string, value: unk
 async function setEventosCustomFields(taskId: string, dados: FormDados, arquivos: ArquivosMap): Promise<void> {
   for (const field of EVENTOS_CUSTOM_FIELDS) {
     let value: unknown;
-
     if (field.isArquivo) {
       value = arquivos[field.dadosKey] || null;
-      if (!value) {
-        logger.warn({ taskId, fieldId: field.id, label: field.label }, "ClickUp: arquivo sem URL, pulando");
-        continue;
-      }
+      if (!value) { logger.warn({ taskId, label: field.label }, "ClickUp: arquivo sem URL, pulando"); continue; }
     } else {
       const raw = dados[field.dadosKey];
-      if (raw === undefined || raw === null || String(raw).trim() === "") {
-        logger.warn({ taskId, fieldId: field.id, label: field.label }, "ClickUp: campo sem valor, pulando");
+      if (raw === undefined || raw === null || str(raw as string) === "") {
+        logger.warn({ taskId, label: field.label }, "ClickUp: campo sem valor, pulando");
         continue;
       }
       if (field.isDate) {
@@ -387,18 +514,58 @@ async function setEventosCustomFields(taskId: string, dados: FormDados, arquivos
         value = isNaN(ts) ? String(raw) : ts;
       } else if (field.isNumber) {
         const n = parseInt(String(raw).replace(/\D/g, ""));
-        if (isNaN(n)) {
-          logger.warn({ taskId, fieldId: field.id, label: field.label, raw }, "ClickUp: valor numerico invalido, pulando");
-          continue;
-        }
+        if (isNaN(n)) { logger.warn({ taskId, label: field.label, raw }, "ClickUp: valor numerico invalido, pulando"); continue; }
         value = n;
       } else {
         value = String(raw);
       }
     }
-
     await setClickUpCustomField(taskId, field.id, value, field.label);
   }
+}
+
+async function setGeneralCustomFields(
+  taskId: string,
+  tipo: string,
+  subtipo: string,
+  dados: FormDados,
+  arquivos: ArquivosMap
+): Promise<void> {
+  const tipoHuman = humanizeRequestType(tipo);
+  const titulo = str(dados.titulo) || str(dados.nomeCompleto) || null;
+  const arquivoPrincipal = arquivos.materialAtual || arquivos.arquivoBase || null;
+  const arquivoApoio = arquivos.arquivoApoio || arquivos.fotoPerfil || null;
+
+  const fields: Array<{ id: string; value: unknown; label: string }> = [
+    { id: "6e36326f-2501-4ce2-9894-13d4ddf222d4", value: str(dados.nome) || null,     label: "Nome do solicitante" },
+    { id: "ea901547-2f65-42ee-ab6c-5fbf0ceaa79b", value: tipoHuman,                   label: "Tipo de solicitação" },
+    { id: "ba1bccb2-5c82-43cc-a20c-79b74f2f5b38", value: subtipo || null,              label: "Subtipo" },
+    { id: "b727b647-0da1-43a5-a82d-70c33dedf0fd", value: titulo,                       label: "Título" },
+    { id: "5d7ae6e5-8528-4df3-bf0c-ed3bb05ebee1", value: str(dados.finalidade) || null, label: "Finalidade" },
+    { id: "c7585104-7f53-4dcb-95d6-c75d55c4c57b", value: str(dados.publicoAlvo) || null, label: "Público-alvo" },
+    { id: "33c5d4c5-1e0d-48ba-b0a5-6decdea6e138", value: str(dados.prazoEntrega) || null, label: "Prazo de entrega" },
+    { id: "ea38779d-385c-410b-972e-ba97499e9252", value: str(dados.canais) || null,    label: "Canais" },
+    { id: "294f47eb-82a7-416e-998e-ea79b77d296b", value: arquivoPrincipal,             label: "Arquivo principal" },
+    { id: "67d565fd-ca4f-472b-969b-4b5228459e0f", value: arquivoApoio,                label: "Arquivo de apoio" },
+  ];
+
+  for (const { id, value, label } of fields) {
+    if (!value) {
+      logger.warn({ taskId, fieldId: id, label }, "ClickUp: campo geral sem valor, pulando");
+      continue;
+    }
+    await setClickUpCustomField(taskId, id, value, label);
+  }
+}
+
+// ─────────────────────────────────────────────
+// Core public functions
+// ─────────────────────────────────────────────
+
+function getListId(tipoSolicitacao: string): string | null {
+  const category = CLICKUP_LIST_MAP[tipoSolicitacao];
+  if (!category) return null;
+  return CLICKUP_LISTS[category] || null;
 }
 
 export async function createClickUpTask(
@@ -420,6 +587,7 @@ export async function createClickUpTask(
 
   const tipo = solicitacao.tipo_solicitacao;
   const subtipo = solicitacao.subtipo || "";
+  const safeArquivos = arquivos || {};
 
   let taskName: string;
   let description: string;
@@ -428,16 +596,13 @@ export async function createClickUpTask(
     taskName = buildClickUpEventTaskName(dados);
     description = buildEventDescription(dados, user);
   } else {
-    const nome = str(dados.nomeEvento) || str(dados.titulo) || str(dados.nomeCompleto);
-    const solicitante = user.name || user.email;
-    taskName = subtipo
-      ? `[${tipo} ${subtipo}] ${nome} — ${solicitante}`
-      : `[${tipo}] ${nome} — ${solicitante}`;
-    description = JSON.stringify(dados, null, 2);
+    taskName = buildGeneralTaskName(tipo, subtipo, dados, user);
+    description = buildGeneralDescription(tipo, subtipo, dados, user, safeArquivos);
   }
 
-  const taskStatus = tipo === "eventos" ? "Solicitações" : "Para fazer";
+  logger.info({ tipo, taskName, descriptionLength: description.length }, "ClickUp: criando task");
 
+  const taskStatus = tipo === "eventos" ? "Solicitações" : "Para fazer";
   let taskId: string | null = null;
 
   try {
@@ -446,13 +611,11 @@ export async function createClickUpTask(
       headers: { "Authorization": CLICKUP_API_TOKEN, "Content-Type": "application/json" },
       body: JSON.stringify({ name: taskName, description, status: taskStatus }),
     });
-
     if (!response.ok) {
       const text = await response.text();
       logger.error({ status: response.status, body: text }, "ClickUp API error");
       return null;
     }
-
     const data = await response.json() as { id?: string };
     taskId = data.id || null;
   } catch (err) {
@@ -461,11 +624,12 @@ export async function createClickUpTask(
   }
 
   if (!taskId) return null;
-
   logger.info({ taskId, tipo, taskName }, "ClickUp: task criada com sucesso");
 
   if (tipo === "eventos") {
-    await setEventosCustomFields(taskId, dados, arquivos || {});
+    await setEventosCustomFields(taskId, dados, safeArquivos);
+  } else {
+    await setGeneralCustomFields(taskId, tipo, subtipo, dados, safeArquivos);
   }
 
   return taskId;
