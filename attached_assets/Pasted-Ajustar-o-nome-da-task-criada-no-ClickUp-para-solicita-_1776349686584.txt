@@ -1,0 +1,135 @@
+Ajustar o nome da task criada no ClickUp para solicitações de eventos.
+
+## Problema atual
+
+Hoje o nome da task está vindo em formato técnico, por exemplo:
+
+`[eventos presencial] Teste Clickup 2 — João Paulo Rodrigues Sardeto`
+
+Isso usa valores brutos do payload e inclui o solicitante no título.
+
+## Objetivo
+
+Humanizar o nome da task e adotar um padrão operacional mais útil.
+
+---
+
+# Novo padrão obrigatório para eventos
+
+## Formato desejado
+
+`[Evento Presencial] Teste Clickup 2 - Acrelândia`
+
+### Regra geral:
+
+`[Evento {Natureza Humanizada}] {Título do evento} - {Cidade do evento}`
+
+---
+
+# Regras obrigatórias
+
+## 1. Humanizar natureza
+
+Converter:
+
+* `presencial` → `Presencial`
+* `online` → `Online`
+
+## 2. Prefixo fixo
+
+Não usar mais:
+
+* `[eventos presencial]`
+* `[eventos online]`
+
+Usar:
+
+* `[Evento Presencial]`
+* `[Evento Online]`
+
+## 3. Título do evento
+
+Usar o nome/título principal do evento vindo do payload real.
+
+Priorizar o campo correto do formulário de eventos, por exemplo:
+
+* `nomeEvento`
+  ou equivalente real encontrado no backend
+
+## 4. Cidade do evento
+
+Usar a cidade do evento no final do nome.
+
+Formato:
+` - {Cidade}`
+
+Exemplo:
+`[Evento Presencial] Teste Clickup 2 - Acrelândia`
+
+## 5. Remover solicitante do título
+
+Não incluir mais o nome do solicitante no nome da task de eventos.
+
+O solicitante já pode estar:
+
+* em custom field
+* na descrição
+* em outro campo do ClickUp
+
+Não precisa poluir o título.
+
+## 6. Fallbacks seguros
+
+Se não houver cidade:
+usar apenas
+`[Evento Presencial] Teste Clickup 2`
+
+Se não houver título:
+usar algo como
+`[Evento Presencial] Evento sem título - Acrelândia`
+
+Se faltarem ambos:
+usar fallback seguro e legível.
+
+## 7. Aplicar apenas para eventos
+
+Não alterar ainda o padrão dos outros tipos de solicitação.
+
+---
+
+# Implementação sugerida
+
+Criar helper específico, algo como:
+
+* `buildClickUpEventTaskName(dados)`
+  ou equivalente
+
+Esse helper deve:
+
+* ler natureza
+* humanizar natureza
+* ler título do evento
+* ler cidade
+* montar string final com fallback
+
+---
+
+# Logs obrigatórios
+
+Registrar:
+
+* natureza encontrada
+* título encontrado
+* cidade encontrada
+* nome final gerado da task
+
+---
+
+# Entrega esperada
+
+Ao finalizar, informar:
+
+1. arquivo alterado
+2. helper criado/ajustado
+3. exemplo do novo nome final da task
+4. fallbacks aplicados

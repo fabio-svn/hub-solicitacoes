@@ -33,6 +33,16 @@ const CLICKUP_STATUS_MAP: Record<string, string> = {
   "cancelled": "cancelado",
 };
 
+const IBGE_STATE_MAP: Record<string, string> = {
+  "12": "Acre", "27": "Alagoas", "16": "Amapá", "13": "Amazonas",
+  "29": "Bahia", "23": "Ceará", "53": "Distrito Federal", "32": "Espírito Santo",
+  "52": "Goiás", "21": "Maranhão", "51": "Mato Grosso", "50": "Mato Grosso do Sul",
+  "31": "Minas Gerais", "15": "Pará", "25": "Paraíba", "41": "Paraná",
+  "26": "Pernambuco", "22": "Piauí", "33": "Rio de Janeiro", "24": "Rio Grande do Norte",
+  "43": "Rio Grande do Sul", "11": "Rondônia", "14": "Roraima", "42": "Santa Catarina",
+  "35": "São Paulo", "28": "Sergipe", "17": "Tocantins",
+};
+
 interface FieldDef {
   label: string;
   id: string;
@@ -78,26 +88,26 @@ const EVENTOS_CUSTOM_FIELDS: FieldDef[] = [
 ];
 
 const MATERIAL_LABELS: Record<string, string> = {
-  "pacote-padrao":              "Pacote de Divulgação Padrão",
-  "pacote-personalizado":       "Pacote de Divulgação Personalizado",
-  "banner-impresso":            "Banner Impresso",
-  "flyer":                      "Flyer",
-  "brindes-store":              "Brindes (solicitar na Store)",
-  "brindes-personalizados":     "Brindes Personalizados",
-  "captacao-audiovisual":       "Captação Audiovisual",
-  "coffee-break":               "Coffee Break ou Coquetel",
-  "instagram":                  "Divulgação no Instagram da SVN",
-  "email-marketing":            "E-mail Marketing",
-  "equipe-staff":               "Equipe Staff (Marketing)",
-  "jantar-almoco":              "Jantar / Almoço (Restaurante)",
-  "pagina-sorteio":             "Página para Sorteio",
-  "projeto-stand":              "Projeto de Stand",
-  "pacote-padrao-online":       "Pacote de Divulgação Padrão (online)",
-  "pacote-personalizado-online":"Pacote de Divulgação Personalizado (online)",
-  "instagram-online":           "Divulgação no Instagram da SVN (online)",
-  "link-youtube-online":        "Link da live no Youtube",
-  "apoio-live-online":          "Apoio em live",
-  "email-marketing-online":     "E-mail Marketing (online)",
+  "pacote-padrao":               "Pacote de Divulgação Padrão",
+  "pacote-personalizado":        "Pacote de Divulgação Personalizado",
+  "banner-impresso":             "Banner Impresso",
+  "flyer":                       "Flyer",
+  "brindes-store":               "Brindes (solicitar na Store)",
+  "brindes-personalizados":      "Brindes Personalizados",
+  "captacao-audiovisual":        "Captação Audiovisual",
+  "coffee-break":                "Coffee Break ou Coquetel",
+  "instagram":                   "Divulgação no Instagram da SVN",
+  "email-marketing":             "E-mail Marketing",
+  "equipe-staff":                "Equipe Staff (Marketing)",
+  "jantar-almoco":               "Jantar / Almoço (Restaurante)",
+  "pagina-sorteio":              "Página para Sorteio",
+  "projeto-stand":               "Projeto de Stand",
+  "pacote-padrao-online":        "Pacote de Divulgação Padrão (online)",
+  "pacote-personalizado-online": "Pacote de Divulgação Personalizado (online)",
+  "instagram-online":            "Divulgação no Instagram da SVN (online)",
+  "link-youtube-online":         "Link da live no Youtube",
+  "apoio-live-online":           "Apoio em live",
+  "email-marketing-online":      "E-mail Marketing (online)",
 };
 
 const MATERIAL_COND_LABELS: Record<string, Record<string, string>> = {
@@ -116,45 +126,6 @@ const MATERIAL_COND_LABELS: Record<string, Record<string, string>> = {
   "projeto-stand":               { materiais: "Materiais necessários" },
 };
 
-function buildMateriaisSection(dados: FormDados): string {
-  const materiais = dados.materiais as string[] | undefined;
-  if (!materiais || !Array.isArray(materiais) || materiais.length === 0) {
-    logger.warn("ClickUp: nenhum material encontrado no payload para seção de descrição");
-    return "";
-  }
-
-  const detalhes = (dados.materiaisDetalhes || {}) as Record<string, Record<string, string>>;
-  logger.info({ materiais, temDetalhes: Object.keys(detalhes).length > 0 }, "ClickUp: construindo secao de materiais");
-
-  let section = "\n\n📦 Materiais solicitados\n";
-
-  for (const materialId of materiais) {
-    const label = MATERIAL_LABELS[materialId] || materialId;
-    section += `\n✅ ${label}\n`;
-
-    const condLabels = MATERIAL_COND_LABELS[materialId];
-    const condValues = detalhes[materialId];
-
-    if (condLabels && condValues && typeof condValues === "object") {
-      for (const [key, fieldLabel] of Object.entries(condLabels)) {
-        const val = condValues[key];
-        if (val !== undefined && val !== null && val !== "") {
-          section += `• ${fieldLabel}: ${val}\n`;
-        }
-      }
-    }
-  }
-
-  logger.info({ materiaisCount: materiais.length, secaoLength: section.length }, "ClickUp: secao de materiais construida com sucesso");
-  return section;
-}
-
-function getListId(tipoSolicitacao: string): string | null {
-  const category = CLICKUP_LIST_MAP[tipoSolicitacao];
-  if (!category) return null;
-  return CLICKUP_LISTS[category] || null;
-}
-
 interface SolicitacaoData {
   tipo_solicitacao: string;
   subtipo?: string | null;
@@ -163,6 +134,7 @@ interface SolicitacaoData {
 interface UserData {
   name: string;
   email: string;
+  role?: string;
 }
 
 interface FormDados {
@@ -178,19 +150,211 @@ export interface ArquivosMap {
   [campo: string]: string;
 }
 
+function str(v: unknown): string {
+  if (v === undefined || v === null) return "";
+  return String(v).trim();
+}
+
+function addLine(items: string[], label: string, value: string | null | undefined): void {
+  const v = str(value);
+  if (v) items.push(`• ${label}: ${v}`);
+}
+
+function formatDate(raw: string | undefined): string | null {
+  const s = str(raw);
+  if (!s) return null;
+  const d = new Date(s + "T00:00:00");
+  if (isNaN(d.getTime())) return s;
+  return `${String(d.getDate()).padStart(2, "0")}/${String(d.getMonth() + 1).padStart(2, "0")}/${d.getFullYear()}`;
+}
+
+function humanizeEstado(raw: string | undefined): string | null {
+  const s = str(raw);
+  if (!s) return null;
+  const mapped = IBGE_STATE_MAP[s];
+  if (!mapped) {
+    logger.warn({ raw: s }, "ClickUp: estado nao encontrado no mapa IBGE, mantendo valor original");
+    return s;
+  }
+  return mapped;
+}
+
+function humanizeLocal(dados: FormDados): string | null {
+  const localEvento = str(dados.localEvento);
+  if (!localEvento) return null;
+  if (localEvento === "unidade") {
+    const unidade = str(dados.unidadeSVN);
+    return unidade ? `Unidade SVN — ${unidade}` : "Unidade SVN";
+  }
+  if (localEvento === "externo") {
+    const nome = str(dados.localNome);
+    const endereco = str(dados.localEndereco);
+    const parts = [nome, endereco].filter(Boolean);
+    return parts.length ? parts.join(" — ") : "Local externo (não especificado)";
+  }
+  if (localEvento === "nao-definido") {
+    return "Local ainda não definido";
+  }
+  return null;
+}
+
+function buildRequesterSection(user: UserData): string {
+  const items: string[] = [];
+  items.push(`• Solicitante: ${user.name}`);
+  items.push(`• E-mail: ${user.email}`);
+  logger.info({ nome: user.name, email: user.email }, "ClickUp: bloco solicitante montado (telefone e unidade nao disponivel na sessao atual)");
+  return `👤 Solicitante\n\n${items.join("\n")}`;
+}
+
+function buildResumoSection(dados: FormDados): string {
+  const naturezaRaw = str(dados.natureza);
+  const natureza = naturezaRaw === "presencial" ? "Presencial"
+    : naturezaRaw === "online" ? "Online"
+    : naturezaRaw || null;
+
+  const tipoAproxRaw = str(dados.tipoAprox);
+  const tipoAprox = tipoAproxRaw === "ao-vivo" ? "Ao vivo"
+    : tipoAproxRaw === "gravado" ? "Gravado"
+    : tipoAproxRaw || null;
+
+  const items: string[] = [];
+  addLine(items, "Natureza", natureza);
+  addLine(items, "Nível de maturidade", str(dados.maturidade));
+  addLine(items, "Título do evento", str(dados.nomeEvento));
+  addLine(items, "Data do evento", formatDate(dados.dataEvento as string));
+  addLine(items, "Horário do evento", str(dados.horario));
+  addLine(items, "Origem do evento", str(dados.origem));
+  addLine(items, "Tipo de evento", str(dados.tipoEvento));
+  addLine(items, "Público-alvo", str(dados.publico));
+  addLine(items, "Estado", humanizeEstado(dados.estado as string));
+  addLine(items, "Cidade", str(dados.cidade));
+  addLine(items, "Local", humanizeLocal(dados));
+  addLine(items, "Número estimado de convidados", str(dados.convidados));
+  addLine(items, "Custo estimado", str(dados.custoEstimado));
+  addLine(items, "Rateio", str(dados.rateio));
+  addLine(items, "Canal de transmissão", str(dados.canal));
+  addLine(items, "Link de transmissão", str(dados.linkTransmissao));
+  addLine(items, "Tipo de transmissão", tipoAprox);
+  addLine(items, "Ideia / Quando", str(dados.ideaQuando));
+  addLine(items, "Objetivos", str(dados.objetivos));
+  addLine(items, "Descrição", str(dados.descricao));
+
+  logger.info({ itens: items.length }, "ClickUp: bloco de resumo montado");
+  return `🎯 Resumo da solicitação\n\n${items.join("\n")}`;
+}
+
+function buildPalestrantesSection(dados: FormDados): string | null {
+  const tem = str(dados.temPalestrante).toLowerCase();
+  if (tem !== "sim") return null;
+
+  const items: string[] = [];
+  items.push("• O evento terá palestrantes?: Sim");
+
+  const lista = [
+    { svn: dados.palSvn1, nome: dados.palNome1, cargo: dados.palCargo1, n: 1 },
+    { svn: dados.palSvn2, nome: dados.palNome2, cargo: dados.palCargo2, n: 2 },
+    { svn: dados.palSvn3, nome: dados.palNome3, cargo: dados.palCargo3, n: 3 },
+    { svn: dados.palSvn4, nome: dados.palNome4, cargo: dados.palCargo4, n: 4 },
+  ];
+
+  let count = 0;
+  for (const { svn, nome, cargo, n } of lista) {
+    const nomeStr = str(nome as string);
+    if (!nomeStr) continue;
+    count++;
+    const svnStr = str(svn as string);
+    if (svnStr) items.push(`• Palestrante ${n} é colaborador da SVN?: ${svnStr}`);
+    items.push(`• Nome do palestrante ${n}: ${nomeStr}`);
+    const cargoStr = str(cargo as string);
+    if (cargoStr) items.push(`• Cargo do palestrante ${n}: ${cargoStr}`);
+  }
+
+  if (count === 0) return null;
+
+  logger.info({ count }, "ClickUp: bloco de palestrantes montado");
+  return `🎤 Palestrantes\n\n${items.join("\n")}`;
+}
+
+function buildMateriaisSection(dados: FormDados): string | null {
+  const materiais = dados.materiais as string[] | undefined;
+  if (!materiais || !Array.isArray(materiais) || materiais.length === 0) {
+    logger.warn("ClickUp: nenhum material encontrado no payload para secao de materiais");
+    return null;
+  }
+
+  const detalhes = (dados.materiaisDetalhes || {}) as Record<string, Record<string, string>>;
+  const lines: string[] = [];
+
+  for (const materialId of materiais) {
+    const label = MATERIAL_LABELS[materialId] || materialId;
+    lines.push(`✅ ${label}`);
+
+    const condLabels = MATERIAL_COND_LABELS[materialId];
+    const condValues = detalhes[materialId];
+    if (condLabels && condValues && typeof condValues === "object") {
+      for (const [key, fieldLabel] of Object.entries(condLabels)) {
+        const val = str(condValues[key]);
+        if (val) lines.push(`• ${fieldLabel}: ${val}`);
+      }
+    }
+    lines.push("");
+  }
+
+  logger.info({ count: materiais.length }, "ClickUp: bloco de materiais montado");
+  return `📦 Materiais solicitados\n\n${lines.join("\n").trimEnd()}`;
+}
+
+function buildEventDescription(dados: FormDados, user: UserData): string {
+  const blocks: string[] = [];
+
+  blocks.push(buildRequesterSection(user));
+  blocks.push(buildResumoSection(dados));
+
+  const palestrantes = buildPalestrantesSection(dados);
+  if (palestrantes) blocks.push(palestrantes);
+
+  const materiais = buildMateriaisSection(dados);
+  if (materiais) blocks.push(materiais);
+
+  const obs = str(dados.observacoes);
+  if (obs) {
+    blocks.push(`📝 Observações gerais\n\n• ${obs}`);
+  }
+
+  logger.info({ blocos: blocks.length }, "ClickUp: descricao humanizada gerada com sucesso, JSON bruto removido");
+  return blocks.join("\n\n");
+}
+
+function buildClickUpEventTaskName(dados: FormDados): string {
+  const naturezaRaw = str(dados.natureza);
+  const natureza = naturezaRaw === "presencial" ? "Presencial"
+    : naturezaRaw === "online" ? "Online"
+    : naturezaRaw || "Evento";
+
+  const titulo = str(dados.nomeEvento) || "Evento sem título";
+  const cidade = str(dados.cidade);
+
+  logger.info({ natureza, titulo, cidade }, "ClickUp: nome da task de evento gerado");
+
+  return cidade
+    ? `[Evento ${natureza}] ${titulo} - ${cidade}`
+    : `[Evento ${natureza}] ${titulo}`;
+}
+
+function getListId(tipoSolicitacao: string): string | null {
+  const category = CLICKUP_LIST_MAP[tipoSolicitacao];
+  if (!category) return null;
+  return CLICKUP_LISTS[category] || null;
+}
+
 async function setClickUpCustomField(taskId: string, fieldId: string, value: unknown, label: string): Promise<void> {
   logger.info({ taskId, fieldId, label, value }, "ClickUp: tentando preencher custom field");
-
   try {
     const response = await fetch(`https://api.clickup.com/api/v2/task/${taskId}/field/${fieldId}`, {
       method: "POST",
-      headers: {
-        "Authorization": CLICKUP_API_TOKEN,
-        "Content-Type": "application/json",
-      },
+      headers: { "Authorization": CLICKUP_API_TOKEN, "Content-Type": "application/json" },
       body: JSON.stringify({ value }),
     });
-
     if (!response.ok) {
       const text = await response.text();
       logger.error({ taskId, fieldId, label, status: response.status, body: text }, "ClickUp: erro ao preencher custom field");
@@ -209,16 +373,15 @@ async function setEventosCustomFields(taskId: string, dados: FormDados, arquivos
     if (field.isArquivo) {
       value = arquivos[field.dadosKey] || null;
       if (!value) {
-        logger.warn({ taskId, fieldId: field.id, label: field.label }, "ClickUp: arquivo sem URL disponivel no payload, pulando");
+        logger.warn({ taskId, fieldId: field.id, label: field.label }, "ClickUp: arquivo sem URL, pulando");
         continue;
       }
     } else {
       const raw = dados[field.dadosKey];
-      if (raw === undefined || raw === null || raw === "") {
-        logger.warn({ taskId, fieldId: field.id, label: field.label, dadosKey: field.dadosKey }, "ClickUp: campo sem valor no payload, pulando");
+      if (raw === undefined || raw === null || String(raw).trim() === "") {
+        logger.warn({ taskId, fieldId: field.id, label: field.label }, "ClickUp: campo sem valor, pulando");
         continue;
       }
-
       if (field.isDate) {
         const ts = new Date(String(raw)).getTime();
         value = isNaN(ts) ? String(raw) : ts;
@@ -257,36 +420,31 @@ export async function createClickUpTask(
 
   const tipo = solicitacao.tipo_solicitacao;
   const subtipo = solicitacao.subtipo || "";
-  const nome = dados.nomeEvento || dados.titulo || dados.nomeCompleto || "";
-  const solicitante = user.name || user.email;
 
-  const taskName = subtipo
-    ? `[${tipo} ${subtipo}] ${nome} — ${solicitante}`
-    : `[${tipo}] ${nome} — ${solicitante}`;
+  let taskName: string;
+  let description: string;
 
-  const baseDescription = JSON.stringify(dados, null, 2);
-  const materiaisSection = tipo === "eventos" ? buildMateriaisSection(dados) : "";
-  const description = baseDescription + materiaisSection;
+  if (tipo === "eventos") {
+    taskName = buildClickUpEventTaskName(dados);
+    description = buildEventDescription(dados, user);
+  } else {
+    const nome = str(dados.nomeEvento) || str(dados.titulo) || str(dados.nomeCompleto);
+    const solicitante = user.name || user.email;
+    taskName = subtipo
+      ? `[${tipo} ${subtipo}] ${nome} — ${solicitante}`
+      : `[${tipo}] ${nome} — ${solicitante}`;
+    description = JSON.stringify(dados, null, 2);
+  }
 
-  logger.info({ taskName, descriptionLength: description.length }, "ClickUp: descricao final gerada");
-
-  const category = CLICKUP_LIST_MAP[tipo] || "";
-  const taskStatus = category === "eventos" ? "Solicitações" : "Para fazer";
+  const taskStatus = tipo === "eventos" ? "Solicitações" : "Para fazer";
 
   let taskId: string | null = null;
 
   try {
     const response = await fetch(`https://api.clickup.com/api/v2/list/${listId}/task`, {
       method: "POST",
-      headers: {
-        "Authorization": CLICKUP_API_TOKEN,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        name: taskName,
-        description,
-        status: taskStatus,
-      }),
+      headers: { "Authorization": CLICKUP_API_TOKEN, "Content-Type": "application/json" },
+      body: JSON.stringify({ name: taskName, description, status: taskStatus }),
     });
 
     if (!response.ok) {
@@ -304,7 +462,7 @@ export async function createClickUpTask(
 
   if (!taskId) return null;
 
-  logger.info({ taskId, tipo }, "ClickUp: task criada com sucesso");
+  logger.info({ taskId, tipo, taskName }, "ClickUp: task criada com sucesso");
 
   if (tipo === "eventos") {
     await setEventosCustomFields(taskId, dados, arquivos || {});
@@ -315,14 +473,11 @@ export async function createClickUpTask(
 
 export async function getClickUpTaskStatus(taskId: string): Promise<string | null> {
   if (!CLICKUP_API_TOKEN) return null;
-
   try {
     const response = await fetch(`https://api.clickup.com/api/v2/task/${taskId}`, {
       headers: { "Authorization": CLICKUP_API_TOKEN },
     });
-
     if (!response.ok) return null;
-
     const data = await response.json() as { status?: { status?: string } };
     const clickupStatus = data.status?.status?.toLowerCase() || "";
     return CLICKUP_STATUS_MAP[clickupStatus] || null;

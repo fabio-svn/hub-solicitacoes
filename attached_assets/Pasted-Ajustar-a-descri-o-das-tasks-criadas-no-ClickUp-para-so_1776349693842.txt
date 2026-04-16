@@ -1,0 +1,180 @@
+Ajustar a descrição das tasks criadas no ClickUp para solicitações de eventos.
+
+## Objetivo
+
+Adicionar no topo da descrição da task um bloco fixo com **dados do solicitante vindos da integração Microsoft**, sem depender do formulário.
+
+Esses dados devem aparecer antes de qualquer outro bloco (antes de resumo, materiais, palestrantes etc).
+
+---
+
+# Novo bloco obrigatório no TOPO da descrição
+
+## 👤 Solicitante
+
+• Solicitante: João Paulo Rodrigues Sardeto
+• WhatsApp: (44) 99999-9999
+• Unidade: SVN Aracaju
+
+---
+
+# Fonte dos dados
+
+Esses dados **não vêm do formulário**.
+
+Devem ser obtidos através da integração atual com Microsoft / autenticação corporativa / perfil do usuário logado.
+
+Usar as fontes já existentes no projeto.
+
+Exemplos possíveis:
+
+* sessão autenticada
+* perfil Microsoft
+* Microsoft Graph já integrado
+* banco/cache interno sincronizado
+* objeto `user`
+* payload enriquecido no backend
+
+## Importante
+
+Não inventar novos fluxos se esses dados já existirem no projeto.
+
+Primeiro localizar onde hoje o sistema já possui:
+
+* nome do usuário
+* email corporativo
+* telefone / celular
+* unidade / filial / escritório
+
+---
+
+# Prioridade de obtenção dos dados
+
+## Nome do solicitante
+
+Preferir:
+
+1. nome retornado pela integração Microsoft
+2. nome da sessão autenticada
+3. fallback para email
+
+## WhatsApp
+
+Preferir:
+
+1. telefone móvel corporativo
+2. campo telefone no perfil Microsoft
+3. número armazenado internamente
+4. se inexistente, omitir linha
+
+## Unidade
+
+Preferir:
+
+1. unidade vinculada ao usuário no sistema
+2. departamento / office location Microsoft
+3. mapeamento interno existente
+4. se inexistente, omitir linha
+
+---
+
+# Regras obrigatórias
+
+## 1. Mostrar no topo absoluto da descrição
+
+Esse bloco deve aparecer antes de:
+
+* resumo do evento
+* materiais solicitados
+* palestrantes
+* observações
+
+## 2. Mostrar apenas dados existentes
+
+Se não houver WhatsApp:
+
+Mostrar:
+
+👤 Solicitante
+
+• Solicitante: João Paulo Rodrigues Sardeto
+• Unidade: SVN Aracaju
+
+## 3. Não mostrar placeholders
+
+Não exibir:
+
+* undefined
+* null
+* vazio
+* N/A
+* unknown
+
+## 4. Formatação de telefone
+
+Se possível, humanizar número brasileiro.
+
+Exemplo:
+
+* 44999999999 → (44) 99999-9999
+
+Se não for possível, manter bruto.
+
+## 5. Unidade
+
+Humanizar siglas se necessário.
+
+Exemplo:
+
+* arqj → SVN Aracaju
+* maringa → SVN Maringá
+
+---
+
+# Implementação sugerida
+
+Criar helper:
+
+* `buildRequesterSection(user, profile)`
+  ou equivalente
+
+Esse helper retorna bloco textual pronto para ser prependado à descrição.
+
+---
+
+# Importante sobre performance
+
+Se já existir consulta Microsoft Graph no login, reutilizar dados existentes.
+
+Evitar nova chamada externa desnecessária a cada criação de task, se os dados já estiverem em memória/sessão/banco.
+
+---
+
+# Logs obrigatórios
+
+Registrar:
+
+* dados do solicitante encontrados
+* WhatsApp encontrado ou ausente
+* unidade encontrada ou ausente
+* bloco do solicitante inserido no topo
+
+---
+
+# Entrega esperada
+
+Ao finalizar, informar:
+
+1. de onde cada dado foi obtido (nome, telefone, unidade)
+2. arquivo alterado
+3. helper criado
+4. exemplo da descrição final completa
+5. fallback usado quando algum dado não existir
+
+---
+
+# Prioridade máxima
+
+Preservar funcionamento atual.
+
+Apenas enriquecer a descrição da task com contexto do solicitante autenticado.
