@@ -1,0 +1,215 @@
+Melhorar a integração do formulário de eventos com ClickUp.
+
+## Objetivo
+
+Aprimorar a integração atual para que:
+
+1. Continue criando a task normalmente no ClickUp
+2. Continue preenchendo os custom fields já mapeados
+3. Passe a preencher os IDs abaixo corretamente
+4. Adicione na descrição da task uma seção organizada com os **materiais solicitados** e seus respectivos **campos condicionais preenchidos**
+
+---
+
+# PARTE 1 — Custom Fields do ClickUp (Eventos)
+
+Após criar a task, preencher os custom fields abaixo com os dados reais do formulário de eventos.
+
+## IDs oficiais
+
+* Natureza → `1e31ee81-8b88-4cfc-b8c1-754a94f5f084`
+* Nível de maturidade → `1fe629c6-9cf4-4576-8828-bc93aae0d335`
+* Tipo de evento → `b0261bc8-2ead-4820-9df9-6475c35cb182`
+* Público-alvo → `5ffdf7e3-cde1-465c-a186-1b24d0f6b395`
+* Número estimado de convidados → `d676846e-b66c-4c71-8173-7378d9db1f95`
+* Custo estimado → `de09cf5f-3e69-48de-bb7f-bececcf55f95`
+* Rateio → `7ce379f3-fc8c-4ba4-a814-829694df1d07`
+* Endereço do local externo → `78816dd7-89b1-470b-a812-8716cd4b8ebf`
+* Canal de transmissão → `83420339-a502-4a47-ac02-17c5cb5f17c2`
+* Link de transmissão → `3ff627f5-84ed-4bcf-90e7-1b1bb73810bd`
+* Ideia / Quando → `ee61335f-97d0-4f9a-91db-675aa7697671`
+* Logo complementar de parceiro → `ecd1b31c-d6a4-4e20-bbb8-48297caf816a`
+
+## Palestrante 2
+
+* É colaborador SVN? → `9c1d3dbe-39cf-4a84-a67b-2d33ffd6bffe`
+* Nome → `281def01-58e4-4d21-8b0e-f8bd792d947e`
+* Cargo → `52391024-c4f3-4999-983a-53492e8069a5`
+* Foto → `00b1cf20-bb99-4f93-bd7b-6e06cf28e84a`
+
+## Palestrante 3
+
+* Nome → `ea476985-2ec4-4a06-8e33-9d6a70ddd07a`
+* Cargo → `f32b20cc-01a6-443e-a5ac-91aaee4fa9b2`
+* Foto → `53981c0c-20ef-45e9-bf11-8f95261dd4ce`
+
+## Palestrante 4
+
+* Nome → `a128e306-f734-423c-8971-9fd4ca66e354`
+* Cargo → `e76af56c-0cf8-4274-970c-93333c6c2f86`
+* Foto → `2ad7d8c4-bc0d-4925-818e-cc24bedca0bc`
+
+---
+
+# Regra obrigatória de mapeamento
+
+Não assumir nomes cegamente.
+
+Antes de preencher os campos, inspecionar o payload real do formulário de eventos e usar as chaves reais existentes.
+
+Se o nome técnico no backend for diferente, adaptar corretamente.
+
+## Tipos de valor
+
+* Campos texto → string
+* Número de convidados → número real
+* URLs → enviar URL válida
+* Sim / Não → string legível se esse for o formato já validado
+
+---
+
+# Robustez
+
+Se algum campo não existir no payload:
+
+* não quebrar integração
+* pular campo
+* logar ausência de valor
+
+Se um campo falhar:
+
+* continuar os demais
+
+---
+
+# PARTE 2 — Materiais solicitados na descrição da task
+
+Adicionar na descrição da task uma seção organizada:
+
+## 📦 Materiais solicitados
+
+Para cada item selecionado no formulário:
+
+✅ Nome do material
+• Campo condicional preenchido
+• Campo condicional preenchido
+
+---
+
+# Exemplos reais esperados
+
+## Banner impresso
+
+✅ Banner impresso
+• Tamanho: 120x80 cm
+• Conteúdo: Convite oficial do evento
+
+---
+
+## E-mail marketing
+
+✅ E-mail marketing
+• Conteúdo: Convite com CTA para inscrição
+• Base: Clientes premium Maringá
+
+---
+
+## Página para sorteio
+
+Se prêmio definido:
+
+✅ Página para sorteio
+• Já tem prêmio definido?: Sim
+• Descrição do brinde: iPhone 16 Pro
+
+Se não:
+
+✅ Página para sorteio
+• Já tem prêmio definido?: Não
+
+(Não mostrar descrição do brinde vazia)
+
+---
+
+# Regras obrigatórias dos materiais
+
+## Detectar automaticamente:
+
+* checkboxes selecionados
+* cards selecionados
+* array de materiais
+* estrutura atual usada no formulário
+
+## Mostrar apenas:
+
+* campos preenchidos
+* valores válidos
+* respostas relevantes
+
+## Não mostrar:
+
+* vazio
+* null
+* undefined
+* placeholders
+
+---
+
+# Humanização obrigatória
+
+Transformar slugs em nomes legíveis:
+
+* banner-impresso → Banner impresso
+* email-marketing → E-mail marketing
+* pagina-sorteio → Página para sorteio
+
+---
+
+# Importante
+
+Não substituir a descrição atual.
+
+Apenas enriquecer a descrição existente da task.
+
+---
+
+# Implementação sugerida
+
+Criar helpers reutilizáveis:
+
+* setClickUpCustomField(taskId, fieldId, value)
+* buildMateriaisSection(dados)
+* appendToDescription()
+
+---
+
+# Logs obrigatórios
+
+Registrar:
+
+* task criada
+* fields preenchidos com sucesso
+* fields ignorados por falta de valor
+* materiais encontrados
+* descrição final gerada
+* erros de API
+
+---
+
+# Entrega esperada
+
+Ao finalizar, informar:
+
+1. arquivo alterado
+2. campos mapeados com sucesso
+3. quais valores não existiam no payload
+4. exemplo real da descrição final
+5. se algum ID falhou por tipo incompatível
+
+---
+
+# Prioridade máxima
+
+Preservar funcionamento atual.
+
+Adicionar robustez e qualidade operacional no ClickUp sem quebrar o fluxo existente.

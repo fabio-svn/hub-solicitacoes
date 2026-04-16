@@ -33,18 +33,121 @@ const CLICKUP_STATUS_MAP: Record<string, string> = {
   "cancelled": "cancelado",
 };
 
-const EVENTOS_CUSTOM_FIELDS: Array<{ label: string; id: string; dadosKey: string; isArquivo?: boolean; isDate?: boolean }> = [
+interface FieldDef {
+  label: string;
+  id: string;
+  dadosKey: string;
+  isArquivo?: boolean;
+  isDate?: boolean;
+  isNumber?: boolean;
+}
+
+const EVENTOS_CUSTOM_FIELDS: FieldDef[] = [
   { label: "Nome do solicitante",              id: "92db4658-70d1-430e-98ec-5e27029136fd", dadosKey: "nome" },
-  { label: "Data do evento",                   id: "361cb66a-8c99-43ec-a4fa-5a347e9a4fbd", dadosKey: "dataEvento", isDate: true },
+  { label: "Data do evento",                   id: "361cb66a-8c99-43ec-a4fa-5a347e9a4fbd", dadosKey: "dataEvento",       isDate: true },
   { label: "Origem do evento",                 id: "626bb697-d9eb-4e79-8277-8a7145e4b979", dadosKey: "origem" },
   { label: "Horário do evento",                id: "45d8babe-a7dd-4a78-952f-1aa366bf34ed", dadosKey: "horario" },
   { label: "Título do evento",                 id: "b40d49f5-341d-4671-a4f0-7cef7a643d6b", dadosKey: "nomeEvento" },
   { label: "O evento terá palestrantes?",      id: "8dbc39d5-f2e7-4669-be67-b1a24a53c2cf", dadosKey: "temPalestrante" },
-  { label: "Palestrante 1 é colaborador SVN?", id: "28491235-89d7-4384-819c-66ca974d04a0", dadosKey: "palSvn1" },
-  { label: "Nome do palestrante 1",            id: "5de3fdb1-3434-4820-92c8-6e7ee82cd3eb", dadosKey: "palNome1" },
-  { label: "Cargo do palestrante 1",           id: "56fbcd07-eab1-465d-9055-8c5e6c0f39ac", dadosKey: "palCargo1" },
-  { label: "Foto do palestrante 1",            id: "73d010f4-fb4b-4e00-bcf1-f550487c18fd", dadosKey: "palFoto1", isArquivo: true },
+  { label: "Palestrante 1 — colaborador SVN?", id: "28491235-89d7-4384-819c-66ca974d04a0", dadosKey: "palSvn1" },
+  { label: "Palestrante 1 — Nome",             id: "5de3fdb1-3434-4820-92c8-6e7ee82cd3eb", dadosKey: "palNome1" },
+  { label: "Palestrante 1 — Cargo",            id: "56fbcd07-eab1-465d-9055-8c5e6c0f39ac", dadosKey: "palCargo1" },
+  { label: "Palestrante 1 — Foto",             id: "73d010f4-fb4b-4e00-bcf1-f550487c18fd", dadosKey: "palFoto1",         isArquivo: true },
+  { label: "Natureza",                         id: "1e31ee81-8b88-4cfc-b8c1-754a94f5f084", dadosKey: "natureza" },
+  { label: "Nível de maturidade",              id: "1fe629c6-9cf4-4576-8828-bc93aae0d335", dadosKey: "maturidade" },
+  { label: "Tipo de evento",                   id: "b0261bc8-2ead-4820-9df9-6475c35cb182", dadosKey: "tipoEvento" },
+  { label: "Público-alvo",                     id: "5ffdf7e3-cde1-465c-a186-1b24d0f6b395", dadosKey: "publico" },
+  { label: "Número de convidados",             id: "d676846e-b66c-4c71-8173-7378d9db1f95", dadosKey: "convidados",       isNumber: true },
+  { label: "Custo estimado",                   id: "de09cf5f-3e69-48de-bb7f-bececcf55f95", dadosKey: "custoEstimado" },
+  { label: "Rateio",                           id: "7ce379f3-fc8c-4ba4-a814-829694df1d07", dadosKey: "rateio" },
+  { label: "Endereço do local externo",        id: "78816dd7-89b1-470b-a812-8716cd4b8ebf", dadosKey: "localEndereco" },
+  { label: "Canal de transmissão",             id: "83420339-a502-4a47-ac02-17c5cb5f17c2", dadosKey: "canal" },
+  { label: "Link de transmissão",              id: "3ff627f5-84ed-4bcf-90e7-1b1bb73810bd", dadosKey: "linkTransmissao" },
+  { label: "Ideia / Quando",                   id: "ee61335f-97d0-4f9a-91db-675aa7697671", dadosKey: "ideaQuando" },
+  { label: "Logo complementar de parceiro",    id: "ecd1b31c-d6a4-4e20-bbb8-48297caf816a", dadosKey: "logoFile",         isArquivo: true },
+  { label: "Palestrante 2 — colaborador SVN?", id: "9c1d3dbe-39cf-4a84-a67b-2d33ffd6bffe", dadosKey: "palSvn2" },
+  { label: "Palestrante 2 — Nome",             id: "281def01-58e4-4d21-8b0e-f8bd792d947e", dadosKey: "palNome2" },
+  { label: "Palestrante 2 — Cargo",            id: "52391024-c4f3-4999-983a-53492e8069a5", dadosKey: "palCargo2" },
+  { label: "Palestrante 2 — Foto",             id: "00b1cf20-bb99-4f93-bd7b-6e06cf28e84a", dadosKey: "palFoto2",         isArquivo: true },
+  { label: "Palestrante 3 — Nome",             id: "ea476985-2ec4-4a06-8e33-9d6a70ddd07a", dadosKey: "palNome3" },
+  { label: "Palestrante 3 — Cargo",            id: "f32b20cc-01a6-443e-a5ac-91aaee4fa9b2", dadosKey: "palCargo3" },
+  { label: "Palestrante 3 — Foto",             id: "53981c0c-20ef-45e9-bf11-8f95261dd4ce", dadosKey: "palFoto3",         isArquivo: true },
+  { label: "Palestrante 4 — Nome",             id: "a128e306-f734-423c-8971-9fd4ca66e354", dadosKey: "palNome4" },
+  { label: "Palestrante 4 — Cargo",            id: "e76af56c-0cf8-4274-970c-93333c6c2f86", dadosKey: "palCargo4" },
+  { label: "Palestrante 4 — Foto",             id: "2ad7d8c4-bc0d-4925-818e-cc24bedca0bc", dadosKey: "palFoto4",         isArquivo: true },
 ];
+
+const MATERIAL_LABELS: Record<string, string> = {
+  "pacote-padrao":              "Pacote de Divulgação Padrão",
+  "pacote-personalizado":       "Pacote de Divulgação Personalizado",
+  "banner-impresso":            "Banner Impresso",
+  "flyer":                      "Flyer",
+  "brindes-store":              "Brindes (solicitar na Store)",
+  "brindes-personalizados":     "Brindes Personalizados",
+  "captacao-audiovisual":       "Captação Audiovisual",
+  "coffee-break":               "Coffee Break ou Coquetel",
+  "instagram":                  "Divulgação no Instagram da SVN",
+  "email-marketing":            "E-mail Marketing",
+  "equipe-staff":               "Equipe Staff (Marketing)",
+  "jantar-almoco":              "Jantar / Almoço (Restaurante)",
+  "pagina-sorteio":             "Página para Sorteio",
+  "projeto-stand":              "Projeto de Stand",
+  "pacote-padrao-online":       "Pacote de Divulgação Padrão (online)",
+  "pacote-personalizado-online":"Pacote de Divulgação Personalizado (online)",
+  "instagram-online":           "Divulgação no Instagram da SVN (online)",
+  "link-youtube-online":        "Link da live no Youtube",
+  "apoio-live-online":          "Apoio em live",
+  "email-marketing-online":     "E-mail Marketing (online)",
+};
+
+const MATERIAL_COND_LABELS: Record<string, Record<string, string>> = {
+  "pacote-personalizado":        { personConvite: "O que personalizar no convite", personPagina: "O que incluir na página de inscrição" },
+  "pacote-personalizado-online": { personConvite: "O que personalizar no convite", personPagina: "O que incluir na página de inscrição" },
+  "banner-impresso":             { tamanho: "Tamanho", conteudo: "Conteúdo" },
+  "flyer":                       { tipo: "Tipo", tamanho: "Tamanho", conteudo: "Conteúdo" },
+  "brindes-personalizados":      { descricao: "Descrição do brinde" },
+  "captacao-audiovisual":        { tipo: "Tipo de captação" },
+  "instagram":                   { formaDiv: "Forma de divulgação", arroba: "Perfil" },
+  "instagram-online":            { formaDiv: "Forma de divulgação", arroba: "Perfil" },
+  "email-marketing":             { conteudo: "Conteúdo do e-mail" },
+  "email-marketing-online":      { conteudo: "Conteúdo do e-mail" },
+  "apoio-live-online":           { descricao: "Tipo de apoio" },
+  "pagina-sorteio":              { premioDefinido: "Prêmio definido", descricao: "Descrição do prêmio" },
+  "projeto-stand":               { materiais: "Materiais necessários" },
+};
+
+function buildMateriaisSection(dados: FormDados): string {
+  const materiais = dados.materiais as string[] | undefined;
+  if (!materiais || !Array.isArray(materiais) || materiais.length === 0) {
+    logger.warn("ClickUp: nenhum material encontrado no payload para seção de descrição");
+    return "";
+  }
+
+  const detalhes = (dados.materiaisDetalhes || {}) as Record<string, Record<string, string>>;
+  logger.info({ materiais, temDetalhes: Object.keys(detalhes).length > 0 }, "ClickUp: construindo secao de materiais");
+
+  let section = "\n\n📦 Materiais solicitados\n";
+
+  for (const materialId of materiais) {
+    const label = MATERIAL_LABELS[materialId] || materialId;
+    section += `\n✅ ${label}\n`;
+
+    const condLabels = MATERIAL_COND_LABELS[materialId];
+    const condValues = detalhes[materialId];
+
+    if (condLabels && condValues && typeof condValues === "object") {
+      for (const [key, fieldLabel] of Object.entries(condLabels)) {
+        const val = condValues[key];
+        if (val !== undefined && val !== null && val !== "") {
+          section += `• ${fieldLabel}: ${val}\n`;
+        }
+      }
+    }
+  }
+
+  logger.info({ materiaisCount: materiais.length, secaoLength: section.length }, "ClickUp: secao de materiais construida com sucesso");
+  return section;
+}
 
 function getListId(tipoSolicitacao: string): string | null {
   const category = CLICKUP_LIST_MAP[tipoSolicitacao];
@@ -66,6 +169,8 @@ interface FormDados {
   nomeEvento?: string;
   titulo?: string;
   nomeCompleto?: string;
+  materiais?: unknown;
+  materiaisDetalhes?: unknown;
   [key: string]: unknown;
 }
 
@@ -104,7 +209,7 @@ async function setEventosCustomFields(taskId: string, dados: FormDados, arquivos
     if (field.isArquivo) {
       value = arquivos[field.dadosKey] || null;
       if (!value) {
-        logger.warn({ taskId, fieldId: field.id, label: field.label }, "ClickUp: campo de arquivo sem URL disponivel no payload");
+        logger.warn({ taskId, fieldId: field.id, label: field.label }, "ClickUp: arquivo sem URL disponivel no payload, pulando");
         continue;
       }
     } else {
@@ -117,6 +222,13 @@ async function setEventosCustomFields(taskId: string, dados: FormDados, arquivos
       if (field.isDate) {
         const ts = new Date(String(raw)).getTime();
         value = isNaN(ts) ? String(raw) : ts;
+      } else if (field.isNumber) {
+        const n = parseInt(String(raw).replace(/\D/g, ""));
+        if (isNaN(n)) {
+          logger.warn({ taskId, fieldId: field.id, label: field.label, raw }, "ClickUp: valor numerico invalido, pulando");
+          continue;
+        }
+        value = n;
       } else {
         value = String(raw);
       }
@@ -152,7 +264,11 @@ export async function createClickUpTask(
     ? `[${tipo} ${subtipo}] ${nome} — ${solicitante}`
     : `[${tipo}] ${nome} — ${solicitante}`;
 
-  const description = JSON.stringify(dados, null, 2);
+  const baseDescription = JSON.stringify(dados, null, 2);
+  const materiaisSection = tipo === "eventos" ? buildMateriaisSection(dados) : "";
+  const description = baseDescription + materiaisSection;
+
+  logger.info({ taskName, descriptionLength: description.length }, "ClickUp: descricao final gerada");
 
   const category = CLICKUP_LIST_MAP[tipo] || "";
   const taskStatus = category === "eventos" ? "Solicitações" : "Para fazer";

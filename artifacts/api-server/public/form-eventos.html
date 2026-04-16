@@ -1312,6 +1312,100 @@
         palSvn1:        (() => { const v = document.querySelector('input[name="palSvn1"]:checked')?.value;   return v === 'sim' ? 'Sim' : v === 'nao' ? 'Não' : ''; })(),
         palNome1:       document.getElementById('palNome1')?.value       || '',
         palCargo1:      document.getElementById('palCargo1')?.value      || '',
+        palSvn2:        (() => { const v = document.querySelector('input[name="palSvn2"]:checked')?.value;   return v === 'sim' ? 'Sim' : v === 'nao' ? 'Não' : ''; })(),
+        palNome2:       document.getElementById('palNome2')?.value       || '',
+        palCargo2:      document.getElementById('palCargo2')?.value      || '',
+        palSvn3:        (() => { const v = document.querySelector('input[name="palSvn3"]:checked')?.value;   return v === 'sim' ? 'Sim' : v === 'nao' ? 'Não' : ''; })(),
+        palNome3:       document.getElementById('palNome3')?.value       || '',
+        palCargo3:      document.getElementById('palCargo3')?.value      || '',
+        palSvn4:        (() => { const v = document.querySelector('input[name="palSvn4"]:checked')?.value;   return v === 'sim' ? 'Sim' : v === 'nao' ? 'Não' : ''; })(),
+        palNome4:       document.getElementById('palNome4')?.value       || '',
+        palCargo4:      document.getElementById('palCargo4')?.value      || '',
+        materiaisDetalhes: (() => {
+          const det = {};
+          if (formState.materiais.has('pacote-personalizado') || formState.materiais.has('pacote-personalizado-online')) {
+            const d = {};
+            const c = document.getElementById('matPersonConvite')?.value?.trim();
+            const p = document.getElementById('matPersonPagina')?.value?.trim();
+            if (c) d.personConvite = c;
+            if (p) d.personPagina = p;
+            const key = formState.materiais.has('pacote-personalizado') ? 'pacote-personalizado' : 'pacote-personalizado-online';
+            if (Object.keys(d).length) det[key] = d;
+          }
+          if (formState.materiais.has('banner-impresso')) {
+            const d = {};
+            const t = document.getElementById('matBannerTam')?.value?.trim();
+            const c = document.getElementById('matBannerConteudo')?.value?.trim();
+            if (t) d.tamanho = t;
+            if (c) d.conteudo = c;
+            if (Object.keys(d).length) det['banner-impresso'] = d;
+          }
+          if (formState.materiais.has('flyer')) {
+            const d = {};
+            const tipo = document.querySelector('input[name="flyerTipo"]:checked')?.value;
+            if (tipo) d.tipo = tipo === 'institucional' ? 'Institucional Padrão (A5)' : 'Personalizado';
+            if (tipo === 'personalizado') {
+              const t = document.getElementById('matFlyerTam')?.value?.trim();
+              const c = document.getElementById('matFlyerConteudo')?.value?.trim();
+              if (t) d.tamanho = t;
+              if (c) d.conteudo = c;
+            }
+            if (Object.keys(d).length) det['flyer'] = d;
+          }
+          if (formState.materiais.has('brindes-personalizados')) {
+            const d = {};
+            const b = document.getElementById('matBrindeDesc')?.value?.trim();
+            if (b) d.descricao = b;
+            if (Object.keys(d).length) det['brindes-personalizados'] = d;
+          }
+          if (formState.materiais.has('captacao-audiovisual')) {
+            const d = {};
+            const c = document.querySelector('input[name="captacao"]:checked')?.value;
+            if (c) d.tipo = c === 'fotos' ? 'Sessão de fotos' : 'Gravação de vídeo';
+            if (Object.keys(d).length) det['captacao-audiovisual'] = d;
+          }
+          if (formState.materiais.has('instagram') || formState.materiais.has('instagram-online')) {
+            const d = {};
+            const t = document.querySelector('input[name="igTipo"]:checked')?.value;
+            const a = document.getElementById('matIgArroba')?.value?.trim();
+            if (t) d.formaDiv = t === 'menção' ? 'Menção' : 'Colab';
+            if (a) d.arroba = a;
+            const key = formState.materiais.has('instagram') ? 'instagram' : 'instagram-online';
+            if (Object.keys(d).length) det[key] = d;
+          }
+          if (formState.materiais.has('email-marketing') || formState.materiais.has('email-marketing-online')) {
+            const d = {};
+            const c = document.getElementById('matEmailConteudo')?.value?.trim();
+            if (c) d.conteudo = c;
+            const key = formState.materiais.has('email-marketing') ? 'email-marketing' : 'email-marketing-online';
+            if (Object.keys(d).length) det[key] = d;
+          }
+          if (formState.materiais.has('apoio-live-online')) {
+            const d = {};
+            const a = document.getElementById('matApoioDesc')?.value?.trim();
+            if (a) d.descricao = a;
+            if (Object.keys(d).length) det['apoio-live-online'] = d;
+          }
+          if (formState.materiais.has('pagina-sorteio')) {
+            const d = {};
+            const s = document.querySelector('input[name="sorteio1"]:checked')?.value;
+            if (s) {
+              d.premioDefinido = s === 'sim' ? 'Sim' : 'Não';
+              if (s === 'sim') {
+                const desc = document.getElementById('matSorteioDesc')?.value?.trim();
+                if (desc) d.descricao = desc;
+              }
+            }
+            if (Object.keys(d).length) det['pagina-sorteio'] = d;
+          }
+          if (formState.materiais.has('projeto-stand')) {
+            const d = {};
+            const m = document.getElementById('matStandMat')?.value?.trim();
+            if (m) d.materiais = m;
+            if (Object.keys(d).length) det['projeto-stand'] = d;
+          }
+          return Object.keys(det).length ? det : undefined;
+        })(),
       };
 
       const dadosLimpos = Object.fromEntries(
