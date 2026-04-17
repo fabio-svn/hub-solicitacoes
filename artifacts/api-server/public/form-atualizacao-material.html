@@ -19,6 +19,12 @@
       <div class="form-step active" id="step1">
         <h2 style="font-weight:600;font-size:1.1rem;margin-bottom:20px">Informações do material</h2>
         <div class="field">
+          <label>Setor <span style="color:var(--ruby-red)">*</span></label>
+          <select id="setor" required>
+            <option value="">Selecione seu setor</option>
+          </select>
+        </div>
+        <div class="field">
           <label>Material atual + arquivos de apoio</label>
           <div class="file-input-wrapper">
             <label class="file-input-btn" for="materialAtual">
@@ -72,6 +78,9 @@
       Auth.renderHeader(document.getElementById('mainHeader'));
 
       FileUpload.bind('materialAtual', 'materialAtualName');
+
+      const setorSel = document.getElementById('setor');
+      if (setorSel) { SETORES.filter(s => s !== 'Selecione seu setor').forEach(s => { const o = document.createElement('option'); o.value = s; o.textContent = s; setorSel.appendChild(o); }); }
     }
 
     function validateRequiredFields() {
@@ -130,7 +139,7 @@
       formData.append('tipo_solicitacao', 'atualizacao-material');
       const dados = {
         nome: Auth.getUserName(),
-        setor: '',
+        setor: document.getElementById('setor')?.value || '',
         titulo: document.getElementById('titulo').value,
         finalidade: document.getElementById('finalidade').value,
         descricao: document.getElementById('descricao').value,

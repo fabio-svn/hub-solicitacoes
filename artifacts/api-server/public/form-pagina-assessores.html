@@ -28,6 +28,12 @@
 
         <h2 style="font-weight:600;font-size:1.1rem;margin-bottom:20px">Informações do assessor</h2>
         <div class="field">
+          <label>Setor <span style="color:var(--ruby-red)">*</span></label>
+          <select id="setor" required>
+            <option value="">Selecione seu setor</option>
+          </select>
+        </div>
+        <div class="field">
           <label>Nome completo</label>
           <input type="text" id="nomeCompleto" placeholder="Nome completo do assessor" required>
         </div>
@@ -203,6 +209,9 @@
       CONTRATOS_SOCIAIS.forEach(c => { const o = document.createElement('option'); o.value = c; o.textContent = c; csSel.appendChild(o); });
 
       renderSelos();
+
+      const setorSel = document.getElementById('setor');
+      if (setorSel) { SETORES.filter(s => s !== 'Selecione seu setor').forEach(s => { const o = document.createElement('option'); o.value = s; o.textContent = s; setorSel.appendChild(o); }); }
 
       FileUpload.bind('fotoPerfil', 'fotoPerfilName', {
         accept: '.jpg,.jpeg,.png,.webp',
@@ -393,7 +402,7 @@
       formData.append('subtipo', subtipo);
       const dados = {
         nome: Auth.getUserName(),
-        setor: '',
+        setor: document.getElementById('setor')?.value || '',
         nomeCompleto: document.getElementById('nomeCompleto').value,
         codigoAssessor: document.getElementById('codigoAssessor').value,
         unidade: document.getElementById('unidade').value,

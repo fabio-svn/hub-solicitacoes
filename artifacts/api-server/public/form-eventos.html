@@ -46,6 +46,12 @@
               </label>
             </div>
             <div class="field" style="margin-top:16px">
+              <label>Setor <span style="color:var(--ruby-red)">*</span></label>
+              <select id="setor" required>
+                <option value="">Selecione seu setor</option>
+              </select>
+            </div>
+            <div class="field" style="margin-top:16px">
               <label class="checkbox-option">
                 <input type="checkbox" id="checkPrazos">
                 <span class="checkbox-custom"></span>
@@ -302,6 +308,7 @@
       data._natureza = formState.natureza;
       data._maturidade = formState.maturidade;
       data._materiais = [...formState.materiais];
+      data._setor = document.getElementById('setor')?.value || '';
       data._checkPrazos = document.getElementById('checkPrazos')?.checked || false;
       data._checkTutorial = document.getElementById('checkTutorial')?.checked || false;
       const tipoAprox = document.querySelector('input[name="tipoAprox"]:checked');
@@ -330,6 +337,7 @@
           const el = document.getElementById(id);
           if (el && data[id]) el.value = data[id];
         });
+        if (data._setor) { const el = document.getElementById('setor'); if (el) el.value = data._setor; }
         if (data._checkPrazos) { const el = document.getElementById('checkPrazos'); if (el) el.checked = true; }
         if (data._checkTutorial) { const el = document.getElementById('checkTutorial'); if (el) el.checked = true; }
         if (data._natureza) {
@@ -380,8 +388,12 @@
       const ratSel = document.getElementById('rateio');
       OPCOES_RATEIO.forEach(r => { const o = document.createElement('option'); o.value = r; o.textContent = r; ratSel.appendChild(o); });
 
+      const setorSel = document.getElementById('setor');
+      if (setorSel) { SETORES.filter(s => s !== 'Selecione seu setor').forEach(s => { const o = document.createElement('option'); o.value = s; o.textContent = s; setorSel.appendChild(o); }); }
+
       restoreFormState();
 
+      document.getElementById('setor')?.addEventListener('change', () => { validateStep1(); saveFormState(); });
       document.getElementById('checkPrazos').addEventListener('change', () => { validateStep1(); saveFormState(); });
       document.getElementById('checkTutorial')?.addEventListener('change', () => { validateStep1(); saveFormState(); });
 
@@ -433,9 +445,10 @@
     function validateStep1() {
       const prazos = document.getElementById('checkPrazos').checked;
       const nat = !!formState.natureza;
+      const setor = !!document.getElementById('setor')?.value;
       let tutorial = true;
       if (formState.natureza === 'online') tutorial = document.getElementById('checkTutorial').checked;
-      document.getElementById('btnNext1').disabled = !(prazos && nat && tutorial);
+      document.getElementById('btnNext1').disabled = !(prazos && nat && setor && tutorial);
     }
 
     function selectMaturidade(m) {
@@ -1280,6 +1293,7 @@
 
       const dados = {
         nome:           Auth.getUserName(),
+        setor:          document.getElementById('setor')?.value || '',
         natureza:       formState.natureza,
         maturidade:     formState.maturidade === 1 ? 'Tenho a maioria das informações'
                       : formState.maturidade === 2 ? 'Tenho algumas informações'

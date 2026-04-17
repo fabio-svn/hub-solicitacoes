@@ -67,6 +67,69 @@ const IBGE_SIGLA_MAP: Record<string, string> = {
   "11":"RO","14":"RR","42":"SC","35":"SP","28":"SE","17":"TO",
 };
 
+const NATUREZA_CODIGO: Record<string, string> = {
+  "presencial": "P",
+  "online":     "L",
+  "patrocinio": "PC",
+};
+
+const SETOR_CODIGO_MAP: Record<string, string> = {
+  "Administração":                           "ADM",
+  "Alocação":                                "ALO",
+  "Aracaju":                                 "AJU",
+  "Câmbio":                                  "CAM",
+  "Campo Grande":                            "CGR",
+  "Capital Humano":                          "RH",
+  "Cascavel":                                "CVV",
+  "Commodities":                             "CMO",
+  "Connect":                                 "CONN",
+  "Corporate":                               "COR",
+  "Cuiabá":                                  "CBA",
+  "Curitiba":                                "CTB",
+  "Curitiba Digital":                        "CTBDGT",
+  "Digital":                                 "DIG",
+  "Financeiro":                              "FIN",
+  "Foz do Iguaçu":                           "FOZ",
+  "Institucional":                           "INST",
+  "Jurídico":                                "JUR",
+  "Londrina":                                "LDN",
+  "Marketing":                               "MKT",
+  "Marketing Digital":                       "MKTDGT",
+  "Maringá":                                 "MGF",
+  "Maringá Digital":                         "MGFDGT",
+  "Middle":                                  "MID",
+  "Performance":                             "PER",
+  "Produto":                                 "PRO",
+  "Proteção Patrimonial":                    "PPA",
+  "Renda Fixa":                              "RF",
+  "Renda Variável":                          "RV",
+  "Salvador":                                "SSA",
+  "São Paulo":                               "SAO",
+  "São Paulo Digital":                       "SAODGT",
+  "SVN Gestão":                              "GEST",
+  "SVN Global":                              "GLO",
+  "SVN Investment & Merchant Banking (M&A)": "IMB",
+  "Toledo":                                  "TLD",
+  "Universidade SVN":                        "USVN",
+  "Vitória da Conquista":                    "VDC",
+  "Wealth Planning":                         "WEAL",
+};
+
+function gerarIdSolicitacao(dados: FormDados, tipo: string): string {
+  const naturezaRaw = str(dados.natureza as string).toLowerCase();
+  const tipoCode = tipo === "eventos"
+    ? (NATUREZA_CODIGO[naturezaRaw] || "E")
+    : "S";
+  const setor = str(dados.setor as string);
+  const setorCode = SETOR_CODIGO_MAP[setor] || "GRL";
+  const now = new Date();
+  const ano = now.getFullYear();
+  const mes = String(now.getMonth() + 1).padStart(2, "0");
+  const dia = String(now.getDate()).padStart(2, "0");
+  const rand = String(Math.floor(Math.random() * 900) + 100);
+  return `${tipoCode}-${setorCode}-${ano}-${mes}-${dia}-${rand}`;
+}
+
 const REQUEST_TYPE_LABELS: Record<string, string> = {
   "artes-divulgacao":           "Arte de Divulgação",
   "atualizacao-material":       "Atualização de Material",
@@ -79,12 +142,19 @@ const REQUEST_TYPE_LABELS: Record<string, string> = {
 };
 
 const ARQUIVO_LABELS: Record<string, string> = {
-  arquivoBase:   "Arquivo base",
-  arquivoApoio:  "Arquivo de apoio",
-  materialAtual: "Material atual",
-  fotoPerfil:    "Foto de perfil",
-  logoFile:      "Logo complementar",
-  matEmailBase:  "Base para disparo de e-mail",
+  arquivoBase:     "Arquivo base",
+  arquivoApoio:    "Arquivo de apoio",
+  materialAtual:   "Material atual",
+  fotoPerfil:      "Foto de perfil",
+  logoFile:        "Logo complementar de parceiro",
+  imgFile:         "Imagem complementar",
+  demaisFile:      "Demais arquivos de apoio",
+  arquivoBaseNova: "Arquivo base (nova apresentação)",
+  matEmailBase:    "Base para disparo de e-mail",
+  palFoto1:        "Foto — Palestrante 1",
+  palFoto2:        "Foto — Palestrante 2",
+  palFoto3:        "Foto — Palestrante 3",
+  palFoto4:        "Foto — Palestrante 4",
 };
 
 interface FieldDef {
@@ -320,6 +390,7 @@ function buildResumoSection(dados: FormDados): string {
 
   const items: string[] = [];
   addLine(items, "Natureza", natureza);
+  addLine(items, "Setor solicitante", str(dados.setor as string));
   addLine(items, "Nível de maturidade", str(dados.maturidade));
   addLine(items, "Título do evento", str(dados.nomeEvento));
   addLine(items, "Data do evento", formatDate(dados.dataEvento as string));
@@ -490,7 +561,7 @@ function buildGeneralDescription(
   const resumoItems: string[] = [];
   addLine(resumoItems, "Tipo", tipoHuman);
   if (subtipo) addLine(resumoItems, "Subtipo", subtipo);
-  if (setor && setor !== "Geral") addLine(resumoItems, "Setor", setor);
+  if (setor) addLine(resumoItems, "Setor", setor);
   addLine(resumoItems, "Título", str(dados.titulo) || str(dados.nomeCompleto));
   addLine(resumoItems, "Finalidade", str(dados.finalidade));
   addLine(resumoItems, "Prazo de entrega", str(dados.prazoEntrega));
@@ -786,6 +857,16 @@ export async function createClickUpTask(
   } else {
     await setGeneralCustomFields(taskId, tipo, subtipo, dados, safeArquivos);
   }
+
+  const idSolicitacao = gerarIdSolicitacao(dados, tipo);
+  logger.info({ taskId, idSolicitacao, tipo }, "ClickUp: ID da solicitação gerada");
+  await setClickUpCustomField(
+    taskId,
+    "4a8493f1-dfc8-49b4-9372-f6df80d62816",
+    idSolicitacao,
+    "ID da Solicitação",
+    { clickupType: "short_text", raw: idSolicitacao }
+  );
 
   return taskId;
 }

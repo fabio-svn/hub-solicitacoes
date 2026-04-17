@@ -35,8 +35,12 @@ export async function uploadToR2(
   const client = getS3Client();
 
   if (!client || !R2_BUCKET) {
-    logger.warn("R2 not configured, using placeholder URL");
-    return `${R2_PUBLIC_URL}solicitacoes/${solicitacaoId}/${campo}/${file.originalname}`;
+    logger.error({ solicitacaoId, campo }, "R2 não configurado — arquivo não salvo, retornando placeholder");
+    const baseUrl = process.env.R2_PUBLIC_URL?.replace(/\/*$/, "/") || "";
+    if (!baseUrl) {
+      logger.error("R2_PUBLIC_URL ausente — URL do arquivo ficará inválida");
+    }
+    return `${baseUrl}solicitacoes/${solicitacaoId}/${campo}/${file.originalname}`;
   }
 
   const ext = file.originalname.split(".").pop() || "";

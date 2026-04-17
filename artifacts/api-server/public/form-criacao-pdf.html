@@ -24,6 +24,12 @@
       <div class="form-step active" id="step1">
         <h2 style="font-weight:600;font-size:1.1rem;margin-bottom:20px">Informações do material</h2>
         <div class="field">
+          <label>Setor <span style="color:var(--ruby-red)">*</span></label>
+          <select id="setor" required>
+            <option value="">Selecione seu setor</option>
+          </select>
+        </div>
+        <div class="field">
           <label>Título do material</label>
           <input type="text" id="titulo" placeholder="Título do PDF" required>
         </div>
@@ -127,6 +133,9 @@
       });
       FileUpload.bind('arquivoApoio', 'arquivoApoioName');
 
+      const setorSel = document.getElementById('setor');
+      if (setorSel) { SETORES.filter(s => s !== 'Selecione seu setor').forEach(s => { const o = document.createElement('option'); o.value = s; o.textContent = s; setorSel.appendChild(o); }); }
+
       restoreDraft();
     }
 
@@ -196,7 +205,7 @@
       formData.append('subtipo', subtipo);
       const dados = {
         nome: Auth.getUserName(),
-        setor: '',
+        setor: document.getElementById('setor')?.value || '',
         titulo: document.getElementById('titulo').value,
         finalidade: document.getElementById('finalidade').value,
         canais: canais.join(', '),
@@ -239,6 +248,7 @@
     function saveDraft() {
       try {
         sessionStorage.setItem('form-pdf', JSON.stringify({
+          setor: document.getElementById('setor')?.value || '',
           titulo: document.getElementById('titulo')?.value || '',
           finalidade: document.getElementById('finalidade')?.value || '',
           conteudo: document.getElementById('conteudo')?.value || '',
