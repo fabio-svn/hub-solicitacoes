@@ -46,12 +46,7 @@ const CATEGORIAS_SOLICITACAO = [
   {
     categoria: "Identidade e materiais pessoais",
     itens: [
-      { id: "pagina-assessores", label: "Página de Assessores", icon: "icon-user", ativo: true,
-        subOpcoes: [
-          { id: "pagina-assessores-dados", label: "Dados para página de assessores" },
-          { id: "pagina-assessores-atualizacao", label: "Atualização de dados para página de assessores" },
-        ]
-      },
+      { id: "pagina-assessores", label: "Página de Assessores", icon: "icon-user", ativo: true },
       { id: "assinatura-email", label: "Assinatura de E-mail", icon: "icon-mail", ativo: false },
       { id: "cartao-visita", label: "Cartão de Visita", icon: "icon-credit-card", ativo: false,
         subOpcoes: [
@@ -69,18 +64,8 @@ const CATEGORIAS_SOLICITACAO = [
     categoria: "Marketing e conteúdo",
     itens: [
       { id: "artes-divulgacao", label: "Artes de Divulgação", icon: "icon-image", ativo: true },
-      { id: "apresentacao", label: "Apresentação", icon: "icon-monitor", ativo: true,
-        subOpcoes: [
-          { id: "apresentacao-nova", label: "Nova apresentação" },
-          { id: "apresentacao-atualizar", label: "Atualizar apresentação" },
-        ]
-      },
-      { id: "conteudo-pdf", label: "Conteúdo em PDF", icon: "icon-file-pdf", ativo: true,
-        subOpcoes: [
-          { id: "conteudo-pdf-informativo", label: "Informativo" },
-          { id: "conteudo-pdf-ebook", label: "Ebook" },
-        ]
-      },
+      { id: "apresentacao", label: "Apresentação", icon: "icon-monitor", ativo: true },
+      { id: "conteudo-pdf", label: "Conteúdo em PDF", icon: "icon-file-pdf", ativo: true },
       { id: "email-marketing", label: "E-mail Marketing", icon: "icon-send", ativo: false },
       { id: "materia-blog", label: "Matéria para blog, jornal ou revista", icon: "icon-newspaper", ativo: false },
       { id: "conteudos-central", label: "Conteúdos Central SVN", icon: "icon-layout", ativo: false },
@@ -404,11 +389,14 @@ const CAMPOS_ETAPA2_FORM2_ONLINE = [
 
 const FORM_ROUTES = {
   "eventos": "form-eventos.html",
+  "pagina-assessores": "form-pagina-assessores.html",
   "pagina-assessores-dados": "form-pagina-assessores.html?subtipo=dados",
   "pagina-assessores-atualizacao": "form-pagina-assessores.html?subtipo=atualizacao",
   "artes-divulgacao": "form-artes-divulgacao.html",
+  "apresentacao": "form-apresentacoes.html",
   "apresentacao-nova": "form-apresentacoes.html?subtipo=nova",
   "apresentacao-atualizar": "form-apresentacoes.html?subtipo=atualizar",
+  "conteudo-pdf": "form-criacao-pdf.html",
   "conteudo-pdf-informativo": "form-criacao-pdf.html?subtipo=informativo",
   "conteudo-pdf-ebook": "form-criacao-pdf.html?subtipo=ebook",
   "atualizacao-material": "form-atualizacao-material.html",

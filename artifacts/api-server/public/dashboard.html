@@ -130,20 +130,6 @@
     </div>
   </div>
 
-  <div class="drawer-overlay" id="drawerOverlay" onclick="closeDrawer()"></div>
-  <div class="drawer" id="drawer">
-    <div class="drawer-header">
-      <div>
-        <div id="drawerTitle" style="font-weight:700;font-size:1.1rem;margin-bottom:8px"></div>
-        <div id="drawerBadges" style="display:flex;gap:6px;flex-wrap:wrap"></div>
-      </div>
-      <button class="drawer-close" onclick="closeDrawer()">&times;</button>
-    </div>
-    <div id="drawerFluxo" style="padding:16px 24px;border-bottom:1px solid var(--border-light)"></div>
-    <div class="drawer-body" id="drawerBody"></div>
-    <div class="drawer-footer" id="drawerFooter"></div>
-  </div>
-
   <script src="config.js"></script>
   <script src="auth.js"></script>
   <script>
@@ -154,7 +140,6 @@
     };
     let pages = { eventos: 1, geral: 1 };
     let searchTimeout;
-    let itemsCache = {};
 
     function esc(str) {
       if (!str) return '';
@@ -253,14 +238,8 @@
         return;
       }
 
-      data.data.forEach((item, idx) => {
-        const cacheKey = tab + '_' + idx + '_' + pages[tab];
-        itemsCache[cacheKey] = item;
-      });
-
       let lastPeriodo = null;
       container.innerHTML = data.data.map((item, idx) => {
-        const cacheKey = tab + '_' + idx + '_' + pages[tab];
         let dados = {};
         try { dados = typeof item.dados === 'string' ? JSON.parse(item.dados) : (item.dados || {}); } catch { dados = {}; }
         const titulo = dados.nomeEvento || dados.tituloEvento || dados.titulo || dados.nomeCompleto || item.tipo_solicitacao;
@@ -276,7 +255,7 @@
           groupHeader = `<div style="font-size:0.75rem;font-weight:600;opacity:0.4;text-transform:uppercase;letter-spacing:0.06em;margin:${idx === 0 ? '0' : '16px'} 0 8px;padding:0 2px">${periodo}</div>`;
         }
 
-        return groupHeader + `<div class="request-card" data-cache="${esc(cacheKey)}" onclick="openDrawerByKey('${esc(cacheKey)}')">
+        return groupHeader + `<div class="request-card" onclick="window.location.href='/solicitacao.html?id=${item.id}'">
           <div class="request-info">
             <div class="request-title">${esc(titulo)}</div>
             <div class="request-meta">
@@ -315,7 +294,6 @@
     }
 
     function goPage(tab, page) {
-      Object.keys(itemsCache).forEach(k => { if (k.startsWith(tab + '_')) delete itemsCache[k]; });
       pages[tab] = page;
       loadList(tab);
     }
@@ -324,8 +302,6 @@
       currentTab = tab;
       document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
       document.querySelectorAll('.tab-content').forEach(c => c.classList.toggle('active', c.id === 'tab-' + tab));
-      const otherTab = tab === 'eventos' ? 'geral' : 'eventos';
-      Object.keys(itemsCache).forEach(k => { if (k.startsWith(otherTab + '_')) delete itemsCache[k]; });
       const listEl = document.getElementById(tab === 'eventos' ? 'listEventos' : 'listGeral');
       if (listEl && !listEl.hasChildNodes()) loadList(tab);
     }
@@ -405,12 +381,6 @@
     function debounceSearch(tab) {
       clearTimeout(searchTimeout);
       searchTimeout = setTimeout(() => { pages[tab] = 1; loadList(tab); }, 300);
-    }
-
-    function openDrawerByKey(key) {
-      const item = itemsCache[key];
-      if (!item) return;
-      openDrawer(item);
     }
 
     function normalizeSlug(value) {
@@ -572,185 +542,6 @@
       return 'Mais antigas';
     }
 
-    async function openDrawer(item) {
-      document.getElementById('drawerOverlay').classList.add('visible');
-      document.getElementById('drawer').classList.add('open');
-      renderDrawerContent(item);
-      try {
-        const syncRes = await fetch('/api/solicitacoes/' + item.id + '/status');
-        if (syncRes.ok) {
-          const syncData = await syncRes.json();
-          if (syncData.updated && syncData.status !== item.status) {
-            item.status = syncData.status;
-            renderDrawerContent(item);
-          }
-        }
-      } catch {}
-    }
-
-    function renderDrawerContent(item) {
-      let dados = {};
-      try {
-        dados = typeof item.dados === 'string' ? JSON.parse(item.dados) : (item.dados || {});
-      } catch { dados = {}; }
-
-      const titulo = dados.nomeEvento || dados.tituloEvento || dados.titulo || dados.nomeCompleto || item.tipo_solicitacao;
-      const tipoLabel = TIPO_SOLICITACAO_LABELS[item.tipo_solicitacao] || item.tipo_solicitacao;
-      const statusObj = STATUS_SOLICITACAO.find(s => s.id === item.status) || { label: item.status, bg: '#f1f5f9', text: '#475569' };
-
-      document.getElementById('drawerTitle').textContent = titulo;
-      document.getElementById('drawerBadges').innerHTML = `
-        <span class="badge" style="background:var(--carbon-black);color:var(--paper-white)">${esc(tipoLabel)}</span>
-        <span class="badge" style="background:${statusObj.bg};color:${statusObj.text}">${esc(statusObj.label)}</span>
-      `;
-
-      const tipoBase = item.tipo_solicitacao === 'eventos' ? 'eventos' : '_default';
-      const fluxo = (typeof FLUXOS_ETAPAS !== 'undefined')
-        ? (FLUXOS_ETAPAS[item.tipo_solicitacao] || FLUXOS_ETAPAS[tipoBase] || FLUXOS_ETAPAS['_default'])
-        : [];
-      const statusAtual = item.status;
-      const etapasVisiveis = fluxo.filter(e => e.visivel);
-      const etapaExcepcional = fluxo.find(e => !e.visivel && e.id === statusAtual);
-      const idxAtual = etapasVisiveis.findIndex(e => e.id === statusAtual);
-
-      const fluxoEl = document.getElementById('drawerFluxo');
-      if (fluxoEl) {
-        if (etapaExcepcional) {
-          fluxoEl.innerHTML = `
-            <div style="background:rgba(159,63,55,0.08);border:1px solid rgba(159,63,55,0.2);border-radius:8px;padding:10px 14px;font-size:0.85rem;font-weight:600;color:var(--ruby-red);display:flex;align-items:center;gap:8px">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-              ${etapaExcepcional.label}
-            </div>`;
-        } else if (etapasVisiveis.length > 0) {
-          fluxoEl.innerHTML = `
-            <p style="font-size:0.7rem;font-weight:600;letter-spacing:0.07em;text-transform:uppercase;opacity:0.4;margin-bottom:14px">Andamento da solicitação</p>
-            <div style="display:flex;flex-direction:column">
-              ${etapasVisiveis.map((etapa, idx) => {
-                const isConcluida = idx < idxAtual;
-                const isAtual = idx === idxAtual;
-                const isUltima = idx === etapasVisiveis.length - 1;
-                const statusEntry = STATUS_SOLICITACAO.find(s => s.id === etapa.id);
-                const cor = statusEntry ? { bg: statusEntry.bg, text: statusEntry.text } : { bg: 'transparent', text: 'rgba(34,27,25,0.15)' };
-                const circBg = isConcluida ? '#065f46' : isAtual ? cor.bg : 'transparent';
-                const circBorder = isConcluida ? '#065f46' : isAtual ? cor.text : 'rgba(34,27,25,0.15)';
-                const icone = isConcluida
-                  ? `<svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>`
-                  : isAtual ? `<div style="width:6px;height:6px;border-radius:50%;background:${cor.text}"></div>` : '';
-                const lblColor = isConcluida ? '#065f46' : isAtual ? cor.text : 'rgba(34,27,25,0.35)';
-                const lblWeight = isAtual ? '700' : '400';
-                const estadoLabel = isConcluida
-                  ? `<span style="font-size:10px;color:#065f46;margin-left:auto">Concluído</span>`
-                  : isAtual
-                  ? `<span style="font-size:10px;font-weight:600;color:${cor.text};margin-left:auto">Atual</span>`
-                  : '';
-                const connector = !isUltima
-                  ? `<div style="width:2px;height:10px;background:${isConcluida ? '#065f46' : 'rgba(34,27,25,0.1)'};margin-left:9px;flex-shrink:0"></div>`
-                  : '';
-                return `
-                  <div style="display:flex;align-items:center;gap:10px">
-                    <div style="width:20px;height:20px;border-radius:50%;background:${circBg};border:2px solid ${circBorder};display:flex;align-items:center;justify-content:center;flex-shrink:0">
-                      ${icone}
-                    </div>
-                    <div style="flex:1;display:flex;align-items:center;justify-content:space-between">
-                      <span style="font-size:0.8rem;font-weight:${lblWeight};color:${lblColor};line-height:1.3">${etapa.label}</span>
-                      ${estadoLabel}
-                    </div>
-                  </div>
-                  ${connector}`;
-              }).join('')}
-            </div>`;
-        } else {
-          fluxoEl.innerHTML = '';
-        }
-      }
-
-      let bodyHtml = '';
-      let temPalestranteHtml = '';
-      let palestrantesHtml = '';
-      const dadosEntries = Object.entries(dados);
-      const palKeysProcessed = new Set();
-
-      for (const [key, value] of dadosEntries) {
-        if (value === null || value === undefined || value === '') continue;
-
-        // Ocultar URLs de fotos de palestrantes
-        if (/^palFoto\d$/.test(key)) continue;
-
-        // Guardar "temPalestrante" para renderizar na posição correta (antes dos blocos)
-        if (key === 'temPalestrante') {
-          const label = (typeof DRAWER_FIELD_LABELS !== 'undefined' && DRAWER_FIELD_LABELS[key]) ? DRAWER_FIELD_LABELS[key] : key;
-          temPalestranteHtml = `<div class="drawer-field"><div class="drawer-field-label">${esc(label)}</div><div class="drawer-field-value">${esc(String(humanizeValue(key, value)))}</div></div>`;
-          continue;
-        }
-
-        // Detectar e agrupar campos de palestrante numerado
-        const palMatch = key.match(/^pal(Svn|Nome|Cargo)(\d)$/);
-        if (palMatch) {
-          const n = palMatch[2];
-          if (palKeysProcessed.has('pal_' + n)) continue;
-          palKeysProcessed.add('pal_' + n);
-
-          const nome  = String(dados['palNome'  + n] || '').trim();
-          const cargo = String(dados['palCargo' + n] || '').trim();
-          const svn   = String(dados['palSvn'   + n] || '').trim();
-          if (!nome) continue;
-
-          const svnBadge = svn.toLowerCase() === 'sim'
-            ? `<span style="background:var(--ruby-red);color:var(--paper-white);font-size:0.65rem;padding:2px 8px;border-radius:999px;font-weight:700;margin-left:6px">SVN</span>`
-            : '';
-
-          palestrantesHtml += `
-            <div class="drawer-field" style="background:var(--icon-bg);border-radius:8px;padding:10px 14px;margin-bottom:8px">
-              <div style="font-size:0.75rem;opacity:0.45;margin-bottom:4px">Palestrante ${n}</div>
-              <div style="font-weight:700;font-size:0.9rem;display:flex;align-items:center">
-                ${esc(nome)}${svnBadge}
-              </div>
-              ${cargo ? `<div style="font-size:0.8rem;opacity:0.6;margin-top:2px">${esc(cargo)}</div>` : ''}
-            </div>`;
-          continue;
-        }
-
-        const label = (typeof DRAWER_FIELD_LABELS !== 'undefined' && DRAWER_FIELD_LABELS[key]) ? DRAWER_FIELD_LABELS[key] : key;
-
-        if (Array.isArray(value)) {
-          if (value.length === 0) continue;
-          if (typeof value[0] === 'object') {
-            bodyHtml += `<div class="drawer-field"><div class="drawer-field-label">${esc(label)}</div>
-              ${value.map(dep => `<div style="background:var(--icon-bg);border-radius:8px;padding:10px 12px;margin-top:6px;font-size:0.85rem">
-                ${dep.texto ? `<div style="font-style:italic;margin-bottom:4px">${esc(dep.texto)}</div>` : ''}
-                ${dep.nome ? `<div style="font-weight:600;font-size:0.8rem">${esc(dep.nome)}</div>` : ''}
-              </div>`).join('')}</div>`;
-          } else {
-            bodyHtml += `<div class="drawer-field"><div class="drawer-field-label">${esc(label)}</div><div class="drawer-field-value">${esc(humanizeValue(key, value))}</div></div>`;
-          }
-          continue;
-        }
-        if (typeof value === 'object') continue;
-        bodyHtml += `<div class="drawer-field"><div class="drawer-field-label">${esc(label)}</div><div class="drawer-field-value">${esc(String(humanizeValue(key, value)))}</div></div>`;
-      }
-
-      if (temPalestranteHtml || palestrantesHtml) {
-        bodyHtml += temPalestranteHtml + palestrantesHtml;
-      }
-
-      document.getElementById('drawerBody').innerHTML = bodyHtml || '<p style="opacity:0.5">Sem dados adicionais</p>';
-      document.getElementById('drawerFooter').innerHTML = `
-        <span style="display:flex;align-items:center;gap:5px">
-          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
-          ID&thinsp;${item.id}
-        </span>
-        <span style="display:flex;align-items:center;gap:5px">
-          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-          ${new Date(item.created_at).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })} às ${new Date(item.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
-        </span>`;
-    }
-
-    function closeDrawer() {
-      document.getElementById('drawerOverlay').classList.remove('visible');
-      document.getElementById('drawer').classList.remove('open');
-    }
-
-    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeDrawer(); });
 
     init();
   </script>

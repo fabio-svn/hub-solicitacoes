@@ -14,14 +14,37 @@
   <header class="header" id="mainHeader"></header>
   <div class="container-narrow" style="padding-top:32px;padding-bottom:80px">
     <div class="form-card">
-      <div class="form-progress"><div class="form-progress-bar" id="progressBar" style="width:50%"></div></div>
+      <div class="form-progress"><div class="form-progress-bar" id="progressBar" style="width:33%"></div></div>
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-        <h2 style="font-weight:500;font-size:1.1rem;margin:0" id="formTitle"></h2>
-        <span style="font-size:0.8rem;opacity:0.4" id="stepLabel">Etapa 1 de 2</span>
+        <h2 style="font-weight:500;font-size:1.1rem;margin:0" id="formTitle">Conteúdo em PDF</h2>
+        <span style="font-size:0.8rem;opacity:0.4" id="stepLabel">Etapa 1 de 3</span>
       </div>
       <div style="height:1px;background:var(--border-light);margin-bottom:24px"></div>
 
       <div class="form-step active" id="step1">
+        <h2 style="font-weight:600;font-size:1.1rem;margin-bottom:8px">Qual tipo de PDF?</h2>
+        <div class="radio-cards">
+          <div class="radio-card" onclick="selectSubtipo('informativo')" id="cardInformativo">
+            <div class="card-icon">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+            </div>
+            <div class="card-label">Informativo</div>
+            <div class="card-desc">Material de apoio, resumo ou documento informativo em PDF</div>
+          </div>
+          <div class="radio-card" onclick="selectSubtipo('ebook')" id="cardEbook">
+            <div class="card-icon">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
+            </div>
+            <div class="card-label">E-book</div>
+            <div class="card-desc">Material educativo ou guia completo em formato de e-book</div>
+          </div>
+        </div>
+        <div class="form-nav">
+          <button class="btn btn-primary" id="btnNext1" disabled onclick="goToStep2()">Próximo</button>
+        </div>
+      </div>
+
+      <div class="form-step" id="step2">
         <h2 style="font-weight:600;font-size:1.1rem;margin-bottom:20px">Informações do material</h2>
         <div class="field">
           <label>Setor <span style="color:var(--ruby-red)">*</span></label>
@@ -67,11 +90,11 @@
           </div>
         </div>
         <div class="form-nav">
-          <button class="btn btn-primary" onclick="validateStep1() && goStep(2)">Próximo</button>
+          <button class="btn btn-primary" onclick="validateStep2() && goStep(3)">Próximo</button>
         </div>
       </div>
 
-      <div class="form-step" id="step2">
+      <div class="form-step" id="step3">
         <h2 style="font-weight:600;font-size:1.1rem;margin-bottom:20px">Informações adicionais</h2>
         <div class="field">
           <label>Público-alvo</label>
@@ -94,7 +117,7 @@
         </div>
         <div style="border-top:1px solid rgba(34,27,25,.08);margin:28px 0 20px;padding-top:22px">
           <div class="form-nav">
-            <button class="btn btn-secondary" onclick="goStep(1)">Voltar</button>
+            <button class="btn btn-secondary" onclick="goStep(2)">Voltar</button>
             <button class="btn btn-primary btn-submit-gold" id="btnSubmit" onclick="submitForm()">Enviar</button>
           </div>
         </div>
@@ -116,17 +139,32 @@
   <script src="auth.js"></script>
   <script>
     const params = new URLSearchParams(window.location.search);
-    const subtipo = params.get('subtipo') || 'informativo';
-    const TITLES = { informativo: 'PDF — Informativo', ebook: 'PDF — E-book' };
+    let subtipo = params.get('subtipo') || '';
     const TIPOS = { informativo: 'conteudo-pdf-informativo', ebook: 'conteudo-pdf-ebook' };
+
+    function selectSubtipo(tipo) {
+      subtipo = tipo;
+      document.getElementById('cardInformativo').className = 'radio-card' + (tipo === 'informativo' ? ' selected' : '');
+      document.getElementById('cardEbook').className = 'radio-card' + (tipo === 'ebook' ? ' selected' : '');
+      document.getElementById('btnNext1').disabled = false;
+    }
+
+    function goToStep2() {
+      document.getElementById('step1').classList.remove('active');
+      document.getElementById('step2').classList.add('active');
+      document.getElementById('progressBar').style.width = '66%';
+      document.getElementById('stepLabel').textContent = 'Etapa 2 de 3';
+      document.getElementById('formTitle').textContent = subtipo === 'ebook' ? 'PDF — E-book' : 'PDF — Informativo';
+      window.scrollTo(0, 0);
+    }
 
     async function init() {
       await _configReady;
       await Auth.init();
-      if (!Auth.isAuthenticated()) { window.location.href = '/auth/login?redirect=/form-criacao-pdf.html?subtipo=' + subtipo; return; }
+      if (!Auth.isAuthenticated()) { window.location.href = '/auth/login?redirect=/form-criacao-pdf.html'; return; }
       Auth.renderHeader(document.getElementById('mainHeader'));
       const _fl = document.getElementById('formLogo'); if (_fl) _fl.src = URL_LOGO_PRETA;
-      document.getElementById('formTitle').textContent = TITLES[subtipo] || TITLES.informativo;
+      if (subtipo) goToStep2();
 
       document.getElementById('canalOutroCheck').addEventListener('change', () => {
         document.getElementById('canalOutroField').style.display = document.getElementById('canalOutroCheck').checked ? 'block' : 'none';
@@ -139,8 +177,8 @@
       restoreDraft();
     }
 
-    function validateStep1() {
-      document.querySelectorAll('#step1 .field-invalid').forEach(el => el.classList.remove('field-invalid'));
+    function validateStep2() {
+      document.querySelectorAll('#step2 .field-invalid').forEach(el => el.classList.remove('field-invalid'));
       const errors = [];
 
       ['titulo', 'finalidade', 'conteudo'].forEach(id => {
@@ -164,8 +202,9 @@
     function goStep(step) {
       document.querySelectorAll('.form-step').forEach(s => s.classList.remove('active'));
       document.getElementById('step' + step).classList.add('active');
-      document.getElementById('progressBar').style.width = (step / 2 * 100) + '%';
-      document.getElementById('stepLabel').textContent = `Etapa ${step} de 2`;
+      const progress = step === 1 ? 33 : step === 2 ? 66 : 100;
+      document.getElementById('progressBar').style.width = progress + '%';
+      document.getElementById('stepLabel').textContent = `Etapa ${step} de 3`;
       window.scrollTo(0, 0);
     }
 

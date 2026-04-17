@@ -17,13 +17,6 @@
     <div id="categoriesContainer"></div>
   </div>
 
-  <div class="sub-options-overlay" id="subOptionsOverlay" onclick="closeSubOptions(event)">
-    <div class="sub-options-card" id="subOptionsCard" onclick="event.stopPropagation()">
-      <h3 id="subOptionsTitle"></h3>
-      <div id="subOptionsList"></div>
-    </div>
-  </div>
-
   <a href="/" class="float-home">
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
     <span>Início</span>
@@ -166,42 +159,9 @@
     }
 
     function handleItemClick(item) {
-      if (item.subOpcoes) {
-        showSubOptions(item);
-      } else {
-        const route = FORM_ROUTES[item.id];
-        if (route) window.location.href = '/' + route;
-      }
+      const route = FORM_ROUTES[item.id];
+      if (route) window.location.href = '/' + route;
     }
-
-    function showSubOptions(item) {
-      document.getElementById('subOptionsTitle').textContent = item.label;
-      const list = document.getElementById('subOptionsList');
-      list.innerHTML = '';
-      item.subOpcoes.forEach(sub => {
-        const btn = document.createElement('button');
-        btn.className = 'sub-option-btn';
-        btn.textContent = sub.label;
-        btn.onclick = () => {
-          const route = FORM_ROUTES[sub.id];
-          if (route) window.location.href = '/' + route;
-        };
-        list.appendChild(btn);
-      });
-      document.getElementById('subOptionsOverlay').classList.add('visible');
-    }
-
-    function closeSubOptions(e) {
-      if (e.target === document.getElementById('subOptionsOverlay')) {
-        document.getElementById('subOptionsOverlay').classList.remove('visible');
-      }
-    }
-
-    document.addEventListener('keydown', e => {
-      if (e.key === 'Escape') {
-        document.getElementById('subOptionsOverlay').classList.remove('visible');
-      }
-    });
 
     init();
   </script>

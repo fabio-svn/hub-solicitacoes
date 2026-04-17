@@ -14,13 +14,38 @@
   <header class="header" id="mainHeader"></header>
   <div class="container-narrow" style="padding-top:32px;padding-bottom:80px">
     <div class="form-card">
-      <div class="form-progress"><div class="form-progress-bar" id="progressBar" style="width:100%"></div></div>
+      <div class="form-progress"><div class="form-progress-bar" id="progressBar" style="width:50%"></div></div>
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-        <h2 style="font-weight:500;font-size:1.1rem;margin:0" id="formTitle"></h2>
+        <h2 style="font-weight:500;font-size:1.1rem;margin:0" id="formTitle">Página de Assessores</h2>
+        <span style="font-size:0.8rem;opacity:0.4" id="stepLabel">Etapa 1 de 2</span>
       </div>
       <div style="height:1px;background:var(--border-light);margin-bottom:24px"></div>
 
-      <div class="form-step active" id="step2">
+      <div class="form-step active" id="step1">
+        <h2 style="font-weight:600;font-size:1.1rem;margin-bottom:8px">Qual tipo de solicitação?</h2>
+        <p style="font-size:0.85rem;opacity:0.6;margin-bottom:20px">Selecione o que melhor descreve sua necessidade.</p>
+        <div class="radio-cards">
+          <div class="radio-card" onclick="selectSubtipo('dados')" id="cardDados">
+            <div class="card-icon">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            </div>
+            <div class="card-label">Dados para página de assessores</div>
+            <div class="card-desc">Para quando o assessor ainda não tem página própria nos sites SVN</div>
+          </div>
+          <div class="radio-card" onclick="selectSubtipo('atualizacao')" id="cardAtualizacao">
+            <div class="card-icon">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            </div>
+            <div class="card-label">Atualizar dados da página</div>
+            <div class="card-desc">Para atualizar foto, bio, novos selos adquiridos ou outras informações do perfil existente</div>
+          </div>
+        </div>
+        <div class="form-nav">
+          <button class="btn btn-primary" id="btnNext1" disabled onclick="goToStep2()">Próximo</button>
+        </div>
+      </div>
+
+      <div class="form-step" id="step2">
         <div id="updateCard" style="display:none" class="alert-card alert-info">
           <div class="alert-title">Atualização</div>
           <div class="alert-text">Preencha apenas os campos que deseja atualizar. Os demais permanecerão como estão no seu perfil atual.</div>
@@ -186,21 +211,39 @@
   <script src="auth.js"></script>
   <script>
     const params = new URLSearchParams(window.location.search);
-    const subtipo = params.get('subtipo') || 'dados';
-    const isAtualizacao = subtipo === 'atualização' || subtipo === 'atualizacao';
-    const TITLES = { dados: 'Página de Assessores — Dados', atualização: 'Página de Assessores — Atualização' };
-    const TIPOS = { dados: 'pagina-assessores-dados', atualização: 'pagina-assessores-atualizacao' };
+    let subtipo = params.get('subtipo') || '';
+    let isAtualizacao = subtipo === 'atualizacao';
+    const TIPOS = { dados: 'pagina-assessores-dados', atualizacao: 'pagina-assessores-atualizacao' };
     let depoimentos = [];
     let selectedSelos = new Set();
+
+    function selectSubtipo(tipo) {
+      subtipo = tipo;
+      isAtualizacao = tipo === 'atualizacao';
+      document.getElementById('cardDados').className = 'radio-card' + (tipo === 'dados' ? ' selected' : '');
+      document.getElementById('cardAtualizacao').className = 'radio-card' + (tipo === 'atualizacao' ? ' selected' : '');
+      document.getElementById('btnNext1').disabled = false;
+    }
+
+    function goToStep2() {
+      document.getElementById('step1').classList.remove('active');
+      document.getElementById('step2').classList.add('active');
+      document.getElementById('progressBar').style.width = '100%';
+      document.getElementById('stepLabel').textContent = 'Etapa 2 de 2';
+      document.getElementById('formTitle').textContent = isAtualizacao
+        ? 'Página de Assessores — Atualização'
+        : 'Página de Assessores — Dados';
+      if (isAtualizacao) document.getElementById('updateCard').style.display = 'block';
+      window.scrollTo(0, 0);
+    }
 
     async function init() {
       await _configReady;
       await Auth.init();
-      if (!Auth.isAuthenticated()) { window.location.href = '/auth/login?redirect=/form-pagina-assessores.html?subtipo=' + subtipo; return; }
+      if (!Auth.isAuthenticated()) { window.location.href = '/auth/login?redirect=/form-pagina-assessores.html'; return; }
       Auth.renderHeader(document.getElementById('mainHeader'));
       const _fl = document.getElementById('formLogo'); if (_fl) _fl.src = URL_LOGO_PRETA;
-      document.getElementById('formTitle').textContent = TITLES[subtipo] || TITLES.dados;
-      if (isAtualizacao) document.getElementById('updateCard').style.display = 'block';
+      if (subtipo) goToStep2();
 
       const unSel = document.getElementById('unidade');
       UNIDADES_SVN.forEach(u => { const o = document.createElement('option'); o.value = u.nome; o.textContent = u.nome; unSel.appendChild(o); });

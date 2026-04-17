@@ -393,4 +393,137 @@ router.get("/solicitacoes/:id/status", requireAuth, async (req, res): Promise<vo
   }
 });
 
+router.get("/solicitacoes/:id/entrega", requireAuth, async (req, res): Promise<void> => {
+  try {
+    const user = req.session.user!;
+    const id = parseInt(String(req.params.id));
+    if (isNaN(id)) { res.status(400).json({ error: "ID inválido" }); return; }
+
+    const conditions: ReturnType<typeof eq>[] = [eq(solicitacoesTable.id, id)];
+    if (user.role !== "admin" && user.role !== "gestor") {
+      conditions.push(eq(solicitacoesTable.user_email, user.email));
+    }
+
+    const [solicitacao] = await db.select().from(solicitacoesTable).where(and(...conditions));
+    if (!solicitacao) { res.status(404).json({ error: "Solicitação não encontrada" }); return; }
+    if (!solicitacao.clickup_task_id) { res.json({ links: [], status: solicitacao.status }); return; }
+
+    const response = await fetch(`https://api.clickup.com/api/v2/task/${solicitacao.clickup_task_id}`, {
+      headers: { "Authorization": process.env.CLICKUP_API_TOKEN || "" },
+    });
+    if (!response.ok) { res.json({ links: [], status: solicitacao.status }); return; }
+
+    const data = await response.json() as {
+      custom_fields?: Array<{ id: string; value?: string }>;
+      status?: { status: string };
+    };
+
+    const entregaField = data.custom_fields?.find(f => f.id === "4485ee1d-253f-4599-a66a-aa674deddf41");
+    const entregaRaw = entregaField?.value || "";
+
+    const links: Array<{ label: string; url: string }> = [];
+    if (entregaRaw) {
+      entregaRaw.split("\n").forEach(line => {
+        const trimmed = line.trim();
+        if (!trimmed) return;
+        const colonIdx = trimmed.indexOf(":");
+        if (colonIdx > 0) {
+          const label = trimmed.substring(0, colonIdx).trim();
+          const url = trimmed.substring(colonIdx + 1).trim();
+          if (url.startsWith("http")) links.push({ label, url });
+        } else if (trimmed.startsWith("http")) {
+          links.push({ label: "Arquivo", url: trimmed });
+        }
+      });
+    }
+
+    res.json({ links, status: solicitacao.status, taskId: solicitacao.clickup_task_id });
+  } catch (err) {
+    logger.error({ err }, "Erro ao buscar entrega");
+    res.status(500).json({ error: "Erro ao buscar links de entrega" });
+  }
+});
+
+router.post("/solicitacoes/:id/alteracao", requireAuth, async (req, res): Promise<void> => {
+  try {
+    const user = req.session.user!;
+    const id = parseInt(String(req.params.id));
+    if (isNaN(id)) { res.status(400).json({ error: "ID inválido" }); return; }
+
+    const { mensagem } = req.body as { mensagem: string };
+    if (!mensagem || !mensagem.trim()) {
+      res.status(400).json({ error: "Mensagem obrigatória" });
+      return;
+    }
+
+    const conditions: ReturnType<typeof eq>[] = [eq(solicitacoesTable.id, id), eq(solicitacoesTable.user_email, user.email)];
+    const [solicitacao] = await db.select().from(solicitacoesTable).where(and(...conditions));
+    if (!solicitacao) { res.status(404).json({ error: "Solicitação não encontrada" }); return; }
+    if (!solicitacao.clickup_task_id) { res.status(400).json({ error: "Task não encontrada no ClickUp" }); return; }
+
+    const token = process.env.CLICKUP_API_TOKEN || "";
+
+    let mentionText = "";
+    try {
+      const taskRes = await fetch(`https://api.clickup.com/api/v2/task/${solicitacao.clickup_task_id}`, {
+        headers: { "Authorization": token },
+      });
+      if (taskRes.ok) {
+        const taskData = await taskRes.json() as { assignees?: Array<{ id: number; username: string }> };
+        const firstAssignee = taskData.assignees?.[0];
+        if (firstAssignee) {
+          mentionText = `@${firstAssignee.username} `;
+        }
+      }
+    } catch {}
+
+    const comentario = `${mentionText}✏️ Alteração solicitada por ${user.name}:\n\n${mensagem.trim()}`;
+
+    const commentRes = await fetch(`https://api.clickup.com/api/v2/task/${solicitacao.clickup_task_id}/comment`, {
+      method: "POST",
+      headers: { "Authorization": token, "Content-Type": "application/json" },
+      body: JSON.stringify({ comment_text: comentario }),
+    });
+
+    if (!commentRes.ok) {
+      const errText = await commentRes.text();
+      logger.error({ status: commentRes.status, body: errText }, "Erro ao comentar no ClickUp");
+      res.status(500).json({ error: "Erro ao enviar alteração" });
+      return;
+    }
+
+    res.json({ success: true });
+  } catch (err) {
+    logger.error({ err }, "Erro ao enviar alteração");
+    res.status(500).json({ error: "Erro ao processar alteração" });
+  }
+});
+
+router.post("/solicitacoes/:id/aprovacao", requireAuth, async (req, res): Promise<void> => {
+  try {
+    const user = req.session.user!;
+    const id = parseInt(String(req.params.id));
+    if (isNaN(id)) { res.status(400).json({ error: "ID inválido" }); return; }
+
+    const conditions: ReturnType<typeof eq>[] = [eq(solicitacoesTable.id, id), eq(solicitacoesTable.user_email, user.email)];
+    const [solicitacao] = await db.select().from(solicitacoesTable).where(and(...conditions));
+    if (!solicitacao) { res.status(404).json({ error: "Solicitação não encontrada" }); return; }
+    if (!solicitacao.clickup_task_id) { res.status(400).json({ error: "Task não encontrada no ClickUp" }); return; }
+
+    const token = process.env.CLICKUP_API_TOKEN || "";
+
+    const comentario = `✅ Aprovado por ${user.name} em ${new Date().toLocaleDateString('pt-BR')}`;
+    await fetch(`https://api.clickup.com/api/v2/task/${solicitacao.clickup_task_id}/comment`, {
+      method: "POST",
+      headers: { "Authorization": token, "Content-Type": "application/json" },
+      body: JSON.stringify({ comment_text: comentario }),
+    });
+
+    res.json({ success: true });
+  } catch (err) {
+    logger.error({ err }, "Erro ao registrar aprovação");
+    res.status(500).json({ error: "Erro ao registrar aprovação" });
+  }
+});
+
 export default router;

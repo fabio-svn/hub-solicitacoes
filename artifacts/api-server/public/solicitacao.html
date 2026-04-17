@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Solicitação - Hub SVN</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap" media="print" onload="this.media='all'">
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap"></noscript>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="page-light">
+  <header class="header" id="mainHeader"></header>
+
+  <div class="container" style="padding-top:32px;padding-bottom:80px;max-width:760px">
+
+    <a href="/dashboard.html" style="display:inline-flex;align-items:center;gap:6px;font-size:0.85rem;font-weight:600;color:var(--carbon-black);opacity:0.5;margin-bottom:24px;text-decoration:none">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+      Minhas solicitações
+    </a>
+
+    <div id="skeletonLoader">
+      <div style="background:var(--icon-bg);border-radius:12px;height:32px;width:60%;margin-bottom:12px;position:relative;overflow:hidden">
+        <div style="position:absolute;inset:0;background:linear-gradient(90deg,transparent 25%,rgba(255,255,255,0.5) 50%,transparent 75%);background-size:200% 100%;animation:shimmer 1.2s infinite"></div>
+      </div>
+      <div style="background:var(--icon-bg);border-radius:12px;height:20px;width:40%;margin-bottom:32px;position:relative;overflow:hidden">
+        <div style="position:absolute;inset:0;background:linear-gradient(90deg,transparent 25%,rgba(255,255,255,0.5) 50%,transparent 75%);background-size:200% 100%;animation:shimmer 1.2s infinite"></div>
+      </div>
+      <div style="background:var(--icon-bg);border-radius:12px;height:200px;position:relative;overflow:hidden">
+        <div style="position:absolute;inset:0;background:linear-gradient(90deg,transparent 25%,rgba(255,255,255,0.5) 50%,transparent 75%);background-size:200% 100%;animation:shimmer 1.2s infinite"></div>
+      </div>
+    </div>
+
+    <div id="pageContent" style="display:none">
+
+      <div style="margin-bottom:24px">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap">
+          <h1 id="solTitulo" style="font-family:'Taviraj',serif;font-weight:300;font-size:1.8rem;color:var(--carbon-black);margin:0"></h1>
+          <span id="solStatus" class="badge" style="font-size:0.8rem;padding:6px 14px;flex-shrink:0"></span>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px" id="solBadges"></div>
+        <div style="font-size:0.8rem;opacity:0.4;margin-top:8px" id="solMeta"></div>
+      </div>
+
+      <div class="form-card" style="margin-bottom:20px;padding:24px" id="fluxoCard"></div>
+
+      <div id="aprovacaoCard" style="display:none;margin-bottom:20px"></div>
+
+      <div class="form-card" style="padding:24px" id="dadosCard">
+        <h3 style="font-weight:700;font-size:0.85rem;text-transform:uppercase;letter-spacing:0.06em;opacity:0.4;margin-bottom:16px">Dados da solicitação</h3>
+        <div id="dadosContent"></div>
+      </div>
+
+      <div style="margin-top:16px;font-size:0.75rem;opacity:0.35;display:flex;gap:16px;flex-wrap:wrap" id="solRodape"></div>
+
+    </div>
+  </div>
+
+  <a href="/solicitacoes.html" class="float-home" style="bottom:78px">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>
+    <span>Menu</span>
+  </a>
+  <a href="/" class="float-home">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+    <span>Início</span>
+  </a>
+
+  <script src="config.js"></script>
+  <script src="auth.js"></script>
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const solicitacaoId = params.get('id');
+
+    function esc(str) {
+      if (!str) return '';
+      const d = document.createElement('div');
+      d.textContent = String(str);
+      return d.innerHTML;
+    }
+
+    async function init() {
+      await _configReady;
+      await Auth.init();
+      if (!Auth.isAuthenticated()) {
+        window.location.href = '/auth/login?redirect=/solicitacao.html?id=' + solicitacaoId;
+        return;
+      }
+      Auth.renderHeader(document.getElementById('mainHeader'));
+
+      if (!solicitacaoId) {
+        window.location.href = '/dashboard.html';
+        return;
+      }
+
+      await loadSolicitacao();
+    }
+
+    async function loadSolicitacao() {
+      try {
+        const res = await fetch('/api/solicitacoes/' + solicitacaoId);
+        if (!res.ok) { window.location.href = '/dashboard.html'; return; }
+        const item = await res.json();
+
+        syncStatus(item);
+        renderPage(item);
+      } catch (e) {
+        console.error(e);
+        window.location.href = '/dashboard.html';
+      }
+    }
+
+    async function syncStatus(item) {
+      try {
+        const syncRes = await fetch('/api/solicitacoes/' + solicitacaoId + '/status');
+        if (syncRes.ok) {
+          const syncData = await syncRes.json();
+          if (syncData.updated && syncData.status !== item.status) {
+            item.status = syncData.status;
+            renderPage(item);
+          }
+        }
+      } catch {}
+    }
+
+    function renderPage(item) {
+      document.getElementById('skeletonLoader').style.display = 'none';
+      document.getElementById('pageContent').style.display = 'block';
+
+      let dados = {};
+      try { dados = typeof item.dados === 'string' ? JSON.parse(item.dados) : (item.dados || {}); } catch {}
+
+      const titulo = dados.nomeEvento || dados.tituloEvento || dados.titulo || dados.nomeCompleto || item.tipo_solicitacao;
+      const tipoLabel = TIPO_SOLICITACAO_LABELS[item.tipo_solicitacao] || item.tipo_solicitacao;
+      const statusObj = STATUS_SOLICITACAO.find(s => s.id === item.status) || { label: item.status, bg: '#f1f5f9', text: '#475569' };
+
+      document.getElementById('solTitulo').textContent = titulo;
+      const statusEl = document.getElementById('solStatus');
+      statusEl.textContent = statusObj.label;
+      statusEl.style.background = statusObj.bg;
+      statusEl.style.color = statusObj.text;
+
+      const badgesEl = document.getElementById('solBadges');
+      badgesEl.innerHTML = `
+        <span class="badge" style="background:var(--carbon-black);color:var(--paper-white)">${esc(tipoLabel)}</span>
+        ${dados.natureza ? `<span class="badge" style="background:var(--icon-bg);color:var(--carbon-black)">${dados.natureza === 'presencial' ? 'Presencial' : 'Online'}</span>` : ''}
+        ${dados.setor ? `<span class="badge" style="background:var(--icon-bg);color:var(--carbon-black)">${esc(dados.setor)}</span>` : ''}
+      `;
+
+      document.getElementById('solMeta').textContent =
+        `Solicitado em ${new Date(item.created_at).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })} às ${new Date(item.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`;
+
+      renderFluxo(item, dados);
+      renderAprovacao(item, dados);
+      renderDados(dados, item);
+
+      document.getElementById('solRodape').innerHTML = `
+        <span>ID: ${item.id}</span>
+        ${dados.idSolicitacao ? `<span>Código: ${dados.idSolicitacao}</span>` : ''}
+      `;
+
+      document.title = `${titulo} — Hub SVN`;
+    }
+
+    function renderFluxo(item, dados) {
+      const fluxoCard = document.getElementById('fluxoCard');
+      const tipoBase = item.tipo_solicitacao === 'eventos' ? 'eventos' : '_default';
+      const fluxo = (typeof FLUXOS_ETAPAS !== 'undefined')
+        ? (FLUXOS_ETAPAS[item.tipo_solicitacao] || FLUXOS_ETAPAS[tipoBase] || FLUXOS_ETAPAS['_default'])
+        : [];
+      const etapasVisiveis = fluxo.filter(e => e.visivel);
+      const etapaExcepcional = fluxo.find(e => !e.visivel && e.id === item.status);
+      const idxAtual = etapasVisiveis.findIndex(e => e.id === item.status);
+
+      if (etapaExcepcional) {
+        fluxoCard.innerHTML = `
+          <div style="background:rgba(159,63,55,0.08);border:1px solid rgba(159,63,55,0.2);border-radius:8px;padding:12px 16px;font-size:0.9rem;font-weight:600;color:var(--ruby-red);display:flex;align-items:center;gap:8px">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            ${etapaExcepcional.label}
+          </div>`;
+        return;
+      }
+
+      if (etapasVisiveis.length === 0) { fluxoCard.style.display = 'none'; return; }
+
+      fluxoCard.innerHTML = `
+        <p style="font-size:0.7rem;font-weight:600;letter-spacing:0.07em;text-transform:uppercase;opacity:0.4;margin-bottom:20px">Andamento da solicitação</p>
+        <div style="display:flex;flex-direction:column;gap:0">
+          ${etapasVisiveis.map((etapa, idx) => {
+            const isConcluida = idx < idxAtual;
+            const isAtual = idx === idxAtual;
+            const isUltima = idx === etapasVisiveis.length - 1;
+            const statusEntry = STATUS_SOLICITACAO.find(s => s.id === etapa.id);
+            const cor = statusEntry ? { bg: statusEntry.bg, text: statusEntry.text } : { bg: 'transparent', text: 'rgba(34,27,25,0.15)' };
+            const circBg = isConcluida ? '#065f46' : isAtual ? cor.bg : 'transparent';
+            const circBorder = isConcluida ? '#065f46' : isAtual ? cor.text : 'rgba(34,27,25,0.15)';
+            const icone = isConcluida
+              ? '<svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>'
+              : isAtual ? `<div style="width:6px;height:6px;border-radius:50%;background:${cor.text}"></div>` : '';
+            const lblColor = isConcluida ? '#065f46' : isAtual ? cor.text : 'rgba(34,27,25,0.35)';
+            const lblWeight = isAtual ? '700' : '400';
+            const estadoLabel = isConcluida
+              ? '<span style="font-size:11px;color:#065f46;margin-left:auto;opacity:0.8">Concluído</span>'
+              : isAtual ? `<span style="font-size:11px;font-weight:600;color:${cor.text};margin-left:auto">Atual</span>` : '';
+            const connector = !isUltima
+              ? `<div style="width:2px;height:12px;background:${isConcluida ? '#065f46' : 'rgba(34,27,25,0.1)'};margin-left:9px;flex-shrink:0"></div>`
+              : '';
+            return `
+              <div style="display:flex;align-items:center;gap:12px">
+                <div style="width:20px;height:20px;border-radius:50%;background:${circBg};border:2px solid ${circBorder};display:flex;align-items:center;justify-content:center;flex-shrink:0">${icone}</div>
+                <div style="flex:1;display:flex;align-items:center;justify-content:space-between">
+                  <span style="font-size:0.85rem;font-weight:${lblWeight};color:${lblColor}">${etapa.label}</span>
+                  ${estadoLabel}
+                </div>
+              </div>
+              ${connector}`;
+          }).join('')}
+        </div>`;
+    }
+
+    async function renderAprovacao(item, dados) {
+      const card = document.getElementById('aprovacaoCard');
+
+      const statusComAprovacao = ['em-aprovacao', 'concluido', 'reprovado'];
+      if (!statusComAprovacao.includes(item.status)) {
+        card.style.display = 'none';
+        return;
+      }
+
+      card.style.display = 'block';
+      card.innerHTML = `
+        <div class="form-card" style="padding:24px">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px">
+            <div style="width:36px;height:36px;border-radius:50%;background:rgba(219,234,254,0.5);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1e40af" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+            </div>
+            <div>
+              <div style="font-weight:700;font-size:0.95rem">Materiais para aprovação</div>
+              <div style="font-size:0.8rem;opacity:0.5">Os arquivos da sua solicitação estão prontos</div>
+            </div>
+          </div>
+          <div id="chatArea" style="background:var(--icon-bg);border-radius:12px;padding:20px;min-height:120px">
+            <div id="chatLoading" style="text-align:center;padding:20px;opacity:0.4;font-size:0.85rem">Carregando arquivos...</div>
+            <div id="chatContent" style="display:none"></div>
+          </div>
+        </div>`;
+
+      try {
+        const res = await fetch('/api/solicitacoes/' + item.id + '/entrega');
+        const data = await res.json();
+
+        document.getElementById('chatLoading').style.display = 'none';
+        const chatContent = document.getElementById('chatContent');
+        chatContent.style.display = 'block';
+
+        const nomeUsuario = Auth.getUserName() || 'você';
+
+        if (!data.links || data.links.length === 0) {
+          chatContent.innerHTML = `
+            <p style="font-size:0.9rem;opacity:0.6;font-style:italic">
+              Os arquivos ainda estão sendo preparados. Volte em breve.
+            </p>`;
+          return;
+        }
+
+        const linksHtml = data.links.map(link =>
+          `<a href="${esc(link.url)}" target="_blank" rel="noopener"
+             style="display:inline-flex;align-items:center;gap:6px;padding:8px 16px;background:var(--carbon-black);color:var(--paper-white);border-radius:8px;font-size:0.85rem;font-weight:600;text-decoration:none;transition:0.2s"
+             onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+            ${esc(link.label)}
+          </a>`
+        ).join('');
+
+        const jaAprovado = item.status === 'concluido';
+
+        chatContent.innerHTML = `
+          <div style="margin-bottom:16px">
+            <p style="font-size:0.9rem;line-height:1.6;margin-bottom:12px">
+              Olá <strong>${esc(nomeUsuario)}</strong>,<br>
+              Os materiais solicitados estão disponíveis!
+            </p>
+            <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px">
+              ${linksHtml}
+            </div>
+          </div>
+
+          ${jaAprovado ? `
+            <div style="background:#d1fae5;border-radius:8px;padding:12px 16px;display:flex;align-items:center;gap:8px;font-size:0.85rem;font-weight:600;color:#065f46">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+              Solicitação aprovada
+            </div>
+          ` : `
+            <div id="acaoAprovacao">
+              <p style="font-size:0.85rem;opacity:0.6;margin-bottom:12px">Por favor, selecione uma das opções:</p>
+              <div style="display:flex;gap:10px;flex-wrap:wrap">
+                <button onclick="confirmarAprovacao(${item.id})"
+                  style="display:inline-flex;align-items:center;gap:8px;padding:10px 20px;background:#16a34a;color:white;border:none;border-radius:8px;font-family:'Nunito Sans',sans-serif;font-weight:700;font-size:0.9rem;cursor:pointer;transition:0.2s"
+                  onmouseover="this.style.background='#15803d'" onmouseout="this.style.background='#16a34a'">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                  Aprovado
+                </button>
+                <button onclick="mostrarCampoAlteracao()"
+                  style="display:inline-flex;align-items:center;gap:8px;padding:10px 20px;background:#dc2626;color:white;border:none;border-radius:8px;font-family:'Nunito Sans',sans-serif;font-weight:700;font-size:0.9rem;cursor:pointer;transition:0.2s"
+                  onmouseover="this.style.background='#b91c1c'" onmouseout="this.style.background='#dc2626'">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                  Solicitar alterações
+                </button>
+              </div>
+            </div>
+
+            <div id="campoAlteracao" style="display:none;margin-top:16px">
+              <p style="font-size:0.875rem;font-weight:600;margin-bottom:8px">O que gostaria que fosse alterado?</p>
+              <textarea id="textoAlteracao" placeholder="Descreva as alterações necessárias..."
+                style="width:100%;border:1px solid rgba(34,27,25,0.2);border-radius:8px;padding:12px;font-family:'Nunito Sans',sans-serif;font-size:0.875rem;min-height:100px;resize:vertical;box-sizing:border-box"></textarea>
+              <div style="display:flex;gap:8px;margin-top:10px">
+                <button onclick="cancelarAlteracao()"
+                  style="padding:8px 16px;background:transparent;border:1px solid rgba(34,27,25,0.2);border-radius:8px;font-family:'Nunito Sans',sans-serif;font-size:0.85rem;cursor:pointer">
+                  Cancelar
+                </button>
+                <button onclick="confirmarAlteracao(${item.id})"
+                  style="padding:8px 20px;background:var(--ruby-red);color:white;border:none;border-radius:8px;font-family:'Nunito Sans',sans-serif;font-weight:700;font-size:0.85rem;cursor:pointer">
+                  Enviar
+                </button>
+              </div>
+            </div>
+          `}`;
+
+      } catch (e) {
+        document.getElementById('chatLoading').style.display = 'none';
+        document.getElementById('chatContent').style.display = 'block';
+        document.getElementById('chatContent').innerHTML =
+          '<p style="font-size:0.85rem;color:var(--ruby-red)">Erro ao carregar arquivos. Tente recarregar a página.</p>';
+      }
+    }
+
+    function mostrarCampoAlteracao() {
+      document.getElementById('acaoAprovacao').style.display = 'none';
+      document.getElementById('campoAlteracao').style.display = 'block';
+      document.getElementById('textoAlteracao').focus();
+    }
+
+    function cancelarAlteracao() {
+      document.getElementById('campoAlteracao').style.display = 'none';
+      document.getElementById('acaoAprovacao').style.display = 'block';
+      document.getElementById('textoAlteracao').value = '';
+    }
+
+    async function confirmarAprovacao(solicitacaoId) {
+      const btnAprovado = document.querySelector('#acaoAprovacao button:first-child');
+      if (!confirm('Confirmar aprovação dos materiais?')) return;
+
+      btnAprovado.disabled = true;
+      btnAprovado.textContent = 'Enviando...';
+
+      try {
+        const res = await fetch('/api/solicitacoes/' + solicitacaoId + '/aprovacao', { method: 'POST' });
+        if (res.ok) {
+          document.getElementById('acaoAprovacao').innerHTML = `
+            <div style="background:#d1fae5;border-radius:8px;padding:12px 16px;display:flex;align-items:center;gap:8px;font-size:0.85rem;font-weight:600;color:#065f46">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+              Aprovação enviada com sucesso!
+            </div>`;
+        } else {
+          btnAprovado.disabled = false;
+          btnAprovado.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Aprovado';
+          alert('Erro ao enviar aprovação. Tente novamente.');
+        }
+      } catch (e) {
+        btnAprovado.disabled = false;
+        alert('Erro de conexão.');
+      }
+    }
+
+    async function confirmarAlteracao(solicitacaoId) {
+      const mensagem = document.getElementById('textoAlteracao').value.trim();
+      if (!mensagem) {
+        document.getElementById('textoAlteracao').style.borderColor = 'var(--ruby-red)';
+        return;
+      }
+
+      if (!confirm('Enviar solicitação de alteração?\n\n"' + mensagem + '"')) return;
+
+      const btnEnviar = document.querySelector('#campoAlteracao button:last-child');
+      btnEnviar.disabled = true;
+      btnEnviar.textContent = 'Enviando...';
+
+      try {
+        const res = await fetch('/api/solicitacoes/' + solicitacaoId + '/alteracao', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ mensagem }),
+        });
+        if (res.ok) {
+          document.getElementById('campoAlteracao').innerHTML = `
+            <div style="background:#fef3c7;border-radius:8px;padding:12px 16px;font-size:0.85rem;color:#92660a">
+              <strong>Alteração enviada!</strong> O time de marketing foi notificado e entrará em contato em breve.
+            </div>`;
+        } else {
+          btnEnviar.disabled = false;
+          btnEnviar.textContent = 'Enviar';
+          alert('Erro ao enviar. Tente novamente.');
+        }
+      } catch (e) {
+        btnEnviar.disabled = false;
+        btnEnviar.textContent = 'Enviar';
+        alert('Erro de conexão.');
+      }
+    }
+
+    function renderDados(dados, item) {
+      const container = document.getElementById('dadosContent');
+      const palKeysProcessed = new Set();
+      let html = '';
+      let temPalestranteHtml = '';
+      let palestrantesHtml = '';
+
+      for (const [key, value] of Object.entries(dados)) {
+        if (value === null || value === undefined || value === '') continue;
+        if (/^palFoto\d$/.test(key)) continue;
+
+        if (key === 'temPalestrante') {
+          const label = (typeof DRAWER_FIELD_LABELS !== 'undefined' && DRAWER_FIELD_LABELS[key]) ? DRAWER_FIELD_LABELS[key] : key;
+          temPalestranteHtml = `<div class="drawer-field"><div class="drawer-field-label">${esc(label)}</div><div class="drawer-field-value">${esc(String(value))}</div></div>`;
+          continue;
+        }
+
+        const palMatch = key.match(/^pal(Svn|Nome|Cargo)(\d)$/);
+        if (palMatch) {
+          const n = palMatch[2];
+          if (palKeysProcessed.has('pal_' + n)) continue;
+          palKeysProcessed.add('pal_' + n);
+          const nome = String(dados['palNome' + n] || '').trim();
+          const cargo = String(dados['palCargo' + n] || '').trim();
+          const svn = String(dados['palSvn' + n] || '').trim();
+          if (!nome) continue;
+          const svnBadge = svn.toLowerCase() === 'sim'
+            ? '<span style="background:var(--ruby-red);color:var(--paper-white);font-size:0.65rem;padding:2px 8px;border-radius:999px;font-weight:700;margin-left:6px">SVN</span>' : '';
+          palestrantesHtml += `
+            <div class="drawer-field" style="background:var(--icon-bg);border-radius:8px;padding:10px 14px;margin-bottom:8px">
+              <div style="font-size:0.75rem;opacity:0.45;margin-bottom:4px">Palestrante ${n}</div>
+              <div style="font-weight:700;font-size:0.9rem;display:flex;align-items:center">${esc(nome)}${svnBadge}</div>
+              ${cargo ? `<div style="font-size:0.8rem;opacity:0.6;margin-top:2px">${esc(cargo)}</div>` : ''}
+            </div>`;
+          continue;
+        }
+
+        const label = (typeof DRAWER_FIELD_LABELS !== 'undefined' && DRAWER_FIELD_LABELS[key]) ? DRAWER_FIELD_LABELS[key] : key;
+
+        if (Array.isArray(value)) {
+          if (value.length === 0) continue;
+          if (typeof value[0] === 'object') {
+            html += `<div class="drawer-field"><div class="drawer-field-label">${esc(label)}</div>
+              ${value.map(dep => `<div style="background:var(--icon-bg);border-radius:8px;padding:10px 12px;margin-top:6px;font-size:0.85rem">
+                ${dep.texto ? `<div style="font-style:italic;margin-bottom:4px">${esc(dep.texto)}</div>` : ''}
+                ${dep.nome ? `<div style="font-weight:600;font-size:0.8rem">${esc(dep.nome)}</div>` : ''}
+              </div>`).join('')}</div>`;
+          } else {
+            html += `<div class="drawer-field"><div class="drawer-field-label">${esc(label)}</div><div class="drawer-field-value">${esc(humanizeValue(key, value))}</div></div>`;
+          }
+          continue;
+        }
+        if (typeof value === 'object') continue;
+        html += `<div class="drawer-field"><div class="drawer-field-label">${esc(label)}</div><div class="drawer-field-value">${esc(String(humanizeValue(key, value)))}</div></div>`;
+      }
+
+      if (temPalestranteHtml || palestrantesHtml) html += temPalestranteHtml + palestrantesHtml;
+      container.innerHTML = html || '<p style="opacity:0.5;font-size:0.9rem">Sem dados adicionais</p>';
+    }
+
+    function normalizeSlug(value) {
+      return String(value ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim().toLowerCase();
+    }
+
+    function titleCasePtBr(text) {
+      return String(text).split(' ').filter(Boolean).map(word => {
+        const lower = word.toLowerCase();
+        const keepLower = ['de', 'da', 'do', 'das', 'dos', 'e', 'em', 'para', 'ao', 'aos'];
+        if (keepLower.includes(lower)) return lower;
+        return lower.charAt(0).toUpperCase() + lower.slice(1);
+      }).join(' ').replace(/^./, c => c.toUpperCase());
+    }
+
+    function humanizeSlug(value) {
+      const raw = String(value ?? '').trim();
+      if (!raw) return raw;
+      const normalized = normalizeSlug(raw);
+      const directMap = {
+        'pacote-padrao': 'Pacote Padrão', 'em-producao': 'Em produção',
+        'nao-definido': 'Não definido', 'aberto ao publico em geral': 'Aberto ao público em geral',
+      };
+      if (directMap[normalized]) return directMap[normalized];
+      let humanized = titleCasePtBr(raw.replace(/[_-]+/g, ' ').trim());
+      [
+        [/\bPadrao\b/g,'Padrão'],[/\bProducao\b/g,'Produção'],[/\bNao\b/g,'Não'],
+        [/\bPagina\b/g,'Página'],[/\bDivulgacao\b/g,'Divulgação'],[/\bAtualizacao\b/g,'Atualização'],
+      ].forEach(([p, r]) => { humanized = humanized.replace(p, r); });
+      return humanized;
+    }
+
+    function humanizeValue(key, value) {
+      const maps = {
+        natureza: { presencial: 'Presencial', online: 'Online' },
+        maturidade: { 1: 'Tenho a maioria das informações', 2: 'Tenho algumas informações', 3: 'Ainda estou estruturando' },
+        localEvento: { unidade: 'Unidade SVN', externo: 'Local externo', 'nao-definido': 'Não definido' },
+      };
+      const materiaisMap = {};
+      if (typeof ITENS_MATERIAIS !== 'undefined') ITENS_MATERIAIS.forEach(i => { materiaisMap[normalizeSlug(i.id)] = i.label; });
+      if (typeof ITENS_MATERIAIS_ONLINE !== 'undefined') ITENS_MATERIAIS_ONLINE.forEach(i => { materiaisMap[normalizeSlug(i.id)] = i.label; });
+      if (key === 'materiais' && Array.isArray(value)) return value.map(v => materiaisMap[normalizeSlug(v)] || humanizeSlug(v)).join(', ');
+      if (key === 'selos' && Array.isArray(value) && typeof SELOS_ASSESSOR !== 'undefined') {
+        const selosMap = {};
+        SELOS_ASSESSOR.forEach(s => { selosMap[normalizeSlug(s.id)] = s.label; });
+        return value.map(v => selosMap[normalizeSlug(v)] || humanizeSlug(v)).join(' · ');
+      }
+      if (maps[key]) {
+        const nv = normalizeSlug(value);
+        for (const [mk, ml] of Object.entries(maps[key])) { if (normalizeSlug(mk) === nv) return ml; }
+      }
+      if (typeof value === 'string' && (value.includes('-') || value.includes('_'))) return humanizeSlug(value);
+      return value;
+    }
+
+    init();
+  </script>
+</body>
+</html>
