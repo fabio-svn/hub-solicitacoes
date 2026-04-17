@@ -262,17 +262,20 @@
       align-items: center;
       gap: 6px;
       padding: 7px 14px;
-      background: var(--carbon-black);
-      color: var(--paper-white);
+      background: rgba(34,27,25,0.07);
+      color: var(--carbon-black);
+      border: 1px solid rgba(34,27,25,0.18);
       border-radius: 10px;
       font-size: 0.82rem;
       font-weight: 600;
       text-decoration: none;
-      transition: opacity 0.2s;
+      transition: background 0.18s, box-shadow 0.18s;
       margin: 2px 4px 2px 0;
-      box-shadow: 0 1px 4px rgba(34,27,25,0.2);
     }
-    .chat-link-btn:hover { opacity: 0.8; }
+    .chat-link-btn:hover {
+      background: rgba(34,27,25,0.13);
+      box-shadow: 0 2px 8px rgba(34,27,25,0.1);
+    }
 
     .chat-action-btns {
       display: flex;
