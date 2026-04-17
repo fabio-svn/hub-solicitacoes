@@ -11,16 +11,22 @@
   <link rel="stylesheet" href="style.css">
   <style>
     /* ─── Status rail horizontal ─── */
+    .status-rail-scroll {
+      overflow-x: auto;
+      overflow-y: visible;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+      padding: 6px 2px 4px;
+      margin: 0 -2px;
+    }
+    .status-rail-scroll::-webkit-scrollbar { display: none; }
     .status-rail {
       display: flex;
       align-items: flex-start;
       gap: 0;
-      overflow-x: auto;
-      padding-bottom: 4px;
-      -webkit-overflow-scrolling: touch;
-      scrollbar-width: none;
+      overflow: visible;
+      min-width: min-content;
     }
-    .status-rail::-webkit-scrollbar { display: none; }
     .status-step {
       display: flex;
       flex-direction: column;
@@ -90,7 +96,8 @@
     .status-step-label.done { color: #6B9080; font-weight: 600; }
     .status-step-label.current { color: var(--current-color, #2563C0); font-weight: 700; }
     @media (max-width: 560px) {
-      .status-rail { flex-direction: column; gap: 0; overflow-x: hidden; }
+      .status-rail-scroll { overflow-x: hidden; overflow-y: visible; padding: 4px 0; }
+      .status-rail { flex-direction: column; gap: 0; min-width: 0; }
       .status-step { flex-direction: row; align-items: center; min-width: 0; gap: 10px; flex: none; }
       .status-step-track { flex-direction: column; align-items: center; width: 22px; flex-shrink: 0; }
       .status-step-line { width: 2px; height: 14px; flex: none; }
@@ -99,37 +106,65 @@
     }
 
     /* ─── Mini-chat ─── */
-    .chat-wrap { display: flex; flex-direction: column; gap: 10px; }
+    .chat-wrap { display: flex; flex-direction: column; gap: 8px; }
+
+    /* Animação progressiva de entrada */
+    @keyframes bubbleIn {
+      from { opacity: 0; transform: translateY(7px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .chat-msg {
+      opacity: 0;
+      transform: translateY(7px);
+    }
+    .chat-msg.visible {
+      animation: bubbleIn 0.28s ease forwards;
+    }
+
     .chat-bubble {
-      max-width: 88%;
-      padding: 12px 16px;
-      border-radius: 16px;
+      max-width: 80%;
+      padding: 10px 15px;
+      border-radius: 18px;
       font-size: 0.875rem;
-      line-height: 1.55;
+      line-height: 1.58;
     }
     .chat-bubble-system {
-      background: var(--icon-bg);
-      border-bottom-left-radius: 4px;
+      background: #fff;
+      border: 1px solid rgba(34,27,25,0.09);
+      border-bottom-left-radius: 5px;
       align-self: flex-start;
       color: var(--carbon-black);
+      box-shadow: 0 1px 3px rgba(34,27,25,0.06);
     }
     .chat-bubble-user {
       background: var(--carbon-black);
       color: var(--paper-white);
-      border-bottom-right-radius: 4px;
+      border-bottom-right-radius: 5px;
       align-self: flex-end;
+      box-shadow: 0 1px 3px rgba(34,27,25,0.1);
     }
     .chat-bubble-success {
-      background: #d1fae5;
-      border-bottom-left-radius: 4px;
+      background: #ecfdf5;
+      border: 1px solid rgba(10,144,96,0.2);
+      border-bottom-left-radius: 5px;
       align-self: flex-start;
-      color: #064e3b;
+      color: #065F40;
+      box-shadow: 0 1px 3px rgba(10,144,96,0.08);
     }
     .chat-bubble-warning {
-      background: #fef9c3;
-      border-bottom-left-radius: 4px;
+      background: #fffbeb;
+      border: 1px solid rgba(180,120,0,0.18);
+      border-bottom-left-radius: 5px;
       align-self: flex-start;
-      color: #713f12;
+      color: #7A5200;
+      box-shadow: 0 1px 3px rgba(180,120,0,0.07);
+    }
+    .chat-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+      align-self: flex-start;
+      padding-left: 2px;
     }
     .chat-actions {
       display: flex;
@@ -142,19 +177,28 @@
       display: inline-flex;
       align-items: center;
       gap: 7px;
-      padding: 10px 20px;
-      border: none;
+      padding: 10px 18px;
       border-radius: 10px;
       font-family: 'Nunito Sans', sans-serif;
       font-weight: 700;
-      font-size: 0.875rem;
+      font-size: 0.85rem;
       cursor: pointer;
-      transition: opacity 0.15s, transform 0.1s;
+      transition: background 0.18s, transform 0.1s, box-shadow 0.18s;
     }
-    .chat-btn:hover { opacity: 0.87; transform: translateY(-1px); }
-    .chat-btn:active { opacity: 1; transform: translateY(0); }
-    .chat-btn-approve { background: #16a34a; color: #fff; }
-    .chat-btn-change  { background: #dc2626; color: #fff; }
+    .chat-btn:hover { transform: translateY(-1px); box-shadow: 0 3px 10px rgba(0,0,0,0.1); }
+    .chat-btn:active { transform: translateY(0); box-shadow: none; }
+    .chat-btn-approve {
+      background: rgba(10,144,96,0.1);
+      color: #076040;
+      border: 1.5px solid rgba(10,144,96,0.28);
+    }
+    .chat-btn-approve:hover { background: rgba(10,144,96,0.18); }
+    .chat-btn-change {
+      background: rgba(172,54,49,0.09);
+      color: #7A2520;
+      border: 1.5px solid rgba(172,54,49,0.25);
+    }
+    .chat-btn-change:hover { background: rgba(172,54,49,0.17); }
 
     .chat-textarea {
       width: 100%;
@@ -177,15 +221,16 @@
       align-items: center;
       gap: 6px;
       padding: 8px 14px;
-      background: var(--carbon-black);
-      color: var(--paper-white);
+      background: rgba(34,27,25,0.07);
+      color: var(--carbon-black);
+      border: 1.5px solid rgba(34,27,25,0.14);
       border-radius: 8px;
       font-size: 0.82rem;
       font-weight: 600;
       text-decoration: none;
-      transition: opacity 0.15s;
+      transition: background 0.15s, box-shadow 0.15s;
     }
-    .link-pill:hover { opacity: 0.82; }
+    .link-pill:hover { background: rgba(34,27,25,0.12); box-shadow: 0 2px 6px rgba(34,27,25,0.1); }
 
     /* ─── Header da solicitação ─── */
     .sol-header {
@@ -273,75 +318,85 @@
 
     /* ─── Approval accordion ─── */
     .aprov-card {
-      border: 1.5px solid rgba(34,27,25,0.1);
+      /* Mesmo visual dos form-card do sistema */
+      background: #fff;
       border-radius: 14px;
+      border: 1px solid rgba(34,27,25,0.09);
+      box-shadow: 0 1px 4px rgba(34,27,25,0.06);
       overflow: hidden;
-      background: var(--paper-white);
     }
     .aprov-toggle {
       display: flex;
       align-items: center;
       gap: 14px;
-      padding: 16px 18px;
+      padding: 17px 20px;
       cursor: pointer;
       transition: background 0.15s;
       user-select: none;
     }
-    .aprov-toggle:hover { background: rgba(34,27,25,0.025); }
+    .aprov-toggle:hover { background: rgba(34,27,25,0.022); }
     .aprov-toggle.aprov-locked {
       cursor: not-allowed;
-      opacity: 0.42;
+      opacity: 0.4;
     }
     .aprov-toggle.aprov-locked:hover { background: transparent; }
     .aprov-toggle.aprov-waiting {
       cursor: default;
-      opacity: 0.62;
+      opacity: 0.58;
     }
     .aprov-toggle.aprov-waiting:hover { background: transparent; }
     .aprov-toggle-icon {
       width: 38px;
       height: 38px;
       border-radius: 50%;
-      background: #dbeafe;
+      background: rgba(172,54,49,0.11);   /* Ruby Red translúcido */
       display: flex;
       align-items: center;
       justify-content: center;
       flex-shrink: 0;
-      transition: background 0.2s;
     }
-    .aprov-toggle.aprov-locked .aprov-toggle-icon { background: rgba(34,27,25,0.07); }
-    .aprov-toggle.aprov-waiting .aprov-toggle-icon { background: #fef3c7; }
+    .aprov-toggle.aprov-locked .aprov-toggle-icon {
+      background: rgba(34,27,25,0.06);
+    }
+    .aprov-toggle.aprov-waiting .aprov-toggle-icon {
+      background: rgba(180,120,0,0.1);
+    }
     .aprov-toggle-body { flex: 1; min-width: 0; }
     .aprov-toggle-title {
       font-size: 0.9rem;
       font-weight: 700;
       color: var(--carbon-black);
+      letter-spacing: -0.01em;
     }
     .aprov-toggle-sub {
-      font-size: 0.75rem;
+      font-size: 0.74rem;
       color: var(--carbon-black);
-      opacity: 0.48;
+      opacity: 0.44;
       margin-top: 2px;
     }
     .aprov-chevron {
       flex-shrink: 0;
-      opacity: 0.35;
-      transition: transform 0.25s ease, opacity 0.2s;
+      color: rgba(34,27,25,0.3);
+      transition: transform 0.28s cubic-bezier(.4,0,.2,1), color 0.2s;
     }
-    .aprov-chevron.open { transform: rotate(180deg); opacity: 0.7; }
+    .aprov-chevron.open {
+      transform: rotate(180deg);
+      color: rgba(34,27,25,0.6);
+    }
     .aprov-content {
       overflow: hidden;
       max-height: 0;
-      transition: max-height 0.35s ease, padding 0.25s;
-      padding: 0 18px;
+      transition: max-height 0.38s cubic-bezier(.4,0,.2,1);
     }
     .aprov-content.open {
-      max-height: 900px;
-      padding: 2px 18px 20px;
+      max-height: 1000px;
+    }
+    .aprov-content-inner {
+      padding: 4px 20px 22px;
     }
     .aprov-divider {
       border: none;
-      border-top: 1px solid rgba(34,27,25,0.08);
+      border-top: 1px solid rgba(34,27,25,0.07);
       margin: 0;
     }
   </style>
@@ -570,20 +625,25 @@
 
       card.innerHTML = `
         <p style="font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;opacity:0.38;margin-bottom:14px">Andamento</p>
-        <div class="status-rail">${stepsHtml}</div>`;
+        <div class="status-rail-scroll"><div class="status-rail">${stepsHtml}</div></div>`;
     }
 
     /* ── renderAprovacao ──────────────────────── */
-    const ICON_LOCK = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>`;
-    const ICON_CHAT = `<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#2563C0" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>`;
-    const ICON_CLOCK = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#92700A" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>`;
-    const ICON_CHEVRON = `<svg class="aprov-chevron" id="aprovChevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="6 9 12 15 18 9"/></svg>`;
-    const ICON_CHECK = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>`;
-    const ICON_EDIT = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>`;
+    const ICON_LOCK = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(34,27,25,0.45)" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>`;
+    const ICON_CHAT_RR = `<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#AC3631" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>`;
+    const ICON_CLOCK_W = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(140,90,0,0.7)" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>`;
+    const ICON_CHEVRON_SVG = `<svg class="aprov-chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="6 9 12 15 18 9"/></svg>`;
+    const ICON_CHECK = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>`;
+    const ICON_EDIT = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>`;
+    const ICON_SEND = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>`;
+    const ICON_LINK = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>`;
+
+    let _chatAnimated = false;
 
     async function renderAprovacao(item, dados) {
       const card = document.getElementById('aprovacaoCard');
       card.style.display = 'block';
+      _chatAnimated = false;
 
       const isEmAprovacao = item.status === 'em-aprovacao';
 
@@ -592,7 +652,7 @@
         console.log('[Aprovação] estado: bloqueado — status:', item.status);
         card.innerHTML = `
           <div class="aprov-card">
-            <div class="aprov-toggle aprov-locked" title="Disponível quando a solicitação chegar à etapa de aprovação">
+            <div class="aprov-toggle aprov-locked">
               <div class="aprov-toggle-icon">${ICON_LOCK}</div>
               <div class="aprov-toggle-body">
                 <div class="aprov-toggle-title">Materiais para aprovação</div>
@@ -606,8 +666,8 @@
       /* ── Carregando (em-aprovacao) ─── */
       card.innerHTML = `
         <div class="aprov-card">
-          <div class="aprov-toggle aprov-waiting" id="aprovToggle">
-            <div class="aprov-toggle-icon">${ICON_CHAT}</div>
+          <div class="aprov-toggle aprov-waiting">
+            <div class="aprov-toggle-icon">${ICON_CHAT_RR}</div>
             <div class="aprov-toggle-body">
               <div class="aprov-toggle-title">Materiais para aprovação</div>
               <div class="aprov-toggle-sub" id="aprovSub">Verificando materiais…</div>
@@ -626,79 +686,66 @@
         /* ── Estado C: em-aprovacao sem links ─── */
         if (!links || links.length === 0) {
           console.log('[Aprovação] estado: aguardando material');
-          document.getElementById('aprovSub').textContent = 'Os materiais ainda estão sendo preparados';
+          const sub = document.getElementById('aprovSub');
+          if (sub) sub.textContent = 'Os materiais ainda estão sendo preparados';
           return;
         }
 
         /* ── Estado B: em-aprovacao com links ─── */
-        console.log('[Aprovação] estado: ativo — exibindo acordeão com', links.length, 'link(s)');
+        console.log('[Aprovação] estado: ativo —', links.length, 'link(s)');
 
         const linksHtml = links.map(link =>
           `<a class="link-pill" href="${esc(link.url)}" target="_blank" rel="noopener">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-            ${esc(link.label)}
+            ${ICON_LINK} ${esc(link.label)}
           </a>`
         ).join('');
 
         card.innerHTML = `
           <div class="aprov-card">
             <div class="aprov-toggle" id="aprovToggle" onclick="toggleAprovacao()">
-              <div class="aprov-toggle-icon">${ICON_CHAT}</div>
+              <div class="aprov-toggle-icon">${ICON_CHAT_RR}</div>
               <div class="aprov-toggle-body">
                 <div class="aprov-toggle-title">Materiais para aprovação</div>
                 <div class="aprov-toggle-sub">Os materiais já estão disponíveis para sua análise</div>
               </div>
-              ${ICON_CHEVRON}
+              ${ICON_CHEVRON_SVG}
             </div>
             <hr class="aprov-divider">
             <div class="aprov-content" id="aprovContent">
-              <div class="chat-wrap" id="chatWrap" style="margin-top:14px">
-                <div class="chat-bubble chat-bubble-system">
-                  Olá, <strong>${esc(primeiroNome)}!</strong>
-                </div>
-                <div class="chat-bubble chat-bubble-system">
-                  Os materiais solicitados já estão disponíveis para sua análise.
-                </div>
-                <div class="chat-bubble chat-bubble-system">
-                  Você pode acessá-los abaixo:
-                </div>
-                <div style="display:flex;flex-wrap:wrap;gap:8px;align-self:flex-start">
-                  ${linksHtml}
-                </div>
-                <div class="chat-bubble chat-bubble-system">
-                  Depois de revisar os materiais, escolha uma das opções abaixo para seguirmos.
-                </div>
-                <div class="chat-actions" id="chatActions">
-                  <button class="chat-btn chat-btn-approve" onclick="confirmarAprovacao(${item.id})">
-                    ${ICON_CHECK} Aprovar materiais
-                  </button>
-                  <button class="chat-btn chat-btn-change" onclick="mostrarCampoAlteracao()">
-                    ${ICON_EDIT} Solicitar ajustes
-                  </button>
-                </div>
-                <div id="campoAlteracao" style="display:none;width:100%;align-self:stretch">
-                  <div class="chat-bubble chat-bubble-system" style="margin-bottom:10px">
-                    Entendido.<br>Por favor, descreva abaixo o que você gostaria que fosse ajustado.
+              <div class="aprov-content-inner">
+                <div class="chat-wrap" id="chatWrap">
+                  <div class="chat-msg"><div class="chat-bubble chat-bubble-system">Olá, <strong>${esc(primeiroNome)}!</strong></div></div>
+                  <div class="chat-msg"><div class="chat-bubble chat-bubble-system">Os materiais solicitados já estão disponíveis para sua análise.</div></div>
+                  <div class="chat-msg"><div class="chat-bubble chat-bubble-system">Você pode acessá-los abaixo:</div></div>
+                  <div class="chat-msg chat-links">${linksHtml}</div>
+                  <div class="chat-msg"><div class="chat-bubble chat-bubble-system">Depois de revisar os materiais, escolha uma das opções abaixo para seguirmos.</div></div>
+                  <div class="chat-msg chat-actions" id="chatActions">
+                    <button class="chat-btn chat-btn-approve" onclick="confirmarAprovacao(${item.id})">${ICON_CHECK} Aprovar materiais</button>
+                    <button class="chat-btn chat-btn-change" onclick="mostrarCampoAlteracao()">${ICON_EDIT} Solicitar ajustes</button>
                   </div>
-                  <textarea id="textoAlteracao" class="chat-textarea"
-                    placeholder="Escreva aqui os ajustes necessários…"></textarea>
-                  <div style="display:flex;gap:8px;margin-top:8px">
-                    <button onclick="cancelarAlteracao()"
-                      style="padding:8px 16px;background:transparent;border:1.5px solid rgba(34,27,25,0.18);border-radius:8px;font-family:'Nunito Sans',sans-serif;font-size:0.82rem;cursor:pointer">
-                      Cancelar
-                    </button>
-                    <button onclick="confirmarAlteracao(${item.id})" id="btnEnviarAlteracao"
-                      style="padding:8px 20px;background:var(--ruby-red);color:#fff;border:none;border-radius:8px;font-family:'Nunito Sans',sans-serif;font-weight:700;font-size:0.82rem;cursor:pointer">
-                      Enviar solicitação de ajustes
-                    </button>
+                  <div id="campoAlteracao" style="display:none;width:100%;align-self:stretch">
+                    <div class="chat-bubble chat-bubble-system" style="margin-bottom:10px">
+                      Entendido.<br>Por favor, descreva abaixo o que você gostaria que fosse ajustado.
+                    </div>
+                    <textarea id="textoAlteracao" class="chat-textarea"
+                      placeholder="Escreva aqui os ajustes necessários…"></textarea>
+                    <div style="display:flex;gap:8px;margin-top:10px">
+                      <button onclick="cancelarAlteracao()"
+                        style="padding:9px 16px;background:transparent;border:1.5px solid rgba(34,27,25,0.16);border-radius:9px;font-family:'Nunito Sans',sans-serif;font-size:0.82rem;cursor:pointer;color:var(--carbon-black)">
+                        Cancelar
+                      </button>
+                      <button onclick="confirmarAlteracao(${item.id})" id="btnEnviarAlteracao"
+                        style="display:inline-flex;align-items:center;gap:7px;padding:9px 18px;background:rgba(172,54,49,0.09);color:#7A2520;border:1.5px solid rgba(172,54,49,0.25);border-radius:9px;font-family:'Nunito Sans',sans-serif;font-weight:700;font-size:0.82rem;cursor:pointer">
+                        ${ICON_SEND} Enviar solicitação de ajustes
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
           </div>`;
 
-        /* Auto-abrir acordeão após delay curto */
-        setTimeout(() => toggleAprovacao(true), 120);
+        /* Acordeão fechado por padrão — usuário abre ao clicar */
 
       } catch (e) {
         console.error('[Aprovação] erro ao buscar entrega:', e);
@@ -707,14 +754,24 @@
       }
     }
 
-    function toggleAprovacao(forceOpen) {
+    function toggleAprovacao() {
       const content = document.getElementById('aprovContent');
-      const chevron = document.getElementById('aprovChevron');
+      const chevron = document.querySelector('.aprov-chevron');
       if (!content) return;
-      const isOpen = content.classList.contains('open');
-      if (forceOpen === true && isOpen) return;
-      content.classList.toggle('open', forceOpen !== undefined ? forceOpen : !isOpen);
-      if (chevron) chevron.classList.toggle('open', content.classList.contains('open'));
+      const opening = !content.classList.contains('open');
+      content.classList.toggle('open');
+      if (chevron) chevron.classList.toggle('open');
+      if (opening && !_chatAnimated) {
+        _chatAnimated = true;
+        animateChatMessages();
+      }
+    }
+
+    function animateChatMessages() {
+      const msgs = document.querySelectorAll('#chatWrap .chat-msg');
+      msgs.forEach((msg, i) => {
+        setTimeout(() => { msg.classList.add('visible'); }, i * 160 + 60);
+      });
     }
 
     function mostrarCampoAlteracao() {
@@ -727,6 +784,17 @@
       document.getElementById('campoAlteracao').style.display = 'none';
       document.getElementById('chatActions').style.display = 'flex';
       document.getElementById('textoAlteracao').value = '';
+    }
+
+    function addAnimatedBubble(chatWrap, className, html) {
+      const wrapper = document.createElement('div');
+      wrapper.className = 'chat-msg';
+      const bubble = document.createElement('div');
+      bubble.className = 'chat-bubble ' + className;
+      bubble.innerHTML = html;
+      wrapper.appendChild(bubble);
+      chatWrap.appendChild(wrapper);
+      requestAnimationFrame(() => setTimeout(() => wrapper.classList.add('visible'), 40));
     }
 
     async function confirmarAprovacao(solId) {
@@ -742,10 +810,8 @@
           const chatWrap = document.getElementById('chatWrap');
           const actionsEl = document.getElementById('chatActions');
           if (actionsEl) actionsEl.remove();
-          const bubble = document.createElement('div');
-          bubble.className = 'chat-bubble chat-bubble-success';
-          bubble.innerHTML = '<strong>Perfeito!</strong> Obrigado pelo seu retorno.<br>Sua aprovação foi registrada com sucesso.';
-          chatWrap.appendChild(bubble);
+          addAnimatedBubble(chatWrap, 'chat-bubble-success',
+            '<strong>Perfeito!</strong> Obrigado pelo seu retorno.<br>Sua aprovação foi registrada com sucesso.');
         } else {
           console.warn('[Aprovação] erro na aprovação — status HTTP:', res.status);
           btn.disabled = false;
@@ -772,7 +838,7 @@
 
       const btn = document.getElementById('btnEnviarAlteracao');
       btn.disabled = true;
-      btn.textContent = 'Enviando…';
+      btn.innerHTML = `${ICON_SEND} Enviando…`;
 
       try {
         const res = await fetch('/api/solicitacoes/' + solId + '/alteracao', {
@@ -785,24 +851,21 @@
           const chatWrap = document.getElementById('chatWrap');
           const campoEl = document.getElementById('campoAlteracao');
           if (campoEl) campoEl.remove();
-          const resumo = document.createElement('div');
-          resumo.className = 'chat-bubble chat-bubble-user';
-          resumo.textContent = mensagem;
-          chatWrap.appendChild(resumo);
-          const resp = document.createElement('div');
-          resp.className = 'chat-bubble chat-bubble-warning';
-          resp.innerHTML = '<strong>Recebemos sua solicitação de ajustes.</strong><br>Nossa equipe seguirá com a revisão e atualizará o andamento da solicitação em breve.';
-          chatWrap.appendChild(resp);
+          addAnimatedBubble(chatWrap, 'chat-bubble-user', esc(mensagem));
+          setTimeout(() => {
+            addAnimatedBubble(chatWrap, 'chat-bubble-warning',
+              '<strong>Recebemos sua solicitação de ajustes.</strong><br>Nossa equipe seguirá com a revisão e atualizará o andamento da solicitação em breve.');
+          }, 350);
         } else {
           console.warn('[Alteração] erro ao enviar — status HTTP:', res.status);
           btn.disabled = false;
-          btn.textContent = 'Enviar solicitação de ajustes';
+          btn.innerHTML = `${ICON_SEND} Enviar solicitação de ajustes`;
           alert('Erro ao enviar. Tente novamente.');
         }
       } catch (e) {
         console.error('[Alteração] erro de conexão:', e);
         btn.disabled = false;
-        btn.textContent = 'Enviar solicitação de ajustes';
+        btn.innerHTML = `${ICON_SEND} Enviar solicitação de ajustes`;
         alert('Erro de conexão.');
       }
     }
