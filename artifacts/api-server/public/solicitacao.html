@@ -852,7 +852,7 @@
         mensagensAlteracao: [],
       };
 
-      await mensagemSistema(gerarMensagemBoasVindas(nomeUsuario, rodadaAtual, isNova));
+      await mensagemSistema(gerarMensagemBoasVindas(nomeUsuario, rodadaAtual, isNova, linksAtuais.length));
 
       if (linksAtuais.length === 0) {
         await mensagemSistema('Os arquivos ainda estão sendo preparados. Volte em breve.');
@@ -867,10 +867,17 @@
       window._chatState.fase = 'decisao';
     }
 
-    function gerarMensagemBoasVindas(nome, rodada, isNova) {
+    function gerarMensagemBoasVindas(nome, rodada, isNova, numLinks) {
       const primeiroNome = nome.split(' ')[0];
-      if (rodada.numero === 1) return `Olá, <strong>${esc(primeiroNome)}</strong>! Os materiais da sua solicitação estão prontos. 🎉`;
-      return `Olá, <strong>${esc(primeiroNome)}</strong>! Os materiais foram revisados e uma nova versão está disponível. Veja o que foi atualizado abaixo.`;
+      const singular = (numLinks || 1) === 1;
+      if (rodada.numero === 1) {
+        return singular
+          ? `Olá, <strong>${esc(primeiroNome)}</strong>! O material da sua solicitação está pronto! 🎉`
+          : `Olá, <strong>${esc(primeiroNome)}</strong>! Os materiais da sua solicitação estão prontos. 🎉`;
+      }
+      return singular
+        ? `Olá, <strong>${esc(primeiroNome)}</strong>! O material foi revisado e uma nova versão está disponível! 😊 Veja o que foi atualizado abaixo.`
+        : `Olá, <strong>${esc(primeiroNome)}</strong>! Os materiais foram revisados e uma nova versão está disponível! 😊 Veja o que foi atualizado abaixo.`;
     }
 
     function renderLinksMsg(links) {
@@ -1105,9 +1112,15 @@
       if (!wrap) return;
 
       const primeiroNome = nomeUsuario.split(' ')[0];
+      const numLinks = rodada.links?.length || 1;
+      const singular = numLinks === 1;
       const msgInicial = rodada.numero === 1
-        ? `Olá, <strong>${esc(primeiroNome)}</strong>! Os materiais da sua solicitação estiveram disponíveis.`
-        : `Olá, <strong>${esc(primeiroNome)}</strong>! Os materiais revisados estiveram disponíveis.`;
+        ? (singular
+            ? `Olá, <strong>${esc(primeiroNome)}</strong>! O material da sua solicitação está pronto! 🎉`
+            : `Olá, <strong>${esc(primeiroNome)}</strong>! Os materiais da sua solicitação estão prontos. 🎉`)
+        : (singular
+            ? `Olá, <strong>${esc(primeiroNome)}</strong>! O material foi revisado e uma nova versão está disponível! 😊 Veja o que foi atualizado abaixo.`
+            : `Olá, <strong>${esc(primeiroNome)}</strong>! Os materiais foram revisados e uma nova versão está disponível! 😊 Veja o que foi atualizado abaixo.`);
 
       const hora = rodada.data
         ? new Date(rodada.data).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
