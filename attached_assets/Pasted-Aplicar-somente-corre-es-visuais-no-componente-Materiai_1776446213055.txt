@@ -1,0 +1,244 @@
+Aplicar **somente correções visuais** no componente **Materiais para aprovação**, preservando toda a lógica/backend atual.
+
+## Importante
+
+Não alterar:
+
+* integrações
+* parser de links
+* status
+* fluxo de aprovação
+* backend
+* requests
+* estados funcionais
+
+Quero apenas ajustes de UI/UX.
+
+---
+
+# CONTEXTO
+
+Após mudanças no backend, o visual do componente regrediu parcialmente.
+
+Hoje o componente está funcional, porém visualmente desalinhado.
+
+Objetivo: devolver aparência premium e coerente com o restante do sistema.
+
+---
+
+# PARTE 1 — Botão/acordeão superior
+
+## Problemas atuais
+
+* ícone azul voltou a ficar genérico
+* topo perdeu refinamento
+* chevron pouco elegante
+
+## Ajustes desejados
+
+### Ícone
+
+Trocar azul atual por linguagem Ruby Red da marca.
+
+Sugestão:
+
+* fundo circular suave ruby translúcido
+* ícone ruby sólido
+
+### Cabeçalho
+
+Melhorar:
+
+* alinhamento vertical
+* espaçamento interno
+* hover suave
+* cursor claro de interação
+
+### Chevron
+
+* menor
+* elegante
+* rotação suave ao abrir/fechar
+
+---
+
+# PARTE 2 — Fundo geral do chat
+
+## Problema atual
+
+Visual muito chapado / sem profundidade.
+
+## Ajuste desejado
+
+No corpo expandido do chat:
+
+* fundo branco levemente aquecido
+  ou
+* gradient muito sutil
+
+Exemplo de direção:
+
+```text id="j6f4u0"
+linear-gradient(180deg,
+#ffffff 0%,
+#fdfaf9 100%)
+```
+
+## Importante
+
+Visual clean e premium.
+
+---
+
+# PARTE 3 — Balões de conversa
+
+## Problema atual
+
+Ainda parecem caixas comuns.
+
+## Ajuste desejado
+
+Transformar em bolhas reais de conversa.
+
+## Aplicar
+
+* radius mais orgânico
+* padding confortável
+* largura natural (máx ~70%)
+* sombra sutil
+* borda extremamente leve
+* melhor ritmo entre mensagens
+
+## Mensagens da SVN
+
+Alinhadas à esquerda.
+
+## Timestamps
+
+Mais discretos:
+
+* menores
+* cinza suave
+* menos espaçamento exagerado
+
+---
+
+# PARTE 4 — Botões Aprovar / Solicitar alterações
+
+## Problema atual
+
+Voltaram a parecer chapados/brutos.
+
+## Ajuste desejado
+
+Refazer visual mantendo cores funcionais.
+
+### Aprovar
+
+* verde elegante
+* fundo levemente translúcido
+* borda suave
+* hover mais sólido
+* sombra leve
+
+### Solicitar alterações
+
+* ruby/vermelho sofisticado
+* fundo translúcido
+* borda ruby suave
+* hover mais sólido
+
+## Tipografia
+
+* peso forte
+* padding melhor
+* radius premium
+
+## Importante
+
+Parecer botões do sistema, não botões genéricos.
+
+---
+
+# PARTE 5 — Campo inferior “Digite sua mensagem”
+
+## Problema atual
+
+Está cru visualmente.
+
+## Ajuste desejado
+
+Refinar input inferior:
+
+* fundo branco premium
+* borda suave
+* placeholder elegante
+* ícone enviar melhor integrado
+* radius alto
+* sombra discreta
+
+## Botão enviar
+
+* integrar à identidade visual
+* não parecer botão solto
+
+---
+
+# PARTE 6 — Espaçamento geral
+
+## Ajustar
+
+* distância entre mensagens
+* margens internas do chat
+* alinhamento dos botões
+* respiro visual
+
+Hoje há áreas meio soltas.
+
+---
+
+# PARTE 7 — Responsividade
+
+Garantir boa aparência em:
+
+* desktop
+* notebook
+* tablet
+* mobile
+
+---
+
+# PARTE 8 — Glow da etapa atual (se componente existir na mesma tela)
+
+Se a timeline/status da solicitação estiver presente:
+
+Aplicar glow suave na etapa atual.
+
+---
+
+# PARTE 9 — O que NÃO fazer
+
+* não alterar backend
+* não alterar fluxo funcional
+* não mexer em integrações
+* não reescrever lógica
+* não trocar textos
+
+Somente visual.
+
+---
+
+# PARTE 10 — Entrega esperada
+
+Informar:
+
+1. arquivos CSS/componentes alterados
+2. quais elementos foram refinados
+3. antes/depois visual
+4. se lógica foi preservada integralmente
+
+---
+
+# Prioridade máxima
+
+Quero recuperar aparência premium do componente sem tocar no funcionamento atual.
