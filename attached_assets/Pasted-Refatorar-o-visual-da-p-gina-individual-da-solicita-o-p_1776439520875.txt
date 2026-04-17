@@ -1,0 +1,267 @@
+Refatorar o visual da página individual da solicitação para ficar mais profissional, organizada e aproveitar melhor o espaço horizontal.
+
+## Problemas atuais
+
+### Header
+
+* elementos soltos
+* muito espaço vazio
+* status deslocado
+* tipo/setor/data mal distribuídos
+
+### Card Dados da Solicitação
+
+* tudo empilhado em coluna única
+* leitura lenta
+* desperdício de espaço
+* parece formulário bruto
+
+---
+
+# OBJETIVO
+
+Transformar a página em um painel premium de acompanhamento de solicitação.
+
+---
+
+# PARTE 1 — Refazer Header
+
+## Estrutura nova (desktop)
+
+Linha superior:
+
+* botão voltar discreto
+
+Linha principal:
+
+* título grande da solicitação
+
+Linha secundária:
+
+* tipo da solicitação
+* setor
+* data da solicitação
+
+Lado direito:
+
+* badge de status grande e destacado
+
+## Exemplo visual
+
+Vaga IMB
+
+Arte de Divulgação • Administração
+Solicitado em 17 abr 2026 às 12:07
+
+[EM APROVAÇÃO]
+
+## Regras
+
+* reduzir espaços vazios
+* alinhar verticalmente
+* status integrado ao header
+* tipografia elegante
+
+---
+
+# PARTE 2 — Melhorar card Dados da Solicitação
+
+## Trocar coluna única por grid responsivo
+
+### Desktop
+
+2 colunas (ou 3 se couber)
+
+Exemplo:
+
+Solicitante | Setor
+Título | Prazo
+Canais | Público-alvo
+Finalidade | Tipo
+
+## Campos longos ocupam largura total:
+
+* Conteúdo
+* Observações
+* Briefing
+
+## Mobile
+
+Volta para 1 coluna responsiva.
+
+---
+
+# PARTE 3 — Hierarquia visual
+
+## Labels
+
+* menores
+* cinza médio
+* uppercase opcional
+* tracking leve
+
+## Valores
+
+* maiores
+* peso 600
+* cor principal
+
+## Espaçamento
+
+* reduzir espaços excessivos
+* aproximar label do valor
+* ritmo visual consistente
+
+---
+
+# PARTE 4 — Card style
+
+Manter identidade atual, porém melhorar:
+
+* padding inteligente
+* borda suave
+* sombra sutil
+* radius premium
+
+---
+
+# PARTE 5 — Compatibilidade
+
+Aplicar para:
+
+* solicitações gerais
+* eventos (adaptando campos)
+
+---
+
+# PARTE 6 — Responsividade
+
+Desktop:
+
+* layout horizontal elegante
+
+Tablet:
+
+* grid 2 colunas
+
+Mobile:
+
+* stack limpo
+
+---
+
+# ENTREGA ESPERADA
+
+1. arquivos alterados
+2. estrutura nova do header
+3. grid aplicado nos dados
+4. melhorias de tipografia
+5. telas desktop/mobile
+
+
+Refinar visualmente todas as cores de status do hub para ficarem mais vivas, modernas e alinhadas ao padrão visual do ClickUp.
+
+## Problema atual
+
+As cores dos status estão apagadas, frias e sem contraste suficiente, especialmente no dark mode.
+
+O ClickUp transmite melhor leitura visual.
+
+## Objetivo
+
+Manter a identidade do hub, mas usar badges/status mais vibrantes, premium e legíveis.
+
+---
+
+# Nova paleta obrigatória
+
+## Recebido
+
+* background: `#5B6470`
+* text: `#FFFFFF`
+
+## Em análise
+
+* background: `#FFC533`
+* text: `#1E1E1E`
+
+## Aguardando informação
+
+* background: `#B78A6B`
+* text: `#FFFFFF`
+
+## Em produção
+
+* background: `#FF7A00`
+* text: `#FFFFFF`
+
+## Em revisão
+
+* background: `#9B4DDB`
+* text: `#FFFFFF`
+
+## Em aprovação
+
+* background: `#3B82F6`
+* text: `#FFFFFF`
+
+## Concluído
+
+* background: `#10B981`
+* text: `#FFFFFF`
+
+## Cancelado
+
+* background: `#EF4444`
+* text: `#FFFFFF`
+
+---
+
+# Aplicar onde existir status
+
+* badges
+* timeline
+* cards
+* filtros
+* indicadores laterais
+* página da solicitação
+
+---
+
+# Melhorias visuais obrigatórias
+
+## Badge
+
+* border-radius moderno
+* padding melhorado
+* font-weight 700
+* letter-spacing leve
+* sombra sutil
+* contraste AA mínimo
+
+## Hover (se clicável)
+
+Leve brilho / elevação.
+
+---
+
+# Dark mode
+
+As cores devem se destacar no fundo escuro sem vibrar demais.
+
+---
+
+# Importante
+
+Não mudar a lógica dos status.
+
+Apenas melhorar visual.
+
+---
+
+# Entrega esperada
+
+1. arquivo(s) alterados
+2. onde a paleta foi centralizada
+3. antes/depois dos badges
+4. se todas as telas usam a mesma source of truth
