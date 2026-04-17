@@ -462,7 +462,7 @@ function buildMateriaisSection(dados: FormDados): string | null {
   return `━━━━━━━━━━━━━━━━━━━━━━\n📦 MATERIAIS SOLICITADOS\n━━━━━━━━━━━━━━━━━━━━━━\n\n${lines.join("\n").trimEnd()}`;
 }
 
-function buildEventDescription(dados: FormDados, user: UserData): string {
+function buildEventDescription(dados: FormDados, user: UserData, arquivos: ArquivosMap): string {
   const blocks: string[] = [];
   blocks.push(buildRequesterSection(user));
   blocks.push(buildResumoSection(dados));
@@ -470,9 +470,11 @@ function buildEventDescription(dados: FormDados, user: UserData): string {
   if (palestrantes) blocks.push(palestrantes);
   const materiais = buildMateriaisSection(dados);
   if (materiais) blocks.push(materiais);
+  const arquivosSection = buildArquivosSection(arquivos);
+  if (arquivosSection) blocks.push(arquivosSection);
   const obs = str(dados.observacoes);
   if (obs) blocks.push(`━━━━━━━━━━━━━━━━━━━━━━\n📝 OBSERVAÇÕES GERAIS\n━━━━━━━━━━━━━━━━━━━━━━\n\n• ${obs}`);
-  logger.info({ blocos: blocks.length }, "ClickUp: descricao humanizada de evento gerada, JSON bruto removido");
+  logger.info({ blocos: blocks.length }, "ClickUp: descricao humanizada de evento gerada");
   return blocks.join("\n\n");
 }
 
@@ -817,7 +819,7 @@ export async function createClickUpTask(
 
   if (tipo === "eventos") {
     taskName = buildClickUpEventTaskName(dados);
-    description = buildEventDescription(dados, user);
+    description = buildEventDescription(dados, user, safeArquivos);
   } else {
     taskName = buildGeneralTaskName(tipo, subtipo, dados, user);
     description = buildGeneralDescription(tipo, subtipo, dados, user, safeArquivos);
