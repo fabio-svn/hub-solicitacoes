@@ -422,22 +422,72 @@ router.get("/solicitacoes/:id/entrega", requireAuth, async (req, res): Promise<v
     const entregaRaw = entregaField?.value || "";
 
     const links: Array<{ label: string; url: string }> = [];
+    logger.info({ entregaRaw, taskId: solicitacao.clickup_task_id }, "Entrega field raw value");
+
+    function extractUrl(text: string): string | null {
+      const m = text.match(/https?:\/\/[^\s<>"')]+/);
+      return m ? m[0].replace(/[.,;:!?)]+$/, "") : null;
+    }
+
     if (entregaRaw) {
-      entregaRaw.split("\n").forEach(line => {
+      const lines = entregaRaw.split(/\n+/);
+      let materialCount = 0;
+      lines.forEach(line => {
         const trimmed = line.trim();
         if (!trimmed) return;
+
+        // Case 1: markdown link [label](url)
+        const mdMatch = trimmed.match(/\[([^\]]+)\]\((https?:\/\/[^)]+)\)/);
+        if (mdMatch) {
+          links.push({ label: mdMatch[1].trim(), url: mdMatch[2].trim() });
+          return;
+        }
+
+        // Case 2: pipe separator  "Label | https://..."
+        if (trimmed.includes(" | ") || trimmed.includes("|")) {
+          const pipeIdx = trimmed.indexOf("|");
+          const before = trimmed.substring(0, pipeIdx).trim();
+          const after = trimmed.substring(pipeIdx + 1).trim();
+          const url = extractUrl(after) || extractUrl(before);
+          if (url) {
+            const label = before.startsWith("http") ? `Material ${++materialCount}` : before;
+            links.push({ label, url });
+            return;
+          }
+        }
+
+        // Case 3: bare URL on its own line
+        if (/^https?:\/\//.test(trimmed)) {
+          const url = extractUrl(trimmed);
+          if (url) { links.push({ label: `Material ${++materialCount}`, url }); return; }
+        }
+
+        // Case 4: "Label: https://..." — colon separator, but label must not start with http
         const colonIdx = trimmed.indexOf(":");
-        if (colonIdx > 0) {
-          const label = trimmed.substring(0, colonIdx).trim();
-          const url = trimmed.substring(colonIdx + 1).trim();
-          if (url.startsWith("http")) links.push({ label, url });
-        } else if (trimmed.startsWith("http")) {
-          links.push({ label: "Arquivo", url: trimmed });
+        if (colonIdx > 0 && !trimmed.startsWith("http")) {
+          const possibleLabel = trimmed.substring(0, colonIdx).trim();
+          const rest = trimmed.substring(colonIdx + 1).trim();
+          const url = extractUrl(rest);
+          if (url && possibleLabel.length < 60) {
+            links.push({ label: possibleLabel, url });
+            return;
+          }
+        }
+
+        // Case 5: line contains a URL somewhere
+        const url = extractUrl(trimmed);
+        if (url) {
+          const textPart = trimmed.replace(url, "").replace(/[:\-|]+$/, "").trim();
+          const label = textPart && !textPart.startsWith("http") && textPart.length < 60
+            ? textPart
+            : `Material ${++materialCount}`;
+          links.push({ label, url });
         }
       });
     }
 
-    res.json({ links, status: solicitacao.status, taskId: solicitacao.clickup_task_id });
+    logger.info({ links, count: links.length }, "Parsed Entrega links");
+    res.json({ links, status: solicitacao.status, taskId: solicitacao.clickup_task_id, rawLength: entregaRaw.length });
   } catch (err) {
     logger.error({ err }, "Erro ao buscar entrega");
     res.status(500).json({ error: "Erro ao buscar links de entrega" });
