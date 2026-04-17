@@ -70,19 +70,17 @@
     .status-step-circle.current {
       border-color: var(--current-color, #2563C0);
       background: var(--current-bg, #DBEAFE);
+      animation: pulse-ring 1.8s ease-out infinite;
     }
-    .status-step-circle.current::after {
-      content: '';
-      position: absolute;
-      inset: -5px;
-      border-radius: 50%;
-      border: 2px solid var(--current-color, #2563C0);
-      opacity: 0;
-      animation: stepRingPulse 2.2s ease-out infinite;
+    @keyframes pulse-ring {
+      0%   { box-shadow: 0 0 0 0px rgba(34,27,25,0.32); }
+      70%  { box-shadow: 0 0 0 6px rgba(34,27,25,0); }
+      100% { box-shadow: 0 0 0 0px rgba(34,27,25,0); }
     }
-    @keyframes stepRingPulse {
-      0%   { opacity: 0.55; transform: scale(0.82); }
-      100% { opacity: 0;    transform: scale(1.55); }
+    @keyframes badgePop {
+      0%   { transform: scale(0.6); opacity: 0; }
+      70%  { transform: scale(1.15); }
+      100% { transform: scale(1); opacity: 1; }
     }
     .status-step-label {
       margin-top: 6px;
@@ -688,10 +686,11 @@
     const ICON_SEND = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>`;
     const ICON_EXT = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>`;
 
-    let _chatPlayed = false;
-    let _chatSolId  = null;
-    let _chatLinks  = [];
-    let _chatNome   = '';
+    let _chatPlayed      = false;
+    let _chatSolId       = null;
+    let _chatLinks       = [];
+    let _chatNome        = '';
+    let _mostrarDestaque = false;
 
     const _delay = ms => new Promise(r => setTimeout(r, ms));
 
@@ -784,6 +783,8 @@
       _chatNome   = '';
 
       const isEmAprovacao = item.status === 'em-aprovacao';
+      const _storageKey   = 'aprovacao_visto_' + item.id;
+      _mostrarDestaque    = isEmAprovacao && sessionStorage.getItem(_storageKey) !== '1';
 
       if (!isEmAprovacao) {
         console.log('[Aprovação] bloqueado — status:', item.status);
@@ -827,12 +828,19 @@
         _chatLinks = links;
         _chatNome  = nome;
 
+        const glowStyle = _mostrarDestaque
+          ? 'box-shadow:0 0 0 2px #AC3631, 0 8px 28px rgba(172,54,49,0.16);'
+          : '';
+        const badgeHtml = _mostrarDestaque
+          ? `<span id="aprovNovoBadge" style="background:#AC3631;color:#fff;font-size:0.6rem;font-weight:800;padding:2px 7px;border-radius:999px;letter-spacing:0.04em;animation:badgePop 0.4s ease forwards;flex-shrink:0">NOVO</span>`
+          : '';
+
         card.innerHTML = `
-          <div class="aprov-card">
+          <div class="aprov-card" id="aprovCardInner" style="transition:box-shadow 0.4s ease;${glowStyle}">
             <div class="aprov-toggle" id="aprovToggle" onclick="toggleAprovacao()">
               <div class="aprov-toggle-icon">${ICON_CHAT_RR}</div>
               <div class="aprov-toggle-body">
-                <div class="aprov-toggle-title">Materiais para aprovação</div>
+                <div class="aprov-toggle-title" style="display:flex;align-items:center;gap:8px">Materiais para aprovação ${badgeHtml}</div>
                 <div class="aprov-toggle-sub">Os materiais já estão disponíveis para sua análise</div>
               </div>
               ${ICON_CHEVRON_SVG}
@@ -873,10 +881,23 @@
       const opening = !content.classList.contains('open');
       content.classList.toggle('open');
       if (chevron) chevron.classList.toggle('open');
-      if (opening && !_chatPlayed && _chatLinks.length) {
-        _chatPlayed = true;
-        const body = document.getElementById('chatBody');
-        if (body) playChat(body, _chatNome, _chatLinks, _chatSolId);
+      if (opening) {
+        /* Remover glow + badge na primeira abertura */
+        if (_mostrarDestaque) {
+          _mostrarDestaque = false;
+          sessionStorage.setItem('aprovacao_visto_' + _chatSolId, '1');
+          const inner = document.getElementById('aprovCardInner');
+          if (inner) inner.style.boxShadow = '';
+          const badge = document.getElementById('aprovNovoBadge');
+          if (badge) badge.style.animation = 'none';
+          setTimeout(() => { if (badge) badge.remove(); }, 300);
+        }
+        /* Iniciar conversa na primeira abertura */
+        if (!_chatPlayed && _chatLinks.length) {
+          _chatPlayed = true;
+          const body = document.getElementById('chatBody');
+          if (body) playChat(body, _chatNome, _chatLinks, _chatSolId);
+        }
       }
     }
 

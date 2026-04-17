@@ -61,6 +61,16 @@ const CATEGORIAS_SOLICITACAO = [
     ]
   },
   {
+    categoria: "Eventos e relacionamento",
+    itens: [
+      { id: "eventos", label: "Eventos", icon: "icon-calendar", ativo: true },
+      { id: "certificado-eventos", label: "Certificado para Eventos", icon: "icon-award", ativo: false },
+      { id: "patrocinio", label: "Patrocínio", icon: "icon-flag", ativo: false },
+      { id: "brindes", label: "Brindes", icon: "icon-gift", ativo: false },
+      { id: "pagina-online", label: "Página Online", icon: "icon-globe", ativo: false },
+    ]
+  },
+  {
     categoria: "Marketing e conteúdo",
     itens: [
       { id: "artes-divulgacao", label: "Artes de Divulgação", icon: "icon-image", ativo: true },
@@ -70,16 +80,6 @@ const CATEGORIAS_SOLICITACAO = [
       { id: "materia-blog", label: "Matéria para blog, jornal ou revista", icon: "icon-newspaper", ativo: false },
       { id: "conteudos-central", label: "Conteúdos Central SVN", icon: "icon-layout", ativo: false },
       { id: "atualizacao-material", label: "Atualização de material", icon: "icon-refresh", ativo: true },
-    ]
-  },
-  {
-    categoria: "Eventos e relacionamento",
-    itens: [
-      { id: "eventos", label: "Eventos", icon: "icon-calendar", ativo: true },
-      { id: "certificado-eventos", label: "Certificado para Eventos", icon: "icon-award", ativo: false },
-      { id: "patrocinio", label: "Patrocínio", icon: "icon-flag", ativo: false },
-      { id: "brindes", label: "Brindes", icon: "icon-gift", ativo: false },
-      { id: "pagina-online", label: "Página Online", icon: "icon-globe", ativo: false },
     ]
   },
   {
