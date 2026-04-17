@@ -846,6 +846,8 @@
         chatWrap.appendChild(badgeRodada);
       }
 
+      const plural = linksAtuais.length > 1;
+
       window._chatState = {
         solId: item.id,
         rodadaAtual,
@@ -853,6 +855,7 @@
         nomeUsuario,
         fase: 'apresentacao',
         mensagensAlteracao: [],
+        plural,
       };
 
       await mensagemSistema(gerarMensagemBoasVindas(nomeUsuario, rodadaAtual, isNova, linksAtuais.length));
@@ -863,10 +866,30 @@
         return;
       }
 
+      const apresentacaoLinks = plural ? pick([
+        'Aqui estão os arquivos disponíveis:',
+        'Esses são os materiais para sua análise:',
+        'Confira os arquivos abaixo:',
+      ]) : pick([
+        'Aqui está o arquivo disponível:',
+        'Esse é o material para sua análise:',
+        'Confira o arquivo abaixo:',
+      ]);
+
+      const chamadaDecisao = plural ? pick([
+        'Por favor, analise os materiais e selecione uma das opções:',
+        'Após revisar os arquivos, selecione uma das opções abaixo:',
+        'O que você acha dos materiais? Selecione uma opção:',
+      ]) : pick([
+        'Por favor, analise o material e selecione uma das opções:',
+        'Após revisar o arquivo, selecione uma das opções abaixo:',
+        'O que você acha do material? Selecione uma opção:',
+      ]);
+
       await delay(800);
-      await mensagemSistema(renderLinksMsg(linksAtuais));
+      await mensagemSistema(renderLinksMsg(linksAtuais, apresentacaoLinks));
       await delay(1000);
-      await mensagemSistema('Por favor, analise os materiais e selecione uma das opções:', false, renderBotoesDecisao());
+      await mensagemSistema(chamadaDecisao, false, renderBotoesDecisao());
       window._chatState.fase = 'decisao';
     }
 
@@ -883,14 +906,15 @@
         : `Olá, <strong>${esc(primeiroNome)}</strong>! Os materiais foram revisados e uma nova versão está disponível! 😊 Veja o que foi atualizado abaixo.`;
     }
 
-    function renderLinksMsg(links) {
+    function renderLinksMsg(links, introText) {
       const btns = links.map(l =>
         `<a href="${esc(l.url)}" target="_blank" rel="noopener" class="chat-link-btn">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
           ${esc(l.label)}
         </a>`
       ).join('');
-      return `Aqui estão os arquivos disponíveis:<br><div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:4px">${btns}</div>`;
+      const intro = introText || (links.length === 1 ? 'Aqui está o arquivo disponível:' : 'Aqui estão os arquivos disponíveis:');
+      return `${intro}<br><div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:4px">${btns}</div>`;
     }
 
     function renderBotoesDecisao() {
@@ -915,7 +939,16 @@
 
       adicionarMensagemUsuario('Aprovado ✓');
       await delay(900);
-      await mensagemSistema('Ótimo! Sua aprovação foi registrada. O time de marketing será notificado. 🎉');
+      const plural = window._chatState?.plural ?? false;
+      await mensagemSistema(plural ? pick([
+        'Ótimo! Sua aprovação foi registrada. O time de marketing será notificado. 🎉',
+        'Aprovação registrada! O time de marketing já foi notificado. 🎉',
+        'Perfeito! Obrigado pela aprovação dos materiais. O time de marketing foi notificado. 🎉',
+      ]) : pick([
+        'Ótimo! Sua aprovação foi registrada. O time de marketing será notificado. 🎉',
+        'Aprovação registrada! O time de marketing já foi notificado. 🎉',
+        'Perfeito! Obrigado pela aprovação do material. O time de marketing foi notificado. 🎉',
+      ]));
 
       try {
         await fetch('/api/solicitacoes/' + window._chatState.solId + '/aprovacao', { method: 'POST' });
@@ -937,7 +970,16 @@
 
       adicionarMensagemUsuario('Solicitar alterações');
       await delay(900);
-      await mensagemSistema('Claro! Descreva o que precisa ser alterado. Pode enviar em várias mensagens — quando terminar, é só me dizer.');
+      const plural = window._chatState?.plural ?? false;
+      await mensagemSistema(plural ? pick([
+        'Claro! Descreva o que precisa ser alterado nos materiais. Pode enviar em várias mensagens — quando terminar, é só me dizer.',
+        'Entendido! O que você gostaria de alterar nos arquivos? Pode detalhar à vontade — quando terminar, é só confirmar.',
+        'Tudo bem! Descreva os ajustes necessários. Pode enviar em partes — quando quiser, finalizamos juntos.',
+      ]) : pick([
+        'Claro! Descreva o que precisa ser alterado. Pode enviar em várias mensagens — quando terminar, é só me dizer.',
+        'Entendido! O que você gostaria de alterar? Pode detalhar à vontade — quando terminar, é só confirmar.',
+        'Tudo bem! Descreva o ajuste necessário. Pode enviar em partes — quando quiser, finalizamos juntos.',
+      ]));
 
       habilitarInput('Descreva a alteração...');
     }
@@ -1031,6 +1073,10 @@
     /* ── utilitários do chat ── */
     function delay(ms) {
       return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    function pick(arr) {
+      return arr[Math.floor(Math.random() * arr.length)];
     }
 
     function autoResizeTextarea(el) {
@@ -1151,7 +1197,7 @@
         </div>
         ${rodada.decisao === 'aprovado'
           ? `<div class="chat-msg usuario"><div class="chat-msg-col"><div class="chat-bubble">Aprovado ✓</div></div></div>
-             <div class="chat-msg sistema">${avatarHtml}<div class="chat-msg-col"><div class="chat-bubble" style="color:#065f46">Aprovação registrada com sucesso! ✓</div></div></div>`
+             <div class="chat-msg sistema">${avatarHtml}<div class="chat-msg-col"><div class="chat-bubble" style="color:#065f46">${singular ? 'Aprovação do material registrada com sucesso! ✓' : 'Aprovação dos materiais registrada com sucesso! ✓'}</div></div></div>`
           : rodada.mensagens?.length
             ? rodada.mensagens.map(m => `<div class="chat-msg usuario"><div class="chat-msg-col"><div class="chat-bubble">${esc(m)}</div></div></div>`).join('') +
               `<div class="chat-msg sistema">${avatarHtml}<div class="chat-msg-col"><div class="chat-bubble">Alteração enviada ao time de marketing. ✉️</div></div></div>`
