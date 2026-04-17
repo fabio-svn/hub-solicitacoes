@@ -162,22 +162,22 @@ const SELOS_ASSESSOR = [
 ];
 
 const STATUS_SOLICITACAO = [
-  { id: "recebido",               label: "Recebido",                   bg: "#5B6470", text: "#FFFFFF",  cor: "--carbon-black"  },
-  { id: "alinhamentos",           label: "Alinhamentos",               bg: "#3B82F6", text: "#FFFFFF",  cor: "--sage-green"    },
-  { id: "em-analise",             label: "Em análise",                 bg: "#FFC533", text: "#1E1E1E",  cor: "--ruby-red"      },
-  { id: "em-andamento",           label: "Em andamento",               bg: "#FFC533", text: "#1E1E1E",  cor: "--leather-brown" },
-  { id: "em-producao",            label: "Em produção",                bg: "#FF7A00", text: "#FFFFFF",  cor: "--ruby-red"      },
-  { id: "em-revisao",             label: "Em revisão",                 bg: "#9B4DDB", text: "#FFFFFF",  cor: "--leather-brown" },
-  { id: "em-aprovacao",           label: "Em aprovação",               bg: "#3B82F6", text: "#FFFFFF",  cor: "--sage-green"    },
-  { id: "cotacao-aprovacao",      label: "Em cotação / aprovação",     bg: "#3B82F6", text: "#FFFFFF",  cor: "--leather-brown" },
-  { id: "aguardando",             label: "Aguardando informação",      bg: "#B78A6B", text: "#FFFFFF",  cor: "--leather-brown" },
-  { id: "aguardando-rh",          label: "Aguardando aprovação do RH", bg: "#B78A6B", text: "#FFFFFF",  cor: "--leather-brown" },
-  { id: "aguardando-pagamento",   label: "Aguardando pagamento",       bg: "#B78A6B", text: "#FFFFFF",  cor: "--leather-brown" },
-  { id: "aguardando-finalizacao", label: "Aguardando finalização",     bg: "#9B4DDB", text: "#FFFFFF",  cor: "--leather-brown" },
-  { id: "concluido",              label: "Concluído",                  bg: "#10B981", text: "#FFFFFF",  cor: "--sage-green"    },
-  { id: "reprovado",              label: "Reprovado / Cancelado",      bg: "#EF4444", text: "#FFFFFF",  cor: "--ruby-red"      },
-  { id: "cancelado",              label: "Cancelado",                  bg: "#EF4444", text: "#FFFFFF",  cor: "--carbon-black"  },
-  { id: "em-espera",              label: "Em espera",                  bg: "#5B6470", text: "#FFFFFF",  cor: "--carbon-black"  },
+  { id: "recebido",               label: "Recebido",                   bg: "#4D545F", text: "#FFFFFF",  cor: "--carbon-black"  },
+  { id: "alinhamentos",           label: "Alinhamentos",               bg: "#2563C0", text: "#FFFFFF",  cor: "--sage-green"    },
+  { id: "em-analise",             label: "Em análise",                 bg: "#C98A00", text: "#FFFFFF",  cor: "--ruby-red"      },
+  { id: "em-andamento",           label: "Em andamento",               bg: "#C98A00", text: "#FFFFFF",  cor: "--leather-brown" },
+  { id: "em-producao",            label: "Em produção",                bg: "#C85C00", text: "#FFFFFF",  cor: "--ruby-red"      },
+  { id: "em-revisao",             label: "Em revisão",                 bg: "#7438B0", text: "#FFFFFF",  cor: "--leather-brown" },
+  { id: "em-aprovacao",           label: "Em aprovação",               bg: "#2563C0", text: "#FFFFFF",  cor: "--sage-green"    },
+  { id: "cotacao-aprovacao",      label: "Em cotação / aprovação",     bg: "#2563C0", text: "#FFFFFF",  cor: "--leather-brown" },
+  { id: "aguardando",             label: "Aguardando informação",      bg: "#8A6040", text: "#FFFFFF",  cor: "--leather-brown" },
+  { id: "aguardando-rh",          label: "Aguardando aprovação do RH", bg: "#8A6040", text: "#FFFFFF",  cor: "--leather-brown" },
+  { id: "aguardando-pagamento",   label: "Aguardando pagamento",       bg: "#8A6040", text: "#FFFFFF",  cor: "--leather-brown" },
+  { id: "aguardando-finalizacao", label: "Aguardando finalização",     bg: "#7438B0", text: "#FFFFFF",  cor: "--leather-brown" },
+  { id: "concluido",              label: "Concluído",                  bg: "#0A9060", text: "#FFFFFF",  cor: "--sage-green"    },
+  { id: "reprovado",              label: "Reprovado / Cancelado",      bg: "#C82828", text: "#FFFFFF",  cor: "--ruby-red"      },
+  { id: "cancelado",              label: "Cancelado",                  bg: "#C82828", text: "#FFFFFF",  cor: "--carbon-black"  },
+  { id: "em-espera",              label: "Em espera",                  bg: "#4D545F", text: "#FFFFFF",  cor: "--carbon-black"  },
 ];
 
 const SETORES = [

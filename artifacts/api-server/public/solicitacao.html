@@ -41,7 +41,7 @@
       background: rgba(34,27,25,0.1);
       transition: background 0.3s;
     }
-    .status-step-line.done { background: #10B981; }
+    .status-step-line.done { background: #6B9080; }
     .status-step-line.invisible { background: transparent; }
     .status-step-circle {
       width: 22px;
@@ -55,14 +55,28 @@
       flex-shrink: 0;
       transition: all 0.3s;
       z-index: 1;
+      position: relative;
     }
     .status-step-circle.done {
-      background: #10B981;
-      border-color: #10B981;
+      background: #6B9080;
+      border-color: #6B9080;
     }
     .status-step-circle.current {
-      border-color: var(--current-color, #1e40af);
-      background: var(--current-bg, #dbeafe);
+      border-color: var(--current-color, #2563C0);
+      background: var(--current-bg, #DBEAFE);
+    }
+    .status-step-circle.current::after {
+      content: '';
+      position: absolute;
+      inset: -5px;
+      border-radius: 50%;
+      border: 2px solid var(--current-color, #2563C0);
+      opacity: 0;
+      animation: stepRingPulse 2.2s ease-out infinite;
+    }
+    @keyframes stepRingPulse {
+      0%   { opacity: 0.55; transform: scale(0.82); }
+      100% { opacity: 0;    transform: scale(1.55); }
     }
     .status-step-label {
       margin-top: 6px;
@@ -73,8 +87,8 @@
       line-height: 1.3;
       padding: 0 2px;
     }
-    .status-step-label.done { color: #10B981; font-weight: 600; }
-    .status-step-label.current { color: var(--current-color, #1e40af); font-weight: 700; }
+    .status-step-label.done { color: #6B9080; font-weight: 600; }
+    .status-step-label.current { color: var(--current-color, #2563C0); font-weight: 700; }
     @media (max-width: 560px) {
       .status-rail { flex-direction: column; gap: 0; overflow-x: hidden; }
       .status-step { flex-direction: row; align-items: center; min-width: 0; gap: 10px; flex: none; }
@@ -235,7 +249,7 @@
     .dados-grid-wide {
       grid-column: 1 / -1;
     }
-    .dados-field { display: flex; flex-direction: column; gap: 3px; }
+    .dados-field { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
     .dados-label {
       font-size: 0.68rem;
       font-weight: 700;
@@ -249,10 +263,86 @@
       font-weight: 600;
       color: var(--carbon-black);
       line-height: 1.45;
+      word-break: break-word;
+      overflow-wrap: break-word;
     }
     @media (max-width: 480px) {
       .dados-grid { grid-template-columns: 1fr; }
       .dados-grid-wide { grid-column: 1; }
+    }
+
+    /* ─── Approval accordion ─── */
+    .aprov-card {
+      border: 1.5px solid rgba(34,27,25,0.1);
+      border-radius: 14px;
+      overflow: hidden;
+      background: var(--paper-white);
+    }
+    .aprov-toggle {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 16px 18px;
+      cursor: pointer;
+      transition: background 0.15s;
+      user-select: none;
+    }
+    .aprov-toggle:hover { background: rgba(34,27,25,0.025); }
+    .aprov-toggle.aprov-locked {
+      cursor: not-allowed;
+      opacity: 0.42;
+    }
+    .aprov-toggle.aprov-locked:hover { background: transparent; }
+    .aprov-toggle.aprov-waiting {
+      cursor: default;
+      opacity: 0.62;
+    }
+    .aprov-toggle.aprov-waiting:hover { background: transparent; }
+    .aprov-toggle-icon {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      background: #dbeafe;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: background 0.2s;
+    }
+    .aprov-toggle.aprov-locked .aprov-toggle-icon { background: rgba(34,27,25,0.07); }
+    .aprov-toggle.aprov-waiting .aprov-toggle-icon { background: #fef3c7; }
+    .aprov-toggle-body { flex: 1; min-width: 0; }
+    .aprov-toggle-title {
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: var(--carbon-black);
+    }
+    .aprov-toggle-sub {
+      font-size: 0.75rem;
+      color: var(--carbon-black);
+      opacity: 0.48;
+      margin-top: 2px;
+    }
+    .aprov-chevron {
+      flex-shrink: 0;
+      opacity: 0.35;
+      transition: transform 0.25s ease, opacity 0.2s;
+    }
+    .aprov-chevron.open { transform: rotate(180deg); opacity: 0.7; }
+    .aprov-content {
+      overflow: hidden;
+      max-height: 0;
+      transition: max-height 0.35s ease, padding 0.25s;
+      padding: 0 18px;
+    }
+    .aprov-content.open {
+      max-height: 900px;
+      padding: 2px 18px 20px;
+    }
+    .aprov-divider {
+      border: none;
+      border-top: 1px solid rgba(34,27,25,0.08);
+      margin: 0;
     }
   </style>
 </head>
@@ -484,31 +574,44 @@
     }
 
     /* ── renderAprovacao ──────────────────────── */
+    const ICON_LOCK = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>`;
+    const ICON_CHAT = `<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#2563C0" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>`;
+    const ICON_CLOCK = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#92700A" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>`;
+    const ICON_CHEVRON = `<svg class="aprov-chevron" id="aprovChevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="6 9 12 15 18 9"/></svg>`;
+    const ICON_CHECK = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>`;
+    const ICON_EDIT = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>`;
+
     async function renderAprovacao(item, dados) {
       const card = document.getElementById('aprovacaoCard');
+      card.style.display = 'block';
 
-      // Condição A: só aparece quando em-aprovacao
-      if (item.status !== 'em-aprovacao') {
-        console.log('[Aprovação] ocultado — status:', item.status, '(não é em-aprovacao)');
-        card.style.display = 'none';
+      const isEmAprovacao = item.status === 'em-aprovacao';
+
+      /* ── Estado A: antes de em-aprovacao ─── */
+      if (!isEmAprovacao) {
+        console.log('[Aprovação] estado: bloqueado — status:', item.status);
+        card.innerHTML = `
+          <div class="aprov-card">
+            <div class="aprov-toggle aprov-locked" title="Disponível quando a solicitação chegar à etapa de aprovação">
+              <div class="aprov-toggle-icon">${ICON_LOCK}</div>
+              <div class="aprov-toggle-body">
+                <div class="aprov-toggle-title">Materiais para aprovação</div>
+                <div class="aprov-toggle-sub">Disponível quando a solicitação chegar à etapa de aprovação</div>
+              </div>
+            </div>
+          </div>`;
         return;
       }
 
-      // Mostrar card com loading
-      card.style.display = 'block';
+      /* ── Carregando (em-aprovacao) ─── */
       card.innerHTML = `
-        <div class="form-card" style="padding:20px" id="aprovacaoInner">
-          <div style="display:flex;align-items:center;gap:10px;margin-bottom:18px">
-            <div style="width:34px;height:34px;border-radius:50%;background:#dbeafe;display:flex;align-items:center;justify-content:center;flex-shrink:0">
-              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#1e40af" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+        <div class="aprov-card">
+          <div class="aprov-toggle aprov-waiting" id="aprovToggle">
+            <div class="aprov-toggle-icon">${ICON_CHAT}</div>
+            <div class="aprov-toggle-body">
+              <div class="aprov-toggle-title">Materiais para aprovação</div>
+              <div class="aprov-toggle-sub" id="aprovSub">Verificando materiais…</div>
             </div>
-            <div>
-              <div style="font-weight:700;font-size:0.9rem">Materiais para aprovação</div>
-              <div style="font-size:0.75rem;opacity:0.5">Aguardando sua avaliação</div>
-            </div>
-          </div>
-          <div id="chatWrap" class="chat-wrap">
-            <div class="chat-bubble chat-bubble-system" style="opacity:0.5;font-style:italic">Verificando materiais…</div>
           </div>
         </div>`;
 
@@ -517,78 +620,101 @@
         const data = await res.json();
         const links = data.links || [];
         const nomeUsuario = Auth.getUserName() || 'solicitante';
-        console.log('[Aprovação] status:', item.status, '| links encontrados:', links.length, '| rawLength:', data.rawLength ?? '?');
-        console.log('[Aprovação] links parseados:', JSON.stringify(links));
+        const primeiroNome = nomeUsuario.split(' ')[0];
+        console.log('[Aprovação] links encontrados:', links.length);
 
-        const chatWrap = document.getElementById('chatWrap');
-
-        // Condição B: links válidos
+        /* ── Estado C: em-aprovacao sem links ─── */
         if (!links || links.length === 0) {
-          console.log('[Aprovação] nenhum link — exibindo mensagem de aguardo');
-          chatWrap.innerHTML = `
-            <div class="chat-bubble chat-bubble-system">
-              Olá, <strong>${esc(nomeUsuario)}</strong>!<br>
-              Os materiais da sua solicitação estão sendo preparados. Assim que estiverem prontos, você poderá aprová-los aqui.
-            </div>`;
+          console.log('[Aprovação] estado: aguardando material');
+          document.getElementById('aprovSub').textContent = 'Os materiais ainda estão sendo preparados';
           return;
         }
 
-        // Renderizar links como pills
-        const linksHtml = links.map((link, i) =>
+        /* ── Estado B: em-aprovacao com links ─── */
+        console.log('[Aprovação] estado: ativo — exibindo acordeão com', links.length, 'link(s)');
+
+        const linksHtml = links.map(link =>
           `<a class="link-pill" href="${esc(link.url)}" target="_blank" rel="noopener">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
             ${esc(link.label)}
           </a>`
         ).join('');
 
-        console.log('[Aprovação] exibindo chat de aprovação com', links.length, 'link(s)');
-
-        chatWrap.innerHTML = `
-          <div class="chat-bubble chat-bubble-system">
-            Olá, <strong>${esc(nomeUsuario)}</strong>! Os materiais solicitados já estão disponíveis para sua análise.
-          </div>
-          <div style="display:flex;flex-wrap:wrap;gap:8px;padding-left:0;align-self:flex-start">
-            ${linksHtml}
-          </div>
-          <div class="chat-bubble chat-bubble-system">
-            Analise os materiais e selecione uma das opções abaixo.
-          </div>
-          <div class="chat-actions" id="chatActions">
-            <button class="chat-btn chat-btn-approve" onclick="confirmarAprovacao(${item.id})">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-              Aprovado
-            </button>
-            <button class="chat-btn chat-btn-change" onclick="mostrarCampoAlteracao()">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-              Solicitar alterações
-            </button>
-          </div>
-          <div id="campoAlteracao" style="display:none;width:100%;align-self:stretch">
-            <div class="chat-bubble chat-bubble-system" style="margin-bottom:10px">
-              Entendido. O que você gostaria que fosse alterado?
+        card.innerHTML = `
+          <div class="aprov-card">
+            <div class="aprov-toggle" id="aprovToggle" onclick="toggleAprovacao()">
+              <div class="aprov-toggle-icon">${ICON_CHAT}</div>
+              <div class="aprov-toggle-body">
+                <div class="aprov-toggle-title">Materiais para aprovação</div>
+                <div class="aprov-toggle-sub">Os materiais já estão disponíveis para sua análise</div>
+              </div>
+              ${ICON_CHEVRON}
             </div>
-            <textarea id="textoAlteracao" class="chat-textarea"
-              placeholder="Descreva com detalhes o que precisa ser ajustado…"></textarea>
-            <div style="display:flex;gap:8px;margin-top:8px">
-              <button onclick="cancelarAlteracao()"
-                style="padding:8px 16px;background:transparent;border:1.5px solid rgba(34,27,25,0.18);border-radius:8px;font-family:'Nunito Sans',sans-serif;font-size:0.82rem;cursor:pointer">
-                Cancelar
-              </button>
-              <button onclick="confirmarAlteracao(${item.id})" id="btnEnviarAlteracao"
-                style="padding:8px 20px;background:var(--ruby-red);color:#fff;border:none;border-radius:8px;font-family:'Nunito Sans',sans-serif;font-weight:700;font-size:0.82rem;cursor:pointer">
-                Enviar
-              </button>
+            <hr class="aprov-divider">
+            <div class="aprov-content" id="aprovContent">
+              <div class="chat-wrap" id="chatWrap" style="margin-top:14px">
+                <div class="chat-bubble chat-bubble-system">
+                  Olá, <strong>${esc(primeiroNome)}!</strong>
+                </div>
+                <div class="chat-bubble chat-bubble-system">
+                  Os materiais solicitados já estão disponíveis para sua análise.
+                </div>
+                <div class="chat-bubble chat-bubble-system">
+                  Você pode acessá-los abaixo:
+                </div>
+                <div style="display:flex;flex-wrap:wrap;gap:8px;align-self:flex-start">
+                  ${linksHtml}
+                </div>
+                <div class="chat-bubble chat-bubble-system">
+                  Depois de revisar os materiais, escolha uma das opções abaixo para seguirmos.
+                </div>
+                <div class="chat-actions" id="chatActions">
+                  <button class="chat-btn chat-btn-approve" onclick="confirmarAprovacao(${item.id})">
+                    ${ICON_CHECK} Aprovar materiais
+                  </button>
+                  <button class="chat-btn chat-btn-change" onclick="mostrarCampoAlteracao()">
+                    ${ICON_EDIT} Solicitar ajustes
+                  </button>
+                </div>
+                <div id="campoAlteracao" style="display:none;width:100%;align-self:stretch">
+                  <div class="chat-bubble chat-bubble-system" style="margin-bottom:10px">
+                    Entendido.<br>Por favor, descreva abaixo o que você gostaria que fosse ajustado.
+                  </div>
+                  <textarea id="textoAlteracao" class="chat-textarea"
+                    placeholder="Escreva aqui os ajustes necessários…"></textarea>
+                  <div style="display:flex;gap:8px;margin-top:8px">
+                    <button onclick="cancelarAlteracao()"
+                      style="padding:8px 16px;background:transparent;border:1.5px solid rgba(34,27,25,0.18);border-radius:8px;font-family:'Nunito Sans',sans-serif;font-size:0.82rem;cursor:pointer">
+                      Cancelar
+                    </button>
+                    <button onclick="confirmarAlteracao(${item.id})" id="btnEnviarAlteracao"
+                      style="padding:8px 20px;background:var(--ruby-red);color:#fff;border:none;border-radius:8px;font-family:'Nunito Sans',sans-serif;font-weight:700;font-size:0.82rem;cursor:pointer">
+                      Enviar solicitação de ajustes
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>`;
+
+        /* Auto-abrir acordeão após delay curto */
+        setTimeout(() => toggleAprovacao(true), 120);
 
       } catch (e) {
         console.error('[Aprovação] erro ao buscar entrega:', e);
-        const chatWrap = document.getElementById('chatWrap');
-        if (chatWrap) chatWrap.innerHTML = `
-          <div class="chat-bubble chat-bubble-system" style="color:var(--ruby-red)">
-            Não foi possível carregar os materiais. Por favor, tente recarregar a página.
-          </div>`;
+        const sub = document.getElementById('aprovSub');
+        if (sub) sub.textContent = 'Não foi possível carregar os materiais. Recarregue a página.';
       }
+    }
+
+    function toggleAprovacao(forceOpen) {
+      const content = document.getElementById('aprovContent');
+      const chevron = document.getElementById('aprovChevron');
+      if (!content) return;
+      const isOpen = content.classList.contains('open');
+      if (forceOpen === true && isOpen) return;
+      content.classList.toggle('open', forceOpen !== undefined ? forceOpen : !isOpen);
+      if (chevron) chevron.classList.toggle('open', content.classList.contains('open'));
     }
 
     function mostrarCampoAlteracao() {
@@ -604,7 +730,7 @@
     }
 
     async function confirmarAprovacao(solId) {
-      console.log('[Aprovação] clique em Aprovado — id:', solId);
+      console.log('[Aprovação] clique em Aprovar materiais — id:', solId);
       const btn = document.querySelector('#chatActions .chat-btn-approve');
       btn.disabled = true;
       btn.innerHTML = `<svg class="spin" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 12a9 9 0 11-6.219-8.56"/></svg> Enviando…`;
@@ -618,18 +744,18 @@
           if (actionsEl) actionsEl.remove();
           const bubble = document.createElement('div');
           bubble.className = 'chat-bubble chat-bubble-success';
-          bubble.innerHTML = '<strong>Perfeito!</strong> Agradecemos pela sua aprovação. O time de marketing foi notificado.';
+          bubble.innerHTML = '<strong>Perfeito!</strong> Obrigado pelo seu retorno.<br>Sua aprovação foi registrada com sucesso.';
           chatWrap.appendChild(bubble);
         } else {
           console.warn('[Aprovação] erro na aprovação — status HTTP:', res.status);
           btn.disabled = false;
-          btn.innerHTML = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Aprovado`;
+          btn.innerHTML = `${ICON_CHECK} Aprovar materiais`;
           alert('Erro ao registrar aprovação. Tente novamente.');
         }
       } catch (e) {
         console.error('[Aprovação] erro de conexão:', e);
         btn.disabled = false;
-        btn.innerHTML = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Aprovado`;
+        btn.innerHTML = `${ICON_CHECK} Aprovar materiais`;
         alert('Erro de conexão. Verifique sua internet e tente novamente.');
       }
     }
@@ -665,18 +791,18 @@
           chatWrap.appendChild(resumo);
           const resp = document.createElement('div');
           resp.className = 'chat-bubble chat-bubble-warning';
-          resp.innerHTML = '<strong>Solicitação recebida!</strong> O time de marketing foi notificado e entrará em contato para alinhar os ajustes.';
+          resp.innerHTML = '<strong>Recebemos sua solicitação de ajustes.</strong><br>Nossa equipe seguirá com a revisão e atualizará o andamento da solicitação em breve.';
           chatWrap.appendChild(resp);
         } else {
           console.warn('[Alteração] erro ao enviar — status HTTP:', res.status);
           btn.disabled = false;
-          btn.textContent = 'Enviar';
+          btn.textContent = 'Enviar solicitação de ajustes';
           alert('Erro ao enviar. Tente novamente.');
         }
       } catch (e) {
         console.error('[Alteração] erro de conexão:', e);
         btn.disabled = false;
-        btn.textContent = 'Enviar';
+        btn.textContent = 'Enviar solicitação de ajustes';
         alert('Erro de conexão.');
       }
     }
