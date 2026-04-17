@@ -527,7 +527,10 @@ router.post("/solicitacoes/:id/alteracao", requireAuth, async (req, res): Promis
       }
     } catch {}
 
-    const comentario = `${mentionText}✏️ Alteração solicitada por ${user.name}:\n\n${mensagem.trim()}`;
+    const isMultiple = /^\d+\./.test(mensagem.trim());
+    const comentario = isMultiple
+      ? `${mentionText}✏️ Alterações solicitadas por ${user.name}:\n\n${mensagem.trim()}`
+      : `${mentionText}✏️ Alteração solicitada por ${user.name}:\n\n${mensagem.trim()}`;
 
     const commentRes = await fetch(`https://api.clickup.com/api/v2/task/${solicitacao.clickup_task_id}/comment`, {
       method: "POST",
@@ -561,6 +564,21 @@ router.post("/solicitacoes/:id/aprovacao", requireAuth, async (req, res): Promis
     if (!solicitacao.clickup_task_id) { res.status(400).json({ error: "Task não encontrada no ClickUp" }); return; }
 
     const token = process.env.CLICKUP_API_TOKEN || "";
+
+    const existingComments = await fetch(
+      `https://api.clickup.com/api/v2/task/${solicitacao.clickup_task_id}/comment`,
+      { headers: { "Authorization": token } }
+    );
+    if (existingComments.ok) {
+      const commentsData = await existingComments.json() as { comments?: Array<{ comment_text: string }> };
+      const jaAprovado = commentsData.comments?.some(c =>
+        c.comment_text?.includes('Aprovado por') && c.comment_text?.includes(user.name)
+      );
+      if (jaAprovado) {
+        res.json({ success: true, alreadyApproved: true });
+        return;
+      }
+    }
 
     const comentario = `✅ Aprovado por ${user.name} em ${new Date().toLocaleDateString('pt-BR')}`;
     await fetch(`https://api.clickup.com/api/v2/task/${solicitacao.clickup_task_id}/comment`, {

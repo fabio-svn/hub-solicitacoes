@@ -103,183 +103,198 @@
       .status-step-label { margin-top: 0; text-align: left; font-size: 0.82rem; }
     }
 
-    /* ─── Chat body (fundo gradiente warm) ─── */
-    .chat-body {
-      background: linear-gradient(170deg, #fffefe 0%, #fdf8f7 50%, #f9f5f3 100%);
-      padding: 18px 16px 20px;
+    /* ── Chat de aprovação ───────────────────────── */
+    .chat-wrap {
       display: flex;
       flex-direction: column;
-      gap: 4px;
+      gap: 12px;
+      padding: 16px;
+      max-height: 420px;
       overflow-y: auto;
-      min-height: 180px;
-      max-height: 540px;
-      -webkit-overflow-scrolling: touch;
+      scroll-behavior: smooth;
       scrollbar-width: thin;
       scrollbar-color: rgba(34,27,25,0.12) transparent;
     }
-    .chat-body::-webkit-scrollbar { width: 4px; }
-    .chat-body::-webkit-scrollbar-thumb { background: rgba(34,27,25,0.12); border-radius: 2px; }
+    .chat-wrap::-webkit-scrollbar { width: 4px; }
+    .chat-wrap::-webkit-scrollbar-thumb { background: rgba(34,27,25,0.12); border-radius: 2px; }
 
-    /* ─── Linhas do chat (posicionamento) ─── */
-    .cr {
+    .chat-msg {
       display: flex;
-      align-items: flex-end;
-      gap: 8px;
-      opacity: 0;
-      transform: translateY(6px);
-      transition: opacity 0.3s ease, transform 0.3s ease;
+      flex-direction: column;
+      max-width: 82%;
+      gap: 3px;
     }
-    .cr.show { opacity: 1; transform: translateY(0); }
-    .cr.right { flex-direction: row-reverse; }
-    .cr.mt { margin-top: 6px; }
+    .chat-msg.sistema { align-self: flex-start; }
+    .chat-msg.usuario { align-self: flex-end; align-items: flex-end; }
 
-    /* ─── Avatar SVN ─── */
-    .svn-av {
-      width: 30px; height: 30px;
-      border-radius: 50%;
-      background: rgba(172,54,49,0.09);
-      border: 1.5px solid rgba(172,54,49,0.2);
-      display: flex; align-items: center; justify-content: center;
-      flex-shrink: 0;
-      font-size: 0.48rem; font-weight: 900;
-      letter-spacing: 0.05em; color: #AC3631;
-      line-height: 1; text-align: center;
-    }
-    .svn-av.inv { visibility: hidden; }
-
-    /* ─── Balões ─── */
-    .cb {
-      max-width: 70%;
-      padding: 9px 13px;
-      border-radius: 18px;
+    .chat-bubble {
+      padding: 10px 14px;
+      border-radius: 16px;
       font-size: 0.875rem;
-      line-height: 1.6;
+      line-height: 1.55;
       word-break: break-word;
-      overflow-wrap: break-word;
     }
-    .cb.svn {
-      background: #fff;
+    .chat-msg.sistema .chat-bubble {
+      background: var(--paper-white);
+      border: 1px solid rgba(34,27,25,0.1);
+      border-bottom-left-radius: 4px;
       color: var(--carbon-black);
-      border: 1px solid rgba(34,27,25,0.09);
-      border-bottom-left-radius: 5px;
-      box-shadow: 0 1px 3px rgba(34,27,25,0.07);
     }
-    .cb.user {
+    .chat-msg.usuario .chat-bubble {
       background: var(--carbon-black);
       color: var(--paper-white);
-      border-bottom-right-radius: 5px;
-      box-shadow: 0 2px 6px rgba(34,27,25,0.18);
+      border-bottom-right-radius: 4px;
     }
-    .cb.ok {
-      background: #ecfdf5;
-      color: #065F40;
-      border: 1px solid rgba(10,144,96,0.2);
-      border-bottom-left-radius: 5px;
-      box-shadow: 0 1px 3px rgba(10,144,96,0.07);
-    }
-    .cb.warn {
-      background: #fffbeb;
-      color: #7A5200;
-      border: 1px solid rgba(180,120,0,0.18);
-      border-bottom-left-radius: 5px;
+    .chat-msg .chat-time {
+      font-size: 0.7rem;
+      opacity: 0.35;
+      padding: 0 4px;
     }
 
-    /* ─── Typing indicator ─── */
-    .typing-row {
+    .chat-typing {
       display: flex;
-      align-items: flex-end;
+      align-items: center;
+      gap: 4px;
+      padding: 10px 14px;
+      background: var(--paper-white);
+      border: 1px solid rgba(34,27,25,0.1);
+      border-radius: 16px;
+      border-bottom-left-radius: 4px;
+      width: fit-content;
+    }
+    .chat-typing span {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: rgba(34,27,25,0.35);
+      animation: typing-dot 1.2s infinite;
+    }
+    .chat-typing span:nth-child(2) { animation-delay: 0.2s; }
+    .chat-typing span:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes typing-dot {
+      0%, 60%, 100% { transform: translateY(0); opacity: 0.35; }
+      30%            { transform: translateY(-5px); opacity: 1; }
+    }
+
+    .chat-input-area {
+      border-top: 1px solid rgba(34,27,25,0.08);
+      padding: 12px 16px;
+      display: flex;
       gap: 8px;
-      animation: trFadeIn 0.2s ease forwards;
+      align-items: flex-end;
     }
-    @keyframes trFadeIn { from { opacity: 0; } to { opacity: 1; } }
-    .typing-bubble {
-      background: #fff;
-      border: 1px solid rgba(34,27,25,0.09);
-      border-radius: 18px; border-bottom-left-radius: 5px;
-      padding: 11px 16px;
-      display: flex; gap: 4px; align-items: center;
-      box-shadow: 0 1px 3px rgba(34,27,25,0.07);
-    }
-    .td {
-      width: 6px; height: 6px; border-radius: 50%;
-      background: rgba(34,27,25,0.28);
-      animation: tdBounce 1.3s ease-in-out infinite;
-    }
-    .td:nth-child(2) { animation-delay: 0.18s; }
-    .td:nth-child(3) { animation-delay: 0.36s; }
-    @keyframes tdBounce {
-      0%, 60%, 100% { transform: translateY(0); opacity: 0.28; }
-      30% { transform: translateY(-4px); opacity: 0.85; }
-    }
-
-    /* ─── Links row ─── */
-    .chat-links-row {
-      display: flex; flex-direction: column; gap: 6px;
-      padding-left: 38px;
-      opacity: 0; transform: translateY(6px);
-      transition: opacity 0.3s ease, transform 0.3s ease;
-    }
-    .chat-links-row.show { opacity: 1; transform: translateY(0); }
-    .link-pill {
-      display: inline-flex; align-items: center; gap: 7px;
-      padding: 9px 15px;
-      background: #fff; color: var(--carbon-black);
-      border: 1.5px solid rgba(34,27,25,0.14);
-      border-radius: 10px;
-      font-size: 0.83rem; font-weight: 600;
-      text-decoration: none;
-      box-shadow: 0 1px 3px rgba(34,27,25,0.06);
-      transition: background 0.14s, box-shadow 0.14s, transform 0.1s;
-      align-self: flex-start;
-    }
-    .link-pill:hover {
-      background: rgba(34,27,25,0.04);
-      box-shadow: 0 3px 9px rgba(34,27,25,0.12);
-      transform: translateY(-1px);
-    }
-
-    /* ─── Botões de ação ─── */
-    .chat-actions-row {
-      display: flex; flex-direction: column; gap: 7px;
-      padding-left: 38px; margin-top: 4px;
-      opacity: 0; transform: translateY(6px);
-      transition: opacity 0.3s ease, transform 0.3s ease;
-    }
-    .chat-actions-row.show { opacity: 1; transform: translateY(0); }
-    .chat-btn {
-      display: inline-flex; align-items: center; gap: 8px;
-      padding: 11px 18px; border-radius: 11px;
+    .chat-input-area textarea {
+      flex: 1;
+      border: 1px solid rgba(34,27,25,0.15);
+      border-radius: 12px;
+      padding: 10px 14px;
       font-family: 'Nunito Sans', sans-serif;
-      font-weight: 700; font-size: 0.86rem;
-      cursor: pointer; text-align: left;
-      border: 1.5px solid;
-      transition: background 0.16s, transform 0.1s, box-shadow 0.16s;
-      align-self: flex-start;
+      font-size: 0.875rem;
+      resize: none;
+      min-height: 40px;
+      max-height: 120px;
+      line-height: 1.4;
+      transition: border-color 0.2s;
+      box-sizing: border-box;
     }
-    .chat-btn:hover { transform: translateY(-1px); box-shadow: 0 3px 10px rgba(0,0,0,0.09); }
-    .chat-btn:active { transform: translateY(0); box-shadow: none; }
-    .chat-btn-approve { background: rgba(10,144,96,0.08); color: #065F40; border-color: rgba(10,144,96,0.25); }
-    .chat-btn-approve:hover { background: rgba(10,144,96,0.15); }
-    .chat-btn-change  { background: rgba(172,54,49,0.08); color: #7A2520; border-color: rgba(172,54,49,0.22); }
-    .chat-btn-change:hover  { background: rgba(172,54,49,0.15); }
+    .chat-input-area textarea:focus { outline: none; border-color: var(--carbon-black); }
+    .chat-input-area textarea:disabled { background: transparent; opacity: 0.4; cursor: not-allowed; }
 
-    /* ─── Campo de alteração ─── */
-    .chat-compose {
-      padding: 14px 16px;
-      border-top: 1px solid rgba(34,27,25,0.07);
-      background: rgba(249,245,243,0.8);
-      display: flex; flex-direction: column; gap: 10px;
+    .chat-send-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: var(--carbon-black);
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: opacity 0.2s;
     }
-    .chat-textarea {
-      width: 100%;
-      border: 1.5px solid rgba(34,27,25,0.14);
-      border-radius: 12px; padding: 11px 14px;
-      font-family: 'Nunito Sans', sans-serif; font-size: 0.875rem;
-      min-height: 88px; resize: vertical; background: #fff;
-      box-sizing: border-box; transition: border-color 0.2s;
+    .chat-send-btn:disabled { opacity: 0.25; cursor: not-allowed; }
+
+    .chat-link-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 14px;
+      background: var(--carbon-black);
+      color: var(--paper-white);
+      border-radius: 8px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      text-decoration: none;
+      transition: opacity 0.2s;
+      margin: 2px 4px 2px 0;
     }
-    .chat-textarea:focus { outline: none; border-color: rgba(34,27,25,0.4); }
-    .chat-compose-btns { display: flex; gap: 8px; justify-content: flex-end; }
+    .chat-link-btn:hover { opacity: 0.8; }
+
+    .chat-action-btns {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 4px;
+    }
+
+    .btn-aprovar {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 9px 18px;
+      background: #16a34a;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-family: 'Nunito Sans', sans-serif;
+      font-weight: 700;
+      font-size: 0.875rem;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .btn-aprovar:hover { background: #15803d; }
+
+    .btn-alterar {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 9px 18px;
+      background: #dc2626;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-family: 'Nunito Sans', sans-serif;
+      font-weight: 700;
+      font-size: 0.875rem;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .btn-alterar:hover { background: #b91c1c; }
+
+    .rodada-historico {
+      border: 1px solid rgba(34,27,25,0.08);
+      border-radius: 10px;
+      overflow: hidden;
+      margin-bottom: 12px;
+    }
+    .rodada-historico-header {
+      padding: 10px 16px;
+      background: var(--icon-bg);
+      font-size: 0.8rem;
+      font-weight: 600;
+      opacity: 0.6;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      user-select: none;
+    }
+    .rodada-historico-body {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease;
+    }
 
     /* ─── Header da solicitação ─── */
     .sol-header {
@@ -365,89 +380,6 @@
       .dados-grid-wide { grid-column: 1; }
     }
 
-    /* ─── Approval accordion ─── */
-    .aprov-card {
-      /* Mesmo visual dos form-card do sistema */
-      background: #fff;
-      border-radius: 14px;
-      border: 1px solid rgba(34,27,25,0.09);
-      box-shadow: 0 1px 4px rgba(34,27,25,0.06);
-      overflow: hidden;
-    }
-    .aprov-toggle {
-      display: flex;
-      align-items: center;
-      gap: 14px;
-      padding: 17px 20px;
-      cursor: pointer;
-      transition: background 0.15s;
-      user-select: none;
-    }
-    .aprov-toggle:hover { background: rgba(34,27,25,0.022); }
-    .aprov-toggle.aprov-locked {
-      cursor: not-allowed;
-      opacity: 0.4;
-    }
-    .aprov-toggle.aprov-locked:hover { background: transparent; }
-    .aprov-toggle.aprov-waiting {
-      cursor: default;
-      opacity: 0.58;
-    }
-    .aprov-toggle.aprov-waiting:hover { background: transparent; }
-    .aprov-toggle-icon {
-      width: 38px;
-      height: 38px;
-      border-radius: 50%;
-      background: rgba(172,54,49,0.11);   /* Ruby Red translúcido */
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-shrink: 0;
-    }
-    .aprov-toggle.aprov-locked .aprov-toggle-icon {
-      background: rgba(34,27,25,0.06);
-    }
-    .aprov-toggle.aprov-waiting .aprov-toggle-icon {
-      background: rgba(180,120,0,0.1);
-    }
-    .aprov-toggle-body { flex: 1; min-width: 0; }
-    .aprov-toggle-title {
-      font-size: 0.9rem;
-      font-weight: 700;
-      color: var(--carbon-black);
-      letter-spacing: -0.01em;
-    }
-    .aprov-toggle-sub {
-      font-size: 0.74rem;
-      color: var(--carbon-black);
-      opacity: 0.44;
-      margin-top: 2px;
-    }
-    .aprov-chevron {
-      flex-shrink: 0;
-      color: rgba(34,27,25,0.3);
-      transition: transform 0.28s cubic-bezier(.4,0,.2,1), color 0.2s;
-    }
-    .aprov-chevron.open {
-      transform: rotate(180deg);
-      color: rgba(34,27,25,0.6);
-    }
-    .aprov-content {
-      overflow: hidden;
-      max-height: 0;
-      transition: max-height 0.38s cubic-bezier(.4,0,.2,1);
-    }
-    .aprov-content.open {
-      max-height: 1000px;
-    }
-    .aprov-content-inner {
-      padding: 0;
-    }
-    .aprov-divider {
-      border: none;
-      border-top: 1px solid rgba(34,27,25,0.07);
-      margin: 0;
-    }
   </style>
 </head>
 <body class="page-light">
@@ -677,325 +609,475 @@
         <div class="status-rail-scroll"><div class="status-rail">${stepsHtml}</div></div>`;
     }
 
-    /* ── renderAprovacao ──────────────────────── */
-    const ICON_LOCK = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(34,27,25,0.45)" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>`;
-    const ICON_CHAT_RR = `<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#AC3631" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>`;
-    const ICON_CHEVRON_SVG = `<svg class="aprov-chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="6 9 12 15 18 9"/></svg>`;
-    const ICON_CHECK = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>`;
-    const ICON_EDIT = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>`;
-    const ICON_SEND = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>`;
-    const ICON_EXT = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>`;
+    /* ── Sistema de Aprovação v2 — storage de rodadas ── */
+    const APROVACAO_KEY = id => 'aprovacao_v2_' + id;
 
-    let _chatPlayed      = false;
-    let _chatSolId       = null;
-    let _chatLinks       = [];
-    let _chatNome        = '';
-    let _mostrarDestaque = false;
-
-    const _delay = ms => new Promise(r => setTimeout(r, ms));
-
-    /* ── helpers DOM ── */
-    function mkAv(inv) {
-      return `<div class="svn-av${inv ? ' inv' : ''}">SVN</div>`;
-    }
-    function mkTypingEl() {
-      const d = document.createElement('div');
-      d.className = 'typing-row';
-      d.innerHTML = `${mkAv(false)}<div class="typing-bubble"><div class="td"></div><div class="td"></div><div class="td"></div></div>`;
-      return d;
-    }
-    function appendShow(body, el) {
-      body.appendChild(el);
-      body.scrollTop = body.scrollHeight;
-      requestAnimationFrame(() => requestAnimationFrame(() => {
-        el.classList.add('show');
-        body.scrollTop = body.scrollHeight;
-      }));
-    }
-    function mkSvnRow(html, showAv, extraClass) {
-      const el = document.createElement('div');
-      el.className = 'cr' + (extraClass ? ' ' + extraClass : '');
-      el.innerHTML = `${mkAv(!showAv)}<div class="cb svn">${html}</div>`;
-      return el;
-    }
-    function mkLinksRow(links) {
-      const el = document.createElement('div');
-      el.className = 'chat-links-row';
-      el.innerHTML = links.map(l =>
-        `<a class="link-pill" href="${esc(l.url)}" target="_blank" rel="noopener">${ICON_EXT} ${esc(l.label)}</a>`
-      ).join('');
-      return el;
-    }
-    function mkActionsRow(solId) {
-      const el = document.createElement('div');
-      el.id = 'chatActionsRow';
-      el.className = 'chat-actions-row';
-      el.innerHTML = `
-        <button class="chat-btn chat-btn-approve" onclick="confirmarAprovacao(${solId})">${ICON_CHECK} Aprovar materiais</button>
-        <button class="chat-btn chat-btn-change"  onclick="mostrarCampoAlteracao()">${ICON_EDIT} Solicitar ajustes</button>`;
-      return el;
+    function getRodadas(solId) {
+      try {
+        const raw = localStorage.getItem(APROVACAO_KEY(solId));
+        return raw ? JSON.parse(raw) : [];
+      } catch { return []; }
     }
 
-    /* ── conversa sequencial ── */
-    async function playChat(body, nome, links, solId) {
-      const msgs = [
-        { html: `Olá, ${esc(nome)}! 👋`,                                               showAv: true,  ms: 750  },
-        { html: `Os materiais solicitados já estão prontos para sua análise.`,          showAv: false, ms: 1000 },
-        { html: `Separei tudo para você abaixo:`,                                       showAv: false, ms: 650  },
-      ];
-      for (const m of msgs) {
-        const t = mkTypingEl();
-        body.appendChild(t);
-        body.scrollTop = body.scrollHeight;
-        await _delay(m.ms);
-        t.remove();
-        appendShow(body, mkSvnRow(m.html, m.showAv, ''));
-        await _delay(240);
+    function saveRodadas(solId, rodadas) {
+      try {
+        localStorage.setItem(APROVACAO_KEY(solId), JSON.stringify(rodadas));
+      } catch {}
+    }
+
+    function getLinksHash(links) {
+      return links.map(l => l.url).sort().join('|');
+    }
+
+    function resolveRodadaAtual(solId, linksAtuais) {
+      const rodadas = getRodadas(solId);
+      if (rodadas.length === 0) {
+        const nova = { numero: 1, links: linksAtuais, decisao: null, mensagens: [], data: new Date().toISOString() };
+        saveRodadas(solId, [nova]);
+        return { rodadas: [nova], rodadaAtual: nova, isNova: true };
       }
-      // links
-      await _delay(160);
-      const lr = mkLinksRow(links);
-      appendShow(body, lr);
-      lr.classList.remove('cr'); // links row already has its own show animation
-      await _delay(300);
+      const ultima = rodadas[rodadas.length - 1];
+      const hashAtual  = getLinksHash(linksAtuais);
+      const hashUltima = getLinksHash(ultima.links || []);
 
-      // última mensagem
-      const t2 = mkTypingEl();
-      body.appendChild(t2);
-      body.scrollTop = body.scrollHeight;
-      await _delay(950);
-      t2.remove();
-      appendShow(body, mkSvnRow(`Quando terminar de revisar, me avise como deseja seguir. 🙏`, false, ''));
-      await _delay(340);
+      if (ultima.decisao !== null && hashAtual !== hashUltima) {
+        const nova = { numero: rodadas.length + 1, links: linksAtuais, decisao: null, mensagens: [], data: new Date().toISOString() };
+        rodadas.push(nova);
+        saveRodadas(solId, rodadas);
+        return { rodadas, rodadaAtual: nova, isNova: true };
+      }
 
-      // botões
-      const ar = mkActionsRow(solId);
-      appendShow(body, ar);
+      if (ultima.decisao !== null) {
+        return { rodadas, rodadaAtual: ultima, isNova: false };
+      }
+
+      return { rodadas, rodadaAtual: ultima, isNova: false };
     }
 
-    /* ── renderAprovacao ── */
+    /* ── renderAprovacao v2 ── */
     async function renderAprovacao(item, dados) {
       const card = document.getElementById('aprovacaoCard');
-      card.style.display = 'block';
-      _chatPlayed = false;
-      _chatSolId  = item.id;
-      _chatLinks  = [];
-      _chatNome   = '';
+      const statusComAprovacao = ['em-aprovacao', 'concluido', 'reprovado', 'em-revisao'];
+      const temHistorico = getRodadas(item.id).length > 0;
 
-      const isEmAprovacao = item.status === 'em-aprovacao';
-      const _storageKey   = 'aprovacao_visto_' + item.id;
-      _mostrarDestaque    = isEmAprovacao && sessionStorage.getItem(_storageKey) !== '1';
-
-      if (!isEmAprovacao) {
-        console.log('[Aprovação] bloqueado — status:', item.status);
-        card.innerHTML = `
-          <div class="aprov-card">
-            <div class="aprov-toggle aprov-locked">
-              <div class="aprov-toggle-icon">${ICON_LOCK}</div>
-              <div class="aprov-toggle-body">
-                <div class="aprov-toggle-title">Materiais para aprovação</div>
-                <div class="aprov-toggle-sub">Disponível quando a solicitação chegar à etapa de aprovação</div>
-              </div>
-            </div>
-          </div>`;
+      if (!statusComAprovacao.includes(item.status) && !temHistorico) {
+        card.style.display = 'none';
         return;
       }
 
+      card.style.display = 'block';
+
+      const storageKey = 'aprovacao_visto_' + item.id;
+      const jaVisto = localStorage.getItem(storageKey) === '1';
+      const mostrarDestaque = item.status === 'em-aprovacao' && !jaVisto;
+
       card.innerHTML = `
-        <div class="aprov-card">
-          <div class="aprov-toggle aprov-waiting">
-            <div class="aprov-toggle-icon">${ICON_CHAT_RR}</div>
-            <div class="aprov-toggle-body">
-              <div class="aprov-toggle-title">Materiais para aprovação</div>
-              <div class="aprov-toggle-sub" id="aprovSub">Verificando materiais…</div>
+        <div class="form-card" id="aprovacaoCardInner" style="overflow:hidden;padding:0;transition:box-shadow 0.4s ease;${
+          mostrarDestaque ? 'box-shadow:0 0 0 2px var(--ruby-red),0 8px 32px rgba(172,54,49,0.18);' : ''
+        }">
+          <div id="aprovacaoHeader" style="padding:20px 24px;cursor:pointer;display:flex;align-items:center;gap:12px">
+            <div style="width:36px;height:36px;border-radius:50%;background:rgba(219,234,254,0.5);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1e40af" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+            </div>
+            <div style="flex:1">
+              <div style="font-weight:700;font-size:0.95rem;display:flex;align-items:center;gap:8px">
+                Materiais para aprovação
+                ${mostrarDestaque ? '<span style="background:var(--ruby-red);color:white;font-size:0.65rem;font-weight:700;padding:2px 8px;border-radius:999px;animation:badgePop 0.4s ease forwards">NOVO</span>' : ''}
+              </div>
+              <div style="font-size:0.8rem;opacity:0.5" id="aprovacaoSubtitle">
+                ${item.status === 'em-aprovacao' ? 'Os materiais estão prontos para sua análise' : 'Histórico de aprovação'}
+              </div>
+            </div>
+            <svg id="aprovacaoChevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="opacity:0.35;transition:transform 0.25s;flex-shrink:0"><polyline points="6 9 12 15 18 9"/></svg>
+          </div>
+
+          <div id="aprovacaoBody" style="max-height:0;overflow:hidden;transition:max-height 0.35s ease">
+            <div style="border-top:1px solid rgba(34,27,25,0.07)">
+              <div id="chatLoading" style="padding:24px;text-align:center;opacity:0.4;font-size:0.85rem">
+                Carregando…
+              </div>
+              <div id="chatUI" style="display:none">
+                <div id="historicoRodadas" style="padding:0 16px;padding-top:16px"></div>
+                <div class="chat-wrap" id="chatWrap"></div>
+                <div class="chat-input-area" id="chatInputArea">
+                  <textarea id="chatInput" placeholder="Digite sua mensagem..." rows="1" disabled
+                    oninput="autoResizeTextarea(this)"
+                    onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();enviarMensagemUsuario()}"
+                  ></textarea>
+                  <button class="chat-send-btn" id="chatSendBtn" disabled onclick="enviarMensagemUsuario()">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         </div>`;
 
-      try {
-        const res  = await fetch('/api/solicitacoes/' + item.id + '/entrega');
-        const data = await res.json();
-        const links = data.links || [];
-        const nome   = (Auth.getUserName() || 'solicitante').split(' ')[0];
-        console.log('[Aprovação] links:', links.length);
+      let aberto = false;
+      let carregado = false;
 
-        if (!links.length) {
-          const sub = document.getElementById('aprovSub');
-          if (sub) sub.textContent = 'Os materiais ainda estão sendo preparados';
-          return;
+      document.getElementById('aprovacaoHeader').onclick = async () => {
+        aberto = !aberto;
+        const body = document.getElementById('aprovacaoBody');
+        const chevron = document.getElementById('aprovacaoChevron');
+        chevron.style.transform = aberto ? 'rotate(180deg)' : 'rotate(0deg)';
+
+        if (aberto) {
+          body.style.maxHeight = '700px';
+          localStorage.setItem(storageKey, '1');
+          if (mostrarDestaque) {
+            document.getElementById('aprovacaoCardInner').style.boxShadow = '';
+          }
+          if (!carregado) {
+            carregado = true;
+            await iniciarChat(item);
+          }
+        } else {
+          body.style.maxHeight = '0';
         }
+      };
+    }
 
-        _chatLinks = links;
-        _chatNome  = nome;
+    /* ── iniciarChat ── */
+    async function iniciarChat(item) {
+      const nomeUsuario = Auth.getUserName() || item.user_name || 'você';
 
-        const glowStyle = _mostrarDestaque
-          ? 'box-shadow:0 0 0 2px #AC3631, 0 8px 28px rgba(172,54,49,0.16);'
+      let linksAtuais = [];
+      try {
+        const res = await fetch('/api/solicitacoes/' + item.id + '/entrega');
+        const data = await res.json();
+        linksAtuais = data.links || [];
+      } catch {}
+
+      document.getElementById('chatLoading').style.display = 'none';
+      document.getElementById('chatUI').style.display = 'block';
+
+      const { rodadas, rodadaAtual, isNova } = resolveRodadaAtual(item.id, linksAtuais);
+
+      renderHistoricoRodadas(rodadas.slice(0, -1));
+
+      const jaDecidido = rodadaAtual.decisao !== null;
+
+      if (jaDecidido) {
+        renderTranscript(rodadaAtual, nomeUsuario);
+        document.getElementById('chatInputArea').style.display = 'none';
+        return;
+      }
+
+      window._chatState = {
+        solId: item.id,
+        rodadaAtual,
+        rodadas,
+        nomeUsuario,
+        fase: 'apresentacao',
+        mensagensAlteracao: [],
+      };
+
+      await mensagemSistema(gerarMensagemBoasVindas(nomeUsuario, rodadaAtual, isNova));
+
+      if (linksAtuais.length === 0) {
+        await mensagemSistema('Os arquivos ainda estão sendo preparados. Volte em breve.');
+        document.getElementById('chatInputArea').style.display = 'none';
+        return;
+      }
+
+      await delay(800);
+      await mensagemSistema(renderLinksMsg(linksAtuais));
+      await delay(1000);
+      await mensagemSistema('Por favor, analise os materiais e selecione uma das opções:', false, renderBotoesDecisao());
+      window._chatState.fase = 'decisao';
+    }
+
+    function gerarMensagemBoasVindas(nome, rodada, isNova) {
+      const primeiroNome = nome.split(' ')[0];
+      if (rodada.numero === 1) return `Olá, <strong>${esc(primeiroNome)}</strong>! Os materiais da sua solicitação estão prontos. 🎉`;
+      return `Olá, <strong>${esc(primeiroNome)}</strong>! Os materiais foram revisados e uma nova versão está disponível. Veja o que foi atualizado abaixo.`;
+    }
+
+    function renderLinksMsg(links) {
+      const btns = links.map(l =>
+        `<a href="${esc(l.url)}" target="_blank" rel="noopener" class="chat-link-btn">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+          ${esc(l.label)}
+        </a>`
+      ).join('');
+      return `Aqui estão os arquivos disponíveis:<br><div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:4px">${btns}</div>`;
+    }
+
+    function renderBotoesDecisao() {
+      return `<div class="chat-action-btns">
+        <button class="btn-aprovar" onclick="acaoAprovar()">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+          Aprovado
+        </button>
+        <button class="btn-alterar" onclick="acaoSolicitarAlteracao()">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          Solicitar alterações
+        </button>
+      </div>`;
+    }
+
+    /* ── ações de interação ── */
+    async function acaoAprovar() {
+      if (window._chatState?.fase !== 'decisao') return;
+      window._chatState.fase = 'finalizado';
+      desabilitarInput();
+      removerBotoesDecisao();
+
+      adicionarMensagemUsuario('Aprovado ✓');
+      await delay(900);
+      await mensagemSistema('Ótimo! Sua aprovação foi registrada. O time de marketing será notificado. 🎉');
+
+      try {
+        await fetch('/api/solicitacoes/' + window._chatState.solId + '/aprovacao', { method: 'POST' });
+      } catch {}
+
+      const rodadas = getRodadas(window._chatState.solId);
+      const ultima = rodadas[rodadas.length - 1];
+      ultima.decisao = 'aprovado';
+      ultima.dataDecisao = new Date().toISOString();
+      saveRodadas(window._chatState.solId, rodadas);
+
+      document.getElementById('chatInputArea').style.display = 'none';
+    }
+
+    async function acaoSolicitarAlteracao() {
+      if (window._chatState?.fase !== 'decisao') return;
+      window._chatState.fase = 'alteracao_input';
+      removerBotoesDecisao();
+
+      adicionarMensagemUsuario('Solicitar alterações');
+      await delay(900);
+      await mensagemSistema('Claro! Descreva o que precisa ser alterado. Pode enviar em várias mensagens — quando terminar, é só me dizer.');
+
+      habilitarInput('Descreva a alteração...');
+    }
+
+    async function enviarMensagemUsuario() {
+      const input = document.getElementById('chatInput');
+      const texto = input.value.trim();
+      if (!texto || !window._chatState) return;
+
+      const fase = window._chatState.fase;
+      if (fase !== 'alteracao_input') return;
+
+      input.value = '';
+      input.style.height = 'auto';
+      desabilitarInput();
+
+      adicionarMensagemUsuario(texto);
+      window._chatState.mensagensAlteracao.push(texto);
+
+      await delay(1000);
+      await mensagemSistema(
+        `Anotado! Gostaria de acrescentar mais alguma coisa?`,
+        false,
+        `<div class="chat-action-btns" style="margin-top:6px">
+          <button class="btn-aprovar" style="background:#2563eb" onclick="acaoTemMais()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Sim, tenho mais
+          </button>
+          <button class="btn-alterar" style="background:#7c3aed" onclick="acaoFinalizarAlteracao()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+            Não, pode enviar
+          </button>
+        </div>`
+      );
+      window._chatState.fase = 'alteracao_confirmacao';
+    }
+
+    async function acaoTemMais() {
+      if (window._chatState?.fase !== 'alteracao_confirmacao') return;
+      window._chatState.fase = 'alteracao_input';
+      removerBotoesDecisao();
+      await delay(300);
+      habilitarInput('Acrescente mais detalhes...');
+    }
+
+    async function acaoFinalizarAlteracao() {
+      if (window._chatState?.fase !== 'alteracao_confirmacao') return;
+      window._chatState.fase = 'finalizado';
+      removerBotoesDecisao();
+      desabilitarInput();
+
+      adicionarMensagemUsuario('Não, pode enviar.');
+      await delay(900);
+      await mensagemSistema('Perfeito! Enviando sua solicitação de alteração...');
+
+      const mensagens = window._chatState.mensagensAlteracao;
+      const mensagemFormatada = mensagens.length === 1
+        ? mensagens[0]
+        : mensagens.map((m, i) => `${i + 1}. ${m}`).join('\n');
+
+      let sucesso = false;
+      try {
+        const res = await fetch('/api/solicitacoes/' + window._chatState.solId + '/alteracao', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ mensagem: mensagemFormatada }),
+        });
+        sucesso = res.ok;
+      } catch {}
+
+      await delay(600);
+      if (sucesso) {
+        await mensagemSistema('Alteração enviada com sucesso! O time de marketing foi notificado e entrará em contato em breve. ✉️');
+      } else {
+        await mensagemSistema('Houve um erro ao enviar. Por favor, tente novamente ou entre em contato com o time de marketing.', true);
+        window._chatState.fase = 'alteracao_input';
+        habilitarInput('Tente novamente...');
+        return;
+      }
+
+      const rodadas = getRodadas(window._chatState.solId);
+      const ultima = rodadas[rodadas.length - 1];
+      ultima.decisao = 'alteracao';
+      ultima.mensagens = mensagens;
+      ultima.dataDecisao = new Date().toISOString();
+      saveRodadas(window._chatState.solId, rodadas);
+
+      document.getElementById('chatInputArea').style.display = 'none';
+    }
+
+    /* ── utilitários do chat ── */
+    function delay(ms) {
+      return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    function autoResizeTextarea(el) {
+      el.style.height = 'auto';
+      el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+    }
+
+    function scrollChatBottom() {
+      const wrap = document.getElementById('chatWrap');
+      if (wrap) wrap.scrollTop = wrap.scrollHeight;
+    }
+
+    function habilitarInput(placeholder) {
+      const input = document.getElementById('chatInput');
+      const btn = document.getElementById('chatSendBtn');
+      if (input) { input.disabled = false; input.placeholder = placeholder || 'Digite sua mensagem...'; input.focus(); }
+      if (btn) btn.disabled = false;
+    }
+
+    function desabilitarInput() {
+      const input = document.getElementById('chatInput');
+      const btn = document.getElementById('chatSendBtn');
+      if (input) input.disabled = true;
+      if (btn) btn.disabled = true;
+    }
+
+    function removerBotoesDecisao() {
+      document.querySelectorAll('.chat-action-btns').forEach(el => el.remove());
+    }
+
+    function adicionarMensagemUsuario(texto) {
+      const wrap = document.getElementById('chatWrap');
+      if (!wrap) return;
+      const hora = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+      const div = document.createElement('div');
+      div.className = 'chat-msg usuario';
+      div.innerHTML = `<div class="chat-bubble">${esc(texto)}</div><span class="chat-time">${hora}</span>`;
+      wrap.appendChild(div);
+      scrollChatBottom();
+    }
+
+    async function mensagemSistema(html, isError = false, extraHtml = '') {
+      const wrap = document.getElementById('chatWrap');
+      if (!wrap) return;
+
+      const typing = document.createElement('div');
+      typing.className = 'chat-msg sistema';
+      typing.innerHTML = `<div class="chat-typing"><span></span><span></span><span></span></div>`;
+      wrap.appendChild(typing);
+      scrollChatBottom();
+
+      await delay(1200);
+      wrap.removeChild(typing);
+
+      const hora = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+      const div = document.createElement('div');
+      div.className = 'chat-msg sistema';
+      div.innerHTML = `
+        <div class="chat-bubble" style="${isError ? 'border-color:var(--ruby-red);color:var(--ruby-red)' : ''}">${html}</div>
+        ${extraHtml ? `<div style="padding:0 4px;margin-top:4px">${extraHtml}</div>` : ''}
+        <span class="chat-time">${hora}</span>`;
+      wrap.appendChild(div);
+      scrollChatBottom();
+    }
+
+    function renderTranscript(rodada, nomeUsuario) {
+      const wrap = document.getElementById('chatWrap');
+      if (!wrap) return;
+
+      const primeiroNome = nomeUsuario.split(' ')[0];
+      const msgInicial = rodada.numero === 1
+        ? `Olá, <strong>${esc(primeiroNome)}</strong>! Os materiais da sua solicitação estiveram disponíveis.`
+        : `Olá, <strong>${esc(primeiroNome)}</strong>! Os materiais revisados estiveram disponíveis.`;
+
+      const hora = rodada.data
+        ? new Date(rodada.data).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+        : '--:--';
+
+      wrap.innerHTML = `
+        <div class="chat-msg sistema">
+          <div class="chat-bubble">${msgInicial}</div>
+          <span class="chat-time">${hora}</span>
+        </div>
+        <div class="chat-msg sistema">
+          <div class="chat-bubble">${renderLinksMsg(rodada.links || [])}</div>
+        </div>
+        ${rodada.decisao === 'aprovado'
+          ? `<div class="chat-msg usuario"><div class="chat-bubble">Aprovado ✓</div></div>
+             <div class="chat-msg sistema"><div class="chat-bubble" style="background:#d1fae5;border-color:#a7f3d0;color:#065f46">Aprovação registrada com sucesso! ✓</div></div>`
+          : rodada.mensagens?.length
+            ? rodada.mensagens.map(m => `<div class="chat-msg usuario"><div class="chat-bubble">${esc(m)}</div></div>`).join('') +
+              `<div class="chat-msg sistema"><div class="chat-bubble">Alteração enviada ao time de marketing. ✉️</div></div>`
+            : ''
+        }`;
+
+      const sub = document.getElementById('aprovacaoSubtitle');
+      if (sub) {
+        sub.textContent = rodada.decisao === 'aprovado'
+          ? `Aprovado em ${new Date(rodada.dataDecisao || rodada.data).toLocaleDateString('pt-BR')}`
+          : `Alteração solicitada em ${new Date(rodada.dataDecisao || rodada.data).toLocaleDateString('pt-BR')}`;
+      }
+    }
+
+    function renderHistoricoRodadas(rodadasAnteriores) {
+      const container = document.getElementById('historicoRodadas');
+      if (!container || rodadasAnteriores.length === 0) return;
+
+      container.innerHTML = rodadasAnteriores.map(rodada => {
+        const decisaoLabel = rodada.decisao === 'aprovado' ? '✓ Aprovado' : '✏️ Alteração solicitada';
+        const dataLabel = rodada.dataDecisao
+          ? new Date(rodada.dataDecisao).toLocaleDateString('pt-BR')
           : '';
-        const badgeHtml = _mostrarDestaque
-          ? `<span id="aprovNovoBadge" style="background:#AC3631;color:#fff;font-size:0.6rem;font-weight:800;padding:2px 7px;border-radius:999px;letter-spacing:0.04em;animation:badgePop 0.4s ease forwards;flex-shrink:0">NOVO</span>`
-          : '';
-
-        card.innerHTML = `
-          <div class="aprov-card" id="aprovCardInner" style="transition:box-shadow 0.4s ease;${glowStyle}">
-            <div class="aprov-toggle" id="aprovToggle" onclick="toggleAprovacao()">
-              <div class="aprov-toggle-icon">${ICON_CHAT_RR}</div>
-              <div class="aprov-toggle-body">
-                <div class="aprov-toggle-title" style="display:flex;align-items:center;gap:8px">Materiais para aprovação ${badgeHtml}</div>
-                <div class="aprov-toggle-sub">Os materiais já estão disponíveis para sua análise</div>
-              </div>
-              ${ICON_CHEVRON_SVG}
+        return `
+          <div class="rodada-historico">
+            <div class="rodada-historico-header" onclick="toggleHistoricoRodada(this)">
+              <span>Rodada ${rodada.numero} — ${decisaoLabel}${dataLabel ? ' · ' + dataLabel : ''}</span>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="transition:transform 0.2s"><polyline points="6 9 12 15 18 9"/></svg>
             </div>
-            <hr class="aprov-divider">
-            <div class="aprov-content" id="aprovContent">
-              <div class="aprov-content-inner">
-                <div class="chat-body" id="chatBody"></div>
-                <div id="campoAlteracao" style="display:none" class="chat-compose">
-                  <div style="font-size:0.82rem;font-weight:600;color:var(--carbon-black);opacity:0.55;margin-bottom:4px">Descreva os ajustes necessários:</div>
-                  <textarea id="textoAlteracao" class="chat-textarea" placeholder="Escreva aqui o que você gostaria de ajustar…"></textarea>
-                  <div class="chat-compose-btns">
-                    <button onclick="cancelarAlteracao()"
-                      style="padding:9px 16px;background:transparent;border:1.5px solid rgba(34,27,25,0.16);border-radius:9px;font-family:'Nunito Sans',sans-serif;font-size:0.82rem;cursor:pointer;color:var(--carbon-black)">
-                      Cancelar
-                    </button>
-                    <button onclick="confirmarAlteracao(${item.id})" id="btnEnviarAlteracao"
-                      style="display:inline-flex;align-items:center;gap:7px;padding:9px 18px;background:rgba(172,54,49,0.09);color:#7A2520;border:1.5px solid rgba(172,54,49,0.25);border-radius:9px;font-family:'Nunito Sans',sans-serif;font-weight:700;font-size:0.82rem;cursor:pointer">
-                      ${ICON_SEND} Enviar
-                    </button>
-                  </div>
-                </div>
+            <div class="rodada-historico-body">
+              <div style="padding:12px 16px;font-size:0.82rem;opacity:0.7">
+                ${rodada.links?.map(l => `<a href="${esc(l.url)}" target="_blank" style="color:var(--carbon-black);font-weight:600">${esc(l.label)}</a>`).join(' · ') || 'Sem links'}
+                ${rodada.decisao === 'alteracao' && rodada.mensagens?.length
+                  ? `<div style="margin-top:8px;padding-top:8px;border-top:1px solid rgba(34,27,25,0.08)">${rodada.mensagens.map((m, i) => `<div style="margin-bottom:4px">${rodada.mensagens.length > 1 ? (i+1)+'. ' : ''}${esc(m)}</div>`).join('')}</div>`
+                  : ''}
               </div>
             </div>
           </div>`;
-
-      } catch (e) {
-        console.error('[Aprovação] erro:', e);
-        const sub = document.getElementById('aprovSub');
-        if (sub) sub.textContent = 'Não foi possível carregar os materiais. Recarregue a página.';
-      }
+      }).join('');
     }
 
-    function toggleAprovacao() {
-      const content = document.getElementById('aprovContent');
-      const chevron = document.querySelector('.aprov-chevron');
-      if (!content) return;
-      const opening = !content.classList.contains('open');
-      content.classList.toggle('open');
-      if (chevron) chevron.classList.toggle('open');
-      if (opening) {
-        /* Remover glow + badge na primeira abertura */
-        if (_mostrarDestaque) {
-          _mostrarDestaque = false;
-          sessionStorage.setItem('aprovacao_visto_' + _chatSolId, '1');
-          const inner = document.getElementById('aprovCardInner');
-          if (inner) inner.style.boxShadow = '';
-          const badge = document.getElementById('aprovNovoBadge');
-          if (badge) badge.style.animation = 'none';
-          setTimeout(() => { if (badge) badge.remove(); }, 300);
-        }
-        /* Iniciar conversa na primeira abertura */
-        if (!_chatPlayed && _chatLinks.length) {
-          _chatPlayed = true;
-          const body = document.getElementById('chatBody');
-          if (body) playChat(body, _chatNome, _chatLinks, _chatSolId);
-        }
-      }
-    }
-
-    function mostrarCampoAlteracao() {
-      const ar = document.getElementById('chatActionsRow');
-      if (ar) ar.style.display = 'none';
-      document.getElementById('campoAlteracao').style.display = 'block';
-      setTimeout(() => document.getElementById('textoAlteracao').focus(), 60);
-    }
-
-    function cancelarAlteracao() {
-      document.getElementById('campoAlteracao').style.display = 'none';
-      document.getElementById('textoAlteracao').value = '';
-      const ar = document.getElementById('chatActionsRow');
-      if (ar) ar.style.display = 'flex';
-    }
-
-    async function confirmarAprovacao(solId) {
-      console.log('[Aprovação] confirmar — id:', solId);
-      const btn = document.querySelector('#chatActionsRow .chat-btn-approve');
-      if (!btn) return;
-      btn.disabled = true;
-      btn.innerHTML = `<svg class="spin" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 12a9 9 0 11-6.219-8.56"/></svg> Enviando…`;
-      try {
-        const res = await fetch('/api/solicitacoes/' + solId + '/aprovacao', { method: 'POST' });
-        if (res.ok) {
-          const body = document.getElementById('chatBody');
-          const ar   = document.getElementById('chatActionsRow');
-          if (ar) ar.remove();
-          await _delay(200);
-          const t = mkTypingEl();
-          body.appendChild(t); body.scrollTop = body.scrollHeight;
-          await _delay(900);
-          t.remove();
-          const row = mkSvnRow('<strong>Perfeito!</strong> Muito obrigado pelo seu retorno. 🙏<br>Sua aprovação foi registrada com sucesso.', true, '');
-          const bubble = row.querySelector('.cb');
-          bubble.classList.remove('svn');
-          bubble.classList.add('ok');
-          appendShow(body, row);
-        } else {
-          btn.disabled = false;
-          btn.innerHTML = `${ICON_CHECK} Aprovar materiais`;
-          alert('Erro ao registrar aprovação. Tente novamente.');
-        }
-      } catch (e) {
-        btn.disabled = false;
-        btn.innerHTML = `${ICON_CHECK} Aprovar materiais`;
-        alert('Erro de conexão. Verifique sua internet e tente novamente.');
-      }
-    }
-
-    async function confirmarAlteracao(solId) {
-      const mensagem = document.getElementById('textoAlteracao').value.trim();
-      if (!mensagem) {
-        document.getElementById('textoAlteracao').style.borderColor = 'var(--ruby-red)';
-        document.getElementById('textoAlteracao').focus();
-        return;
-      }
-      document.getElementById('textoAlteracao').style.borderColor = '';
-      const btn = document.getElementById('btnEnviarAlteracao');
-      btn.disabled = true;
-      btn.innerHTML = `${ICON_SEND} Enviando…`;
-      try {
-        const res = await fetch('/api/solicitacoes/' + solId + '/alteracao', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ mensagem }),
-        });
-        if (res.ok) {
-          const body = document.getElementById('chatBody');
-          document.getElementById('campoAlteracao').style.display = 'none';
-
-          const userRow = document.createElement('div');
-          userRow.className = 'cr right mt';
-          userRow.innerHTML = `<div class="cb user">${esc(mensagem)}</div>`;
-          appendShow(body, userRow);
-
-          await _delay(500);
-          const t = mkTypingEl();
-          body.appendChild(t); body.scrollTop = body.scrollHeight;
-          await _delay(1100);
-          t.remove();
-
-          const respRow = mkSvnRow(`<strong>Recebemos sua solicitação de ajustes.</strong><br>Nossa equipe vai revisar e atualizar o andamento em breve. 🙏`, true, '');
-          const bubble = respRow.querySelector('.cb');
-          bubble.classList.remove('svn');
-          bubble.classList.add('warn');
-          appendShow(body, respRow);
-        } else {
-          btn.disabled = false;
-          btn.innerHTML = `${ICON_SEND} Enviar`;
-          alert('Erro ao enviar. Tente novamente.');
-        }
-      } catch (e) {
-        btn.disabled = false;
-        btn.innerHTML = `${ICON_SEND} Enviar`;
-        alert('Erro de conexão.');
-      }
+    function toggleHistoricoRodada(header) {
+      const body = header.nextElementSibling;
+      const chevron = header.querySelector('svg');
+      const isOpen = body.style.maxHeight && body.style.maxHeight !== '0px';
+      body.style.maxHeight = isOpen ? '0' : body.scrollHeight + 'px';
+      if (chevron) chevron.style.transform = isOpen ? 'rotate(0deg)' : 'rotate(180deg)';
     }
 
     /* ── renderDados ──────────────────────────── */
