@@ -436,7 +436,7 @@ input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
   transform: translateY(-2px);
 }
 .selection-btn.selected { border-color: var(--ruby-red); background: rgba(159,63,55,0.04); box-shadow: 0 0 0 3px rgba(159,63,55,0.1); }
-.selection-btn.disabled { opacity: 0.45; cursor: not-allowed; }
+.selection-btn.disabled { opacity: 0.5; cursor: not-allowed; }
 .selection-btn .btn-icon { font-size: 28px; color: var(--carbon-black); }
 .selection-btn .btn-label { font-weight: 600; font-size: 0.875rem; }
 
