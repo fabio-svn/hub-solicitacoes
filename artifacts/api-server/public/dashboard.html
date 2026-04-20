@@ -242,6 +242,19 @@
   <script src="config.js"></script>
   <script src="auth.js"></script>
   <script>
+    const CLICKUP_ICON = `<svg width="14" height="14" viewBox="0 0 54.8 65.8" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="cu1" x1="0" y1="15.05" x2="54.84" y2="15.05" gradientUnits="userSpaceOnUse" gradientTransform="matrix(1 0 0 -1 0 69.36)">
+          <stop offset="0" stop-color="#8930FD"/><stop offset="1" stop-color="#49CCF9"/>
+        </linearGradient>
+        <linearGradient id="cu2" x1="1.2" y1="53.17" x2="53.74" y2="53.17" gradientUnits="userSpaceOnUse" gradientTransform="matrix(1 0 0 -1 0 69.36)">
+          <stop offset="0" stop-color="#FF02F0"/><stop offset="1" stop-color="#FFC800"/>
+        </linearGradient>
+      </defs>
+      <path fill="url(#cu1)" d="M0,50.6l10.1-7.8c5.4,7,11.1,10.3,17.4,10.3c6.3,0,11.9-3.2,17-10.2l10.3,7.6c-7.4,10-16.6,15.3-27.3,15.3C16.9,65.8,7.6,60.5,0,50.6z"/>
+      <path fill="url(#cu2)" d="M27.5,16.9l-18,15.5l-8.3-9.7L27.6,0l26.2,22.7l-8.4,9.6L27.5,16.9z"/>
+    </svg>`;
+
     let currentTab = localStorage.getItem('svn_dashboard_tab') || 'geral';
     let filters = {
       eventos: { periodo: '', status: '', natureza: '' },
@@ -382,7 +395,15 @@
           <div class="request-badges">
             ${naturezaLabel ? `<span class="badge" style="background:var(--icon-bg);color:var(--carbon-black);opacity:0.7">${esc(naturezaLabel)}</span>` : ''}
             <span class="badge" style="background:${statusObj.bg || '#f1f5f9'};color:${statusObj.text || '#475569'}">${esc(statusObj.label)}</span>
-            ${isAdm && item.clickup_url ? `<a href="${esc(item.clickup_url)}" target="_blank" rel="noopener" onclick="event.stopPropagation()" class="badge" style="background:rgba(118,180,71,0.12);color:#4a7c2f;text-decoration:none;font-size:0.7rem">ClickUp ↗</a>` : ''}
+            ${isAdm && item.clickup_url ? `
+              <a href="${esc(item.clickup_url)}" target="_blank" rel="noopener"
+                 onclick="event.stopPropagation()"
+                 title="Abrir no ClickUp"
+                 style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:7px;background:rgba(137,48,253,0.08);text-decoration:none;transition:background 0.15s;flex-shrink:0"
+                 onmouseover="this.style.background='rgba(137,48,253,0.15)'"
+                 onmouseout="this.style.background='rgba(137,48,253,0.08)'">
+                ${CLICKUP_ICON}
+              </a>` : ''}
           </div>
           <div class="request-chevron">&rsaquo;</div>
         </div>`;
@@ -871,7 +892,7 @@
             (avaliacao?.comentario ? '<div style="font-size:0.7rem;opacity:0.5;max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="' + esc(avaliacao.comentario) + '">' + esc(avaliacao.comentario) + '</div>' : '') +
           '</td>' +
           '<td style="padding:10px 14px">' +
-            (item.clickup_url ? '<a href="' + esc(item.clickup_url) + '" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="font-size:0.75rem;color:var(--ruby-red);font-weight:600;text-decoration:none;opacity:0.7" onmouseover="this.style.opacity=\'1\'" onmouseout="this.style.opacity=\'0.7\'">↗ CU</a>' : '') +
+            (item.clickup_url ? '<a href="' + esc(item.clickup_url) + '" target="_blank" rel="noopener" onclick="event.stopPropagation()" title="Abrir no ClickUp" style="display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:6px;background:rgba(137,48,253,0.08);text-decoration:none;transition:background 0.15s" onmouseover="this.style.background=\'rgba(137,48,253,0.15)\'" onmouseout="this.style.background=\'rgba(137,48,253,0.08)\'">' + CLICKUP_ICON + '</a>' : '') +
           '</td>' +
           '</tr>';
       }).join('');
@@ -918,5 +939,12 @@
     </svg>
     <span>Início</span>
   </a>
+<a href="https://wa.me/5544991689207" target="_blank" rel="noopener"
+   class="float-whatsapp" title="Falar com o time de Marketing">
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg">
+    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/>
+    <path d="M11.999 2C6.477 2 2 6.484 2 12.017c0 1.99.521 3.86 1.43 5.484L2 22l4.644-1.414A9.96 9.96 0 0011.999 22C17.523 22 22 17.516 22 11.983 22 6.472 17.523 2 11.999 2zm0 18.15a8.124 8.124 0 01-4.162-1.145l-.299-.178-3.088.941.923-3.121-.196-.32A8.185 8.185 0 013.85 11.983c0-4.51 3.644-8.183 8.15-8.183 4.507 0 8.152 3.672 8.152 8.183 0 4.51-3.645 8.167-8.153 8.167z"/>
+  </svg>
+</a>
 </body>
 </html>
