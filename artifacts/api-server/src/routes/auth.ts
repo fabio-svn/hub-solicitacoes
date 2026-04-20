@@ -145,7 +145,8 @@ router.get("/me", (req, res): void => {
   res.json({
     authenticated: true,
     user,
-    adminOriginal: req.session.adminOriginal || null
+    adminOriginal: req.session.adminOriginal || null,
+    impersonating: !!req.session.adminOriginal,
   });
 });
 

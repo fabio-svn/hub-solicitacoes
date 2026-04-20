@@ -738,15 +738,14 @@ input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
 .admin-tabela td.col-acoes {
   position: sticky;
   right: 0;
-  background: var(--paper-white);
   z-index: 2;
+  border-left: 1px solid var(--border-light);
 }
 .admin-tabela th.col-acoes {
   background: var(--carbon-black);
 }
-.admin-tabela td.col-acoes,
-.admin-tabela th.col-acoes {
-  border-left: 1px solid var(--border-light);
+.admin-tabela td.col-acoes {
+  background: var(--paper-white);
 }
 
 /* Compact action buttons inside table rows */
@@ -1236,7 +1235,7 @@ input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
 .float-whatsapp {
   position: fixed;
   right: 20px;
-  bottom: 78px;
+  bottom: 78px; /* fallback — sobrescrito por JS inline em cada página */
   width: 44px;
   height: 44px;
   border-radius: 50%;

@@ -1,6 +1,7 @@
 const Auth = {
   user: null,
   initialized: false,
+  _outsideClickListenerAdded: false,
 
   async init() {
     if (this.initialized) return this.user;
@@ -14,6 +15,9 @@ const Auth = {
       const data = await res.json();
       if (data.authenticated) {
         this.user = data.user;
+      }
+      if (data.impersonating && !sessionStorage.getItem('svn_impersonate')) {
+        sessionStorage.setItem('svn_impersonate', data.user.email);
       }
     } catch (e) {
       console.error("Auth check failed:", e);
@@ -139,15 +143,16 @@ const Auth = {
       </div>
     `;
 
-    setTimeout(() => {
-      document.addEventListener('click', function handleOutsideClick(e) {
+    if (!Auth._outsideClickListenerAdded) {
+      Auth._outsideClickListenerAdded = true;
+      document.addEventListener('click', function(e) {
         const trigger = document.getElementById('userMenuTrigger');
         const dd = document.getElementById('userDropdown');
         if (dd && trigger && !trigger.contains(e.target) && !dd.contains(e.target)) {
           dd.style.display = 'none';
         }
       });
-    }, 0);
+    }
   }
 };
 

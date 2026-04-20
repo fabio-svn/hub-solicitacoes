@@ -48,12 +48,7 @@ const CATEGORIAS_SOLICITACAO = [
     itens: [
       { id: "pagina-assessores", label: "Página de Assessores", icon: "icon-user", ativo: true },
       { id: "assinatura-email", label: "Assinatura de E-mail", icon: "icon-mail", ativo: false },
-      { id: "cartao-visita", label: "Cartão de Visita", icon: "icon-credit-card", ativo: false,
-        subOpcoes: [
-          { id: "cartao-visita-fisico", label: "Físico" },
-          { id: "cartao-visita-digital", label: "Digital" },
-        ]
-      },
+      { id: "cartao-visita", label: "Cartão de Visita", icon: "icon-credit-card", ativo: false },
       { id: "cartao-boas-vindas", label: "Cartão de Boas-vindas", icon: "icon-handshake", ativo: false },
       { id: "cartao-comemorativo", label: "Cartão Comemorativo", icon: "icon-heart", ativo: false },
       { id: "divulgacao-nps", label: "Divulgação NPS", icon: "icon-star", ativo: false },
@@ -223,6 +218,9 @@ const SETORES = [
   "Wealth Planning",
 ];
 
+// NOTA: Este mapa é intencionalmente duplicado de SETOR_CODIGO_MAP em clickup.ts.
+// config.js roda no browser, clickup.ts no Node.js — não há como compartilhar.
+// Ao adicionar ou alterar setores, atualizar AMBOS os arquivos.
 const SETOR_CODIGOS = {
   "Administração":                           "ADM",
   "Alocação":                                "ALO",
@@ -362,43 +360,12 @@ const PRAZOS_MATERIAIS = {
   "email-marketing-online": { label: "3-5 dias úteis" },
 };
 
-const CAMPOS_ETAPA2_FORM2 = [
-  { id: "nome-evento", label: "Nome do evento" },
-  { id: "data-evento", label: "Data do evento" },
-  { id: "horario", label: "Horário do evento" },
-  { id: "descricao", label: "Descrição do evento" },
-  { id: "origem", label: "Origem do evento" },
-  { id: "tipo-evento", label: "Tipo de evento" },
-  { id: "publico", label: "Público do evento" },
-  { id: "estado-cidade", label: "Estado e Cidade" },
-  { id: "local", label: "Local do evento" },
-  { id: "convidados", label: "Número de convidados" },
-];
-
-const CAMPOS_ETAPA2_FORM2_ONLINE = [
-  { id: "titulo-evento", label: "Título do evento" },
-  { id: "descricao", label: "Descrição do evento" },
-  { id: "publico", label: "Público do evento" },
-  { id: "objetivos", label: "Objetivos de retorno" },
-  { id: "canal", label: "Canal de transmissão" },
-  { id: "link-transmissao", label: "Link da transmissão" },
-  { id: "origem", label: "Origem do evento" },
-  { id: "data-evento", label: "Data do evento" },
-  { id: "horario", label: "Horário do evento" },
-];
-
 const FORM_ROUTES = {
-  "eventos": "form-eventos.html",
-  "pagina-assessores": "form-pagina-assessores.html",
-  "pagina-assessores-dados": "form-pagina-assessores.html?subtipo=dados",
-  "pagina-assessores-atualizacao": "form-pagina-assessores.html?subtipo=atualizacao",
-  "artes-divulgacao": "form-artes-divulgacao.html",
-  "apresentacao": "form-apresentacoes.html",
-  "apresentacao-nova": "form-apresentacoes.html?subtipo=nova",
-  "apresentacao-atualizar": "form-apresentacoes.html?subtipo=atualizar",
-  "conteudo-pdf": "form-criacao-pdf.html",
-  "conteudo-pdf-informativo": "form-criacao-pdf.html?subtipo=informativo",
-  "conteudo-pdf-ebook": "form-criacao-pdf.html?subtipo=ebook",
+  "eventos":              "form-eventos.html",
+  "pagina-assessores":    "form-pagina-assessores.html",
+  "artes-divulgacao":     "form-artes-divulgacao.html",
+  "apresentacao":         "form-apresentacoes.html",
+  "conteudo-pdf":         "form-criacao-pdf.html",
   "atualizacao-material": "form-atualizacao-material.html",
 };
 
@@ -413,6 +380,7 @@ const FLUXOS_ETAPAS = {
     { id: "concluido",              label: "Concluído",                 visivel: true  },
     { id: "reprovado",              label: "Reprovado / Cancelado",     visivel: false },
     { id: "em-espera",              label: "Em espera",                 visivel: false },
+    { id: "cancelado",              label: "Cancelado",                 visivel: false },
   ],
   "_default": [
     { id: "recebido",     label: "Recebido",              visivel: true  },
@@ -423,6 +391,7 @@ const FLUXOS_ETAPAS = {
     { id: "em-aprovacao", label: "Em aprovação",          visivel: true  },
     { id: "concluido",    label: "Concluído",             visivel: true  },
     { id: "cancelado",    label: "Cancelado",             visivel: false },
+    { id: "em-espera",    label: "Em espera",             visivel: false },
   ],
 };
 

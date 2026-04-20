@@ -69,6 +69,17 @@ function checkRateLimit(email: string): boolean {
   return true;
 }
 
+function parseQueryArray(val: unknown): string[] {
+  if (!val) return [];
+  if (Array.isArray(val)) return val.map(String).filter(Boolean);
+  return String(val).split(',').filter(Boolean);
+}
+
+function extractUrl(text: string): string | null {
+  const m = text.match(/https?:\/\/[^\s<>"')]+/);
+  return m ? m[0].replace(/[.,;:!?)]+$/, "") : null;
+}
+
 router.post("/solicitacoes", requireAuth, upload.any(), async (req, res): Promise<void> => {
   try {
     const user = req.session.user!;
@@ -437,11 +448,6 @@ router.get("/solicitacoes/:id/entrega", requireAuth, async (req, res): Promise<v
     const links: Array<{ label: string; url: string }> = [];
     logger.info({ entregaRaw, taskId: solicitacao.clickup_task_id }, "Entrega field raw value");
 
-    function extractUrl(text: string): string | null {
-      const m = text.match(/https?:\/\/[^\s<>"')]+/);
-      return m ? m[0].replace(/[.,;:!?)]+$/, "") : null;
-    }
-
     if (entregaRaw) {
       const lines = entregaRaw.split(/\n+/);
       let materialCount = 0;
@@ -708,16 +714,16 @@ router.get("/admin/historico", requireAuth, async (req, res): Promise<void> => {
       )`);
     }
 
-    if (req.query.tipos) {
-      const tiposArr = String(req.query.tipos).split(",").filter(Boolean);
-      if (tiposArr.length > 0) conditions.push(inArray(solicitacoesTable.tipo_solicitacao, tiposArr));
+    const tiposArr = parseQueryArray(req.query.tipos);
+    if (tiposArr.length > 0) {
+      conditions.push(inArray(solicitacoesTable.tipo_solicitacao, tiposArr));
     } else if (req.query.tipo && String(req.query.tipo) !== "") {
       conditions.push(sql`${solicitacoesTable.tipo_solicitacao} = ${String(req.query.tipo)}`);
     }
 
-    if (req.query.statuses) {
-      const statusArr = String(req.query.statuses).split(",").filter(Boolean);
-      if (statusArr.length > 0) conditions.push(inArray(solicitacoesTable.status, statusArr));
+    const statusArr = parseQueryArray(req.query.statuses);
+    if (statusArr.length > 0) {
+      conditions.push(inArray(solicitacoesTable.status, statusArr));
     } else if (req.query.status && String(req.query.status) !== "") {
       conditions.push(sql`${solicitacoesTable.status} = ${String(req.query.status)}`);
     }

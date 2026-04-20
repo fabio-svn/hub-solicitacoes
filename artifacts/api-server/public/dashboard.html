@@ -488,12 +488,12 @@
       localStorage.setItem('svn_dashboard_tab', tab);
       document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
       document.querySelectorAll('.tab-content').forEach(c => {
-        c.classList.toggle('active', c.id === 'tab-' + tab);
-        c.style.display = c.id === 'tab-' + tab ? '' : 'none';
+        const isActive = c.id === 'tab-' + tab;
+        c.classList.toggle('active', isActive);
+        c.style.display = isActive ? 'block' : 'none';
       });
       if (tab === 'admin') {
-        loadAdminStats();
-        loadAdminHistorico();
+        Promise.all([loadAdminStats(), loadAdminHistorico()]);
       } else {
         const listEl = document.getElementById(tab === 'eventos' ? 'listEventos' : 'listGeral');
         if (listEl && !listEl.hasChildNodes()) loadList(tab);
@@ -853,15 +853,13 @@
       adminDias = parseInt(btn.dataset.dias);
       document.getElementById('adminDe').value = '';
       document.getElementById('adminAte').value = '';
-      loadAdminStats();
-      loadAdminHistorico();
+      Promise.all([loadAdminStats(), loadAdminHistorico()]);
     }
 
     function setAdminCustomPeriodo() {
       document.querySelectorAll('#adminPeriodoBtns .filter-chip').forEach(b => b.classList.remove('active'));
       adminDias = null;
-      loadAdminStats();
-      loadAdminHistorico();
+      Promise.all([loadAdminStats(), loadAdminHistorico()]);
     }
 
     async function loadAdminStats() {
@@ -1035,8 +1033,10 @@
 
       const busca = document.getElementById('adminBusca')?.value?.trim();
       if (busca) params.set('busca', busca);
-      adminTiposSelecionados.forEach(t => params.append('tipos', t));
-      adminStatusesSelecionados.forEach(s => params.append('statuses', s));
+      if (adminTiposSelecionados.size > 0)
+        params.set('tipos', [...adminTiposSelecionados].join(','));
+      if (adminStatusesSelecionados.size > 0)
+        params.set('statuses', [...adminStatusesSelecionados].join(','));
       const avaliacaoCb = document.getElementById('adminFiltroAvaliacao');
       if (avaliacaoCb?.checked) params.set('avaliacao', 'sim');
       const de = document.getElementById('adminDe')?.value;
@@ -1225,12 +1225,6 @@
         </button>
       </div>
     </div>
-  </div>
-
-  <!-- Banner de impersonação -->
-  <div id="impersonarBanner" style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:9999;background:#1e40af;color:#fff;padding:10px 20px;font-size:0.82rem;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
-    <span>Você está visualizando como <strong id="impersonarBannerEmail"></strong></span>
-    <button onclick="pararImpersonar()" style="background:rgba(255,255,255,0.2);border:none;border-radius:6px;padding:5px 14px;color:#fff;font-size:0.8rem;cursor:pointer;font-family:'Nunito Sans',sans-serif;font-weight:700">Sair da visualização</button>
   </div>
 
   <a href="/solicitacoes.html" class="float-home" style="bottom:78px">
