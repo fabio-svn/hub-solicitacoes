@@ -142,7 +142,11 @@ router.get("/me", (req, res): void => {
     res.json({ authenticated: false });
     return;
   }
-  res.json({ authenticated: true, user });
+  res.json({
+    authenticated: true,
+    user,
+    adminOriginal: req.session.adminOriginal || null
+  });
 });
 
 export default router;

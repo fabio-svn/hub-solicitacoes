@@ -45,67 +45,28 @@
         </div>
       </div>
 
-      <div class="form-step" id="step2seletor">
-        <h2 style="font-weight:600;font-size:1.05rem;margin-bottom:6px">O que você gostaria de atualizar?</h2>
-        <p style="font-size:0.85rem;opacity:0.55;margin-bottom:20px">Selecione todos os campos que deseja atualizar.</p>
-
-        <div style="display:flex;flex-direction:column;gap:8px" id="camposBtnList">
-          <button class="campo-toggle-btn" data-campo="nomeCompleto" onclick="toggleCampo(this)">
-            <span>Nome completo</span>
-            <svg class="campo-check" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-          </button>
-          <button class="campo-toggle-btn" data-campo="codigoAssessor" onclick="toggleCampo(this)">
-            <span>Código do assessor</span>
-            <svg class="campo-check" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-          </button>
-          <button class="campo-toggle-btn" data-campo="unidade" onclick="toggleCampo(this)">
-            <span>Unidade</span>
-            <svg class="campo-check" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-          </button>
-          <button class="campo-toggle-btn" data-campo="contratoSocial" onclick="toggleCampo(this)">
-            <span>Contrato social</span>
-            <svg class="campo-check" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-          </button>
-          <button class="campo-toggle-btn" data-campo="fotoPerfil" onclick="toggleCampo(this)">
-            <span>Foto de perfil</span>
-            <svg class="campo-check" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-          </button>
-          <button class="campo-toggle-btn" data-campo="linkedin" onclick="toggleCampo(this)">
-            <span>LinkedIn</span>
-            <svg class="campo-check" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-          </button>
-          <button class="campo-toggle-btn" data-campo="instagram" onclick="toggleCampo(this)">
-            <span>Instagram</span>
-            <svg class="campo-check" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-          </button>
-          <button class="campo-toggle-btn" data-campo="miniBio" onclick="toggleCampo(this)">
-            <span>Mini bio</span>
-            <svg class="campo-check" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-          </button>
-          <button class="campo-toggle-btn" data-campo="selos" onclick="toggleCampo(this)">
-            <span>Selos</span>
-            <svg class="campo-check" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-          </button>
-          <button class="campo-toggle-btn" data-campo="depoimentos" onclick="toggleCampo(this)">
-            <span>Depoimentos</span>
-            <svg class="campo-check" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-          </button>
-        </div>
-
-        <div id="seletorError" style="display:none;color:var(--ruby-red);font-size:0.82rem;margin-top:12px">
-          Selecione ao menos um campo para continuar.
-        </div>
-
-        <div class="form-nav" style="margin-top:24px">
-          <button class="btn btn-secondary" onclick="voltarParaStep1()">Voltar</button>
-          <button class="btn btn-primary" onclick="confirmarCamposSelecionados()">Próximo</button>
-        </div>
-      </div>
-
       <div class="form-step" id="step2">
         <div id="updateCard" style="display:none" class="alert-card alert-info">
           <div class="alert-title">Atualização</div>
           <div class="alert-text">Preencha apenas os campos que deseja atualizar. Os demais permanecerão como estão no seu perfil atual.</div>
+        </div>
+
+        <!-- Seletor inline — mostrado apenas quando isAtualizacao === true -->
+        <div id="seletorInline" style="display:none;margin-bottom:24px">
+          <p style="font-size:0.85rem;font-weight:600;margin-bottom:10px">O que você gostaria de atualizar?</p>
+          <div style="display:flex;flex-wrap:wrap;gap:8px" id="camposBtnList">
+            <button class="campo-toggle-btn" data-campo="nomeCompleto" onclick="toggleCampoInline(this)">Nome completo</button>
+            <button class="campo-toggle-btn" data-campo="codigoAssessor" onclick="toggleCampoInline(this)">Código do assessor</button>
+            <button class="campo-toggle-btn" data-campo="unidade" onclick="toggleCampoInline(this)">Unidade</button>
+            <button class="campo-toggle-btn" data-campo="contratoSocial" onclick="toggleCampoInline(this)">Contrato social</button>
+            <button class="campo-toggle-btn" data-campo="fotoPerfil" onclick="toggleCampoInline(this)">Foto de perfil</button>
+            <button class="campo-toggle-btn" data-campo="linkedin" onclick="toggleCampoInline(this)">LinkedIn</button>
+            <button class="campo-toggle-btn" data-campo="instagram" onclick="toggleCampoInline(this)">Instagram</button>
+            <button class="campo-toggle-btn" data-campo="miniBio" onclick="toggleCampoInline(this)">Mini bio</button>
+            <button class="campo-toggle-btn" data-campo="selos" onclick="toggleCampoInline(this)">Selos</button>
+            <button class="campo-toggle-btn" data-campo="depoimentos" onclick="toggleCampoInline(this)">Depoimentos</button>
+          </div>
+          <p id="seletorInlineError" style="display:none;color:var(--ruby-red);font-size:0.8rem;margin-top:8px">Selecione ao menos um campo para enviar.</p>
         </div>
 
         <h2 style="font-weight:600;font-size:1.1rem;margin-bottom:20px">Informações do assessor</h2>
@@ -191,11 +152,14 @@
 
         <div style="border-top:1px solid rgba(34,27,25,.08);margin:28px 0 20px;padding-top:22px">
           <div class="form-nav" style="justify-content:space-between">
-            <button class="btn btn-dark" onclick="openPreview()" style="gap:8px">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-              Ver prévia da página
-            </button>
-            <button class="btn btn-primary btn-submit-gold" id="btnSubmit" onclick="submitForm()">Enviar</button>
+            <button class="btn btn-secondary" onclick="voltarDoStep2()">Voltar</button>
+            <div style="display:flex;gap:8px">
+              <button class="btn btn-dark" onclick="openPreview()" style="gap:8px">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                Ver prévia
+              </button>
+              <button class="btn btn-primary btn-submit-gold" id="btnSubmit" onclick="submitForm()">Enviar</button>
+            </div>
           </div>
         </div>
       </div>
@@ -284,80 +248,70 @@
 
     function goToStep2() {
       document.getElementById('step1').classList.remove('active');
+      document.getElementById('step2').classList.add('active');
+      document.getElementById('progressBar').style.width = '100%';
 
       if (isAtualizacao) {
-        document.getElementById('step2seletor').classList.add('active');
-        document.getElementById('progressBar').style.width = '50%';
-        document.getElementById('stepLabel').textContent = 'Etapa 2 de 3';
         document.getElementById('formTitle').textContent = 'Página de Assessores — Atualização';
-      } else {
-        document.getElementById('step2').classList.add('active');
-        document.getElementById('progressBar').style.width = '100%';
         document.getElementById('stepLabel').textContent = 'Etapa 2 de 2';
+        document.getElementById('updateCard').style.display = 'block';
+        document.getElementById('seletorInline').style.display = 'block';
+        const todosCampos = ['nomeCompleto','codigoAssessor','unidade','contratoSocial',
+          'fotoPerfil','linkedin','instagram','miniBio','selos','depoimentos'];
+        todosCampos.forEach(c => {
+          const el = document.getElementById('field_' + c);
+          if (el) { el.style.display = 'none'; el.style.maxHeight = '0'; el.style.overflow = 'hidden'; }
+        });
+      } else {
         document.getElementById('formTitle').textContent = 'Página de Assessores — Dados';
+        document.getElementById('stepLabel').textContent = 'Etapa 2 de 2';
       }
+      window.scrollTo(0, 0);
+    }
+
+    function voltarDoStep2() {
+      document.getElementById('step2').classList.remove('active');
+      document.getElementById('step1').classList.add('active');
+      document.getElementById('progressBar').style.width = '50%';
+      document.getElementById('stepLabel').textContent = 'Etapa 1 de 2';
       window.scrollTo(0, 0);
     }
 
     const camposSelecionados = new Set();
 
-    function toggleCampo(btn) {
+    function toggleCampoInline(btn) {
       const campo = btn.dataset.campo;
+      const fieldEl = document.getElementById('field_' + campo);
+
       if (camposSelecionados.has(campo)) {
         camposSelecionados.delete(campo);
         btn.classList.remove('selecionado');
+        if (fieldEl) {
+          fieldEl.style.maxHeight = '0';
+          fieldEl.style.overflow = 'hidden';
+          setTimeout(() => { fieldEl.style.display = 'none'; }, 300);
+          fieldEl.querySelectorAll('input,textarea,select').forEach(i => i.required = false);
+        }
       } else {
         camposSelecionados.add(campo);
         btn.classList.add('selecionado');
-      }
-      document.getElementById('seletorError').style.display = 'none';
-    }
-
-    function voltarParaStep1() {
-      document.getElementById('step2seletor').classList.remove('active');
-      document.getElementById('step1').classList.add('active');
-      document.getElementById('progressBar').style.width = '50%';
-      document.getElementById('stepLabel').textContent = 'Etapa 1 de 3';
-    }
-
-    function confirmarCamposSelecionados() {
-      if (camposSelecionados.size === 0) {
-        document.getElementById('seletorError').style.display = 'block';
-        return;
-      }
-
-      const todosCampos = [
-        'nomeCompleto','codigoAssessor','unidade','contratoSocial',
-        'fotoPerfil','linkedin','instagram','miniBio','selos','depoimentos'
-      ];
-
-      // Ocultar todos e remover required
-      todosCampos.forEach(campo => {
-        const el = document.getElementById('field_' + campo);
-        if (el) {
-          el.style.display = 'none';
-          el.querySelectorAll('input,textarea,select').forEach(i => i.required = false);
-        }
-      });
-
-      // Mostrar selecionados e tornar obrigatórios conforme necessário
-      const opcionaisPorNatureza = ['instagram', 'selos', 'depoimentos'];
-      camposSelecionados.forEach(campo => {
-        const el = document.getElementById('field_' + campo);
-        if (el) {
-          el.style.display = 'block';
-          if (!opcionaisPorNatureza.includes(campo)) {
-            el.querySelectorAll('input,textarea,select').forEach(i => i.required = true);
+        if (fieldEl) {
+          fieldEl.style.display = 'block';
+          fieldEl.style.overflow = 'hidden';
+          fieldEl.style.maxHeight = '0';
+          requestAnimationFrame(() => {
+            fieldEl.style.transition = 'max-height 0.3s ease';
+            fieldEl.style.maxHeight = fieldEl.scrollHeight + 'px';
+            setTimeout(() => { fieldEl.style.overflow = 'visible'; }, 300);
+          });
+          const opcionais = ['instagram', 'selos', 'depoimentos'];
+          if (!opcionais.includes(campo)) {
+            fieldEl.querySelectorAll('input,textarea,select').forEach(i => i.required = true);
           }
+          setTimeout(() => fieldEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 100);
         }
-      });
-
-      document.getElementById('updateCard').style.display = 'block';
-      document.getElementById('step2seletor').classList.remove('active');
-      document.getElementById('step2').classList.add('active');
-      document.getElementById('progressBar').style.width = '100%';
-      document.getElementById('stepLabel').textContent = 'Etapa 3 de 3';
-      window.scrollTo(0, 0);
+      }
+      document.getElementById('seletorInlineError').style.display = 'none';
     }
 
     async function init() {
@@ -541,6 +495,11 @@
     }
 
     async function submitForm() {
+      if (isAtualizacao && camposSelecionados.size === 0) {
+        document.getElementById('seletorInlineError').style.display = 'block';
+        document.getElementById('seletorInline').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        return;
+      }
       if (!validateRequiredFields()) return;
       const btn = document.getElementById('btnSubmit');
       btn.disabled = true; btn.textContent = 'Enviando...';

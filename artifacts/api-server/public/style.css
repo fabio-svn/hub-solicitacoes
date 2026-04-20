@@ -981,35 +981,37 @@ input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
 
 /* Campo toggle btn (seletor de atualização) */
 .campo-toggle-btn {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  width: 100%;
-  padding: 12px 16px;
+  padding: 6px 14px;
+  border-radius: 999px;
   background: var(--icon-bg);
   border: 1.5px solid transparent;
-  border-radius: 10px;
   font-family: 'Nunito Sans', sans-serif;
-  font-size: 0.9rem;
+  font-size: 0.82rem;
   font-weight: 600;
   color: var(--carbon-black);
   cursor: pointer;
-  transition: border-color 0.15s, background 0.15s;
-  text-align: left;
-}
-.campo-toggle-btn .campo-check {
-  opacity: 0;
-  color: var(--ruby-red);
-  transition: opacity 0.15s;
-  flex-shrink: 0;
+  transition: all 0.15s;
 }
 .campo-toggle-btn.selecionado {
   border-color: var(--ruby-red);
-  background: rgba(172,54,49,0.05);
+  background: rgba(172,54,49,0.07);
+  color: var(--ruby-red);
 }
-.campo-toggle-btn.selecionado .campo-check {
-  opacity: 1;
+
+/* Dropdown checkbox labels */
+.dropdown-checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  font-size: 0.82rem;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.1s;
+  font-family: 'Nunito Sans', sans-serif;
 }
+.dropdown-checkbox-label:hover { background: var(--icon-bg); }
+.dropdown-checkbox-label input[type=checkbox] { width:14px; height:14px; accent-color: var(--ruby-red); cursor:pointer; }
 
 /* Preview assessor modal */
 .preview-assessor-left {

@@ -707,12 +707,23 @@ router.get("/admin/historico", requireAuth, async (req, res): Promise<void> => {
       )`);
     }
 
-    if (req.query.tipo && String(req.query.tipo) !== "") {
+    if (req.query.tipos) {
+      const tiposArr = String(req.query.tipos).split(",").filter(Boolean);
+      if (tiposArr.length > 0) conditions.push(inArray(solicitacoesTable.tipo_solicitacao, tiposArr));
+    } else if (req.query.tipo && String(req.query.tipo) !== "") {
       conditions.push(sql`${solicitacoesTable.tipo_solicitacao} = ${String(req.query.tipo)}`);
     }
 
-    if (req.query.status && String(req.query.status) !== "") {
+    if (req.query.statuses) {
+      const statusArr = String(req.query.statuses).split(",").filter(Boolean);
+      if (statusArr.length > 0) conditions.push(inArray(solicitacoesTable.status, statusArr));
+    } else if (req.query.status && String(req.query.status) !== "") {
       conditions.push(sql`${solicitacoesTable.status} = ${String(req.query.status)}`);
+    }
+
+    if (req.query.solicitante) {
+      const term = `%${String(req.query.solicitante).replace(/%/g, "\\%")}%`;
+      conditions.push(sql`${solicitacoesTable.user_email} ILIKE ${term}`);
     }
 
     if (req.query.de) {
@@ -730,6 +741,17 @@ router.get("/admin/historico", requireAuth, async (req, res): Promise<void> => {
 
     const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
 
+    const allowedCols: Record<string, any> = {
+      created_at: solicitacoesTable.created_at,
+      status: solicitacoesTable.status,
+      tipo_solicitacao: solicitacoesTable.tipo_solicitacao,
+      titulo: solicitacoesTable.titulo,
+    };
+    const orderColKey = String(req.query.order || "created_at");
+    const orderDirKey = String(req.query.dir || "desc");
+    const col = allowedCols[orderColKey] || solicitacoesTable.created_at;
+    const orderBy = orderDirKey === "asc" ? col : desc(col);
+
     const results = await db.select({
       id: solicitacoesTable.id,
       user_email: solicitacoesTable.user_email,
@@ -742,7 +764,7 @@ router.get("/admin/historico", requireAuth, async (req, res): Promise<void> => {
     })
       .from(solicitacoesTable)
       .where(whereClause)
-      .orderBy(desc(solicitacoesTable.created_at))
+      .orderBy(orderBy)
       .limit(limit)
       .offset(offset);
 
@@ -760,6 +782,36 @@ router.get("/admin/historico", requireAuth, async (req, res): Promise<void> => {
   } catch (err) {
     logger.error({ err }, "Erro ao buscar histórico admin");
     res.status(500).json({ error: "Erro ao buscar histórico" });
+  }
+});
+
+router.post("/admin/impersonate", requireAuth, async (req, res): Promise<void> => {
+  try {
+    const user = req.session.user!;
+    if (user.role !== "admin" && user.role !== "gestor") {
+      res.status(403).json({ error: "Acesso negado" }); return;
+    }
+    const { email } = req.body as { email: string };
+    if (!email || !email.includes("@")) {
+      res.status(400).json({ error: "E-mail inválido" }); return;
+    }
+    req.session.adminOriginal = req.session.user;
+    req.session.user = { email, name: email.split("@")[0], role: "user" };
+    res.json({ success: true, email });
+  } catch (err) {
+    res.status(500).json({ error: "Erro ao impersonar" });
+  }
+});
+
+router.post("/admin/impersonate/stop", requireAuth, async (req, res): Promise<void> => {
+  try {
+    if (req.session.adminOriginal) {
+      req.session.user = req.session.adminOriginal;
+      delete req.session.adminOriginal;
+    }
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: "Erro ao sair" });
   }
 });
 

@@ -127,6 +127,7 @@
           </div>
         </div>
         <div class="form-nav">
+          <button class="btn btn-secondary" onclick="goToStep1()">Voltar</button>
           <button class="btn btn-primary" onclick="validateStep2() && goStep(3)">Próximo</button>
         </div>
       </div>
@@ -190,6 +191,14 @@
       document.getElementById('cardNova').className = 'radio-card' + (tipo === 'nova' ? ' selected' : '');
       document.getElementById('cardAtualizar').className = 'radio-card' + (tipo === 'atualizar' ? ' selected' : '');
       document.getElementById('btnNext1').disabled = false;
+    }
+
+    function goToStep1() {
+      document.querySelectorAll('.form-step').forEach(s => s.classList.remove('active'));
+      document.getElementById('step1').classList.add('active');
+      document.getElementById('progressBar').style.width = '33%';
+      document.getElementById('stepLabel').textContent = 'Etapa 1 de 3';
+      window.scrollTo(0, 0);
     }
 
     function goToStep2() {

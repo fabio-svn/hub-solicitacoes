@@ -9,6 +9,7 @@ interface SessionUser {
 declare module "express-session" {
   interface SessionData {
     user?: SessionUser;
+    adminOriginal?: SessionUser;
     authNonce?: string;
     authRedirect?: string;
   }

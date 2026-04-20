@@ -781,6 +781,22 @@
         return;
       }
 
+      // Guard duplo: se em-aprovacao, verificar se há links de entrega antes de mostrar
+      if (item.status === 'em-aprovacao') {
+        let temLinks = false;
+        try {
+          const res = await fetch('/api/solicitacoes/' + item.id + '/entrega');
+          if (res.ok) {
+            const data = await res.json();
+            temLinks = data.links && data.links.length > 0;
+          }
+        } catch {}
+        if (!temLinks) {
+          card.style.display = 'none';
+          return;
+        }
+      }
+
       card.style.display = 'block';
 
       const storageKey = 'aprovacao_visto_' + item.id;
@@ -1233,21 +1249,64 @@
     }
 
     async function verAvaliacao(solId) {
+      const btn = document.getElementById('btnVerAvaliacao');
+      if (btn) { btn.style.opacity = '0.5'; btn.style.pointerEvents = 'none'; }
+
       try {
         const res = await fetch('/api/solicitacoes/' + solId + '/avaliacao');
-        if (!res.ok) { alert('Sem avaliação registrada.'); return; }
-        const { avaliacao } = await res.json();
-        if (!avaliacao) { alert('Sem avaliação registrada.'); return; }
-        const av = avaliacao;
-        const data = av.data ? new Date(av.data).toLocaleDateString('pt-BR') : '';
-        alert(
-          'Avaliação do cliente\n' +
-          'Nota: ' + av.nota + '/10\n' +
-          (av.comentario ? 'Comentário: ' + av.comentario + '\n' : '') +
-          (data ? 'Data: ' + data : '')
-        );
-      } catch { alert('Erro ao buscar avaliação.'); }
+        const data = await res.json();
+
+        const modal = document.getElementById('avaliacaoModal');
+        const content = document.getElementById('avaliacaoModalContent');
+
+        if (!data.avaliacao) {
+          content.innerHTML = `
+            <div style="text-align:center;padding:16px 0">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin-bottom:8px;opacity:0.25"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              <p style="font-size:0.9rem;opacity:0.5">Nenhuma avaliação registrada para esta solicitação.</p>
+            </div>`;
+        } else {
+          const av = data.avaliacao;
+          const { nota, comentario } = av;
+          const dataAv = av.data;
+          const dataFmt = dataAv ? new Date(dataAv).toLocaleDateString('pt-BR', { day:'2-digit', month:'long', year:'numeric' }) : '';
+          const horaFmt = dataAv ? new Date(dataAv).toLocaleTimeString('pt-BR', { hour:'2-digit', minute:'2-digit' }) : '';
+          const notaCor = nota >= 8 ? '#16a34a' : nota >= 5 ? '#ea580c' : '#dc2626';
+          const notaLabel = nota >= 8 ? 'Excelente' : nota >= 5 ? 'Regular' : 'Precisa melhorar';
+          const estrelas = Array.from({length: 10}, (_, i) =>
+            `<svg width="18" height="18" viewBox="0 0 24 24" fill="${i < nota ? '#f59e0b' : 'none'}" stroke="${i < nota ? '#f59e0b' : 'rgba(34,27,25,0.2)'}" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`
+          ).join('');
+
+          content.innerHTML = `
+            <div style="text-align:center;padding:8px 0 20px">
+              <div style="font-size:3rem;font-weight:700;color:${notaCor};line-height:1">${nota}</div>
+              <div style="font-size:0.82rem;font-weight:600;color:${notaCor};margin-bottom:10px">${notaLabel}</div>
+              <div style="display:flex;justify-content:center;gap:2px;flex-wrap:wrap">${estrelas}</div>
+              <div style="font-size:0.75rem;opacity:0.35;margin-top:8px">de 10</div>
+            </div>
+            ${comentario ? `
+              <div style="background:var(--icon-bg);border-radius:10px;padding:14px 16px;margin-bottom:16px">
+                <div style="font-size:0.72rem;font-weight:700;opacity:0.4;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px">Comentário</div>
+                <p style="font-size:0.875rem;line-height:1.55;margin:0">${esc(comentario)}</p>
+              </div>
+            ` : `<p style="text-align:center;font-size:0.82rem;opacity:0.4;margin-bottom:16px">Sem comentário adicional.</p>`}
+            ${dataFmt ? `<p style="text-align:center;font-size:0.75rem;opacity:0.35">Avaliado em ${dataFmt} às ${horaFmt}</p>` : ''}`;
+        }
+
+        modal.style.display = 'flex';
+      } catch {}
+
+      if (btn) { btn.style.opacity = ''; btn.style.pointerEvents = ''; }
     }
+
+    function fecharModalAvaliacao(e) {
+      if (e && e.target !== document.getElementById('avaliacaoModal')) return;
+      document.getElementById('avaliacaoModal').style.display = 'none';
+    }
+
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape') document.getElementById('avaliacaoModal').style.display = 'none';
+    });
 
     /* ── utilitários do chat ── */
     function delay(ms) {
@@ -1571,6 +1630,16 @@
 
     init();
   </script>
+<div id="avaliacaoModal" style="display:none;position:fixed;inset:0;z-index:200;background:rgba(34,27,25,0.5);backdrop-filter:blur(4px);align-items:center;justify-content:center;padding:20px" onclick="fecharModalAvaliacao(event)">
+  <div style="background:var(--paper-white);border-radius:16px;padding:28px;max-width:440px;width:100%;box-shadow:0 8px 40px rgba(34,27,25,0.2)" onclick="event.stopPropagation()">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+      <h3 style="font-family:'Taviraj',serif;font-weight:300;font-size:1.2rem;margin:0">Avaliação recebida</h3>
+      <button onclick="fecharModalAvaliacao()" style="background:none;border:none;cursor:pointer;opacity:0.4;font-size:1.4rem;line-height:1;padding:0">&times;</button>
+    </div>
+    <div id="avaliacaoModalContent"></div>
+  </div>
+</div>
+
 <a href="https://wa.me/5544991689207" target="_blank" rel="noopener"
    class="float-whatsapp" title="Falar com o time de Marketing">
   <svg width="22" height="22" viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg">
