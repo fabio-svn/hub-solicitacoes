@@ -24,6 +24,11 @@ const Auth = {
     // Verificar e exibir banner de impersonação
     const impEmail = sessionStorage.getItem('svn_impersonate');
     if (impEmail) {
+      // Ocultar elementos admin antes de qualquer render
+      const adminStyle = document.createElement('style');
+      adminStyle.textContent = '#tabAdmin, [data-admin-only], .admin-only { display: none !important; }';
+      document.head.appendChild(adminStyle);
+
       if (!document.getElementById('impersonarBanner')) {
         const banner = document.createElement('div');
         banner.id = 'impersonarBanner';
@@ -196,6 +201,8 @@ window._impersonar = async function() {
     });
     if (res.ok) {
       sessionStorage.setItem('svn_impersonate', email);
+      const dropdown = document.querySelector('.user-dropdown');
+      if (dropdown) dropdown.style.display = 'none';
       window.location.reload();
     } else {
       alert('Não foi possível entrar como esse usuário.');

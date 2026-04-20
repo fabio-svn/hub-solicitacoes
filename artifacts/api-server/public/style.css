@@ -179,8 +179,8 @@ input[type="number"], input[type="date"], input[type="time"],
 select, textarea {
   width: 100%;
   border: 1px solid rgba(34,27,25,0.2);
-  border-radius: 6px;
-  padding: 12px 14px;
+  border-radius: 10px;
+  padding: 10px 14px;
   font-family: 'Nunito Sans', sans-serif;
   font-size: 0.9rem;
   line-height: 1.5;
@@ -744,16 +744,9 @@ input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
 .admin-tabela th.col-acoes {
   background: var(--carbon-black);
 }
-.admin-tabela td.col-acoes::before,
-.admin-tabela th.col-acoes::before {
-  content: '';
-  position: absolute;
-  left: -16px;
-  top: 0;
-  bottom: 0;
-  width: 16px;
-  background: linear-gradient(to right, transparent, rgba(34,27,25,0.06));
-  pointer-events: none;
+.admin-tabela td.col-acoes,
+.admin-tabela th.col-acoes {
+  border-left: 1px solid var(--border-light);
 }
 
 /* Compact action buttons inside table rows */
@@ -1243,6 +1236,7 @@ input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
 .float-whatsapp {
   position: fixed;
   right: 20px;
+  bottom: 78px;
   width: 44px;
   height: 44px;
   border-radius: 50%;

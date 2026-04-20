@@ -184,7 +184,13 @@
           <canvas id="adminPizza" width="200" height="200" style="flex-shrink:0;max-width:200px"></canvas>
           <div id="adminLegenda" style="flex:1;min-width:180px;display:flex;flex-direction:column;gap:8px"></div>
         </div>
-        <div id="graficoCheckboxes" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:14px"></div>
+        <div id="graficoFiltros" style="margin-top:16px;padding-top:14px;border-top:1px solid var(--border-light)">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+            <p style="font-size:0.72rem;font-weight:700;opacity:0.4;text-transform:uppercase;letter-spacing:0.05em;margin:0">Filtrar exibição</p>
+            <button onclick="resetGraficoFiltros()" style="font-size:0.75rem;color:var(--ruby-red);background:none;border:none;cursor:pointer;padding:0;font-family:'Nunito Sans',sans-serif;font-weight:600">Mostrar todos</button>
+          </div>
+          <div id="graficoCheckboxes" style="display:flex;flex-wrap:wrap;gap:6px"></div>
+        </div>
       </div>
 
       <!-- Histórico -->
@@ -265,7 +271,7 @@
               <th style="padding:10px 14px">
                 <span style="font-weight:700;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.06em;color:rgba(255,255,255,0.7)">Avaliação</span>
               </th>
-              <th class="col-acoes" style="padding:10px 14px;width:96px;text-align:center">
+              <th style="padding:10px 14px;width:96px;text-align:center">
                 <span style="font-weight:700;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.06em;color:rgba(255,255,255,0.7)">Ações</span>
               </th>
             </tr>
@@ -898,18 +904,17 @@
     }
 
     function toggleGraficoFiltro(id) {
-      if (!graficoFiltrosAtivos) {
-        // Primeira interação: ativar modo filtro com tudo menos o clicado
-        const todosItens = adminGraficoModo === 'tipo'
-          ? adminGraficoData.porTipo.map(i => i.tipo)
-          : adminGraficoData.porStatus.map(i => i.status);
-        graficoFiltrosAtivos = new Set(todosItens.filter(x => x !== id));
-      } else if (graficoFiltrosAtivos.has(id)) {
+      if (!graficoFiltrosAtivos) return;
+      if (graficoFiltrosAtivos.has(id)) {
         graficoFiltrosAtivos.delete(id);
       } else {
         graficoFiltrosAtivos.add(id);
       }
-      if (graficoFiltrosAtivos.size === 0) graficoFiltrosAtivos = null;
+      renderAdminGrafico();
+    }
+
+    function resetGraficoFiltros() {
+      graficoFiltrosAtivos = null;
       renderAdminGrafico();
     }
 
@@ -917,20 +922,23 @@
       const container = document.getElementById('graficoCheckboxes');
       if (!container) return;
       const CORES = ['#AC3631','#221B19','#4a7c2f','#1e40af','#9333ea','#ea580c','#0891b2','#be123c','#854d0e','#166534'];
-      container.innerHTML = todosItens.map((item, i) => {
-        const isAtivo = !graficoFiltrosAtivos || graficoFiltrosAtivos.has(item.id);
+
+      container.innerHTML = '';
+      todosItens.forEach((item, i) => {
+        const isAtivo = graficoFiltrosAtivos ? graficoFiltrosAtivos.has(item.id) : true;
         const cor = item.cor || CORES[i % CORES.length];
-        return `<label data-item-id="${esc(item.id)}" style="display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:999px;border:1.5px solid ${isAtivo ? cor : 'rgba(34,27,25,0.12)'};background:${isAtivo ? cor + '18' : 'transparent'};cursor:pointer;font-size:0.78rem;font-weight:600;transition:all 0.15s;user-select:none">
-          <input type="checkbox" ${isAtivo ? 'checked' : ''} data-id="${esc(item.id)}" style="display:none">
-          <span style="width:8px;height:8px;border-radius:2px;background:${cor};flex-shrink:0"></span>
-          ${esc(item.label)}
-        </label>`;
-      }).join('');
-      container.querySelectorAll('label').forEach(label => {
-        label.addEventListener('click', () => {
-          const id = label.dataset.itemId;
-          toggleGraficoFiltro(id);
-        });
+
+        const label = document.createElement('label');
+        label.style.cssText = 'display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:999px;border:1.5px solid ' + (isAtivo ? cor : 'rgba(34,27,25,0.12)') + ';background:' + (isAtivo ? cor + '18' : 'transparent') + ';cursor:pointer;font-size:0.78rem;font-weight:600;transition:all 0.15s;user-select:none';
+
+        const dot = document.createElement('span');
+        dot.style.cssText = 'width:8px;height:8px;border-radius:2px;background:' + cor + ';flex-shrink:0';
+
+        label.appendChild(dot);
+        label.appendChild(document.createTextNode(item.label));
+        label.addEventListener('click', () => toggleGraficoFiltro(item.id));
+
+        container.appendChild(label);
       });
     }
 
@@ -950,9 +958,12 @@
             cor: STATUS_SOLICITACAO?.find(s => s.id === i.status)?.bg || null,
           }));
 
-      const itens = graficoFiltrosAtivos
-        ? todosItens.filter(i => graficoFiltrosAtivos.has(i.id))
-        : todosItens;
+      // Inicializar com todos os itens na primeira renderização
+      if (graficoFiltrosAtivos === null) {
+        graficoFiltrosAtivos = new Set(todosItens.map(i => i.id));
+      }
+
+      const itens = todosItens.filter(i => graficoFiltrosAtivos.has(i.id));
 
       renderGraficoCheckboxes(todosItens);
 
@@ -1051,9 +1062,20 @@
       }
 
       tbody.innerHTML = data.data.map(item => {
-        const tipoLabel = (typeof TIPO_SOLICITACAO_LABELS !== 'undefined' && TIPO_SOLICITACAO_LABELS[item.tipo_solicitacao]) || item.tipo_solicitacao;
+        let tipoLabel = (typeof TIPO_SOLICITACAO_LABELS !== 'undefined' && TIPO_SOLICITACAO_LABELS[item.tipo_solicitacao]) || item.tipo_solicitacao;
+        if (item.tipo_solicitacao === 'eventos') {
+          let dados = {};
+          try { dados = typeof item.dados === 'string' ? JSON.parse(item.dados) : (item.dados || {}); } catch {}
+          if (dados.natureza) {
+            const naturezaLabel = dados.natureza === 'presencial' ? 'Presencial'
+              : dados.natureza === 'online' ? 'Online'
+              : dados.natureza === 'patrocinio' ? 'Patrocínio'
+              : dados.natureza;
+            tipoLabel = 'Evento — ' + naturezaLabel;
+          }
+        }
         const statusObj = (typeof STATUS_SOLICITACAO !== 'undefined' && STATUS_SOLICITACAO.find(s => s.id === item.status))
-          || { label: item.status, bg: '#e2e8f0', text: '#475569' };
+          || { label: item.status, bg: '#e2e8f0', text: '#94a3b8' };
         const data_fmt = new Date(item.created_at).toLocaleDateString('pt-BR', { day:'2-digit', month:'2-digit', year:'2-digit' });
         const hora_fmt = new Date(item.created_at).toLocaleTimeString('pt-BR', { hour:'2-digit', minute:'2-digit' });
         const avaliacao = item.avaliacao;
@@ -1062,7 +1084,8 @@
             (avaliacao.comentario ? '<div style="font-size:0.7rem;opacity:0.5;max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="' + esc(avaliacao.comentario) + '">' + esc(avaliacao.comentario) + '</div>' : '')
           : '<span style="opacity:0.25">—</span>';
 
-        const statusDot = '<span class="status-dot" style="background:' + (statusObj.text || '#475569') + '" title="' + esc(statusObj.label) + '"></span>';
+        const statusCor = statusObj?.text || '#94a3b8';
+        const statusDot = '<span class="status-dot" style="background:' + statusCor + ';display:block;margin:0 auto" title="' + esc(statusObj?.label || item.status) + '"></span>';
 
         const clickupBtn = item.clickup_url
           ? '<button class="tabela-acao-btn" title="Abrir no ClickUp" onclick="window.open(\'' + esc(item.clickup_url) + '\',\'_blank\')">' + CLICKUP_ICON + '</button>'
@@ -1075,19 +1098,18 @@
             '<div style="font-size:0.8rem">' + data_fmt + '</div>' +
             '<div style="font-size:0.72rem;opacity:0.4">' + hora_fmt + '</div>' +
           '</td>' +
-          '<td style="padding:10px 14px;max-width:140px">' +
-            '<div style="font-size:0.82rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + esc(item.user_email?.split('@')[0] || '—') + '</div>' +
-            '<div style="font-size:0.72rem;opacity:0.4">' + esc(item.user_email?.split('@')[1] || '') + '</div>' +
+          '<td style="padding:8px 12px;max-width:110px">' +
+            '<div style="font-size:0.82rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="' + esc(item.user_email || '') + '">' + esc(item.user_email?.split('@')[0] || '—') + '</div>' +
           '</td>' +
-          '<td style="padding:10px 14px;max-width:200px">' +
-            '<div style="font-size:0.82rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + esc(item.titulo || '—') + '</div>' +
+          '<td style="padding:8px 12px;max-width:180px">' +
+            '<div style="font-size:0.82rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="' + esc(item.titulo || '') + '">' + esc(item.titulo || '—') + '</div>' +
           '</td>' +
           '<td style="padding:10px 14px;white-space:nowrap"><span style="font-size:0.78rem;opacity:0.7">' + esc(tipoLabel) + '</span></td>' +
           '<td style="padding:10px 14px">' +
             '<div style="display:flex;align-items:center;justify-content:center">' + statusDot + '</div>' +
           '</td>' +
           '<td style="padding:10px 14px;text-align:center">' + notaHtml + '</td>' +
-          '<td class="col-acoes" style="padding:8px 10px">' +
+          '<td style="padding:8px 10px">' +
             '<div style="display:flex;align-items:center;gap:4px;justify-content:center">' +
               '<button class="tabela-acao-btn" title="Ver solicitação" onclick="window.open(\'/solicitacao.html?id=' + item.id + '\',\'_blank\')">' +
                 '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>' +
@@ -1126,48 +1148,84 @@
       adminSearchTimeout = setTimeout(() => { adminPageHistorico = 1; loadAdminHistorico(); }, 300);
     }
 
-    // ── Delete inline (double-click pattern) ────────────────────
-    async function confirmarExcluir(id, btn) {
-      if (btn.dataset.confirmando === '1') {
-        btn.dataset.confirmando = '0';
-        btn.title = 'Excluir solicitação';
-        btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>';
-        btn.style.color = '';
-        try {
-          const res = await fetch('/api/solicitacoes/' + id, { method: 'DELETE' });
-          if (res.ok) {
-            const row = btn.closest('tr');
-            if (row) {
-              row.style.transition = 'opacity 0.3s, transform 0.3s';
-              row.style.opacity = '0';
-              row.style.transform = 'translateX(20px)';
-              setTimeout(() => { row.remove(); }, 300);
-            }
-          } else {
-            const data = await res.json();
-            alert(data.error || 'Erro ao excluir.');
-          }
-        } catch { alert('Erro de conexão.'); }
-        return;
-      }
+    // ── Delete modal ─────────────────────────────────────────────
+    let _deleteTargetId = null;
+    let _deleteTargetRow = null;
 
-      btn.dataset.confirmando = '1';
-      btn.style.color = '#dc2626';
-      btn.title = 'Clique novamente para confirmar';
-      btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>';
-
-      setTimeout(() => {
-        if (btn.dataset.confirmando === '1') {
-          btn.dataset.confirmando = '0';
-          btn.style.color = '';
-          btn.title = 'Excluir solicitação';
-          btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>';
-        }
-      }, 3000);
+    function confirmarExcluir(id, btn) {
+      _deleteTargetId = id;
+      _deleteTargetRow = btn.closest('tr');
+      document.getElementById('deleteModal').style.display = 'flex';
     }
+
+    function cancelarExclusao() {
+      _deleteTargetId = null;
+      _deleteTargetRow = null;
+      document.getElementById('deleteModal').style.display = 'none';
+    }
+
+    async function executarExclusao() {
+      if (!_deleteTargetId) return;
+      const btn = document.getElementById('btnConfirmarExclusao');
+      btn.disabled = true;
+      btn.textContent = 'Excluindo...';
+      try {
+        const res = await fetch('/api/solicitacoes/' + _deleteTargetId, { method: 'DELETE' });
+        if (res.ok) {
+          document.getElementById('deleteModal').style.display = 'none';
+          if (_deleteTargetRow) {
+            _deleteTargetRow.style.transition = 'opacity 0.3s, transform 0.3s';
+            _deleteTargetRow.style.opacity = '0';
+            _deleteTargetRow.style.transform = 'translateX(20px)';
+            setTimeout(() => { _deleteTargetRow?.remove(); }, 300);
+          }
+        } else {
+          const data = await res.json().catch(() => ({}));
+          btn.disabled = false;
+          btn.textContent = 'Excluir permanentemente';
+          alert(data.error || 'Erro ao excluir. Tente novamente.');
+        }
+      } catch {
+        btn.disabled = false;
+        btn.textContent = 'Excluir permanentemente';
+        alert('Erro de conexão.');
+      }
+      _deleteTargetId = null;
+      _deleteTargetRow = null;
+    }
+
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape') cancelarExclusao();
+    });
 
     init();
   </script>
+
+  <!-- Modal de exclusão customizado -->
+  <div id="deleteModal" style="display:none;position:fixed;inset:0;z-index:500;background:rgba(34,27,25,0.6);backdrop-filter:blur(4px);align-items:center;justify-content:center;padding:20px" onclick="cancelarExclusao()">
+    <div style="background:var(--paper-white);border-radius:16px;padding:28px;max-width:400px;width:100%;box-shadow:0 8px 40px rgba(34,27,25,0.2)" onclick="event.stopPropagation()">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+        <div style="width:40px;height:40px;border-radius:50%;background:rgba(220,38,38,0.1);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>
+        </div>
+        <div>
+          <div style="font-weight:700;font-size:0.95rem">Excluir solicitação?</div>
+          <div style="font-size:0.82rem;opacity:0.55;margin-top:2px">Esta ação é permanente e não pode ser desfeita.</div>
+        </div>
+      </div>
+      <div style="background:rgba(220,38,38,0.06);border:1px solid rgba(220,38,38,0.15);border-radius:8px;padding:10px 14px;margin-bottom:20px;font-size:0.82rem;color:#b91c1c">
+        ⚠️ Todos os arquivos vinculados também serão excluídos.
+      </div>
+      <div style="display:flex;gap:10px;justify-content:flex-end">
+        <button onclick="cancelarExclusao()" style="padding:9px 20px;border-radius:8px;border:1px solid var(--border-light);background:transparent;font-family:'Nunito Sans',sans-serif;font-size:0.875rem;font-weight:600;cursor:pointer">
+          Cancelar
+        </button>
+        <button id="btnConfirmarExclusao" onclick="executarExclusao()" style="padding:9px 20px;border-radius:8px;border:none;background:#dc2626;color:white;font-family:'Nunito Sans',sans-serif;font-size:0.875rem;font-weight:700;cursor:pointer">
+          Excluir permanentemente
+        </button>
+      </div>
+    </div>
+  </div>
 
   <!-- Banner de impersonação -->
   <div id="impersonarBanner" style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:9999;background:#1e40af;color:#fff;padding:10px 20px;font-size:0.82rem;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">

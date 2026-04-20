@@ -763,6 +763,7 @@ router.get("/admin/historico", requireAuth, async (req, res): Promise<void> => {
       created_at: solicitacoesTable.created_at,
       clickup_url: solicitacoesTable.clickup_url,
       avaliacao: solicitacoesTable.avaliacao,
+      dados: solicitacoesTable.dados,
     })
       .from(solicitacoesTable)
       .where(whereClause)

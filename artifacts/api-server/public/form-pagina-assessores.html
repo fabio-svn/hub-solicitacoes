@@ -154,7 +154,7 @@
           <div class="form-nav" style="justify-content:space-between">
             <button class="btn btn-secondary" onclick="voltarDoStep2()">Voltar</button>
             <div style="display:flex;gap:8px">
-              <button class="btn btn-dark" onclick="openPreview()" style="gap:8px">
+              <button class="btn btn-dark" id="btnPreview" onclick="openPreview()" style="gap:8px">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
                 Ver prévia
               </button>
@@ -250,6 +250,8 @@
       document.getElementById('step1').classList.remove('active');
       document.getElementById('step2').classList.add('active');
       document.getElementById('progressBar').style.width = '100%';
+
+      document.getElementById('btnPreview').style.display = isAtualizacao ? 'none' : '';
 
       if (isAtualizacao) {
         document.getElementById('formTitle').textContent = 'Página de Assessores — Atualização';
