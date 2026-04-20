@@ -979,6 +979,38 @@ input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
   object-fit: contain;
 }
 
+/* Campo toggle btn (seletor de atualização) */
+.campo-toggle-btn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 12px 16px;
+  background: var(--icon-bg);
+  border: 1.5px solid transparent;
+  border-radius: 10px;
+  font-family: 'Nunito Sans', sans-serif;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--carbon-black);
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+  text-align: left;
+}
+.campo-toggle-btn .campo-check {
+  opacity: 0;
+  color: var(--ruby-red);
+  transition: opacity 0.15s;
+  flex-shrink: 0;
+}
+.campo-toggle-btn.selecionado {
+  border-color: var(--ruby-red);
+  background: rgba(172,54,49,0.05);
+}
+.campo-toggle-btn.selecionado .campo-check {
+  opacity: 1;
+}
+
 /* Preview assessor modal */
 .preview-assessor-left {
   display: flex;

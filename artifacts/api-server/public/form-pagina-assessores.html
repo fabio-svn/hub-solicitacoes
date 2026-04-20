@@ -29,8 +29,8 @@
             <div class="card-icon">
               <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
             </div>
-            <div class="card-label">Dados para página de assessores</div>
-            <div class="card-desc">Para quando o assessor ainda não tem página própria nos sites SVN</div>
+            <div class="card-label">É a primeira vez que preencho meus dados para criação da página de assessor(a)</div>
+            <div class="card-desc">Para quando sua página ainda não existe nos sites SVN</div>
           </div>
           <div class="radio-card" onclick="selectSubtipo('atualizacao')" id="cardAtualizacao">
             <div class="card-icon">
@@ -42,6 +42,63 @@
         </div>
         <div class="form-nav">
           <button class="btn btn-primary" id="btnNext1" disabled onclick="goToStep2()">Próximo</button>
+        </div>
+      </div>
+
+      <div class="form-step" id="step2seletor">
+        <h2 style="font-weight:600;font-size:1.05rem;margin-bottom:6px">O que você gostaria de atualizar?</h2>
+        <p style="font-size:0.85rem;opacity:0.55;margin-bottom:20px">Selecione todos os campos que deseja atualizar.</p>
+
+        <div style="display:flex;flex-direction:column;gap:8px" id="camposBtnList">
+          <button class="campo-toggle-btn" data-campo="nomeCompleto" onclick="toggleCampo(this)">
+            <span>Nome completo</span>
+            <svg class="campo-check" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+          </button>
+          <button class="campo-toggle-btn" data-campo="codigoAssessor" onclick="toggleCampo(this)">
+            <span>Código do assessor</span>
+            <svg class="campo-check" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+          </button>
+          <button class="campo-toggle-btn" data-campo="unidade" onclick="toggleCampo(this)">
+            <span>Unidade</span>
+            <svg class="campo-check" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+          </button>
+          <button class="campo-toggle-btn" data-campo="contratoSocial" onclick="toggleCampo(this)">
+            <span>Contrato social</span>
+            <svg class="campo-check" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+          </button>
+          <button class="campo-toggle-btn" data-campo="fotoPerfil" onclick="toggleCampo(this)">
+            <span>Foto de perfil</span>
+            <svg class="campo-check" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+          </button>
+          <button class="campo-toggle-btn" data-campo="linkedin" onclick="toggleCampo(this)">
+            <span>LinkedIn</span>
+            <svg class="campo-check" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+          </button>
+          <button class="campo-toggle-btn" data-campo="instagram" onclick="toggleCampo(this)">
+            <span>Instagram</span>
+            <svg class="campo-check" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+          </button>
+          <button class="campo-toggle-btn" data-campo="miniBio" onclick="toggleCampo(this)">
+            <span>Mini bio</span>
+            <svg class="campo-check" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+          </button>
+          <button class="campo-toggle-btn" data-campo="selos" onclick="toggleCampo(this)">
+            <span>Selos</span>
+            <svg class="campo-check" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+          </button>
+          <button class="campo-toggle-btn" data-campo="depoimentos" onclick="toggleCampo(this)">
+            <span>Depoimentos</span>
+            <svg class="campo-check" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+          </button>
+        </div>
+
+        <div id="seletorError" style="display:none;color:var(--ruby-red);font-size:0.82rem;margin-top:12px">
+          Selecione ao menos um campo para continuar.
+        </div>
+
+        <div class="form-nav" style="margin-top:24px">
+          <button class="btn btn-secondary" onclick="voltarParaStep1()">Voltar</button>
+          <button class="btn btn-primary" onclick="confirmarCamposSelecionados()">Próximo</button>
         </div>
       </div>
 
@@ -58,27 +115,27 @@
             <option value="">Selecione seu setor</option>
           </select>
         </div>
-        <div class="field">
+        <div class="field" id="field_nomeCompleto">
           <label>Nome completo</label>
           <input type="text" id="nomeCompleto" placeholder="Nome completo do assessor" required>
         </div>
-        <div class="field">
+        <div class="field" id="field_codigoAssessor">
           <label>Código de assessor</label>
           <input type="text" id="codigoAssessor" placeholder="Código do assessor" required>
         </div>
-        <div class="field">
+        <div class="field" id="field_unidade">
           <label>Unidade</label>
           <select id="unidade" required>
             <option value="">Selecione a unidade</option>
           </select>
         </div>
-        <div class="field">
+        <div class="field" id="field_contratoSocial">
           <label>Contrato social</label>
           <select id="contratoSocial" required>
             <option value="">Selecione</option>
           </select>
         </div>
-        <div class="field">
+        <div class="field" id="field_fotoPerfil">
           <label style="display:block;margin-bottom:10px">Foto de perfil</label>
           <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
             <div class="file-input-wrapper" style="margin:0">
@@ -99,24 +156,24 @@
           <div class="file-name" id="fotoPerfilName" style="margin-top:6px"></div>
           <div class="field-hint">Dimensão recomendada: 580 x 756px. Enquadramento profissional, boa iluminação.</div>
         </div>
-        <div class="field">
+        <div class="field" id="field_linkedin">
           <label>Perfil do LinkedIn</label>
           <input type="url" id="linkedin" placeholder="https://linkedin.com/in/seu-perfil" required>
         </div>
-        <div class="field">
+        <div class="field" id="field_instagram">
           <label>Perfil do Instagram (opcional)</label>
           <input type="text" id="instagram" placeholder="@seuinstagram">
         </div>
-        <div class="field">
+        <div class="field" id="field_miniBio">
           <label>Mini-bio</label>
           <textarea id="miniBio" placeholder="Escreva uma bio profissional seguindo o padrão institucional SVN..." required></textarea>
         </div>
-        <div class="field">
+        <div class="field" id="field_selos">
           <label>Selos e certificações (opcional)</label>
           <div class="pills-wrap" id="selosContainer"></div>
         </div>
 
-        <div class="field" style="margin-top:24px">
+        <div class="field" id="field_depoimentos" style="margin-top:24px">
           <label>Depoimentos de clientes (opcional, até 3)</label>
           <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin:8px 0 10px;padding:9px 14px;background:var(--icon-bg);border:1px solid var(--border-light);border-radius:9px;flex-wrap:wrap">
             <span style="font-size:0.8rem;color:var(--carbon-black);opacity:0.7">Consulte a pesquisa NPS para encontrar depoimentos pelo seu código de assessor.</span>
@@ -227,13 +284,79 @@
 
     function goToStep2() {
       document.getElementById('step1').classList.remove('active');
+
+      if (isAtualizacao) {
+        document.getElementById('step2seletor').classList.add('active');
+        document.getElementById('progressBar').style.width = '50%';
+        document.getElementById('stepLabel').textContent = 'Etapa 2 de 3';
+        document.getElementById('formTitle').textContent = 'Página de Assessores — Atualização';
+      } else {
+        document.getElementById('step2').classList.add('active');
+        document.getElementById('progressBar').style.width = '100%';
+        document.getElementById('stepLabel').textContent = 'Etapa 2 de 2';
+        document.getElementById('formTitle').textContent = 'Página de Assessores — Dados';
+      }
+      window.scrollTo(0, 0);
+    }
+
+    const camposSelecionados = new Set();
+
+    function toggleCampo(btn) {
+      const campo = btn.dataset.campo;
+      if (camposSelecionados.has(campo)) {
+        camposSelecionados.delete(campo);
+        btn.classList.remove('selecionado');
+      } else {
+        camposSelecionados.add(campo);
+        btn.classList.add('selecionado');
+      }
+      document.getElementById('seletorError').style.display = 'none';
+    }
+
+    function voltarParaStep1() {
+      document.getElementById('step2seletor').classList.remove('active');
+      document.getElementById('step1').classList.add('active');
+      document.getElementById('progressBar').style.width = '50%';
+      document.getElementById('stepLabel').textContent = 'Etapa 1 de 3';
+    }
+
+    function confirmarCamposSelecionados() {
+      if (camposSelecionados.size === 0) {
+        document.getElementById('seletorError').style.display = 'block';
+        return;
+      }
+
+      const todosCampos = [
+        'nomeCompleto','codigoAssessor','unidade','contratoSocial',
+        'fotoPerfil','linkedin','instagram','miniBio','selos','depoimentos'
+      ];
+
+      // Ocultar todos e remover required
+      todosCampos.forEach(campo => {
+        const el = document.getElementById('field_' + campo);
+        if (el) {
+          el.style.display = 'none';
+          el.querySelectorAll('input,textarea,select').forEach(i => i.required = false);
+        }
+      });
+
+      // Mostrar selecionados e tornar obrigatórios conforme necessário
+      const opcionaisPorNatureza = ['instagram', 'selos', 'depoimentos'];
+      camposSelecionados.forEach(campo => {
+        const el = document.getElementById('field_' + campo);
+        if (el) {
+          el.style.display = 'block';
+          if (!opcionaisPorNatureza.includes(campo)) {
+            el.querySelectorAll('input,textarea,select').forEach(i => i.required = true);
+          }
+        }
+      });
+
+      document.getElementById('updateCard').style.display = 'block';
+      document.getElementById('step2seletor').classList.remove('active');
       document.getElementById('step2').classList.add('active');
       document.getElementById('progressBar').style.width = '100%';
-      document.getElementById('stepLabel').textContent = 'Etapa 2 de 2';
-      document.getElementById('formTitle').textContent = isAtualizacao
-        ? 'Página de Assessores — Atualização'
-        : 'Página de Assessores — Dados';
-      if (isAtualizacao) document.getElementById('updateCard').style.display = 'block';
+      document.getElementById('stepLabel').textContent = 'Etapa 3 de 3';
       window.scrollTo(0, 0);
     }
 
