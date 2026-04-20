@@ -330,7 +330,22 @@
 
       const tipoCriacao = document.querySelector('input[name="tipoCriacao"]:checked')?.value;
       if (!isAtualizar && tipoCriacao === 'base-existente' && !document.getElementById('arquivoBaseNova').files[0]) {
-        alert('Envie o arquivo base para continuar.'); goStep(2); return;
+        goToStep2();
+        setTimeout(() => {
+          const fieldEl = document.getElementById('uploadBase');
+          if (fieldEl) {
+            fieldEl.classList.add('field-invalid');
+            let errorEl = fieldEl.querySelector('.field-error');
+            if (!errorEl) {
+              errorEl = document.createElement('div');
+              errorEl.className = 'field-error';
+              fieldEl.appendChild(errorEl);
+            }
+            errorEl.textContent = 'Envie o arquivo base para continuar.';
+            fieldEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }
+        }, 50);
+        return;
       }
 
       const btn = document.getElementById('btnSubmit');

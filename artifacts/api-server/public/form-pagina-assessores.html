@@ -395,7 +395,7 @@
 
     function openPreview() {
       const name = document.getElementById('nomeCompleto').value || 'Nome do Assessor';
-      const bio = document.getElementById('miniBio').value || 'A bio aparecera aqui...';
+      const bio = document.getElementById('miniBio').value || 'A bio aparecerá aqui...';
       const linkedin = document.getElementById('linkedin').value;
 
       document.getElementById('previewName').textContent = name;
@@ -559,7 +559,7 @@
           try {
             const resumo = {
               tipo: TIPO_SOLICITACAO_LABELS[formData.get('tipo_solicitacao')] || formData.get('tipo_solicitacao'),
-              subtipo: formData.get('subtipo') || '', titulo: dados.nomeEvento || dados.tituloEvento || dados.titulo || dados.nomeCompleto || '',
+              subtipo: formData.get('subtipo') || '', titulo: dados.nomeCompleto || '',
               solicitante: dados.nome || Auth.getUserName(),
               setor: dados.setor || '',
               data: new Date().toLocaleDateString('pt-BR'),

@@ -452,6 +452,7 @@ const DRAWER_FIELD_LABELS = {
   observacoes:          "Observações",
   ideaQuando:           "Ideia de quando realizar",
   tipoAprox:            "Tipo aproximado",
+  email:                "E-mail",
   nomeCompleto:         "Nome completo",
   codigoAssessor:       "Código de assessor",
   unidade:              "Unidade",
