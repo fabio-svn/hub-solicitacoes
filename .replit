@@ -1,4 +1,4 @@
-modules = ["nodejs-24"]
+modules = ["nodejs-24", "postgresql-16"]
 
 [deployment]
 router = "application"
@@ -40,3 +40,6 @@ externalPort = 3001
 [userenv.shared]
 ALLOWED_ORIGIN = "https://hub.portalsvn.com.br"
 R2_PUBLIC_URL = "https://pub-a2132f9b61f940659cc98265acfcf64c.r2.dev"
+
+[nix]
+channel = "stable-25_05"

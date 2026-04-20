@@ -139,10 +139,15 @@ router.post("/solicitacoes", requireAuth, upload.any(), async (req, res): Promis
 
     let clickupTaskId: string | null = null;
     try {
-      clickupTaskId = await createClickUpTask(solicitacao, user, parsedDados, arquivosMap);
+      const { taskId, taskName } = await createClickUpTask(solicitacao, user, parsedDados, arquivosMap);
+      clickupTaskId = taskId;
       if (clickupTaskId) {
         await db.update(solicitacoesTable)
-          .set({ clickup_task_id: clickupTaskId })
+          .set({
+            clickup_task_id: clickupTaskId,
+            titulo: taskName || null,
+            clickup_url: `https://app.clickup.com/t/${clickupTaskId}`,
+          })
           .where(eq(solicitacoesTable.id, solicitacao.id));
       }
     } catch (clickupErr) {
@@ -406,6 +411,13 @@ router.get("/solicitacoes/:id/entrega", requireAuth, async (req, res): Promise<v
 
     const [solicitacao] = await db.select().from(solicitacoesTable).where(and(...conditions));
     if (!solicitacao) { res.status(404).json({ error: "Solicitação não encontrada" }); return; }
+
+    const tiposSemAprovacao = ["pagina-assessores-dados", "pagina-assessores-atualizacao"];
+    if (tiposSemAprovacao.includes(solicitacao.tipo_solicitacao)) {
+      res.status(403).json({ error: "Aprovação não disponível para este tipo de solicitação" });
+      return;
+    }
+
     if (!solicitacao.clickup_task_id) { res.json({ links: [], status: solicitacao.status }); return; }
 
     const response = await fetch(`https://api.clickup.com/api/v2/task/${solicitacao.clickup_task_id}`, {
@@ -591,6 +603,53 @@ router.post("/solicitacoes/:id/aprovacao", requireAuth, async (req, res): Promis
   } catch (err) {
     logger.error({ err }, "Erro ao registrar aprovação");
     res.status(500).json({ error: "Erro ao registrar aprovação" });
+  }
+});
+
+router.post("/solicitacoes/:id/avaliacao", requireAuth, async (req, res): Promise<void> => {
+  try {
+    const user = req.session.user!;
+    const id = parseInt(String(req.params.id));
+    if (isNaN(id)) { res.status(400).json({ error: "ID inválido" }); return; }
+
+    const { nota, comentario } = req.body as { nota: number; comentario?: string };
+    if (!nota || nota < 1 || nota > 10) {
+      res.status(400).json({ error: "Nota deve ser entre 1 e 10" });
+      return;
+    }
+
+    const [solicitacao] = await db.select()
+      .from(solicitacoesTable)
+      .where(and(eq(solicitacoesTable.id, id), eq(solicitacoesTable.user_email, user.email)));
+    if (!solicitacao) { res.status(404).json({ error: "Solicitação não encontrada" }); return; }
+
+    await db.update(solicitacoesTable)
+      .set({ avaliacao: { nota, comentario: comentario?.trim() || null, data: new Date().toISOString() } })
+      .where(eq(solicitacoesTable.id, id));
+
+    res.json({ success: true });
+  } catch (err) {
+    logger.error({ err }, "Erro ao salvar avaliação");
+    res.status(500).json({ error: "Erro ao salvar avaliação" });
+  }
+});
+
+router.get("/solicitacoes/:id/avaliacao", requireAuth, async (req, res): Promise<void> => {
+  try {
+    const user = req.session.user!;
+    if (user.role !== "admin" && user.role !== "gestor") {
+      res.status(403).json({ error: "Acesso negado" }); return;
+    }
+    const id = parseInt(String(req.params.id));
+    if (isNaN(id)) { res.status(400).json({ error: "ID inválido" }); return; }
+    const [sol] = await db.select({ avaliacao: solicitacoesTable.avaliacao })
+      .from(solicitacoesTable)
+      .where(eq(solicitacoesTable.id, id));
+    if (!sol) { res.status(404).json({ error: "Não encontrado" }); return; }
+    res.json({ avaliacao: sol.avaliacao });
+  } catch (err) {
+    logger.error({ err }, "Erro ao buscar avaliação");
+    res.status(500).json({ error: "Erro ao buscar avaliação" });
   }
 });
 

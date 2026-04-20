@@ -33,11 +33,11 @@
     </div>
 
     <div class="tabs">
-      <button class="tab active" data-tab="eventos" onclick="switchTab('eventos')">Eventos</button>
-      <button class="tab" data-tab="geral" onclick="switchTab('geral')">Solicitações gerais</button>
+      <button class="tab active" data-tab="geral" onclick="switchTab('geral')">Solicitações gerais</button>
+      <button class="tab" data-tab="eventos" onclick="switchTab('eventos')">Eventos</button>
     </div>
 
-    <div class="tab-content active" id="tab-eventos">
+    <div class="tab-content" id="tab-eventos">
       <div style="display:flex;gap:10px;align-items:flex-start">
         <div class="filter-bar" id="filterBarEventos" style="flex-shrink:0">
           <button class="filter-toggle-btn" id="filterToggleEventos" onclick="toggleFilterPanel('eventos')">
@@ -80,7 +80,7 @@
       <div class="pagination" id="paginationEventos"></div>
     </div>
 
-    <div class="tab-content" id="tab-geral">
+    <div class="tab-content active" id="tab-geral">
       <div style="display:flex;gap:10px;align-items:flex-start">
         <div class="filter-bar" id="filterBarGeral" style="flex-shrink:0">
           <button class="filter-toggle-btn" id="filterToggleGeral" onclick="toggleFilterPanel('geral')">
@@ -133,7 +133,7 @@
   <script src="config.js"></script>
   <script src="auth.js"></script>
   <script>
-    let currentTab = 'eventos';
+    let currentTab = localStorage.getItem('svn_dashboard_tab') || 'geral';
     let filters = {
       eventos: { periodo: '', status: '', natureza: '' },
       geral: { periodo: '', status: '', tipo: '' }
@@ -157,8 +157,11 @@
       }
       Auth.renderHeader(document.getElementById('mainHeader'));
       loadStats();
-      loadList('eventos');
-      setTimeout(() => loadList('geral'), 800);
+      // Restore tab from localStorage and load it first
+      switchTab(currentTab);
+      loadList(currentTab);
+      const otherTab = currentTab === 'geral' ? 'eventos' : 'geral';
+      setTimeout(() => loadList(otherTab), 800);
     }
 
     async function loadStats() {
@@ -242,7 +245,8 @@
       container.innerHTML = data.data.map((item, idx) => {
         let dados = {};
         try { dados = typeof item.dados === 'string' ? JSON.parse(item.dados) : (item.dados || {}); } catch { dados = {}; }
-        const titulo = dados.nomeEvento || dados.tituloEvento || dados.titulo || dados.nomeCompleto || item.tipo_solicitacao;
+        const titulo = item.titulo || dados.nomeEvento || dados.tituloEvento || dados.titulo || dados.nomeCompleto || item.tipo_solicitacao;
+        const isAdm = typeof Auth !== 'undefined' && Auth.isAdmin && Auth.isAdmin();
         const tipoLabel = TIPO_SOLICITACAO_LABELS[item.tipo_solicitacao] || item.tipo_solicitacao;
         const statusObj = STATUS_SOLICITACAO.find(s => s.id === item.status) || { label: item.status, bg: '#f1f5f9', text: '#475569' };
         const dataRel = dataRelativa(item.created_at);
@@ -266,6 +270,7 @@
           <div class="request-badges">
             ${naturezaLabel ? `<span class="badge" style="background:var(--icon-bg);color:var(--carbon-black);opacity:0.7">${esc(naturezaLabel)}</span>` : ''}
             <span class="badge" style="background:${statusObj.bg || '#f1f5f9'};color:${statusObj.text || '#475569'}">${esc(statusObj.label)}</span>
+            ${isAdm && item.clickup_url ? `<a href="${esc(item.clickup_url)}" target="_blank" rel="noopener" onclick="event.stopPropagation()" class="badge" style="background:rgba(118,180,71,0.12);color:#4a7c2f;text-decoration:none;font-size:0.7rem">ClickUp ↗</a>` : ''}
           </div>
           <div class="request-chevron">&rsaquo;</div>
         </div>`;
@@ -300,6 +305,7 @@
 
     function switchTab(tab) {
       currentTab = tab;
+      localStorage.setItem('svn_dashboard_tab', tab);
       document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
       document.querySelectorAll('.tab-content').forEach(c => c.classList.toggle('active', c.id === 'tab-' + tab));
       const listEl = document.getElementById(tab === 'eventos' ? 'listEventos' : 'listGeral');

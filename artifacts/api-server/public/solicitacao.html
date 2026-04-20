@@ -301,6 +301,18 @@
       box-shadow: 0 2px 6px rgba(22,163,74,0.3);
     }
     .btn-aprovar:hover { background: #15803d; }
+    .btn-link-admin {
+      background: none;
+      border: none;
+      color: var(--ruby-red);
+      font-size: 0.72rem;
+      font-family: inherit;
+      cursor: pointer;
+      padding: 0;
+      text-decoration: underline;
+      opacity: 0.75;
+    }
+    .btn-link-admin:hover { opacity: 1; }
 
     .btn-alterar {
       display: inline-flex;
@@ -597,10 +609,14 @@
       renderAprovacao(item, dados);
       renderDados(dados, item);
 
+      const isAdm = typeof Auth !== 'undefined' && Auth.isAdmin && Auth.isAdmin();
       document.getElementById('solRodape').innerHTML =
         `<span>ID interno: ${item.id}</span>` +
         (dados.idSolicitacao ? `<span>Código: ${esc(dados.idSolicitacao)}</span>` : '') +
-        (item.clickup_task_id ? `<span>ClickUp: ${esc(item.clickup_task_id)}</span>` : '');
+        (isAdm && item.clickup_url
+          ? `<span><a href="${esc(item.clickup_url)}" target="_blank" rel="noopener">Ver no ClickUp ↗</a></span>`
+          : (item.clickup_task_id ? `<span>ClickUp: ${esc(item.clickup_task_id)}</span>` : '')) +
+        (isAdm ? `<span><button class="btn-link-admin" onclick="verAvaliacao(${item.id})">Ver avaliação</button></span>` : '');
     }
 
     /* ── renderFluxo (horizontal rail) ─────────── */
@@ -714,6 +730,17 @@
     /* ── renderAprovacao v2 ── */
     async function renderAprovacao(item, dados) {
       const card = document.getElementById('aprovacaoCard');
+
+      const tiposComAprovacao = [
+        'eventos', 'artes-divulgacao', 'atualizacao-material',
+        'conteudo-pdf-informativo', 'conteudo-pdf-ebook',
+        'apresentacao-nova', 'apresentacao-atualizar',
+      ];
+      if (!tiposComAprovacao.includes(item.tipo_solicitacao)) {
+        card.style.display = 'none';
+        return;
+      }
+
       const statusComAprovacao = ['em-aprovacao', 'concluido', 'reprovado', 'em-revisao'];
       const temHistorico = getRodadas(item.id).length > 0;
 
@@ -802,14 +829,23 @@
       let linksAtuais = [];
       try {
         const res = await fetch('/api/solicitacoes/' + item.id + '/entrega');
-        const data = await res.json();
-        linksAtuais = data.links || [];
+        if (res.ok) {
+          const data = await res.json();
+          linksAtuais = data.links || [];
+        }
       } catch {}
 
       document.getElementById('chatLoading').style.display = 'none';
       document.getElementById('chatUI').style.display = 'block';
 
       const { rodadas, rodadaAtual, isNova } = resolveRodadaAtual(item.id, linksAtuais);
+
+      // Guard: status não é em-aprovacao e não há histórico
+      if (item.status !== 'em-aprovacao' && rodadas.length === 0) {
+        await mensagemSistema('Esta solicitação não está aguardando aprovação no momento.');
+        document.getElementById('chatInputArea').style.display = 'none';
+        return;
+      }
 
       renderHistoricoRodadas(rodadas.slice(0, -1));
 
@@ -861,7 +897,7 @@
       await mensagemSistema(gerarMensagemBoasVindas(nomeUsuario, rodadaAtual, isNova, linksAtuais.length));
 
       if (linksAtuais.length === 0) {
-        await mensagemSistema('Os arquivos ainda estão sendo preparados. Volte em breve.');
+        await mensagemSistema('Os arquivos desta solicitação serão entregues diretamente pelo time de Marketing. Aguarde o contato.');
         document.getElementById('chatInputArea').style.display = 'none';
         return;
       }
@@ -961,6 +997,9 @@
       saveRodadas(window._chatState.solId, rodadas);
 
       document.getElementById('chatInputArea').style.display = 'none';
+
+      await delay(1500);
+      renderPesquisaSatisfacao(window._chatState.solId);
     }
 
     async function acaoSolicitarAlteracao() {
@@ -1068,6 +1107,114 @@
       saveRodadas(window._chatState.solId, rodadas);
 
       document.getElementById('chatInputArea').style.display = 'none';
+    }
+
+    /* ── Pesquisa de Satisfação ── */
+    async function renderPesquisaSatisfacao(solId) {
+      const notas = [1,2,3,4,5,6,7,8,9,10];
+      const html = `
+        <div id="pesquisaSatisfacao" style="
+          background: rgba(255,255,255,0.7);
+          border: 1px solid rgba(34,27,25,0.1);
+          border-radius: 12px;
+          padding: 16px 20px;
+          margin-top: 16px;
+          font-family: inherit;
+        ">
+          <p style="font-size:0.9rem;font-weight:600;color:var(--carbon-black);margin:0 0 10px">
+            Em uma escala de 1 a 10, como você avalia o material entregue?
+          </p>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">
+            ${notas.map(n => `
+              <button
+                class="nota-btn"
+                data-nota="${n}"
+                onclick="selecionarNota(${n})"
+                style="
+                  width:36px;height:36px;border-radius:8px;
+                  border:2px solid rgba(34,27,25,0.18);
+                  background:transparent;font-size:0.85rem;
+                  font-weight:700;color:var(--carbon-black);
+                  cursor:pointer;transition:all 0.15s;
+                "
+              >${n}</button>
+            `).join('')}
+          </div>
+          <div id="pesquisaComentarioWrap" style="display:none;margin-top:6px">
+            <textarea
+              id="pesquisaComentario"
+              placeholder="Comentário opcional (máx. 500 caracteres)"
+              maxlength="500"
+              style="
+                width:100%;border-radius:8px;border:1px solid rgba(34,27,25,0.2);
+                padding:8px 12px;font-family:inherit;font-size:0.85rem;
+                resize:vertical;min-height:64px;background:var(--paper-white);
+                box-sizing:border-box;
+              "
+            ></textarea>
+            <div style="display:flex;gap:8px;margin-top:8px">
+              <button onclick="enviarAvaliacao(${solId})" style="
+                background:var(--ruby-red);color:#fff;border:none;
+                border-radius:8px;padding:7px 18px;font-size:0.85rem;
+                font-weight:600;cursor:pointer;
+              ">Enviar avaliação</button>
+              <button onclick="document.getElementById('pesquisaSatisfacao').remove()" style="
+                background:transparent;color:rgba(34,27,25,0.5);border:none;
+                font-size:0.82rem;cursor:pointer;text-decoration:underline;
+              ">Pular</button>
+            </div>
+          </div>
+        </div>`;
+      const chatWrap = document.getElementById('chatWrap');
+      if (chatWrap) chatWrap.insertAdjacentHTML('beforeend', html);
+    }
+
+    function selecionarNota(nota) {
+      document.querySelectorAll('.nota-btn').forEach(btn => {
+        const n = parseInt(btn.dataset.nota);
+        btn.style.background = n === nota ? 'var(--ruby-red)' : 'transparent';
+        btn.style.color = n === nota ? '#fff' : 'var(--carbon-black)';
+        btn.style.borderColor = n === nota ? 'var(--ruby-red)' : 'rgba(34,27,25,0.18)';
+      });
+      document.querySelector('.nota-btn[data-nota="' + nota + '"]').dataset.selecionado = '1';
+      window._notaSelecionada = nota;
+      document.getElementById('pesquisaComentarioWrap').style.display = 'block';
+    }
+
+    async function enviarAvaliacao(solId) {
+      const nota = window._notaSelecionada;
+      if (!nota) return;
+      const comentario = (document.getElementById('pesquisaComentario')?.value || '').trim();
+      try {
+        await fetch('/api/solicitacoes/' + solId + '/avaliacao', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ nota, comentario }),
+        });
+      } catch {}
+      const el = document.getElementById('pesquisaSatisfacao');
+      if (el) el.outerHTML = `
+        <div style="
+          text-align:center;padding:14px;color:rgba(34,27,25,0.55);
+          font-size:0.85rem;margin-top:12px;
+        ">Obrigado pelo feedback! 💛</div>`;
+    }
+
+    async function verAvaliacao(solId) {
+      try {
+        const res = await fetch('/api/solicitacoes/' + solId + '/avaliacao');
+        if (!res.ok) { alert('Sem avaliação registrada.'); return; }
+        const { avaliacao } = await res.json();
+        if (!avaliacao) { alert('Sem avaliação registrada.'); return; }
+        const av = avaliacao;
+        const data = av.data ? new Date(av.data).toLocaleDateString('pt-BR') : '';
+        alert(
+          'Avaliação do cliente\n' +
+          'Nota: ' + av.nota + '/10\n' +
+          (av.comentario ? 'Comentário: ' + av.comentario + '\n' : '') +
+          (data ? 'Data: ' + data : '')
+        );
+      } catch { alert('Erro ao buscar avaliação.'); }
     }
 
     /* ── utilitários do chat ── */

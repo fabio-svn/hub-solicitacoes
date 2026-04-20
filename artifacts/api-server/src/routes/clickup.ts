@@ -798,15 +798,40 @@ function getListId(tipoSolicitacao: string): string {
   return CLICKUP_LIST_GERAL;
 }
 
+function addBusinessDays(date: Date, days: number): Date {
+  const result = new Date(date);
+  let added = 0;
+  while (added < days) {
+    result.setDate(result.getDate() + 1);
+    const dow = result.getDay();
+    if (dow !== 0 && dow !== 6) added++;
+  }
+  return result;
+}
+
+const PRAZO_DIAS_UTEIS: Record<string, number> = {
+  "pagina-assessores-dados":       3,
+  "pagina-assessores-atualizacao": 2,
+  "apresentacao-nova":             5,
+  "apresentacao-atualizar":        5,
+  "artes-divulgacao":              3,
+  "atualizacao-material":          3,
+  "conteudo-pdf-informativo":      4,
+  "conteudo-pdf-ebook":            15,
+};
+
+const ASSIGNEE_GERAL   = process.env.CLICKUP_ASSIGNEE_GERAL   || "";
+const ASSIGNEE_EVENTOS = process.env.CLICKUP_ASSIGNEE_EVENTOS || "";
+
 export async function createClickUpTask(
   solicitacao: SolicitacaoData,
   user: UserData,
   dados: FormDados,
   arquivos?: ArquivosMap
-): Promise<string | null> {
+): Promise<{ taskId: string | null; taskName: string }> {
   if (!CLICKUP_API_TOKEN) {
     logger.warn("CLICKUP_API_TOKEN not configured, skipping task creation");
-    return null;
+    return { taskId: null, taskName: "" };
   }
 
   const tipo = solicitacao.tipo_solicitacao;
@@ -829,6 +854,28 @@ export async function createClickUpTask(
 
   const taskPayload: Record<string, unknown> = { name: taskName, description };
   if (tipo === "eventos") taskPayload.status = "Solicitações";
+
+  // Datas de início e prazo
+  const hoje = new Date();
+  hoje.setHours(12, 0, 0, 0);
+  taskPayload.start_date = hoje.getTime();
+  taskPayload.start_date_time = false;
+
+  let diasUteis = PRAZO_DIAS_UTEIS[tipo] ?? 3;
+  if (tipo === "apresentacao-nova" || tipo === "apresentacao-atualizar") {
+    const qtd = parseInt(String((dados as Record<string, unknown>).qtdPaginas || "0"));
+    if (qtd > 20) diasUteis = 15;
+  }
+  const prazoDate = addBusinessDays(new Date(), diasUteis);
+  prazoDate.setHours(12, 0, 0, 0);
+  taskPayload.due_date = prazoDate.getTime();
+  taskPayload.due_date_time = false;
+  logger.info({ tipo, diasUteis, prazo: prazoDate.toISOString() }, "ClickUp: prazo calculado");
+
+  // Responsável por tipo
+  const assigneeId = tipo === "eventos" ? ASSIGNEE_EVENTOS : ASSIGNEE_GERAL;
+  if (assigneeId) taskPayload.assignees = [parseInt(assigneeId)];
+
   let taskId: string | null = null;
 
   logger.info({ tipo, listId, taskName, payload: taskPayload }, "ClickUp: payload final antes do POST");
@@ -842,16 +889,16 @@ export async function createClickUpTask(
     if (!response.ok) {
       const text = await response.text();
       logger.error({ tipo, listId, taskName, httpStatus: response.status, body: text }, "ClickUp: erro ao criar task");
-      return null;
+      return { taskId: null, taskName };
     }
     const data = await response.json() as { id?: string };
     taskId = data.id || null;
   } catch (err) {
     logger.error({ err, tipo, listId }, "ClickUp: falha na criação da task");
-    return null;
+    return { taskId: null, taskName };
   }
 
-  if (!taskId) return null;
+  if (!taskId) return { taskId: null, taskName };
   logger.info({ taskId, tipo, listId, taskName }, "ClickUp: task criada com sucesso");
 
   if (tipo === "eventos") {
@@ -870,7 +917,7 @@ export async function createClickUpTask(
     { clickupType: "short_text", raw: idSolicitacao }
   );
 
-  return taskId;
+  return { taskId, taskName };
 }
 
 export async function getClickUpTaskStatus(taskId: string): Promise<string | null> {

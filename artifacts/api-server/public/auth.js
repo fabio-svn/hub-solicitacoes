@@ -51,6 +51,10 @@ const Auth = {
     return this.user ? this.user.role : "colaborador";
   },
 
+  isAdmin() {
+    return this.user?.role === 'admin' || this.user?.role === 'gestor';
+  },
+
   getInitials() {
     const name = this.getUserName();
     if (!name) return "?";
