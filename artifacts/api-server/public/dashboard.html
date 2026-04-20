@@ -11,6 +11,16 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body class="page-light">
+<svg xmlns="http://www.w3.org/2000/svg" width="0" height="0" style="position:absolute;overflow:hidden">
+  <defs>
+    <linearGradient id="cu1" x1="0" y1="15.05" x2="54.84" y2="15.05" gradientUnits="userSpaceOnUse" gradientTransform="matrix(1 0 0 -1 0 69.36)">
+      <stop offset="0" stop-color="#8930FD"/><stop offset="1" stop-color="#49CCF9"/>
+    </linearGradient>
+    <linearGradient id="cu2" x1="1.2" y1="53.17" x2="53.74" y2="53.17" gradientUnits="userSpaceOnUse" gradientTransform="matrix(1 0 0 -1 0 69.36)">
+      <stop offset="0" stop-color="#FF02F0"/><stop offset="1" stop-color="#FFC800"/>
+    </linearGradient>
+  </defs>
+</svg>
   <header class="header" id="mainHeader"></header>
   <div class="container">
     <div class="title-row">
@@ -293,19 +303,11 @@
   <script src="auth.js"></script>
   <script>
     const CLICKUP_ICON = `<svg width="14" height="14" viewBox="0 0 54.8 65.8" xmlns="http://www.w3.org/2000/svg">
-      <defs>
-        <linearGradient id="cu1" x1="0" y1="15.05" x2="54.84" y2="15.05" gradientUnits="userSpaceOnUse" gradientTransform="matrix(1 0 0 -1 0 69.36)">
-          <stop offset="0" stop-color="#8930FD"/><stop offset="1" stop-color="#49CCF9"/>
-        </linearGradient>
-        <linearGradient id="cu2" x1="1.2" y1="53.17" x2="53.74" y2="53.17" gradientUnits="userSpaceOnUse" gradientTransform="matrix(1 0 0 -1 0 69.36)">
-          <stop offset="0" stop-color="#FF02F0"/><stop offset="1" stop-color="#FFC800"/>
-        </linearGradient>
-      </defs>
       <path fill="url(#cu1)" d="M0,50.6l10.1-7.8c5.4,7,11.1,10.3,17.4,10.3c6.3,0,11.9-3.2,17-10.2l10.3,7.6c-7.4,10-16.6,15.3-27.3,15.3C16.9,65.8,7.6,60.5,0,50.6z"/>
       <path fill="url(#cu2)" d="M27.5,16.9l-18,15.5l-8.3-9.7L27.6,0l26.2,22.7l-8.4,9.6L27.5,16.9z"/>
     </svg>`;
 
-    let currentTab = sessionStorage.getItem('svn_dashboard_tab') || 'geral';
+    let currentTab = 'geral';
     let filters = {
       eventos: { periodo: '', status: '', natureza: '' },
       geral: { periodo: '', status: '', tipo: '' }
@@ -488,7 +490,6 @@
 
     function switchTab(tab) {
       currentTab = tab;
-      sessionStorage.setItem('svn_dashboard_tab', tab);
       document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
       document.querySelectorAll('.tab-content').forEach(c => {
         const isActive = c.id === 'tab-' + tab;
@@ -1274,7 +1275,7 @@
         const statusDot = '<span class="status-dot" style="background:' + statusCor + ';display:block;margin:0 auto" title="' + esc(statusObj?.label || item.status) + '"></span>';
 
         const clickupBtn = item.clickup_url
-          ? '<button class="tabela-acao-btn" title="Abrir no ClickUp" onclick="window.open(\'' + esc(item.clickup_url) + '\',\'_blank\')">' + CLICKUP_ICON + '</button>'
+          ? '<button style="width:28px;height:28px;border-radius:7px;border:none;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;background:rgba(74,124,47,0.1);transition:all 0.15s" title="Abrir no ClickUp" onmouseover="this.style.background=\'rgba(74,124,47,0.22)\';this.style.transform=\'scale(1.08)\'" onmouseout="this.style.background=\'rgba(74,124,47,0.1)\';this.style.transform=\'scale(1)\'" onclick="window.open(\'' + esc(item.clickup_url) + '\',\'_blank\')">' + CLICKUP_ICON + '</button>'
           : '<div style="width:28px"></div>';
 
         return '<tr style="border-top:1px solid var(--border-light);transition:background 0.12s"' +

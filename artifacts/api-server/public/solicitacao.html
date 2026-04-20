@@ -620,6 +620,10 @@
 
       const metaParts = [];
       metaParts.push(`<span>${esc(tipoLabel)}</span>`);
+      if (item.user_email) {
+        const nomeUser = item.user_email.split('@')[0];
+        metaParts.push(`<span class="sol-meta-sep"></span><span style="display:inline-flex;align-items:center;gap:3px"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="opacity:0.45;flex-shrink:0"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>${esc(nomeUser)}</span><span class="sol-meta-sep"></span><span style="opacity:0.5" title="${esc(item.user_email)}">${esc(item.user_email)}</span>`);
+      }
       if (dados.setor) metaParts.push(`<span class="sol-meta-sep"></span><span>${esc(dados.setor)}</span>`);
       if (dados.natureza) metaParts.push(`<span class="sol-meta-sep"></span><span>${dados.natureza === 'presencial' ? 'Presencial' : 'Online'}</span>`);
       metaParts.push(`<span class="sol-meta-sep"></span><span>Solicitado em ${dtStr}</span>`);
