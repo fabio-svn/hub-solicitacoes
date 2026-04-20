@@ -180,17 +180,15 @@
               <button id="graficoBtnTipo" onclick="toggleGraficoDropdown('tipo')" style="display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:8px;border:1px solid var(--border-light);background:var(--carbon-black);color:white;font-family:'Nunito Sans',sans-serif;font-size:0.8rem;font-weight:600;cursor:pointer;white-space:nowrap;transition:all 0.15s">
                 Por tipo
                 <svg id="graficoChevronTipo" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="transition:transform 0.2s"><polyline points="6 9 12 15 18 9"/></svg>
-                <span class="filter-count-badge" id="graficoCountTipo" style="display:none">0</span>
               </button>
-              <div id="graficoDropdownTipo" style="display:none;position:absolute;top:36px;right:0;z-index:100;background:#fff;border:1px solid var(--border-light);border-radius:10px;box-shadow:0 4px 20px rgba(0,0,0,.1);padding:8px;min-width:200px;max-height:260px;overflow-y:auto"></div>
+              <div id="graficoDropdownTipo" style="display:none;position:absolute;top:36px;right:0;z-index:100;background:#fff;border:1px solid var(--border-light);border-radius:10px;box-shadow:0 4px 20px rgba(0,0,0,.1);padding:8px;min-width:280px"></div>
             </div>
             <div style="position:relative" id="graficoDropdownStatusWrap">
               <button id="graficoBtnStatus" onclick="toggleGraficoDropdown('status')" style="display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:8px;border:1px solid var(--border-light);background:var(--card-white);color:var(--carbon-black);font-family:'Nunito Sans',sans-serif;font-size:0.8rem;font-weight:600;cursor:pointer;white-space:nowrap;transition:all 0.15s">
                 Por status
                 <svg id="graficoChevronStatus" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="transition:transform 0.2s"><polyline points="6 9 12 15 18 9"/></svg>
-                <span class="filter-count-badge" id="graficoCountStatus" style="display:none">0</span>
               </button>
-              <div id="graficoDropdownStatus" style="display:none;position:absolute;top:36px;right:0;z-index:100;background:#fff;border:1px solid var(--border-light);border-radius:10px;box-shadow:0 4px 20px rgba(0,0,0,.1);padding:8px;min-width:200px"></div>
+              <div id="graficoDropdownStatus" style="display:none;position:absolute;top:36px;right:0;z-index:100;background:#fff;border:1px solid var(--border-light);border-radius:10px;box-shadow:0 4px 20px rgba(0,0,0,.1);padding:8px;min-width:280px"></div>
             </div>
           </div>
         </div>
@@ -1034,17 +1032,10 @@
         label.querySelector('input').addEventListener('change', () => toggleGraficoFiltro(item.id));
         container.appendChild(label);
       });
-      atualizarContadorGrafico(modo, todosItens);
     }
 
     function atualizarContadorGrafico(modo, todosItens) {
-      if (!graficoFiltrosAtivos) return;
-      const total = todosItens?.length || 0;
-      const ativos = graficoFiltrosAtivos.size;
-      const isFiltrado = ativos < total && ativos > 0;
-      const countId = modo === 'tipo' ? 'graficoCountTipo' : 'graficoCountStatus';
-      const countEl = document.getElementById(countId);
-      if (countEl) { countEl.style.display = isFiltrado ? 'inline' : 'none'; countEl.textContent = String(total - ativos) + ' ocultos'; }
+      // Removido — sem contador nos botões do gráfico
     }
 
     document.addEventListener('click', e => {
@@ -1057,81 +1048,119 @@
       if (!adminGraficoData) return;
 
       const todosItens = adminGraficoModo === 'tipo'
-        ? adminGraficoData.porTipo.map(i => ({
-            id: i.tipo,
-            label: (typeof TIPO_SOLICITACAO_LABELS !== 'undefined' && TIPO_SOLICITACAO_LABELS[i.tipo]) || i.tipo,
-            value: i.count
-          }))
-        : adminGraficoData.porStatus.map(i => ({
-            id: i.status,
-            label: (STATUS_SOLICITACAO?.find(s => s.id === i.status)?.label) || i.status,
-            value: i.count,
-            cor: STATUS_SOLICITACAO?.find(s => s.id === i.status)?.bg || null,
-          }));
+        ? adminGraficoData.porTipo
+            .filter(i => i.count > 0)
+            .sort((a, b) => b.count - a.count)
+            .map(i => ({
+              id: i.tipo,
+              label: (typeof TIPO_SOLICITACAO_LABELS !== 'undefined' && TIPO_SOLICITACAO_LABELS[i.tipo]) || i.tipo,
+              value: i.count
+            }))
+        : adminGraficoData.porStatus
+            .filter(i => i.count > 0)
+            .sort((a, b) => b.count - a.count)
+            .map(i => ({
+              id: i.status,
+              label: (STATUS_SOLICITACAO?.find(s => s.id === i.status)?.label) || i.status,
+              value: i.count,
+              cor: STATUS_SOLICITACAO?.find(s => s.id === i.status)?.bg || null,
+            }));
 
-      // Inicializar com todos os itens na primeira renderização
       if (graficoFiltrosAtivos === null) {
         graficoFiltrosAtivos = new Set(todosItens.map(i => i.id));
       }
 
       const itens = todosItens.filter(i => graficoFiltrosAtivos.has(i.id));
 
-      atualizarContadorGrafico(adminGraficoModo, todosItens);
-
-      const total = itens.reduce((a, b) => a + b.value, 0);
-      if (total === 0) {
-        document.getElementById('adminLegenda').innerHTML = '<p style="opacity:0.4;font-size:0.85rem">Nenhuma solicitação no período.</p>';
-        const canvas = document.getElementById('adminPizza');
-        const ctx = canvas.getContext('2d');
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        return;
-      }
-
-      const CORES = ['#AC3631','#221B19','#4a7c2f','#1e40af','#9333ea','#ea580c','#0891b2','#be123c','#854d0e','#166534'];
       const canvas = document.getElementById('adminPizza');
-      const ctx = canvas.getContext('2d');
-      canvas.width = 200; canvas.height = 200;
-      ctx.clearRect(0, 0, 200, 200);
+      const legenda = document.getElementById('adminLegenda');
 
-      let startAngle = -Math.PI / 2;
-      const cx = 100, cy = 100, r = 85, rInner = 50;
+      canvas.style.transition = 'opacity 0.18s ease';
+      legenda.style.transition = 'opacity 0.18s ease';
+      canvas.style.opacity = '0';
+      legenda.style.opacity = '0';
 
-      itens.forEach((item, i) => {
-        const slice = (item.value / total) * 2 * Math.PI;
-        const cor = item.cor || CORES[i % CORES.length];
-        ctx.beginPath();
-        ctx.moveTo(cx, cy);
-        ctx.arc(cx, cy, r, startAngle, startAngle + slice);
-        ctx.closePath();
-        ctx.fillStyle = cor;
-        ctx.fill();
-        startAngle += slice;
-      });
+      setTimeout(() => {
+        const total = itens.reduce((a, b) => a + b.value, 0);
+        if (total === 0) {
+          legenda.innerHTML = '<p style="opacity:0.4;font-size:0.85rem">Nenhuma solicitação no período.</p>';
+          const ctx = canvas.getContext('2d');
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          canvas.style.opacity = '1';
+          legenda.style.opacity = '1';
+          return;
+        }
 
-      ctx.beginPath();
-      ctx.arc(cx, cy, rInner, 0, 2 * Math.PI);
-      ctx.fillStyle = getComputedStyle(document.body).getPropertyValue('--paper-white').trim() || '#FFF8F3';
-      ctx.fill();
+        const CORES = ['#AC3631','#221B19','#4a7c2f','#1e40af','#9333ea','#ea580c','#0891b2','#be123c','#854d0e','#166534'];
+        canvas.width = 200; canvas.height = 200;
+        const ctx = canvas.getContext('2d');
+        const cx = 100, cy = 100, r = 85, rInner = 50;
 
-      ctx.fillStyle = '#221B19';
-      ctx.font = 'bold 24px "Nunito Sans", sans-serif';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText(total, cx, cy - 6);
-      ctx.font = '11px "Nunito Sans", sans-serif';
-      ctx.fillStyle = 'rgba(34,27,25,0.4)';
-      ctx.fillText('total', cx, cy + 14);
+        const slices = itens.map((item, i) => ({
+          angle: (item.value / total) * 2 * Math.PI,
+          cor: item.cor || CORES[i % CORES.length],
+        }));
 
-      document.getElementById('adminLegenda').innerHTML = itens.map((item, i) => {
-        const pct = Math.round((item.value / total) * 100);
-        const cor = item.cor || CORES[i % CORES.length];
-        return '<div style="display:flex;align-items:center;gap:8px">' +
-          '<div style="width:10px;height:10px;border-radius:2px;background:' + cor + ';flex-shrink:0"></div>' +
-          '<span style="font-size:0.8rem;flex:1;line-height:1.3">' + esc(item.label) + '</span>' +
-          '<span style="font-size:0.8rem;font-weight:700;opacity:0.7">' + pct + '%</span>' +
-          '<span style="font-size:0.75rem;opacity:0.4">' + item.value + '</span>' +
-          '</div>';
-      }).join('');
+        const duration = 350;
+        const startTime = performance.now();
+
+        function drawFrame(now) {
+          const elapsed = now - startTime;
+          const progress = Math.min(elapsed / duration, 1);
+          const ease = 1 - Math.pow(1 - progress, 3);
+
+          ctx.clearRect(0, 0, 200, 200);
+
+          let sa = -Math.PI / 2;
+          slices.forEach(slice => {
+            const ang = slice.angle * ease;
+            ctx.beginPath();
+            ctx.moveTo(cx, cy);
+            ctx.arc(cx, cy, r, sa, sa + ang);
+            ctx.closePath();
+            ctx.fillStyle = slice.cor;
+            ctx.fill();
+            sa += ang;
+          });
+
+          ctx.beginPath();
+          ctx.arc(cx, cy, rInner, 0, 2 * Math.PI);
+          ctx.fillStyle = getComputedStyle(document.body).getPropertyValue('--paper-white').trim() || '#FFF8F3';
+          ctx.fill();
+
+          if (progress > 0.6) {
+            const alpha = Math.min((progress - 0.6) / 0.4, 1);
+            ctx.globalAlpha = alpha;
+            ctx.fillStyle = '#221B19';
+            ctx.font = 'bold 24px "Nunito Sans", sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(total, cx, cy - 6);
+            ctx.font = '11px "Nunito Sans", sans-serif';
+            ctx.fillStyle = 'rgba(34,27,25,0.4)';
+            ctx.fillText('total', cx, cy + 14);
+            ctx.globalAlpha = 1;
+          }
+
+          if (progress < 1) requestAnimationFrame(drawFrame);
+        }
+
+        requestAnimationFrame(drawFrame);
+
+        legenda.innerHTML = itens.map((item, i) => {
+          const pct = Math.round((item.value / total) * 100);
+          const cor = item.cor || CORES[i % CORES.length];
+          return '<div style="display:flex;align-items:center;gap:8px">' +
+            '<div style="width:10px;height:10px;border-radius:2px;background:' + cor + ';flex-shrink:0"></div>' +
+            '<span style="font-size:0.8rem;flex:1;line-height:1.3">' + esc(item.label) + '</span>' +
+            '<span style="font-size:0.8rem;font-weight:700;opacity:0.7">' + pct + '%</span>' +
+            '<span style="font-size:0.75rem;opacity:0.4">' + item.value + '</span>' +
+            '</div>';
+        }).join('');
+
+        canvas.style.opacity = '1';
+        legenda.style.opacity = '1';
+      }, 180);
     }
 
     async function loadAdminHistorico() {
