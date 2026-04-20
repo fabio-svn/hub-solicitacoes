@@ -1605,7 +1605,32 @@
       ].forEach(([p,r]) => { h = h.replace(p, r); });
       return h;
     }
+    function formatarData(raw) {
+      if (!raw) return '';
+      const meses = ['janeiro','fevereiro','março','abril','maio','junho',
+                     'julho','agosto','setembro','outubro','novembro','dezembro'];
+      let d;
+      const matchISO = String(raw).match(/^(\d{4})-(\d{2})-(\d{2})/);
+      if (matchISO) {
+        d = new Date(parseInt(matchISO[1]), parseInt(matchISO[2])-1, parseInt(matchISO[3]));
+      } else {
+        d = new Date(raw);
+      }
+      if (isNaN(d.getTime())) return String(raw);
+      const dia = d.getDate();
+      const mes = meses[d.getMonth()];
+      const ano = d.getFullYear();
+      const diaFmt = String(dia).padStart(2, '0');
+      const mesFmt = String(d.getMonth() + 1).padStart(2, '0');
+      return `${dia} de ${mes} de ${ano} (${diaFmt}/${mesFmt}/${ano})`;
+    }
+
     function humanizeValue(key, value) {
+      const dataCampos = ['dataEvento', 'prazoEntrega'];
+      if (dataCampos.includes(key) && typeof value === 'string') {
+        const formatted = formatarData(value);
+        if (formatted !== value) return formatted;
+      }
       const maps = {
         natureza: { presencial:'Presencial', online:'Online' },
         maturidade: { 1:'Tenho a maioria das informações', 2:'Tenho algumas informações', 3:'Ainda estou estruturando' },
@@ -1647,5 +1672,27 @@
     <path d="M11.999 2C6.477 2 2 6.484 2 12.017c0 1.99.521 3.86 1.43 5.484L2 22l4.644-1.414A9.96 9.96 0 0011.999 22C17.523 22 22 17.516 22 11.983 22 6.472 17.523 2 11.999 2zm0 18.15a8.124 8.124 0 01-4.162-1.145l-.299-.178-3.088.941.923-3.121-.196-.32A8.185 8.185 0 013.85 11.983c0-4.51 3.644-8.183 8.15-8.183 4.507 0 8.152 3.672 8.152 8.183 0 4.51-3.645 8.167-8.153 8.167z"/>
   </svg>
 </a>
+<script>
+(function() {
+  function posicionarWhatsApp() {
+    const wa = document.querySelector('.float-whatsapp');
+    if (!wa) return;
+    const outros = [...document.querySelectorAll('.float-home')]
+      .filter(el => el !== wa && getComputedStyle(el).display !== 'none');
+    if (outros.length === 0) {
+      wa.style.bottom = '78px';
+    } else {
+      const alturas = outros.map(el => parseInt(el.style.bottom || getComputedStyle(el).bottom) || 20);
+      const maiorAltura = Math.max(...alturas);
+      wa.style.bottom = (maiorAltura + 58) + 'px';
+    }
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', posicionarWhatsApp);
+  } else {
+    posicionarWhatsApp();
+  }
+})();
+</script>
 </body>
 </html>

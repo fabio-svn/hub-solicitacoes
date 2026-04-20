@@ -20,6 +20,25 @@ const Auth = {
     } finally {
       this.initialized = true;
     }
+
+    // Verificar e exibir banner de impersonação
+    const impEmail = sessionStorage.getItem('svn_impersonate');
+    if (impEmail) {
+      if (!document.getElementById('impersonarBanner')) {
+        const banner = document.createElement('div');
+        banner.id = 'impersonarBanner';
+        banner.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:9999;background:#7c3aed;color:white;padding:8px 20px;display:flex;align-items:center;justify-content:center;gap:10px;font-size:0.82rem;font-weight:600;font-family:"Nunito Sans",sans-serif';
+        banner.innerHTML = `
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+          Visualizando como: <strong>${impEmail}</strong>
+          <button onclick="window._sairImpersonar()" style="background:rgba(255,255,255,0.2);border:none;color:white;padding:3px 10px;border-radius:6px;cursor:pointer;font-family:'Nunito Sans',sans-serif;font-weight:600;font-size:0.78rem;margin-left:6px">
+            Sair ✕
+          </button>`;
+        document.body.prepend(banner);
+        document.body.style.paddingTop = (parseInt(document.body.style.paddingTop || '0') + 40) + 'px';
+      }
+    }
+
     return this.user;
   },
 
@@ -94,6 +113,22 @@ const Auth = {
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
               Sair
             </button>
+            ${this.isAdmin() ? `
+              <div style="border-top:1px solid rgba(34,27,25,0.08);margin:4px 0;padding-top:4px">
+                <div style="padding:6px 12px;font-size:0.72rem;font-weight:700;opacity:0.4;text-transform:uppercase;letter-spacing:0.05em">Admin</div>
+                <div id="impersonarWrap" style="padding:4px 8px">
+                  <div style="font-size:0.78rem;font-weight:600;opacity:0.6;margin-bottom:6px;padding:0 4px">Visualizar como:</div>
+                  <div style="display:flex;gap:6px">
+                    <input type="email" id="impersonarEmailInput" placeholder="email@svninvest.com.br"
+                      style="flex:1;border:1px solid rgba(34,27,25,0.15);border-radius:7px;padding:5px 9px;font-family:'Nunito Sans',sans-serif;font-size:0.78rem;min-width:0"
+                      onclick="event.stopPropagation()">
+                    <button onclick="window._impersonar()" style="padding:5px 10px;background:var(--carbon-black);color:white;border:none;border-radius:7px;font-family:'Nunito Sans',sans-serif;font-size:0.78rem;font-weight:600;cursor:pointer;white-space:nowrap">
+                      Entrar
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ` : ''}
           </div>
         </div>
       </div>
@@ -144,3 +179,34 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   });
 });
+
+// ── IMPERSONAÇÃO GLOBAL ───────────────────────────────────────
+window._impersonar = async function() {
+  const input = document.getElementById('impersonarEmailInput');
+  const email = input?.value?.trim();
+  if (!email || !email.includes('@')) {
+    if (input) input.style.borderColor = 'var(--ruby-red)';
+    return;
+  }
+  try {
+    const res = await fetch('/api/admin/impersonate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email }),
+    });
+    if (res.ok) {
+      sessionStorage.setItem('svn_impersonate', email);
+      window.location.reload();
+    } else {
+      alert('Não foi possível entrar como esse usuário.');
+    }
+  } catch { alert('Erro de conexão.'); }
+};
+
+window._sairImpersonar = async function() {
+  sessionStorage.removeItem('svn_impersonate');
+  try {
+    await fetch('/api/admin/impersonate/stop', { method: 'POST' });
+  } catch {}
+  window.location.reload();
+};

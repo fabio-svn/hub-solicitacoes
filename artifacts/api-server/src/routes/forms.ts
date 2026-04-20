@@ -743,9 +743,11 @@ router.get("/admin/historico", requireAuth, async (req, res): Promise<void> => {
 
     const allowedCols: Record<string, any> = {
       created_at: solicitacoesTable.created_at,
+      criado_em: solicitacoesTable.created_at,
       status: solicitacoesTable.status,
       tipo_solicitacao: solicitacoesTable.tipo_solicitacao,
       titulo: solicitacoesTable.titulo,
+      user_email: solicitacoesTable.user_email,
     };
     const orderColKey = String(req.query.order || "created_at");
     const orderDirKey = String(req.query.dir || "desc");
