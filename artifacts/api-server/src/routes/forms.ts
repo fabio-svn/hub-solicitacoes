@@ -793,17 +793,23 @@ router.delete("/solicitacoes/:id", requireAuth, async (req, res): Promise<void> 
     if (user.role !== "admin" && user.role !== "gestor") {
       res.status(403).json({ error: "Acesso negado" }); return;
     }
+
     const id = parseInt(String(req.params.id));
     if (isNaN(id)) { res.status(400).json({ error: "ID inválido" }); return; }
-    const result = await pool.query(
-      "DELETE FROM solicitacoes WHERE id = $1 RETURNING id",
-      [id]
-    );
-    if (result.rowCount === 0) {
-      res.status(404).json({ error: "Solicitação não encontrada" }); return;
-    }
-    res.json({ success: true, id });
+
+    const [solicitacao] = await db.select()
+      .from(solicitacoesTable)
+      .where(eq(solicitacoesTable.id, id));
+
+    if (!solicitacao) { res.status(404).json({ error: "Solicitação não encontrada" }); return; }
+
+    await db.delete(arquivosTable).where(eq(arquivosTable.solicitacao_id, id));
+    await db.delete(solicitacoesTable).where(eq(solicitacoesTable.id, id));
+
+    logger.info({ id, deletedBy: user.email }, "Solicitação excluída por admin");
+    res.json({ success: true });
   } catch (err) {
+    logger.error({ err }, "Erro ao excluir solicitação");
     res.status(500).json({ error: "Erro ao excluir solicitação" });
   }
 });

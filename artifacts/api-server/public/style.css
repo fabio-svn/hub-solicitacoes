@@ -733,6 +733,47 @@ input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
 .tbl-action-btn.clickup:hover { background: rgba(137,48,253,0.18); }
 .tbl-actions { display: flex; align-items: center; gap: 6px; }
 
+/* Admin table — sticky actions column */
+.admin-tabela th.col-acoes,
+.admin-tabela td.col-acoes {
+  position: sticky;
+  right: 0;
+  background: var(--paper-white);
+  z-index: 2;
+}
+.admin-tabela th.col-acoes {
+  background: var(--carbon-black);
+}
+.admin-tabela td.col-acoes::before,
+.admin-tabela th.col-acoes::before {
+  content: '';
+  position: absolute;
+  left: -16px;
+  top: 0;
+  bottom: 0;
+  width: 16px;
+  background: linear-gradient(to right, transparent, rgba(34,27,25,0.06));
+  pointer-events: none;
+}
+
+/* Compact action buttons inside table rows */
+.tabela-acao-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 7px;
+  border: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s, color 0.15s;
+  background: transparent;
+  color: var(--carbon-black);
+  flex-shrink: 0;
+}
+.tabela-acao-btn:hover { background: var(--icon-bg); }
+.tabela-acao-btn.danger:hover { background: rgba(220,38,38,0.08); color: #dc2626; }
+
 /* Responsive table — stack as cards below 600px */
 @media (max-width: 600px) {
   .admin-table thead { display: none; }
