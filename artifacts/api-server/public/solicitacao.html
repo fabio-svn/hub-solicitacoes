@@ -856,7 +856,7 @@
         chevron.style.transform = aberto ? 'rotate(180deg)' : 'rotate(0deg)';
 
         if (aberto) {
-          body.style.maxHeight = '700px';
+          body.style.maxHeight = '900px';
           localStorage.setItem(storageKey, '1');
           if (mostrarDestaque) {
             document.getElementById('aprovacaoCardInner').style.boxShadow = '';
@@ -1301,8 +1301,9 @@
     }
 
     function fecharModalAvaliacao(e) {
-      if (e && e.target !== document.getElementById('avaliacaoModal')) return;
-      document.getElementById('avaliacaoModal').style.display = 'none';
+      if (!e || e.target === document.getElementById('avaliacaoModal')) {
+        document.getElementById('avaliacaoModal').style.display = 'none';
+      }
     }
 
     document.addEventListener('keydown', e => {
@@ -1500,7 +1501,7 @@
       let palestrantesBlock = '';
       let hasContent = false;
 
-      const SKIP_KEYS = new Set(['idSolicitacao', 'natureza', 'setor']);
+      const SKIP_KEYS = new Set(['idSolicitacao', 'natureza', 'setor', 'nome', 'materiaisDetalhes']);
 
       for (const [key, value] of Object.entries(dados)) {
         if (value === null || value === undefined || value === '') continue;

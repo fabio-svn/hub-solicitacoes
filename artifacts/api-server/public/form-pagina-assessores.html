@@ -150,6 +150,7 @@
           <button id="addDepoimento" onclick="addDepoimento()" style="margin-top:10px;background:none;border:none;padding:0;font-size:0.88rem;color:var(--ruby-red);cursor:pointer;font-weight:600;text-decoration:underline;text-underline-offset:3px;opacity:0.85">+ Adicionar depoimento</button>
         </div>
 
+        <div id="submitError" class="alert-card alert-danger" style="display:none;margin-bottom:16px"></div>
         <div style="border-top:1px solid rgba(34,27,25,.08);margin:28px 0 20px;padding-top:22px">
           <div class="form-nav" style="justify-content:space-between">
             <button class="btn btn-secondary" onclick="voltarDoStep2()">Voltar</button>
@@ -339,6 +340,7 @@
         accept: '.jpg,.jpeg,.png,.webp',
         maxMB: 50
       });
+      restoreDraft();
     }
 
     function renderSelos() {
@@ -496,6 +498,11 @@
       return true;
     }
 
+    function showSubmitError(msg) {
+      const el = document.getElementById('submitError');
+      if (el) { el.style.display = 'block'; el.textContent = msg; el.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
+    }
+
     async function submitForm() {
       if (isAtualizacao && camposSelecionados.size === 0) {
         document.getElementById('seletorInlineError').style.display = 'block';
@@ -503,8 +510,6 @@
         return;
       }
       if (!validateRequiredFields()) return;
-      const btn = document.getElementById('btnSubmit');
-      btn.disabled = true; btn.textContent = 'Enviando...';
 
       if (!isAtualizacao && !document.getElementById('fotoPerfil').files[0]) {
         const fieldEl = document.getElementById('fotoPerfil').closest('.field');
@@ -519,9 +524,11 @@
           errorEl.textContent = 'A foto de perfil é obrigatória.';
           fieldEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
-        btn.disabled = false; btn.textContent = 'Enviar';
         return;
       }
+
+      const btn = document.getElementById('btnSubmit');
+      btn.disabled = true; btn.textContent = 'Enviando...';
 
       const validDepos = depoimentos.filter(d => d.nome && d.texto);
       const formData = new FormData();
@@ -565,8 +572,16 @@
           } catch {}
           window.location.href = '/thankyou.html';
         }
-        else { alert('Erro ao enviar.'); btn.disabled = false; btn.textContent = 'Enviar'; }
-      } catch (e) { alert('Erro de conexão.'); btn.disabled = false; btn.textContent = 'Enviar'; }
+        else {
+          let errMsg = 'Erro ao enviar. Tente novamente.';
+          try { const errData = await res.json(); if (errData.error) errMsg = errData.error; } catch {}
+          showSubmitError(errMsg);
+          btn.disabled = false; btn.textContent = 'Enviar';
+        }
+      } catch (e) {
+        showSubmitError('Erro de conexão. Verifique sua internet.');
+        btn.disabled = false; btn.textContent = 'Enviar';
+      }
     }
 
     function saveDraft() {
@@ -594,7 +609,6 @@
       } catch {}
     }
     document.querySelectorAll('input,textarea,select').forEach(el => el.addEventListener('change', saveDraft));
-    restoreDraft();
 
     document.addEventListener('input', function(e) {
       const field = e.target.closest('.field');

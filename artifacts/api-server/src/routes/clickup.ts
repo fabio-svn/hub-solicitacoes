@@ -621,6 +621,9 @@ async function setClickUpCustomField(
 }
 
 async function setEventosCustomFields(taskId: string, dados: FormDados, arquivos: ArquivosMap, user: UserData): Promise<void> {
+  // ── Cópia local para campos computados — não muta o objeto original ────────
+  const dadosLocal: Record<string, unknown> = { ...dados };
+
   // ── Campos computados: calcular antes do Promise.all ──────────────────────
   const localHuman = humanizeLocal(dados);
 
@@ -628,10 +631,12 @@ async function setEventosCustomFields(taskId: string, dados: FormDados, arquivos
   const estadoRaw = str(dados.estado as string);
   if (cidadeRaw) {
     const sigla = IBGE_SIGLA_MAP[estadoRaw] || estadoRaw;
-    (dados as Record<string, unknown>)._cidadeFormatada = sigla ? `${cidadeRaw} - ${sigla}` : cidadeRaw;
+    dadosLocal._cidadeFormatada = sigla ? `${cidadeRaw} - ${sigla}` : cidadeRaw;
   }
 
   const localEvento = str(dados.localEvento as string);
+  // UNIDADES_ENDERECOS é definido inline para manter o mapeamento próximo ao uso;
+  // se outros módulos precisarem, extrair para um arquivo de constantes compartilhado.
   if (localEvento === "unidade") {
     const UNIDADES_ENDERECOS: Record<string, string> = {
       "SVN Aracaju":              "R. Francisco Duarte Ramos, 34 - Jardins, Aracaju - SE",
@@ -684,7 +689,7 @@ async function setEventosCustomFields(taskId: string, dados: FormDados, arquivos
       if (!url) { logger.warn({ taskId, label: field.label }, "ClickUp: arquivo sem URL, pulando"); continue; }
       value = url;
     } else {
-      const raw = dados[field.dadosKey];
+      const raw = field.dadosKey in dadosLocal ? dadosLocal[field.dadosKey] : dados[field.dadosKey];
       if (raw === undefined || raw === null || str(raw as string) === "") {
         logger.warn({ taskId, label: field.label, dadosKey: field.dadosKey }, "ClickUp: campo sem valor, pulando");
         continue;
@@ -702,7 +707,7 @@ async function setEventosCustomFields(taskId: string, dados: FormDados, arquivos
     fieldPromises.push(
       setClickUpCustomField(taskId, field.id, value, field.label, {
         clickupType: field.clickupType,
-        raw: dados[field.dadosKey],
+        raw: field.dadosKey in dadosLocal ? dadosLocal[field.dadosKey] : dados[field.dadosKey],
       })
     );
   }
@@ -879,7 +884,13 @@ export async function createClickUpTask(
 
   // Responsável por tipo
   const assigneeId = tipo === "eventos" ? ASSIGNEE_EVENTOS : ASSIGNEE_GERAL;
-  if (assigneeId) taskPayload.assignees = [parseInt(assigneeId)];
+  const assigneeIdNum = parseInt(assigneeId);
+  if (!isNaN(assigneeIdNum)) {
+    taskPayload.assignees = [assigneeIdNum];
+    logger.info({ assigneeId, assigneeIdNum, tipo }, "ClickUp: assignee definido");
+  } else if (assigneeId) {
+    logger.warn({ assigneeId, tipo }, "ClickUp: assigneeId inválido (não numérico), pulando");
+  }
 
   let taskId: string | null = null;
 
