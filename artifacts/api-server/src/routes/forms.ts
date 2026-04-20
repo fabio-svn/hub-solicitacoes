@@ -606,6 +606,163 @@ router.post("/solicitacoes/:id/aprovacao", requireAuth, async (req, res): Promis
   }
 });
 
+router.get("/admin/stats", requireAuth, async (req, res): Promise<void> => {
+  try {
+    const user = req.session.user!;
+    if (user.role !== "admin" && user.role !== "gestor") {
+      res.status(403).json({ error: "Acesso negado" }); return;
+    }
+
+    const dias = Math.min(365, Math.max(1, parseInt(String(req.query.dias)) || 7));
+    const now = new Date();
+    const periodoAtual = new Date(now.getTime() - dias * 86400000);
+    const periodoAnterior = new Date(periodoAtual.getTime() - dias * 86400000);
+
+    const [atual] = await db.select({ count: sql<number>`count(*)` })
+      .from(solicitacoesTable)
+      .where(sql`${solicitacoesTable.created_at} >= ${periodoAtual.toISOString()}`);
+
+    const [anterior] = await db.select({ count: sql<number>`count(*)` })
+      .from(solicitacoesTable)
+      .where(and(
+        sql`${solicitacoesTable.created_at} >= ${periodoAnterior.toISOString()}`,
+        sql`${solicitacoesTable.created_at} < ${periodoAtual.toISOString()}`
+      ));
+
+    const porTipo = await db.select({
+      tipo: solicitacoesTable.tipo_solicitacao,
+      count: sql<number>`count(*)`
+    })
+      .from(solicitacoesTable)
+      .where(sql`${solicitacoesTable.created_at} >= ${periodoAtual.toISOString()}`)
+      .groupBy(solicitacoesTable.tipo_solicitacao)
+      .orderBy(desc(sql`count(*)`));
+
+    const porStatus = await db.select({
+      status: solicitacoesTable.status,
+      count: sql<number>`count(*)`
+    })
+      .from(solicitacoesTable)
+      .where(sql`${solicitacoesTable.created_at} >= ${periodoAtual.toISOString()}`)
+      .groupBy(solicitacoesTable.status)
+      .orderBy(desc(sql`count(*)`));
+
+    const [avaliacoes] = await db.select({ count: sql<number>`count(*)` })
+      .from(solicitacoesTable)
+      .where(and(
+        sql`${solicitacoesTable.created_at} >= ${periodoAtual.toISOString()}`,
+        sql`${solicitacoesTable.avaliacao} IS NOT NULL`
+      ));
+
+    const [mediaNotas] = await db.select({
+      media: sql<number>`avg((avaliacao->>'nota')::numeric)`
+    })
+      .from(solicitacoesTable)
+      .where(and(
+        sql`${solicitacoesTable.created_at} >= ${periodoAtual.toISOString()}`,
+        sql`${solicitacoesTable.avaliacao} IS NOT NULL`
+      ));
+
+    const totalAtual = Number(atual.count);
+    const totalAnterior = Number(anterior.count);
+    const delta = totalAnterior === 0
+      ? (totalAtual > 0 ? 100 : 0)
+      : Math.round(((totalAtual - totalAnterior) / totalAnterior) * 100);
+
+    res.json({
+      total: totalAtual,
+      delta,
+      deltaPositivo: totalAtual >= totalAnterior,
+      porTipo: porTipo.map(r => ({ tipo: r.tipo, count: Number(r.count) })),
+      porStatus: porStatus.map(r => ({ status: r.status, count: Number(r.count) })),
+      avaliacoes: Number(avaliacoes.count),
+      mediaNotas: mediaNotas.media ? Number(mediaNotas.media).toFixed(1) : null,
+      dias,
+    });
+  } catch (err) {
+    logger.error({ err }, "Erro ao buscar stats admin");
+    res.status(500).json({ error: "Erro ao buscar estatísticas" });
+  }
+});
+
+router.get("/admin/historico", requireAuth, async (req, res): Promise<void> => {
+  try {
+    const user = req.session.user!;
+    if (user.role !== "admin" && user.role !== "gestor") {
+      res.status(403).json({ error: "Acesso negado" }); return;
+    }
+
+    const page = Math.max(1, parseInt(String(req.query.page)) || 1);
+    const limit = Math.min(50, Math.max(1, parseInt(String(req.query.limit)) || 25));
+    const offset = (page - 1) * limit;
+
+    const conditions: ReturnType<typeof sql>[] = [];
+
+    if (req.query.busca) {
+      const term = `%${String(req.query.busca).replace(/%/g, "\\%")}%`;
+      conditions.push(sql`(
+        ${solicitacoesTable.titulo} ILIKE ${term} OR
+        ${solicitacoesTable.user_email} ILIKE ${term} OR
+        ${solicitacoesTable.dados}::text ILIKE ${term}
+      )`);
+    }
+
+    if (req.query.tipo && String(req.query.tipo) !== "") {
+      conditions.push(sql`${solicitacoesTable.tipo_solicitacao} = ${String(req.query.tipo)}`);
+    }
+
+    if (req.query.status && String(req.query.status) !== "") {
+      conditions.push(sql`${solicitacoesTable.status} = ${String(req.query.status)}`);
+    }
+
+    if (req.query.de) {
+      conditions.push(sql`${solicitacoesTable.created_at} >= ${new Date(String(req.query.de)).toISOString()}`);
+    }
+    if (req.query.ate) {
+      const ate = new Date(String(req.query.ate));
+      ate.setHours(23, 59, 59, 999);
+      conditions.push(sql`${solicitacoesTable.created_at} <= ${ate.toISOString()}`);
+    }
+
+    if (req.query.avaliacao === "sim") {
+      conditions.push(sql`${solicitacoesTable.avaliacao} IS NOT NULL`);
+    }
+
+    const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
+
+    const results = await db.select({
+      id: solicitacoesTable.id,
+      user_email: solicitacoesTable.user_email,
+      tipo_solicitacao: solicitacoesTable.tipo_solicitacao,
+      status: solicitacoesTable.status,
+      titulo: solicitacoesTable.titulo,
+      created_at: solicitacoesTable.created_at,
+      clickup_url: solicitacoesTable.clickup_url,
+      avaliacao: solicitacoesTable.avaliacao,
+    })
+      .from(solicitacoesTable)
+      .where(whereClause)
+      .orderBy(desc(solicitacoesTable.created_at))
+      .limit(limit)
+      .offset(offset);
+
+    const [countResult] = await db.select({ count: sql<number>`count(*)` })
+      .from(solicitacoesTable)
+      .where(whereClause);
+
+    res.json({
+      data: results,
+      total: Number(countResult.count),
+      page,
+      limit,
+      totalPages: Math.ceil(Number(countResult.count) / limit),
+    });
+  } catch (err) {
+    logger.error({ err }, "Erro ao buscar histórico admin");
+    res.status(500).json({ error: "Erro ao buscar histórico" });
+  }
+});
+
 router.post("/solicitacoes/:id/avaliacao", requireAuth, async (req, res): Promise<void> => {
   try {
     const user = req.session.user!;
