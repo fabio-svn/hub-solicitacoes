@@ -785,6 +785,27 @@ router.get("/admin/historico", requireAuth, async (req, res): Promise<void> => {
   }
 });
 
+router.delete("/solicitacoes/:id", requireAuth, async (req, res): Promise<void> => {
+  try {
+    const user = req.session.user!;
+    if (user.role !== "admin" && user.role !== "gestor") {
+      res.status(403).json({ error: "Acesso negado" }); return;
+    }
+    const id = parseInt(String(req.params.id));
+    if (isNaN(id)) { res.status(400).json({ error: "ID inválido" }); return; }
+    const result = await pool.query(
+      "DELETE FROM solicitacoes WHERE id = $1 RETURNING id",
+      [id]
+    );
+    if (result.rowCount === 0) {
+      res.status(404).json({ error: "Solicitação não encontrada" }); return;
+    }
+    res.json({ success: true, id });
+  } catch (err) {
+    res.status(500).json({ error: "Erro ao excluir solicitação" });
+  }
+});
+
 router.post("/admin/impersonate", requireAuth, async (req, res): Promise<void> => {
   try {
     const user = req.session.user!;
