@@ -823,15 +823,20 @@ const PRAZO_DIAS_UTEIS: Record<string, number> = {
 const ASSIGNEE_GERAL   = process.env.CLICKUP_ASSIGNEE_GERAL   || "";
 const ASSIGNEE_EVENTOS = process.env.CLICKUP_ASSIGNEE_EVENTOS || "";
 
+const ASSIGNEE_NOMES: Record<string, string> = {
+  "55140303":  "João Sardeto",
+  "112032406": "Julia Rodrigues",
+};
+
 export async function createClickUpTask(
   solicitacao: SolicitacaoData,
   user: UserData,
   dados: FormDados,
   arquivos?: ArquivosMap
-): Promise<{ taskId: string | null; taskName: string }> {
+): Promise<{ taskId: string | null; taskName: string; responsavel: string }> {
   if (!CLICKUP_API_TOKEN) {
     logger.warn("CLICKUP_API_TOKEN not configured, skipping task creation");
-    return { taskId: null, taskName: "" };
+    return { taskId: null, taskName: "", responsavel: "" };
   }
 
   const tipo = solicitacao.tipo_solicitacao;
@@ -889,16 +894,16 @@ export async function createClickUpTask(
     if (!response.ok) {
       const text = await response.text();
       logger.error({ tipo, listId, taskName, httpStatus: response.status, body: text }, "ClickUp: erro ao criar task");
-      return { taskId: null, taskName };
+      return { taskId: null, taskName, responsavel: "" };
     }
     const data = await response.json() as { id?: string };
     taskId = data.id || null;
   } catch (err) {
     logger.error({ err, tipo, listId }, "ClickUp: falha na criação da task");
-    return { taskId: null, taskName };
+    return { taskId: null, taskName, responsavel: "" };
   }
 
-  if (!taskId) return { taskId: null, taskName };
+  if (!taskId) return { taskId: null, taskName, responsavel: "" };
   logger.info({ taskId, tipo, listId, taskName }, "ClickUp: task criada com sucesso");
 
   if (tipo === "eventos") {
@@ -917,7 +922,9 @@ export async function createClickUpTask(
     { clickupType: "short_text", raw: idSolicitacao }
   );
 
-  return { taskId, taskName };
+  const responsavel = ASSIGNEE_NOMES[assigneeId] || "";
+
+  return { taskId, taskName, responsavel };
 }
 
 export async function getClickUpTaskStatus(taskId: string): Promise<string | null> {

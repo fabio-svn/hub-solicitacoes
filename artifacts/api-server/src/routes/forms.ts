@@ -139,7 +139,7 @@ router.post("/solicitacoes", requireAuth, upload.any(), async (req, res): Promis
 
     let clickupTaskId: string | null = null;
     try {
-      const { taskId, taskName } = await createClickUpTask(solicitacao, user, parsedDados, arquivosMap);
+      const { taskId, taskName, responsavel } = await createClickUpTask(solicitacao, user, parsedDados, arquivosMap);
       clickupTaskId = taskId;
       if (clickupTaskId) {
         await db.update(solicitacoesTable)
@@ -147,6 +147,7 @@ router.post("/solicitacoes", requireAuth, upload.any(), async (req, res): Promis
             clickup_task_id: clickupTaskId,
             titulo: taskName || null,
             clickup_url: `https://app.clickup.com/t/${clickupTaskId}`,
+            responsavel: responsavel || null,
           })
           .where(eq(solicitacoesTable.id, solicitacao.id));
       }
