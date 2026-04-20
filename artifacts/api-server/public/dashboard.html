@@ -181,14 +181,12 @@
                 Por tipo
                 <svg id="graficoChevronTipo" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="transition:transform 0.2s"><polyline points="6 9 12 15 18 9"/></svg>
               </button>
-              <div id="graficoDropdownTipo" style="display:none;position:absolute;top:36px;right:0;z-index:100;background:#fff;border:1px solid var(--border-light);border-radius:10px;box-shadow:0 4px 20px rgba(0,0,0,.1);padding:8px;min-width:280px"></div>
             </div>
             <div style="position:relative" id="graficoDropdownStatusWrap">
               <button id="graficoBtnStatus" onclick="toggleGraficoDropdown('status')" style="display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:8px;border:1px solid var(--border-light);background:var(--card-white);color:var(--carbon-black);font-family:'Nunito Sans',sans-serif;font-size:0.8rem;font-weight:600;cursor:pointer;white-space:nowrap;transition:all 0.15s">
                 Por status
                 <svg id="graficoChevronStatus" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="transition:transform 0.2s"><polyline points="6 9 12 15 18 9"/></svg>
               </button>
-              <div id="graficoDropdownStatus" style="display:none;position:absolute;top:36px;right:0;z-index:100;background:#fff;border:1px solid var(--border-light);border-radius:10px;box-shadow:0 4px 20px rgba(0,0,0,.1);padding:8px;min-width:280px"></div>
             </div>
           </div>
         </div>
@@ -809,6 +807,16 @@
       if (!Auth.isAdmin()) return;
       document.getElementById('tabAdmin').style.display = '';
       renderDropdownTipos();
+      window.addEventListener('scroll', () => {
+        const ddT = document.getElementById('graficoDropdownTipo');
+        const ddS = document.getElementById('graficoDropdownStatus');
+        if (ddT) ddT.style.display = 'none';
+        if (ddS) ddS.style.display = 'none';
+        const cT = document.getElementById('graficoChevronTipo');
+        const cS = document.getElementById('graficoChevronStatus');
+        if (cT) cT.style.transform = 'rotate(0)';
+        if (cS) cS.style.transform = 'rotate(0)';
+      }, { passive: true });
       document.addEventListener('click', e => {
         if (!e.target || !document.contains(e.target)) return;
         if (!e.target.closest('#dropdownTipoWrap')) {
@@ -983,24 +991,44 @@
     }
 
     function toggleGraficoDropdown(modo) {
-      const ddTipo   = document.getElementById('graficoDropdownTipo');
-      const ddStatus = document.getElementById('graficoDropdownStatus');
+      const ddTipo     = document.getElementById('graficoDropdownTipo');
+      const ddStatus   = document.getElementById('graficoDropdownStatus');
       const chevTipo   = document.getElementById('graficoChevronTipo');
       const chevStatus = document.getElementById('graficoChevronStatus');
+      const btnTipo    = document.getElementById('graficoBtnTipo');
+      const btnStatus  = document.getElementById('graficoBtnStatus');
+
+      function posicionarDropdown(dd, btn) {
+        const rect = btn.getBoundingClientRect();
+        const ddWidth = 280;
+        let left = rect.right - ddWidth;
+        if (left < 8) left = 8;
+        dd.style.top  = (rect.bottom + 6) + 'px';
+        dd.style.left = left + 'px';
+      }
+
       if (modo === 'tipo') {
         const isOpen = ddTipo.style.display === 'block';
         ddTipo.style.display   = isOpen ? 'none' : 'block';
         ddStatus.style.display = 'none';
-        chevTipo.style.transform   = isOpen ? 'rotate(0deg)' : 'rotate(180deg)';
-        chevStatus.style.transform = 'rotate(0deg)';
-        if (!isOpen) { if (adminGraficoModo !== 'tipo') switchGrafico('tipo'); renderGraficoDropdown('tipo'); }
+        chevTipo.style.transform   = isOpen ? 'rotate(0)' : 'rotate(180deg)';
+        chevStatus.style.transform = 'rotate(0)';
+        if (!isOpen) {
+          posicionarDropdown(ddTipo, btnTipo);
+          if (adminGraficoModo !== 'tipo') switchGrafico('tipo');
+          renderGraficoDropdown('tipo');
+        }
       } else {
         const isOpen = ddStatus.style.display === 'block';
         ddStatus.style.display = isOpen ? 'none' : 'block';
         ddTipo.style.display   = 'none';
-        chevStatus.style.transform = isOpen ? 'rotate(0deg)' : 'rotate(180deg)';
-        chevTipo.style.transform   = 'rotate(0deg)';
-        if (!isOpen) { if (adminGraficoModo !== 'status') switchGrafico('status'); renderGraficoDropdown('status'); }
+        chevStatus.style.transform = isOpen ? 'rotate(0)' : 'rotate(180deg)';
+        chevTipo.style.transform   = 'rotate(0)';
+        if (!isOpen) {
+          posicionarDropdown(ddStatus, btnStatus);
+          if (adminGraficoModo !== 'status') switchGrafico('status');
+          renderGraficoDropdown('status');
+        }
       }
     }
 
@@ -1040,8 +1068,24 @@
 
     document.addEventListener('click', e => {
       if (!e.target || !document.contains(e.target)) return;
-      if (!e.target.closest('#graficoDropdownTipoWrap')) { const el = document.getElementById('graficoDropdownTipo'); const chev = document.getElementById('graficoChevronTipo'); if (el) el.style.display = 'none'; if (chev) chev.style.transform = 'rotate(0deg)'; }
-      if (!e.target.closest('#graficoDropdownStatusWrap')) { const el = document.getElementById('graficoDropdownStatus'); const chev = document.getElementById('graficoChevronStatus'); if (el) el.style.display = 'none'; if (chev) chev.style.transform = 'rotate(0deg)'; }
+      const ddTipo   = document.getElementById('graficoDropdownTipo');
+      const ddStatus = document.getElementById('graficoDropdownStatus');
+      const btnTipo   = document.getElementById('graficoBtnTipo');
+      const btnStatus = document.getElementById('graficoBtnStatus');
+      if (ddTipo && ddTipo.style.display === 'block') {
+        if (!btnTipo?.contains(e.target) && !ddTipo.contains(e.target)) {
+          ddTipo.style.display = 'none';
+          const chev = document.getElementById('graficoChevronTipo');
+          if (chev) chev.style.transform = 'rotate(0)';
+        }
+      }
+      if (ddStatus && ddStatus.style.display === 'block') {
+        if (!btnStatus?.contains(e.target) && !ddStatus.contains(e.target)) {
+          ddStatus.style.display = 'none';
+          const chev = document.getElementById('graficoChevronStatus');
+          if (chev) chev.style.transform = 'rotate(0)';
+        }
+      }
     });
 
     function renderAdminGrafico() {
@@ -1426,5 +1470,8 @@
   }
 })();
 </script>
+
+<div id="graficoDropdownTipo" style="display:none;position:fixed;z-index:500;background:var(--card-white);border:1px solid var(--border-light);border-radius:10px;box-shadow:0 4px 20px rgba(0,0,0,.12);padding:8px;min-width:280px"></div>
+<div id="graficoDropdownStatus" style="display:none;position:fixed;z-index:500;background:var(--card-white);border:1px solid var(--border-light);border-radius:10px;box-shadow:0 4px 20px rgba(0,0,0,.12);padding:8px;min-width:280px"></div>
 </body>
 </html>
