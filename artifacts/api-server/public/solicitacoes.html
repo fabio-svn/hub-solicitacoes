@@ -90,7 +90,18 @@
         cat.itens.forEach(item => {
           const btn = document.createElement('button');
           btn.className = 'selection-btn' + (item.ativo ? '' : ' disabled');
-          if (!item.ativo) btn.setAttribute('data-tooltip', 'Em breve');
+          if (!item.ativo) {
+            btn.setAttribute('data-tooltip', 'Em breve');
+            btn.addEventListener('click', function() {
+              const label = btn.querySelector('.btn-label');
+              if (label) {
+                const originalText = label.textContent;
+                label.textContent = 'Em breve';
+                label.style.opacity = '0.5';
+                setTimeout(() => { label.textContent = originalText; label.style.opacity = ''; }, 1500);
+              }
+            });
+          }
           btn.innerHTML = `<div class="btn-icon">${ICONS[item.icon] || ''}</div><div class="btn-label">${item.label}</div>`;
           if (item.ativo) {
             btn.onclick = () => handleItemClick(item);
@@ -119,7 +130,18 @@
             const btn = document.createElement('button');
             btn.className = 'selection-btn' + (item.ativo ? '' : ' disabled');
             btn.style.cssText = 'width:100%;height:100px;';
-            if (!item.ativo) btn.setAttribute('data-tooltip', 'Em breve');
+            if (!item.ativo) {
+              btn.setAttribute('data-tooltip', 'Em breve');
+              btn.addEventListener('click', function() {
+                const label = btn.querySelector('.btn-label');
+                if (label) {
+                  const originalText = label.textContent;
+                  label.textContent = 'Em breve';
+                  label.style.opacity = '0.5';
+                  setTimeout(() => { label.textContent = originalText; label.style.opacity = ''; }, 1500);
+                }
+              });
+            }
             btn.innerHTML = `<div class="btn-icon">${ICONS[item.icon] || ''}</div><div class="btn-label">${item.label}</div>`;
             if (item.ativo) btn.onclick = () => handleItemClick(item);
             col.appendChild(btn);
@@ -147,7 +169,18 @@
             const btn = document.createElement('button');
             btn.className = 'selection-btn' + (item.ativo ? '' : ' disabled');
             btn.style.cssText = 'width:100%;height:80px;flex-direction:row;gap:12px;justify-content:center';
-            if (!item.ativo) btn.setAttribute('data-tooltip', 'Em breve');
+            if (!item.ativo) {
+              btn.setAttribute('data-tooltip', 'Em breve');
+              btn.addEventListener('click', function() {
+                const label = btn.querySelector('.btn-label');
+                if (label) {
+                  const originalText = label.textContent;
+                  label.textContent = 'Em breve';
+                  label.style.opacity = '0.5';
+                  setTimeout(() => { label.textContent = originalText; label.style.opacity = ''; }, 1500);
+                }
+              });
+            }
             btn.innerHTML = `<div class="btn-icon">${ICONS[item.icon] || ''}</div><div class="btn-label">${item.label}</div>`;
             if (item.ativo) btn.onclick = () => handleItemClick(item);
             wrapper.appendChild(btn);

@@ -64,7 +64,7 @@
     .error-msg { display:none; margin-top:16px; background:rgba(159,63,55,0.15); border:1px solid var(--ruby-red); border-radius:8px; padding:12px 16px; font-size:0.85rem; color:var(--paper-white); max-width:500px; text-align:center; }
     @media (max-width: 480px) { .home-card { padding: 36px 24px; } }
   </style>
-  <script src="transitions.js"></script>
+  <script src="transitions.js" defer></script>
 </head>
 <body class="page-dark">
   <video autoplay loop muted playsinline style="position:fixed;inset:0;width:100%;height:100%;object-fit:cover;z-index:0" id="bgVideo"></video>
@@ -100,9 +100,10 @@
       el.style.display = 'block';
       if (error === 'domain_not_allowed') el.textContent = 'Apenas contas @svninvest.com.br são aceitas. Por favor, use seu e-mail corporativo.';
       else if (error === 'login_failed' || error === 'auth_failed') el.textContent = 'Falha na autenticação. Tente novamente.';
-      else el.textContent = 'Ocorreu um erro. Tente novamente.';
+      else el.textContent = 'Ocorreu um erro (' + error + '). Tente novamente.';
     }
     async function goTo(page) {
+      document.querySelectorAll('.home-btn').forEach(b => { b.style.opacity = '0.5'; b.style.pointerEvents = 'none'; });
       await Auth.init();
       if (!Auth.isAuthenticated()) { window.location.href = '/auth/login?redirect=/' + page; return; }
       window.location.href = '/' + page;

@@ -30,6 +30,8 @@ const FileUpload = {
     const input   = typeof inputId  === 'string' ? document.getElementById(inputId)  : inputId;
     const nameEl  = typeof nameElId === 'string' ? document.getElementById(nameElId) : nameElId;
     if (!input) return;
+    if (input.dataset.uploadBound === '1') return;
+    input.dataset.uploadBound = '1';
     options = options || {};
 
     input.addEventListener('change', function(e) {

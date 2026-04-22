@@ -50,9 +50,8 @@
 
     setTimeout(() => {
       const card = document.getElementById('card');
-      card.style.transition = 'all 0.5s ease';
+      card.style.transition = 'opacity 0.5s ease';
       card.style.opacity = '1';
-      card.style.transform = 'scale(1)';
     }, 100);
 
     setTimeout(() => {
@@ -81,7 +80,7 @@
         const itens = [];
         if (resumo.tipo)        itens.push({ label: 'Tipo',             valor: resumo.tipo });
         if (resumo.titulo)      itens.push({ label: 'Identificação',    valor: resumo.titulo });
-        if (resumo.natureza)    itens.push({ label: 'Natureza',         valor: resumo.natureza === 'presencial' ? 'Presencial' : 'Online' });
+        if (resumo.natureza) { const naturezaMap = { presencial: 'Presencial', online: 'Online', patrocinio: 'Patrocínio' }; itens.push({ label: 'Natureza', valor: naturezaMap[resumo.natureza] || resumo.natureza }); }
         if (resumo.solicitante) itens.push({ label: 'Solicitante',      valor: resumo.solicitante });
         if (resumo.setor)       itens.push({ label: 'Setor',            valor: resumo.setor });
         if (resumo.data)        itens.push({ label: 'Enviado em',       valor: resumo.data + ' às ' + resumo.hora });
@@ -99,8 +98,8 @@
             const card = document.getElementById('resumoCard');
             card.style.transition = 'opacity 0.4s ease';
             card.style.opacity = '1';
+            sessionStorage.removeItem('svn_ultimo_resumo');
           }, 1200);
-          sessionStorage.removeItem('svn_ultimo_resumo');
         }
       }
     } catch {}

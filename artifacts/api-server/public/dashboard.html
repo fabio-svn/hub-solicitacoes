@@ -1351,6 +1351,8 @@
       _deleteTargetId = null;
       _deleteTargetRow = null;
       document.getElementById('deleteModal').style.display = 'none';
+      const btn = document.getElementById('btnConfirmarExclusao');
+      if (btn) { btn.disabled = false; btn.textContent = 'Excluir permanentemente'; }
     }
 
     async function executarExclusao() {
@@ -1362,6 +1364,8 @@
         const res = await fetch('/api/solicitacoes/' + _deleteTargetId, { method: 'DELETE' });
         if (res.ok) {
           document.getElementById('deleteModal').style.display = 'none';
+          btn.disabled = false;
+          btn.textContent = 'Excluir permanentemente';
           if (_deleteTargetRow) {
             const row = _deleteTargetRow;
             const height = row.getBoundingClientRect().height;
