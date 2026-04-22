@@ -1,5 +1,6 @@
 import { Router } from "express";
 import multer from "multer";
+import os from "os";
 import { db } from "@workspace/db";
 import { solicitacoesTable, arquivosTable } from "@workspace/db";
 import { eq, desc, and, ne, sql, inArray } from "drizzle-orm";
@@ -9,7 +10,7 @@ import { uploadToR2 } from "./r2";
 import { logger } from "../lib/logger";
 
 const router = Router();
-const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 250 * 1024 * 1024 } });
+const upload = multer({ dest: os.tmpdir(), limits: { fileSize: 250 * 1024 * 1024 } });
 
 const VALID_TIPOS = [
   "eventos",
@@ -819,36 +820,6 @@ router.delete("/solicitacoes/:id", requireAuth, async (req, res): Promise<void> 
   } catch (err) {
     logger.error({ err }, "Erro ao excluir solicitação");
     res.status(500).json({ error: "Erro ao excluir solicitação" });
-  }
-});
-
-router.post("/admin/impersonate", requireAuth, async (req, res): Promise<void> => {
-  try {
-    const user = req.session.user!;
-    if (user.role !== "admin" && user.role !== "gestor") {
-      res.status(403).json({ error: "Acesso negado" }); return;
-    }
-    const { email } = req.body as { email: string };
-    if (!email || !email.includes("@")) {
-      res.status(400).json({ error: "E-mail inválido" }); return;
-    }
-    req.session.adminOriginal = req.session.user;
-    req.session.user = { email, name: email.split("@")[0], role: "user" };
-    res.json({ success: true, email });
-  } catch (err) {
-    res.status(500).json({ error: "Erro ao impersonar" });
-  }
-});
-
-router.post("/admin/impersonate/stop", requireAuth, async (req, res): Promise<void> => {
-  try {
-    if (req.session.adminOriginal) {
-      req.session.user = req.session.adminOriginal;
-      delete req.session.adminOriginal;
-    }
-    res.json({ success: true });
-  } catch (err) {
-    res.status(500).json({ error: "Erro ao sair" });
   }
 });
 

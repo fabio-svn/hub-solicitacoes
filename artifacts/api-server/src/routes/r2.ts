@@ -1,5 +1,6 @@
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import { v4 as uuidv4 } from "uuid";
+import fs from "fs";
 import { logger } from "../lib/logger";
 
 const R2_ACCOUNT_ID = process.env.R2_ACCOUNT_ID || "";
@@ -28,7 +29,7 @@ function getS3Client(): S3Client | null {
 }
 
 export async function uploadToR2(
-  file: { buffer: Buffer; originalname: string; mimetype: string },
+  file: { path: string; originalname: string; mimetype: string },
   solicitacaoId: number,
   campo: string
 ): Promise<string> {
@@ -36,6 +37,7 @@ export async function uploadToR2(
 
   if (!client || !R2_BUCKET) {
     logger.error({ solicitacaoId, campo }, "R2 não configurado — arquivo não salvo, retornando placeholder");
+    await fs.promises.unlink(file.path).catch(() => {});
     const baseUrl = process.env.R2_PUBLIC_URL?.replace(/\/*$/, "/") || "";
     if (!baseUrl) {
       logger.error("R2_PUBLIC_URL ausente — URL do arquivo ficará inválida");
@@ -46,12 +48,16 @@ export async function uploadToR2(
   const ext = file.originalname.split(".").pop() || "";
   const key = `solicitacoes/${solicitacaoId}/${campo}/${uuidv4()}.${ext}`;
 
-  await client.send(new PutObjectCommand({
-    Bucket: R2_BUCKET,
-    Key: key,
-    Body: file.buffer,
-    ContentType: file.mimetype,
-  }));
+  try {
+    await client.send(new PutObjectCommand({
+      Bucket: R2_BUCKET,
+      Key: key,
+      Body: fs.createReadStream(file.path),
+      ContentType: file.mimetype,
+    }));
+  } finally {
+    await fs.promises.unlink(file.path).catch(() => {});
+  }
 
   return `${R2_PUBLIC_URL}${key}`;
 }

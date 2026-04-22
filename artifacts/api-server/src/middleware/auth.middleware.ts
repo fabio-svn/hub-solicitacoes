@@ -31,20 +31,17 @@ export function requireAuth(req: Request, res: Response, next: NextFunction): vo
   next();
 }
 
-// requireRole já inclui verificação de autenticação internamente.
-// Ao usar requireRole em uma rota, não é necessário adicionar requireAuth
-// antes — mas fazê-lo é inofensivo e aumenta a clareza da intenção.
+// requireRole reutiliza requireAuth para a verificação de autenticação (DRY).
+// Ao usar requireRole em uma rota, não é necessário adicionar requireAuth antes.
 export function requireRole(...roles: string[]) {
   return (req: Request, res: Response, next: NextFunction): void => {
-    const user = req.session?.user;
-    if (!user) {
-      res.status(401).json({ error: "Autenticação necessária" });
-      return;
-    }
-    if (!roles.includes(user.role)) {
-      res.status(403).json({ error: "Acesso negado" });
-      return;
-    }
-    next();
+    requireAuth(req, res, () => {
+      const user = req.session.user!;
+      if (!roles.includes(user.role)) {
+        res.status(403).json({ error: "Acesso negado" });
+        return;
+      }
+      next();
+    });
   };
 }

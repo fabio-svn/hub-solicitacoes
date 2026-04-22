@@ -52,4 +52,47 @@ router.put("/users/:id/role", requireAuth, requireRole("admin"), async (req, res
   }
 });
 
+router.post("/impersonate", requireAuth, requireRole("admin", "gestor"), async (req, res): Promise<void> => {
+  try {
+    const { email } = req.body as { email: string };
+    if (!email || !email.includes("@")) {
+      res.status(400).json({ error: "E-mail inválido" });
+      return;
+    }
+    req.session.adminOriginal = req.session.user;
+    req.session.user = { email, name: email.split("@")[0], role: "user" };
+    req.session.save((err) => {
+      if (err) {
+        logger.error({ err }, "Erro ao salvar sessão de impersonar");
+        res.status(500).json({ error: "Erro ao impersonar" });
+        return;
+      }
+      res.json({ success: true, email });
+    });
+  } catch (err) {
+    logger.error({ err }, "Erro ao impersonar");
+    res.status(500).json({ error: "Erro ao impersonar" });
+  }
+});
+
+router.post("/impersonate/stop", requireAuth, async (req, res): Promise<void> => {
+  try {
+    if (req.session.adminOriginal) {
+      req.session.user = req.session.adminOriginal;
+      delete req.session.adminOriginal;
+    }
+    req.session.save((err) => {
+      if (err) {
+        logger.error({ err }, "Erro ao salvar sessão ao sair impersonar");
+        res.status(500).json({ error: "Erro ao sair" });
+        return;
+      }
+      res.json({ success: true });
+    });
+  } catch (err) {
+    logger.error({ err }, "Erro ao sair impersonar");
+    res.status(500).json({ error: "Erro ao sair" });
+  }
+});
+
 export default router;

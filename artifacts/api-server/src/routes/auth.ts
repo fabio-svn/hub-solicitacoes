@@ -58,7 +58,14 @@ router.get("/login", async (req, res) => {
       state: nonce,
       prompt: "select_account",
     });
-    res.redirect(authUrl);
+    req.session.save((saveErr) => {
+      if (saveErr) {
+        logger.error({ saveErr }, "Session save error before MSAL redirect");
+        res.redirect("/?error=login_failed");
+        return;
+      }
+      res.redirect(authUrl);
+    });
   } catch (err) {
     logger.error({ err }, "MSAL login error");
     res.redirect("/?error=login_failed");
@@ -132,6 +139,7 @@ router.get("/callback", async (req, res) => {
 
 router.get("/logout", (req, res) => {
   req.session.destroy(() => {
+    res.clearCookie("connect.sid");
     res.redirect("/");
   });
 });

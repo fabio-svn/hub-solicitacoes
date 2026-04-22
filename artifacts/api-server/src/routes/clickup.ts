@@ -22,9 +22,7 @@ const CLICKUP_STATUS_MAP: Record<string, string> = {
   "em producao":                "em-producao",
   "em producao.":               "em-producao",
   "em revisao":                 "em-revisao",
-  "em revisão":                 "em-revisao",
   "em aprovacao":               "em-aprovacao",
-  "em aprovação":               "em-aprovacao",
   "alinhamentos":               "alinhamentos",
   "cotacao-aprovacao":          "cotacao-aprovacao",
   "cotacao aprovacao":          "cotacao-aprovacao",
@@ -679,7 +677,7 @@ async function setEventosCustomFields(taskId: string, dados: FormDados, arquivos
   ]);
 
   // ── Campos da lista EVENTOS_CUSTOM_FIELDS — paralelo em lotes de 10 ────────
-  const fieldPromises: Array<Promise<void>> = [];
+  const fieldThunks: Array<() => Promise<void>> = [];
 
   for (const field of EVENTOS_CUSTOM_FIELDS) {
     let value: string | null;
@@ -704,8 +702,9 @@ async function setEventosCustomFields(taskId: string, dados: FormDados, arquivos
       }
     }
 
-    fieldPromises.push(
-      setClickUpCustomField(taskId, field.id, value, field.label, {
+    const capturedValue = value;
+    fieldThunks.push(
+      () => setClickUpCustomField(taskId, field.id, capturedValue, field.label, {
         clickupType: field.clickupType,
         raw: field.dadosKey in dadosLocal ? dadosLocal[field.dadosKey] : dados[field.dadosKey],
       })
@@ -713,8 +712,8 @@ async function setEventosCustomFields(taskId: string, dados: FormDados, arquivos
   }
 
   const BATCH_SIZE = 10;
-  for (let i = 0; i < fieldPromises.length; i += BATCH_SIZE) {
-    await Promise.all(fieldPromises.slice(i, i + BATCH_SIZE));
+  for (let i = 0; i < fieldThunks.length; i += BATCH_SIZE) {
+    await Promise.all(fieldThunks.slice(i, i + BATCH_SIZE).map(t => t()));
   }
 }
 

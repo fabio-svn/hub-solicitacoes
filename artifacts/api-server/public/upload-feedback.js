@@ -39,12 +39,19 @@ const FileUpload = {
       if (!f) { FileUpload.clear(nameEl); return; }
 
       if (options.accept) {
-        const allowed = options.accept.split(',')
-          .map(function(x) { return x.trim().toLowerCase().replace(/^\./,''); })
-          .filter(Boolean);
+        const allowed = options.accept.split(',').map(function(x) { return x.trim().toLowerCase(); }).filter(Boolean);
         const ext = f.name.split('.').pop().toLowerCase();
-        if (allowed.length && !allowed.includes(ext)) {
-          FileUpload.error(nameEl, 'Formato não permitido. Use: ' + allowed.map(function(x){ return x.toUpperCase(); }).join(', '));
+        const mime = f.type.toLowerCase();
+        const valid = allowed.some(function(a) {
+          if (a === mime) return true;
+          if (a.endsWith('/*') && mime.startsWith(a.replace('/*', '/'))) return true;
+          return a.replace(/^\./, '') === ext;
+        });
+        if (!valid) {
+          const extLabels = allowed
+            .filter(function(a) { return !a.includes('/'); })
+            .map(function(x) { return x.replace(/^\./, '').toUpperCase(); });
+          FileUpload.error(nameEl, 'Formato não permitido.' + (extLabels.length ? ' Use: ' + extLabels.join(', ') : ''));
           input.value = '';
           return;
         }

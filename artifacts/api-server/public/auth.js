@@ -175,7 +175,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const link = e.target.closest('a[href]');
     if (!link) return;
     const href = link.getAttribute('href');
-    if (!href || href.startsWith('#') || href.startsWith('http') || href.startsWith('mailto') || link.target === '_blank') return;
+    if (!href || href.startsWith('#') || href.startsWith('http') || href.startsWith('mailto') || link.target === '_blank' || link.hasAttribute('download')) return;
     e.preventDefault();
     document.body.style.transition = 'opacity 0.15s ease';
     document.body.style.opacity = '0';
@@ -206,7 +206,7 @@ window._impersonar = async function() {
     });
     if (res.ok) {
       sessionStorage.setItem('svn_impersonate', email);
-      const dropdown = document.querySelector('.user-dropdown');
+      const dropdown = document.getElementById('userDropdown');
       if (dropdown) dropdown.style.display = 'none';
       window.location.reload();
     } else {
