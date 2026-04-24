@@ -137,6 +137,9 @@ const REQUEST_TYPE_LABELS: Record<string, string> = {
   "apresentacao-atualizar":     "Atualização de Apresentação",
   "pagina-assessores-dados":    "Página de Assessores",
   "pagina-assessores-atualizacao": "Página de Assessores",
+  "cartao-visita-fisico":       "Cartão de Visita — Físico",
+  "pagina-online":              "Página Online",
+  "outro":                      "Outro",
 };
 
 const ARQUIVO_LABELS: Record<string, string> = {
@@ -822,7 +825,27 @@ const PRAZO_DIAS_UTEIS: Record<string, number> = {
   "atualizacao-material":          3,
   "conteudo-pdf-informativo":      4,
   "conteudo-pdf-ebook":            15,
+  "pagina-online":                 5,
+  "outro":                         7,
 };
+
+const TIPOS_SEM_CLICKUP = [
+  "assinatura-email",
+  "cartao-visita-digital",
+  "cartao-boas-vindas",
+  "divulgacao-nps",
+  "convite-fp",
+  "certificado-eventos",
+];
+
+function proximaQuarta(): Date {
+  const d = new Date();
+  d.setHours(12, 0, 0, 0);
+  const dow = d.getDay();
+  const diasAte = (3 - dow + 7) % 7 || 7;
+  d.setDate(d.getDate() + diasAte);
+  return d;
+}
 
 const ASSIGNEE_GERAL   = process.env.CLICKUP_ASSIGNEE_GERAL   || "";
 const ASSIGNEE_EVENTOS = process.env.CLICKUP_ASSIGNEE_EVENTOS || "";
@@ -844,6 +867,11 @@ export async function createClickUpTask(
   }
 
   const tipo = solicitacao.tipo_solicitacao;
+
+  if (TIPOS_SEM_CLICKUP.includes(tipo)) {
+    logger.info({ tipo }, "ClickUp: tipo sem integração, pulando");
+    return { taskId: null, taskName: "", responsavel: "" };
+  }
   const subtipo = solicitacao.subtipo || "";
   const safeArquivos = arquivos || {};
   const listId = getListId(tipo);
@@ -870,16 +898,21 @@ export async function createClickUpTask(
   taskPayload.start_date = hoje.getTime();
   taskPayload.start_date_time = false;
 
-  let diasUteis = PRAZO_DIAS_UTEIS[tipo] ?? 3;
-  if (tipo === "apresentacao-nova" || tipo === "apresentacao-atualizar") {
-    const qtd = parseInt(String((dados as Record<string, unknown>).qtdPaginas || "0"));
-    if (qtd > 20) diasUteis = 15;
+  let prazoDate: Date;
+  if (tipo === "cartao-visita-fisico") {
+    prazoDate = proximaQuarta();
+  } else {
+    let diasUteis = PRAZO_DIAS_UTEIS[tipo] ?? 3;
+    if (tipo === "apresentacao-nova" || tipo === "apresentacao-atualizar") {
+      const qtd = parseInt(String((dados as Record<string, unknown>).qtdPaginas || "0"));
+      if (qtd > 20) diasUteis = 15;
+    }
+    prazoDate = addBusinessDays(new Date(), diasUteis);
+    prazoDate.setHours(12, 0, 0, 0);
   }
-  const prazoDate = addBusinessDays(new Date(), diasUteis);
-  prazoDate.setHours(12, 0, 0, 0);
   taskPayload.due_date = prazoDate.getTime();
   taskPayload.due_date_time = false;
-  logger.info({ tipo, diasUteis, prazo: prazoDate.toISOString() }, "ClickUp: prazo calculado");
+  logger.info({ tipo, prazo: prazoDate.toISOString() }, "ClickUp: prazo calculado");
 
   // Responsável por tipo
   const assigneeId = tipo === "eventos" ? ASSIGNEE_EVENTOS : ASSIGNEE_GERAL;

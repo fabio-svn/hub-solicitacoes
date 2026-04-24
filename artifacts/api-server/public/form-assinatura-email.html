@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Assinatura de E-mail - Hub SVN</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap" media="print" onload="this.media='all'">
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap"></noscript>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="page-light">
+  <header class="header" id="mainHeader"></header>
+  <div class="container-narrow" style="padding-top:32px;padding-bottom:80px">
+
+    <div id="webhookConfig" style="display:none;margin-bottom:16px">
+      <div style="display:flex;align-items:center;gap:8px;padding:10px 14px;background:var(--icon-bg);border:1px solid var(--border-light);border-radius:10px;font-size:0.82rem">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>
+        <span style="opacity:0.6;flex-shrink:0;white-space:nowrap">Webhook N8N:</span>
+        <input type="url" id="webhookUrl" placeholder="https://n8n.portalsvn.com.br/webhook/..." style="flex:1;border:none;background:transparent;font-family:'Nunito Sans',sans-serif;font-size:0.82rem;outline:none;min-width:0">
+        <button onclick="salvarWebhook()" style="padding:4px 10px;border-radius:6px;background:var(--carbon-black);color:white;border:none;font-family:'Nunito Sans',sans-serif;font-size:0.75rem;font-weight:600;cursor:pointer;white-space:nowrap">Salvar</button>
+      </div>
+    </div>
+
+    <div class="form-card">
+      <div class="form-progress"><div class="form-progress-bar" id="progressBar" style="width:100%"></div></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <h2 style="font-weight:500;font-size:1.1rem;margin:0">Assinatura de E-mail</h2>
+      </div>
+      <div style="height:1px;background:var(--border-light);margin-bottom:24px"></div>
+
+      <div class="alert-card alert-info" style="margin-bottom:24px">
+        <div class="alert-title">Como funciona</div>
+        <div class="alert-text">Preencha os dados abaixo para criação da sua assinatura de e-mail. Após o envio, a assinatura será gerada automaticamente e entregue via N8N.</div>
+      </div>
+
+      <div class="field">
+        <label>Setor <span style="color:var(--ruby-red)">*</span></label>
+        <select id="setor" required>
+          <option value="">Selecione seu setor</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Nome completo <span style="color:var(--ruby-red)">*</span></label>
+        <input type="text" id="nomeCompleto" placeholder="Seu nome completo" required>
+      </div>
+      <div class="field">
+        <label>Telefone / WhatsApp <span style="color:var(--ruby-red)">*</span></label>
+        <input type="tel" id="telefone" placeholder="(00) 00000-0000" oninput="mascaraTelefone(this)" required>
+      </div>
+      <div class="field">
+        <label>E-mail corporativo <span style="color:var(--ruby-red)">*</span></label>
+        <input type="email" id="emailCorporativo" placeholder="seu@svninvest.com.br" required>
+      </div>
+      <div class="field">
+        <label>Marca <span style="color:var(--ruby-red)">*</span></label>
+        <select id="marca" required>
+          <option value="">Selecione a marca</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Observações (opcional)</label>
+        <textarea id="observacoes" placeholder="Informações adicionais ou cargo personalizado..."></textarea>
+      </div>
+
+      <div style="border-top:1px solid rgba(34,27,25,.08);margin:28px 0 20px;padding-top:22px">
+        <div id="submitError" class="alert-card alert-danger" style="display:none;margin-bottom:16px"></div>
+        <div class="form-nav" style="justify-content:flex-end">
+          <button class="btn btn-primary btn-submit-gold" id="btnSubmit" onclick="submitForm()">Enviar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <a href="/solicitacoes.html" class="float-home" style="bottom:78px">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>
+    <span>Menu</span>
+  </a>
+  <a href="/" class="float-home">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+    <span>Início</span>
+  </a>
+  <a href="https://wa.me/5544991689207" target="_blank" rel="noopener" class="float-whatsapp" title="Falar com o time de Marketing">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M11.999 2C6.477 2 2 6.484 2 12.017c0 1.99.521 3.86 1.43 5.484L2 22l4.644-1.414A9.96 9.96 0 0011.999 22C17.523 22 22 17.516 22 11.983 22 6.472 17.523 2 11.999 2zm0 18.15a8.124 8.124 0 01-4.162-1.145l-.299-.178-3.088.941.923-3.121-.196-.32A8.185 8.185 0 013.85 11.983c0-4.51 3.644-8.183 8.15-8.183 4.507 0 8.152 3.672 8.152 8.183 0 4.51-3.645 8.167-8.153 8.167z"/></svg>
+  </a>
+  <script>
+  (function() {
+    function posicionarWhatsApp() {
+      const wa = document.querySelector('.float-whatsapp');
+      if (!wa) return;
+      const outros = [...document.querySelectorAll('.float-home')].filter(el => el !== wa && getComputedStyle(el).display !== 'none');
+      if (outros.length === 0) { wa.style.bottom = '78px'; } else {
+        const alturas = outros.map(el => parseInt(el.style.bottom || getComputedStyle(el).bottom) || 20);
+        wa.style.bottom = (Math.max(...alturas) + 58) + 'px';
+      }
+    }
+    if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', posicionarWhatsApp); } else { posicionarWhatsApp(); }
+  })();
+  </script>
+
+  <script src="utils.js"></script>
+  <script src="upload-feedback.js"></script>
+  <script src="config.js"></script>
+  <script src="auth.js"></script>
+  <script>
+    const TIPO = 'assinatura-email';
+    const WEBHOOK_KEY = 'svn_webhook_assinatura';
+
+    async function init() {
+      await _configReady;
+      await Auth.init();
+      if (!Auth.isAuthenticated()) { window.location.href = '/auth/login?redirect=/form-assinatura-email.html'; return; }
+      Auth.renderHeader(document.getElementById('mainHeader'));
+
+      const setorSel = document.getElementById('setor');
+      if (setorSel) { SETORES.filter(s => s !== 'Selecione seu setor').forEach(s => { const o = document.createElement('option'); o.value = s; o.textContent = s; setorSel.appendChild(o); }); }
+
+      const marcaSel = document.getElementById('marca');
+      if (marcaSel) { MARCAS_SVN.forEach(m => { const o = document.createElement('option'); o.value = m; o.textContent = m; marcaSel.appendChild(o); }); }
+
+      iniciarWebhookConfig();
+      restoreSession();
+    }
+
+    function iniciarWebhookConfig() {
+      if (!Auth.isAdmin()) return;
+      document.getElementById('webhookConfig').style.display = 'block';
+      const saved = localStorage.getItem(WEBHOOK_KEY);
+      if (saved) document.getElementById('webhookUrl').value = saved;
+    }
+
+    function salvarWebhook() {
+      const url = document.getElementById('webhookUrl').value.trim();
+      if (url) localStorage.setItem(WEBHOOK_KEY, url);
+      const btn = event.currentTarget;
+      const orig = btn.textContent;
+      btn.textContent = 'Salvo ✓';
+      setTimeout(() => { btn.textContent = orig; }, 1500);
+    }
+
+    function saveSession() {
+      try {
+        sessionStorage.setItem('form-assinatura-email', JSON.stringify({
+          setor: document.getElementById('setor')?.value || '',
+          nomeCompleto: document.getElementById('nomeCompleto')?.value || '',
+          telefone: document.getElementById('telefone')?.value || '',
+          emailCorporativo: document.getElementById('emailCorporativo')?.value || '',
+          marca: document.getElementById('marca')?.value || '',
+          observacoes: document.getElementById('observacoes')?.value || '',
+        }));
+      } catch {}
+    }
+
+    function restoreSession() {
+      try {
+        const data = JSON.parse(sessionStorage.getItem('form-assinatura-email'));
+        if (!data) return;
+        if (data.setor) { const el = document.getElementById('setor'); if (el) el.value = data.setor; }
+        if (data.nomeCompleto) document.getElementById('nomeCompleto').value = data.nomeCompleto;
+        if (data.telefone) document.getElementById('telefone').value = data.telefone;
+        if (data.emailCorporativo) document.getElementById('emailCorporativo').value = data.emailCorporativo;
+        if (data.marca) { const el = document.getElementById('marca'); if (el) el.value = data.marca; }
+        if (data.observacoes) document.getElementById('observacoes').value = data.observacoes;
+      } catch {}
+    }
+
+    function validateRequiredFields() {
+      document.querySelectorAll('.field-invalid').forEach(el => el.classList.remove('field-invalid'));
+      const invalidFields = [];
+      document.querySelectorAll('input[required], select[required], textarea[required]').forEach(input => {
+        const isEmpty = !input.value.trim();
+        if (isEmpty) {
+          const fieldWrapper = input.closest('.field');
+          if (fieldWrapper) {
+            fieldWrapper.classList.add('field-invalid');
+            let errorEl = fieldWrapper.querySelector('.field-error');
+            if (!errorEl) { errorEl = document.createElement('div'); errorEl.className = 'field-error'; input.parentElement.appendChild(errorEl); }
+            errorEl.textContent = 'Este campo é obrigatório.';
+            invalidFields.push(fieldWrapper);
+          }
+        }
+      });
+      if (invalidFields.length > 0) { invalidFields[0].scrollIntoView({ behavior: 'smooth', block: 'center' }); return false; }
+      return true;
+    }
+
+    async function submitForm() {
+      if (!validateRequiredFields()) return;
+      const btn = document.getElementById('btnSubmit');
+      btn.disabled = true; btn.textContent = 'Enviando...';
+
+      const dados = {
+        nome: Auth.getUserName(),
+        setor: document.getElementById('setor')?.value || '',
+        nomeCompleto: document.getElementById('nomeCompleto').value,
+        telefone: document.getElementById('telefone').value,
+        emailCorporativo: document.getElementById('emailCorporativo').value,
+        marca: document.getElementById('marca').value,
+        observacoes: document.getElementById('observacoes').value,
+      };
+
+      const formData = new FormData();
+      formData.append('tipo_solicitacao', TIPO);
+      formData.append('dados', JSON.stringify(dados));
+
+      try {
+        const res = await fetch('/api/solicitacoes', { method: 'POST', body: formData });
+        if (res.ok) {
+          const webhookUrl = localStorage.getItem(WEBHOOK_KEY);
+          if (webhookUrl) { try { await fetch(webhookUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ tipo: TIPO, ...dados }) }); } catch {} }
+          sessionStorage.removeItem('form-assinatura-email');
+          try {
+            sessionStorage.setItem('svn_ultimo_resumo', JSON.stringify({
+              tipo: TIPO_SOLICITACAO_LABELS[TIPO] || TIPO,
+              solicitante: Auth.getUserName(),
+              setor: dados.setor,
+              data: new Date().toLocaleDateString('pt-BR'),
+              hora: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+            }));
+          } catch {}
+          window.location.href = '/thankyou.html';
+        } else {
+          const d = await res.json().catch(() => ({}));
+          const errEl = document.getElementById('submitError');
+          if (errEl) { errEl.style.display = 'block'; errEl.textContent = d.error || 'Erro ao enviar. Tente novamente.'; }
+          btn.disabled = false; btn.textContent = 'Enviar';
+        }
+      } catch {
+        const errEl = document.getElementById('submitError');
+        if (errEl) { errEl.style.display = 'block'; errEl.textContent = 'Erro de conexão. Verifique sua internet e tente novamente.'; }
+        btn.disabled = false; btn.textContent = 'Enviar';
+      }
+    }
+
+    document.addEventListener('input', function(e) {
+      const field = e.target.closest('.field');
+      if (field && field.classList.contains('field-invalid') && e.target.value.trim()) field.classList.remove('field-invalid');
+      saveSession();
+    });
+    document.addEventListener('change', function(e) {
+      const field = e.target.closest('.field');
+      if (field && field.classList.contains('field-invalid')) field.classList.remove('field-invalid');
+      saveSession();
+    });
+
+    init();
+  </script>
+</body>
+</html>

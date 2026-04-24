@@ -22,6 +22,15 @@ const VALID_TIPOS = [
   "apresentacao-atualizar",
   "pagina-assessores-dados",
   "pagina-assessores-atualizacao",
+  "assinatura-email",
+  "cartao-visita-fisico",
+  "cartao-visita-digital",
+  "cartao-boas-vindas",
+  "divulgacao-nps",
+  "convite-fp",
+  "certificado-eventos",
+  "pagina-online",
+  "outro",
 ];
 
 const VALID_STATUSES = [
@@ -42,6 +51,15 @@ const REQUIRED_FIELDS: Record<string, string[]> = {
   "apresentacao-atualizar": ["nome", "titulo"],
   "pagina-assessores-dados": ["nome", "nomeCompleto"],
   "pagina-assessores-atualizacao": ["nome"],
+  "assinatura-email":      ["nome", "nomeCompleto", "telefone", "emailCorporativo", "marca"],
+  "cartao-visita-fisico":  ["nome", "nomeCartao", "whatsapp", "emailCorporativo", "unidade"],
+  "cartao-visita-digital": ["nome", "nomeCompleto", "telefone", "emailCorporativo", "marca"],
+  "cartao-boas-vindas":    ["nome", "nomeCliente", "nomeAssinatura", "contratoSocial", "unidade"],
+  "divulgacao-nps":        ["nome", "nomeAssinatura", "cargo", "agradecimento", "modeloArte"],
+  "convite-fp":            ["nome", "codigoAssessor", "nomeAssinatura", "cargo", "contratoSocial"],
+  "certificado-eventos":   ["nome", "whatsapp", "cargaHoraria"],
+  "pagina-online":         ["nome", "titulo", "finalidade"],
+  "outro":                 ["nome", "titulo", "finalidade", "descricao"],
 };
 
 function validateFormDados(tipo: string, dados: Record<string, unknown>): string | null {

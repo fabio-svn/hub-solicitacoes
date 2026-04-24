@@ -47,22 +47,22 @@ const CATEGORIAS_SOLICITACAO = [
     categoria: "Identidade e materiais pessoais",
     itens: [
       { id: "pagina-assessores", label: "Página de Assessores", icon: "icon-user", ativo: true },
-      { id: "assinatura-email", label: "Assinatura de E-mail", icon: "icon-mail", ativo: false },
-      { id: "cartao-visita", label: "Cartão de Visita", icon: "icon-credit-card", ativo: false },
-      { id: "cartao-boas-vindas", label: "Cartão de Boas-vindas", icon: "icon-handshake", ativo: false },
+      { id: "assinatura-email", label: "Assinatura de E-mail", icon: "icon-mail", ativo: true },
+      { id: "cartao-visita", label: "Cartão de Visita", icon: "icon-credit-card", ativo: true },
+      { id: "cartao-boas-vindas", label: "Cartão de Boas-vindas", icon: "icon-handshake", ativo: true },
       { id: "cartao-comemorativo", label: "Cartão Comemorativo", icon: "icon-heart", ativo: false },
-      { id: "divulgacao-nps", label: "Divulgação NPS", icon: "icon-star", ativo: false },
-      { id: "convite-fp", label: "Convite Financial Planning", icon: "icon-envelope", ativo: false },
+      { id: "divulgacao-nps", label: "Divulgação NPS", icon: "icon-star", ativo: true },
+      { id: "convite-fp", label: "Convite Financial Planning", icon: "icon-envelope", ativo: true },
     ]
   },
   {
     categoria: "Eventos e relacionamento",
     itens: [
       { id: "eventos", label: "Eventos", icon: "icon-calendar", ativo: true },
-      { id: "certificado-eventos", label: "Certificado para Eventos", icon: "icon-award", ativo: false },
+      { id: "certificado-eventos", label: "Certificado para Eventos", icon: "icon-award", ativo: true },
       { id: "patrocinio", label: "Patrocínio", icon: "icon-flag", ativo: false },
       { id: "brindes", label: "Brindes", icon: "icon-gift", ativo: false },
-      { id: "pagina-online", label: "Página Online", icon: "icon-globe", ativo: false },
+      { id: "pagina-online", label: "Página Online", icon: "icon-globe", ativo: true },
     ]
   },
   {
@@ -102,7 +102,7 @@ const CATEGORIAS_SOLICITACAO = [
     categoria: "Outros",
     layout: "single",
     itens: [
-      { id: "outro", label: "Outro", icon: "icon-edit", ativo: false },
+      { id: "outro", label: "Outro", icon: "icon-edit", ativo: true },
     ]
   },
 ];
@@ -126,7 +126,7 @@ const TIPO_SOLICITACAO_LABELS = {
   "cartao-visita":                  "Cartão de Visita",
   "cartao-boas-vindas":             "Cartão de Boas-vindas",
   "cartao-comemorativo":            "Cartão Comemorativo",
-  "divulgacao-nps":                 "Divulgação NPS",
+  "divulgacao-nps":                 "Arte NPS",
   "convite-fp":                     "Convite Financial Planning",
   "email-marketing":                "E-mail Marketing",
   "materia-blog":                   "Matéria para Blog/Jornal/Revista",
@@ -143,6 +143,42 @@ const TIPO_SOLICITACAO_LABELS = {
 };
 
 const CONTRATOS_SOCIAIS = ["SVN Capital", "SVN Connect", "SVN Investimentos"];
+
+const MARCAS_SVN = [
+  "SVN",
+  "SVN Investimentos",
+  "SVN Capital",
+  "SVN Connect",
+  "SVN Agro, Câmbio & Commodities",
+  "SVN Gestão",
+  "SVN Global",
+  "SVN Proteção Patrimonial",
+  "SVN Investment & Merchant Banking",
+  "SVN Wealth Planning",
+];
+
+const CARGOS_ASSESSOR = [
+  "Assessor de Investimentos",
+  "Assessora de Investimentos",
+  "Sócio e Assessor de Investimentos",
+  "Sócia e Assessora de Investimentos",
+];
+
+const DRAWER_FIELD_LABELS = {
+  nomeCartao:       "Nome no cartão",
+  whatsapp:         "WhatsApp",
+  emailCorporativo: "E-mail corporativo",
+  marca:            "Marca",
+  nomeCliente:      "Nome do cliente",
+  isPrivate:        "Cliente Private?",
+  nomeAssinatura:   "Nome para assinatura",
+  cargo:            "Cargo",
+  agradecimento:    "Agradecimento",
+  modeloArte:       "Modelo de arte",
+  idEvento:         "ID do evento",
+  cargaHoraria:     "Carga horária",
+  tituloPagina:     "Título da página",
+};
 
 const SELOS_ASSESSOR = [
   { id: "ancord",          label: "Ancord",         icon_url: "https://pub-a2132f9b61f940659cc98265acfcf64c.r2.dev/ancord.webp" },
@@ -393,6 +429,14 @@ const FORM_ROUTES = {
   "apresentacao":         "form-apresentacoes.html",
   "conteudo-pdf":         "form-criacao-pdf.html",
   "atualizacao-material": "form-atualizacao-material.html",
+  "assinatura-email":     "form-assinatura-email.html",
+  "cartao-visita":        "form-cartao-visita.html",
+  "cartao-boas-vindas":   "form-cartao-boas-vindas.html",
+  "divulgacao-nps":       "form-divulgacao-nps.html",
+  "convite-fp":           "form-convite-fp.html",
+  "certificado-eventos":  "form-certificado-eventos.html",
+  "pagina-online":        "form-pagina-online.html",
+  "outro":                "form-outro.html",
 };
 
 const FLUXOS_ETAPAS = {

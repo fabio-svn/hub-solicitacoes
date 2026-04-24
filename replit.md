@@ -28,6 +28,14 @@ Internal request management web application for SVN Investimentos. Built as a pn
   - `solicitacoes.html` - Category selection grid
   - `form-eventos.html` - Events form (7 steps, 6 combinations: Presencial/Online x 3 maturity levels)
   - `form-pagina-assessores.html` - Assessor page form with live preview modal
+  - `form-assinatura-email.html` - Email signature form (N8N, svn_webhook_assinatura)
+  - `form-cartao-visita.html` - Business card form (2-step: físico→ClickUp next Wed / digital→N8N svn_webhook_cartao_digital)
+  - `form-cartao-boas-vindas.html` - Welcome card form (N8N, svn_webhook_boas_vindas)
+  - `form-divulgacao-nps.html` - Arte NPS form (N8N, svn_webhook_nps)
+  - `form-convite-fp.html` - Financial Planning invite form (N8N, svn_webhook_convite_fp)
+  - `form-certificado-eventos.html` - Event certificate form (N8N, svn_webhook_certificado)
+  - `form-pagina-online.html` - Online page form (ClickUp, 5 business days)
+  - `form-outro.html` - Free-form request (ClickUp, 7 business days)
   - `form-apresentacoes.html` - Presentations form (subtipo: nova/atualizar)
   - `form-artes-divulgacao.html` - Art/design request form
   - `form-atualizacao-material.html` - Material update form
