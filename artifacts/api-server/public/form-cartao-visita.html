@@ -54,27 +54,32 @@
 
       <!-- Passo 1: Escolha do tipo -->
       <div class="form-step active" id="step1">
-        <p style="font-size:0.9rem;opacity:0.7;margin-bottom:20px">Qual tipo de cartão de visita você precisa?</p>
-        <div class="tipo-option" id="optFisico" onclick="selecionarTipo('fisico')">
-          <div class="tipo-icon">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+        <h2 style="font-weight:600;font-size:1.1rem;margin-bottom:20px">Qual tipo de cartão você precisa?</h2>
+        <div class="radio-cards">
+          <div class="radio-card" onclick="selectTipo('fisico')" id="cardFisico">
+            <div class="card-icon">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <rect x="1" y="4" width="22" height="16" rx="2" ry="2"/>
+                <line x1="1" y1="10" x2="23" y2="10"/>
+              </svg>
+            </div>
+            <div class="card-label">Cartão Físico</div>
+            <div class="card-desc">Cartão impresso para uso presencial</div>
           </div>
-          <div>
-            <div class="tipo-label">Físico</div>
-            <div class="tipo-desc">Cartão impresso — prazo: próxima quarta-feira</div>
+          <div class="radio-card" onclick="selectTipo('digital')" id="cardDigital">
+            <div class="card-icon">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+                <line x1="8" y1="21" x2="16" y2="21"/>
+                <line x1="12" y1="17" x2="12" y2="21"/>
+              </svg>
+            </div>
+            <div class="card-label">Cartão Digital</div>
+            <div class="card-desc">Cartão digital enviado por e-mail</div>
           </div>
         </div>
-        <div class="tipo-option" id="optDigital" onclick="selecionarTipo('digital')">
-          <div class="tipo-icon">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18" stroke-linecap="round" stroke-width="3"/></svg>
-          </div>
-          <div>
-            <div class="tipo-label">Digital</div>
-            <div class="tipo-desc">Cartão digital / NFC — gerado via N8N</div>
-          </div>
-        </div>
-        <div style="margin-top:24px;display:flex;justify-content:flex-end">
-          <button class="btn btn-primary btn-submit-gold" id="btnNext" onclick="irParaPasso2()" disabled style="opacity:0.4">Próximo</button>
+        <div class="form-nav" style="margin-top:24px">
+          <button class="btn btn-primary" id="btnNext1" disabled onclick="irParaPasso2()">Próximo</button>
         </div>
       </div>
 
@@ -114,11 +119,6 @@
             <option value="">Selecione a unidade</option>
           </select>
         </div>
-        <div class="field">
-          <label>Observações (opcional)</label>
-          <textarea id="observacoesFisico" placeholder="Cargo personalizado, número de vias, outras informações..."></textarea>
-        </div>
-
         <div style="border-top:1px solid rgba(34,27,25,.08);margin:28px 0 20px;padding-top:22px">
           <div id="submitErrorFisico" class="alert-card alert-danger" style="display:none;margin-bottom:16px"></div>
           <div class="form-nav" style="justify-content:flex-end">
@@ -136,7 +136,7 @@
 
         <div class="alert-card alert-info" style="margin-bottom:24px">
           <div class="alert-title">Cartão digital</div>
-          <div class="alert-text">Preencha os dados para criação do cartão digital. O cartão será gerado automaticamente via N8N.</div>
+          <div class="alert-text">Preencha os dados para criação do cartão digital. O cartão será gerado e entregue automaticamente.</div>
         </div>
 
         <div class="field">
@@ -163,11 +163,6 @@
             <option value="">Selecione a marca</option>
           </select>
         </div>
-        <div class="field">
-          <label>Observações (opcional)</label>
-          <textarea id="observacoesDigital" placeholder="Cargo personalizado ou outras informações..."></textarea>
-        </div>
-
         <div style="border-top:1px solid rgba(34,27,25,.08);margin:28px 0 20px;padding-top:22px">
           <div id="submitErrorDigital" class="alert-card alert-danger" style="display:none;margin-bottom:16px"></div>
           <div class="form-nav" style="justify-content:flex-end">
@@ -246,14 +241,14 @@
       setTimeout(() => { btn.textContent = orig; }, 1500);
     }
 
-    function selecionarTipo(tipo) {
+    function selectTipo(tipo) {
       tipoSelecionado = tipo;
-      document.getElementById('optFisico').classList.toggle('selected', tipo === 'fisico');
-      document.getElementById('optDigital').classList.toggle('selected', tipo === 'digital');
-      const btn = document.getElementById('btnNext');
-      btn.disabled = false;
-      btn.style.opacity = '1';
+      document.getElementById('cardFisico').className = 'radio-card' + (tipo === 'fisico' ? ' selected' : '');
+      document.getElementById('cardDigital').className = 'radio-card' + (tipo === 'digital' ? ' selected' : '');
+      document.getElementById('btnNext1').disabled = false;
     }
+
+    function selecionarTipo(tipo) { selectTipo(tipo); }
 
     function irParaPasso2() {
       if (!tipoSelecionado) return;
@@ -313,7 +308,6 @@
         whatsapp: document.getElementById('whatsappFisico').value,
         emailCorporativo: document.getElementById('emailCorporativoFisico').value,
         unidade: document.getElementById('unidadeFisico').value,
-        observacoes: document.getElementById('observacoesFisico').value,
       };
 
       const formData = new FormData();
@@ -359,7 +353,6 @@
         telefone: document.getElementById('telefoneDigital').value,
         emailCorporativo: document.getElementById('emailCorporativoDigital').value,
         marca: document.getElementById('marcaDigital').value,
-        observacoes: document.getElementById('observacoesDigital').value,
       };
 
       const formData = new FormData();

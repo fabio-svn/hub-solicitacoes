@@ -17,7 +17,7 @@
     <div id="webhookConfig" style="display:none;margin-bottom:16px">
       <div style="display:flex;align-items:center;gap:8px;padding:10px 14px;background:var(--icon-bg);border:1px solid var(--border-light);border-radius:10px;font-size:0.82rem">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>
-        <span style="opacity:0.6;flex-shrink:0;white-space:nowrap">Webhook N8N:</span>
+        <span style="opacity:0.6;flex-shrink:0;white-space:nowrap">Webhook:</span>
         <input type="url" id="webhookUrl" placeholder="https://n8n.portalsvn.com.br/webhook/..." style="flex:1;border:none;background:transparent;font-family:'Nunito Sans',sans-serif;font-size:0.82rem;outline:none;min-width:0">
         <button onclick="salvarWebhook()" style="padding:4px 10px;border-radius:6px;background:var(--carbon-black);color:white;border:none;font-family:'Nunito Sans',sans-serif;font-size:0.75rem;font-weight:600;cursor:pointer;white-space:nowrap">Salvar</button>
       </div>
@@ -32,7 +32,7 @@
 
       <div class="alert-card alert-info" style="margin-bottom:24px">
         <div class="alert-title">Como funciona</div>
-        <div class="alert-text">Preencha os dados abaixo para criação da sua assinatura de e-mail. Após o envio, a assinatura será gerada automaticamente e entregue via N8N.</div>
+        <div class="alert-text">Preencha os dados abaixo para criação da sua assinatura de e-mail. Após o envio, a assinatura será gerada e entregue automaticamente.</div>
       </div>
 
       <div class="field">
@@ -60,8 +60,17 @@
         </select>
       </div>
       <div class="field">
-        <label>Observações (opcional)</label>
-        <textarea id="observacoes" placeholder="Informações adicionais ou cargo personalizado..."></textarea>
+        <label>Você possui CFP?</label>
+        <div class="radio-group" style="flex-direction:row;gap:16px">
+          <label class="radio-option">
+            <input type="radio" name="cfp" value="sim">
+            <span class="radio-custom"></span><span>Sim</span>
+          </label>
+          <label class="radio-option">
+            <input type="radio" name="cfp" value="nao">
+            <span class="radio-custom"></span><span>Não</span>
+          </label>
+        </div>
       </div>
 
       <div style="border-top:1px solid rgba(34,27,25,.08);margin:28px 0 20px;padding-top:22px">
@@ -147,7 +156,7 @@
           telefone: document.getElementById('telefone')?.value || '',
           emailCorporativo: document.getElementById('emailCorporativo')?.value || '',
           marca: document.getElementById('marca')?.value || '',
-          observacoes: document.getElementById('observacoes')?.value || '',
+          cfp: document.querySelector('input[name="cfp"]:checked')?.value || '',
         }));
       } catch {}
     }
@@ -161,7 +170,7 @@
         if (data.telefone) document.getElementById('telefone').value = data.telefone;
         if (data.emailCorporativo) document.getElementById('emailCorporativo').value = data.emailCorporativo;
         if (data.marca) { const el = document.getElementById('marca'); if (el) el.value = data.marca; }
-        if (data.observacoes) document.getElementById('observacoes').value = data.observacoes;
+        if (data.cfp) { const el = document.querySelector(`input[name="cfp"][value="${data.cfp}"]`); if (el) el.checked = true; }
       } catch {}
     }
 
@@ -197,7 +206,7 @@
         telefone: document.getElementById('telefone').value,
         emailCorporativo: document.getElementById('emailCorporativo').value,
         marca: document.getElementById('marca').value,
-        observacoes: document.getElementById('observacoes').value,
+        cfp: document.querySelector('input[name="cfp"]:checked')?.value || '',
       };
 
       const formData = new FormData();

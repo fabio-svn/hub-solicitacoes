@@ -9,3 +9,11 @@ function mascaraTelefone(el) {
   }
   el.value = v;
 }
+
+function mascaraMoeda(el) {
+  let v = el.value.replace(/\D/g, '');
+  const num = parseInt(v) || 0;
+  el.value = (num / 100).toLocaleString('pt-BR', {
+    style: 'currency', currency: 'BRL'
+  });
+}

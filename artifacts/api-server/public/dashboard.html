@@ -55,6 +55,10 @@
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
         Painel Admin
       </button>
+      <button class="tab" data-tab="log" id="tabLog" onclick="switchTab('log')" style="display:none;align-items:center;gap:6px">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        Log de atividade
+      </button>
     </div>
 
     <div class="tab-content" id="tab-eventos">
@@ -297,6 +301,54 @@
       <div class="pagination" id="adminPaginacao" style="margin-top:12px"></div>
 
     </div>
+
+    <div class="tab-content" id="tab-log" style="display:none">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px">
+        <p style="font-size:0.8rem;opacity:0.5;margin:0">Registro de todas as solicitações criadas no hub. Útil para acompanhar integrações e identificar problemas.</p>
+        <button onclick="exportarLog()" style="padding:5px 14px;border-radius:8px;border:1px solid var(--border-light);background:var(--card-white);font-family:'Nunito Sans',sans-serif;font-size:0.8rem;font-weight:600;cursor:pointer">Exportar CSV</button>
+      </div>
+
+      <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;align-items:center">
+        <div class="search-bar" style="flex:1;max-width:240px;margin-bottom:0;height:32px;padding:0 14px;border-radius:8px">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" opacity="0.4"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" id="logBusca" placeholder="Buscar por e-mail, tipo..." oninput="debounceLogSearch()">
+        </div>
+        <select id="logFiltroTipo" onchange="loadLog()" style="height:32px;border:1px solid var(--border-light);border-radius:8px;padding:0 10px;font-family:'Nunito Sans',sans-serif;font-size:0.8rem;background:var(--card-white)">
+          <option value="">Todos os tipos</option>
+        </select>
+        <select id="logFiltroClickup" onchange="loadLog()" style="height:32px;border:1px solid var(--border-light);border-radius:8px;padding:0 10px;font-family:'Nunito Sans',sans-serif;font-size:0.8rem;background:var(--card-white)">
+          <option value="">ClickUp: todos</option>
+          <option value="com">Com task ClickUp</option>
+          <option value="sem">Sem task ClickUp</option>
+        </select>
+      </div>
+
+      <div style="border-radius:12px;border:1px solid var(--border-light);overflow:hidden;position:relative">
+        <table style="width:100%;border-collapse:collapse;font-size:0.82rem;table-layout:fixed" id="logTabela">
+          <colgroup>
+            <col style="width:100px">
+            <col style="width:130px">
+            <col style="width:auto">
+            <col style="width:90px">
+            <col style="width:100px">
+          </colgroup>
+          <thead>
+            <tr style="background:var(--carbon-black)">
+              <th style="padding:10px 14px;font-weight:700;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.06em;color:rgba(255,255,255,0.7);text-align:left">Data/Hora</th>
+              <th style="padding:10px 14px;font-weight:700;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.06em;color:rgba(255,255,255,0.7);text-align:left">Solicitante</th>
+              <th style="padding:10px 14px;font-weight:700;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.06em;color:rgba(255,255,255,0.7);text-align:left">Tipo</th>
+              <th style="padding:10px 14px;font-weight:700;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.06em;color:rgba(255,255,255,0.7);text-align:left">Status</th>
+              <th style="padding:10px 14px;font-weight:700;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.06em;color:rgba(255,255,255,0.7);text-align:left">ClickUp</th>
+            </tr>
+          </thead>
+          <tbody id="logTabelaBody">
+            <tr><td colspan="5" style="padding:24px;text-align:center;opacity:0.4">Carregando...</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="pagination" id="logPaginacao" style="margin-top:12px"></div>
+    </div>
+
   </div>
 
   <script src="config.js"></script>
@@ -498,6 +550,9 @@
       });
       if (tab === 'admin') {
         Promise.all([loadAdminStats(), loadAdminHistorico()]);
+      } else if (tab === 'log') {
+        logPage = 1;
+        loadLog();
       } else {
         const listEl = document.getElementById(tab === 'eventos' ? 'listEventos' : 'listGeral');
         if (listEl && !listEl.hasChildNodes()) loadList(tab);
@@ -804,9 +859,138 @@
       container.innerHTML = html;
     }
 
+    let logPage = 1;
+    let logSearchTimeout;
+
+    function initLog() {
+      const sel = document.getElementById('logFiltroTipo');
+      if (sel && typeof TIPO_SOLICITACAO_LABELS !== 'undefined') {
+        Object.entries(TIPO_SOLICITACAO_LABELS).forEach(([id, label]) => {
+          const o = document.createElement('option');
+          o.value = id; o.textContent = label;
+          sel.appendChild(o);
+        });
+      }
+    }
+
+    async function loadLog() {
+      const tbody = document.getElementById('logTabelaBody');
+      tbody.innerHTML = `<tr><td colspan="5" style="padding:24px;text-align:center;opacity:0.4">Carregando...</td></tr>`;
+      const params = new URLSearchParams();
+      params.set('page', logPage);
+      params.set('limit', '30');
+      params.set('order', 'created_at');
+      params.set('dir', 'desc');
+      const busca = document.getElementById('logBusca')?.value?.trim();
+      if (busca) params.set('busca', busca);
+      const tipo = document.getElementById('logFiltroTipo')?.value;
+      if (tipo) params.set('tipos', tipo);
+      const clickup = document.getElementById('logFiltroClickup')?.value;
+      if (clickup === 'com') params.set('com_clickup', 'sim');
+      if (clickup === 'sem') params.set('sem_clickup', 'sim');
+      try {
+        const res = await fetch('/api/admin/historico?' + params.toString());
+        const data = await res.json();
+        renderLog(data);
+      } catch {
+        tbody.innerHTML = `<tr><td colspan="5" style="padding:24px;text-align:center;color:var(--ruby-red)">Erro ao carregar log.</td></tr>`;
+      }
+    }
+
+    function renderLog(data) {
+      const tbody = document.getElementById('logTabelaBody');
+      if (!data.data || data.data.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" style="padding:24px;text-align:center;opacity:0.4">Nenhum registro encontrado.</td></tr>`;
+        document.getElementById('logPaginacao').innerHTML = '';
+        return;
+      }
+      tbody.innerHTML = data.data.map(item => {
+        const dt = new Date(item.created_at);
+        const data_fmt = dt.toLocaleDateString('pt-BR', { day:'2-digit', month:'2-digit', year:'2-digit' });
+        const hora_fmt = dt.toLocaleTimeString('pt-BR', { hour:'2-digit', minute:'2-digit' });
+        const tipoLabel = (typeof TIPO_SOLICITACAO_LABELS !== 'undefined' && TIPO_SOLICITACAO_LABELS[item.tipo_solicitacao]) || item.tipo_solicitacao;
+        const statusObj = STATUS_SOLICITACAO?.find(s => s.id === item.status) || { bg: '#e2e8f0', text: '#475569', label: item.status };
+        const temClickup = !!item.clickup_url;
+        return `<tr style="border-top:1px solid var(--border-light);transition:background 0.12s" onmouseover="this.style.background='var(--icon-bg)'" onmouseout="this.style.background=''">
+          <td style="padding:8px 14px;white-space:nowrap">
+            <div style="font-size:0.8rem">${data_fmt}</div>
+            <div style="font-size:0.72rem;opacity:0.4">${hora_fmt}</div>
+          </td>
+          <td style="padding:8px 14px;overflow:hidden">
+            <div style="font-size:0.82rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${esc(item.user_email || '')}">
+              ${esc(item.user_email?.split('@')[0] || '—')}
+            </div>
+          </td>
+          <td style="padding:8px 14px;overflow:hidden">
+            <div style="font-size:0.78rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${esc(tipoLabel)}">
+              ${esc(tipoLabel)}
+            </div>
+          </td>
+          <td style="padding:8px 14px">
+            <span style="display:inline-block;padding:3px 8px;border-radius:999px;font-size:0.7rem;font-weight:700;background:${statusObj.bg};color:${statusObj.text}">
+              ${esc(statusObj.label)}
+            </span>
+          </td>
+          <td style="padding:8px 14px;text-align:center">
+            ${temClickup
+              ? `<a href="${esc(item.clickup_url)}" target="_blank" style="display:inline-flex;align-items:center;gap:4px;color:#7c3aed;font-size:0.75rem;font-weight:600;text-decoration:none">${CLICKUP_ICON} Task</a>`
+              : `<span style="font-size:0.75rem;opacity:0.3">—</span>`
+            }
+          </td>
+        </tr>`;
+      }).join('');
+
+      const pag = document.getElementById('logPaginacao');
+      if (data.totalPages <= 1) { pag.innerHTML = ''; return; }
+      let html = `<button ${data.page <= 1 ? 'disabled' : ''} onclick="logGoPage(${data.page-1})">&laquo;</button>`;
+      for (let i = Math.max(1, data.page-2); i <= Math.min(data.totalPages, data.page+2); i++) {
+        html += `<button class="${i === data.page ? 'active' : ''}" onclick="logGoPage(${i})">${i}</button>`;
+      }
+      html += `<button ${data.page >= data.totalPages ? 'disabled' : ''} onclick="logGoPage(${data.page+1})">&raquo;</button>`;
+      pag.innerHTML = html;
+    }
+
+    function logGoPage(page) { logPage = page; loadLog(); }
+
+    function debounceLogSearch() {
+      clearTimeout(logSearchTimeout);
+      logSearchTimeout = setTimeout(() => { logPage = 1; loadLog(); }, 300);
+    }
+
+    function exportarLog() {
+      fetch('/api/admin/historico?limit=1000&order=created_at&dir=desc')
+        .then(r => r.json())
+        .then(data => {
+          if (!data.data) return;
+          const headers = ['Data', 'Hora', 'Solicitante', 'E-mail', 'Tipo', 'Status', 'ClickUp URL'];
+          const rows = data.data.map(item => {
+            const dt = new Date(item.created_at);
+            const tipoLabel = (typeof TIPO_SOLICITACAO_LABELS !== 'undefined' && TIPO_SOLICITACAO_LABELS[item.tipo_solicitacao]) || item.tipo_solicitacao;
+            return [
+              dt.toLocaleDateString('pt-BR'),
+              dt.toLocaleTimeString('pt-BR', { hour:'2-digit', minute:'2-digit' }),
+              item.user_email?.split('@')[0] || '',
+              item.user_email || '',
+              tipoLabel,
+              item.status,
+              item.clickup_url || '',
+            ].map(v => `"${String(v).replace(/"/g,'""')}"`).join(',');
+          });
+          const csv = [headers.join(','), ...rows].join('\n');
+          const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+          const a = document.createElement('a');
+          a.href = URL.createObjectURL(blob);
+          a.download = 'log-hub-svn-' + new Date().toISOString().split('T')[0] + '.csv';
+          a.click();
+        })
+        .catch(() => alert('Erro ao exportar.'));
+    }
+
     function initAdmin() {
       if (!Auth.isAdmin()) return;
       document.getElementById('tabAdmin').style.display = '';
+      document.getElementById('tabLog').style.display = '';
+      initLog();
       renderDropdownTipos();
       window.addEventListener('scroll', () => {
         const ddT = document.getElementById('graficoDropdownTipo');

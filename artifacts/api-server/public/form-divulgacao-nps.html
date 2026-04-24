@@ -17,7 +17,7 @@
     <div id="webhookConfig" style="display:none;margin-bottom:16px">
       <div style="display:flex;align-items:center;gap:8px;padding:10px 14px;background:var(--icon-bg);border:1px solid var(--border-light);border-radius:10px;font-size:0.82rem">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>
-        <span style="opacity:0.6;flex-shrink:0;white-space:nowrap">Webhook N8N:</span>
+        <span style="opacity:0.6;flex-shrink:0;white-space:nowrap">Webhook:</span>
         <input type="url" id="webhookUrl" placeholder="https://n8n.portalsvn.com.br/webhook/..." style="flex:1;border:none;background:transparent;font-family:'Nunito Sans',sans-serif;font-size:0.82rem;outline:none;min-width:0">
         <button onclick="salvarWebhook()" style="padding:4px 10px;border-radius:6px;background:var(--carbon-black);color:white;border:none;font-family:'Nunito Sans',sans-serif;font-size:0.75rem;font-weight:600;cursor:pointer;white-space:nowrap">Salvar</button>
       </div>
@@ -32,7 +32,7 @@
 
       <div class="alert-card alert-info" style="margin-bottom:24px">
         <div class="alert-title">Arte de divulgação NPS</div>
-        <div class="alert-text">Preencha os dados abaixo para criação de arte personalizada comemorando a avaliação NPS de um cliente. A arte será gerada e entregue automaticamente via N8N.</div>
+        <div class="alert-text">Preencha os dados abaixo para criação de arte personalizada comemorando a avaliação NPS de um cliente. A arte será gerada e entregue automaticamente.</div>
       </div>
 
       <div class="field">
@@ -56,12 +56,20 @@
         <textarea id="agradecimento" placeholder="Escreva a mensagem personalizada de agradecimento ao cliente..." required></textarea>
       </div>
       <div class="field">
-        <label>Modelo de arte <span style="color:var(--ruby-red)">*</span></label>
-        <input type="text" id="modeloArte" placeholder="Ex: Modelo A, Modelo B, código do template..." required>
+        <label>Modelo de arte desejada <span style="color:var(--ruby-red)">*</span></label>
+        <select id="modeloArte" required onchange="handleModeloArte()">
+          <option value="">Selecione</option>
+          <option value="com-foto">Com foto</option>
+          <option value="sem-foto">Sem foto</option>
+        </select>
       </div>
-      <div class="field">
-        <label>Observações (opcional)</label>
-        <textarea id="observacoes" placeholder="Informações adicionais sobre a arte..."></textarea>
+      <div class="field" id="fotoField" style="display:none">
+        <label>Foto de perfil</label>
+        <div class="file-input-wrapper">
+          <label class="file-input-btn" for="fotoPerfil">Escolher foto</label>
+          <input type="file" id="fotoPerfil" accept=".jpg,.jpeg,.png,.webp">
+          <div class="file-name" id="fotoPerfilName"></div>
+        </div>
       </div>
 
       <div style="border-top:1px solid rgba(34,27,25,.08);margin:28px 0 20px;padding-top:22px">
@@ -147,7 +155,6 @@
           cargo: document.getElementById('cargo')?.value || '',
           agradecimento: document.getElementById('agradecimento')?.value || '',
           modeloArte: document.getElementById('modeloArte')?.value || '',
-          observacoes: document.getElementById('observacoes')?.value || '',
         }));
       } catch {}
     }
@@ -160,8 +167,7 @@
         if (data.nomeAssinatura) document.getElementById('nomeAssinatura').value = data.nomeAssinatura;
         if (data.cargo) { const el = document.getElementById('cargo'); if (el) el.value = data.cargo; }
         if (data.agradecimento) document.getElementById('agradecimento').value = data.agradecimento;
-        if (data.modeloArte) document.getElementById('modeloArte').value = data.modeloArte;
-        if (data.observacoes) document.getElementById('observacoes').value = data.observacoes;
+        if (data.modeloArte) { document.getElementById('modeloArte').value = data.modeloArte; handleModeloArte(); }
       } catch {}
     }
 
@@ -185,6 +191,11 @@
       return true;
     }
 
+    function handleModeloArte() {
+      const val = document.getElementById('modeloArte').value;
+      document.getElementById('fotoField').style.display = val === 'com-foto' ? 'block' : 'none';
+    }
+
     async function submitForm() {
       if (!validateRequiredFields()) return;
       const btn = document.getElementById('btnSubmit');
@@ -197,7 +208,6 @@
         cargo: document.getElementById('cargo').value,
         agradecimento: document.getElementById('agradecimento').value,
         modeloArte: document.getElementById('modeloArte').value,
-        observacoes: document.getElementById('observacoes').value,
       };
 
       const formData = new FormData();

@@ -176,7 +176,7 @@ label, .label {
 
 input[type="text"], input[type="email"], input[type="url"],
 input[type="number"], input[type="date"], input[type="time"],
-select, textarea {
+input[type="tel"], select, textarea {
   width: 100%;
   border: 1px solid rgba(34,27,25,0.2);
   border-radius: 10px;

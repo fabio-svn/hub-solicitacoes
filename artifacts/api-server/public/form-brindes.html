@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Outro - Hub SVN</title>
+  <title>Brindes - Hub SVN</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap" media="print" onload="this.media='all'">
@@ -13,17 +13,17 @@
 <body class="page-light">
   <header class="header" id="mainHeader"></header>
   <div class="container-narrow" style="padding-top:32px;padding-bottom:80px">
-
     <div class="form-card">
       <div class="form-progress"><div class="form-progress-bar" id="progressBar" style="width:100%"></div></div>
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-        <h2 style="font-weight:500;font-size:1.1rem;margin:0">Outro</h2>
+        <h2 style="font-weight:500;font-size:1.1rem;margin:0">Brindes</h2>
       </div>
       <div style="height:1px;background:var(--border-light);margin-bottom:24px"></div>
 
-      <div class="alert-card alert-warning" style="margin-bottom:24px">
-        <div class="alert-title">Solicitação livre</div>
-        <div class="alert-text">Use este formulário para solicitações que não se encaixam em nenhuma categoria disponível. Descreva sua necessidade com o máximo de detalhes possível. Prazo estimado: <strong>7 dias úteis</strong>.</div>
+      <div class="alert-card alert-info" style="margin-bottom:24px">
+        <div class="alert-text">
+          O prazo mínimo para a solicitação de brindes é de 15 dias de antecedência.
+        </div>
       </div>
 
       <div class="field">
@@ -34,16 +34,58 @@
       </div>
       <div class="field">
         <label>Título da solicitação <span style="color:var(--ruby-red)">*</span></label>
-        <input type="text" id="titulo" placeholder="Um título curto e descritivo" required>
+        <input type="text" id="titulo" placeholder="Ex: brinde para [ocasião]" required>
       </div>
       <div class="field">
-        <label>Finalidade <span style="color:var(--ruby-red)">*</span></label>
-        <textarea id="finalidade" placeholder="Qual é o objetivo desta solicitação?" required></textarea>
+        <label>Para qual finalidade você usará esses brindes? <span style="color:var(--ruby-red)">*</span></label>
+        <input type="text" id="finalidade" placeholder="Descreva a finalidade" required>
       </div>
       <div class="field">
-        <label>Descrição detalhada <span style="color:var(--ruby-red)">*</span></label>
-        <textarea id="descricao" placeholder="Descreva com detalhes o que precisa ser feito, incluindo referências, prazos desejados e qualquer outra informação relevante..." required></textarea>
+        <label>Em qual data pretende entregar esse brinde? <span style="color:var(--ruby-red)">*</span></label>
+        <input type="date" id="dataEntrega" required>
       </div>
+      <div class="field">
+        <label>O que você irá oferecer como brinde? <span style="color:var(--ruby-red)">*</span></label>
+        <div class="checkbox-group" id="itensContainer">
+          <label class="checkbox-option"><input type="checkbox" value="Moleskine"><span class="checkbox-custom"></span><span>Moleskine</span></label>
+          <label class="checkbox-option"><input type="checkbox" value="Bloco de notas"><span class="checkbox-custom"></span><span>Bloco de notas</span></label>
+          <label class="checkbox-option"><input type="checkbox" value="Camiseta"><span class="checkbox-custom"></span><span>Camiseta</span></label>
+          <label class="checkbox-option"><input type="checkbox" value="Caneta"><span class="checkbox-custom"></span><span>Caneta</span></label>
+          <label class="checkbox-option"><input type="checkbox" value="Cartão presente"><span class="checkbox-custom"></span><span>Cartão presente</span></label>
+          <label class="checkbox-option"><input type="checkbox" value="Carteira"><span class="checkbox-custom"></span><span>Carteira</span></label>
+          <label class="checkbox-option"><input type="checkbox" value="Copo de café"><span class="checkbox-custom"></span><span>Copo de café</span></label>
+          <label class="checkbox-option"><input type="checkbox" value="Garrafa"><span class="checkbox-custom"></span><span>Garrafa</span></label>
+          <label class="checkbox-option"><input type="checkbox" value="Lápis"><span class="checkbox-custom"></span><span>Lápis</span></label>
+          <label class="checkbox-option" id="outroCheck">
+            <input type="checkbox" value="Outro" onchange="toggleOutroBrinde(this)">
+            <span class="checkbox-custom"></span><span>Outro</span>
+          </label>
+        </div>
+        <div id="outroBrindeField" style="display:none;margin-top:8px">
+          <input type="text" id="outroBrinde" placeholder="Descreva o brinde">
+        </div>
+      </div>
+      <div class="field">
+        <label>Caso haja cartão presente, o que será escrito nele? (opcional)</label>
+        <textarea id="textoCartaoPresente" placeholder="Texto para o cartão presente..."></textarea>
+      </div>
+      <div class="field">
+        <label>Há alguma personalização necessária, ou serão os produtos tradicionais da Store SVN?</label>
+        <textarea id="personalizacao" placeholder="Descreva se há personalização..."></textarea>
+      </div>
+      <div class="field">
+        <label>Arquivos de apoio (opcional)</label>
+        <div class="file-input-wrapper">
+          <label class="file-input-btn" for="arquivoApoio">Escolher arquivo</label>
+          <input type="file" id="arquivoApoio">
+          <div class="file-name" id="arquivoApoioName"></div>
+        </div>
+        <div class="field-hint">
+          Caso não consiga, envie para:
+          <a href="mailto:gabriela.franca@elevationsvn.com.br">gabriela.franca@elevationsvn.com.br</a>
+        </div>
+      </div>
+
       <div style="border-top:1px solid rgba(34,27,25,.08);margin:28px 0 20px;padding-top:22px">
         <div id="submitError" class="alert-card alert-danger" style="display:none;margin-bottom:16px"></div>
         <div class="form-nav" style="justify-content:flex-end">
@@ -62,7 +104,7 @@
     <span>Início</span>
   </a>
   <a href="https://wa.me/5544991689207" target="_blank" rel="noopener" class="float-whatsapp" title="Falar com o time de Marketing">
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M11.999 2C6.477 2 2 6.484 2 12.017c0 1.99.521 3.86 1.43 5.484L2 22l4.644-1.414A9.96 9.96 0 0011.999 22C17.523 22 22 17.516 22 11.983 22 6.472 17.523 2 11.999 2zm0 18.15a8.124 8.124 0 01-4.162-1.145l-.299-.178-3.088.941.923-3.121-.196-.32A8.185 8.185 0 013.85 11.983c0-4.51 3.644-8.183 8.15-8.183 4.507 0 8.152 3.672 8.152 8.183 0 4.51-3.645 8.167-8.153 8.167z"/></svg>
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M11.999 2C6.477 2 2 6.484 2 12.017c0 1.99.521 3.86 1.43 5.484L2 22l4.644-1.414A9.96 9.96 0 0011.999 22C17.523 22 22 17.516 22 11.983 22 6.472 17.523 2 11.999 2zm0 18.15a8.124 8.124 0 01-4.162-1.145l-.299-.178-3.088.941.923-3.121-.196-.32A8.185 8.185 0 013.85 11.983c0-4.51 3.644-8.183 8.15-8.183 4.507 0 8.152 3.672 8.152 8.183 0 4.51-3.645 8.167-8.153 8.167z"/></svg>
   </a>
   <script>
   (function() {
@@ -84,48 +126,40 @@
   <script src="config.js"></script>
   <script src="auth.js"></script>
   <script>
-    const TIPO = 'outro';
+    const TIPO = 'brindes';
 
     async function init() {
       await _configReady;
       await Auth.init();
-      if (!Auth.isAuthenticated()) { window.location.href = '/auth/login?redirect=/form-outro.html'; return; }
+      if (!Auth.isAuthenticated()) { window.location.href = '/auth/login?redirect=/form-brindes.html'; return; }
       Auth.renderHeader(document.getElementById('mainHeader'));
 
       const setorSel = document.getElementById('setor');
       if (setorSel) { SETORES.filter(s => s !== 'Selecione seu setor').forEach(s => { const o = document.createElement('option'); o.value = s; o.textContent = s; setorSel.appendChild(o); }); }
 
-      restoreSession();
+      FileUpload.bind('arquivoApoio', 'arquivoApoioName');
     }
 
-    function saveSession() {
-      try {
-        sessionStorage.setItem('form-outro', JSON.stringify({
-          setor: document.getElementById('setor')?.value || '',
-          titulo: document.getElementById('titulo')?.value || '',
-          finalidade: document.getElementById('finalidade')?.value || '',
-          descricao: document.getElementById('descricao')?.value || '',
-        }));
-      } catch {}
+    function toggleOutroBrinde(cb) {
+      document.getElementById('outroBrindeField').style.display = cb.checked ? 'block' : 'none';
     }
 
-    function restoreSession() {
-      try {
-        const data = JSON.parse(sessionStorage.getItem('form-outro'));
-        if (!data) return;
-        if (data.setor) { const el = document.getElementById('setor'); if (el) el.value = data.setor; }
-        if (data.titulo) document.getElementById('titulo').value = data.titulo;
-        if (data.finalidade) document.getElementById('finalidade').value = data.finalidade;
-        if (data.descricao) document.getElementById('descricao').value = data.descricao;
-      } catch {}
+    function getItensSelecionados() {
+      const checks = document.querySelectorAll('#itensContainer input[type="checkbox"]:checked');
+      const vals = Array.from(checks).map(c => c.value);
+      const outroIdx = vals.indexOf('Outro');
+      if (outroIdx !== -1) {
+        const outroBrinde = document.getElementById('outroBrinde').value.trim();
+        if (outroBrinde) vals[outroIdx] = outroBrinde;
+      }
+      return vals.join(', ');
     }
 
     function validateRequiredFields() {
       document.querySelectorAll('.field-invalid').forEach(el => el.classList.remove('field-invalid'));
       const invalidFields = [];
       document.querySelectorAll('input[required], select[required], textarea[required]').forEach(input => {
-        const isEmpty = !input.value.trim();
-        if (isEmpty) {
+        if (!input.value.trim()) {
           const fieldWrapper = input.closest('.field');
           if (fieldWrapper) {
             fieldWrapper.classList.add('field-invalid');
@@ -136,6 +170,20 @@
           }
         }
       });
+
+      const itens = getItensSelecionados();
+      if (!itens) {
+        const container = document.getElementById('itensContainer');
+        const field = container?.closest('.field');
+        if (field && !field.classList.contains('field-invalid')) {
+          field.classList.add('field-invalid');
+          let errorEl = field.querySelector('.field-error');
+          if (!errorEl) { errorEl = document.createElement('div'); errorEl.className = 'field-error'; container.parentElement.appendChild(errorEl); }
+          errorEl.textContent = 'Selecione pelo menos um item.';
+          invalidFields.push(field);
+        }
+      }
+
       if (invalidFields.length > 0) { invalidFields[0].scrollIntoView({ behavior: 'smooth', block: 'center' }); return false; }
       return true;
     }
@@ -150,17 +198,21 @@
         setor: document.getElementById('setor')?.value || '',
         titulo: document.getElementById('titulo').value,
         finalidade: document.getElementById('finalidade').value,
-        descricao: document.getElementById('descricao').value,
+        dataEntrega: document.getElementById('dataEntrega').value,
+        itens: getItensSelecionados(),
+        textoCartaoPresente: document.getElementById('textoCartaoPresente').value,
+        personalizacao: document.getElementById('personalizacao').value,
       };
 
       const formData = new FormData();
       formData.append('tipo_solicitacao', TIPO);
       formData.append('dados', JSON.stringify(dados));
+      const arquivoInput = document.getElementById('arquivoApoio');
+      if (arquivoInput?.files[0]) formData.append('arquivo', arquivoInput.files[0]);
 
       try {
         const res = await fetch('/api/solicitacoes', { method: 'POST', body: formData });
         if (res.ok) {
-          sessionStorage.removeItem('form-outro');
           try {
             sessionStorage.setItem('svn_ultimo_resumo', JSON.stringify({
               tipo: TIPO_SOLICITACAO_LABELS[TIPO] || TIPO,
@@ -184,15 +236,9 @@
       }
     }
 
-    document.addEventListener('input', function(e) {
-      const field = e.target.closest('.field');
-      if (field && field.classList.contains('field-invalid') && e.target.value.trim()) field.classList.remove('field-invalid');
-      saveSession();
-    });
     document.addEventListener('change', function(e) {
       const field = e.target.closest('.field');
-      if (field && field.classList.contains('field-invalid')) field.classList.remove('field-invalid');
-      saveSession();
+      if (field && field.classList.contains('field-invalid') && e.target.value.trim()) field.classList.remove('field-invalid');
     });
 
     init();

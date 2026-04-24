@@ -31,6 +31,13 @@ const VALID_TIPOS = [
   "certificado-eventos",
   "pagina-online",
   "outro",
+  "cartao-comemorativo",
+  "brindes",
+  "patrocinio",
+  "email-marketing",
+  "producao-video",
+  "sessao-fotos",
+  "materiais-impressos",
 ];
 
 const VALID_STATUSES = [
@@ -60,6 +67,13 @@ const REQUIRED_FIELDS: Record<string, string[]> = {
   "certificado-eventos":   ["nome", "whatsapp", "cargaHoraria"],
   "pagina-online":         ["nome", "titulo", "finalidade"],
   "outro":                 ["nome", "titulo", "finalidade", "descricao"],
+  "cartao-comemorativo":   ["nome", "nomeAniversariante", "modeloCartao", "mensagem", "assinatura"],
+  "brindes":               ["nome", "titulo", "finalidade", "dataEntrega", "itens"],
+  "patrocinio":            ["nome", "tituloEvento", "dataEvento", "horario", "local", "tipoEvento", "publico", "explicacao"],
+  "email-marketing":       ["nome", "assunto", "finalidade", "tema", "dataDisparo", "assinaturaEmail"],
+  "producao-video":        ["nome", "titulo", "ideia", "formato"],
+  "sessao-fotos":          ["nome", "titulo", "descricao"],
+  "materiais-impressos":   ["nome", "tipoMaterial"],
 };
 
 function validateFormDados(tipo: string, dados: Record<string, unknown>): string | null {
@@ -763,6 +777,13 @@ router.get("/admin/historico", requireAuth, async (req, res): Promise<void> => {
 
     if (req.query.avaliacao === "sim") {
       conditions.push(sql`${solicitacoesTable.avaliacao} IS NOT NULL`);
+    }
+
+    if (req.query.com_clickup === "sim") {
+      conditions.push(sql`${solicitacoesTable.clickup_url} IS NOT NULL`);
+    }
+    if (req.query.sem_clickup === "sim") {
+      conditions.push(sql`${solicitacoesTable.clickup_url} IS NULL`);
     }
 
     const whereClause = conditions.length > 0 ? and(...conditions) : undefined;

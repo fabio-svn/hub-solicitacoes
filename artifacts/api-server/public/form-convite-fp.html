@@ -61,11 +61,6 @@
           <option value="">Selecione</option>
         </select>
       </div>
-      <div class="field">
-        <label>Observações (opcional)</label>
-        <textarea id="observacoes" placeholder="Informações adicionais sobre o convite..."></textarea>
-      </div>
-
       <div style="border-top:1px solid rgba(34,27,25,.08);margin:28px 0 20px;padding-top:22px">
         <div id="submitError" class="alert-card alert-danger" style="display:none;margin-bottom:16px"></div>
         <div class="form-nav" style="justify-content:flex-end">
@@ -152,7 +147,6 @@
           nomeAssinatura: document.getElementById('nomeAssinatura')?.value || '',
           cargo: document.getElementById('cargo')?.value || '',
           contratoSocial: document.getElementById('contratoSocial')?.value || '',
-          observacoes: document.getElementById('observacoes')?.value || '',
         }));
       } catch {}
     }
@@ -166,7 +160,6 @@
         if (data.nomeAssinatura) document.getElementById('nomeAssinatura').value = data.nomeAssinatura;
         if (data.cargo) { const el = document.getElementById('cargo'); if (el) el.value = data.cargo; }
         if (data.contratoSocial) { const el = document.getElementById('contratoSocial'); if (el) el.value = data.contratoSocial; }
-        if (data.observacoes) document.getElementById('observacoes').value = data.observacoes;
       } catch {}
     }
 
@@ -202,7 +195,6 @@
         nomeAssinatura: document.getElementById('nomeAssinatura').value,
         cargo: document.getElementById('cargo').value,
         contratoSocial: document.getElementById('contratoSocial').value,
-        observacoes: document.getElementById('observacoes').value,
       };
 
       const formData = new FormData();

@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Patrocínio - Hub SVN</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap" media="print" onload="this.media='all'">
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap"></noscript>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="page-light">
+  <header class="header" id="mainHeader"></header>
+  <div class="container-narrow" style="padding-top:32px;padding-bottom:80px">
+    <div class="form-card">
+      <div class="form-progress"><div class="form-progress-bar" id="progressBar" style="width:50%"></div></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <h2 style="font-weight:500;font-size:1.1rem;margin:0">Patrocínio</h2>
+        <span id="stepLabel" style="font-size:0.78rem;opacity:0.5">Passo 1 de 2</span>
+      </div>
+      <div style="height:1px;background:var(--border-light);margin-bottom:24px"></div>
+
+      <!-- Passo 1 -->
+      <div class="form-step active" id="step1">
+        <div class="alert-card alert-warning" style="margin-bottom:24px">
+          <div class="alert-text">
+            A solicitação de patrocínio deve ser feita com o mínimo de 30 dias de antecedência, pois dependemos do prazo do jurídico para confecção dos contratos, além dos prazos de gráficas para produção dos materiais.
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Setor <span style="color:var(--ruby-red)">*</span></label>
+          <select id="setor" required>
+            <option value="">Selecione seu setor</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Título do evento patrocinado <span style="color:var(--ruby-red)">*</span></label>
+          <input type="text" id="tituloEvento" placeholder="Nome do evento" required>
+        </div>
+        <div class="field">
+          <label>Qual ou quais serão as marcas parceiras neste patrocínio? <span style="color:var(--ruby-red)">*</span></label>
+          <input type="text" id="marcasParceiras" placeholder="Marcas parceiras" required>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div class="field">
+            <label>Data do evento <span style="color:var(--ruby-red)">*</span></label>
+            <input type="date" id="dataEvento" required>
+          </div>
+          <div class="field">
+            <label>Horário <span style="color:var(--ruby-red)">*</span></label>
+            <input type="time" id="horario" required>
+          </div>
+        </div>
+        <div class="field">
+          <label>É horário de Brasília?</label>
+          <div class="radio-group" style="flex-direction:row;gap:16px">
+            <label class="radio-option"><input type="radio" name="horBrasilia" value="sim" required><span class="radio-custom"></span><span>Sim</span></label>
+            <label class="radio-option"><input type="radio" name="horBrasilia" value="nao"><span class="radio-custom"></span><span>Não</span></label>
+          </div>
+        </div>
+        <div class="field">
+          <label>Local (nome e endereço) <span style="color:var(--ruby-red)">*</span></label>
+          <textarea id="local" placeholder="Nome do local e endereço completo" required></textarea>
+        </div>
+        <div class="field">
+          <label>Tipo de evento <span style="color:var(--ruby-red)">*</span></label>
+          <select id="tipoEvento" required>
+            <option value="">Selecione</option>
+            <option>Almoço</option>
+            <option>Jantar</option>
+            <option>Esportivo</option>
+            <option>Corporativo</option>
+            <option>Feira</option>
+            <option>Beneficente</option>
+            <option>Escolar</option>
+            <option>Universitário</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>O evento será aberto ou fechado? <span style="color:var(--ruby-red)">*</span></label>
+          <select id="publico" required>
+            <option value="">Selecione</option>
+            <option value="aberto">Será aberto ao público em geral</option>
+            <option value="fechado">Será fechado para convidados</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Explique a ideia do patrocínio <span style="color:var(--ruby-red)">*</span></label>
+          <textarea id="explicacao" placeholder="Descreva a proposta e objetivos..." required></textarea>
+        </div>
+
+        <div class="field" style="margin-top:16px">
+          <label>Mídia kit ou proposta de patrocínio (opcional)</label>
+          <div class="file-input-wrapper">
+            <label class="file-input-btn" for="midiaKit">Escolher arquivo</label>
+            <input type="file" id="midiaKit">
+            <div class="file-name" id="midiaKitName"></div>
+          </div>
+        </div>
+        <div class="field">
+          <label>Arquivos de apoio — logos dos parceiros (opcional)</label>
+          <div class="file-input-wrapper">
+            <label class="file-input-btn" for="arquivoApoio">Escolher arquivo</label>
+            <input type="file" id="arquivoApoio">
+            <div class="file-name" id="arquivoApoioName"></div>
+          </div>
+        </div>
+
+        <div class="form-nav" style="margin-top:28px">
+          <button class="btn btn-primary" onclick="goToStep2()">Próximo</button>
+        </div>
+      </div>
+
+      <!-- Passo 2 -->
+      <div class="form-step" id="step2">
+        <button type="button" onclick="voltarStep1()" style="display:flex;align-items:center;gap:6px;background:none;border:none;cursor:pointer;font-size:0.82rem;opacity:0.6;padding:0;margin-bottom:20px;font-family:inherit">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+          Voltar
+        </button>
+
+        <h2 style="font-weight:600;font-size:1.1rem;margin-bottom:20px">Informações financeiras</h2>
+
+        <div class="field">
+          <label>Centro de custo <span style="color:var(--ruby-red)">*</span></label>
+          <input type="text" id="centroCusto" placeholder="Centro de custo" required>
+        </div>
+        <div class="field">
+          <label>Valor da cota de patrocínio <span style="color:var(--ruby-red)">*</span></label>
+          <input type="text" id="valorCota" placeholder="R$ 0,00" oninput="mascaraMoeda(this)" required>
+        </div>
+        <div class="field">
+          <label>Orçamento total (incluindo patrocínio e materiais extras) <span style="color:var(--ruby-red)">*</span></label>
+          <input type="text" id="orcamentoTotal" placeholder="R$ 0,00" oninput="mascaraMoeda(this)" required>
+        </div>
+        <div class="field">
+          <label>Expectativa de retorno em Delta de Receita <span style="color:var(--ruby-red)">*</span></label>
+          <input type="text" id="expectativaRetorno" placeholder="Ex: R$ 50.000" required>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div class="field">
+            <label>Orçamento por pessoa para alimentação</label>
+            <input type="text" id="orcAlimentacao" placeholder="R$ 0,00" oninput="mascaraMoeda(this)">
+          </div>
+          <div class="field">
+            <label>Orçamento para material gráfico</label>
+            <input type="text" id="orcGrafico" placeholder="R$ 0,00" oninput="mascaraMoeda(this)">
+          </div>
+          <div class="field">
+            <label>Orçamento para brindes</label>
+            <input type="text" id="orcBrindes" placeholder="R$ 0,00" oninput="mascaraMoeda(this)">
+          </div>
+          <div class="field">
+            <label>Orçamento para equipe staff</label>
+            <input type="text" id="orcStaff" placeholder="R$ 0,00" oninput="mascaraMoeda(this)">
+          </div>
+        </div>
+
+        <div style="border-top:1px solid rgba(34,27,25,.08);margin:28px 0 20px;padding-top:22px">
+          <div id="submitError" class="alert-card alert-danger" style="display:none;margin-bottom:16px"></div>
+          <div class="form-nav" style="justify-content:flex-end">
+            <button class="btn btn-primary btn-submit-gold" id="btnSubmit" onclick="submitForm()">Enviar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <a href="/solicitacoes.html" class="float-home" style="bottom:78px">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>
+    <span>Menu</span>
+  </a>
+  <a href="/" class="float-home">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+    <span>Início</span>
+  </a>
+  <a href="https://wa.me/5544991689207" target="_blank" rel="noopener" class="float-whatsapp" title="Falar com o time de Marketing">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M11.999 2C6.477 2 2 6.484 2 12.017c0 1.99.521 3.86 1.43 5.484L2 22l4.644-1.414A9.96 9.96 0 0011.999 22C17.523 22 22 17.516 22 11.983 22 6.472 17.523 2 11.999 2zm0 18.15a8.124 8.124 0 01-4.162-1.145l-.299-.178-3.088.941.923-3.121-.196-.32A8.185 8.185 0 013.85 11.983c0-4.51 3.644-8.183 8.15-8.183 4.507 0 8.152 3.672 8.152 8.183 0 4.51-3.645 8.167-8.153 8.167z"/></svg>
+  </a>
+  <script>
+  (function() {
+    function posicionarWhatsApp() {
+      const wa = document.querySelector('.float-whatsapp');
+      if (!wa) return;
+      const outros = [...document.querySelectorAll('.float-home')].filter(el => el !== wa && getComputedStyle(el).display !== 'none');
+      if (outros.length === 0) { wa.style.bottom = '78px'; } else {
+        const alturas = outros.map(el => parseInt(el.style.bottom || getComputedStyle(el).bottom) || 20);
+        wa.style.bottom = (Math.max(...alturas) + 58) + 'px';
+      }
+    }
+    if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', posicionarWhatsApp); } else { posicionarWhatsApp(); }
+  })();
+  </script>
+
+  <script src="utils.js"></script>
+  <script src="upload-feedback.js"></script>
+  <script src="config.js"></script>
+  <script src="auth.js"></script>
+  <script>
+    const TIPO = 'patrocinio';
+
+    async function init() {
+      await _configReady;
+      await Auth.init();
+      if (!Auth.isAuthenticated()) { window.location.href = '/auth/login?redirect=/form-patrocinio.html'; return; }
+      Auth.renderHeader(document.getElementById('mainHeader'));
+
+      const setorSel = document.getElementById('setor');
+      if (setorSel) { SETORES.filter(s => s !== 'Selecione seu setor').forEach(s => { const o = document.createElement('option'); o.value = s; o.textContent = s; setorSel.appendChild(o); }); }
+
+      FileUpload.bind('midiaKit', 'midiaKitName');
+      FileUpload.bind('arquivoApoio', 'arquivoApoioName');
+    }
+
+    function validateStep(stepId) {
+      const step = document.getElementById(stepId);
+      step.querySelectorAll('.field-invalid').forEach(el => el.classList.remove('field-invalid'));
+      const invalidFields = [];
+      step.querySelectorAll('input[required], select[required], textarea[required]').forEach(input => {
+        if (!input.value.trim()) {
+          const fieldWrapper = input.closest('.field');
+          if (fieldWrapper) {
+            fieldWrapper.classList.add('field-invalid');
+            let errorEl = fieldWrapper.querySelector('.field-error');
+            if (!errorEl) { errorEl = document.createElement('div'); errorEl.className = 'field-error'; input.parentElement.appendChild(errorEl); }
+            errorEl.textContent = 'Este campo é obrigatório.';
+            invalidFields.push(fieldWrapper);
+          }
+        }
+      });
+      if (invalidFields.length > 0) { invalidFields[0].scrollIntoView({ behavior: 'smooth', block: 'center' }); return false; }
+      return true;
+    }
+
+    function goToStep2() {
+      if (!validateStep('step1')) return;
+      document.getElementById('step1').classList.remove('active');
+      document.getElementById('step2').classList.add('active');
+      document.getElementById('progressBar').style.width = '100%';
+      document.getElementById('stepLabel').textContent = 'Passo 2 de 2';
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function voltarStep1() {
+      document.getElementById('step2').classList.remove('active');
+      document.getElementById('step1').classList.add('active');
+      document.getElementById('progressBar').style.width = '50%';
+      document.getElementById('stepLabel').textContent = 'Passo 1 de 2';
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    async function submitForm() {
+      if (!validateStep('step2')) return;
+      const btn = document.getElementById('btnSubmit');
+      btn.disabled = true; btn.textContent = 'Enviando...';
+
+      const dados = {
+        nome: Auth.getUserName(),
+        setor: document.getElementById('setor')?.value || '',
+        tituloEvento: document.getElementById('tituloEvento').value,
+        marcasParceiras: document.getElementById('marcasParceiras').value,
+        dataEvento: document.getElementById('dataEvento').value,
+        horario: document.getElementById('horario').value,
+        horBrasilia: document.querySelector('input[name="horBrasilia"]:checked')?.value || '',
+        local: document.getElementById('local').value,
+        tipoEvento: document.getElementById('tipoEvento').value,
+        publico: document.getElementById('publico').value,
+        explicacao: document.getElementById('explicacao').value,
+        centroCusto: document.getElementById('centroCusto').value,
+        valorCota: document.getElementById('valorCota').value,
+        orcamentoTotal: document.getElementById('orcamentoTotal').value,
+        expectativaRetorno: document.getElementById('expectativaRetorno').value,
+        orcAlimentacao: document.getElementById('orcAlimentacao').value,
+        orcGrafico: document.getElementById('orcGrafico').value,
+        orcBrindes: document.getElementById('orcBrindes').value,
+        orcStaff: document.getElementById('orcStaff').value,
+      };
+
+      const formData = new FormData();
+      formData.append('tipo_solicitacao', TIPO);
+      formData.append('dados', JSON.stringify(dados));
+      const midiaInput = document.getElementById('midiaKit');
+      if (midiaInput?.files[0]) formData.append('arquivo', midiaInput.files[0]);
+      const apoioInput = document.getElementById('arquivoApoio');
+      if (apoioInput?.files[0]) formData.append('arquivo2', apoioInput.files[0]);
+
+      try {
+        const res = await fetch('/api/solicitacoes', { method: 'POST', body: formData });
+        if (res.ok) {
+          try {
+            sessionStorage.setItem('svn_ultimo_resumo', JSON.stringify({
+              tipo: TIPO_SOLICITACAO_LABELS[TIPO] || TIPO,
+              solicitante: Auth.getUserName(),
+              setor: dados.setor,
+              data: new Date().toLocaleDateString('pt-BR'),
+              hora: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+            }));
+          } catch {}
+          window.location.href = '/thankyou.html';
+        } else {
+          const d = await res.json().catch(() => ({}));
+          const errEl = document.getElementById('submitError');
+          if (errEl) { errEl.style.display = 'block'; errEl.textContent = d.error || 'Erro ao enviar. Tente novamente.'; }
+          btn.disabled = false; btn.textContent = 'Enviar';
+        }
+      } catch {
+        const errEl = document.getElementById('submitError');
+        if (errEl) { errEl.style.display = 'block'; errEl.textContent = 'Erro de conexão. Verifique sua internet e tente novamente.'; }
+        btn.disabled = false; btn.textContent = 'Enviar';
+      }
+    }
+
+    document.addEventListener('change', function(e) {
+      const field = e.target.closest('.field');
+      if (field && field.classList.contains('field-invalid') && e.target.value.trim()) field.classList.remove('field-invalid');
+    });
+
+    init();
+  </script>
+</body>
+</html>

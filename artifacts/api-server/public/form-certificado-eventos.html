@@ -57,11 +57,6 @@
         <label>Carga horária <span style="color:var(--ruby-red)">*</span></label>
         <input type="text" id="cargaHoraria" placeholder="Ex: 8h, 20 horas, 2 dias" required>
       </div>
-      <div class="field">
-        <label>Observações (opcional)</label>
-        <textarea id="observacoes" placeholder="Informações adicionais sobre o certificado..."></textarea>
-      </div>
-
       <div style="border-top:1px solid rgba(34,27,25,.08);margin:28px 0 20px;padding-top:22px">
         <div id="submitError" class="alert-card alert-danger" style="display:none;margin-bottom:16px"></div>
         <div class="form-nav" style="justify-content:flex-end">
@@ -142,7 +137,6 @@
           nomeEvento: document.getElementById('nomeEvento')?.value || '',
           idEvento: document.getElementById('idEvento')?.value || '',
           cargaHoraria: document.getElementById('cargaHoraria')?.value || '',
-          observacoes: document.getElementById('observacoes')?.value || '',
         }));
       } catch {}
     }
@@ -156,7 +150,6 @@
         if (data.nomeEvento) document.getElementById('nomeEvento').value = data.nomeEvento;
         if (data.idEvento) document.getElementById('idEvento').value = data.idEvento;
         if (data.cargaHoraria) document.getElementById('cargaHoraria').value = data.cargaHoraria;
-        if (data.observacoes) document.getElementById('observacoes').value = data.observacoes;
       } catch {}
     }
 
@@ -192,7 +185,6 @@
         nomeEvento: document.getElementById('nomeEvento').value,
         idEvento: document.getElementById('idEvento').value,
         cargaHoraria: document.getElementById('cargaHoraria').value,
-        observacoes: document.getElementById('observacoes').value,
       };
 
       const formData = new FormData();

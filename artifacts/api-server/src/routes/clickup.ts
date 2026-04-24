@@ -2,8 +2,10 @@ import { logger } from "../lib/logger";
 
 const CLICKUP_API_TOKEN = process.env.CLICKUP_API_TOKEN || "";
 
-const CLICKUP_LIST_EVENTOS = process.env.CLICKUP_LIST_EVENTOS || "901303299333";
-const CLICKUP_LIST_GERAL   = process.env.CLICKUP_LIST_GERAL   || "901300673533";
+const CLICKUP_LIST_EVENTOS   = process.env.CLICKUP_LIST_EVENTOS   || "901303299333";
+const CLICKUP_LIST_GERAL     = process.env.CLICKUP_LIST_GERAL     || "901300673533";
+const CLICKUP_LIST_BRINDES   = process.env.CLICKUP_LIST_BRINDES   || "900100469662";
+const CLICKUP_LIST_PATROCINIO = process.env.CLICKUP_LIST_PATROCINIO || "901324638951";
 
 function normalizeStatusKey(raw: string): string {
   return raw
@@ -129,17 +131,23 @@ function gerarIdSolicitacao(dados: FormDados, tipo: string): string {
 }
 
 const REQUEST_TYPE_LABELS: Record<string, string> = {
-  "artes-divulgacao":           "Arte de Divulgação",
-  "atualizacao-material":       "Atualização de Material",
-  "conteudo-pdf-informativo":   "PDF Informativo",
-  "conteudo-pdf-ebook":         "PDF Ebook",
-  "apresentacao-nova":          "Apresentação Nova",
-  "apresentacao-atualizar":     "Atualização de Apresentação",
-  "pagina-assessores-dados":    "Página de Assessores",
+  "artes-divulgacao":              "Arte de Divulgação",
+  "atualizacao-material":          "Atualização de Material",
+  "conteudo-pdf-informativo":      "PDF Informativo",
+  "conteudo-pdf-ebook":            "PDF Ebook",
+  "apresentacao-nova":             "Apresentação Nova",
+  "apresentacao-atualizar":        "Atualização de Apresentação",
+  "pagina-assessores-dados":       "Página de Assessores",
   "pagina-assessores-atualizacao": "Página de Assessores",
-  "cartao-visita-fisico":       "Cartão de Visita — Físico",
-  "pagina-online":              "Página Online",
-  "outro":                      "Outro",
+  "cartao-visita-fisico":          "Cartão de Visita — Físico",
+  "pagina-online":                 "Página Online",
+  "outro":                         "Outro",
+  "email-marketing":               "E-mail Marketing",
+  "producao-video":                "Produção de Vídeo",
+  "sessao-fotos":                  "Sessão de Fotos",
+  "materiais-impressos":           "Materiais Impressos",
+  "brindes":                       "Brindes",
+  "patrocinio":                    "Patrocínio",
 };
 
 const ARQUIVO_LABELS: Record<string, string> = {
@@ -801,6 +809,14 @@ function getListId(tipoSolicitacao: string): string {
     logger.info({ tipo: tipoSolicitacao, listId: CLICKUP_LIST_EVENTOS }, "ClickUp: roteando para Lista Eventos");
     return CLICKUP_LIST_EVENTOS;
   }
+  if (tipoSolicitacao === "brindes") {
+    logger.info({ tipo: tipoSolicitacao, listId: CLICKUP_LIST_BRINDES }, "ClickUp: roteando para Lista Brindes");
+    return CLICKUP_LIST_BRINDES;
+  }
+  if (tipoSolicitacao === "patrocinio") {
+    logger.info({ tipo: tipoSolicitacao, listId: CLICKUP_LIST_PATROCINIO }, "ClickUp: roteando para Lista Patrocínios");
+    return CLICKUP_LIST_PATROCINIO;
+  }
   logger.info({ tipo: tipoSolicitacao, listId: CLICKUP_LIST_GERAL }, "ClickUp: roteando para Lista Geral");
   return CLICKUP_LIST_GERAL;
 }
@@ -827,6 +843,12 @@ const PRAZO_DIAS_UTEIS: Record<string, number> = {
   "conteudo-pdf-ebook":            15,
   "pagina-online":                 5,
   "outro":                         7,
+  "email-marketing":               3,
+  "producao-video":                7,
+  "sessao-fotos":                  7,
+  "materiais-impressos":           5,
+  "brindes":                       15,
+  "patrocinio":                    30,
 };
 
 const TIPOS_SEM_CLICKUP = [
@@ -836,6 +858,7 @@ const TIPOS_SEM_CLICKUP = [
   "divulgacao-nps",
   "convite-fp",
   "certificado-eventos",
+  "cartao-comemorativo",
 ];
 
 function proximaQuarta(): Date {

@@ -62,15 +62,19 @@
         </select>
       </div>
       <div class="field">
-        <label>Cliente Private?</label>
-        <div class="checkbox-group">
-          <label class="checkbox-option"><input type="radio" name="isPrivate" value="Sim"><span class="checkbox-custom"></span><span>Sim</span></label>
-          <label class="checkbox-option"><input type="radio" name="isPrivate" value="Não" checked><span class="checkbox-custom"></span><span>Não</span></label>
+        <label>Seu cliente se enquadra como Private?</label>
+        <div class="radio-group" style="flex-direction:row;gap:24px">
+          <label class="radio-option">
+            <input type="radio" name="isPrivate" value="sim" required>
+            <span class="radio-custom"></span>
+            <span>Sim</span>
+          </label>
+          <label class="radio-option">
+            <input type="radio" name="isPrivate" value="nao">
+            <span class="radio-custom"></span>
+            <span>Não</span>
+          </label>
         </div>
-      </div>
-      <div class="field">
-        <label>Observações (opcional)</label>
-        <textarea id="observacoes" placeholder="Informações adicionais..."></textarea>
       </div>
 
       <div style="border-top:1px solid rgba(34,27,25,.08);margin:28px 0 20px;padding-top:22px">
@@ -159,7 +163,7 @@
           nomeAssinatura: document.getElementById('nomeAssinatura')?.value || '',
           contratoSocial: document.getElementById('contratoSocial')?.value || '',
           unidade: document.getElementById('unidade')?.value || '',
-          observacoes: document.getElementById('observacoes')?.value || '',
+          isPrivate: document.querySelector('input[name="isPrivate"]:checked')?.value || '',
         }));
       } catch {}
     }
@@ -173,7 +177,7 @@
         if (data.nomeAssinatura) document.getElementById('nomeAssinatura').value = data.nomeAssinatura;
         if (data.contratoSocial) { const el = document.getElementById('contratoSocial'); if (el) el.value = data.contratoSocial; }
         if (data.unidade) { const el = document.getElementById('unidade'); if (el) el.value = data.unidade; }
-        if (data.observacoes) document.getElementById('observacoes').value = data.observacoes;
+        if (data.isPrivate) { const el = document.querySelector(`input[name="isPrivate"][value="${data.isPrivate}"]`); if (el) el.checked = true; }
       } catch {}
     }
 
@@ -210,8 +214,7 @@
         nomeAssinatura: document.getElementById('nomeAssinatura').value,
         contratoSocial: document.getElementById('contratoSocial').value,
         unidade: document.getElementById('unidade').value,
-        isPrivate: isPrivateEl ? isPrivateEl.value : 'Não',
-        observacoes: document.getElementById('observacoes').value,
+        isPrivate: isPrivateEl ? isPrivateEl.value : 'nao',
       };
 
       const formData = new FormData();
