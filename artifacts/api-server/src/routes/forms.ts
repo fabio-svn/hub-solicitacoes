@@ -134,15 +134,14 @@ function buildWebhookFields(
 
   switch (tipo) {
     case "assinatura-email":
-      // Keys match the original Elementor/N8N contract that was already working
       return {
         ...base,
-        name:  s(dados.nomeCompleto),
-        phone: s(dados.telefone),
-        email: s(dados.emailCorporativo),
-        marca: s(dados.marca),
-        cargo: s(dados.cargo),
-        cfp:   dados.cfp === "sim" ? "Sim" : "Não",
+        nome_assessor: s(dados.nomeCompleto || dados.nome),
+        cargo:         s(dados.cargo),
+        email:         s(dados.emailCorporativo),
+        telefone:      s(dados.telefone),
+        marca:         s(dados.marca),
+        cfp:           dados.cfp === "sim" ? "Sim" : "Não",
       };
     case "cartao-visita-fisico":
       return {
@@ -218,14 +217,7 @@ function buildWebhookFields(
 }
 
 // Per-type metadata added to the body (outside form_fields[]) for webhooks that need it
-const WEBHOOK_METADATA: Record<string, Record<string, string>> = {
-  "assinatura-email": {
-    post_id:  "2750",
-    form_id:  "a0c2112",
-    action:   "elementor_pro_forms_send_form",
-    referrer: "https://hub.portalsvn.com.br/form-assinatura-email.html",
-  },
-};
+const WEBHOOK_METADATA: Record<string, Record<string, string>> = {};
 
 // Log webhook env var presence at module load (helps diagnose silent failures)
 Object.entries(WEBHOOK_MAP).forEach(([tipo, url]) => {
