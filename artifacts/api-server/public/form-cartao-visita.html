@@ -35,15 +35,6 @@
   <header class="header" id="mainHeader"></header>
   <div class="container-narrow" style="padding-top:32px;padding-bottom:80px">
 
-    <div id="webhookConfig" style="display:none;margin-bottom:16px">
-      <div style="display:flex;align-items:center;gap:8px;padding:10px 14px;background:var(--icon-bg);border:1px solid var(--border-light);border-radius:10px;font-size:0.82rem">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>
-        <span style="opacity:0.6;flex-shrink:0;white-space:nowrap">Webhook N8N (digital):</span>
-        <input type="url" id="webhookUrl" placeholder="https://n8n.portalsvn.com.br/webhook/..." style="flex:1;border:none;background:transparent;font-family:'Nunito Sans',sans-serif;font-size:0.82rem;outline:none;min-width:0">
-        <button onclick="salvarWebhook()" style="padding:4px 10px;border-radius:6px;background:var(--carbon-black);color:white;border:none;font-family:'Nunito Sans',sans-serif;font-size:0.75rem;font-weight:600;cursor:pointer;white-space:nowrap">Salvar</button>
-      </div>
-    </div>
-
     <div class="form-card">
       <div class="form-progress"><div class="form-progress-bar" id="progressBar" style="width:50%"></div></div>
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
@@ -96,12 +87,6 @@
         </div>
 
         <div class="field">
-          <label>Setor <span style="color:var(--ruby-red)">*</span></label>
-          <select id="setorFisico" required>
-            <option value="">Selecione seu setor</option>
-          </select>
-        </div>
-        <div class="field">
           <label>Nome no cartão <span style="color:var(--ruby-red)">*</span></label>
           <input type="text" id="nomeCartaoFisico" placeholder="Nome exatamente como deve aparecer" required>
         </div>
@@ -140,12 +125,6 @@
         </div>
 
         <div class="field">
-          <label>Setor <span style="color:var(--ruby-red)">*</span></label>
-          <select id="setorDigital" required>
-            <option value="">Selecione seu setor</option>
-          </select>
-        </div>
-        <div class="field">
           <label>Nome completo <span style="color:var(--ruby-red)">*</span></label>
           <input type="text" id="nomeCompletoDigital" placeholder="Seu nome completo" required>
         </div>
@@ -158,9 +137,12 @@
           <input type="email" id="emailCorporativoDigital" placeholder="seu@svninvest.com.br" required>
         </div>
         <div class="field">
-          <label>Marca <span style="color:var(--ruby-red)">*</span></label>
-          <select id="marcaDigital" required>
-            <option value="">Selecione a marca</option>
+          <label>Contrato social <span style="color:var(--ruby-red)">*</span></label>
+          <select id="contratoSocial" required>
+            <option value="">Selecione</option>
+            <option value="SVN Capital">SVN Capital</option>
+            <option value="SVN Connect">SVN Connect</option>
+            <option value="SVN Investimentos">SVN Investimentos</option>
           </select>
         </div>
         <div style="border-top:1px solid rgba(34,27,25,.08);margin:28px 0 20px;padding-top:22px">
@@ -204,7 +186,6 @@
   <script src="config.js"></script>
   <script src="auth.js"></script>
   <script>
-    const WEBHOOK_KEY = 'svn_webhook_cartao_digital';
     let tipoSelecionado = null;
 
     async function init() {
@@ -213,32 +194,8 @@
       if (!Auth.isAuthenticated()) { window.location.href = '/auth/login?redirect=/form-cartao-visita.html'; return; }
       Auth.renderHeader(document.getElementById('mainHeader'));
 
-      ['setorFisico', 'setorDigital'].forEach(id => {
-        const sel = document.getElementById(id);
-        if (sel) { SETORES.filter(s => s !== 'Selecione seu setor').forEach(s => { const o = document.createElement('option'); o.value = s; o.textContent = s; sel.appendChild(o); }); }
-      });
-
       const unidadeSel = document.getElementById('unidadeFisico');
       if (unidadeSel) { UNIDADES_SVN.forEach(u => { const o = document.createElement('option'); o.value = u.nome; o.textContent = u.nome; unidadeSel.appendChild(o); }); }
-
-      const marcaSel = document.getElementById('marcaDigital');
-      if (marcaSel) { MARCAS_SVN.forEach(m => { const o = document.createElement('option'); o.value = m; o.textContent = m; marcaSel.appendChild(o); }); }
-    }
-
-    function iniciarWebhookConfig() {
-      if (!Auth.isAdmin()) return;
-      document.getElementById('webhookConfig').style.display = 'block';
-      const saved = localStorage.getItem(WEBHOOK_KEY);
-      if (saved) document.getElementById('webhookUrl').value = saved;
-    }
-
-    function salvarWebhook() {
-      const url = document.getElementById('webhookUrl').value.trim();
-      if (url) localStorage.setItem(WEBHOOK_KEY, url);
-      const btn = event.currentTarget;
-      const orig = btn.textContent;
-      btn.textContent = 'Salvo ✓';
-      setTimeout(() => { btn.textContent = orig; }, 1500);
     }
 
     function selectTipo(tipo) {
@@ -257,10 +214,8 @@
       document.getElementById('stepLabel').textContent = 'Passo 2 de 2';
       if (tipoSelecionado === 'fisico') {
         document.getElementById('step2Fisico').classList.add('active');
-        document.getElementById('webhookConfig').style.display = 'none';
       } else {
         document.getElementById('step2Digital').classList.add('active');
-        iniciarWebhookConfig();
       }
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
@@ -268,7 +223,6 @@
     function voltarPasso1() {
       document.getElementById('step2Fisico').classList.remove('active');
       document.getElementById('step2Digital').classList.remove('active');
-      document.getElementById('webhookConfig').style.display = 'none';
       document.getElementById('step1').classList.add('active');
       document.getElementById('progressBar').style.width = '50%';
       document.getElementById('stepLabel').textContent = 'Passo 1 de 2';
@@ -303,7 +257,6 @@
       const dados = {
         nome: Auth.getUserName(),
         subTipo: 'físico',
-        setor: document.getElementById('setorFisico')?.value || '',
         nomeCartao: document.getElementById('nomeCartaoFisico').value,
         whatsapp: document.getElementById('whatsappFisico').value,
         emailCorporativo: document.getElementById('emailCorporativoFisico').value,
@@ -319,9 +272,9 @@
         if (res.ok) {
           try {
             sessionStorage.setItem('svn_ultimo_resumo', JSON.stringify({
+              tipo_id: 'cartao-visita-fisico',
               tipo: 'Cartão de Visita — Físico',
               solicitante: Auth.getUserName(),
-              setor: dados.setor,
               data: new Date().toLocaleDateString('pt-BR'),
               hora: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
             }));
@@ -348,11 +301,10 @@
       const dados = {
         nome: Auth.getUserName(),
         subTipo: 'digital',
-        setor: document.getElementById('setorDigital')?.value || '',
         nomeCompleto: document.getElementById('nomeCompletoDigital').value,
         telefone: document.getElementById('telefoneDigital').value,
         emailCorporativo: document.getElementById('emailCorporativoDigital').value,
-        marca: document.getElementById('marcaDigital').value,
+        contratoSocial: document.getElementById('contratoSocial').value,
       };
 
       const formData = new FormData();
@@ -362,13 +314,11 @@
       try {
         const res = await fetch('/api/solicitacoes', { method: 'POST', body: formData });
         if (res.ok) {
-          const webhookUrl = localStorage.getItem(WEBHOOK_KEY);
-          if (webhookUrl) { try { await fetch(webhookUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ tipo: 'cartao-visita-digital', ...dados }) }); } catch {} }
           try {
             sessionStorage.setItem('svn_ultimo_resumo', JSON.stringify({
+              tipo_id: 'cartao-visita-digital',
               tipo: 'Cartão de Visita — Digital',
               solicitante: Auth.getUserName(),
-              setor: dados.setor,
               data: new Date().toLocaleDateString('pt-BR'),
               hora: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
             }));

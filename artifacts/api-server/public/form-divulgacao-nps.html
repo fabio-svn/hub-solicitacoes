@@ -14,15 +14,6 @@
   <header class="header" id="mainHeader"></header>
   <div class="container-narrow" style="padding-top:32px;padding-bottom:80px">
 
-    <div id="webhookConfig" style="display:none;margin-bottom:16px">
-      <div style="display:flex;align-items:center;gap:8px;padding:10px 14px;background:var(--icon-bg);border:1px solid var(--border-light);border-radius:10px;font-size:0.82rem">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>
-        <span style="opacity:0.6;flex-shrink:0;white-space:nowrap">Webhook:</span>
-        <input type="url" id="webhookUrl" placeholder="https://n8n.portalsvn.com.br/webhook/..." style="flex:1;border:none;background:transparent;font-family:'Nunito Sans',sans-serif;font-size:0.82rem;outline:none;min-width:0">
-        <button onclick="salvarWebhook()" style="padding:4px 10px;border-radius:6px;background:var(--carbon-black);color:white;border:none;font-family:'Nunito Sans',sans-serif;font-size:0.75rem;font-weight:600;cursor:pointer;white-space:nowrap">Salvar</button>
-      </div>
-    </div>
-
     <div class="form-card">
       <div class="form-progress"><div class="form-progress-bar" id="progressBar" style="width:100%"></div></div>
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
@@ -35,12 +26,6 @@
         <div class="alert-text">Preencha os dados abaixo para criação de arte personalizada comemorando a avaliação NPS de um cliente. A arte será gerada e entregue automaticamente.</div>
       </div>
 
-      <div class="field">
-        <label>Setor <span style="color:var(--ruby-red)">*</span></label>
-        <select id="setor" required>
-          <option value="">Selecione seu setor</option>
-        </select>
-      </div>
       <div class="field">
         <label>Nome para assinatura <span style="color:var(--ruby-red)">*</span></label>
         <input type="text" id="nomeAssinatura" placeholder="Nome do assessor para assinar a arte" required>
@@ -113,7 +98,6 @@
   <script src="auth.js"></script>
   <script>
     const TIPO = 'divulgacao-nps';
-    const WEBHOOK_KEY = 'svn_webhook_nps';
 
     async function init() {
       await _configReady;
@@ -121,36 +105,15 @@
       if (!Auth.isAuthenticated()) { window.location.href = '/auth/login?redirect=/form-divulgacao-nps.html'; return; }
       Auth.renderHeader(document.getElementById('mainHeader'));
 
-      const setorSel = document.getElementById('setor');
-      if (setorSel) { SETORES.filter(s => s !== 'Selecione seu setor').forEach(s => { const o = document.createElement('option'); o.value = s; o.textContent = s; setorSel.appendChild(o); }); }
-
       const cargoSel = document.getElementById('cargo');
       if (cargoSel) { CARGOS_ASSESSOR.forEach(c => { const o = document.createElement('option'); o.value = c; o.textContent = c; cargoSel.appendChild(o); }); }
 
-      iniciarWebhookConfig();
       restoreSession();
-    }
-
-    function iniciarWebhookConfig() {
-      if (!Auth.isAdmin()) return;
-      document.getElementById('webhookConfig').style.display = 'block';
-      const saved = localStorage.getItem(WEBHOOK_KEY);
-      if (saved) document.getElementById('webhookUrl').value = saved;
-    }
-
-    function salvarWebhook() {
-      const url = document.getElementById('webhookUrl').value.trim();
-      if (url) localStorage.setItem(WEBHOOK_KEY, url);
-      const btn = event.currentTarget;
-      const orig = btn.textContent;
-      btn.textContent = 'Salvo ✓';
-      setTimeout(() => { btn.textContent = orig; }, 1500);
     }
 
     function saveSession() {
       try {
         sessionStorage.setItem('form-divulgacao-nps', JSON.stringify({
-          setor: document.getElementById('setor')?.value || '',
           nomeAssinatura: document.getElementById('nomeAssinatura')?.value || '',
           cargo: document.getElementById('cargo')?.value || '',
           agradecimento: document.getElementById('agradecimento')?.value || '',
@@ -163,7 +126,6 @@
       try {
         const data = JSON.parse(sessionStorage.getItem('form-divulgacao-nps'));
         if (!data) return;
-        if (data.setor) { const el = document.getElementById('setor'); if (el) el.value = data.setor; }
         if (data.nomeAssinatura) document.getElementById('nomeAssinatura').value = data.nomeAssinatura;
         if (data.cargo) { const el = document.getElementById('cargo'); if (el) el.value = data.cargo; }
         if (data.agradecimento) document.getElementById('agradecimento').value = data.agradecimento;
@@ -203,7 +165,6 @@
 
       const dados = {
         nome: Auth.getUserName(),
-        setor: document.getElementById('setor')?.value || '',
         nomeAssinatura: document.getElementById('nomeAssinatura').value,
         cargo: document.getElementById('cargo').value,
         agradecimento: document.getElementById('agradecimento').value,
@@ -217,14 +178,12 @@
       try {
         const res = await fetch('/api/solicitacoes', { method: 'POST', body: formData });
         if (res.ok) {
-          const webhookUrl = localStorage.getItem(WEBHOOK_KEY);
-          if (webhookUrl) { try { await fetch(webhookUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ tipo: TIPO, ...dados }) }); } catch {} }
           sessionStorage.removeItem('form-divulgacao-nps');
           try {
             sessionStorage.setItem('svn_ultimo_resumo', JSON.stringify({
+              tipo_id: TIPO,
               tipo: TIPO_SOLICITACAO_LABELS[TIPO] || TIPO,
               solicitante: Auth.getUserName(),
-              setor: dados.setor,
               data: new Date().toLocaleDateString('pt-BR'),
               hora: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
             }));

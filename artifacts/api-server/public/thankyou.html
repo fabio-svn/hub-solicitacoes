@@ -42,11 +42,37 @@
 
   <script src="config.js"></script>
   <script>
+    const TIPOS_AUTOMACAO = [
+      'assinatura-email',
+      'cartao-visita-fisico',
+      'cartao-visita-digital',
+      'cartao-boas-vindas',
+      'divulgacao-nps',
+      'convite-fp',
+      'certificado-eventos',
+      'cartao-comemorativo',
+    ];
+
     document.getElementById('bgVideo').src = URL_VIDEO_HERO;
-    document.getElementById('title').textContent = MSG_THANKYOU_TITULO;
-    document.getElementById('subtitle').textContent = MSG_THANKYOU_SUBTITULO;
-    document.getElementById('ctaBtn').textContent = MSG_THANKYOU_BOTAO;
     document.getElementById('logo').src = URL_LOGO_BRANCA;
+
+    let titulo = MSG_THANKYOU_TITULO;
+    let subtitulo = MSG_THANKYOU_SUBTITULO;
+
+    try {
+      const raw = sessionStorage.getItem('svn_ultimo_resumo');
+      if (raw) {
+        const resumo = JSON.parse(raw);
+        if (resumo.tipo_id && TIPOS_AUTOMACAO.includes(resumo.tipo_id)) {
+          titulo = 'Solicitação enviada com sucesso!';
+          subtitulo = 'Seu material será gerado automaticamente e enviado para o e-mail informado em breve.';
+        }
+      }
+    } catch {}
+
+    document.getElementById('title').textContent = titulo;
+    document.getElementById('subtitle').textContent = subtitulo;
+    document.getElementById('ctaBtn').textContent = MSG_THANKYOU_BOTAO;
 
     setTimeout(() => {
       const card = document.getElementById('card');

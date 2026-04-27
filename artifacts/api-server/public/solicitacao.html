@@ -541,6 +541,17 @@
       <path fill="url(#cu2b)" d="M27.5,16.9l-18,15.5l-8.3-9.7L27.6,0l26.2,22.7l-8.4,9.6L27.5,16.9z"/>
     </svg>`;
 
+    const TIPOS_AUTOMACAO = [
+      'assinatura-email',
+      'cartao-visita-fisico',
+      'cartao-visita-digital',
+      'cartao-boas-vindas',
+      'divulgacao-nps',
+      'convite-fp',
+      'certificado-eventos',
+      'cartao-comemorativo',
+    ];
+
     const params = new URLSearchParams(window.location.search);
     const solicitacaoId = params.get('id');
 
@@ -686,6 +697,7 @@
     /* ── renderFluxo (horizontal rail) ─────────── */
     function renderFluxo(item) {
       const card = document.getElementById('fluxoCard');
+      if (TIPOS_AUTOMACAO.includes(item.tipo_solicitacao)) { card.style.display = 'none'; return; }
       const tipoKey = item.tipo_solicitacao === 'eventos' ? 'eventos' : '_default';
       const fluxo = (typeof FLUXOS_ETAPAS !== 'undefined')
         ? (FLUXOS_ETAPAS[item.tipo_solicitacao] || FLUXOS_ETAPAS[tipoKey] || [])
@@ -794,6 +806,8 @@
     /* ── renderAprovacao v2 ── */
     async function renderAprovacao(item, dados) {
       const card = document.getElementById('aprovacaoCard');
+
+      if (TIPOS_AUTOMACAO.includes(item.tipo_solicitacao)) { card.style.display = 'none'; return; }
 
       const tiposComAprovacao = [
         'eventos', 'artes-divulgacao', 'atualizacao-material',

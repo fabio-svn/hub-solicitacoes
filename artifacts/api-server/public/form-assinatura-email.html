@@ -14,15 +14,6 @@
   <header class="header" id="mainHeader"></header>
   <div class="container-narrow" style="padding-top:32px;padding-bottom:80px">
 
-    <div id="webhookConfig" style="display:none;margin-bottom:16px">
-      <div style="display:flex;align-items:center;gap:8px;padding:10px 14px;background:var(--icon-bg);border:1px solid var(--border-light);border-radius:10px;font-size:0.82rem">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>
-        <span style="opacity:0.6;flex-shrink:0;white-space:nowrap">Webhook:</span>
-        <input type="url" id="webhookUrl" placeholder="https://n8n.portalsvn.com.br/webhook/..." style="flex:1;border:none;background:transparent;font-family:'Nunito Sans',sans-serif;font-size:0.82rem;outline:none;min-width:0">
-        <button onclick="salvarWebhook()" style="padding:4px 10px;border-radius:6px;background:var(--carbon-black);color:white;border:none;font-family:'Nunito Sans',sans-serif;font-size:0.75rem;font-weight:600;cursor:pointer;white-space:nowrap">Salvar</button>
-      </div>
-    </div>
-
     <div class="form-card">
       <div class="form-progress"><div class="form-progress-bar" id="progressBar" style="width:100%"></div></div>
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
@@ -36,36 +27,14 @@
       </div>
 
       <div class="field">
-        <label>Setor <span style="color:var(--ruby-red)">*</span></label>
-        <select id="setor" required>
-          <option value="">Selecione seu setor</option>
-        </select>
-      </div>
-      <div class="field">
         <label>Nome completo <span style="color:var(--ruby-red)">*</span></label>
         <input type="text" id="nomeCompleto" placeholder="Seu nome completo" required>
       </div>
-      <div class="field">
+      <div class="field" id="campoCargoWrap" style="display:none">
         <label>Cargo <span style="color:var(--ruby-red)">*</span></label>
-        <select id="cargo" required>
-          <option value="">Selecione seu cargo</option>
-        </select>
+        <input type="text" id="cargo" placeholder="Seu cargo">
       </div>
-      <div class="field">
-        <label>Telefone / WhatsApp <span style="color:var(--ruby-red)">*</span></label>
-        <input type="tel" id="telefone" placeholder="(00) 00000-0000" oninput="mascaraTelefone(this)" required>
-      </div>
-      <div class="field">
-        <label>E-mail corporativo <span style="color:var(--ruby-red)">*</span></label>
-        <input type="email" id="emailCorporativo" placeholder="seu@svninvest.com.br" required>
-      </div>
-      <div class="field">
-        <label>Marca <span style="color:var(--ruby-red)">*</span></label>
-        <select id="marca" required>
-          <option value="">Selecione a marca</option>
-        </select>
-      </div>
-      <div class="field">
+      <div class="field" id="campoCfpWrap" style="display:none">
         <label>Você possui CFP?</label>
         <div class="radio-group" style="flex-direction:row;gap:16px">
           <label class="radio-option">
@@ -77,6 +46,20 @@
             <span class="radio-custom"></span><span>Não</span>
           </label>
         </div>
+      </div>
+      <div class="field">
+        <label>Telefone / WhatsApp <span style="color:var(--ruby-red)">*</span></label>
+        <input type="tel" id="telefone" placeholder="(00) 00000-0000" oninput="mascaraTelefone(this)" required>
+      </div>
+      <div class="field">
+        <label>E-mail corporativo <span style="color:var(--ruby-red)">*</span></label>
+        <input type="email" id="emailCorporativo" placeholder="seu@svninvest.com.br" required>
+      </div>
+      <div class="field">
+        <label>Marca <span style="color:var(--ruby-red)">*</span></label>
+        <select id="marca" required onchange="handleMarcaChange()">
+          <option value="">Selecione a marca</option>
+        </select>
       </div>
 
       <div style="border-top:1px solid rgba(34,27,25,.08);margin:28px 0 20px;padding-top:22px">
@@ -120,7 +103,7 @@
   <script src="auth.js"></script>
   <script>
     const TIPO = 'assinatura-email';
-    const WEBHOOK_KEY = 'svn_webhook_assinatura';
+    const MARCAS_CONTRATO = ['SVN Capital', 'SVN Connect', 'SVN Investimentos'];
 
     async function init() {
       await _configReady;
@@ -128,39 +111,30 @@
       if (!Auth.isAuthenticated()) { window.location.href = '/auth/login?redirect=/form-assinatura-email.html'; return; }
       Auth.renderHeader(document.getElementById('mainHeader'));
 
-      const setorSel = document.getElementById('setor');
-      if (setorSel) { SETORES.filter(s => s !== 'Selecione seu setor').forEach(s => { const o = document.createElement('option'); o.value = s; o.textContent = s; setorSel.appendChild(o); }); }
-
       const marcaSel = document.getElementById('marca');
       if (marcaSel) { MARCAS_SVN.forEach(m => { const o = document.createElement('option'); o.value = m; o.textContent = m; marcaSel.appendChild(o); }); }
 
-      const cargoSel = document.getElementById('cargo');
-      if (cargoSel && typeof CARGOS_ASSESSOR !== 'undefined') { CARGOS_ASSESSOR.forEach(c => { const o = document.createElement('option'); o.value = c; o.textContent = c; cargoSel.appendChild(o); }); }
-
-      iniciarWebhookConfig();
       restoreSession();
     }
 
-    function iniciarWebhookConfig() {
-      if (!Auth.isAdmin()) return;
-      document.getElementById('webhookConfig').style.display = 'block';
-      const saved = localStorage.getItem(WEBHOOK_KEY);
-      if (saved) document.getElementById('webhookUrl').value = saved;
-    }
-
-    function salvarWebhook() {
-      const url = document.getElementById('webhookUrl').value.trim();
-      if (url) localStorage.setItem(WEBHOOK_KEY, url);
-      const btn = event.currentTarget;
-      const orig = btn.textContent;
-      btn.textContent = 'Salvo ✓';
-      setTimeout(() => { btn.textContent = orig; }, 1500);
+    function handleMarcaChange() {
+      const marca = document.getElementById('marca').value;
+      const isContrato = MARCAS_CONTRATO.includes(marca);
+      const campoCargoWrap = document.getElementById('campoCargoWrap');
+      const campoCfpWrap = document.getElementById('campoCfpWrap');
+      const cargoInput = document.getElementById('cargo');
+      if (campoCargoWrap) {
+        campoCargoWrap.style.display = isContrato ? 'none' : (marca ? 'block' : 'none');
+        if (cargoInput) cargoInput.required = !isContrato && !!marca;
+      }
+      if (campoCfpWrap) {
+        campoCfpWrap.style.display = isContrato ? 'block' : 'none';
+      }
     }
 
     function saveSession() {
       try {
         sessionStorage.setItem('form-assinatura-email', JSON.stringify({
-          setor: document.getElementById('setor')?.value || '',
           nomeCompleto: document.getElementById('nomeCompleto')?.value || '',
           cargo: document.getElementById('cargo')?.value || '',
           telefone: document.getElementById('telefone')?.value || '',
@@ -175,12 +149,11 @@
       try {
         const data = JSON.parse(sessionStorage.getItem('form-assinatura-email'));
         if (!data) return;
-        if (data.setor) { const el = document.getElementById('setor'); if (el) el.value = data.setor; }
         if (data.nomeCompleto) document.getElementById('nomeCompleto').value = data.nomeCompleto;
         if (data.cargo) { const el = document.getElementById('cargo'); if (el) el.value = data.cargo; }
         if (data.telefone) document.getElementById('telefone').value = data.telefone;
         if (data.emailCorporativo) document.getElementById('emailCorporativo').value = data.emailCorporativo;
-        if (data.marca) { const el = document.getElementById('marca'); if (el) el.value = data.marca; }
+        if (data.marca) { const el = document.getElementById('marca'); if (el) { el.value = data.marca; handleMarcaChange(); } }
         if (data.cfp) { const el = document.querySelector(`input[name="cfp"][value="${data.cfp}"]`); if (el) el.checked = true; }
       } catch {}
     }
@@ -189,6 +162,7 @@
       document.querySelectorAll('.field-invalid').forEach(el => el.classList.remove('field-invalid'));
       const invalidFields = [];
       document.querySelectorAll('input[required], select[required], textarea[required]').forEach(input => {
+        if (input.closest('.field') && input.closest('.field').style.display === 'none') return;
         const isEmpty = !input.value.trim();
         if (isEmpty) {
           const fieldWrapper = input.closest('.field');
@@ -210,15 +184,17 @@
       const btn = document.getElementById('btnSubmit');
       btn.disabled = true; btn.textContent = 'Enviando...';
 
+      const marca = document.getElementById('marca').value;
+      const isContrato = MARCAS_CONTRATO.includes(marca);
+
       const dados = {
         nome: Auth.getUserName(),
-        setor: document.getElementById('setor')?.value || '',
         nomeCompleto: document.getElementById('nomeCompleto').value,
-        cargo: document.getElementById('cargo')?.value || '',
+        cargo: isContrato ? '' : (document.getElementById('cargo')?.value || ''),
+        cfp: isContrato ? (document.querySelector('input[name="cfp"]:checked')?.value || '') : '',
         telefone: document.getElementById('telefone').value,
         emailCorporativo: document.getElementById('emailCorporativo').value,
-        marca: document.getElementById('marca').value,
-        cfp: document.querySelector('input[name="cfp"]:checked')?.value || '',
+        marca: marca,
       };
 
       const formData = new FormData();
@@ -228,14 +204,12 @@
       try {
         const res = await fetch('/api/solicitacoes', { method: 'POST', body: formData });
         if (res.ok) {
-          const webhookUrl = localStorage.getItem(WEBHOOK_KEY);
-          if (webhookUrl) { try { await fetch(webhookUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ tipo: TIPO, ...dados }) }); } catch {} }
           sessionStorage.removeItem('form-assinatura-email');
           try {
             sessionStorage.setItem('svn_ultimo_resumo', JSON.stringify({
+              tipo_id: TIPO,
               tipo: TIPO_SOLICITACAO_LABELS[TIPO] || TIPO,
               solicitante: Auth.getUserName(),
-              setor: dados.setor,
               data: new Date().toLocaleDateString('pt-BR'),
               hora: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
             }));

@@ -29,7 +29,7 @@
 </head>
 <body class="page-light">
   <header class="header" id="mainHeader"></header>
-  <div style="padding-top:32px;padding-bottom:80px">
+  <div class="container-narrow" style="padding-top:32px;padding-bottom:80px">
     <div class="form-split">
       <div class="form-main">
         <div class="form-card">
@@ -227,8 +227,9 @@
 
         case 'flyer-institucional':
           container.innerHTML = `
-            <div class="alert-card alert-info">
-              <div class="alert-text">O flyer institucional segue o modelo padrão SVN.</div>
+            <div class="alert-card alert-info" style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px">
+              <div class="alert-text" style="flex:1">O flyer institucional segue o modelo padrão SVN.</div>
+              <button type="button" onclick="verModeloFlyer()" style="flex-shrink:0;background:none;border:1.5px solid var(--border-light);border-radius:8px;padding:5px 12px;font-size:0.78rem;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap">Ver modelo padrão</button>
             </div>
             <div class="field">
               <label>Descrição da solicitação <span style="color:var(--ruby-red)">*</span></label>
@@ -521,7 +522,42 @@
       if (field && field.classList.contains('field-invalid') && e.target.value.trim()) field.classList.remove('field-invalid');
     });
 
+    function verModeloFlyer() {
+      document.getElementById('flyerModal').style.display = 'flex';
+      document.body.style.overflow = 'hidden';
+    }
+
+    function fecharFlyerModal() {
+      document.getElementById('flyerModal').style.display = 'none';
+      document.body.style.overflow = '';
+    }
+
     init();
   </script>
+
+  <div id="flyerModal" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(34,27,25,0.72);align-items:center;justify-content:center;padding:20px" onclick="if(event.target===this)fecharFlyerModal()">
+    <div style="background:var(--card-white);border-radius:16px;max-width:480px;width:100%;overflow:hidden;box-shadow:0 24px 64px rgba(34,27,25,0.18)">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:18px 20px;border-bottom:1px solid var(--border-light)">
+        <span style="font-weight:700;font-size:0.95rem">Modelo padrão — Flyer Institucional</span>
+        <button onclick="fecharFlyerModal()" style="background:none;border:none;cursor:pointer;padding:4px;border-radius:6px;display:flex;align-items:center">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div style="padding:24px">
+        <div style="background:var(--icon-bg);border-radius:10px;padding:32px;display:flex;flex-direction:column;align-items:center;gap:12px;margin-bottom:20px">
+          <div style="width:120px;height:160px;border:2px solid rgba(34,27,25,0.15);border-radius:6px;background:white;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:12px">
+            <div style="width:60px;height:8px;background:var(--gold-primary);border-radius:4px;opacity:0.7"></div>
+            <div style="width:80px;height:4px;background:rgba(34,27,25,0.15);border-radius:2px"></div>
+            <div style="width:80px;height:4px;background:rgba(34,27,25,0.15);border-radius:2px"></div>
+            <div style="width:80px;height:4px;background:rgba(34,27,25,0.15);border-radius:2px"></div>
+            <div style="width:60px;height:4px;background:rgba(34,27,25,0.15);border-radius:2px;margin-top:8px"></div>
+            <div style="width:40px;height:4px;background:var(--gold-primary);border-radius:2px;opacity:0.6"></div>
+          </div>
+          <p style="font-size:0.78rem;opacity:0.5;margin:0;text-align:center">Representação ilustrativa do modelo</p>
+        </div>
+        <p style="font-size:0.85rem;opacity:0.7;line-height:1.6;margin:0">O flyer institucional SVN segue identidade visual padrão da marca: cores, tipografia e logo oficiais. Você pode descrever o conteúdo específico que deve aparecer no material.</p>
+      </div>
+    </div>
+  </div>
 </body>
 </html>

@@ -14,15 +14,6 @@
   <header class="header" id="mainHeader"></header>
   <div class="container-narrow" style="padding-top:32px;padding-bottom:80px">
 
-    <div id="webhookConfig" style="display:none;margin-bottom:16px">
-      <div style="display:flex;align-items:center;gap:8px;padding:10px 14px;background:var(--icon-bg);border:1px solid var(--border-light);border-radius:10px;font-size:0.82rem">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>
-        <span style="opacity:0.6;flex-shrink:0;white-space:nowrap">Webhook N8N:</span>
-        <input type="url" id="webhookUrl" placeholder="https://n8n.portalsvn.com.br/webhook/..." style="flex:1;border:none;background:transparent;font-family:'Nunito Sans',sans-serif;font-size:0.82rem;outline:none;min-width:0">
-        <button onclick="salvarWebhook()" style="padding:4px 10px;border-radius:6px;background:var(--carbon-black);color:white;border:none;font-family:'Nunito Sans',sans-serif;font-size:0.75rem;font-weight:600;cursor:pointer;white-space:nowrap">Salvar</button>
-      </div>
-    </div>
-
     <div class="form-card">
       <div class="form-progress"><div class="form-progress-bar" id="progressBar" style="width:100%"></div></div>
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
@@ -32,14 +23,12 @@
 
       <div class="alert-card alert-info" style="margin-bottom:24px">
         <div class="alert-title">Certificado de participação</div>
-        <div class="alert-text">Preencha os dados abaixo para geração do certificado do evento. O certificado será gerado automaticamente via N8N após o envio.</div>
+        <div class="alert-text">Os certificados chegarão no e-mail informado.</div>
       </div>
 
       <div class="field">
-        <label>Setor <span style="color:var(--ruby-red)">*</span></label>
-        <select id="setor" required>
-          <option value="">Selecione seu setor</option>
-        </select>
+        <label>Seu nome completo <span style="color:var(--ruby-red)">*</span></label>
+        <input type="text" id="nomeCompleto" placeholder="Seu nome completo" required>
       </div>
       <div class="field">
         <label>WhatsApp / Telefone <span style="color:var(--ruby-red)">*</span></label>
@@ -98,41 +87,19 @@
   <script src="auth.js"></script>
   <script>
     const TIPO = 'certificado-eventos';
-    const WEBHOOK_KEY = 'svn_webhook_certificado';
 
     async function init() {
       await _configReady;
       await Auth.init();
       if (!Auth.isAuthenticated()) { window.location.href = '/auth/login?redirect=/form-certificado-eventos.html'; return; }
       Auth.renderHeader(document.getElementById('mainHeader'));
-
-      const setorSel = document.getElementById('setor');
-      if (setorSel) { SETORES.filter(s => s !== 'Selecione seu setor').forEach(s => { const o = document.createElement('option'); o.value = s; o.textContent = s; setorSel.appendChild(o); }); }
-
-      iniciarWebhookConfig();
       restoreSession();
-    }
-
-    function iniciarWebhookConfig() {
-      if (!Auth.isAdmin()) return;
-      document.getElementById('webhookConfig').style.display = 'block';
-      const saved = localStorage.getItem(WEBHOOK_KEY);
-      if (saved) document.getElementById('webhookUrl').value = saved;
-    }
-
-    function salvarWebhook() {
-      const url = document.getElementById('webhookUrl').value.trim();
-      if (url) localStorage.setItem(WEBHOOK_KEY, url);
-      const btn = event.currentTarget;
-      const orig = btn.textContent;
-      btn.textContent = 'Salvo ✓';
-      setTimeout(() => { btn.textContent = orig; }, 1500);
     }
 
     function saveSession() {
       try {
         sessionStorage.setItem('form-certificado-eventos', JSON.stringify({
-          setor: document.getElementById('setor')?.value || '',
+          nomeCompleto: document.getElementById('nomeCompleto')?.value || '',
           whatsapp: document.getElementById('whatsapp')?.value || '',
           nomeEvento: document.getElementById('nomeEvento')?.value || '',
           idEvento: document.getElementById('idEvento')?.value || '',
@@ -145,7 +112,7 @@
       try {
         const data = JSON.parse(sessionStorage.getItem('form-certificado-eventos'));
         if (!data) return;
-        if (data.setor) { const el = document.getElementById('setor'); if (el) el.value = data.setor; }
+        if (data.nomeCompleto) document.getElementById('nomeCompleto').value = data.nomeCompleto;
         if (data.whatsapp) document.getElementById('whatsapp').value = data.whatsapp;
         if (data.nomeEvento) document.getElementById('nomeEvento').value = data.nomeEvento;
         if (data.idEvento) document.getElementById('idEvento').value = data.idEvento;
@@ -180,7 +147,7 @@
 
       const dados = {
         nome: Auth.getUserName(),
-        setor: document.getElementById('setor')?.value || '',
+        nomeCompleto: document.getElementById('nomeCompleto').value,
         whatsapp: document.getElementById('whatsapp').value,
         nomeEvento: document.getElementById('nomeEvento').value,
         idEvento: document.getElementById('idEvento').value,
@@ -194,14 +161,12 @@
       try {
         const res = await fetch('/api/solicitacoes', { method: 'POST', body: formData });
         if (res.ok) {
-          const webhookUrl = localStorage.getItem(WEBHOOK_KEY);
-          if (webhookUrl) { try { await fetch(webhookUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ tipo: TIPO, ...dados }) }); } catch {} }
           sessionStorage.removeItem('form-certificado-eventos');
           try {
             sessionStorage.setItem('svn_ultimo_resumo', JSON.stringify({
+              tipo_id: TIPO,
               tipo: TIPO_SOLICITACAO_LABELS[TIPO] || TIPO,
               solicitante: Auth.getUserName(),
-              setor: dados.setor,
               data: new Date().toLocaleDateString('pt-BR'),
               hora: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
             }));

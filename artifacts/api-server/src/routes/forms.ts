@@ -58,13 +58,13 @@ const REQUIRED_FIELDS: Record<string, string[]> = {
   "apresentacao-atualizar": ["nome", "titulo"],
   "pagina-assessores-dados": ["nome", "nomeCompleto"],
   "pagina-assessores-atualizacao": ["nome"],
-  "assinatura-email":      ["nome", "nomeCompleto", "cargo", "telefone", "emailCorporativo", "marca"],
+  "assinatura-email":      ["nome", "nomeCompleto", "telefone", "emailCorporativo", "marca"],
   "cartao-visita-fisico":  ["nome", "nomeCartao", "whatsapp", "emailCorporativo", "unidade"],
-  "cartao-visita-digital": ["nome", "nomeCompleto", "telefone", "emailCorporativo", "marca"],
-  "cartao-boas-vindas":    ["nome", "nomeCliente", "nomeAssinatura", "contratoSocial", "unidade"],
+  "cartao-visita-digital": ["nome", "nomeCompleto", "telefone", "emailCorporativo", "contratoSocial"],
+  "cartao-boas-vindas":    ["nome", "nomeCliente", "nomeAssinatura", "contratoSocial", "unidade", "cidade"],
   "divulgacao-nps":        ["nome", "nomeAssinatura", "cargo", "agradecimento", "modeloArte"],
   "convite-fp":            ["nome", "codigoAssessor", "nomeAssinatura", "cargo", "contratoSocial"],
-  "certificado-eventos":   ["nome", "whatsapp", "cargaHoraria"],
+  "certificado-eventos":   ["nome", "nomeCompleto", "whatsapp", "cargaHoraria"],
   "pagina-online":         ["nome", "titulo", "finalidade"],
   "outro":                 ["nome", "titulo", "finalidade", "descricao"],
   "cartao-comemorativo":   ["nome", "nomeAniversariante", "modeloCartao", "mensagem", "assinatura"],
@@ -106,6 +106,161 @@ function parseQueryArray(val: unknown): string[] {
   if (!val) return [];
   if (Array.isArray(val)) return val.map(String).filter(Boolean);
   return String(val).split(',').filter(Boolean);
+}
+
+const WEBHOOK_MAP: Record<string, string | undefined> = {
+  "assinatura-email":    process.env.WEBHOOK_ASSINATURA_EMAIL,
+  "cartao-visita-fisico": process.env.WEBHOOK_CARTAO_FISICO,
+  "cartao-visita-digital": process.env.WEBHOOK_CARTAO_DIGITAL,
+  "cartao-boas-vindas":  process.env.WEBHOOK_BOAS_VINDAS,
+  "divulgacao-nps":      process.env.WEBHOOK_NPS,
+  "convite-fp":          process.env.WEBHOOK_CONVITE_FP,
+  "certificado-eventos": process.env.WEBHOOK_CERTIFICADO,
+  "cartao-comemorativo": process.env.WEBHOOK_COMEMORATIVO,
+};
+
+function buildWebhookFields(
+  tipo: string,
+  dados: Record<string, unknown>,
+  userEmail: string,
+  arquivosMap: ArquivosMap,
+): Record<string, string> {
+  const s = (v: unknown) => String(v || "");
+  // Common fields present in every payload
+  const base: Record<string, string> = {
+    solicitante:      s(dados.nome),
+    emailSolicitante: userEmail,
+  };
+
+  switch (tipo) {
+    case "assinatura-email":
+      // Keys match the original Elementor/N8N contract that was already working
+      return {
+        ...base,
+        name:  s(dados.nomeCompleto),
+        phone: s(dados.telefone),
+        email: s(dados.emailCorporativo),
+        marca: s(dados.marca),
+        cargo: s(dados.cargo),
+        cfp:   dados.cfp === "sim" ? "Sim" : "Não",
+      };
+    case "cartao-visita-fisico":
+      return {
+        ...base,
+        name:             s(dados.nomeCartao),
+        phone:            s(dados.whatsapp),
+        email:            s(dados.emailCorporativo),
+        unidade:          s(dados.unidade),
+      };
+    case "cartao-visita-digital":
+      return {
+        ...base,
+        name:           s(dados.nomeCompleto),
+        phone:          s(dados.telefone),
+        email:          s(dados.emailCorporativo),
+        contratoSocial: s(dados.contratoSocial),
+      };
+    case "cartao-boas-vindas":
+      return {
+        ...base,
+        nomeCliente:    s(dados.nomeCliente),
+        nomeAssinatura: s(dados.nomeAssinatura),
+        contratoSocial: s(dados.contratoSocial),
+        unidade:        s(dados.unidade),
+        cidade:         s(dados.cidade),
+        isPrivate:      dados.isPrivate === "sim" ? "Sim" : "Não",
+      };
+    case "divulgacao-nps": {
+      const fields: Record<string, string> = {
+        ...base,
+        nomeAssinatura: s(dados.nomeAssinatura),
+        cargo:          s(dados.cargo),
+        agradecimento:  s(dados.agradecimento),
+        modeloArte:     s(dados.modeloArte),
+      };
+      // Include uploaded photo URL if present
+      if (arquivosMap["fotoPerfil"]) fields.fotoPerfil = arquivosMap["fotoPerfil"];
+      return fields;
+    }
+    case "convite-fp":
+      return {
+        ...base,
+        codigoAssessor: s(dados.codigoAssessor),
+        nomeAssinatura: s(dados.nomeAssinatura),
+        cargo:          s(dados.cargo),
+        contratoSocial: s(dados.contratoSocial),
+      };
+    case "certificado-eventos":
+      return {
+        ...base,
+        name:         s(dados.nomeCompleto),
+        phone:        s(dados.whatsapp),
+        nomeEvento:   s(dados.nomeEvento),
+        idEvento:     s(dados.idEvento),
+        cargaHoraria: s(dados.cargaHoraria),
+      };
+    case "cartao-comemorativo":
+      return {
+        ...base,
+        nomeAniversariante: s(dados.nomeAniversariante),
+        modeloCartao:       s(dados.modeloCartao),
+        mensagem:           s(dados.mensagem),
+        assinatura:         s(dados.assinatura),
+      };
+    default:
+      return base;
+  }
+}
+
+// Per-type metadata added to the body (outside form_fields[]) for webhooks that need it
+const WEBHOOK_METADATA: Record<string, Record<string, string>> = {
+  "assinatura-email": {
+    post_id:  "2750",
+    form_id:  "a0c2112",
+    action:   "elementor_pro_forms_send_form",
+    referrer: "https://hub.portalsvn.com.br/form-assinatura-email.html",
+  },
+};
+
+// Log webhook env var presence at module load (helps diagnose silent failures)
+Object.entries(WEBHOOK_MAP).forEach(([tipo, url]) => {
+  if (!url) {
+    logger.warn({ tipo }, `[Webhook] env var ausente para tipo=${tipo}`);
+  } else {
+    logger.info({ tipo }, `[Webhook] URL configurada para tipo=${tipo}`);
+  }
+});
+
+function dispararWebhook(tipo: string, dados: Record<string, unknown>, userEmail: string, arquivosMap: ArquivosMap): void {
+  const webhookUrl = WEBHOOK_MAP[tipo];
+  if (!webhookUrl) {
+    if (Object.prototype.hasOwnProperty.call(WEBHOOK_MAP, tipo)) {
+      logger.warn({ tipo }, `Webhook env var não configurado para ${tipo}`);
+    }
+    return;
+  }
+
+  const fields = buildWebhookFields(tipo, dados, userEmail, arquivosMap);
+  const body = new URLSearchParams();
+  Object.entries(fields).forEach(([k, v]) => body.append(`form_fields[${k}]`, v));
+
+  // Append any per-type metadata keys outside form_fields[]
+  const meta = WEBHOOK_METADATA[tipo];
+  if (meta) {
+    Object.entries(meta).forEach(([k, v]) => body.append(k, v));
+  }
+
+  logger.info({ tipo, fieldKeys: Object.keys(fields) }, `[Webhook] Disparando tipo=${tipo}`);
+
+  fetch(webhookUrl, {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: body.toString(),
+  }).then(res => {
+    logger.info({ tipo, status: res.status }, `[Webhook] Resposta tipo=${tipo}`);
+  }).catch(err => {
+    logger.error({ err, webhookUrl, tipo }, `Webhook ${tipo} falhou`);
+  });
 }
 
 function extractUrl(text: string): string | null {
@@ -199,38 +354,7 @@ router.post("/solicitacoes", requireAuth, upload.any(), async (req, res): Promis
       logger.error({ err: clickupErr }, "ClickUp task creation failed, continuing");
     }
 
-    if (tipo_solicitacao === "assinatura-email") {
-      const webhookUrl = process.env.WEBHOOK_ASSINATURA_EMAIL;
-      if (webhookUrl) {
-        const formFields: Record<string, string> = {
-          name:  String(parsedDados.nomeCompleto || parsedDados.nome || ""),
-          phone: String(parsedDados.telefone     || ""),
-          email: String(parsedDados.emailCorporativo || ""),
-          marca: String(parsedDados.marca        || ""),
-          cfp:   parsedDados.cfp === "sim" ? "Sim" : "Não",
-        };
-        if (parsedDados.cargo) formFields.cargo = String(parsedDados.cargo);
-
-        const body = new URLSearchParams();
-        Object.entries(formFields).forEach(([k, v]) => {
-          body.append(`form_fields[${k}]`, v);
-        });
-        body.append('post_id',  '2750');
-        body.append('form_id',  'a0c2112');
-        body.append('action',   'elementor_pro_forms_send_form');
-        body.append('referrer', 'https://hub.portalsvn.com.br/form-assinatura-email.html');
-
-        fetch(webhookUrl, {
-          method: "POST",
-          headers: { "Content-Type": "application/x-www-form-urlencoded" },
-          body: body.toString(),
-        }).catch(err => {
-          logger.error({ err, webhookUrl }, "Webhook assinatura-email falhou");
-        });
-      } else {
-        logger.warn("WEBHOOK_ASSINATURA_EMAIL não configurado");
-      }
-    }
+    dispararWebhook(tipo_solicitacao, parsedDados, user.email, arquivosMap);
 
     res.json({ success: true, id: solicitacao.id, clickup_task_id: clickupTaskId });
   } catch (err) {
