@@ -199,6 +199,33 @@ router.post("/solicitacoes", requireAuth, upload.any(), async (req, res): Promis
       logger.error({ err: clickupErr }, "ClickUp task creation failed, continuing");
     }
 
+    if (tipo_solicitacao === "assinatura-email") {
+      const webhookUrl = process.env.WEBHOOK_ASSINATURA_EMAIL;
+      if (webhookUrl) {
+        fetch(webhookUrl, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            id:               solicitacao.id,
+            tipo:             "assinatura-email",
+            nome:             parsedDados.nomeCompleto  || parsedDados.nome || "",
+            telefone:         parsedDados.telefone       || "",
+            email:            parsedDados.emailCorporativo || "",
+            marca:            parsedDados.marca          || "",
+            setor:            parsedDados.setor          || "",
+            cfp:              parsedDados.cfp            || "nao",
+            solicitante:      user.name,
+            solicitanteEmail: user.email,
+            criadoEm:         solicitacao.created_at,
+          }),
+        }).catch(err => {
+          logger.error({ err, webhookUrl }, "Webhook assinatura-email falhou");
+        });
+      } else {
+        logger.warn("WEBHOOK_ASSINATURA_EMAIL não configurado");
+      }
+    }
+
     res.json({ success: true, id: solicitacao.id, clickup_task_id: clickupTaskId });
   } catch (err) {
     logger.error({ err }, "Form submission error");
