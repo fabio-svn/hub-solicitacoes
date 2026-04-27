@@ -35,6 +35,10 @@
         <input type="tel" id="whatsapp" placeholder="(00) 00000-0000" oninput="mascaraTelefone(this)" required>
       </div>
       <div class="field">
+        <label>E-mail para envio do certificado <span style="color:var(--ruby-red)">*</span></label>
+        <input type="email" id="emailCertificado" placeholder="seu@email.com" required>
+      </div>
+      <div class="field">
         <label>Nome do evento (opcional)</label>
         <input type="text" id="nomeEvento" placeholder="Nome do evento para constar no certificado">
       </div>
@@ -101,6 +105,7 @@
         sessionStorage.setItem('form-certificado-eventos', JSON.stringify({
           nomeCompleto: document.getElementById('nomeCompleto')?.value || '',
           whatsapp: document.getElementById('whatsapp')?.value || '',
+          emailCertificado: document.getElementById('emailCertificado')?.value || '',
           nomeEvento: document.getElementById('nomeEvento')?.value || '',
           idEvento: document.getElementById('idEvento')?.value || '',
           cargaHoraria: document.getElementById('cargaHoraria')?.value || '',
@@ -114,6 +119,7 @@
         if (!data) return;
         if (data.nomeCompleto) document.getElementById('nomeCompleto').value = data.nomeCompleto;
         if (data.whatsapp) document.getElementById('whatsapp').value = data.whatsapp;
+        if (data.emailCertificado) document.getElementById('emailCertificado').value = data.emailCertificado;
         if (data.nomeEvento) document.getElementById('nomeEvento').value = data.nomeEvento;
         if (data.idEvento) document.getElementById('idEvento').value = data.idEvento;
         if (data.cargaHoraria) document.getElementById('cargaHoraria').value = data.cargaHoraria;
@@ -149,6 +155,7 @@
         nome: Auth.getUserName(),
         nomeCompleto: document.getElementById('nomeCompleto').value,
         whatsapp: document.getElementById('whatsapp').value,
+        emailCertificado: document.getElementById('emailCertificado').value,
         nomeEvento: document.getElementById('nomeEvento').value,
         idEvento: document.getElementById('idEvento').value,
         cargaHoraria: document.getElementById('cargaHoraria').value,
