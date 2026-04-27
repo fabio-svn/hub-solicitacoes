@@ -46,6 +46,12 @@
         <input type="text" id="nomeCompleto" placeholder="Seu nome completo" required>
       </div>
       <div class="field">
+        <label>Cargo <span style="color:var(--ruby-red)">*</span></label>
+        <select id="cargo" required>
+          <option value="">Selecione seu cargo</option>
+        </select>
+      </div>
+      <div class="field">
         <label>Telefone / WhatsApp <span style="color:var(--ruby-red)">*</span></label>
         <input type="tel" id="telefone" placeholder="(00) 00000-0000" oninput="mascaraTelefone(this)" required>
       </div>
@@ -128,6 +134,9 @@
       const marcaSel = document.getElementById('marca');
       if (marcaSel) { MARCAS_SVN.forEach(m => { const o = document.createElement('option'); o.value = m; o.textContent = m; marcaSel.appendChild(o); }); }
 
+      const cargoSel = document.getElementById('cargo');
+      if (cargoSel && typeof CARGOS_ASSESSOR !== 'undefined') { CARGOS_ASSESSOR.forEach(c => { const o = document.createElement('option'); o.value = c; o.textContent = c; cargoSel.appendChild(o); }); }
+
       iniciarWebhookConfig();
       restoreSession();
     }
@@ -153,6 +162,7 @@
         sessionStorage.setItem('form-assinatura-email', JSON.stringify({
           setor: document.getElementById('setor')?.value || '',
           nomeCompleto: document.getElementById('nomeCompleto')?.value || '',
+          cargo: document.getElementById('cargo')?.value || '',
           telefone: document.getElementById('telefone')?.value || '',
           emailCorporativo: document.getElementById('emailCorporativo')?.value || '',
           marca: document.getElementById('marca')?.value || '',
@@ -167,6 +177,7 @@
         if (!data) return;
         if (data.setor) { const el = document.getElementById('setor'); if (el) el.value = data.setor; }
         if (data.nomeCompleto) document.getElementById('nomeCompleto').value = data.nomeCompleto;
+        if (data.cargo) { const el = document.getElementById('cargo'); if (el) el.value = data.cargo; }
         if (data.telefone) document.getElementById('telefone').value = data.telefone;
         if (data.emailCorporativo) document.getElementById('emailCorporativo').value = data.emailCorporativo;
         if (data.marca) { const el = document.getElementById('marca'); if (el) el.value = data.marca; }
@@ -203,6 +214,7 @@
         nome: Auth.getUserName(),
         setor: document.getElementById('setor')?.value || '',
         nomeCompleto: document.getElementById('nomeCompleto').value,
+        cargo: document.getElementById('cargo')?.value || '',
         telefone: document.getElementById('telefone').value,
         emailCorporativo: document.getElementById('emailCorporativo').value,
         marca: document.getElementById('marca').value,
