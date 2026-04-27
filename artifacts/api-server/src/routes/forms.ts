@@ -152,14 +152,18 @@ function buildWebhookFields(
         email:            s(dados.emailCorporativo),
         unidade:          s(dados.unidade),
       };
-    case "cartao-visita-digital":
-      return {
+    case "cartao-visita-digital": {
+      const fields: Record<string, string> = {
         ...base,
         name:           s(dados.nomeCompleto),
         phone:          s(dados.telefone),
         email:          s(dados.emailCorporativo),
         contratoSocial: s(dados.contratoSocial),
       };
+      // Photo uploaded by assessor — key matches Elementor field ID in N8N workflow
+      if (arquivosMap["fotoPerfilDigital"]) fields["field_4987b4c"] = arquivosMap["fotoPerfilDigital"];
+      return fields;
+    }
     case "cartao-boas-vindas":
       return {
         ...base,
@@ -173,13 +177,13 @@ function buildWebhookFields(
     case "divulgacao-nps": {
       const fields: Record<string, string> = {
         ...base,
-        nomeAssinatura: s(dados.nomeAssinatura),
-        cargo:          s(dados.cargo),
-        agradecimento:  s(dados.agradecimento),
-        modeloArte:     s(dados.modeloArte),
+        nome_assessor: s(dados.nomeAssinatura),
+        cargo:         s(dados.cargo),
+        agradecimento: s(dados.agradecimento),
+        modelo:        s(dados.modeloArte),
       };
-      // Include uploaded photo URL if present
-      if (arquivosMap["fotoPerfil"]) fields.fotoPerfil = arquivosMap["fotoPerfil"];
+      // Include uploaded photo URL — key "foto" matches N8N expectation
+      if (arquivosMap["fotoPerfil"]) fields.foto = arquivosMap["fotoPerfil"];
       return fields;
     }
     case "convite-fp":

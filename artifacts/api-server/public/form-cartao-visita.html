@@ -145,6 +145,15 @@
             <option value="SVN Investimentos">SVN Investimentos</option>
           </select>
         </div>
+        <div class="field">
+          <label>Foto de perfil <span style="color:var(--ruby-red)">*</span></label>
+          <div style="font-size:0.78rem;opacity:0.55;margin-bottom:8px">Usada na geração do cartão. JPG ou PNG, fundo neutro preferencialmente.</div>
+          <div class="file-input-wrapper">
+            <label class="file-input-btn" for="fotoPerfilDigital">Escolher foto</label>
+            <input type="file" id="fotoPerfilDigital" name="fotoPerfilDigital" accept=".jpg,.jpeg,.png,.webp" required>
+            <div class="file-name" id="fotoPerfilDigitalName"></div>
+          </div>
+        </div>
         <div style="border-top:1px solid rgba(34,27,25,.08);margin:28px 0 20px;padding-top:22px">
           <div id="submitErrorDigital" class="alert-card alert-danger" style="display:none;margin-bottom:16px"></div>
           <div class="form-nav" style="justify-content:flex-end">
@@ -196,6 +205,8 @@
 
       const unidadeSel = document.getElementById('unidadeFisico');
       if (unidadeSel) { UNIDADES_SVN.forEach(u => { const o = document.createElement('option'); o.value = u.nome; o.textContent = u.nome; unidadeSel.appendChild(o); }); }
+
+      FileUpload.bind('fotoPerfilDigital', 'fotoPerfilDigitalName', { accept: '.jpg,.jpeg,.png,.webp', maxMB: 10 });
     }
 
     function selectTipo(tipo) {
@@ -310,6 +321,8 @@
       const formData = new FormData();
       formData.append('tipo_solicitacao', 'cartao-visita-digital');
       formData.append('dados', JSON.stringify(dados));
+      const fotoInput = document.getElementById('fotoPerfilDigital');
+      if (fotoInput && fotoInput.files[0]) formData.append('fotoPerfilDigital', fotoInput.files[0]);
 
       try {
         const res = await fetch('/api/solicitacoes', { method: 'POST', body: formData });
