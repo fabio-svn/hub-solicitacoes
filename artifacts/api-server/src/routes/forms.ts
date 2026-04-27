@@ -119,6 +119,17 @@ const WEBHOOK_MAP: Record<string, string | undefined> = {
   "cartao-comemorativo": process.env.WEBHOOK_COMEMORATIVO,
 };
 
+// form_id sent to N8N to identify the workflow
+const WEBHOOK_FORM_ID: Record<string, string> = {
+  "assinatura-email":      "assinatura-de-email",
+  "cartao-visita-fisico":  "solicitacao-cartao-fisico",
+  "cartao-visita-digital": "cartao-digital",
+  "cartao-boas-vindas":    "cartao-boas-vindas",
+  "divulgacao-nps":        "arte-nps",
+  "convite-fp":            "convite-financial-planning",
+  "certificado-eventos":   "gerar-certificados",
+};
+
 function buildWebhookFields(
   tipo: string,
   dados: Record<string, unknown>,
@@ -126,98 +137,81 @@ function buildWebhookFields(
   arquivosMap: ArquivosMap,
 ): Record<string, string> {
   const s = (v: unknown) => String(v || "");
-  // Common fields present in every payload
-  const base: Record<string, string> = {
-    solicitante:      s(dados.nome),
-    emailSolicitante: userEmail,
-  };
 
   switch (tipo) {
     case "assinatura-email":
       return {
-        ...base,
-        nome_assessor: s(dados.nomeCompleto || dados.nome),
-        cargo:         s(dados.cargo),
-        email:         s(dados.emailCorporativo),
-        telefone:      s(dados.telefone),
-        marca:         s(dados.marca),
-        cfp:           dados.cfp === "sim" ? "Sim" : "Não",
+        name:  s(dados.nomeCompleto || dados.nome),
+        phone: s(dados.telefone),
+        email: s(dados.emailCorporativo),
+        marca: s(dados.marca),
+        cargo: s(dados.cargo),
+        cfp:   dados.cfp === "sim" ? "Sim" : "Não",
       };
+
     case "cartao-visita-fisico":
       return {
-        ...base,
-        name:             s(dados.nomeCartao),
-        phone:            s(dados.whatsapp),
-        email:            s(dados.emailCorporativo),
-        unidade:          s(dados.unidade),
+        nome:     s(dados.nomeCartao),
+        whatsApp: s(dados.whatsapp),
+        email:    s(dados.emailCorporativo),
+        unidade:  s(dados.unidade),
       };
+
     case "cartao-visita-digital": {
       const fields: Record<string, string> = {
-        ...base,
-        name:           s(dados.nomeCompleto),
-        phone:          s(dados.telefone),
-        email:          s(dados.emailCorporativo),
-        contratoSocial: s(dados.contratoSocial),
+        name:    s(dados.nomeCompleto),
+        phone:   s(dados.telefone),
+        email:   s(dados.emailCorporativo),
+        unidade: s(dados.contratoSocial),
       };
-      // Photo uploaded by assessor — key matches Elementor field ID in N8N workflow
       if (arquivosMap["fotoPerfilDigital"]) fields["field_4987b4c"] = arquivosMap["fotoPerfilDigital"];
       return fields;
     }
+
     case "cartao-boas-vindas":
       return {
-        ...base,
-        nomeCliente:    s(dados.nomeCliente),
-        nomeAssinatura: s(dados.nomeAssinatura),
-        contratoSocial: s(dados.contratoSocial),
-        unidade:        s(dados.unidade),
-        cidade:         s(dados.cidade),
-        isPrivate:      dados.isPrivate === "sim" ? "Sim" : "Não",
+        nome_cliente:     s(dados.nomeCliente),
+        private:          dados.isPrivate === "sim" ? "Sim" : "Não",
+        nome_assessor:    s(dados.nomeAssinatura),
+        unidade_assessor: s(dados.unidade),
+        cidade_assessor:  s(dados.cidade),
+        email:            userEmail,
       };
+
     case "divulgacao-nps": {
       const fields: Record<string, string> = {
-        ...base,
         nome_assessor: s(dados.nomeAssinatura),
         cargo:         s(dados.cargo),
         agradecimento: s(dados.agradecimento),
         modelo:        s(dados.modeloArte),
+        email:         userEmail,
       };
-      // Include uploaded photo URL — key "foto" matches N8N expectation
       if (arquivosMap["fotoPerfil"]) fields.foto = arquivosMap["fotoPerfil"];
       return fields;
     }
+
     case "convite-fp":
       return {
-        ...base,
-        codigoAssessor: s(dados.codigoAssessor),
-        nomeAssinatura: s(dados.nomeAssinatura),
-        cargo:          s(dados.cargo),
-        contratoSocial: s(dados.contratoSocial),
+        A_ID:          s(dados.codigoAssessor),
+        nome_assessor: s(dados.nomeAssinatura),
+        cargo:         s(dados.cargo),
+        unidade:       s(dados.contratoSocial),
+        email:         userEmail,
       };
+
     case "certificado-eventos":
       return {
-        ...base,
-        name:         s(dados.nomeCompleto),
-        phone:        s(dados.whatsapp),
-        email:        s(dados.emailCertificado),
-        nomeEvento:   s(dados.nomeEvento),
-        idEvento:     s(dados.idEvento),
-        cargaHoraria: s(dados.cargaHoraria),
+        name:          s(dados.nomeCompleto),
+        phone:         s(dados.whatsapp),
+        email:         s(dados.emailCertificado),
+        id_evento:     s(dados.idEvento),
+        field_ad9f955: s(dados.cargaHoraria),
       };
-    case "cartao-comemorativo":
-      return {
-        ...base,
-        nomeAniversariante: s(dados.nomeAniversariante),
-        modeloCartao:       s(dados.modeloCartao),
-        mensagem:           s(dados.mensagem),
-        assinatura:         s(dados.assinatura),
-      };
+
     default:
-      return base;
+      return {};
   }
 }
-
-// Per-type metadata added to the body (outside form_fields[]) for webhooks that need it
-const WEBHOOK_METADATA: Record<string, Record<string, string>> = {};
 
 // Log webhook env var presence at module load (helps diagnose silent failures)
 Object.entries(WEBHOOK_MAP).forEach(([tipo, url]) => {
@@ -237,22 +231,19 @@ function dispararWebhook(tipo: string, dados: Record<string, unknown>, userEmail
     return;
   }
 
-  const fields = buildWebhookFields(tipo, dados, userEmail, arquivosMap);
-  const body = new URLSearchParams();
-  Object.entries(fields).forEach(([k, v]) => body.append(`form_fields[${k}]`, v));
+  const formFields = buildWebhookFields(tipo, dados, userEmail, arquivosMap);
+  const payload = {
+    form_id:     WEBHOOK_FORM_ID[tipo] || tipo,
+    post_id:     "replit",
+    form_fields: formFields,
+  };
 
-  // Append any per-type metadata keys outside form_fields[]
-  const meta = WEBHOOK_METADATA[tipo];
-  if (meta) {
-    Object.entries(meta).forEach(([k, v]) => body.append(k, v));
-  }
-
-  logger.info({ tipo, fieldKeys: Object.keys(fields) }, `[Webhook] Disparando tipo=${tipo}`);
+  logger.info({ tipo, fieldKeys: Object.keys(formFields) }, `[Webhook] Disparando tipo=${tipo}`);
 
   fetch(webhookUrl, {
     method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: body.toString(),
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
   }).then(res => {
     logger.info({ tipo, status: res.status }, `[Webhook] Resposta tipo=${tipo}`);
   }).catch(err => {
