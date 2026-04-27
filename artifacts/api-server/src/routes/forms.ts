@@ -119,16 +119,6 @@ const WEBHOOK_MAP: Record<string, string | undefined> = {
   "cartao-comemorativo": process.env.WEBHOOK_COMEMORATIVO,
 };
 
-// form_id sent to N8N to identify the workflow
-const WEBHOOK_FORM_ID: Record<string, string> = {
-  "assinatura-email":      "assinatura-de-email",
-  "cartao-visita-fisico":  "solicitacao-cartao-fisico",
-  "cartao-visita-digital": "cartao-digital",
-  "cartao-boas-vindas":    "cartao-boas-vindas",
-  "divulgacao-nps":        "arte-nps",
-  "convite-fp":            "convite-financial-planning",
-  "certificado-eventos":   "gerar-certificados",
-};
 
 function buildWebhookFields(
   tipo: string,
@@ -141,12 +131,12 @@ function buildWebhookFields(
   switch (tipo) {
     case "assinatura-email":
       return {
-        name:  s(dados.nomeCompleto || dados.nome),
-        phone: s(dados.telefone),
-        email: s(dados.emailCorporativo),
-        marca: s(dados.marca),
-        cargo: s(dados.cargo),
-        cfp:   dados.cfp === "sim" ? "Sim" : "Não",
+        nome:     s(dados.nomeCompleto),
+        telefone: s(dados.telefone),
+        email:    s(dados.emailCorporativo),
+        marca:    s(dados.marca),
+        cargo:    s(dados.cargo),
+        cfp:      dados.cfp === "sim" ? "Sim" : "Não",
       };
 
     case "cartao-visita-fisico":
@@ -231,19 +221,14 @@ function dispararWebhook(tipo: string, dados: Record<string, unknown>, userEmail
     return;
   }
 
-  const formFields = buildWebhookFields(tipo, dados, userEmail, arquivosMap);
-  const payload = {
-    form_id:     WEBHOOK_FORM_ID[tipo] || tipo,
-    post_id:     "replit",
-    form_fields: formFields,
-  };
+  const fields = buildWebhookFields(tipo, dados, userEmail, arquivosMap);
 
-  logger.info({ tipo, fieldKeys: Object.keys(formFields) }, `[Webhook] Disparando tipo=${tipo}`);
+  logger.info({ tipo, fieldKeys: Object.keys(fields) }, `[Webhook] Disparando tipo=${tipo}`);
 
   fetch(webhookUrl, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
+    body: JSON.stringify(fields),
   }).then(res => {
     logger.info({ tipo, status: res.status }, `[Webhook] Resposta tipo=${tipo}`);
   }).catch(err => {
