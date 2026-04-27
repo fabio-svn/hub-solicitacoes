@@ -42,7 +42,6 @@ ALLOWED_ORIGIN = "https://hub.portalsvn.com.br"
 R2_PUBLIC_URL = "https://pub-a2132f9b61f940659cc98265acfcf64c.r2.dev"
 CLICKUP_LIST_BRINDES = "900100469662"
 CLICKUP_LIST_PATROCINIO = "901324638951"
-WEBHOOK_ASSINATURA_EMAIL = "https://webhook.site/5c36fb54-970a-441d-8422-1e57eb32fe36"
 
 [nix]
 channel = "stable-25_05"
