@@ -202,17 +202,28 @@ router.post("/solicitacoes", requireAuth, upload.any(), async (req, res): Promis
     if (tipo_solicitacao === "assinatura-email") {
       const webhookUrl = process.env.WEBHOOK_ASSINATURA_EMAIL;
       if (webhookUrl) {
+        const formFields: Record<string, string> = {
+          name:  String(parsedDados.nomeCompleto || parsedDados.nome || ""),
+          phone: String(parsedDados.telefone     || ""),
+          email: String(parsedDados.emailCorporativo || ""),
+          marca: String(parsedDados.marca        || ""),
+          cfp:   parsedDados.cfp === "sim" ? "Sim" : "Não",
+        };
+        if (parsedDados.cargo) formFields.cargo = String(parsedDados.cargo);
+
+        const body = new URLSearchParams();
+        Object.entries(formFields).forEach(([k, v]) => {
+          body.append(`form_fields[${k}]`, v);
+        });
+        body.append('post_id',  '2750');
+        body.append('form_id',  'a0c2112');
+        body.append('action',   'elementor_pro_forms_send_form');
+        body.append('referrer', 'https://hub.portalsvn.com.br/form-assinatura-email.html');
+
         fetch(webhookUrl, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            name:  parsedDados.nomeCompleto       || parsedDados.nome || "",
-            phone: parsedDados.telefone           || "",
-            email: parsedDados.emailCorporativo   || "",
-            marca: parsedDados.marca              || "",
-            cargo: parsedDados.cargo              || "",
-            cfp:   parsedDados.cfp === "sim" ? "Sim" : "Não",
-          }),
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body: body.toString(),
         }).catch(err => {
           logger.error({ err, webhookUrl }, "Webhook assinatura-email falhou");
         });
