@@ -69,7 +69,7 @@ const REQUIRED_FIELDS: Record<string, string[]> = {
   "outro":                 ["nome", "titulo", "finalidade", "descricao"],
   "cartao-comemorativo":   ["nome", "nomeAniversariante", "modeloCartao", "mensagem", "assinatura"],
   "brindes":               ["nome", "titulo", "finalidade", "dataEntrega", "itens"],
-  "patrocinio":            ["nome", "tituloEvento", "dataEvento", "horario", "local", "tipoEvento", "publico", "explicacao"],
+  "patrocinio":            ["nome", "tituloEvento", "marcasParceiras", "dataEvento", "horario", "local", "estado", "cidade", "tipoEvento", "publico", "explicacao", "centroCusto", "valorCota", "orcamentoTotal", "expectativaRetorno"],
   "email-marketing":       ["nome", "assunto", "finalidade", "tema", "dataDisparo", "assinaturaEmail"],
   "producao-video":        ["nome", "titulo", "ideia", "formato"],
   "sessao-fotos":          ["nome", "titulo", "descricao"],

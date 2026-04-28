@@ -364,14 +364,40 @@ function buildClickUpEventTaskName(dados: FormDados): string {
 }
 
 function buildGeneralTaskName(tipo: string, _subtipo: string, dados: FormDados, user: UserData): string {
-  const tipoHuman = humanizeRequestType(tipo);
   const setor = getUserDepartment(user, dados);
-  const titulo = str(dados.titulo) || str(dados.nomeCompleto) || "";
-  let name = `[${tipoHuman}]`;
-  if (setor && setor !== "Geral") name += ` ${setor}`;
-  if (titulo) name += ` - ${titulo}`;
-  logger.info({ tipo, tipoHuman, setor, titulo, taskName: name }, "ClickUp: nome da task geral gerado");
-  return name;
+
+  switch (tipo) {
+    case "cartao-visita-fisico":
+      return `[Cartão de Visita] ${str(dados.nomeCartao) || user.name}`;
+
+    case "patrocinio": {
+      const cidade = str(dados.cidade);
+      const tituloEv = str(dados.tituloEvento);
+      return cidade ? `[Patrocínio] ${tituloEv} - ${cidade}` : `[Patrocínio] ${tituloEv}`;
+    }
+
+    case "brindes":
+      return `[Brinde] ${user.name} - ${setor}`;
+
+    case "pagina-online":
+      return `[Página Online] ${str(dados.titulo)} - ${setor}`;
+
+    case "materiais-impressos": {
+      const tipoMat = str(dados.tipoMaterial) || str(dados.tipoImpresso) || "Material";
+      const tipoMatLabel = tipoMat.charAt(0).toUpperCase() + tipoMat.slice(1);
+      return `[Material Impresso] ${tipoMatLabel} - ${setor}`;
+    }
+
+    default: {
+      const tipoHuman = humanizeRequestType(tipo);
+      const titulo = str(dados.titulo) || str(dados.nomeCompleto) || "";
+      let name = `[${tipoHuman}]`;
+      if (setor && setor !== "Geral") name += ` ${setor}`;
+      if (titulo) name += ` - ${titulo}`;
+      logger.info({ tipo, tipoHuman, setor, titulo, taskName: name }, "ClickUp: nome da task geral gerado");
+      return name;
+    }
+  }
 }
 
 // ─────────────────────────────────────────────
@@ -383,7 +409,7 @@ function buildRequesterSection(user: UserData): string {
   items.push(`• Solicitante: ${user.name}`);
   items.push(`• E-mail: ${user.email}`);
   logger.info({ nome: user.name, email: user.email }, "ClickUp: bloco solicitante montado");
-  return `━━━━━━━━━━━━━━━━━━━━━━\n👤 SOLICITANTE\n━━━━━━━━━━━━━━━━━━━━━━\n\n${items.join("\n")}`;
+  return `👤 SOLICITANTE\n━━━━━━━━━━━━━━━━━━━━━━\n\n${items.join("\n")}`;
 }
 
 function buildResumoSection(dados: FormDados): string {
@@ -420,7 +446,7 @@ function buildResumoSection(dados: FormDados): string {
   addLine(items, "Objetivos", str(dados.objetivos));
   addLine(items, "Descrição", str(dados.descricao));
   logger.info({ itens: items.length }, "ClickUp: bloco de resumo montado");
-  return `━━━━━━━━━━━━━━━━━━━━━━\n🎯 RESUMO DA SOLICITAÇÃO\n━━━━━━━━━━━━━━━━━━━━━━\n\n${items.join("\n")}`;
+  return `🎯 RESUMO DA SOLICITAÇÃO\n━━━━━━━━━━━━━━━━━━━━━━\n\n${items.join("\n")}`;
 }
 
 function buildPalestrantesSection(dados: FormDados): string | null {
@@ -446,7 +472,7 @@ function buildPalestrantesSection(dados: FormDados): string | null {
   }
   if (count === 0) return null;
   logger.info({ count }, "ClickUp: bloco de palestrantes montado");
-  return `━━━━━━━━━━━━━━━━━━━━━━\n🎤 PALESTRANTES\n━━━━━━━━━━━━━━━━━━━━━━\n\n${items.join("\n")}`;
+  return `🎤 PALESTRANTES\n━━━━━━━━━━━━━━━━━━━━━━\n\n${items.join("\n")}`;
 }
 
 function buildMateriaisSection(dados: FormDados): string | null {
@@ -468,7 +494,7 @@ function buildMateriaisSection(dados: FormDados): string | null {
     lines.push("");
   }
   logger.info({ count: materiais.length }, "ClickUp: bloco de materiais montado");
-  return `━━━━━━━━━━━━━━━━━━━━━━\n📦 MATERIAIS SOLICITADOS\n━━━━━━━━━━━━━━━━━━━━━━\n\n${lines.join("\n").trimEnd()}`;
+  return `📦 MATERIAIS SOLICITADOS\n━━━━━━━━━━━━━━━━━━━━━━\n\n${lines.join("\n").trimEnd()}`;
 }
 
 function buildEventDescription(dados: FormDados, user: UserData, arquivos: ArquivosMap): string {
@@ -482,7 +508,7 @@ function buildEventDescription(dados: FormDados, user: UserData, arquivos: Arqui
   const arquivosSection = buildArquivosSection(arquivos);
   if (arquivosSection) blocks.push(arquivosSection);
   const obs = str(dados.observacoes);
-  if (obs) blocks.push(`━━━━━━━━━━━━━━━━━━━━━━\n📝 OBSERVAÇÕES GERAIS\n━━━━━━━━━━━━━━━━━━━━━━\n\n• ${obs}`);
+  if (obs) blocks.push(`📝 OBSERVAÇÕES GERAIS\n━━━━━━━━━━━━━━━━━━━━━━\n\n• ${obs}`);
   logger.info({ blocos: blocks.length }, "ClickUp: descricao humanizada de evento gerada");
   return blocks.join("\n\n");
 }
@@ -542,7 +568,7 @@ function buildDetailsSection(tipo: string, dados: FormDados): string | null {
   }
 
   if (items.length === 0) return null;
-  return `━━━━━━━━━━━━━━━━━━━━━━\n📝 DETALHES\n━━━━━━━━━━━━━━━━━━━━━━\n\n${items.join("\n")}`;
+  return `📝 DETALHES\n━━━━━━━━━━━━━━━━━━━━━━\n\n${items.join("\n")}`;
 }
 
 function buildArquivosSection(arquivos: ArquivosMap): string | null {
@@ -553,7 +579,7 @@ function buildArquivosSection(arquivos: ArquivosMap): string | null {
     items.push(`• ${label}: ${url}`);
   }
   if (items.length === 0) return null;
-  return `━━━━━━━━━━━━━━━━━━━━━━\n📎 ARQUIVOS\n━━━━━━━━━━━━━━━━━━━━━━\n\n${items.join("\n")}`;
+  return `📎 ARQUIVOS\n━━━━━━━━━━━━━━━━━━━━━━\n\n${items.join("\n")}`;
 }
 
 function buildGeneralDescription(
@@ -578,7 +604,7 @@ function buildGeneralDescription(
   addLine(resumoItems, "Prazo de entrega", str(dados.prazoEntrega));
   addLine(resumoItems, "Público-alvo", str(dados.publico as string) || str(dados.publicoAlvo));
   addLine(resumoItems, "Canais", str(dados.canais));
-  if (resumoItems.length > 0) blocks.push(`━━━━━━━━━━━━━━━━━━━━━━\n📌 RESUMO\n━━━━━━━━━━━━━━━━━━━━━━\n\n${resumoItems.join("\n")}`);
+  if (resumoItems.length > 0) blocks.push(`📌 RESUMO\n━━━━━━━━━━━━━━━━━━━━━━\n\n${resumoItems.join("\n")}`);
 
   const detalhes = buildDetailsSection(tipo, dados);
   if (detalhes) blocks.push(detalhes);
@@ -587,9 +613,199 @@ function buildGeneralDescription(
   if (arquivosSection) blocks.push(arquivosSection);
 
   const obs = str(dados.observacoes);
-  if (obs) blocks.push(`━━━━━━━━━━━━━━━━━━━━━━\n📝 OBSERVAÇÕES GERAIS\n━━━━━━━━━━━━━━━━━━━━━━\n\n• ${obs}`);
+  if (obs) blocks.push(`📝 OBSERVAÇÕES GERAIS\n━━━━━━━━━━━━━━━━━━━━━━\n\n• ${obs}`);
 
   logger.info({ tipo, blocos: blocks.length }, "ClickUp: descricao geral humanizada gerada, JSON bruto removido");
+  return blocks.join("\n\n");
+}
+
+// ─────────────────────────────────────────────
+// Description builders — específicos por tipo
+// ─────────────────────────────────────────────
+
+function buildCartaoFisicoDescription(dados: FormDados, user: UserData): string {
+  const items: string[] = [];
+  items.push(`• Nome: ${str(dados.nomeCartao)}`);
+  items.push(`• WhatsApp: ${str(dados.whatsapp)}`);
+  items.push(`• E-mail: ${str(dados.emailCorporativo)}`);
+  items.push(`• Link para planilha: https://svninvest-my.sharepoint.com/:x:/r/personal/gabriela_franca_svninvest_com_br/_layouts/15/Doc.aspx?sourcedoc=%7B7D66B897-EA4E-4C43-AB8C-20DB6B8B745C%7D&file=Solicitac%25u0327o%25u0303es%20Marketing.xlsx&nav=MTVfezAwMDAwMDAwLTAwMDEtMDAwMC0wNjAwLTAwMDAwMDAwMDAwMH0&action=default&mobileredirect=true`);
+  return items.join("\n");
+}
+
+function buildPatrocinioDescription(dados: FormDados, user: UserData, arquivos: ArquivosMap): string {
+  const blocks: string[] = [];
+  blocks.push(buildRequesterSection(user));
+
+  const resumoItems: string[] = [];
+  addLine(resumoItems, "Título do evento", str(dados.tituloEvento));
+  addLine(resumoItems, "Marcas parceiras", str(dados.marcasParceiras));
+  addLine(resumoItems, "Data do evento", formatDate(dados.dataEvento as string));
+  addLine(resumoItems, "Horário", str(dados.horario));
+  addLine(resumoItems, "Horário de Brasília?", str(dados.horBrasilia));
+  addLine(resumoItems, "Estado", humanizeEstado(dados.estado as string));
+  addLine(resumoItems, "Cidade", str(dados.cidade));
+  addLine(resumoItems, "Local", str(dados.local));
+  addLine(resumoItems, "Tipo de evento", str(dados.tipoEvento));
+  addLine(resumoItems, "Público", str(dados.publico));
+  if (resumoItems.length > 0)
+    blocks.push(`📋 RESUMO DO EVENTO\n━━━━━━━━━━━━━━━━━━━━━━\n\n${resumoItems.join("\n")}`);
+
+  const explicacao = str(dados.explicacao);
+  if (explicacao)
+    blocks.push(`💡 IDEIA DO PATROCÍNIO\n━━━━━━━━━━━━━━━━━━━━━━\n\n${explicacao}`);
+
+  const matSection = buildMateriaisSection(dados);
+  if (matSection) blocks.push(matSection);
+
+  const finItems: string[] = [];
+  addLine(finItems, "Centro de custo", str(dados.centroCusto));
+  addLine(finItems, "Valor da cota", str(dados.valorCota));
+  addLine(finItems, "Orçamento total", str(dados.orcamentoTotal));
+  addLine(finItems, "Expectativa de retorno", str(dados.expectativaRetorno));
+  addLine(finItems, "Orç. alimentação/pessoa", str(dados.orcAlimentacao));
+  addLine(finItems, "Orç. material gráfico", str(dados.orcGrafico));
+  addLine(finItems, "Orç. brindes", str(dados.orcBrindes));
+  addLine(finItems, "Orç. equipe staff", str(dados.orcStaff));
+  if (finItems.length > 0)
+    blocks.push(`💰 FINANCEIRO\n━━━━━━━━━━━━━━━━━━━━━━\n\n${finItems.join("\n")}`);
+
+  const arquivosSection = buildArquivosSection(arquivos);
+  if (arquivosSection) blocks.push(arquivosSection);
+
+  return blocks.join("\n\n");
+}
+
+function buildBrindesDescription(dados: FormDados, user: UserData, arquivos: ArquivosMap): string {
+  const blocks: string[] = [];
+  blocks.push(buildRequesterSection(user));
+
+  const items: string[] = [];
+  addLine(items, "Setor", str(dados.setor as string));
+  addLine(items, "Título", str(dados.titulo));
+  addLine(items, "Finalidade", str(dados.finalidade));
+  addLine(items, "Data de entrega", formatDate(dados.dataEntrega as string));
+  addLine(items, "Itens solicitados", Array.isArray(dados.itens)
+    ? (dados.itens as string[]).join(", ")
+    : str(dados.itens));
+  addLine(items, "Personalização", str(dados.personalizacao));
+  addLine(items, "Texto cartão presente", str(dados.textoCartaoPresente));
+  if (items.length > 0)
+    blocks.push(`📦 BRINDE\n━━━━━━━━━━━━━━━━━━━━━━\n\n${items.join("\n")}`);
+
+  const arquivosSection = buildArquivosSection(arquivos);
+  if (arquivosSection) blocks.push(arquivosSection);
+
+  return blocks.join("\n\n");
+}
+
+function buildPaginaOnlineDescription(dados: FormDados, user: UserData, arquivos: ArquivosMap): string {
+  const blocks: string[] = [];
+  blocks.push(buildRequesterSection(user));
+
+  const items: string[] = [];
+  addLine(items, "Setor", str(dados.setor as string));
+  addLine(items, "Título da página", str(dados.titulo));
+  addLine(items, "Finalidade", str(dados.finalidade));
+  if (items.length > 0)
+    blocks.push(`🌐 PÁGINA ONLINE\n━━━━━━━━━━━━━━━━━━━━━━\n\n${items.join("\n")}`);
+
+  const arquivosSection = buildArquivosSection(arquivos);
+  if (arquivosSection) blocks.push(arquivosSection);
+
+  return blocks.join("\n\n");
+}
+
+function buildMateriaisImpressosDescription(dados: FormDados, user: UserData, arquivos: ArquivosMap): string {
+  const blocks: string[] = [];
+  blocks.push(buildRequesterSection(user));
+
+  const items: string[] = [];
+  addLine(items, "Setor", str(dados.setor as string));
+  addLine(items, "Tipo de material", str(dados.tipoMaterial) || str(dados.tipoImpresso));
+  addLine(items, "Formato do papel", str(dados.formatoPapel));
+  addLine(items, "Orientação", str(dados.orientacao));
+  addLine(items, "Tamanho", str(dados.tamanhoBanner) || str(dados.tamanhoAdesivo));
+  addLine(items, "Tipo de adesivo", str(dados.tipoAdesivo));
+  addLine(items, "Tipo de camiseta", str(dados.tipoCamiseta));
+  addLine(items, "Cor", str(dados.corCamiseta));
+  addLine(items, "Quantidade/tamanhos", str(dados.qtdTamanhos));
+  addLine(items, "Fornecedor", str(dados.fornecedor));
+  if (items.length > 0)
+    blocks.push(`🖨️ MATERIAL IMPRESSO\n━━━━━━━━━━━━━━━━━━━━━━\n\n${items.join("\n")}`);
+
+  const conteudo = str(dados.conteudoMaterial);
+  if (conteudo)
+    blocks.push(`📝 CONTEÚDO\n━━━━━━━━━━━━━━━━━━━━━━\n\n${conteudo}`);
+
+  const arquivosSection = buildArquivosSection(arquivos);
+  if (arquivosSection) blocks.push(arquivosSection);
+
+  return blocks.join("\n\n");
+}
+
+function buildEmailMarketingDescription(dados: FormDados, user: UserData, arquivos: ArquivosMap): string {
+  const blocks: string[] = [];
+  blocks.push(buildRequesterSection(user));
+
+  const items: string[] = [];
+  addLine(items, "Setor", str(dados.setor as string));
+  addLine(items, "Assunto", str(dados.assunto));
+  addLine(items, "Finalidade", str(dados.finalidade));
+  addLine(items, "Tema e resumo", str(dados.tema));
+  addLine(items, "Data de disparo", formatDate(dados.dataDisparo as string));
+  addLine(items, "Assinatura do e-mail", str(dados.assinaturaEmail));
+  if (items.length > 0)
+    blocks.push(`✉️ E-MAIL MARKETING\n━━━━━━━━━━━━━━━━━━━━━━\n\n${items.join("\n")}`);
+
+  const arquivosSection = buildArquivosSection(arquivos);
+  if (arquivosSection) blocks.push(arquivosSection);
+
+  return blocks.join("\n\n");
+}
+
+function buildProducaoAudiovisualDescription(dados: FormDados, user: UserData, arquivos: ArquivosMap): string {
+  const blocks: string[] = [];
+  blocks.push(buildRequesterSection(user));
+
+  const isVideo = dados.modalidade === "video" ||
+    str(dados.titulo).length > 0 || str(dados.ideia).length > 0;
+
+  const items: string[] = [];
+  addLine(items, "Setor", str(dados.setor as string));
+  addLine(items, "Modalidade", isVideo ? "Produção de Vídeo" : "Sessão de Fotos");
+  addLine(items, "Título", str(dados.titulo) || str(dados.tituloFotos));
+  addLine(items, "Ideia / Descrição", str(dados.ideia) || str(dados.descricaoFotos));
+  addLine(items, "Formato", Array.isArray(dados.formato)
+    ? (dados.formato as string[]).join(", ")
+    : str(dados.formato));
+  addLine(items, "Restrições", str(dados.restricoes));
+  if (items.length > 0)
+    blocks.push(`🎥 PRODUÇÃO AUDIOVISUAL\n━━━━━━━━━━━━━━━━━━━━━━\n\n${items.join("\n")}`);
+
+  const arquivosSection = buildArquivosSection(arquivos);
+  if (arquivosSection) blocks.push(arquivosSection);
+
+  return blocks.join("\n\n");
+}
+
+function buildOutroDescription(dados: FormDados, user: UserData, arquivos: ArquivosMap): string {
+  const blocks: string[] = [];
+  blocks.push(buildRequesterSection(user));
+
+  const items: string[] = [];
+  addLine(items, "Setor", str(dados.setor as string));
+  addLine(items, "Título", str(dados.titulo));
+  addLine(items, "Finalidade", str(dados.finalidade));
+  if (items.length > 0)
+    blocks.push(`📋 RESUMO\n━━━━━━━━━━━━━━━━━━━━━━\n\n${items.join("\n")}`);
+
+  const descricao = str(dados.descricao);
+  if (descricao)
+    blocks.push(`📝 DESCRIÇÃO\n━━━━━━━━━━━━━━━━━━━━━━\n\n${descricao}`);
+
+  const arquivosSection = buildArquivosSection(arquivos);
+  if (arquivosSection) blocks.push(arquivosSection);
+
   return blocks.join("\n\n");
 }
 
@@ -905,6 +1121,37 @@ export async function createClickUpTask(
   if (tipo === "eventos") {
     taskName = buildClickUpEventTaskName(dados);
     description = buildEventDescription(dados, user, safeArquivos);
+  } else if (tipo === "cartao-visita-fisico") {
+    taskName = `[Cartão de Visita] ${str(dados.nomeCartao) || user.name}`;
+    description = buildCartaoFisicoDescription(dados, user);
+  } else if (tipo === "patrocinio") {
+    const cidade = str(dados.cidade);
+    const tituloEv = str(dados.tituloEvento);
+    taskName = cidade ? `[Patrocínio] ${tituloEv} - ${cidade}` : `[Patrocínio] ${tituloEv}`;
+    description = buildPatrocinioDescription(dados, user, safeArquivos);
+  } else if (tipo === "brindes") {
+    const setor = getUserDepartment(user, dados);
+    taskName = `[Brinde] ${user.name} - ${setor}`;
+    description = buildBrindesDescription(dados, user, safeArquivos);
+  } else if (tipo === "pagina-online") {
+    const setor = getUserDepartment(user, dados);
+    taskName = `[Página Online] ${str(dados.titulo)} - ${setor}`;
+    description = buildPaginaOnlineDescription(dados, user, safeArquivos);
+  } else if (tipo === "materiais-impressos") {
+    const setor = getUserDepartment(user, dados);
+    const tipoMat = str(dados.tipoMaterial) || str(dados.tipoImpresso) || "Material";
+    const tipoLabel = tipoMat.charAt(0).toUpperCase() + tipoMat.slice(1);
+    taskName = `[Material Impresso] ${tipoLabel} - ${setor}`;
+    description = buildMateriaisImpressosDescription(dados, user, safeArquivos);
+  } else if (tipo === "email-marketing") {
+    taskName = buildGeneralTaskName(tipo, subtipo, dados, user);
+    description = buildEmailMarketingDescription(dados, user, safeArquivos);
+  } else if (tipo === "producao-video" || tipo === "sessao-fotos") {
+    taskName = buildGeneralTaskName(tipo, subtipo, dados, user);
+    description = buildProducaoAudiovisualDescription(dados, user, safeArquivos);
+  } else if (tipo === "outro") {
+    taskName = buildGeneralTaskName(tipo, subtipo, dados, user);
+    description = buildOutroDescription(dados, user, safeArquivos);
   } else {
     taskName = buildGeneralTaskName(tipo, subtipo, dados, user);
     description = buildGeneralDescription(tipo, subtipo, dados, user, safeArquivos);

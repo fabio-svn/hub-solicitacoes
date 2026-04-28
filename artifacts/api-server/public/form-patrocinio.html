@@ -64,6 +64,20 @@
           <label>Local (nome e endereço) <span style="color:var(--ruby-red)">*</span></label>
           <textarea id="local" placeholder="Nome do local e endereço completo" required></textarea>
         </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div class="field">
+            <label>Estado <span style="color:var(--ruby-red)">*</span></label>
+            <select id="estado" onchange="loadCidades()" required>
+              <option value="">Selecione</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Cidade <span style="color:var(--ruby-red)">*</span></label>
+            <select id="cidade" disabled required>
+              <option value="">Selecione o estado</option>
+            </select>
+          </div>
+        </div>
         <div class="field">
           <label>Tipo de evento <span style="color:var(--ruby-red)">*</span></label>
           <select id="tipoEvento" required>
@@ -200,6 +214,33 @@
   <script>
     const TIPO = 'patrocinio';
 
+    let _estados = [];
+
+    async function loadEstados() {
+      try {
+        const res = await fetch('https://servicodados.ibge.gov.br/api/v1/localidades/estados?orderBy=nome');
+        _estados = await res.json();
+        const sel = document.getElementById('estado');
+        if (!sel) return;
+        sel.innerHTML = '<option value="">Selecione</option>';
+        _estados.forEach(e => { sel.innerHTML += `<option value="${e.id}">${e.sigla} — ${e.nome}</option>`; });
+      } catch (e) { console.error('IBGE error:', e); }
+    }
+
+    async function loadCidades() {
+      const estadoId = document.getElementById('estado').value;
+      const cidSel = document.getElementById('cidade');
+      if (!estadoId) { cidSel.disabled = true; cidSel.innerHTML = '<option value="">Selecione o estado</option>'; return; }
+      cidSel.innerHTML = '<option>Carregando...</option>';
+      try {
+        const res = await fetch(`https://servicodados.ibge.gov.br/api/v1/localidades/estados/${estadoId}/municipios?orderBy=nome`);
+        const cidades = await res.json();
+        cidSel.innerHTML = '<option value="">Selecione</option>';
+        cidades.forEach(c => { cidSel.innerHTML += `<option>${c.nome}</option>`; });
+        cidSel.disabled = false;
+      } catch (e) { console.error(e); }
+    }
+
     async function init() {
       await _configReady;
       await Auth.init();
@@ -211,6 +252,7 @@
 
       FileUpload.bind('midiaKit', 'midiaKitName');
       FileUpload.bind('arquivoApoio', 'arquivoApoioName');
+      await loadEstados();
     }
 
     function validateStep(stepId) {
@@ -264,6 +306,8 @@
         horario: document.getElementById('horario').value,
         horBrasilia: document.querySelector('input[name="horBrasilia"]:checked')?.value || '',
         local: document.getElementById('local').value,
+        estado: document.getElementById('estado')?.value || '',
+        cidade: document.getElementById('cidade')?.value || '',
         tipoEvento: document.getElementById('tipoEvento').value,
         publico: document.getElementById('publico').value,
         explicacao: document.getElementById('explicacao').value,
