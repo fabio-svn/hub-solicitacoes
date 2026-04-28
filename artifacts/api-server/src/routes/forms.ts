@@ -97,7 +97,7 @@ function checkRateLimit(email: string): boolean {
     submissionCounts.set(email, { count: 1, resetAt: now + 60 * 60 * 1000 });
     return true;
   }
-  if (entry.count >= 10) return false;
+  if (entry.count >= 100) return false;
   entry.count++;
   return true;
 }
