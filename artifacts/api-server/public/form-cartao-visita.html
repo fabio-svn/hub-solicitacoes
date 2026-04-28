@@ -104,6 +104,15 @@
             <option value="">Selecione a unidade</option>
           </select>
         </div>
+        <div class="field">
+          <label>Contrato social <span style="color:var(--ruby-red)">*</span></label>
+          <select id="contratoSocialFisico" required>
+            <option value="">Selecione</option>
+            <option>SVN Capital</option>
+            <option>SVN Connect</option>
+            <option>SVN Investimentos</option>
+          </select>
+        </div>
         <div style="border-top:1px solid rgba(34,27,25,.08);margin:28px 0 20px;padding-top:22px">
           <div id="submitErrorFisico" class="alert-card alert-danger" style="display:none;margin-bottom:16px"></div>
           <div class="form-nav" style="justify-content:flex-end">
@@ -272,6 +281,7 @@
         whatsapp: document.getElementById('whatsappFisico').value,
         emailCorporativo: document.getElementById('emailCorporativoFisico').value,
         unidade: document.getElementById('unidadeFisico').value,
+        contratoSocial: document.getElementById('contratoSocialFisico').value,
       };
 
       const formData = new FormData();

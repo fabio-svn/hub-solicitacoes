@@ -59,7 +59,7 @@ const REQUIRED_FIELDS: Record<string, string[]> = {
   "pagina-assessores-dados": ["nome", "nomeCompleto"],
   "pagina-assessores-atualizacao": ["nome"],
   "assinatura-email":      ["nome", "nomeCompleto", "telefone", "emailCorporativo", "marca"],
-  "cartao-visita-fisico":  ["nome", "nomeCartao", "whatsapp", "emailCorporativo", "unidade"],
+  "cartao-visita-fisico":  ["nome", "nomeCartao", "whatsapp", "emailCorporativo", "unidade", "contratoSocial"],
   "cartao-visita-digital": ["nome", "nomeCompleto", "telefone", "emailCorporativo", "contratoSocial"],
   "cartao-boas-vindas":    ["nome", "nomeCliente", "nomeAssinatura", "contratoSocial", "unidade", "cidade"],
   "divulgacao-nps":        ["nome", "nomeAssinatura", "cargo", "agradecimento", "modeloArte"],
@@ -141,31 +141,32 @@ function buildWebhookFields(
 
     case "cartao-visita-fisico":
       return {
-        nome:     s(dados.nomeCartao),
-        whatsApp: s(dados.whatsapp),
-        email:    s(dados.emailCorporativo),
-        unidade:  s(dados.unidade),
+        nome:            s(dados.nomeCartao),
+        telefone:        s(dados.whatsapp),
+        email:           s(dados.emailCorporativo),
+        unidade:         s(dados.unidade),
+        contrato_social: s(dados.contratoSocial),
       };
 
     case "cartao-visita-digital": {
       const fields: Record<string, string> = {
-        name:    s(dados.nomeCompleto),
-        phone:   s(dados.telefone),
-        email:   s(dados.emailCorporativo),
-        unidade: s(dados.contratoSocial),
+        nome:            s(dados.nomeCompleto),
+        telefone:        s(dados.telefone),
+        email:           s(dados.emailCorporativo),
+        contrato_social: s(dados.contratoSocial),
       };
-      if (arquivosMap["fotoPerfilDigital"]) fields["field_4987b4c"] = arquivosMap["fotoPerfilDigital"];
+      if (arquivosMap["fotoPerfil"]) fields.foto = arquivosMap["fotoPerfil"];
       return fields;
     }
 
     case "cartao-boas-vindas":
       return {
-        nome_cliente:     s(dados.nomeCliente),
-        private:          dados.isPrivate === "sim" ? "Sim" : "Não",
-        nome_assessor:    s(dados.nomeAssinatura),
-        unidade_assessor: s(dados.unidade),
-        cidade_assessor:  s(dados.cidade),
-        email:            userEmail,
+        nome_cliente:    s(dados.nomeCliente),
+        private:         dados.isPrivate === "sim" ? "Sim" : "Não",
+        nome_assessor:   s(dados.nomeAssinatura),
+        contrato_social: s(dados.contratoSocial),
+        cidade:          s(dados.cidade),
+        email:           userEmail,
       };
 
     case "divulgacao-nps": {
@@ -182,20 +183,20 @@ function buildWebhookFields(
 
     case "convite-fp":
       return {
-        A_ID:          s(dados.codigoAssessor),
-        nome_assessor: s(dados.nomeAssinatura),
-        cargo:         s(dados.cargo),
-        unidade:       s(dados.contratoSocial),
-        email:         userEmail,
+        codigo_assessor: s(dados.codigoAssessor),
+        nome_assessor:   s(dados.nomeAssinatura),
+        cargo:           s(dados.cargo),
+        contrato_social: s(dados.contratoSocial),
+        email:           userEmail,
       };
 
     case "certificado-eventos":
       return {
-        name:          s(dados.nomeCompleto),
-        phone:         s(dados.whatsapp),
-        email:         s(dados.emailCertificado),
+        nome:          s(dados.nomeCompleto),
+        telefone:      s(dados.whatsapp),
+        email:         userEmail,
         id_evento:     s(dados.idEvento),
-        field_ad9f955: s(dados.cargaHoraria),
+        carga_horaria: s(dados.cargaHoraria),
       };
 
     default:
