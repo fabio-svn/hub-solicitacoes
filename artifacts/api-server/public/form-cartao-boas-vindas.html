@@ -146,15 +146,26 @@
     function validateRequiredFields() {
       document.querySelectorAll('.field-invalid').forEach(el => el.classList.remove('field-invalid'));
       const invalidFields = [];
-      document.querySelectorAll('input[required], select[required], textarea[required]').forEach(input => {
-        const isEmpty = !input.value.trim();
-        if (isEmpty) {
+      document.querySelectorAll('input[required]:not([type="radio"]), select[required], textarea[required]').forEach(input => {
+        if (!input.value.trim()) {
           const fieldWrapper = input.closest('.field');
           if (fieldWrapper) {
             fieldWrapper.classList.add('field-invalid');
             let errorEl = fieldWrapper.querySelector('.field-error');
             if (!errorEl) { errorEl = document.createElement('div'); errorEl.className = 'field-error'; input.parentElement.appendChild(errorEl); }
             errorEl.textContent = 'Este campo é obrigatório.';
+            invalidFields.push(fieldWrapper);
+          }
+        }
+      });
+      const radioNames = new Set([...document.querySelectorAll('input[type="radio"][required]')].map(r => r.name));
+      radioNames.forEach(name => {
+        const checked = document.querySelector(`input[name="${name}"]:checked`);
+        if (!checked) {
+          const firstRadio = document.querySelector(`input[name="${name}"]`);
+          const fieldWrapper = firstRadio?.closest('.field');
+          if (fieldWrapper && !fieldWrapper.classList.contains('field-invalid')) {
+            fieldWrapper.classList.add('field-invalid');
             invalidFields.push(fieldWrapper);
           }
         }

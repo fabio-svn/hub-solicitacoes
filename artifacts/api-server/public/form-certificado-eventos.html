@@ -43,8 +43,9 @@
         <input type="text" id="nomeEvento" placeholder="Nome do evento para constar no certificado">
       </div>
       <div class="field">
-        <label>ID do evento (opcional)</label>
-        <input type="text" id="idEvento" placeholder="Código ou ID do evento no sistema">
+        <label>ID do evento <span style="color:var(--ruby-red)">*</span></label>
+        <input type="text" id="idEvento" placeholder="Ex: P-MGF-2026-04-15-123" required>
+        <div class="field-hint">O ID está disponível na página do evento no Hub.</div>
       </div>
       <div class="field">
         <label>Carga horária <span style="color:var(--ruby-red)">*</span></label>

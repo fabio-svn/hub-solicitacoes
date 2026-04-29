@@ -53,6 +53,11 @@
         <textarea id="assinatura" required>Um abraço, Assessor(a).</textarea>
         <div class="field-hint">Personalize com seu nome se preferir.</div>
       </div>
+      <div class="field">
+        <label>E-mail para envio do cartão <span style="color:var(--ruby-red)">*</span></label>
+        <input type="email" id="emailDestinatario" placeholder="email@svninvest.com.br" required>
+        <div class="field-hint">O cartão será enviado para este e-mail.</div>
+      </div>
 
       <div style="border-top:1px solid rgba(34,27,25,.08);margin:28px 0 20px;padding-top:22px">
         <div id="submitError" class="alert-card alert-danger" style="display:none;margin-bottom:16px"></div>
@@ -111,6 +116,7 @@
           modeloCartao: document.getElementById('modeloCartao')?.value || '',
           mensagem: document.getElementById('mensagem')?.value || '',
           assinatura: document.getElementById('assinatura')?.value || '',
+          emailDestinatario: document.getElementById('emailDestinatario')?.value || '',
         }));
       } catch {}
     }
@@ -123,6 +129,7 @@
         if (data.modeloCartao) { const el = document.getElementById('modeloCartao'); if (el) el.value = data.modeloCartao; }
         if (data.mensagem) document.getElementById('mensagem').value = data.mensagem;
         if (data.assinatura) document.getElementById('assinatura').value = data.assinatura;
+        if (data.emailDestinatario) document.getElementById('emailDestinatario').value = data.emailDestinatario;
       } catch {}
     }
 
@@ -156,6 +163,7 @@
         modeloCartao: document.getElementById('modeloCartao').value,
         mensagem: document.getElementById('mensagem').value,
         assinatura: document.getElementById('assinatura').value,
+        emailDestinatario: document.getElementById('emailDestinatario').value,
       };
 
       const formData = new FormData();
@@ -196,7 +204,7 @@
     });
     document.addEventListener('change', function(e) {
       const field = e.target.closest('.field');
-      if (field && field.classList.contains('field-invalid') && e.target.value.trim()) field.classList.remove('field-invalid');
+      if (field && field.classList.contains('field-invalid')) field.classList.remove('field-invalid');
       saveSession();
     });
 

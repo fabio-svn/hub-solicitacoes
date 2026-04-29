@@ -18,14 +18,18 @@
         <div class="form-card">
           <div class="form-progress"><div class="form-progress-bar" id="progressBar" style="width:14%"></div></div>
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-            <h2 style="font-weight:500;font-size:1.1rem;margin:0">Eventos</h2>
-            <span style="font-size:0.8rem;opacity:0.4" id="stepLabel">Etapa 1 de 7</span>
+            <h2 style="font-weight:500;font-size:1.1rem;margin:0" id="formTitulo">Eventos</h2>
+            <span style="font-size:0.8rem;opacity:0.4" id="stepLabel">Etapa 1 de 6</span>
           </div>
           <div style="height:1px;background:var(--border-light);margin-bottom:24px"></div>
 
           <!-- STEP 1: Natureza -->
           <div class="form-step active" id="step1">
             <h2 style="font-weight:600;font-size:1.1rem;margin-bottom:20px">O evento é presencial ou online?</h2>
+            <div class="field" style="margin-bottom:16px">
+              <label>Cargo <span style="color:var(--ruby-red)">*</span></label>
+              <input type="text" id="cargo" placeholder="Seu cargo ou função" required>
+            </div>
             <div class="field">
               <div class="radio-cards">
                 <div class="radio-card" onclick="selectNatureza('presencial')" id="cardPresencial">
@@ -279,7 +283,6 @@
   <script>
     const STORAGE_KEY = 'hub_form_eventos';
     const formState = { natureza: null, maturidade: null, materiais: new Set(), palestrantes: [] };
-    let totalSteps = 7;
     let estados = [];
 
     const COND_MATERIAL_FIELDS = [
@@ -299,7 +302,7 @@
       const fields = ['nomeEvento','dataEvento','horario','descricao',
         'origem','tipoEvento','publico','convidados','canal','linkTransmissao',
         'objetivos','custoEstimado','rateio','observacoes','localNome','localEndereco',
-        'localSugestoes','ideaQuando'];
+        'localSugestoes','ideaQuando','cargo'];
       const data = {};
       fields.forEach(id => {
         const el = document.getElementById(id);
@@ -308,6 +311,8 @@
       data._natureza = formState.natureza;
       data._maturidade = formState.maturidade;
       data._materiais = [...formState.materiais];
+      data._estado = document.getElementById('estado')?.value || '';
+      data._cidade = document.getElementById('cidade')?.value || '';
       data._setor = document.getElementById('setor')?.value || '';
       data._checkPrazos = document.getElementById('checkPrazos')?.checked || false;
       data._checkTutorial = document.getElementById('checkTutorial')?.checked || false;
@@ -389,7 +394,6 @@
       await Auth.init();
       if (!Auth.isAuthenticated()) { window.location.href = '/auth/login?redirect=/form-eventos.html'; return; }
       Auth.renderHeader(document.getElementById('mainHeader'));
-      const _fl = document.getElementById('formLogo'); if (_fl) _fl.src = URL_LOGO_PRETA;
       document.getElementById('tutorialLink').href = URL_TUTORIAL_TRANSMISSAO;
 
       const ratSel = document.getElementById('rateio');
@@ -401,6 +405,7 @@
       restoreFormState();
 
       document.getElementById('setor')?.addEventListener('change', () => { validateStep1(); saveFormState(); });
+      document.getElementById('cargo')?.addEventListener('input', () => { validateStep1(); saveFormState(); });
       document.getElementById('checkPrazos').addEventListener('change', () => { validateStep1(); saveFormState(); });
       document.getElementById('checkTutorial')?.addEventListener('change', () => { validateStep1(); saveFormState(); });
 
@@ -441,11 +446,13 @@
     function selectNatureza(nat) {
       formState.natureza = nat;
       document.getElementById('cardPresencial').className = 'radio-card' + (nat === 'presencial' ? ' selected' : '');
-      document.getElementById('cardOnline').className = 'radio-card' + (nat === 'online' ? ' selected-green' : '');
+      document.getElementById('cardOnline').className = 'radio-card' + (nat === 'online' ? ' selected' : '');
       document.getElementById('onlineTutorial').style.display = nat === 'online' ? 'block' : 'none';
       document.getElementById('pvLocalRow').style.display = nat === 'presencial' ? 'flex' : 'none';
       document.getElementById('pvCanalRow').style.display = nat === 'online' ? 'flex' : 'none';
       if (nat === 'presencial') document.getElementById('checkTutorial').checked = false;
+      const _ft = document.getElementById('formTitulo');
+      if (_ft) _ft.textContent = 'Eventos — ' + (nat === 'presencial' ? 'Presencial' : 'Online');
       validateStep1();
     }
 
@@ -453,9 +460,10 @@
       const prazos = document.getElementById('checkPrazos').checked;
       const nat = !!formState.natureza;
       const setor = !!document.getElementById('setor')?.value;
+      const cargo = !!document.getElementById('cargo')?.value?.trim();
       let tutorial = true;
       if (formState.natureza === 'online') tutorial = document.getElementById('checkTutorial').checked;
-      document.getElementById('btnNext1').disabled = !(prazos && nat && setor && tutorial);
+      document.getElementById('btnNext1').disabled = !(prazos && nat && setor && tutorial && cargo);
     }
 
     function selectMaturidade(m) {
@@ -598,10 +606,21 @@
         if (!sel) return;
         sel.innerHTML = '<option>Selecione</option>';
         estados.forEach(e => { sel.innerHTML += `<option value="${e.id}">${e.sigla} — ${e.nome}</option>`; });
+        // Restaurar estado/cidade após opções carregadas
+        try {
+          const raw = sessionStorage.getItem(STORAGE_KEY);
+          if (raw) {
+            const saved = JSON.parse(raw);
+            if (saved._estado) {
+              sel.value = saved._estado;
+              if (sel.value) await loadCidades(saved._cidade);
+            }
+          }
+        } catch {}
       } catch (e) { console.error('IBGE error:', e); }
     }
 
-    async function loadCidades() {
+    async function loadCidades(cidadeParaRestaurar) {
       const estadoId = document.getElementById('estado').value;
       const cidSel = document.getElementById('cidade');
       if (!estadoId || estadoId === 'Selecione') { cidSel.disabled = true; cidSel.innerHTML = '<option>Selecione o estado</option>'; return; }
@@ -612,6 +631,7 @@
         cidSel.innerHTML = '<option>Selecione</option>';
         cidades.forEach(c => { cidSel.innerHTML += `<option>${c.nome}</option>`; });
         cidSel.disabled = false;
+        if (cidadeParaRestaurar) cidSel.value = cidadeParaRestaurar;
       } catch (e) { console.error(e); }
     }
 
@@ -714,8 +734,8 @@
           const condBlock = document.getElementById('cond-' + id);
           if (condBlock) condBlock.classList.add('open');
         });
-        restoreCondMaterialFields();
         bindCondUploadHandlers();
+        restoreCondMaterialFields();
       }
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
@@ -729,9 +749,7 @@
     }
 
     function getStepCount() {
-      if (formState.natureza === 'online') return 6;
-      if (formState.maturidade === 3) return 6;
-      return 7;
+      return 6;
     }
 
     function bindCondUploadHandlers() {
@@ -1328,6 +1346,7 @@
 
       const dados = {
         nome:           Auth.getUserName(),
+        cargo:          document.getElementById('cargo')?.value || '',
         setor:          document.getElementById('setor')?.value || '',
         natureza:       formState.natureza,
         maturidade:     formState.maturidade === 1 ? 'Tenho a maioria das informações'

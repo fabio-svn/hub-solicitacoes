@@ -64,10 +64,10 @@ const REQUIRED_FIELDS: Record<string, string[]> = {
   "cartao-boas-vindas":    ["nome", "nomeCliente", "nomeAssinatura", "contratoSocial", "unidade"],
   "divulgacao-nps":        ["nome", "nomeAssinatura", "cargo", "agradecimento", "modeloArte"],
   "convite-fp":            ["nome", "codigoAssessor", "nomeAssinatura", "cargo", "contratoSocial"],
-  "certificado-eventos":   ["nome", "nomeCompleto", "whatsapp", "cargaHoraria"],
+  "certificado-eventos":   ["nome", "nomeCompleto", "whatsapp", "emailCertificado", "idEvento", "cargaHoraria"],
   "pagina-online":         ["nome", "titulo", "finalidade"],
   "outro":                 ["nome", "titulo", "finalidade", "descricao"],
-  "cartao-comemorativo":   ["nome", "nomeAniversariante", "modeloCartao", "mensagem", "assinatura"],
+  "cartao-comemorativo":   ["nome", "nomeAniversariante", "modeloCartao", "mensagem", "assinatura", "emailDestinatario"],
   "brindes":               ["nome", "titulo", "finalidade", "dataEntrega", "itens"],
   "patrocinio":            ["nome", "tituloEvento", "marcasParceiras", "dataEvento", "horario", "local", "estado", "cidade", "tipoEvento", "publico", "explicacao", "centroCusto", "valorCota", "orcamentoTotal", "expectativaRetorno"],
   "email-marketing":       ["nome", "assunto", "finalidade", "tema", "dataDisparo", "assinaturaEmail"],
@@ -196,7 +196,7 @@ function buildWebhookFields(
         modelo:              s(dados.modeloCartao),
         mensagem:            s(dados.mensagem),
         assinatura:          s(dados.assinatura),
-        email:               userEmail,
+        email:               s(dados.emailDestinatario) || userEmail,
       };
 
     case "certificado-eventos":

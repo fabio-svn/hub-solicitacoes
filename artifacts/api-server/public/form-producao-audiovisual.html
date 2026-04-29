@@ -198,6 +198,11 @@
       document.getElementById('step2').classList.add('active');
       document.getElementById('progressBar').style.width = '100%';
       document.getElementById('stepLabel').textContent = 'Passo 2 de 2';
+      const _tituloForm = document.querySelector('.form-card h2');
+      if (_tituloForm) {
+        const lbl = _modalidade === 'video' ? 'Produção de Vídeo' : 'Sessão de Fotos';
+        _tituloForm.textContent = 'Produção Audiovisual — ' + lbl;
+      }
       document.getElementById('camposVideo').style.display = _modalidade === 'video' ? 'block' : 'none';
       document.getElementById('camposFotos').style.display = _modalidade === 'fotos' ? 'block' : 'none';
 
@@ -306,6 +311,7 @@
           try {
             const labelMap = { 'producao-video': 'Produção de Vídeo', 'sessao-fotos': 'Sessão de Fotos' };
             sessionStorage.setItem('svn_ultimo_resumo', JSON.stringify({
+              tipo_id: tipoSolicitacao,
               tipo: (typeof TIPO_SOLICITACAO_LABELS !== 'undefined' && TIPO_SOLICITACAO_LABELS[tipoSolicitacao]) || labelMap[tipoSolicitacao] || tipoSolicitacao,
               solicitante: Auth.getUserName(),
               setor: dados.setor,

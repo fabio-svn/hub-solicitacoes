@@ -26,7 +26,7 @@ Internal request management web application for SVN Investimentos. Built as a pn
 - **Frontend**: `artifacts/api-server/public/` - Static HTML pages
   - `index.html` - Home page with video hero (dark theme)
   - `solicitacoes.html` - Category selection grid
-  - `form-eventos.html` - Events form (7 steps, 6 combinations: Presencial/Online x 3 maturity levels)
+  - `form-eventos.html` - Events form (6 steps, 6 combinations: Presencial/Online x 3 maturity levels)
   - `form-pagina-assessores.html` - Assessor page form with live preview modal
   - `form-assinatura-email.html` - Email signature form (N8N, svn_webhook_assinatura)
   - `form-cartao-visita.html` - Business card form (2-step: físico→ClickUp next Wed / digital→N8N svn_webhook_cartao_digital)
