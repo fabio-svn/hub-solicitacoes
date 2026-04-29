@@ -70,7 +70,6 @@ const IBGE_SIGLA_MAP: Record<string, string> = {
 const NATUREZA_CODIGO: Record<string, string> = {
   "presencial": "P",
   "online":     "L",
-  "patrocinio": "PC",
 };
 
 const SETOR_CODIGO_MAP: Record<string, string> = {
@@ -624,12 +623,17 @@ function buildGeneralDescription(
 // ─────────────────────────────────────────────
 
 function buildCartaoFisicoDescription(dados: FormDados, user: UserData): string {
+  const blocks: string[] = [];
+  blocks.push(buildRequesterSection(user));
   const items: string[] = [];
   items.push(`• Nome: ${str(dados.nomeCartao)}`);
   items.push(`• WhatsApp: ${str(dados.whatsapp)}`);
   items.push(`• E-mail: ${str(dados.emailCorporativo)}`);
+  items.push(`• Contrato social: ${str(dados.contratoSocial)}`);
+  items.push(`• Unidade: ${str(dados.unidade)}`);
   items.push(`• Link para planilha: https://svninvest-my.sharepoint.com/:x:/r/personal/gabriela_franca_svninvest_com_br/_layouts/15/Doc.aspx?sourcedoc=%7B7D66B897-EA4E-4C43-AB8C-20DB6B8B745C%7D&file=Solicitac%25u0327o%25u0303es%20Marketing.xlsx&nav=MTVfezAwMDAwMDAwLTAwMDEtMDAwMC0wNjAwLTAwMDAwMDAwMDAwMH0&action=default&mobileredirect=true`);
-  return items.join("\n");
+  blocks.push(`📇 CARTÃO DE VISITA\n━━━━━━━━━━━━━━━━━━━━━━\n\n${items.join("\n")}`);
+  return blocks.join("\n\n");
 }
 
 function buildPatrocinioDescription(dados: FormDados, user: UserData, arquivos: ArquivosMap): string {
@@ -763,12 +767,11 @@ function buildEmailMarketingDescription(dados: FormDados, user: UserData, arquiv
   return blocks.join("\n\n");
 }
 
-function buildProducaoAudiovisualDescription(dados: FormDados, user: UserData, arquivos: ArquivosMap): string {
+function buildProducaoAudiovisualDescription(dados: FormDados, user: UserData, arquivos: ArquivosMap, tipo: string): string {
   const blocks: string[] = [];
   blocks.push(buildRequesterSection(user));
 
-  const isVideo = dados.modalidade === "video" ||
-    str(dados.titulo).length > 0 || str(dados.ideia).length > 0;
+  const isVideo = tipo === "producao-video";
 
   const items: string[] = [];
   addLine(items, "Setor", str(dados.setor as string));
@@ -880,7 +883,7 @@ async function setEventosCustomFields(taskId: string, dados: FormDados, arquivos
     const unidade = str(dados.unidadeSVN as string);
     const enderecoUnidade = UNIDADES_ENDERECOS[unidade];
     if (enderecoUnidade) {
-      (dados as Record<string, unknown>).localEndereco = enderecoUnidade;
+      dadosLocal.localEndereco = enderecoUnidade;
       logger.info({ unidade, endereco: enderecoUnidade }, "ClickUp: endereço da unidade SVN injetado");
     }
   }
@@ -1086,12 +1089,16 @@ function proximaQuarta(): Date {
   return d;
 }
 
-const ASSIGNEE_GERAL   = process.env.CLICKUP_ASSIGNEE_GERAL   || "";
-const ASSIGNEE_EVENTOS = process.env.CLICKUP_ASSIGNEE_EVENTOS || "";
+const ASSIGNEE_GERAL      = process.env.CLICKUP_ASSIGNEE_GERAL      || "";
+const ASSIGNEE_EVENTOS    = process.env.CLICKUP_ASSIGNEE_EVENTOS    || "";
+const ASSIGNEE_PATROCINIO = process.env.CLICKUP_ASSIGNEE_PATROCINIO || "";
+const ASSIGNEE_BRINDES    = process.env.CLICKUP_ASSIGNEE_BRINDES    || "";
 
 const ASSIGNEE_NOMES: Record<string, string> = {
   "55140303":  "João Sardeto",
   "112032406": "Julia Rodrigues",
+  "55127950":  "Camilla Fernandes",
+  "99968866":  "Taynara Rodrigues",
 };
 
 export async function createClickUpTask(
@@ -1148,7 +1155,7 @@ export async function createClickUpTask(
     description = buildEmailMarketingDescription(dados, user, safeArquivos);
   } else if (tipo === "producao-video" || tipo === "sessao-fotos") {
     taskName = buildGeneralTaskName(tipo, subtipo, dados, user);
-    description = buildProducaoAudiovisualDescription(dados, user, safeArquivos);
+    description = buildProducaoAudiovisualDescription(dados, user, safeArquivos, tipo);
   } else if (tipo === "outro") {
     taskName = buildGeneralTaskName(tipo, subtipo, dados, user);
     description = buildOutroDescription(dados, user, safeArquivos);
@@ -1185,7 +1192,11 @@ export async function createClickUpTask(
   logger.info({ tipo, prazo: prazoDate.toISOString() }, "ClickUp: prazo calculado");
 
   // Responsável por tipo
-  const assigneeId = tipo === "eventos" ? ASSIGNEE_EVENTOS : ASSIGNEE_GERAL;
+  const assigneeId =
+    tipo === "eventos"    ? ASSIGNEE_EVENTOS    :
+    tipo === "patrocinio" ? ASSIGNEE_PATROCINIO :
+    tipo === "brindes"    ? ASSIGNEE_BRINDES    :
+    ASSIGNEE_GERAL;
   const assigneeIdNum = parseInt(assigneeId);
   if (!isNaN(assigneeIdNum)) {
     taskPayload.assignees = [assigneeIdNum];

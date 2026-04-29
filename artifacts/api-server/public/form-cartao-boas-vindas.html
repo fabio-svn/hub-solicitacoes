@@ -23,7 +23,7 @@
 
       <div class="alert-card alert-info" style="margin-bottom:24px">
         <div class="alert-title">Como funciona</div>
-        <div class="alert-text">Preencha os dados do novo cliente para geração do cartão personalizado de boas-vindas. O cartão será enviado automaticamente via N8N.</div>
+        <div class="alert-text">Preencha os dados do novo cliente para geração do cartão personalizado de boas-vindas. O cartão será enviado automaticamente para o seu e-mail após a solicitação.</div>
       </div>
 
       <div class="field">
@@ -45,10 +45,6 @@
         <select id="unidade" required>
           <option value="">Selecione a unidade</option>
         </select>
-      </div>
-      <div class="field">
-        <label>Cidade <span style="color:var(--ruby-red)">*</span></label>
-        <input type="text" id="cidade" placeholder="Cidade do cliente" required>
       </div>
       <div class="field">
         <label>Seu cliente se enquadra como Private?</label>
@@ -130,7 +126,6 @@
           nomeAssinatura: document.getElementById('nomeAssinatura')?.value || '',
           contratoSocial: document.getElementById('contratoSocial')?.value || '',
           unidade: document.getElementById('unidade')?.value || '',
-          cidade: document.getElementById('cidade')?.value || '',
           isPrivate: document.querySelector('input[name="isPrivate"]:checked')?.value || '',
         }));
       } catch {}
@@ -144,7 +139,6 @@
         if (data.nomeAssinatura) document.getElementById('nomeAssinatura').value = data.nomeAssinatura;
         if (data.contratoSocial) { const el = document.getElementById('contratoSocial'); if (el) el.value = data.contratoSocial; }
         if (data.unidade) { const el = document.getElementById('unidade'); if (el) el.value = data.unidade; }
-        if (data.cidade) document.getElementById('cidade').value = data.cidade;
         if (data.isPrivate) { const el = document.querySelector(`input[name="isPrivate"][value="${data.isPrivate}"]`); if (el) el.checked = true; }
       } catch {}
     }
@@ -181,7 +175,6 @@
         nomeAssinatura: document.getElementById('nomeAssinatura').value,
         contratoSocial: document.getElementById('contratoSocial').value,
         unidade: document.getElementById('unidade').value,
-        cidade: document.getElementById('cidade').value,
         isPrivate: isPrivateEl ? isPrivateEl.value : 'nao',
       };
 

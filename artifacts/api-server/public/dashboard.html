@@ -359,7 +359,7 @@
       <path fill="url(#cu2)" d="M27.5,16.9l-18,15.5l-8.3-9.7L27.6,0l26.2,22.7l-8.4,9.6L27.5,16.9z"/>
     </svg>`;
 
-    let currentTab = 'geral';
+    let currentTab = sessionStorage.getItem('svn_dashboard_tab') || 'geral';
     let filters = {
       eventos: { periodo: '', status: '', natureza: '' },
       geral: { periodo: '', status: '', tipo: '' }
@@ -1459,7 +1459,7 @@
         const statusDot = '<span class="status-dot" style="background:' + statusCor + ';display:block;margin:0 auto" title="' + esc(statusObj?.label || item.status) + '"></span>';
 
         const clickupBtn = item.clickup_url
-          ? '<button style="width:28px;height:28px;border-radius:7px;border:none;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;background:rgba(74,124,47,0.1);transition:all 0.15s" title="Abrir no ClickUp" onmouseover="this.style.background=\'rgba(74,124,47,0.22)\';this.style.transform=\'scale(1.08)\'" onmouseout="this.style.background=\'rgba(74,124,47,0.1)\';this.style.transform=\'scale(1)\'" onclick="window.open(\'' + esc(item.clickup_url) + '\',\'_blank\')">' + CLICKUP_ICON + '</button>'
+          ? '<button style="width:28px;height:28px;border-radius:7px;border:none;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;background:rgba(137,48,253,0.08);color:#7c3aed;transition:all 0.15s" title="Abrir no ClickUp" onmouseover="this.style.background=\'rgba(137,48,253,0.15)\';this.style.transform=\'scale(1.08)\'" onmouseout="this.style.background=\'rgba(137,48,253,0.08)\';this.style.transform=\'scale(1)\'" onclick="window.open(\'' + esc(item.clickup_url) + '\',\'_blank\')">' + CLICKUP_ICON + '</button>'
           : '<div style="width:28px"></div>';
 
         return '<tr style="border-top:1px solid var(--border-light);transition:background 0.12s"' +

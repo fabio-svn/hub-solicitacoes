@@ -543,7 +543,6 @@
 
     const TIPOS_AUTOMACAO = [
       'assinatura-email',
-      'cartao-visita-fisico',
       'cartao-visita-digital',
       'cartao-boas-vindas',
       'divulgacao-nps',
@@ -590,7 +589,11 @@
       }
     }
 
+    let _syncing = false;
+
     async function syncStatus(item) {
+      if (_syncing) return;
+      _syncing = true;
       try {
         const r = await fetch('/api/solicitacoes/' + solicitacaoId + '/status');
         if (!r.ok) return;
@@ -601,6 +604,7 @@
           renderPage(item);
         }
       } catch {}
+      finally { _syncing = false; }
     }
 
     /* ── renderPage ───────────────────────────── */
@@ -1723,6 +1727,17 @@
       if (dataCampos.includes(key) && typeof value === 'string') {
         const formatted = formatarData(value);
         if (formatted !== value) return formatted;
+      }
+      if (key === 'isPrivate' || key === 'private') {
+        return (value === 'sim' || value === 'Sim') ? 'Sim' : 'Não';
+      }
+      if (key === 'modeloCartao') {
+        const map = { dourado: 'Dourado', vermelho: 'Vermelho' };
+        return map[String(value).toLowerCase()] || humanizeSlug(String(value));
+      }
+      if (key === 'modeloArte') {
+        const map = { 'com-foto': 'Com foto', 'sem-foto': 'Sem foto' };
+        return map[String(value)] || humanizeSlug(String(value));
       }
       if (key === 'estado') {
         const IBGE_ESTADOS = {

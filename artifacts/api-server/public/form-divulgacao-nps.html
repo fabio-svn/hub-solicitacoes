@@ -52,7 +52,7 @@
         <label>Foto de perfil</label>
         <div class="file-input-wrapper">
           <label class="file-input-btn" for="fotoPerfil">Escolher foto</label>
-          <input type="file" id="fotoPerfil" accept=".jpg,.jpeg,.png,.webp">
+          <input type="file" id="fotoPerfil" name="fotoPerfil" accept=".jpg,.jpeg,.png,.webp">
           <div class="file-name" id="fotoPerfilName"></div>
         </div>
       </div>
@@ -108,6 +108,7 @@
       const cargoSel = document.getElementById('cargo');
       if (cargoSel) { CARGOS_ASSESSOR.forEach(c => { const o = document.createElement('option'); o.value = c; o.textContent = c; cargoSel.appendChild(o); }); }
 
+      FileUpload.bind('fotoPerfil', 'fotoPerfilName', { maxMB: 5, accept: '.jpg,.jpeg,.png,.webp' });
       restoreSession();
     }
 
@@ -174,6 +175,8 @@
       const formData = new FormData();
       formData.append('tipo_solicitacao', TIPO);
       formData.append('dados', JSON.stringify(dados));
+      const fotoEl = document.getElementById('fotoPerfil');
+      if (fotoEl && fotoEl.files[0]) formData.append('fotoPerfil', fotoEl.files[0]);
 
       try {
         const res = await fetch('/api/solicitacoes', { method: 'POST', body: formData });

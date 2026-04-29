@@ -61,10 +61,10 @@ const REQUIRED_FIELDS: Record<string, string[]> = {
   "assinatura-email":      ["nome", "nomeCompleto", "telefone", "emailCorporativo", "marca"],
   "cartao-visita-fisico":  ["nome", "nomeCartao", "whatsapp", "emailCorporativo", "unidade", "contratoSocial"],
   "cartao-visita-digital": ["nome", "nomeCompleto", "telefone", "emailCorporativo", "contratoSocial"],
-  "cartao-boas-vindas":    ["nome", "nomeCliente", "nomeAssinatura", "contratoSocial", "unidade", "cidade"],
+  "cartao-boas-vindas":    ["nome", "nomeCliente", "nomeAssinatura", "contratoSocial", "unidade"],
   "divulgacao-nps":        ["nome", "nomeAssinatura", "cargo", "agradecimento", "modeloArte"],
   "convite-fp":            ["nome", "codigoAssessor", "nomeAssinatura", "cargo", "contratoSocial"],
-  "certificado-eventos":   ["nome", "nomeCompleto", "whatsapp", "emailCertificado", "cargaHoraria"],
+  "certificado-eventos":   ["nome", "nomeCompleto", "whatsapp", "cargaHoraria"],
   "pagina-online":         ["nome", "titulo", "finalidade"],
   "outro":                 ["nome", "titulo", "finalidade", "descricao"],
   "cartao-comemorativo":   ["nome", "nomeAniversariante", "modeloCartao", "mensagem", "assinatura"],
@@ -97,7 +97,7 @@ function checkRateLimit(email: string): boolean {
     submissionCounts.set(email, { count: 1, resetAt: now + 60 * 60 * 1000 });
     return true;
   }
-  if (entry.count >= 100) return false;
+  if (entry.count >= 10) return false;
   entry.count++;
   return true;
 }
@@ -190,6 +190,15 @@ function buildWebhookFields(
         email:           userEmail,
       };
 
+    case "cartao-comemorativo":
+      return {
+        nome_aniversariante: s(dados.nomeAniversariante),
+        modelo:              s(dados.modeloCartao),
+        mensagem:            s(dados.mensagem),
+        assinatura:          s(dados.assinatura),
+        email:               userEmail,
+      };
+
     case "certificado-eventos":
       return {
         nome:          s(dados.nomeCompleto),
@@ -240,6 +249,33 @@ function dispararWebhook(tipo: string, dados: Record<string, unknown>, userEmail
 function extractUrl(text: string): string | null {
   const m = text.match(/https?:\/\/[^\s<>"')]+/);
   return m ? m[0].replace(/[.,;:!?)]+$/, "") : null;
+}
+
+function gerarTituloSolicitacao(tipo: string, dados: Record<string, unknown>, userName: string): string {
+  const s = (v: unknown) => String(v || "").trim();
+  switch (tipo) {
+    case "assinatura-email":     return `[Assinatura de E-mail] ${s(dados.nomeCompleto) || userName}`;
+    case "cartao-visita-fisico": return `[Cartão de Visita] ${s(dados.nomeCartao) || userName}`;
+    case "cartao-visita-digital":return `[Cartão Digital] ${s(dados.nomeCompleto) || userName}`;
+    case "cartao-boas-vindas":   return `[Cartão de Boas-vindas] ${s(dados.nomeCliente) || userName}`;
+    case "cartao-comemorativo":  return `[Cartão Comemorativo] ${s(dados.nomeAniversariante) || userName}`;
+    case "divulgacao-nps":       return `[Arte NPS] ${s(dados.nomeAssinatura) || userName}`;
+    case "convite-fp":           return `[Convite FP] ${s(dados.nomeAssinatura) || userName}`;
+    case "certificado-eventos":  return `[Certificado] ${s(dados.nomeCompleto) || userName}`;
+    case "pagina-online":        return `[Página Online] ${s(dados.titulo)}`;
+    case "outro":                return `[Outro] ${s(dados.titulo)}`;
+    case "brindes":              return `[Brinde] ${s(dados.titulo) || userName}`;
+    case "patrocinio":           return `[Patrocínio] ${s(dados.tituloEvento)}`;
+    case "email-marketing":      return `[E-mail Marketing] ${s(dados.assunto)}`;
+    case "producao-video":       return `[Produção de Vídeo] ${s(dados.titulo) || s(dados.tituloFotos) || userName}`;
+    case "sessao-fotos":         return `[Sessão de Fotos] ${s(dados.tituloFotos) || userName}`;
+    case "materiais-impressos": {
+      const tipoMat = s(dados.tipoMaterial) || s(dados.tipoImpresso) || "Material";
+      const label = tipoMat.charAt(0).toUpperCase() + tipoMat.slice(1);
+      return `[Material Impresso] ${label}`;
+    }
+    default: return `[${tipo}] ${userName}`;
+  }
 }
 
 router.post("/solicitacoes", requireAuth, upload.any(), async (req, res): Promise<void> => {
@@ -309,6 +345,12 @@ router.post("/solicitacoes", requireAuth, upload.any(), async (req, res): Promis
         }
       }
     }
+
+    // Gera e persiste título imediatamente (tipos sem ClickUp nunca sobrescrevem)
+    const tituloGerado = gerarTituloSolicitacao(tipo_solicitacao, parsedDados, user.name);
+    await db.update(solicitacoesTable)
+      .set({ titulo: tituloGerado })
+      .where(eq(solicitacoesTable.id, solicitacao.id));
 
     let clickupTaskId: string | null = null;
     try {

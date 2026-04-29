@@ -1,12 +1,3 @@
-const URL_FORM_EVENTOS = "form-eventos.html";
-const URL_FORM_PAGINA_ASSESSORES = "form-pagina-assessores.html";
-const URL_FORM_APRESENTACOES = "form-apresentacoes.html";
-const URL_FORM_ARTES_DIVULGACAO = "form-artes-divulgacao.html";
-const URL_FORM_ATUALIZACAO_MATERIAL = "form-atualizacao-material.html";
-const URL_FORM_CRIACAO_PDF = "form-criacao-pdf.html";
-const URL_SOLICITACOES = "solicitacoes.html";
-const URL_DASHBOARD = "dashboard.html";
-const URL_ADMIN = "admin.html";
 
 let URL_MANUAL = "https://pub-a2132f9b61f940659cc98265acfcf64c.r2.dev/Manual-de-Eventos-SVN.pdf";
 let URL_APRESENTACAO = "https://hub.portalsvn.com.br/solicitacoes.html";
@@ -78,7 +69,6 @@ const CATEGORIAS_SOLICITACAO = [
   },
   {
     categoria: "Audiovisual",
-    layout: "trio",
     itens: [
       { id: "producao-audiovisual", label: "Produção Audiovisual", icon: "icon-video", ativo: true },
     ]
@@ -114,8 +104,6 @@ const TIPO_SOLICITACAO_LABELS = {
   "divulgacao-nps":                 "Arte NPS",
   "convite-fp":                     "Convite Financial Planning",
   "email-marketing":                "E-mail Marketing",
-  "materia-blog":                   "Matéria para Blog/Jornal/Revista",
-  "conteudos-central":              "Conteúdos Central SVN",
   "certificado-eventos":            "Certificado para Eventos",
   "patrocinio":                     "Patrocínio",
   "brindes":                        "Brindes",
@@ -123,9 +111,7 @@ const TIPO_SOLICITACAO_LABELS = {
   "producao-video":                 "Produção de Vídeo",
   "producao-audiovisual":           "Produção Audiovisual",
   "sessao-fotos":                   "Sessão de Fotos",
-  "analise-gravacoes":              "Análise de Elegibilidade para Gravações",
   "materiais-impressos":            "Materiais Impressos",
-  "obras-manutencao":               "Obras e Manutenções",
   "outro":                          "Outro",
 };
 

@@ -22,8 +22,8 @@
           <polyline points="18 28 25 35 38 22" stroke="#9f3f37" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="40" stroke-dashoffset="40" id="checkMark"/>
         </svg>
       </div>
-      <h1 style="font-weight:700;font-size:1.6rem;margin-bottom:12px;opacity:0" id="title"></h1>
-      <p style="font-weight:400;opacity:0;color:rgba(255,248,243,0.95);margin-bottom:28px" id="subtitle"></p>
+      <h1 style="font-weight:700;font-size:1.6rem;margin-bottom:12px;opacity:0;hyphens:none;-webkit-hyphens:none;word-break:keep-all;overflow-wrap:break-word" id="title"></h1>
+      <p style="font-weight:400;opacity:0;color:rgba(255,248,243,0.95);margin-bottom:28px;hyphens:none;-webkit-hyphens:none;word-break:keep-all;overflow-wrap:break-word" id="subtitle"></p>
       <div style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center" id="ctaBtns">
         <a href="/dashboard.html" class="btn btn-primary" id="ctaBtn" style="opacity:0"></a>
         <a href="/solicitacoes.html" class="btn btn-primary" id="ctaBtn2" style="opacity:0">Nova solicitação</a>
@@ -60,18 +60,52 @@
 
     try {
       const raw = sessionStorage.getItem('svn_ultimo_resumo');
-      if (raw) {
-        const resumo = JSON.parse(raw);
-        if (resumo.tipo_id && TIPOS_AUTOMACAO.includes(resumo.tipo_id)) {
-          titulo = 'Solicitação enviada com sucesso!';
-          subtitulo = 'Seu material será gerado automaticamente e enviado para o e-mail informado em breve.';
-        }
-      }
-    } catch {}
+      if (!raw) throw new Error('sem resumo');
+      const resumo = JSON.parse(raw);
 
-    document.getElementById('title').textContent = titulo;
-    document.getElementById('subtitle').textContent = subtitulo;
-    document.getElementById('ctaBtn').textContent = MSG_THANKYOU_BOTAO;
+      if (resumo.tipo_id && TIPOS_AUTOMACAO.includes(resumo.tipo_id)) {
+        titulo = 'Solicitação enviada com sucesso!';
+        subtitulo = 'Seu material será gerado automaticamente e enviado para o e-mail informado em breve.';
+      }
+
+      document.getElementById('title').textContent = titulo;
+      document.getElementById('subtitle').textContent = subtitulo;
+      document.getElementById('ctaBtn').textContent = MSG_THANKYOU_BOTAO;
+
+      const itens = [];
+      if (resumo.tipo)        itens.push({ label: 'Tipo',             valor: resumo.tipo });
+      if (resumo.titulo)      itens.push({ label: 'Identificação',    valor: resumo.titulo });
+      if (resumo.natureza) {
+        const naturezaMap = { presencial: 'Presencial', online: 'Online', patrocinio: 'Patrocínio' };
+        itens.push({ label: 'Natureza', valor: naturezaMap[resumo.natureza] || resumo.natureza });
+      }
+      if (resumo.solicitante) itens.push({ label: 'Solicitante',      valor: resumo.solicitante });
+      if (resumo.setor)       itens.push({ label: 'Setor',            valor: resumo.setor });
+      if (resumo.data)        itens.push({ label: 'Enviado em',       valor: resumo.data + ' às ' + resumo.hora });
+      if (resumo.materiais?.length > 0)
+        itens.push({ label: 'Itens solicitados', valor: resumo.materiais.length + ' item(ns)' });
+
+      if (itens.length > 0) {
+        document.getElementById('resumoItens').innerHTML = itens.map(item => `
+          <div style="display:flex;justify-content:space-between;align-items:baseline;padding:7px 0;border-bottom:1px solid rgba(255,248,243,0.07);font-size:0.82rem">
+            <span style="color:rgba(255,248,243,0.7);font-weight:400">${item.label}</span>
+            <span style="color:var(--paper-white);font-weight:600;text-align:right;max-width:60%">${item.valor}</span>
+          </div>
+        `).join('');
+        setTimeout(() => {
+          const card = document.getElementById('resumoCard');
+          card.style.transition = 'opacity 0.4s ease';
+          card.style.opacity = '1';
+        }, 1200);
+      }
+
+      sessionStorage.removeItem('svn_ultimo_resumo');
+
+    } catch {
+      document.getElementById('title').textContent = titulo;
+      document.getElementById('subtitle').textContent = subtitulo;
+      document.getElementById('ctaBtn').textContent = MSG_THANKYOU_BOTAO;
+    }
 
     setTimeout(() => {
       const card = document.getElementById('card');
@@ -97,37 +131,6 @@
         el.style.opacity = '1';
       }, 700 + i * 200);
     });
-
-    try {
-      const raw = sessionStorage.getItem('svn_ultimo_resumo');
-      if (raw) {
-        const resumo = JSON.parse(raw);
-        const itens = [];
-        if (resumo.tipo)        itens.push({ label: 'Tipo',             valor: resumo.tipo });
-        if (resumo.titulo)      itens.push({ label: 'Identificação',    valor: resumo.titulo });
-        if (resumo.natureza) { const naturezaMap = { presencial: 'Presencial', online: 'Online', patrocinio: 'Patrocínio' }; itens.push({ label: 'Natureza', valor: naturezaMap[resumo.natureza] || resumo.natureza }); }
-        if (resumo.solicitante) itens.push({ label: 'Solicitante',      valor: resumo.solicitante });
-        if (resumo.setor)       itens.push({ label: 'Setor',            valor: resumo.setor });
-        if (resumo.data)        itens.push({ label: 'Enviado em',       valor: resumo.data + ' às ' + resumo.hora });
-        if (resumo.materiais && resumo.materiais.length > 0) {
-          itens.push({ label: 'Itens solicitados', valor: resumo.materiais.length + ' item(ns)' });
-        }
-        if (itens.length > 0) {
-          document.getElementById('resumoItens').innerHTML = itens.map(item => `
-            <div style="display:flex;justify-content:space-between;align-items:baseline;padding:7px 0;border-bottom:1px solid rgba(255,248,243,0.07);font-size:0.82rem">
-              <span style="color:rgba(255,248,243,0.7);font-weight:400">${item.label}</span>
-              <span style="color:var(--paper-white);font-weight:600;text-align:right;max-width:60%">${item.valor}</span>
-            </div>
-          `).join('');
-          setTimeout(() => {
-            const card = document.getElementById('resumoCard');
-            card.style.transition = 'opacity 0.4s ease';
-            card.style.opacity = '1';
-            sessionStorage.removeItem('svn_ultimo_resumo');
-          }, 1200);
-        }
-      }
-    } catch {}
   </script>
 <a href="https://wa.me/5544991689207" target="_blank" rel="noopener"
    class="float-whatsapp" title="Falar com o time de Marketing">
