@@ -26,10 +26,6 @@
           <!-- STEP 1: Natureza -->
           <div class="form-step active" id="step1">
             <h2 style="font-weight:600;font-size:1.1rem;margin-bottom:20px">O evento é presencial ou online?</h2>
-            <div class="field" style="margin-bottom:16px">
-              <label>Cargo <span style="color:var(--ruby-red)">*</span></label>
-              <input type="text" id="cargo" placeholder="Seu cargo ou função" required>
-            </div>
             <div class="field">
               <div class="radio-cards">
                 <div class="radio-card" onclick="selectNatureza('presencial')" id="cardPresencial">
@@ -302,7 +298,7 @@
       const fields = ['nomeEvento','dataEvento','horario','descricao',
         'origem','tipoEvento','publico','convidados','canal','linkTransmissao',
         'objetivos','custoEstimado','rateio','observacoes','localNome','localEndereco',
-        'localSugestoes','ideaQuando','cargo'];
+        'localSugestoes','ideaQuando'];
       const data = {};
       fields.forEach(id => {
         const el = document.getElementById(id);
@@ -405,7 +401,6 @@
       restoreFormState();
 
       document.getElementById('setor')?.addEventListener('change', () => { validateStep1(); saveFormState(); });
-      document.getElementById('cargo')?.addEventListener('input', () => { validateStep1(); saveFormState(); });
       document.getElementById('checkPrazos').addEventListener('change', () => { validateStep1(); saveFormState(); });
       document.getElementById('checkTutorial')?.addEventListener('change', () => { validateStep1(); saveFormState(); });
 
@@ -460,10 +455,9 @@
       const prazos = document.getElementById('checkPrazos').checked;
       const nat = !!formState.natureza;
       const setor = !!document.getElementById('setor')?.value;
-      const cargo = !!document.getElementById('cargo')?.value?.trim();
       let tutorial = true;
       if (formState.natureza === 'online') tutorial = document.getElementById('checkTutorial').checked;
-      document.getElementById('btnNext1').disabled = !(prazos && nat && setor && tutorial && cargo);
+      document.getElementById('btnNext1').disabled = !(prazos && nat && setor && tutorial);
     }
 
     function selectMaturidade(m) {
@@ -1346,7 +1340,6 @@
 
       const dados = {
         nome:           Auth.getUserName(),
-        cargo:          document.getElementById('cargo')?.value || '',
         setor:          document.getElementById('setor')?.value || '',
         natureza:       formState.natureza,
         maturidade:     formState.maturidade === 1 ? 'Tenho a maioria das informações'
