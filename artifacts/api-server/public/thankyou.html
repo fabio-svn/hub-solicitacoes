@@ -55,8 +55,9 @@
     document.getElementById('bgVideo').src = URL_VIDEO_HERO;
     document.getElementById('logo').src = URL_LOGO_BRANCA;
 
-    let titulo = MSG_THANKYOU_TITULO;
-    let subtitulo = MSG_THANKYOU_SUBTITULO;
+    let titulo = (typeof MSG_THANKYOU_TITULO !== 'undefined' ? MSG_THANKYOU_TITULO : null) || 'Solicitação enviada com sucesso!';
+    let subtitulo = (typeof MSG_THANKYOU_SUBTITULO !== 'undefined' ? MSG_THANKYOU_SUBTITULO : null) || 'Nossa equipe de marketing irá analisar e entrar em contato em breve.';
+    const _botaoLabel = (typeof MSG_THANKYOU_BOTAO !== 'undefined' ? MSG_THANKYOU_BOTAO : null) || 'Ver minhas solicitações';
 
     try {
       const raw = sessionStorage.getItem('svn_ultimo_resumo');
@@ -70,7 +71,7 @@
 
       document.getElementById('title').textContent = titulo;
       document.getElementById('subtitle').textContent = subtitulo;
-      document.getElementById('ctaBtn').textContent = MSG_THANKYOU_BOTAO;
+      document.getElementById('ctaBtn').textContent = _botaoLabel;
 
       const itens = [];
       if (resumo.tipo)        itens.push({ label: 'Tipo',             valor: resumo.tipo });
@@ -99,12 +100,12 @@
         }, 1200);
       }
 
-      sessionStorage.removeItem('svn_ultimo_resumo');
-
     } catch {
       document.getElementById('title').textContent = titulo;
       document.getElementById('subtitle').textContent = subtitulo;
-      document.getElementById('ctaBtn').textContent = MSG_THANKYOU_BOTAO;
+      document.getElementById('ctaBtn').textContent = _botaoLabel;
+    } finally {
+      try { sessionStorage.removeItem('svn_ultimo_resumo'); } catch {}
     }
 
     setTimeout(() => {

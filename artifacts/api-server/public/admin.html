@@ -202,15 +202,14 @@
         return;
       }
       let html = '<table class="admin-table"><thead><tr><th>Tipo</th><th>Título</th><th>Solicitante</th><th>Data</th><th>Status</th></tr></thead><tbody>';
-      data.data.forEach((item, idx) => {
-        const cacheKey = tab + '_' + idx + '_' + adminPages[tab];
-        adminItemsCache[cacheKey] = item;
+      data.data.forEach((item) => {
+        adminItemsCache['item_' + item.id] = item;
         const dados = typeof item.dados === 'string' ? JSON.parse(item.dados) : (item.dados || {});
-        const titulo = dados.nomeEvento || dados.tituloEvento || dados.titulo || dados.nomeCompleto || '-';
+        const titulo = item.titulo || dados.nomeEvento || dados.tituloEvento || dados.titulo || dados.nomeCompleto || '-';
         const tipoLabel = TIPO_SOLICITACAO_LABELS[item.tipo_solicitacao] || item.tipo_solicitacao;
         const statusObj = STATUS_SOLICITACAO.find(s => s.id === item.status) || { label: item.status, cor: '--carbon-black' };
         const date = new Date(item.created_at).toLocaleDateString('pt-BR');
-        html += `<tr onclick="openDrawerByKey('${esc(cacheKey)}')">
+        html += `<tr onclick="openDrawerByKey('item_${item.id}')">
           <td>${esc(tipoLabel)}</td><td>${esc(titulo)}</td><td>${esc(item.user_email)}</td><td>${esc(date)}</td>
           <td><span class="badge" style="background:${statusObj.bg || '#f1f5f9'};color:${statusObj.text || '#475569'}">${esc(statusObj.label)}</span></td>
         </tr>`;
@@ -299,8 +298,15 @@
     }
 
     function humanizeValue(key, value) {
-      if (!value) return value;
+      if (value === null || value === undefined) return '—';
       if (typeof value === 'boolean') return value ? 'Sim' : 'Não';
+      if (key === 'natureza') {
+        const map = { presencial: 'Presencial', online: 'Online', patrocinio: 'Patrocínio' };
+        return map[String(value).toLowerCase()] || String(value);
+      }
+      if (typeof value === 'string' && (value.includes('-') || value.includes('_'))) {
+        return value.replace(/[-_]/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+      }
       return value;
     }
 
@@ -337,7 +343,12 @@
       }
       body += '</div>';
       document.getElementById('drawerBody').innerHTML = body;
-      document.getElementById('drawerFooter').textContent = `ID: ${item.id} | Criado em: ${new Date(item.created_at).toLocaleString('pt-BR')}`;
+      const clickupLink = item.clickup_url
+        ? `<a href="${esc(item.clickup_url)}" target="_blank" rel="noopener"
+             style="display:inline-flex;align-items:center;gap:5px;color:#7c3aed;font-size:0.8rem;font-weight:600;text-decoration:none;margin-left:12px">
+             Abrir no ClickUp</a>`
+        : '';
+      document.getElementById('drawerFooter').innerHTML = `ID: ${item.id} | ${new Date(item.created_at).toLocaleString('pt-BR')}` + clickupLink;
     }
 
     async function openDrawer(item) {

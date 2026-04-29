@@ -221,7 +221,6 @@
       await Auth.init();
       if (!Auth.isAuthenticated()) { window.location.href = '/auth/login?redirect=/form-apresentacoes.html'; return; }
       Auth.renderHeader(document.getElementById('mainHeader'));
-      const _fl = document.getElementById('formLogo'); if (_fl) _fl.src = URL_LOGO_PRETA;
       if (subtipo) goToStep2();
 
       document.querySelectorAll('input[name="tamanho"]').forEach(r => r.addEventListener('change', () => {

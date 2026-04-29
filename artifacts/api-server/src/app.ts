@@ -36,12 +36,20 @@ app.use(
   }),
 );
 
+const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGIN || 'https://hub.portalsvn.com.br')
+  .split(',').map(o => o.trim()).filter(Boolean);
+
 app.use(cors({
-  origin: process.env.ALLOWED_ORIGIN || 'https://hub.portalsvn.com.br',
+  origin: (origin, cb) => {
+    if (!origin) return cb(null, true);
+    if (ALLOWED_ORIGINS.includes(origin)) return cb(null, true);
+    if (process.env.NODE_ENV !== 'production') return cb(null, true);
+    cb(new Error('CORS: origem não permitida: ' + origin));
+  },
   credentials: true,
 }));
-app.use(express.json({ limit: "50mb" }));
-app.use(express.urlencoded({ extended: true, limit: "50mb" }));
+app.use(express.json({ limit: "1mb" }));
+app.use(express.urlencoded({ extended: true, limit: "1mb" }));
 
 const PgStore = pgSession(session);
 app.use(
@@ -49,7 +57,7 @@ app.use(
     store: new PgStore({
       pool,
       tableName: "session",
-      createTableIfMissing: false,
+      createTableIfMissing: true,
     }),
     secret: (() => {
       const secret = process.env.SESSION_SECRET;
@@ -59,6 +67,7 @@ app.use(
       return secret || randomBytes(32).toString("hex");
     })(),
     resave: false,
+    rolling: true,
     saveUninitialized: false,
     cookie: {
       maxAge: 24 * 60 * 60 * 1000,
@@ -70,7 +79,7 @@ app.use(
 );
 
 app.get("/api/config", (_req, res) => {
-  res.set('Cache-Control', 'public, max-age=300');
+  res.set('Cache-Control', 'private, max-age=300');
   res.json({
     r2PublicUrl: process.env.R2_PUBLIC_URL || "https://pub-a2132f9b61f940659cc98265acfcf64c.r2.dev",
     emailUpload: process.env.EMAIL_UPLOAD || "gabriela.franca@svninvest.com.br",
@@ -88,10 +97,7 @@ app.use("/auth", authRouter);
 const publicDir = path.resolve(__dirname, "../public");
 app.use(express.static(publicDir));
 
-app.get("/{*catchAll}", (req, res, next) => {
-  if (req.path.startsWith("/api") || req.path.startsWith("/auth")) {
-    return next();
-  }
+app.get("/{*catchAll}", (_req, res) => {
   res.sendFile(path.join(publicDir, "index.html"));
 });
 

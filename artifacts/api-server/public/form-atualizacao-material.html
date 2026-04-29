@@ -78,6 +78,7 @@
       Auth.renderHeader(document.getElementById('mainHeader'));
 
       FileUpload.bind('materialAtual', 'materialAtualName');
+      restoreDraft();
 
       const setorSel = document.getElementById('setor');
       if (setorSel) { SETORES.filter(s => s !== 'Selecione seu setor').forEach(s => { const o = document.createElement('option'); o.value = s; o.textContent = s; setorSel.appendChild(o); }); }
@@ -197,7 +198,6 @@
       } catch {}
     }
     document.querySelectorAll('input,textarea,select').forEach(el => el.addEventListener('change', saveDraft));
-    restoreDraft();
 
     document.addEventListener('input', function(e) {
       const field = e.target.closest('.field');

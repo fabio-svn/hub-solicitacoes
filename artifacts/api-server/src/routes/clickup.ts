@@ -1,4 +1,5 @@
 import { logger } from "../lib/logger";
+import { randomInt } from "crypto";
 
 const CLICKUP_API_TOKEN = process.env.CLICKUP_API_TOKEN || "";
 
@@ -125,7 +126,7 @@ function gerarIdSolicitacao(dados: FormDados, tipo: string): string {
   const ano = now.getFullYear();
   const mes = String(now.getMonth() + 1).padStart(2, "0");
   const dia = String(now.getDate()).padStart(2, "0");
-  const rand = String(Math.floor(Math.random() * 900) + 100);
+  const rand = String(randomInt(1000, 9999));
   return `${tipoCode}-${setorCode}-${ano}-${mes}-${dia}-${rand}`;
 }
 

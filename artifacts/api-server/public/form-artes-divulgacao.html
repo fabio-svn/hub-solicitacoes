@@ -134,7 +134,6 @@
       await Auth.init();
       if (!Auth.isAuthenticated()) { window.location.href = '/auth/login?redirect=/form-artes-divulgacao.html'; return; }
       Auth.renderHeader(document.getElementById('mainHeader'));
-      const _fl = document.getElementById('formLogo'); if (_fl) _fl.src = URL_LOGO_PRETA;
 
       document.getElementById('canalOutroCheck').addEventListener('change', () => {
         document.getElementById('canalOutroField').style.display = document.getElementById('canalOutroCheck').checked ? 'block' : 'none';

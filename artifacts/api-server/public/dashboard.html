@@ -542,6 +542,7 @@
 
     function switchTab(tab) {
       currentTab = tab;
+      try { sessionStorage.setItem('svn_dashboard_tab', tab); } catch {}
       document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
       document.querySelectorAll('.tab-content').forEach(c => {
         const isActive = c.id === 'tab-' + tab;
@@ -958,7 +959,20 @@
     }
 
     function exportarLog() {
-      fetch('/api/admin/historico?limit=1000&order=created_at&dir=desc')
+      const params = new URLSearchParams({ limit: '1000', order: 'created_at', dir: 'desc' });
+      const busca = document.getElementById('adminBusca')?.value?.trim();
+      if (busca) params.set('busca', busca);
+      if (typeof adminTiposSelecionados !== 'undefined' && adminTiposSelecionados.size > 0)
+        params.set('tipos', [...adminTiposSelecionados].join(','));
+      if (typeof adminStatusesSelecionados !== 'undefined' && adminStatusesSelecionados.size > 0)
+        params.set('statuses', [...adminStatusesSelecionados].join(','));
+      const avaliacaoCb = document.getElementById('adminFiltroAvaliacao');
+      if (avaliacaoCb?.checked) params.set('avaliacao', 'sim');
+      const de = document.getElementById('adminDe')?.value;
+      const ate = document.getElementById('adminAte')?.value;
+      if (de) params.set('de', de);
+      if (ate) params.set('ate', ate);
+      fetch('/api/admin/historico?' + params.toString())
         .then(r => r.json())
         .then(data => {
           if (!data.data) return;
@@ -1433,10 +1447,11 @@
       }
 
       tbody.innerHTML = data.data.map(item => {
+        let dados = {};
+        try { dados = typeof item.dados === 'string' ? JSON.parse(item.dados) : (item.dados || {}); } catch {}
+        const tituloDisplay = item.titulo || dados.nomeEvento || dados.tituloEvento || dados.titulo || dados.nomeCompleto || '—';
         let tipoLabel = (typeof TIPO_SOLICITACAO_LABELS !== 'undefined' && TIPO_SOLICITACAO_LABELS[item.tipo_solicitacao]) || item.tipo_solicitacao;
         if (item.tipo_solicitacao === 'eventos') {
-          let dados = {};
-          try { dados = typeof item.dados === 'string' ? JSON.parse(item.dados) : (item.dados || {}); } catch {}
           if (dados.natureza) {
             const naturezaLabel = dados.natureza === 'presencial' ? 'Presencial'
               : dados.natureza === 'online' ? 'Online'
@@ -1444,7 +1459,7 @@
               : dados.natureza;
             tipoLabel = 'Evento — ' + naturezaLabel;
           }
-        }
+        } // end eventos block
         const statusObj = (typeof STATUS_SOLICITACAO !== 'undefined' && STATUS_SOLICITACAO.find(s => s.id === item.status))
           || { label: item.status, bg: '#e2e8f0', text: '#94a3b8' };
         const data_fmt = new Date(item.created_at).toLocaleDateString('pt-BR', { day:'2-digit', month:'2-digit', year:'2-digit' });
@@ -1473,7 +1488,7 @@
             '<div style="font-size:0.82rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="' + esc(item.user_email || '') + '">' + esc(item.user_email?.split('@')[0] || '—') + '</div>' +
           '</td>' +
           '<td style="padding:8px 10px;overflow:hidden">' +
-            '<div style="font-size:0.82rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="' + esc(item.titulo || '') + '">' + esc(item.titulo || '—') + '</div>' +
+            '<div style="font-size:0.82rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="' + esc(tituloDisplay) + '">' + esc(tituloDisplay) + '</div>' +
           '</td>' +
           '<td style="padding:8px 10px;overflow:hidden">' +
             '<span style="font-size:0.78rem;opacity:0.7;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block" title="' + esc(tipoLabel) + '">' + esc(tipoLabel) + '</span>' +

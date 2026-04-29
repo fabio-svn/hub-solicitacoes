@@ -160,7 +160,8 @@ const Auth = {
 const _originalFetch = window.fetch;
 window.fetch = async function(...args) {
   const res = await _originalFetch(...args);
-  if (res.status === 401 && Auth.initialized && Auth.user) {
+  const _reqUrl = typeof args[0] === 'string' ? args[0] : (args[0]?.url || '');
+  if (res.status === 401 && Auth.initialized && Auth.user && !_reqUrl.includes('/auth/')) {
     if (typeof saveFormState === 'function') { try { saveFormState(); } catch {} }
     if (typeof saveDraft === 'function') { try { saveDraft(); } catch {} }
     window.location.href = '/auth/login?redirect=' + encodeURIComponent(window.location.pathname + window.location.search);

@@ -1586,7 +1586,9 @@
     const WIDE_KEYS = new Set([
       'conteudo','finalidade','observacoes','observacoesFinais','briefing','descricao',
       'descricaoEvento','texto','detalhes','contexto','informacaoAdicional','resumo',
-      'expectativas','objetivos','estrategia','canais','materiais','selos','publico'
+      'expectativas','objetivos','estrategia','canais','materiais','selos','publico',
+      'ideaQuando','localSugestoes','linkTransmissao','personalizacao',
+      'textoCartaoPresente','mensagem','assinatura','agradecimento','conteudoMaterial'
     ]);
 
     function renderDados(dados, item) {
@@ -1723,6 +1725,15 @@
     }
 
     function humanizeValue(key, value) {
+      if (key === 'tipoMaterial' || key === 'tipoImpresso') {
+        const map = {
+          'cracha':'Crachá','crachá':'Crachá','roll-up':'Roll-Up','banner':'Banner',
+          'flyer':'Flyer','folder':'Folder','totem':'Totem','adesivo':'Adesivo',
+          'cartao':'Cartão','cartaz':'Cartaz','camisa':'Camisa','brinde':'Brinde',
+        };
+        const lv = String(value).toLowerCase();
+        return map[lv] || humanizeSlug(String(value));
+      }
       const dataCampos = ['dataEvento', 'prazoEntrega'];
       if (dataCampos.includes(key) && typeof value === 'string') {
         const formatted = formatarData(value);

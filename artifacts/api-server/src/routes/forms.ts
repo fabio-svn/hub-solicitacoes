@@ -10,7 +10,7 @@ import { uploadToR2 } from "./r2";
 import { logger } from "../lib/logger";
 
 const router = Router();
-const upload = multer({ dest: os.tmpdir(), limits: { fileSize: 250 * 1024 * 1024 } });
+const upload = multer({ dest: os.tmpdir(), limits: { fileSize: 250 * 1024 * 1024, files: 10, fields: 20 } });
 
 const VALID_TIPOS = [
   "eventos",
@@ -165,7 +165,6 @@ function buildWebhookFields(
         private:         dados.isPrivate === "sim" ? "Sim" : "Não",
         nome_assessor:   s(dados.nomeAssinatura),
         contrato_social: s(dados.contratoSocial),
-        cidade:          s(dados.cidade),
         email:           userEmail,
       };
 
@@ -235,13 +234,18 @@ function dispararWebhook(tipo: string, dados: Record<string, unknown>, userEmail
 
   logger.info({ tipo, fieldKeys: Object.keys(fields) }, `[Webhook] Disparando tipo=${tipo}`);
 
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 15000);
   fetch(webhookUrl, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(fields),
+    signal: controller.signal,
   }).then(res => {
+    clearTimeout(timeoutId);
     logger.info({ tipo, status: res.status }, `[Webhook] Resposta tipo=${tipo}`);
   }).catch(err => {
+    clearTimeout(timeoutId);
     logger.error({ err, webhookUrl, tipo }, `Webhook ${tipo} falhou`);
   });
 }
@@ -1042,8 +1046,9 @@ router.post("/solicitacoes/:id/avaliacao", requireAuth, async (req, res): Promis
     if (isNaN(id)) { res.status(400).json({ error: "ID inválido" }); return; }
 
     const { nota, comentario } = req.body as { nota: number; comentario?: string };
-    if (!nota || nota < 1 || nota > 10) {
-      res.status(400).json({ error: "Nota deve ser entre 1 e 10" });
+    const notaNum = Number(nota);
+    if (!notaNum || !Number.isInteger(notaNum) || notaNum < 1 || notaNum > 10) {
+      res.status(400).json({ error: "Nota deve ser um inteiro entre 1 e 10" });
       return;
     }
 
@@ -1053,7 +1058,7 @@ router.post("/solicitacoes/:id/avaliacao", requireAuth, async (req, res): Promis
     if (!solicitacao) { res.status(404).json({ error: "Solicitação não encontrada" }); return; }
 
     await db.update(solicitacoesTable)
-      .set({ avaliacao: { nota, comentario: comentario?.trim() || null, data: new Date().toISOString() } })
+      .set({ avaliacao: { nota: notaNum, comentario: comentario?.trim() || null, data: new Date().toISOString() } })
       .where(eq(solicitacoesTable.id, id));
 
     res.json({ success: true });
