@@ -2,7 +2,7 @@ import { Router } from "express";
 import multer from "multer";
 import os from "os";
 import { db } from "@workspace/db";
-import { solicitacoesTable, arquivosTable } from "@workspace/db";
+import { solicitacoesTable, arquivosTable, activityLogTable } from "@workspace/db";
 import { eq, desc, and, ne, sql, inArray } from "drizzle-orm";
 import { requireAuth } from "../middleware/auth.middleware";
 import { createClickUpTask, getClickUpTaskStatus, type ArquivosMap } from "./clickup";
@@ -11,6 +11,27 @@ import { logger } from "../lib/logger";
 
 const router = Router();
 const upload = multer({ dest: os.tmpdir(), limits: { fileSize: 250 * 1024 * 1024, files: 10, fields: 20 } });
+
+async function logAtividade(params: {
+  userEmail?: string; userName?: string;
+  tipo: string; nivel?: string;
+  solicitacaoId?: number; tipoSolicitacao?: string; titulo?: string;
+  detalhe: string; metadata?: Record<string, unknown>;
+}): Promise<void> {
+  try {
+    await db.insert(activityLogTable).values({
+      user_email: params.userEmail,
+      user_name: params.userName,
+      tipo: params.tipo,
+      nivel: (params.nivel || "info") as any,
+      solicitacao_id: params.solicitacaoId,
+      tipo_solicitacao: params.tipoSolicitacao,
+      titulo: params.titulo,
+      detalhe: params.detalhe,
+      metadata: params.metadata as any,
+    });
+  } catch { /* não bloquear fluxo */ }
+}
 
 const VALID_TIPOS = [
   "eventos",
@@ -372,10 +393,25 @@ router.post("/solicitacoes", requireAuth, upload.any(), async (req, res): Promis
       }
     } catch (clickupErr) {
       logger.error({ err: clickupErr }, "ClickUp task creation failed, continuing");
+      await logAtividade({
+        userEmail: user.email, userName: user.name,
+        tipo: "clickup_erro", nivel: "warn",
+        solicitacaoId: solicitacao.id, tipoSolicitacao: tipo_solicitacao,
+        titulo: tituloGerado,
+        detalhe: `Falha ao criar task no ClickUp para solicitação #${solicitacao.id}`,
+      });
     }
 
     dispararWebhook(tipo_solicitacao, parsedDados, user.email, arquivosMap);
 
+    await logAtividade({
+      userEmail: user.email, userName: user.name,
+      tipo: "solicitacao_criada", nivel: "info",
+      solicitacaoId: solicitacao.id, tipoSolicitacao: tipo_solicitacao,
+      titulo: tituloGerado,
+      detalhe: `${user.name} criou uma nova solicitação de ${tipo_solicitacao}`,
+      metadata: { clickup_task_id: clickupTaskId },
+    });
     res.json({ success: true, id: solicitacao.id, clickup_task_id: clickupTaskId });
   } catch (err) {
     logger.error({ err }, "Form submission error");
@@ -541,6 +577,22 @@ router.get("/solicitacoes/stats", requireAuth, async (req, res) => {
   } catch (err) {
     logger.error({ err }, "Error getting stats");
     res.status(500).json({ error: "Erro ao obter estatísticas" });
+  }
+});
+
+router.get("/solicitacoes/pendentes-aprovacao", requireAuth, async (req, res): Promise<void> => {
+  try {
+    const user = req.session.user!;
+    const results = await db.select({ id: solicitacoesTable.id })
+      .from(solicitacoesTable)
+      .where(and(
+        eq(solicitacoesTable.user_email, user.email),
+        eq(solicitacoesTable.status, "em-aprovacao"),
+      ));
+    res.json({ ids: results.map(r => r.id) });
+  } catch (err) {
+    logger.error({ err }, "Erro ao buscar pendentes aprovação");
+    res.status(500).json({ error: "Erro" });
   }
 });
 
@@ -774,6 +826,13 @@ router.post("/solicitacoes/:id/alteracao", requireAuth, async (req, res): Promis
       return;
     }
 
+    await logAtividade({
+      userEmail: user.email, userName: user.name,
+      tipo: "alteracao_solicitada", nivel: "info",
+      solicitacaoId: id, tipoSolicitacao: solicitacao.tipo_solicitacao,
+      titulo: solicitacao.titulo || undefined,
+      detalhe: `${user.name} solicitou alteração na solicitação #${id}`,
+    });
     res.json({ success: true });
   } catch (err) {
     logger.error({ err }, "Erro ao enviar alteração");
@@ -816,6 +875,13 @@ router.post("/solicitacoes/:id/aprovacao", requireAuth, async (req, res): Promis
       body: JSON.stringify({ comment_text: comentario }),
     });
 
+    await logAtividade({
+      userEmail: user.email, userName: user.name,
+      tipo: "aprovacao_registrada", nivel: "info",
+      solicitacaoId: id, tipoSolicitacao: solicitacao.tipo_solicitacao,
+      titulo: solicitacao.titulo || undefined,
+      detalhe: `${user.name} aprovou a solicitação #${id}`,
+    });
     res.json({ success: true });
   } catch (err) {
     logger.error({ err }, "Erro ao registrar aprovação");
@@ -1031,6 +1097,14 @@ router.delete("/solicitacoes/:id", requireAuth, async (req, res): Promise<void> 
     await db.delete(arquivosTable).where(eq(arquivosTable.solicitacao_id, id));
     await db.delete(solicitacoesTable).where(eq(solicitacoesTable.id, id));
 
+    await logAtividade({
+      userEmail: user.email, userName: user.name,
+      tipo: "solicitacao_excluida", nivel: "warn",
+      solicitacaoId: id, tipoSolicitacao: solicitacao.tipo_solicitacao,
+      titulo: solicitacao.titulo || undefined,
+      detalhe: `${user.email} excluiu a solicitação #${id} (${solicitacao.tipo_solicitacao})`,
+      metadata: { titulo: solicitacao.titulo },
+    });
     logger.info({ id, deletedBy: user.email }, "Solicitação excluída por admin");
     res.json({ success: true });
   } catch (err) {
@@ -1084,6 +1158,36 @@ router.get("/solicitacoes/:id/avaliacao", requireAuth, async (req, res): Promise
   } catch (err) {
     logger.error({ err }, "Erro ao buscar avaliação");
     res.status(500).json({ error: "Erro ao buscar avaliação" });
+  }
+});
+
+router.post("/solicitacoes/massa-delete", requireAuth, async (req, res): Promise<void> => {
+  try {
+    const user = req.session.user!;
+    if (user.role !== "admin" && user.role !== "gestor") {
+      res.status(403).json({ error: "Acesso negado" }); return;
+    }
+    const { ids } = req.body as { ids: number[] };
+    if (!Array.isArray(ids) || ids.length === 0) {
+      res.status(400).json({ error: "IDs inválidos" }); return;
+    }
+    const validIds = ids.map(Number).filter(n => !isNaN(n) && n > 0);
+    if (validIds.length === 0) { res.status(400).json({ error: "IDs inválidos" }); return; }
+
+    await db.delete(arquivosTable).where(inArray(arquivosTable.solicitacao_id, validIds));
+    await db.delete(solicitacoesTable).where(inArray(solicitacoesTable.id, validIds));
+
+    await logAtividade({
+      userEmail: user.email, userName: user.name,
+      tipo: "massa_excluida", nivel: "warn",
+      detalhe: `${user.email} excluiu ${validIds.length} solicitações em massa`,
+      metadata: { ids: validIds },
+    });
+    logger.info({ ids: validIds, deletedBy: user.email }, "Solicitações excluídas em massa");
+    res.json({ success: true, deleted: validIds.length });
+  } catch (err) {
+    logger.error({ err }, "Erro ao excluir em massa");
+    res.status(500).json({ error: "Erro ao excluir em massa" });
   }
 });
 

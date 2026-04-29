@@ -2,6 +2,36 @@ const Auth = {
   user: null,
   initialized: false,
   _outsideClickListenerAdded: false,
+  _pendenteIds: new Set(),
+
+  _getLidos() {
+    try { return new Set(JSON.parse(localStorage.getItem('svn_lidos_aprovacao') || '[]')); } catch { return new Set(); }
+  },
+
+  marcarComoLido(id) {
+    const lidos = this._getLidos();
+    if (!lidos.has(id)) {
+      lidos.add(id);
+      try { localStorage.setItem('svn_lidos_aprovacao', JSON.stringify([...lidos])); } catch {}
+    }
+    this._pendenteIds.delete(id);
+    this._atualizarBadgeHeader();
+  },
+
+  temPendencias() {
+    const lidos = this._getLidos();
+    return [...this._pendenteIds].some(id => !lidos.has(id));
+  },
+
+  _atualizarBadgeHeader() {
+    const lidos = this._getLidos();
+    const naoLidos = [...this._pendenteIds].filter(id => !lidos.has(id));
+    const count = naoLidos.length;
+    const badge = document.getElementById('notifBadgeAvatar');
+    const badgeMenu = document.getElementById('notifBadgeMenu');
+    if (badge) { badge.style.display = count > 0 ? '' : 'none'; badge.textContent = count > 9 ? '9+' : String(count); }
+    if (badgeMenu) { badgeMenu.style.display = count > 0 ? '' : 'none'; }
+  },
 
   async init() {
     if (this.initialized) return this.user;
@@ -23,6 +53,16 @@ const Auth = {
       console.error("Auth check failed:", e);
     } finally {
       this.initialized = true;
+    }
+
+    if (this.user) {
+      try {
+        const pr = await fetch('/api/solicitacoes/pendentes-aprovacao');
+        if (pr.ok) {
+          const pd = await pr.json();
+          this._pendenteIds = new Set(pd.ids || []);
+        }
+      } catch {}
     }
 
     // Verificar e exibir banner de impersonação
@@ -103,20 +143,27 @@ const Auth = {
     if (!this.user) return;
     const initials = this.getInitials();
     const name = this.getUserName();
+    const lidos = this._getLidos();
+    const naoLidos = [...this._pendenteIds].filter(id => !lidos.has(id));
+    const badgeCount = naoLidos.length;
 
     container.innerHTML = `
       <div class="header-inner">
         <a href="/solicitacoes.html" class="header-logo"><img src="${logoUrl}" alt="SVN" height="24"></a>
         <div class="header-user" style="position:relative">
           <div id="userMenuTrigger" style="display:flex;align-items:center;gap:8px;cursor:pointer" onclick="Auth.toggleUserMenu()">
-            <div class="avatar">${initials}</div>
+            <div class="avatar" style="position:relative">
+              ${initials}
+              <span id="notifBadgeAvatar" class="notif-badge" style="${badgeCount > 0 ? '' : 'display:none'}">${badgeCount > 9 ? '9+' : badgeCount}</span>
+            </div>
             <span class="user-name">${name}</span>
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="opacity:0.4"><polyline points="6 9 12 15 18 9"/></svg>
           </div>
-          <div id="userDropdown" style="display:none;position:absolute;top:calc(100% + 8px);right:0;background:var(--card-white);border:1px solid var(--border-light);border-radius:10px;box-shadow:0 4px 16px rgba(0,0,0,0.12);min-width:180px;z-index:200;overflow:hidden">
+          <div id="userDropdown" style="display:none;position:absolute;top:calc(100% + 8px);right:0;background:var(--card-white);border:1px solid var(--border-light);border-radius:10px;box-shadow:0 4px 16px rgba(0,0,0,0.12);min-width:200px;z-index:200;overflow:hidden">
             <a href="/dashboard.html" style="display:flex;align-items:center;gap:8px;padding:10px 16px;font-size:0.85rem;font-weight:600;color:var(--carbon-black);text-decoration:none;border-bottom:1px solid var(--border-light)" onmouseover="this.style.background='var(--icon-bg)'" onmouseout="this.style.background='transparent'">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
               Minhas solicitações
+              <span id="notifBadgeMenu" class="notif-badge-menu" style="${badgeCount > 0 ? '' : 'display:none'}">Novo</span>
             </a>
             <button onclick="Auth.logout()" style="display:flex;align-items:center;gap:8px;padding:10px 16px;font-size:0.85rem;font-weight:600;color:var(--carbon-black);background:none;border:none;cursor:pointer;width:100%;text-align:left;font-family:'Nunito Sans',sans-serif" onmouseover="this.style.background='var(--icon-bg)'" onmouseout="this.style.background='transparent'">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>

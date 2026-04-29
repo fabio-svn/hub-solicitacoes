@@ -581,6 +581,9 @@
         if (!res.ok) { window.location.href = '/dashboard.html'; return; }
         const item = await res.json();
         console.log('[Solicitação] status atual:', item.status, '| id:', item.id);
+        if (item.status === 'em-aprovacao' && typeof Auth !== 'undefined' && Auth.marcarComoLido) {
+          Auth.marcarComoLido(item.id);
+        }
         renderPage(item);
         syncStatus(item);
       } catch (e) {

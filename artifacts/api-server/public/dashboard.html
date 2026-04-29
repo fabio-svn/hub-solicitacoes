@@ -256,45 +256,56 @@
         </label>
       </div>
 
+      <!-- Barra de ações em massa -->
+      <div id="acoesMassaBar" style="display:none;align-items:center;gap:10px;margin-bottom:8px;padding:8px 14px;background:rgba(220,38,38,0.06);border:1px solid rgba(220,38,38,0.2);border-radius:10px">
+        <span id="acoesMassaCount" style="font-size:0.82rem;font-weight:700;color:var(--ruby-red)">0 selecionados</span>
+        <button onclick="excluirSelecionados()" style="padding:5px 14px;border-radius:8px;background:var(--ruby-red);color:white;border:none;font-family:'Nunito Sans',sans-serif;font-size:0.8rem;font-weight:700;cursor:pointer">Excluir selecionados</button>
+        <button onclick="limparSelecao()" style="padding:5px 14px;border-radius:8px;background:transparent;color:var(--carbon-black);border:1px solid var(--border-light);font-family:'Nunito Sans',sans-serif;font-size:0.8rem;font-weight:600;cursor:pointer">Cancelar</button>
+      </div>
+
       <!-- Tabela -->
       <div style="border-radius:12px;border:1px solid var(--border-light);position:relative;overflow:hidden" class="admin-tabela-wrap">
         <table style="width:100%;border-collapse:collapse;font-size:0.82rem;table-layout:fixed" class="admin-table" id="adminTabela">
           <colgroup>
-            <col style="width:90px">
+            <col style="width:36px">
+            <col style="width:88px">
             <col style="width:110px">
             <col style="width:auto">
-            <col style="width:130px">
-            <col style="width:52px">
-            <col style="width:80px">
+            <col style="width:120px">
+            <col style="width:54px">
+            <col style="width:88px">
             <col style="width:96px">
           </colgroup>
           <thead>
             <tr style="background:var(--carbon-black);text-align:left">
+              <th style="padding:10px 10px;width:36px">
+                <input type="checkbox" id="checkAll" onclick="toggleCheckAll(this)" style="width:14px;height:14px;accent-color:var(--ruby-red);cursor:pointer">
+              </th>
               <th onclick="sortAdmin('criado_em')" style="padding:10px 14px;cursor:pointer;white-space:nowrap;user-select:none">
-                <span style="font-weight:700;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.06em;color:rgba(255,255,255,0.7)">Data <span id="sortCreated" style="color:white">↓</span></span>
+                <span style="font-weight:800;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.06em;color:#ffffff">Data <span id="sortCreated" style="color:white">↓</span></span>
               </th>
               <th onclick="sortAdmin('user_email')" style="padding:10px 14px;cursor:pointer;white-space:nowrap;user-select:none">
-                <span style="font-weight:700;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.06em;color:rgba(255,255,255,0.7)">Solicitante <span id="sortEmail" style="color:white"></span></span>
+                <span style="font-weight:800;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.06em;color:#ffffff">Solicitante <span id="sortEmail" style="color:white"></span></span>
               </th>
               <th onclick="sortAdmin('titulo')" style="padding:10px 14px;cursor:pointer;white-space:nowrap;user-select:none">
-                <span style="font-weight:700;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.06em;color:rgba(255,255,255,0.7)">Título <span id="sortTitulo" style="color:white"></span></span>
+                <span style="font-weight:800;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.06em;color:#ffffff">Título <span id="sortTitulo" style="color:white"></span></span>
               </th>
               <th onclick="sortAdmin('tipo_solicitacao')" style="padding:10px 14px;cursor:pointer;white-space:nowrap;user-select:none">
-                <span style="font-weight:700;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.06em;color:rgba(255,255,255,0.7)">Tipo <span id="sortTipo" style="color:white"></span></span>
+                <span style="font-weight:800;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.06em;color:#ffffff">Tipo <span id="sortTipo" style="color:white"></span></span>
               </th>
               <th onclick="sortAdmin('status')" style="padding:10px 14px;cursor:pointer;white-space:nowrap;user-select:none">
-                <span style="font-weight:700;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.06em;color:rgba(255,255,255,0.7)">Status <span id="sortStatus" style="color:white"></span></span>
+                <span style="font-weight:800;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.06em;color:#ffffff">Status <span id="sortStatus" style="color:white"></span></span>
               </th>
               <th style="padding:10px 14px">
-                <span style="font-weight:700;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.06em;color:rgba(255,255,255,0.7)">Avaliação</span>
+                <span style="font-weight:800;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.06em;color:#ffffff">Avaliação</span>
               </th>
               <th style="padding:10px 14px;width:96px;text-align:center">
-                <span style="font-weight:700;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.06em;color:rgba(255,255,255,0.7)">Ações</span>
+                <span style="font-weight:800;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.06em;color:#ffffff">Ações</span>
               </th>
             </tr>
           </thead>
           <tbody id="adminTabelaBody">
-            <tr><td colspan="7" style="padding:24px;text-align:center;opacity:0.4">Carregando...</td></tr>
+            <tr><td colspan="8" style="padding:24px;text-align:center;opacity:0.4">Carregando...</td></tr>
           </tbody>
         </table>
       </div>
@@ -304,41 +315,38 @@
 
     <div class="tab-content" id="tab-log" style="display:none">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px">
-        <p style="font-size:0.8rem;opacity:0.5;margin:0">Registro de todas as solicitações criadas no hub. Útil para acompanhar integrações e identificar problemas.</p>
-        <button onclick="exportarLog()" style="padding:5px 14px;border-radius:8px;border:1px solid var(--border-light);background:var(--card-white);font-family:'Nunito Sans',sans-serif;font-size:0.8rem;font-weight:600;cursor:pointer">Exportar CSV</button>
+        <p style="font-size:0.8rem;opacity:0.5;margin:0">Log detalhado de atividades do sistema: criações, exclusões, aprovações e erros de integração.</p>
       </div>
 
       <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;align-items:center">
-        <div class="search-bar" style="flex:1;max-width:240px;margin-bottom:0;height:32px;padding:0 14px;border-radius:8px">
+        <div class="search-bar" style="flex:1;max-width:260px;margin-bottom:0;height:32px;padding:0 14px;border-radius:8px">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" opacity="0.4"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          <input type="text" id="logBusca" placeholder="Buscar por e-mail, tipo..." oninput="debounceLogSearch()">
+          <input type="text" id="logBusca" placeholder="Buscar por usuário, detalhe..." oninput="debounceLogSearch()">
         </div>
-        <select id="logFiltroTipo" onchange="loadLog()" style="height:32px;border:1px solid var(--border-light);border-radius:8px;padding:0 10px;font-family:'Nunito Sans',sans-serif;font-size:0.8rem;background:var(--card-white)">
-          <option value="">Todos os tipos</option>
-        </select>
-        <select id="logFiltroClickup" onchange="loadLog()" style="height:32px;border:1px solid var(--border-light);border-radius:8px;padding:0 10px;font-family:'Nunito Sans',sans-serif;font-size:0.8rem;background:var(--card-white)">
-          <option value="">ClickUp: todos</option>
-          <option value="com">Com task ClickUp</option>
-          <option value="sem">Sem task ClickUp</option>
+        <select id="logFiltroNivel" onchange="loadLog()" style="height:32px;border:1px solid var(--border-light);border-radius:8px;padding:0 10px;font-family:'Nunito Sans',sans-serif;font-size:0.8rem;background:var(--card-white)">
+          <option value="">Todos os níveis</option>
+          <option value="info">Info</option>
+          <option value="warn">Warn</option>
+          <option value="error">Error</option>
         </select>
       </div>
 
       <div style="border-radius:12px;border:1px solid var(--border-light);overflow:hidden;position:relative">
         <table style="width:100%;border-collapse:collapse;font-size:0.82rem;table-layout:fixed" id="logTabela">
           <colgroup>
-            <col style="width:100px">
-            <col style="width:130px">
+            <col style="width:110px">
+            <col style="width:120px">
+            <col style="width:64px">
+            <col style="width:140px">
             <col style="width:auto">
-            <col style="width:90px">
-            <col style="width:100px">
           </colgroup>
           <thead>
             <tr style="background:var(--carbon-black)">
-              <th style="padding:10px 14px;font-weight:700;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.06em;color:rgba(255,255,255,0.7);text-align:left">Data/Hora</th>
-              <th style="padding:10px 14px;font-weight:700;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.06em;color:rgba(255,255,255,0.7);text-align:left">Solicitante</th>
-              <th style="padding:10px 14px;font-weight:700;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.06em;color:rgba(255,255,255,0.7);text-align:left">Tipo</th>
-              <th style="padding:10px 14px;font-weight:700;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.06em;color:rgba(255,255,255,0.7);text-align:left">Status</th>
-              <th style="padding:10px 14px;font-weight:700;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.06em;color:rgba(255,255,255,0.7);text-align:left">ClickUp</th>
+              <th style="padding:10px 14px;font-weight:800;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.06em;color:#ffffff;text-align:left">Data/Hora</th>
+              <th style="padding:10px 14px;font-weight:800;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.06em;color:#ffffff;text-align:left">Usuário</th>
+              <th style="padding:10px 14px;font-weight:800;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.06em;color:#ffffff;text-align:left">Nível</th>
+              <th style="padding:10px 14px;font-weight:800;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.06em;color:#ffffff;text-align:left">Tipo</th>
+              <th style="padding:10px 14px;font-weight:800;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.06em;color:#ffffff;text-align:left">Detalhe</th>
             </tr>
           </thead>
           <tbody id="logTabelaBody">
@@ -456,6 +464,12 @@
 
     const NATUREZA_LABEL = { presencial: 'Presencial', online: 'Online' };
 
+    function isCardPendente(itemId) {
+      if (typeof Auth === 'undefined' || !Auth._pendenteIds) return false;
+      const lidos = Auth._getLidos ? Auth._getLidos() : new Set();
+      return Auth._pendenteIds.has(itemId) && !lidos.has(itemId);
+    }
+
     function renderList(tab, data) {
       const container = document.getElementById(tab === 'eventos' ? 'listEventos' : 'listGeral');
 
@@ -481,6 +495,7 @@
         const dataRel = dataRelativa(item.created_at);
         const periodo = periodoGrupo(item.created_at);
         const naturezaLabel = dados.natureza ? NATUREZA_LABEL[dados.natureza] : null;
+        const pendente = isCardPendente(item.id);
 
         let groupHeader = '';
         if (periodo !== lastPeriodo) {
@@ -488,9 +503,10 @@
           groupHeader = `<div style="font-size:0.75rem;font-weight:600;opacity:0.4;text-transform:uppercase;letter-spacing:0.06em;margin:${idx === 0 ? '0' : '16px'} 0 8px;padding:0 2px">${periodo}</div>`;
         }
 
-        return groupHeader + `<div class="request-card" onclick="window.location.href='/solicitacao.html?id=${item.id}'">
+        return groupHeader + `<div class="request-card" onclick="window.location.href='/solicitacao.html?id=${item.id}'"
+          style="${pendente ? 'border-left:3px solid var(--ruby-red);' : ''}">
           <div class="request-info">
-            <div class="request-title">${esc(titulo)}</div>
+            <div class="request-title">${esc(titulo)}${pendente ? ' <span style="display:inline-block;font-size:0.62rem;font-weight:800;background:var(--ruby-red);color:white;padding:1px 6px;border-radius:999px;vertical-align:middle;margin-left:4px">APROVAÇÃO</span>' : ''}</div>
             <div class="request-meta">
               <span>${esc(tipoLabel)}</span>
               <span>${esc(dataRel)}</span>
@@ -863,16 +879,7 @@
     let logPage = 1;
     let logSearchTimeout;
 
-    function initLog() {
-      const sel = document.getElementById('logFiltroTipo');
-      if (sel && typeof TIPO_SOLICITACAO_LABELS !== 'undefined') {
-        Object.entries(TIPO_SOLICITACAO_LABELS).forEach(([id, label]) => {
-          const o = document.createElement('option');
-          o.value = id; o.textContent = label;
-          sel.appendChild(o);
-        });
-      }
-    }
+    function initLog() {}
 
     async function loadLog() {
       const tbody = document.getElementById('logTabelaBody');
@@ -880,23 +887,33 @@
       const params = new URLSearchParams();
       params.set('page', logPage);
       params.set('limit', '30');
-      params.set('order', 'created_at');
-      params.set('dir', 'desc');
       const busca = document.getElementById('logBusca')?.value?.trim();
       if (busca) params.set('busca', busca);
-      const tipo = document.getElementById('logFiltroTipo')?.value;
-      if (tipo) params.set('tipos', tipo);
-      const clickup = document.getElementById('logFiltroClickup')?.value;
-      if (clickup === 'com') params.set('com_clickup', 'sim');
-      if (clickup === 'sem') params.set('sem_clickup', 'sim');
+      const nivel = document.getElementById('logFiltroNivel')?.value;
+      if (nivel) params.set('nivel', nivel);
       try {
-        const res = await fetch('/api/admin/historico?' + params.toString());
+        const res = await fetch('/api/admin/activity-log?' + params.toString());
         const data = await res.json();
         renderLog(data);
       } catch {
         tbody.innerHTML = `<tr><td colspan="5" style="padding:24px;text-align:center;color:var(--ruby-red)">Erro ao carregar log.</td></tr>`;
       }
     }
+
+    const LOG_NIVEL_STYLE = {
+      info:  { bg: 'rgba(37,99,235,0.1)',  text: '#2563eb', label: 'INFO'  },
+      warn:  { bg: 'rgba(234,88,12,0.1)',  text: '#ea580c', label: 'WARN'  },
+      error: { bg: 'rgba(220,38,38,0.1)',  text: '#dc2626', label: 'ERROR' },
+    };
+
+    const LOG_TIPO_LABEL = {
+      solicitacao_criada:    'Solicitação criada',
+      solicitacao_excluida:  'Excluída',
+      massa_excluida:        'Excl. em massa',
+      alteracao_solicitada:  'Alteração solicitada',
+      aprovacao_registrada:  'Aprovada',
+      clickup_erro:          'Erro ClickUp',
+    };
 
     function renderLog(data) {
       const tbody = document.getElementById('logTabelaBody');
@@ -908,35 +925,27 @@
       tbody.innerHTML = data.data.map(item => {
         const dt = new Date(item.created_at);
         const data_fmt = dt.toLocaleDateString('pt-BR', { day:'2-digit', month:'2-digit', year:'2-digit' });
-        const hora_fmt = dt.toLocaleTimeString('pt-BR', { hour:'2-digit', minute:'2-digit' });
-        const tipoLabel = (typeof TIPO_SOLICITACAO_LABELS !== 'undefined' && TIPO_SOLICITACAO_LABELS[item.tipo_solicitacao]) || item.tipo_solicitacao;
-        const statusObj = STATUS_SOLICITACAO?.find(s => s.id === item.status) || { bg: '#e2e8f0', text: '#475569', label: item.status };
-        const temClickup = !!item.clickup_url;
-        return `<tr style="border-top:1px solid var(--border-light);transition:background 0.12s" onmouseover="this.style.background='var(--icon-bg)'" onmouseout="this.style.background=''">
-          <td style="padding:8px 14px;white-space:nowrap">
-            <div style="font-size:0.8rem">${data_fmt}</div>
-            <div style="font-size:0.72rem;opacity:0.4">${hora_fmt}</div>
+        const hora_fmt = dt.toLocaleTimeString('pt-BR', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
+        const ns = LOG_NIVEL_STYLE[item.nivel] || { bg: '#f1f5f9', text: '#475569', label: item.nivel };
+        const tipoLabel = LOG_TIPO_LABEL[item.tipo] || item.tipo;
+        const userShort = item.user_email ? item.user_email.split('@')[0] : (item.user_name || '—');
+        return `<tr style="border-top:1px solid var(--border-light);transition:background 0.12s;font-family:monospace" onmouseover="this.style.background='var(--icon-bg)'" onmouseout="this.style.background=''">
+          <td style="padding:8px 14px;white-space:nowrap;font-family:monospace">
+            <div style="font-size:0.78rem">${data_fmt}</div>
+            <div style="font-size:0.7rem;opacity:0.45">${hora_fmt}</div>
           </td>
           <td style="padding:8px 14px;overflow:hidden">
-            <div style="font-size:0.82rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${esc(item.user_email || '')}">
-              ${esc(item.user_email?.split('@')[0] || '—')}
-            </div>
-          </td>
-          <td style="padding:8px 14px;overflow:hidden">
-            <div style="font-size:0.78rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${esc(tipoLabel)}">
-              ${esc(tipoLabel)}
-            </div>
+            <div style="font-size:0.78rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${esc(item.user_email || '')}">${esc(userShort)}</div>
           </td>
           <td style="padding:8px 14px">
-            <span style="display:inline-block;padding:3px 8px;border-radius:999px;font-size:0.7rem;font-weight:700;background:${statusObj.bg};color:${statusObj.text}">
-              ${esc(statusObj.label)}
-            </span>
+            <span style="display:inline-block;padding:2px 7px;border-radius:5px;font-size:0.68rem;font-weight:800;background:${ns.bg};color:${ns.text};letter-spacing:0.04em">${ns.label}</span>
           </td>
-          <td style="padding:8px 14px;text-align:center">
-            ${temClickup
-              ? `<a href="${esc(item.clickup_url)}" target="_blank" style="display:inline-flex;align-items:center;gap:4px;color:#7c3aed;font-size:0.75rem;font-weight:600;text-decoration:none">${CLICKUP_ICON} Task</a>`
-              : `<span style="font-size:0.75rem;opacity:0.3">—</span>`
-            }
+          <td style="padding:8px 14px;overflow:hidden">
+            <span style="font-size:0.76rem;opacity:0.8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block" title="${esc(tipoLabel)}">${esc(tipoLabel)}</span>
+            ${item.solicitacao_id ? `<a href="/solicitacao.html?id=${item.solicitacao_id}" target="_blank" style="font-size:0.68rem;opacity:0.4;text-decoration:none;color:inherit">#${item.solicitacao_id}</a>` : ''}
+          </td>
+          <td style="padding:8px 14px;overflow:hidden">
+            <div style="font-size:0.78rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${esc(item.detalhe)}">${esc(item.detalhe)}</div>
           </td>
         </tr>`;
       }).join('');
@@ -1408,7 +1417,7 @@
 
     async function loadAdminHistorico() {
       const tbody = document.getElementById('adminTabelaBody');
-      tbody.innerHTML = '<tr><td colspan="7" style="padding:24px;text-align:center;opacity:0.4">Carregando...</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="8" style="padding:24px;text-align:center;opacity:0.4">Carregando...</td></tr>';
 
       const params = new URLSearchParams();
       params.set('page', adminPageHistorico);
@@ -1434,14 +1443,15 @@
         const data = await res.json();
         renderAdminHistorico(data);
       } catch (e) {
-        tbody.innerHTML = '<tr><td colspan="7" style="padding:24px;text-align:center;color:var(--ruby-red)">Erro ao carregar.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="8" style="padding:24px;text-align:center;color:var(--ruby-red)">Erro ao carregar.</td></tr>';
       }
     }
 
     function renderAdminHistorico(data) {
+      limparSelecao();
       const tbody = document.getElementById('adminTabelaBody');
       if (!data.data || data.data.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="7" style="padding:24px;text-align:center;opacity:0.4">Nenhuma solicitação encontrada.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="8" style="padding:24px;text-align:center;opacity:0.4">Nenhuma solicitação encontrada.</td></tr>';
         document.getElementById('adminPaginacao').innerHTML = '';
         return;
       }
@@ -1480,6 +1490,9 @@
         return '<tr style="border-top:1px solid var(--border-light);transition:background 0.12s"' +
           ' onmouseover="this.style.background=\'var(--icon-bg)\'"' +
           ' onmouseout="this.style.background=\'\'">' +
+          '<td style="padding:10px 10px;text-align:center">' +
+            '<input type="checkbox" class="row-check" data-id="' + item.id + '" style="width:14px;height:14px;accent-color:var(--ruby-red);cursor:pointer" onchange="atualizarSelecao()">' +
+          '</td>' +
           '<td style="padding:10px 14px;white-space:nowrap">' +
             '<div style="font-size:0.8rem">' + data_fmt + '</div>' +
             '<div style="font-size:0.72rem;opacity:0.4">' + hora_fmt + '</div>' +
@@ -1534,6 +1547,75 @@
     function debounceAdminSearch() {
       clearTimeout(adminSearchTimeout);
       adminSearchTimeout = setTimeout(() => { adminPageHistorico = 1; loadAdminHistorico(); }, 300);
+    }
+
+    // ── Exclusão em massa ────────────────────────────────────────
+    function toggleCheckAll(cb) {
+      document.querySelectorAll('.row-check').forEach(c => c.checked = cb.checked);
+      atualizarSelecao();
+    }
+
+    function atualizarSelecao() {
+      const checks = [...document.querySelectorAll('.row-check')];
+      const selecionados = checks.filter(c => c.checked);
+      const bar = document.getElementById('acoesMassaBar');
+      const countEl = document.getElementById('acoesMassaCount');
+      if (selecionados.length > 0) {
+        bar.style.display = 'flex';
+        countEl.textContent = selecionados.length + (selecionados.length === 1 ? ' selecionada' : ' selecionadas');
+      } else {
+        bar.style.display = 'none';
+      }
+      const allChecked = checks.length > 0 && selecionados.length === checks.length;
+      const chkAll = document.getElementById('checkAll');
+      if (chkAll) { chkAll.checked = allChecked; chkAll.indeterminate = !allChecked && selecionados.length > 0; }
+    }
+
+    function limparSelecao() {
+      document.querySelectorAll('.row-check').forEach(c => c.checked = false);
+      const chkAll = document.getElementById('checkAll');
+      if (chkAll) { chkAll.checked = false; chkAll.indeterminate = false; }
+      document.getElementById('acoesMassaBar').style.display = 'none';
+    }
+
+    function excluirSelecionados() {
+      const ids = [...document.querySelectorAll('.row-check:checked')].map(c => parseInt(c.dataset.id));
+      if (ids.length === 0) return;
+      const modal = document.getElementById('deleteMassaModal');
+      document.getElementById('deleteMassaCount').textContent = ids.length;
+      modal.style.display = 'flex';
+    }
+
+    function cancelarExclusaoMassa() {
+      document.getElementById('deleteMassaModal').style.display = 'none';
+      const btn = document.getElementById('btnConfirmarMassa');
+      if (btn) { btn.disabled = false; btn.textContent = 'Excluir permanentemente'; }
+    }
+
+    async function confirmarExclusaoMassa() {
+      const ids = [...document.querySelectorAll('.row-check:checked')].map(c => parseInt(c.dataset.id));
+      if (ids.length === 0) return;
+      const btn = document.getElementById('btnConfirmarMassa');
+      btn.disabled = true; btn.textContent = 'Excluindo...';
+      try {
+        const res = await fetch('/api/solicitacoes/massa-delete', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ids }),
+        });
+        const d = await res.json();
+        if (res.ok && d.success) {
+          document.getElementById('deleteMassaModal').style.display = 'none';
+          limparSelecao();
+          await loadAdminHistorico();
+        } else {
+          alert(d.error || 'Erro ao excluir.');
+        }
+      } catch {
+        alert('Erro de conexão.');
+      } finally {
+        btn.disabled = false; btn.textContent = 'Excluir permanentemente';
+      }
     }
 
     // ── Delete modal ─────────────────────────────────────────────
@@ -1677,5 +1759,19 @@
 
 <div id="graficoDropdownTipo" style="display:none;position:fixed;z-index:500;background:var(--card-white);border:1px solid var(--border-light);border-radius:10px;box-shadow:0 4px 20px rgba(0,0,0,.12);padding:8px;min-width:280px"></div>
 <div id="graficoDropdownStatus" style="display:none;position:fixed;z-index:500;background:var(--card-white);border:1px solid var(--border-light);border-radius:10px;box-shadow:0 4px 20px rgba(0,0,0,.12);padding:8px;min-width:280px"></div>
+
+<div id="deleteMassaModal" style="display:none;position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,0.45);align-items:center;justify-content:center">
+  <div style="background:var(--card-white);border-radius:16px;padding:28px 32px;max-width:400px;width:90%;box-shadow:0 8px 40px rgba(0,0,0,0.18);text-align:center">
+    <div style="width:44px;height:44px;border-radius:50%;background:rgba(220,38,38,0.1);display:flex;align-items:center;justify-content:center;margin:0 auto 16px">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
+    </div>
+    <h3 style="font-size:1rem;font-weight:800;margin:0 0 8px">Excluir em massa</h3>
+    <p style="font-size:0.85rem;opacity:0.6;margin:0 0 20px">Você está prestes a excluir <strong id="deleteMassaCount">0</strong> solicitação(ões) permanentemente. Esta ação não pode ser desfeita.</p>
+    <div style="display:flex;gap:10px;justify-content:center">
+      <button onclick="cancelarExclusaoMassa()" style="padding:9px 20px;border-radius:9px;border:1px solid var(--border-light);background:transparent;font-family:'Nunito Sans',sans-serif;font-size:0.85rem;font-weight:600;cursor:pointer;color:var(--carbon-black)">Cancelar</button>
+      <button id="btnConfirmarMassa" onclick="confirmarExclusaoMassa()" style="padding:9px 20px;border-radius:9px;border:none;background:var(--ruby-red);color:white;font-family:'Nunito Sans',sans-serif;font-size:0.85rem;font-weight:700;cursor:pointer">Excluir permanentemente</button>
+    </div>
+  </div>
+</div>
 </body>
 </html>

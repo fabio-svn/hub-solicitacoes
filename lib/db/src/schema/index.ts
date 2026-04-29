@@ -47,3 +47,17 @@ export const arquivosTable = pgTable("arquivos", {
 export const insertArquivoSchema = createInsertSchema(arquivosTable).omit({ id: true, created_at: true });
 export type InsertArquivo = z.infer<typeof insertArquivoSchema>;
 export type Arquivo = typeof arquivosTable.$inferSelect;
+
+export const activityLogTable = pgTable("activity_log", {
+  id: serial("id").primaryKey(),
+  created_at: timestamp("created_at").defaultNow().notNull(),
+  user_email: text("user_email"),
+  user_name: text("user_name"),
+  tipo: text("tipo").notNull(),
+  nivel: varchar("nivel", { length: 10 }).default("info").notNull(),
+  solicitacao_id: integer("solicitacao_id"),
+  tipo_solicitacao: text("tipo_solicitacao"),
+  titulo: text("titulo"),
+  detalhe: text("detalhe").notNull(),
+  metadata: jsonb("metadata"),
+});

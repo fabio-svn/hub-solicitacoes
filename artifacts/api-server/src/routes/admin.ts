@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { db } from "@workspace/db";
-import { usersTable } from "@workspace/db";
-import { eq } from "drizzle-orm";
+import { usersTable, activityLogTable } from "@workspace/db";
+import { eq, desc, sql, and } from "drizzle-orm";
 import { requireAuth, requireRole } from "../middleware/auth.middleware";
 import { logger } from "../lib/logger";
 
@@ -92,6 +92,45 @@ router.post("/impersonate/stop", requireAuth, async (req, res): Promise<void> =>
   } catch (err) {
     logger.error({ err }, "Erro ao sair impersonar");
     res.status(500).json({ error: "Erro ao sair" });
+  }
+});
+
+router.get("/activity-log", requireAuth, async (req, res): Promise<void> => {
+  try {
+    const user = req.session.user!;
+    if (user.role !== "admin" && user.role !== "gestor") {
+      res.status(403).json({ error: "Acesso negado" }); return;
+    }
+    const page = Math.max(1, parseInt(String(req.query.page)) || 1);
+    const limit = Math.min(50, parseInt(String(req.query.limit)) || 30);
+    const offset = (page - 1) * limit;
+
+    const conditions: ReturnType<typeof eq>[] = [];
+    if (req.query.busca) {
+      const busca = `%${String(req.query.busca)}%`;
+      conditions.push(sql`(${activityLogTable.detalhe} ILIKE ${busca} OR ${activityLogTable.user_email} ILIKE ${busca})`);
+    }
+    if (req.query.nivel) conditions.push(eq(activityLogTable.nivel, String(req.query.nivel)));
+    if (req.query.tipo) conditions.push(eq(activityLogTable.tipo, String(req.query.tipo)));
+
+    const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
+
+    const results = await db.select()
+      .from(activityLogTable)
+      .where(whereClause)
+      .orderBy(desc(activityLogTable.created_at))
+      .limit(limit)
+      .offset(offset);
+
+    const [countResult] = await db.select({ count: sql<number>`count(*)` })
+      .from(activityLogTable)
+      .where(whereClause);
+
+    const total = Number(countResult.count);
+    res.json({ data: results, total, page, limit, totalPages: Math.ceil(total / limit) });
+  } catch (err) {
+    logger.error({ err }, "Erro ao buscar activity log");
+    res.status(500).json({ error: "Erro ao buscar log" });
   }
 });
 
