@@ -99,6 +99,7 @@
       if (!Auth.isAuthenticated()) { window.location.href = '/auth/login?redirect=/form-certificado-eventos.html'; return; }
       Auth.renderHeader(document.getElementById('mainHeader'));
       Auth.aplicarPerfilNoCampo('whatsapp', Auth.getTelefone());
+      Auth.aplicarPerfilNoCampo('emailCertificado', Auth.getUserEmail());
       restoreSession();
     }
 

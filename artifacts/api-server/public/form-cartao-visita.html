@@ -217,7 +217,9 @@
 
       Auth.aplicarPerfilNoCampo('whatsappFisico', Auth.getTelefone());
       Auth.aplicarPerfilNoCampo('unidadeFisico', Auth.getUnidade());
+      Auth.aplicarPerfilNoCampo('emailCorporativoFisico', Auth.getUserEmail());
       Auth.aplicarPerfilNoCampo('telefoneDigital', Auth.getTelefone());
+      Auth.aplicarPerfilNoCampo('emailCorporativoDigital', Auth.getUserEmail());
 
       FileUpload.bind('fotoPerfilDigital', 'fotoPerfilDigitalName', { accept: '.jpg,.jpeg,.png,.webp', maxMB: 10 });
     }
