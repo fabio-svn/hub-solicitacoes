@@ -33,10 +33,12 @@ function getPool(): mysql.Pool | null {
   return pool;
 }
 
-function juntarTelefone(ddd: string | null, telefone: string | null): string | null {
-  const d = (ddd || "").trim();
-  const t = (telefone || "").trim();
+function juntarTelefone(ddd: unknown, telefone: unknown): string | null {
+  const d = ddd == null ? "" : String(ddd).trim();
+  let t = telefone == null ? "" : String(telefone).trim();
   if (!d && !t) return null;
+  if (t.length === 9) t = `${t.slice(0, 5)}-${t.slice(5)}`;
+  else if (t.length === 8) t = `${t.slice(0, 4)}-${t.slice(4)}`;
   if (!d) return t;
   if (!t) return d;
   return `(${d}) ${t}`;
@@ -56,24 +58,21 @@ export async function buscarContato(email: string): Promise<PerfilContato> {
 
   try {
     const [rows] = await p.query(
-      "SELECT DDD, Telefone, DS_unidade, Escritorio, Cargo, CD_ancord FROM contatos WHERE LOWER(Email_interno) = LOWER(?) LIMIT 1",
+      "SELECT DDD, Telefone, DS_unidade, Escritorio, DS_cargo, CD_ancord FROM contatos WHERE LOWER(Email_interno) = LOWER(?) LIMIT 1",
       [email]
     );
-    const arr = rows as Array<{
-      DDD: string | null; Telefone: string | null;
-      DS_unidade: string | null; Escritorio: string | null;
-      Cargo: string | null; CD_ancord: string | null;
-    }>;
+    const arr = rows as Array<Record<string, unknown>>;
     if (!arr || arr.length === 0) return vazio;
     const r = arr[0];
+    const toStr = (v: unknown) => (v == null ? null : String(v).trim() || null);
     return {
       email,
-      ddd: r.DDD || null,
+      ddd: toStr(r.DDD),
       telefone: juntarTelefone(r.DDD, r.Telefone),
-      unidade: r.DS_unidade || null,
-      escritorio: r.Escritorio || null,
-      cargo: r.Cargo || null,
-      cd_ancord: r.CD_ancord || null,
+      unidade: toStr(r.DS_unidade),
+      escritorio: toStr(r.Escritorio),
+      cargo: toStr(r.DS_cargo),
+      cd_ancord: toStr(r.CD_ancord),
       encontrado: true,
     };
   } catch (err) {
