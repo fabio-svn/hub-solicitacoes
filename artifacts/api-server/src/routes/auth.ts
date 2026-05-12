@@ -5,6 +5,7 @@ import { db } from "@workspace/db";
 import { usersTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
 import { logger } from "../lib/logger";
+import { buscarContato } from "../lib/mysqlContatos";
 
 const router = Router();
 
@@ -131,6 +132,22 @@ router.get("/callback", async (req, res) => {
     req.session.user = { email, name, role };
     req.session.graphToken = tokenResponse.accessToken;
 
+    try {
+      const perfil = await buscarContato(email);
+      req.session.userProfile = {
+        telefone: perfil.telefone,
+        ddd: perfil.ddd,
+        unidade: perfil.unidade,
+        escritorio: perfil.escritorio,
+        cargo: perfil.cargo,
+        cd_ancord: perfil.cd_ancord,
+        encontrado: perfil.encontrado,
+        atualizado_em: new Date().toISOString(),
+      };
+    } catch (err) {
+      logger.error({ err, email }, "Erro ao buscar perfil MySQL no login");
+    }
+
     res.redirect(sanitizeRedirect(redirectTo));
   } catch (err) {
     logger.error({ err }, "MSAL callback error");
@@ -198,7 +215,62 @@ router.get("/me", (req, res): void => {
     user,
     adminOriginal: req.session.adminOriginal || null,
     impersonating: !!req.session.adminOriginal,
+    profile: req.session.userProfile || null,
   });
+});
+
+router.get("/me-profile", async (req, res): Promise<void> => {
+  const user = req.session?.user;
+  if (!user) {
+    res.status(401).json({ error: "Não autenticado" });
+    return;
+  }
+  if (req.session.userProfile) {
+    res.json({ profile: req.session.userProfile, fonte: "sessao" });
+    return;
+  }
+  try {
+    const perfil = await buscarContato(user.email);
+    req.session.userProfile = {
+      telefone: perfil.telefone,
+      ddd: perfil.ddd,
+      unidade: perfil.unidade,
+      escritorio: perfil.escritorio,
+      cargo: perfil.cargo,
+      cd_ancord: perfil.cd_ancord,
+      encontrado: perfil.encontrado,
+      atualizado_em: new Date().toISOString(),
+    };
+    res.json({ profile: req.session.userProfile, fonte: "mysql" });
+  } catch (err) {
+    logger.error({ err }, "Erro ao buscar perfil MySQL");
+    res.status(500).json({ error: "Erro ao buscar perfil" });
+  }
+});
+
+router.post("/me-profile/refresh", async (req, res): Promise<void> => {
+  const user = req.session?.user;
+  if (!user) {
+    res.status(401).json({ error: "Não autenticado" });
+    return;
+  }
+  try {
+    const perfil = await buscarContato(user.email);
+    req.session.userProfile = {
+      telefone: perfil.telefone,
+      ddd: perfil.ddd,
+      unidade: perfil.unidade,
+      escritorio: perfil.escritorio,
+      cargo: perfil.cargo,
+      cd_ancord: perfil.cd_ancord,
+      encontrado: perfil.encontrado,
+      atualizado_em: new Date().toISOString(),
+    };
+    res.json({ profile: req.session.userProfile, fonte: "mysql" });
+  } catch (err) {
+    logger.error({ err }, "Erro ao recarregar perfil MySQL");
+    res.status(500).json({ error: "Erro ao recarregar perfil" });
+  }
 });
 
 export default router;

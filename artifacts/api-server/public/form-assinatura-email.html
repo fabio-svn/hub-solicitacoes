@@ -114,6 +114,8 @@
       const marcaSel = document.getElementById('marca');
       if (marcaSel) { MARCAS_SVN.forEach(m => { const o = document.createElement('option'); o.value = m; o.textContent = m; marcaSel.appendChild(o); }); }
 
+      Auth.aplicarPerfilNoCampo('telefone', Auth.getTelefone());
+
       restoreSession();
     }
 

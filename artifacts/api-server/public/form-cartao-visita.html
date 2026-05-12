@@ -215,6 +215,10 @@
       const unidadeSel = document.getElementById('unidadeFisico');
       if (unidadeSel) { UNIDADES_SVN.forEach(u => { const o = document.createElement('option'); o.value = u.nome; o.textContent = u.nome; unidadeSel.appendChild(o); }); }
 
+      Auth.aplicarPerfilNoCampo('whatsappFisico', Auth.getTelefone());
+      Auth.aplicarPerfilNoCampo('unidadeFisico', Auth.getUnidade());
+      Auth.aplicarPerfilNoCampo('telefoneDigital', Auth.getTelefone());
+
       FileUpload.bind('fotoPerfilDigital', 'fotoPerfilDigitalName', { accept: '.jpg,.jpeg,.png,.webp', maxMB: 10 });
     }
 

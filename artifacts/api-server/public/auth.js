@@ -1,8 +1,62 @@
 const Auth = {
   user: null,
+  profile: null,
   initialized: false,
   _outsideClickListenerAdded: false,
   _pendenteIds: new Set(),
+
+  getProfile() { return this.profile; },
+  getTelefone() { return this.profile?.telefone || ''; },
+  getUnidade() { return this.profile?.unidade || ''; },
+  getEscritorio() { return this.profile?.escritorio || ''; },
+  getCargo() { return this.profile?.cargo || ''; },
+  getCdAncord() { return this.profile?.cd_ancord || ''; },
+  perfilEncontrado() { return !!this.profile?.encontrado; },
+
+  async refreshProfile() {
+    try {
+      const res = await fetch('/auth/me-profile/refresh', { method: 'POST' });
+      if (res.ok) {
+        const d = await res.json();
+        this.profile = d.profile || null;
+      }
+    } catch {}
+    return this.profile;
+  },
+
+  aplicarPerfilNoCampo(fieldId, valor) {
+    const el = document.getElementById(fieldId);
+    if (!el || !valor) return false;
+    el.value = valor;
+    if (el.tagName === 'SELECT') {
+      let achou = false;
+      for (const opt of el.options) { if (opt.value === valor || opt.textContent === valor) { achou = true; break; } }
+      if (!achou) {
+        const opt = document.createElement('option');
+        opt.value = valor; opt.textContent = valor; opt.selected = true;
+        el.appendChild(opt);
+      }
+      el.value = valor;
+      el.disabled = true;
+    } else {
+      el.readOnly = true;
+    }
+    el.style.background = '#f5f5f5';
+    el.style.cursor = 'not-allowed';
+    el.style.opacity = '0.75';
+    const wrap = el.closest('.field');
+    if (wrap && !wrap.querySelector('.field-perfil-hint')) {
+      const hint = document.createElement('div');
+      hint.className = 'field-perfil-hint';
+      hint.style.cssText = 'font-size:0.74rem;opacity:0.55;margin-top:4px;display:flex;align-items:center;gap:4px';
+      hint.innerHTML = `
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+        Obtido automaticamente do seu cadastro corporativo
+      `;
+      wrap.appendChild(hint);
+    }
+    return true;
+  },
 
   _getLidos() {
     try { return new Set(JSON.parse(localStorage.getItem('svn_lidos_aprovacao') || '[]')); } catch { return new Set(); }
@@ -45,6 +99,16 @@ const Auth = {
       const data = await res.json();
       if (data.authenticated) {
         this.user = data.user;
+        this.profile = data.profile || null;
+        if (!this.profile) {
+          try {
+            const pr = await fetch('/auth/me-profile');
+            if (pr.ok) {
+              const pd = await pr.json();
+              this.profile = pd.profile || null;
+            }
+          } catch {}
+        }
       }
       if (data.impersonating && !sessionStorage.getItem('svn_impersonate')) {
         sessionStorage.setItem('svn_impersonate', data.user.email);

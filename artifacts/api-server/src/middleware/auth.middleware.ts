@@ -6,6 +6,17 @@ interface SessionUser {
   role: string;
 }
 
+export interface UserProfile {
+  telefone: string | null;
+  ddd: string | null;
+  unidade: string | null;
+  escritorio: string | null;
+  cargo: string | null;
+  cd_ancord: string | null;
+  encontrado: boolean;
+  atualizado_em: string;
+}
+
 declare module "express-session" {
   interface SessionData {
     user?: SessionUser;
@@ -13,6 +24,7 @@ declare module "express-session" {
     authNonce?: string;
     authRedirect?: string;
     graphToken?: string;
+    userProfile?: UserProfile;
   }
 }
 
