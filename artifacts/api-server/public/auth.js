@@ -27,7 +27,6 @@ const Auth = {
   aplicarPerfilNoCampo(fieldId, valor) {
     const el = document.getElementById(fieldId);
     if (!el || !valor) return false;
-    el.value = valor;
     if (el.tagName === 'SELECT') {
       let achou = false;
       for (const opt of el.options) { if (opt.value === valor || opt.textContent === valor) { achou = true; break; } }
@@ -36,22 +35,16 @@ const Auth = {
         opt.value = valor; opt.textContent = valor; opt.selected = true;
         el.appendChild(opt);
       }
-      el.value = valor;
-      el.disabled = true;
-    } else {
-      el.readOnly = true;
     }
-    el.style.background = '#f5f5f5';
-    el.style.cursor = 'not-allowed';
-    el.style.opacity = '0.75';
+    el.value = valor;
     const wrap = el.closest('.field');
     if (wrap && !wrap.querySelector('.field-perfil-hint')) {
       const hint = document.createElement('div');
       hint.className = 'field-perfil-hint';
-      hint.style.cssText = 'font-size:0.74rem;opacity:0.55;margin-top:4px;display:flex;align-items:center;gap:4px';
+      hint.style.cssText = 'font-size:0.74rem;opacity:0.6;margin-top:4px;display:flex;align-items:center;gap:4px;color:var(--carbon-black,#221b19)';
       hint.innerHTML = `
         <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-        Obtido automaticamente do seu cadastro corporativo
+        Pré-preenchido do seu cadastro — pode editar se quiser
       `;
       wrap.appendChild(hint);
     }
