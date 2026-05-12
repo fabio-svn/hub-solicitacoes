@@ -12,6 +12,7 @@ declare module "express-session" {
     adminOriginal?: SessionUser;
     authNonce?: string;
     authRedirect?: string;
+    graphToken?: string;
   }
 }
 

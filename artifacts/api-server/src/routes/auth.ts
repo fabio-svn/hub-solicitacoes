@@ -129,11 +129,54 @@ router.get("/callback", async (req, res) => {
     }
 
     req.session.user = { email, name, role };
+    req.session.graphToken = tokenResponse.accessToken;
 
     res.redirect(sanitizeRedirect(redirectTo));
   } catch (err) {
     logger.error({ err }, "MSAL callback error");
     res.redirect("/?error=auth_failed");
+  }
+});
+
+router.get("/me-graph", async (req, res): Promise<void> => {
+  const user = req.session?.user;
+  if (!user) {
+    res.status(401).json({ error: "Não autenticado" });
+    return;
+  }
+  const token = req.session?.graphToken;
+  if (!token) {
+    res.status(400).json({ error: "Token do Microsoft Graph não disponível. Faça logout e login novamente." });
+    return;
+  }
+  try {
+    const fields = [
+      "id", "displayName", "givenName", "surname",
+      "userPrincipalName", "mail",
+      "mobilePhone", "businessPhones",
+      "officeLocation", "jobTitle", "department",
+      "companyName", "employeeId",
+      "city", "state", "country",
+      "streetAddress", "postalCode",
+      "onPremisesSamAccountName", "onPremisesUserPrincipalName",
+      "onPremisesExtensionAttributes",
+    ].join(",");
+
+    const graphRes = await fetch(
+      `https://graph.microsoft.com/v1.0/me?$select=${fields}`,
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+    const data = await graphRes.json() as Record<string, unknown>;
+
+    if (!graphRes.ok) {
+      res.status(graphRes.status).json({ error: "Erro ao chamar Graph API", detail: data });
+      return;
+    }
+
+    res.json({ sessionUser: user, graphProfile: data });
+  } catch (err) {
+    logger.error({ err }, "Erro ao buscar perfil Graph");
+    res.status(500).json({ error: "Erro interno ao buscar perfil" });
   }
 });
 
