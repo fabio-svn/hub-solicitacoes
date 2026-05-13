@@ -7,6 +7,7 @@ import { eq, desc, and, ne, sql, inArray } from "drizzle-orm";
 import { requireAuth } from "../middleware/auth.middleware";
 import { createClickUpTask, getClickUpTaskStatus, type ArquivosMap } from "./clickup";
 import { uploadToR2 } from "./r2";
+import { gerarAssinaturaEmail } from "./gerador-assinatura";
 import { logger } from "../lib/logger";
 
 const router = Router();
@@ -130,7 +131,7 @@ function parseQueryArray(val: unknown): string[] {
 }
 
 const WEBHOOK_MAP: Record<string, string | undefined> = {
-  "assinatura-email":    process.env.WEBHOOK_ASSINATURA_EMAIL,
+  // "assinatura-email" removido — geração feita diretamente pelo backend
   "cartao-visita-fisico": process.env.WEBHOOK_CARTAO_FISICO,
   "cartao-visita-digital": process.env.WEBHOOK_CARTAO_DIGITAL,
   "cartao-boas-vindas":  process.env.WEBHOOK_BOAS_VINDAS,
@@ -404,6 +405,12 @@ router.post("/solicitacoes", requireAuth, upload.any(), async (req, res): Promis
 
     dispararWebhook(tipo_solicitacao, parsedDados, user.email, arquivosMap);
 
+    if (tipo_solicitacao === "assinatura-email") {
+      gerarAssinaturaEmail(solicitacao.id, parsedDados).catch(err => {
+        logger.error({ err }, "Erro ao gerar assinatura de e-mail");
+      });
+    }
+
     await logAtividade({
       userEmail: user.email, userName: user.name,
       tipo: "solicitacao_criada", nivel: "info",
@@ -672,6 +679,40 @@ router.get("/solicitacoes/:id/status", requireAuth, async (req, res): Promise<vo
   }
 });
 
+router.post("/solicitacoes/:id/entrega", requireAuth, async (req, res): Promise<void> => {
+  try {
+    const id = parseInt(String(req.params.id));
+    if (isNaN(id)) { res.status(400).json({ error: "ID inválido" }); return; }
+
+    const internalSecret = process.env.INTERNAL_API_SECRET;
+    const user = req.session?.user;
+    const isInternal = internalSecret && req.headers["x-internal-secret"] === internalSecret;
+    const isAdmin = user?.role === "admin" || user?.role === "gestor";
+
+    if (!isInternal && !isAdmin) {
+      res.status(403).json({ error: "Acesso negado" }); return;
+    }
+
+    const { links } = req.body as { links: Array<{ label: string; url: string }> };
+    if (!links || !Array.isArray(links) || links.length === 0) {
+      res.status(400).json({ error: "links é obrigatório" }); return;
+    }
+
+    const [solicitacao] = await db.select().from(solicitacoesTable).where(eq(solicitacoesTable.id, id));
+    if (!solicitacao) { res.status(404).json({ error: "Não encontrada" }); return; }
+
+    await db.update(solicitacoesTable)
+      .set({ entrega_links: links, status: "em-aprovacao", updated_at: new Date() })
+      .where(eq(solicitacoesTable.id, id));
+
+    logger.info({ id, count: links.length }, "Links de entrega salvos");
+    res.json({ success: true });
+  } catch (err) {
+    logger.error({ err }, "Erro ao salvar entrega");
+    res.status(500).json({ error: "Erro" });
+  }
+});
+
 router.get("/solicitacoes/:id/entrega", requireAuth, async (req, res): Promise<void> => {
   try {
     const user = req.session.user!;
@@ -689,6 +730,16 @@ router.get("/solicitacoes/:id/entrega", requireAuth, async (req, res): Promise<v
     const tiposSemAprovacao = ["pagina-assessores-dados", "pagina-assessores-atualizacao"];
     if (tiposSemAprovacao.includes(solicitacao.tipo_solicitacao)) {
       res.status(403).json({ error: "Aprovação não disponível para este tipo de solicitação" });
+      return;
+    }
+
+    // Verificar entrega_links no banco antes de consultar ClickUp
+    if (
+      solicitacao.entrega_links &&
+      Array.isArray(solicitacao.entrega_links) &&
+      (solicitacao.entrega_links as Array<unknown>).length > 0
+    ) {
+      res.json({ links: solicitacao.entrega_links, status: solicitacao.status });
       return;
     }
 

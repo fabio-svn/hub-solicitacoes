@@ -25,6 +25,7 @@ export const solicitacoesTable = pgTable("solicitacoes", {
   titulo: text("titulo"),
   clickup_url: text("clickup_url"),
   avaliacao: jsonb("avaliacao"),
+  entrega_links: jsonb("entrega_links"),
   status: varchar("status", { length: 30 }).default("recebido").notNull(),
   responsavel: text("responsavel"),
   created_at: timestamp("created_at").defaultNow().notNull(),
