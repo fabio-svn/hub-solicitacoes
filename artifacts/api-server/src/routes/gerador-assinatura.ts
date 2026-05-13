@@ -1,4 +1,3 @@
-import sharp from "sharp";
 import * as fs from "fs";
 import * as path from "path";
 import * as os from "os";
@@ -103,6 +102,7 @@ export async function gerarAssinaturaEmail(
   solicitacaoId: number,
   dados: Record<string, unknown>
 ): Promise<void> {
+  const sharp = (await import("sharp")).default;
   logger.info({ solicitacaoId }, "Iniciando geração de assinatura PNG");
 
   const nome     = String(dados.nomeCompleto || dados.nome || "").trim();
