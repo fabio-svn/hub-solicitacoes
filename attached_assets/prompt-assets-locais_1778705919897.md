@@ -1,3 +1,26 @@
+# Assets locais para geração de assinatura — sem dependência de URLs externas
+
+## 1. Criar pasta e subir arquivos no Replit
+
+Criar a pasta:
+```
+artifacts/api-server/src/assets/imagens/
+```
+
+Subir os seguintes arquivos nessa pasta com esses nomes exatos:
+- `bg_assinatura.png`
+- `assinatura_linha.png`
+- `assinatura_selos.png`
+- `assinatura_selo_cfp.png`
+- `assinatura_logo_svn_investimentos.png`
+
+---
+
+## 2. `artifacts/api-server/src/routes/gerador-assinatura.ts`
+
+Substituir o arquivo inteiro pelo conteúdo abaixo:
+
+```ts
 import * as fs from "fs";
 import * as path from "path";
 import * as os from "os";
@@ -7,8 +30,10 @@ import { eq } from "drizzle-orm";
 import { uploadToR2 } from "./r2";
 import { logger } from "../lib/logger";
 
+// ─── Diretório de assets locais ──────────────────────────────────────────────
 const ASSETS_DIR = path.resolve(__dirname, "../assets/imagens");
 
+// ─── Resolução de asset: URL remota (env var) ou arquivo local (fallback) ────
 function resolveAsset(envVar: string | undefined, localFile: string): string {
   if (envVar && envVar.startsWith("http")) return envVar;
   return path.join(ASSETS_DIR, localFile);
@@ -26,15 +51,18 @@ const ASSETS = {
   } as Record<string, string>,
 };
 
+// ─── Fontes ───────────────────────────────────────────────────────────────────
 const FONTS_DIR = path.resolve(__dirname, "../assets/fonts");
 const FONT_NOME  = fs.existsSync(path.join(FONTS_DIR, "IvyJournal-Light.otf"))
   ? path.join(FONTS_DIR, "IvyJournal-Light.otf") : null;
 const FONT_DADOS = fs.existsSync(path.join(FONTS_DIR, "RoobertPRO-Regular.otf"))
   ? path.join(FONTS_DIR, "RoobertPRO-Regular.otf") : null;
 
+// ─── Canvas ───────────────────────────────────────────────────────────────────
 const W = 4078;
 const H = 988;
 
+// ─── Posições validadas ───────────────────────────────────────────────────────
 const POS = {
   logo:     { left: 284,  top: 444, w: 1203, h: 112 },
   linha:    { left: 1756, top: 341, w: 11,   h: 306 },
@@ -45,6 +73,7 @@ const POS = {
   selos:    { left: 3400, top: 240, w: 393,  h: 508 },
 };
 
+// ─── Helpers ──────────────────────────────────────────────────────────────────
 async function loadAsset(urlOrPath: string): Promise<Buffer> {
   if (urlOrPath.startsWith("http")) {
     const res = await fetch(urlOrPath);
@@ -94,6 +123,7 @@ function buildTextoSvg(
   </svg>`);
 }
 
+// ─── Função principal ─────────────────────────────────────────────────────────
 export async function gerarAssinaturaEmail(
   solicitacaoId: number,
   dados: Record<string, unknown>
@@ -111,6 +141,7 @@ export async function gerarAssinaturaEmail(
   try {
     const sharp = (await import("sharp")).default;
 
+    // Baixar/ler e redimensionar assets em paralelo
     const [logoBuf, linhaBuf, selosBuf, cfpBuf] = await Promise.all([
       resizeAsset(logoUrl,      POS.logo.w,  POS.logo.h),
       resizeAsset(ASSETS.linha, POS.linha.w, POS.linha.h),
@@ -118,10 +149,12 @@ export async function gerarAssinaturaEmail(
       cfp      ? resizeAsset(ASSETS.seloCfp, POS.cfp.w,   POS.cfp.h)  : Promise.resolve(null),
     ]);
 
+    // Renderizar textos como SVG
     const nomeSvg     = buildTextoSvg(nome,     149, "IvyJournal", FONT_NOME,  "#FFF8F3");
     const telefoneSvg = buildTextoSvg(telefone,  64, "RoobertPRO", FONT_DADOS, "#FFF8F3");
     const emailSvg    = buildTextoSvg(email,     64, "RoobertPRO", FONT_DADOS, "#FFF8F3");
 
+    // Montar camadas
     const layers: Array<{ input: Buffer; top: number; left: number }> = [
       { input: logoBuf,     top: POS.logo.top,     left: POS.logo.left     },
       { input: linhaBuf,    top: POS.linha.top,    left: POS.linha.left    },
@@ -133,6 +166,7 @@ export async function gerarAssinaturaEmail(
     if (cfpBuf)   layers.push({ input: cfpBuf,   top: POS.cfp.top,   left: POS.cfp.left   });
     if (selosBuf) layers.push({ input: selosBuf, top: POS.selos.top, left: POS.selos.left });
 
+    // Compor sobre o background
     const bgBuf = await loadAsset(ASSETS.bg);
     const pngBuffer = await sharp(bgBuf)
       .resize(W, H)
@@ -140,6 +174,7 @@ export async function gerarAssinaturaEmail(
       .png({ compressionLevel: 8 })
       .toBuffer();
 
+    // Salvar temporariamente e fazer upload para R2
     const tmpPath = path.join(os.tmpdir(), `assinatura-${solicitacaoId}-${Date.now()}.png`);
     await fs.promises.writeFile(tmpPath, pngBuffer);
 
@@ -149,6 +184,7 @@ export async function gerarAssinaturaEmail(
       "assinatura"
     );
 
+    // Salvar link e marcar como concluído
     await db.update(solicitacoesTable)
       .set({
         entrega_links: [{ label: "Assinatura de E-mail", url }],
@@ -164,3 +200,31 @@ export async function gerarAssinaturaEmail(
     throw err;
   }
 }
+```
+
+---
+
+## 3. Build
+
+```bash
+cd artifacts/api-server && pnpm run build
+```
+
+Reiniciar o servidor após o build.
+
+---
+
+## Observação — migração para R2 depois
+
+Quando tiver acesso ao Cloudflare R2, subir os assets e adicionar as variáveis
+de ambiente no Railway/Replit:
+
+```
+ASSET_BG_ASSINATURA=https://pub-...r2.dev/bg_assinatura.png
+ASSET_LINHA_ASSINATURA=https://pub-...r2.dev/assinatura_linha.png
+ASSET_SELOS_ASSINATURA=https://pub-...r2.dev/assinatura_selos.png
+ASSET_SELO_CFP=https://pub-...r2.dev/assinatura_selo_cfp.png
+ASSET_LOGO_SVN_INVESTIMENTOS=https://pub-...r2.dev/assinatura_logo_svn_investimentos.png
+```
+
+O código vai usar as URLs das variáveis automaticamente sem precisar rebuildar.
