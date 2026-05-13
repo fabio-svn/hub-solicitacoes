@@ -156,7 +156,7 @@ export async function gerarAssinaturaEmail(
     await db.update(solicitacoesTable)
       .set({
         entrega_links: [{ label: "Assinatura de E-mail", url }],
-        status: "em-aprovacao",
+        status: "concluido",
         updated_at: new Date(),
       })
       .where(eq(solicitacoesTable.id, solicitacaoId));

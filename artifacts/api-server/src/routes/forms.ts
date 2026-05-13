@@ -701,8 +701,21 @@ router.post("/solicitacoes/:id/entrega", requireAuth, async (req, res): Promise<
     const [solicitacao] = await db.select().from(solicitacoesTable).where(eq(solicitacoesTable.id, id));
     if (!solicitacao) { res.status(404).json({ error: "Não encontrada" }); return; }
 
+    const TIPOS_AUTOMACAO = [
+      "assinatura-email",
+      "cartao-visita-digital",
+      "cartao-boas-vindas",
+      "divulgacao-nps",
+      "convite-fp",
+      "certificado-eventos",
+      "cartao-comemorativo",
+    ];
+    const novoStatus = TIPOS_AUTOMACAO.includes(solicitacao.tipo_solicitacao)
+      ? "concluido"
+      : "em-aprovacao";
+
     await db.update(solicitacoesTable)
-      .set({ entrega_links: links, status: "em-aprovacao", updated_at: new Date() })
+      .set({ entrega_links: links, status: novoStatus, updated_at: new Date() })
       .where(eq(solicitacoesTable.id, id));
 
     logger.info({ id, count: links.length }, "Links de entrega salvos");
