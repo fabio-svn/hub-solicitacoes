@@ -176,7 +176,7 @@ function buildWebhookFields(
         email:           s(dados.emailCorporativo),
         contrato_social: s(dados.contratoSocial),
       };
-      if (arquivosMap["fotoPerfil"]) fields.foto = arquivosMap["fotoPerfil"];
+      if (arquivosMap["fotoPerfilDigital"]) fields.foto = arquivosMap["fotoPerfilDigital"];
       return fields;
     }
 
