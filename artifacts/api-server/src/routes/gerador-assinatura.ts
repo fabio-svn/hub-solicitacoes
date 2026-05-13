@@ -7,7 +7,7 @@ import { eq } from "drizzle-orm";
 import { uploadToR2 } from "./r2";
 import { logger } from "../lib/logger";
 
-const ASSETS_DIR = path.resolve(__dirname, "../assets/imagens");
+const ASSETS_DIR = path.resolve(__dirname, "../../src/assets/imagens");
 
 function resolveAsset(envVar: string | undefined, localFile: string): string {
   if (envVar && envVar.startsWith("http")) return envVar;
