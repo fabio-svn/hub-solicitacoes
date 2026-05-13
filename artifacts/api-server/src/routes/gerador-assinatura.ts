@@ -140,14 +140,9 @@ export async function gerarAssinaturaEmail(
       .png({ compressionLevel: 8 })
       .toBuffer();
 
-    const tmpPath = path.join(os.tmpdir(), `assinatura-${solicitacaoId}-${Date.now()}.png`);
-    await fs.promises.writeFile(tmpPath, pngBuffer);
-
-    const url = await uploadToR2(
-      { path: tmpPath, originalname: "assinatura.png", mimetype: "image/png" },
-      solicitacaoId,
-      "assinatura"
-    );
+    const publicPath = `/home/runner/workspace/artifacts/api-server/public/assinatura-teste.png`;
+    await fs.promises.writeFile(publicPath, pngBuffer);
+    const url = `https://6dc99d18-84a9-446c-9548-8c45cbf18bca-00-160oqpp1c29sx.picard.replit.dev/assinatura-teste.png`;
 
     await db.update(solicitacoesTable)
       .set({
