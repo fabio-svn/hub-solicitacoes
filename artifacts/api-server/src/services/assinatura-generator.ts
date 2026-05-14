@@ -27,6 +27,44 @@ function getFontBody(): any {
   return fontBody;
 }
 
+// ── Asset URLs ─────────────────────────────────────────────────────────────
+const ASSETS_BASE = "https://solicitacoes.portalsvn.com.br/assinatura_email";
+
+const SHARED_URLS = {
+  bg:    `${ASSETS_BASE}/bg_assinatura.png`,
+  linha: `${ASSETS_BASE}/assinatura_linha.png`,
+  selos: `${ASSETS_BASE}/assinatura_selos.png`,
+  cfp:   `${ASSETS_BASE}/assinatura_selo_cfp.png`,
+};
+
+const LOGO_URLS: Record<string, string> = {
+  "svn-investimentos":           `${ASSETS_BASE}/assinaturas_assinatura_logo_svn.png`,
+  "svn-capital":                 `${ASSETS_BASE}/assinaturas_assinatura_logo_svn_capital.png`,
+  "svn-connect":                 `${ASSETS_BASE}/assinaturas_assinatura_logo_svn_connect.png`,
+  "svn-gestao":                  `${ASSETS_BASE}/assinaturas_assinatura_logo_svn_gestao.png`,
+  "svn-global":                  `${ASSETS_BASE}/assinaturas_assinatura_logo_svn_global.png`,
+  "svn-imb":                     `${ASSETS_BASE}/assinaturas_assinatura_logo_svn_imb.png`,
+  "svn-agro-cambio-commodities": `${ASSETS_BASE}/assinaturas_assinatura_logo_svn_agro_cambio_commodities.png`,
+  "svn-protecao-patrimonial":    `${ASSETS_BASE}/assinaturas_assinatura_logo_svn_protecaopatrimonial.png`,
+  "svn-wealth-planning":         `${ASSETS_BASE}/assinaturas_assinatura_logo_svn_wealthplanning.png`,
+};
+
+// Cache em memória (vida útil = vida do processo)
+const assetCache = new Map<string, Buffer>();
+
+async function getAsset(url: string): Promise<Buffer> {
+  const cached = assetCache.get(url);
+  if (cached) return cached;
+  const res = await fetch(url);
+  if (!res.ok) {
+    throw new Error(`Falha ao buscar asset ${url}: ${res.status}`);
+  }
+  const buf = Buffer.from(await res.arrayBuffer());
+  assetCache.set(url, buf);
+  return buf;
+}
+
+// ── Layout ──────────────────────────────────────────────────────────────────
 const LAYOUT = {
   canvas: { w: 4078, h: 988 },
   logo:   { x: 284,  y: 444 },
@@ -118,7 +156,7 @@ export interface AssinaturaInput {
   telefone: string;
   email: string;
   temCFP?: boolean;
-  marca?: "svn-investimentos";
+  marca?: string;
 }
 
 export interface AssinaturaResult {
@@ -128,35 +166,44 @@ export interface AssinaturaResult {
 }
 
 export async function gerarAssinatura(input: AssinaturaInput): Promise<AssinaturaResult> {
-  const sharp  = (await import("sharp")).default;
+  const sharp    = (await import("sharp")).default;
   const fdisplay = getFontDisplay();
   const fbody    = getFontBody();
   const marca    = input.marca ?? "svn-investimentos";
-  const dir      = path.join(ASSETS_DIR, "assinatura", marca);
+
+  const logoUrl = LOGO_URLS[marca];
+  if (!logoUrl) {
+    throw new Error(`Marca desconhecida: ${marca}`);
+  }
 
   const fitNome  = autoFit(fdisplay, input.nome,  FONT_SIZES.nome_default,  FONT_SIZES.nome_min,  SAFE_AREA_W);
   const fitEmail = autoFit(fbody,    input.email, FONT_SIZES.email_default, FONT_SIZES.email_min, SAFE_AREA_W);
 
-  const [nomeBuf, telBuf, emailBuf] = await Promise.all([
+  const [bgBuf, logoBuf, linhaBuf, selosBuf, nomeBuf, telBuf, emailBuf, cfpBuf] = await Promise.all([
+    getAsset(SHARED_URLS.bg),
+    getAsset(logoUrl),
+    getAsset(SHARED_URLS.linha),
+    getAsset(SHARED_URLS.selos),
     renderText(fdisplay, input.nome,     fitNome.size),
     renderText(fbody,    input.telefone, FONT_SIZES.tel),
     renderText(fbody,    input.email,    fitEmail.size),
+    input.temCFP ? getAsset(SHARED_URLS.cfp) : Promise.resolve(null as Buffer | null),
   ]);
 
   const composites: import("sharp").OverlayOptions[] = [
-    { input: path.join(dir, "logo.png"),  top: LAYOUT.logo.y,  left: LAYOUT.logo.x,  blend: "screen" },
-    { input: path.join(dir, "linha.png"), top: LAYOUT.linha.y, left: LAYOUT.linha.x, blend: "screen" },
-    { input: nomeBuf,  top: topForText(fdisplay, fitNome.size,  LAYOUT.nome.y_top),   left: LAYOUT.nome.x  },
-    { input: telBuf,   top: topForText(fbody,    FONT_SIZES.tel, LAYOUT.tel.y_top),   left: LAYOUT.tel.x   },
-    { input: emailBuf, top: topForText(fbody,    fitEmail.size, LAYOUT.email.y_top),  left: LAYOUT.email.x },
-    { input: path.join(dir, "selos.png"), top: LAYOUT.selos.y, left: LAYOUT.selos.x, blend: "screen" },
+    { input: logoBuf,  top: LAYOUT.logo.y,  left: LAYOUT.logo.x,  blend: "screen" },
+    { input: linhaBuf, top: LAYOUT.linha.y, left: LAYOUT.linha.x, blend: "screen" },
+    { input: nomeBuf,  top: topForText(fdisplay, fitNome.size,   LAYOUT.nome.y_top),  left: LAYOUT.nome.x  },
+    { input: telBuf,   top: topForText(fbody,    FONT_SIZES.tel,  LAYOUT.tel.y_top),  left: LAYOUT.tel.x   },
+    { input: emailBuf, top: topForText(fbody,    fitEmail.size,   LAYOUT.email.y_top), left: LAYOUT.email.x },
+    { input: selosBuf, top: LAYOUT.selos.y, left: LAYOUT.selos.x, blend: "screen" },
   ];
 
-  if (input.temCFP) {
-    composites.push({ input: path.join(dir, "cfp.png"), top: LAYOUT.cfp.y, left: LAYOUT.cfp.x, blend: "screen" });
+  if (input.temCFP && cfpBuf) {
+    composites.push({ input: cfpBuf, top: LAYOUT.cfp.y, left: LAYOUT.cfp.x, blend: "screen" });
   }
 
-  const pngBuffer = await sharp(path.join(dir, "bg.png"))
+  const pngBuffer = await sharp(bgBuf)
     .composite(composites)
     .png()
     .toBuffer();

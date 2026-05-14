@@ -628,14 +628,9 @@
       if (item.tipo_solicitacao === 'assinatura-email') {
         const isAdm = typeof Auth !== 'undefined' && Auth.isAdmin && Auth.isAdmin();
 
-        // Título serif grande
+        // Título — usa o mesmo .sol-titulo do restante do hub (sem override)
         const tEl = document.getElementById('solTitulo');
         tEl.textContent = tipoLabel;
-        tEl.style.fontFamily = 'Taviraj, "IvyJournal", Georgia, serif';
-        tEl.style.fontSize = 'clamp(2rem, 5vw, 3rem)';
-        tEl.style.fontWeight = '300';
-        tEl.style.lineHeight = '1.1';
-        tEl.style.marginBottom = '0';
         document.title = tipoLabel + ' — Hub SVN';
 
         // Ocultar meta e responsável

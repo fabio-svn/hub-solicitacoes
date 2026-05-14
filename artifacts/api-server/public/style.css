@@ -1014,30 +1014,16 @@ input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
   flex-shrink: 0;
 }
 
-/* Botão de download — página de resumo (full width, grande) */
+/* Botão de download — página de resumo (full width, altura do .btn padrão) */
 .btn-download-page {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
   width: 100%;
-  min-height: 68px;
-  border-radius: 12px;
-  text-decoration: none;
-  font-family: 'Nunito Sans', sans-serif;
-  font-size: 1.1rem;
-  font-weight: 700;
-  color: var(--carbon-black);
-  cursor: pointer;
-  border: none;
-  transition: filter 0.15s ease, transform 0.15s ease;
-  margin-top: 0;
+  justify-content: center;
 }
 .btn-download-page:hover {
-  filter: brightness(1.06);
-  transform: translateY(-1px);
   text-decoration: none;
   color: var(--carbon-black);
+  filter: brightness(1.06);
+  transform: translateY(-1px);
 }
 
 /* Card da assinatura — sem fundo branco, só sombra */
