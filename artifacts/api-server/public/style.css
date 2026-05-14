@@ -985,6 +985,45 @@ input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
   100% { background-position: 0% 50%; }
 }
 
+/* Download button — assinatura de e-mail */
+.btn-download-assinatura {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 14px;
+  border-radius: 8px;
+  text-decoration: none;
+  font-family: 'Nunito Sans', sans-serif;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  border: none;
+  transition: opacity 0.15s, transform 0.15s, box-shadow 0.15s;
+}
+.btn-download-assinatura.btn-download-large {
+  width: 100%;
+  justify-content: center;
+  padding: 13px 20px;
+  font-size: 0.95rem;
+  border-radius: 10px;
+  margin-top: 4px;
+}
+
+/* Preview da assinatura */
+.assinatura-preview-wrapper {
+  background: var(--carbon-black, #221B19);
+  border-radius: 8px;
+  padding: 12px;
+  overflow: hidden;
+  margin-bottom: 14px;
+}
+.assinatura-preview-img {
+  width: 100%;
+  height: auto;
+  display: block;
+  border-radius: 4px;
+}
+
 /* Selo chip (assessores form) */
 .selo-chip {
   display: inline-flex;

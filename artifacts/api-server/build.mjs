@@ -4,6 +4,7 @@ import { fileURLToPath } from "node:url";
 import { build as esbuild } from "esbuild";
 import esbuildPluginPino from "esbuild-plugin-pino";
 import { rm } from "node:fs/promises";
+import { cpSync } from "node:fs";
 
 // Plugins (e.g. 'esbuild-plugin-pino') may use `require` to resolve dependencies
 globalThis.require = createRequire(import.meta.url);
@@ -30,6 +31,7 @@ async function buildAll() {
     external: [
       "*.node",
       "sharp",
+      "fontkit",
       "better-sqlite3",
       "sqlite3",
       "canvas",
@@ -118,6 +120,11 @@ globalThis.__dirname = __bannerPath.dirname(globalThis.__filename);
     `,
     },
   });
+
+  // Copy assets (fonts + assinatura images) to dist so they're available at runtime
+  const assetsDir = path.resolve(artifactDir, "assets");
+  const distAssetsDir = path.resolve(distDir, "assets");
+  cpSync(assetsDir, distAssetsDir, { recursive: true });
 }
 
 buildAll().catch((err) => {

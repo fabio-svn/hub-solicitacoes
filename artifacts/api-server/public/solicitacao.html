@@ -857,20 +857,11 @@
       }
 
       card.style.display = 'block';
+      const primeiroLink = links[0];
       const botoesHtml = links.map(l => `
         <a href="${esc(l.url)}" target="_blank" rel="noopener"
-           download
-           style="
-             display:inline-flex;align-items:center;gap:8px;
-             padding:10px 20px;
-             background:var(--carbon-black);color:var(--paper-white);
-             border-radius:10px;text-decoration:none;
-             font-weight:700;font-size:0.875rem;
-             transition:opacity 0.15s;
-             box-shadow:0 2px 8px rgba(34,27,25,0.2);
-           "
-           onmouseover="this.style.opacity='0.85'"
-           onmouseout="this.style.opacity='1'">
+           download="assinatura-${item.id}.png"
+           class="btn btn-submit-gold btn-download-assinatura btn-download-large">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
             <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
             <polyline points="7 10 12 15 17 10"/>
@@ -879,6 +870,13 @@
           ${esc(l.label)}
         </a>
       `).join('');
+
+      // Preview img (só para assinatura-email que tem URL de imagem)
+      const isAssinatura = item.tipo_solicitacao === 'assinatura-email';
+      const previewHtml = isAssinatura && primeiroLink ? `
+        <div class="assinatura-preview-wrapper">
+          <img src="${esc(primeiroLink.url)}" alt="Assinatura de e-mail" class="assinatura-preview-img" />
+        </div>` : '';
 
       card.innerHTML = `
         <div class="form-card" style="padding:20px 24px">
@@ -890,13 +888,14 @@
             </div>
             <div>
               <div style="font-weight:700;font-size:0.92rem">
-                Material pronto para download
+                ${isAssinatura ? 'Sua assinatura está pronta' : 'Material pronto para download'}
               </div>
               <div style="font-size:0.78rem;opacity:0.42;margin-top:2px">
                 Clique no botão abaixo para baixar
               </div>
             </div>
           </div>
+          ${previewHtml}
           <div style="display:flex;gap:10px;flex-wrap:wrap">
             ${botoesHtml}
           </div>
@@ -1680,6 +1679,11 @@
     ]);
 
     function renderDados(dados, item) {
+      if (item.tipo_solicitacao === 'assinatura-email') {
+        const dadosCard = document.getElementById('dadosCard');
+        if (dadosCard) dadosCard.style.display = 'none';
+        return;
+      }
       const container = document.getElementById('dadosContent');
       const palProcessed = new Set();
       let gridFields = '';

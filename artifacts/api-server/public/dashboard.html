@@ -514,7 +514,18 @@
           </div>
           <div class="request-badges">
             ${naturezaLabel ? `<span class="badge" style="background:var(--icon-bg);color:var(--carbon-black);opacity:0.7">${esc(naturezaLabel)}</span>` : ''}
-            <span class="badge" style="background:${statusObj.bg || '#f1f5f9'};color:${statusObj.text || '#475569'}">${esc(statusObj.label)}</span>
+            ${(item.tipo_solicitacao === 'assinatura-email' && item.status === 'concluido' && Array.isArray(item.entrega_links) && item.entrega_links.length > 0) ? `
+              <a href="${esc(item.entrega_links[0].url)}" download="assinatura-${item.id}.png"
+                 onclick="event.stopPropagation()"
+                 class="btn-download-assinatura"
+                 title="Baixar assinatura">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                  <polyline points="7 10 12 15 17 10"/>
+                  <line x1="12" y1="15" x2="12" y2="3"/>
+                </svg>
+                Baixar
+              </a>` : `<span class="badge" style="background:${statusObj.bg || '#f1f5f9'};color:${statusObj.text || '#475569'}">${esc(statusObj.label)}</span>`}
             ${isAdm && item.clickup_url ? `
               <a href="${esc(item.clickup_url)}" target="_blank" rel="noopener"
                  onclick="event.stopPropagation()"
