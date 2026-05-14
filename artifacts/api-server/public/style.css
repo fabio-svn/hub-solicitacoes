@@ -985,43 +985,72 @@ input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
   100% { background-position: 0% 50%; }
 }
 
-/* Download button — assinatura de e-mail */
-.btn-download-assinatura {
+/* Download pill — dashboard card (mesmas dimensões do .badge) */
+.btn-download-tag {
   display: inline-flex;
   align-items: center;
-  gap: 7px;
-  padding: 7px 14px;
-  border-radius: 8px;
-  text-decoration: none;
+  gap: 5px;
+  padding: 4px 12px;
+  border-radius: 999px;
   font-family: 'Nunito Sans', sans-serif;
-  font-size: 0.8rem;
+  font-size: 0.7rem;
   font-weight: 700;
+  color: var(--carbon-black);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  text-decoration: none;
+  background: linear-gradient(135deg, #c9a84c 0%, #f0d080 40%, #c9a84c 60%, #a07830 100%);
+  background-size: 200% 200%;
+  animation: goldShimmer 2.5s ease infinite;
   cursor: pointer;
-  border: none;
-  transition: opacity 0.15s, transform 0.15s, box-shadow 0.15s;
+  transition: filter 0.15s ease;
 }
-.btn-download-assinatura.btn-download-large {
-  width: 100%;
-  justify-content: center;
-  padding: 13px 20px;
-  font-size: 0.95rem;
-  border-radius: 10px;
-  margin-top: 4px;
+.btn-download-tag:hover {
+  filter: brightness(1.07);
+}
+.btn-download-tag svg {
+  width: 11px;
+  height: 11px;
+  flex-shrink: 0;
 }
 
-/* Preview da assinatura */
-.assinatura-preview-wrapper {
-  background: var(--carbon-black, #221B19);
-  border-radius: 8px;
-  padding: 12px;
-  overflow: hidden;
-  margin-bottom: 14px;
+/* Botão de download — página de resumo (full width, grande) */
+.btn-download-page {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 68px;
+  border-radius: 12px;
+  text-decoration: none;
+  font-family: 'Nunito Sans', sans-serif;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--carbon-black);
+  cursor: pointer;
+  border: none;
+  transition: filter 0.15s ease, transform 0.15s ease;
+  margin-top: 0;
 }
-.assinatura-preview-img {
+.btn-download-page:hover {
+  filter: brightness(1.06);
+  transform: translateY(-1px);
+  text-decoration: none;
+  color: var(--carbon-black);
+}
+
+/* Card da assinatura — sem fundo branco, só sombra */
+.assinatura-preview-card {
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 8px 32px rgba(34, 27, 25, 0.18);
+  margin-bottom: 16px;
+}
+.assinatura-preview-card img {
+  display: block;
   width: 100%;
   height: auto;
-  display: block;
-  border-radius: 4px;
 }
 
 /* Selo chip (assessores form) */
