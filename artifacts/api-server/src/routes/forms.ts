@@ -421,7 +421,17 @@ router.post("/solicitacoes", requireAuth, upload.any(), async (req, res): Promis
     });
     res.json({ success: true, id: solicitacao.id, clickup_task_id: clickupTaskId });
   } catch (err) {
-    logger.error({ err }, "Form submission error");
+    const user = req.session?.user;
+    const errMessage = err instanceof Error ? err.message : String(err);
+    const errStack   = err instanceof Error ? err.stack  : undefined;
+    logger.error({
+      err,
+      errMessage,
+      errStack,
+      userEmail:        user?.email,
+      tipo_solicitacao: req.body?.tipo_solicitacao,
+      step:             "form_submission",
+    }, `Form submission error: ${errMessage}`);
     res.status(500).json({ error: "Erro ao processar solicitação" });
   }
 });
