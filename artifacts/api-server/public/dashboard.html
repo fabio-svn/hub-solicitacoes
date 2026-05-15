@@ -822,8 +822,20 @@
           if (normalizeSlug(mapKey) === normalizedValue) return mapLabel;
         }
       }
+      const marcasMap = {
+        'svn-investimentos':           'SVN Investimentos',
+        'svn-capital':                 'SVN Capital',
+        'svn-connect':                 'SVN Connect',
+        'svn-gestao':                  'SVN Gestão',
+        'svn-global':                  'SVN Global',
+        'svn-imb':                     'SVN IMB',
+        'svn-agro-cambio-commodities': 'SVN Agro, Câmbio e Commodities',
+        'svn-protecao-patrimonial':    'SVN Proteção Patrimonial',
+        'svn-wealth-planning':         'SVN Wealth Planning',
+      };
       if (typeof value === 'string') {
         const normalizedValue = normalizeSlug(value);
+        if (marcasMap[value]) return marcasMap[value];
         if (materiaisMap[normalizedValue]) return materiaisMap[normalizedValue];
         if (value.includes('-') || value.includes('_')) return humanizeSlug(value);
       }
