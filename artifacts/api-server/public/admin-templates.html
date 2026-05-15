@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Editor de Templates — Hub SVN</title>
+  <title>Templates de Arte — Hub SVN</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap" media="print" onload="this.media='all'">
   <link rel="stylesheet" href="style.css">
@@ -11,6 +11,81 @@
   <style>
     *, *::before, *::after { box-sizing: border-box; }
     body { margin: 0; font-family: 'Nunito Sans', sans-serif; background: var(--bg-light, #f5f3f0); color: var(--text-dark, #221b19); }
+
+    /* ── Full-view container (landing / list / create) ── */
+    .full-view { min-height: calc(100vh - 56px); display: flex; flex-direction: column; align-items: center; padding: 48px 24px; }
+    .full-view-inner { width: 100%; max-width: 860px; }
+
+    /* ── Breadcrumb ── */
+    .breadcrumb { display: flex; align-items: center; gap: 6px; font-size: 0.78rem; color: rgba(34,27,25,0.45); margin-bottom: 28px; flex-wrap: wrap; }
+    .breadcrumb a { color: rgba(34,27,25,0.55); cursor: pointer; text-decoration: none; font-weight: 600; }
+    .breadcrumb a:hover { color: #9f3f37; }
+    .breadcrumb .sep { opacity: 0.35; }
+    .breadcrumb .current { color: rgba(34,27,25,0.75); font-weight: 600; }
+
+    /* ── Landing cards ── */
+    .landing-header { font-size: 1.5rem; font-weight: 700; margin-bottom: 8px; }
+    .landing-sub { font-size: 0.88rem; opacity: 0.5; margin-bottom: 40px; }
+    .landing-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    .landing-card {
+      background: #fff; border: 1.5px solid #e8e2dc; border-radius: 16px;
+      padding: 36px 28px; cursor: pointer; transition: border-color 0.15s, box-shadow 0.15s;
+      display: flex; flex-direction: column; gap: 10px;
+    }
+    .landing-card:hover { border-color: #9f3f37; box-shadow: 0 4px 20px rgba(159,63,55,0.1); }
+    .landing-card-icon { font-size: 2rem; line-height: 1; }
+    .landing-card-title { font-size: 1.05rem; font-weight: 700; }
+    .landing-card-desc { font-size: 0.84rem; opacity: 0.55; line-height: 1.5; }
+
+    /* ── List view ── */
+    .list-group-title { font-size: 0.7rem; font-weight: 800; letter-spacing: 0.09em; text-transform: uppercase; color: rgba(34,27,25,0.4); margin: 24px 0 8px; }
+    .list-group-title:first-child { margin-top: 0; }
+    .template-row {
+      background: #fff; border: 1.5px solid #e8e2dc; border-radius: 12px;
+      padding: 14px 16px; margin-bottom: 8px; display: flex; align-items: center; gap: 12px;
+      transition: border-color 0.15s;
+    }
+    .template-row:hover { border-color: #c8a96e; }
+    .template-row-indicator { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+    .template-row-indicator.active { background: #0A9060; }
+    .template-row-indicator.inactive { background: transparent; border: 2px solid #c8c4c0; }
+    .template-row-body { flex: 1; min-width: 0; }
+    .template-row-name { font-size: 0.88rem; font-weight: 700; }
+    .template-row-meta { font-size: 0.75rem; opacity: 0.45; margin-top: 2px; }
+    .badge-active { display: inline-block; padding: 2px 8px; border-radius: 20px; font-size: 0.68rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; background: #d1fae5; color: #065f46; }
+    .template-row-actions { display: flex; gap: 6px; flex-shrink: 0; }
+    .row-btn {
+      padding: 5px 11px; border-radius: 7px; border: 1px solid #e8e2dc; background: transparent;
+      font-size: 0.76rem; font-weight: 600; cursor: pointer; font-family: 'Nunito Sans', sans-serif;
+      color: rgba(34,27,25,0.7); transition: background 0.15s, border-color 0.15s;
+    }
+    .row-btn:hover { background: #f5f3f0; border-color: #c8c4c0; }
+    .row-btn.danger { color: #dc2626; }
+    .row-btn.danger:hover { background: #fef2f2; border-color: #fecaca; }
+    .row-btn.primary { background: #9f3f37; color: #fff; border-color: #9f3f37; }
+    .row-btn.primary:hover { background: #b44b42; border-color: #b44b42; }
+    .empty-state { text-align: center; padding: 60px 20px; opacity: 0.4; font-size: 0.9rem; }
+
+    /* ── Create form ── */
+    .create-form { background: #fff; border: 1.5px solid #e8e2dc; border-radius: 16px; padding: 28px; }
+    .form-group { margin-bottom: 20px; }
+    .form-label { font-size: 0.78rem; font-weight: 700; color: rgba(34,27,25,0.6); margin-bottom: 6px; display: block; letter-spacing: 0.03em; }
+    .form-input { width: 100%; padding: 9px 12px; border: 1.5px solid #e8e2dc; border-radius: 8px; font-size: 0.88rem; font-family: 'Nunito Sans', sans-serif; color: #221b19; background: #fff; transition: border-color 0.15s; }
+    .form-input:focus { outline: none; border-color: #9f3f37; }
+    .form-input[type="radio"] { width: auto; }
+    .radio-group { display: flex; flex-direction: column; gap: 10px; margin-top: 4px; }
+    .radio-option { display: flex; align-items: flex-start; gap: 10px; cursor: pointer; }
+    .radio-option input { margin-top: 3px; accent-color: #9f3f37; cursor: pointer; }
+    .radio-label { font-size: 0.85rem; }
+    .radio-label-sub { font-size: 0.75rem; opacity: 0.5; }
+    .form-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 24px; border-top: 1px solid #f0ece8; padding-top: 20px; }
+    .btn { padding: 8px 18px; border-radius: 8px; border: 1.5px solid #e8e2dc; background: #fff; font-size: 0.84rem; font-weight: 600; cursor: pointer; font-family: 'Nunito Sans', sans-serif; color: rgba(34,27,25,0.7); transition: background 0.15s; }
+    .btn:hover { background: #f5f3f0; }
+    .btn.primary { background: #9f3f37; color: #fff; border-color: #9f3f37; }
+    .btn.primary:hover { background: #b44b42; border-color: #b44b42; }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    /* ── Editor layout ── */
     .editor-layout {
       display: grid;
       grid-template-columns: 220px 1fr 280px;
@@ -20,78 +95,61 @@
     }
     .panel { background: #fff; border-right: 1px solid #e8e2dc; overflow-y: auto; }
     .panel-title { font-size: 0.7rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(34,27,25,0.45); padding: 14px 14px 6px; }
-    .template-item {
-      padding: 10px 14px; cursor: pointer; border-left: 3px solid transparent;
-      font-size: 0.85rem; font-weight: 500; display: flex; align-items: center; gap: 8px;
-      transition: background 0.15s;
-    }
-    .template-item:hover { background: #f5f3f0; }
-    .template-item.active { border-left-color: #9f3f37; background: #fdf5f5; color: #9f3f37; }
-    .template-item .dirty-dot { width: 6px; height: 6px; border-radius: 50%; background: #c8a96e; margin-left: auto; flex-shrink: 0; display: none; }
-    .template-item.dirty .dirty-dot { display: block; }
-    .layer-item {
-      padding: 8px 14px; cursor: pointer; border-left: 3px solid transparent;
-      font-size: 0.8rem; display: flex; align-items: center; gap: 8px;
-      color: rgba(34,27,25,0.7);
-    }
+    .panel-tmpl-header { padding: 12px 14px; border-bottom: 1px solid #f0ece8; }
+    .panel-tmpl-name { font-size: 0.82rem; font-weight: 700; color: #221b19; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .panel-tmpl-tipo { font-size: 0.7rem; color: rgba(34,27,25,0.4); margin-top: 2px; }
+    .layer-item { padding: 8px 14px; cursor: pointer; border-left: 3px solid transparent; font-size: 0.8rem; display: flex; align-items: center; gap: 8px; color: rgba(34,27,25,0.7); }
     .layer-item:hover { background: #f5f3f0; }
     .layer-item.active { border-left-color: #3b82f6; background: #eff6ff; color: #1d4ed8; }
     .layer-type-badge { font-size: 0.65rem; padding: 1px 5px; border-radius: 4px; background: #e8e2dc; color: #6b5e58; white-space: nowrap; }
     .canvas-panel { background: #2a2a2a; display: flex; flex-direction: column; overflow: hidden; }
     .canvas-toolbar {
-      background: #1e1e1e; padding: 8px 14px; display: flex; align-items: center; gap: 10px;
-      border-bottom: 1px solid #333; flex-shrink: 0;
+      background: #1e1e1e; padding: 8px 12px; display: flex; align-items: center; gap: 8px;
+      border-bottom: 1px solid #333; flex-shrink: 0; flex-wrap: wrap;
     }
-    .canvas-toolbar button { font-size: 0.78rem; padding: 5px 12px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.15); background: rgba(255,255,255,0.08); color: #fff; cursor: pointer; font-family: 'Nunito Sans', sans-serif; transition: background 0.15s; }
+    .canvas-toolbar button { font-size: 0.78rem; padding: 5px 10px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.15); background: rgba(255,255,255,0.08); color: #fff; cursor: pointer; font-family: 'Nunito Sans', sans-serif; transition: background 0.15s; }
     .canvas-toolbar button:hover { background: rgba(255,255,255,0.15); }
     .canvas-toolbar button.primary { background: #9f3f37; border-color: #9f3f37; }
     .canvas-toolbar button.primary:hover { background: #b44b42; }
+    .canvas-toolbar button.active { background: rgba(255,255,255,0.2); }
     .canvas-toolbar .mode-toggle { display: flex; gap: 0; border: 1px solid rgba(255,255,255,0.2); border-radius: 6px; overflow: hidden; }
     .canvas-toolbar .mode-toggle button { border: none; border-radius: 0; background: transparent; }
     .canvas-toolbar .mode-toggle button.active { background: rgba(255,255,255,0.2); }
-    .canvas-toolbar .unsaved-badge { font-size: 0.72rem; color: #c8a96e; margin-left: auto; display: none; }
+    .canvas-toolbar .unsaved-badge { font-size: 0.72rem; color: #c8a96e; display: none; }
     .canvas-toolbar .unsaved-badge.visible { display: block; }
+    .toolbar-sep { width: 1px; height: 18px; background: rgba(255,255,255,0.1); flex-shrink: 0; }
+    .toolbar-tmpl-name { font-size: 0.8rem; color: #ddd; font-weight: 600; max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; cursor: pointer; }
+    .toolbar-tmpl-name:hover { color: #fff; }
+    .badge-editor-active { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 0.65rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; background: rgba(10,144,96,0.25); color: #4ade80; border: 1px solid rgba(74,222,128,0.25); }
+    .badge-editor-inactive { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 0.65rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; background: rgba(255,255,255,0.08); color: #999; border: 1px solid rgba(255,255,255,0.12); cursor: pointer; }
+    .badge-editor-inactive:hover { background: rgba(255,255,255,0.15); color: #ccc; }
+    .rendering-indicator { display: none; align-items: center; gap: 5px; font-size: 0.72rem; color: #aaa; }
+    .rendering-indicator.visible { display: flex; }
+    .spinner { width: 12px; height: 12px; border: 2px solid rgba(255,255,255,0.2); border-top-color: #c8a96e; border-radius: 50%; animation: spin 0.7s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .live-toggle { font-size: 0.72rem; color: #aaa; cursor: pointer; padding: 4px 8px; border-radius: 5px; border: 1px solid rgba(255,255,255,0.1); background: transparent; }
+    .live-toggle.on { color: #c8a96e; border-color: rgba(200,169,110,0.3); background: rgba(200,169,110,0.1); }
     .canvas-scroll { flex: 1; overflow: auto; display: flex; align-items: flex-start; justify-content: center; padding: 24px; }
-    .canvas-wrap {
-      position: relative; display: inline-block;
-      box-shadow: 0 4px 40px rgba(0,0,0,0.6);
-      flex-shrink: 0;
-    }
+    .canvas-wrap { position: relative; display: inline-block; box-shadow: 0 4px 40px rgba(0,0,0,0.6); flex-shrink: 0; }
     .canvas-wrap img.bg-img { display: block; width: 100%; height: auto; }
-    .layer-box {
-      position: absolute; cursor: move;
-      border: 1.5px dashed rgba(59,130,246,0.6);
-      box-sizing: border-box;
-    }
+    .layer-box { position: absolute; cursor: move; border: 1.5px dashed rgba(59,130,246,0.6); box-sizing: border-box; }
     .layer-box.selected { border: 2px solid #3b82f6; box-shadow: 0 0 0 2px rgba(59,130,246,0.25); }
-    .layer-box.error { border-color: #ef4444; }
-    .layer-box .layer-label {
-      position: absolute; top: -18px; left: 0;
-      font-size: 9px; background: #3b82f6; color: #fff;
-      padding: 1px 5px; border-radius: 3px 3px 3px 0; white-space: nowrap; line-height: 16px;
-    }
-    .layer-box.error .layer-label { background: #ef4444; }
+    .layer-box .layer-label { position: absolute; top: -18px; left: 0; font-size: 9px; background: #3b82f6; color: #fff; padding: 1px 5px; border-radius: 3px 3px 3px 0; white-space: nowrap; line-height: 16px; }
     .canvas-preview-img { display: none; width: 100%; height: auto; }
+    .no-template { display: flex; align-items: center; justify-content: center; flex: 1; color: rgba(255,255,255,0.3); font-size: 0.9rem; }
     .props-panel { border-right: none; border-left: 1px solid #e8e2dc; }
     .props-section { padding: 12px 14px; border-bottom: 1px solid #f0ece8; }
     .props-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
     .props-row.single { grid-template-columns: 1fr; }
     .props-label { font-size: 0.72rem; color: rgba(34,27,25,0.5); font-weight: 600; margin-bottom: 3px; letter-spacing: 0.03em; }
-    .props-input {
-      width: 100%; padding: 5px 8px; border: 1px solid #e8e2dc; border-radius: 6px;
-      font-size: 0.8rem; font-family: 'Nunito Sans', sans-serif; color: #221b19;
-      background: #fff; transition: border-color 0.15s;
-    }
+    .props-input { width: 100%; padding: 5px 8px; border: 1px solid #e8e2dc; border-radius: 6px; font-size: 0.8rem; font-family: 'Nunito Sans', sans-serif; color: #221b19; background: #fff; transition: border-color 0.15s; }
     .props-input:focus { outline: none; border-color: #3b82f6; }
     .props-input[type="color"] { padding: 2px 4px; height: 30px; cursor: pointer; }
     .props-textarea { height: 90px; resize: vertical; }
     .props-empty { padding: 40px 14px; text-align: center; color: rgba(34,27,25,0.35); font-size: 0.82rem; }
     .btn-delete-layer { width: 100%; padding: 7px; border: 1px solid #fecaca; background: #fff5f5; color: #ef4444; border-radius: 6px; cursor: pointer; font-size: 0.78rem; font-family: 'Nunito Sans', sans-serif; font-weight: 600; transition: background 0.15s; }
     .btn-delete-layer:hover { background: #fef2f2; }
-    .bottom-panel {
-      grid-column: 1 / -1; background: #fff; border-top: 1px solid #e8e2dc;
-      padding: 12px 18px; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; max-height: 120px; overflow-y: auto;
-    }
+    .bottom-panel { grid-column: 1 / -1; background: #fff; border-top: 1px solid #e8e2dc; padding: 12px 18px; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; max-height: 120px; overflow-y: auto; }
     .bottom-label { font-size: 0.7rem; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase; color: rgba(34,27,25,0.4); margin-right: 4px; white-space: nowrap; }
     .test-field { display: flex; flex-direction: column; gap: 2px; }
     .test-field label { font-size: 0.7rem; color: rgba(34,27,25,0.5); }
@@ -101,7 +159,6 @@
     .add-layer-btn:hover { border-color: #9f3f37; color: #9f3f37; background: #fdf5f5; }
     .bg-variant-select { font-size: 0.75rem; padding: 4px 8px; border: 1px solid rgba(255,255,255,0.2); border-radius: 5px; background: rgba(255,255,255,0.08); color: #fff; font-family: 'Nunito Sans',sans-serif; }
     .bg-variant-select option { background: #222; }
-    .no-template { display: flex; align-items: center; justify-content: center; flex: 1; color: rgba(255,255,255,0.3); font-size: 0.9rem; }
     .placeholder-chips { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
     .placeholder-chip { font-size: 0.68rem; padding: 2px 7px; background: #eff6ff; color: #1d4ed8; border-radius: 10px; cursor: pointer; border: 1px solid #bfdbfe; }
     .placeholder-chip:hover { background: #dbeafe; }
@@ -109,63 +166,211 @@
     .align-btn { flex: 1; padding: 5px 0; border: none; background: #fff; cursor: pointer; font-family: 'Nunito Sans',sans-serif; font-size: 0.75rem; transition: background 0.15s; }
     .align-btn:hover { background: #f5f3f0; }
     .align-btn.active { background: #eff6ff; color: #1d4ed8; font-weight: 600; }
+
+    /* ── Inline name edit ── */
+    .name-edit-wrap { display: flex; align-items: center; gap: 6px; }
+    .name-edit-input { background: transparent; border: none; border-bottom: 1px solid rgba(255,255,255,0.3); color: #ddd; font-size: 0.8rem; font-weight: 600; font-family: 'Nunito Sans',sans-serif; padding: 2px 4px; max-width: 160px; outline: none; }
+    .name-edit-input:focus { border-bottom-color: #c8a96e; color: #fff; }
+    .name-edit-pencil { font-size: 0.7rem; color: rgba(255,255,255,0.3); cursor: pointer; }
+    .name-edit-pencil:hover { color: rgba(255,255,255,0.6); }
+
+    /* ── Unsaved changes modal ── */
+    .modal-overlay { display: none; position: fixed; inset: 0; z-index: 500; background: rgba(34,27,25,0.5); backdrop-filter: blur(4px); align-items: center; justify-content: center; }
+    .modal-overlay.open { display: flex; }
+    .modal-box { background: #fff; border-radius: 16px; padding: 28px; max-width: 400px; width: 100%; margin: 16px; }
+    .modal-title { font-size: 1rem; font-weight: 700; margin-bottom: 8px; }
+    .modal-desc { font-size: 0.84rem; opacity: 0.6; margin-bottom: 24px; line-height: 1.5; }
+    .modal-actions { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; }
+    .modal-btn { padding: 8px 16px; border-radius: 8px; border: 1.5px solid #e8e2dc; background: #fff; font-size: 0.82rem; font-weight: 600; cursor: pointer; font-family: 'Nunito Sans',sans-serif; transition: background 0.15s; }
+    .modal-btn:hover { background: #f5f3f0; }
+    .modal-btn.primary { background: #9f3f37; color: #fff; border-color: #9f3f37; }
+    .modal-btn.primary:hover { background: #b44b42; }
+    .modal-btn.ghost { color: rgba(34,27,25,0.5); }
   </style>
 </head>
 <body class="page-light">
   <header class="header" id="mainHeader"></header>
 
-  <div class="editor-layout">
-    <!-- LEFT: Templates + Layers -->
-    <div class="panel" id="leftPanel">
-      <div class="panel-title">Templates</div>
-      <div id="templatesList"></div>
-      <div style="height:1px;background:#f0ece8;margin:4px 0"></div>
-      <div class="panel-title">Layers</div>
-      <div id="layersList"></div>
-      <div class="add-layer-section" id="addLayerSection" style="display:none">
-        <button class="add-layer-btn" onclick="addLayer('text-line')">+ Texto (linha)</button>
-        <button class="add-layer-btn" onclick="addLayer('text-block')">+ Texto (bloco)</button>
-        <button class="add-layer-btn" onclick="addLayer('image')">+ Imagem</button>
-      </div>
-    </div>
-
-    <!-- CENTER: Canvas -->
-    <div class="canvas-panel" id="canvasPanel">
-      <div class="canvas-toolbar">
-        <span style="font-size:0.8rem;color:#aaa;font-weight:600" id="templateTitle">—</span>
-        <button onclick="zoomOut()" title="Reduzir" style="padding:5px 10px;min-width:28px">−</button>
-        <span id="zoomLevel" style="font-size:0.78rem;color:#aaa;min-width:48px;text-align:center">100%</span>
-        <button onclick="zoomIn()" title="Ampliar" style="padding:5px 10px;min-width:28px">+</button>
-        <button onclick="fitToView()" title="Ajustar à tela">Ajustar</button>
-        <div class="mode-toggle">
-          <button id="btnModeEdit" class="active" onclick="setMode('edit')">Editar</button>
-          <button id="btnModePreview" onclick="setMode('preview')">Preview</button>
+  <!-- VIEW: Landing -->
+  <div class="full-view" id="view-landing">
+    <div class="full-view-inner">
+      <div class="landing-header">Templates de Arte</div>
+      <div class="landing-sub">Crie e gerencie os templates usados para gerar artes automaticamente.</div>
+      <div class="landing-cards">
+        <div class="landing-card" onclick="showView('create')">
+          <div class="landing-card-icon">✚</div>
+          <div class="landing-card-title">Criar nova arte</div>
+          <div class="landing-card-desc">Comece um template do zero ou clone um existente para uma nova variação.</div>
         </div>
-        <select class="bg-variant-select" id="bgVariantSelect" style="display:none" onchange="onBgVariantChange(this.value)"></select>
-        <button onclick="renderPreview()" style="margin-left:4px">Atualizar Preview</button>
-        <span class="unsaved-badge" id="unsavedBadge">● não salvo</span>
-        <button class="primary" onclick="saveTemplate()" style="margin-left:4px">Salvar</button>
-      </div>
-      <div class="canvas-scroll" id="canvasScroll">
-        <div class="no-template" id="noTemplate">Selecione um template à esquerda</div>
-        <div class="canvas-wrap" id="canvasWrap" style="display:none">
-          <img class="bg-img" id="bgImg" src="" alt="Background" draggable="false">
-          <img class="canvas-preview-img" id="previewImg" alt="Preview renderizado">
+        <div class="landing-card" onclick="goToList()">
+          <div class="landing-card-icon">✎</div>
+          <div class="landing-card-title">Editar arte existente</div>
+          <div class="landing-card-desc">Veja, edite, ative ou duplique templates já criados.</div>
         </div>
       </div>
     </div>
+  </div>
 
-    <!-- RIGHT: Properties -->
-    <div class="panel props-panel" id="propsPanel">
-      <div class="panel-title">Propriedades</div>
-      <div class="props-empty" id="propsEmpty">Selecione uma layer no canvas ou na lista</div>
-      <div id="propsContent" style="display:none"></div>
+  <!-- VIEW: List -->
+  <div class="full-view" id="view-list" style="display:none">
+    <div class="full-view-inner">
+      <div class="breadcrumb">
+        <a onclick="showView('landing')">Templates de Arte</a>
+        <span class="sep">/</span>
+        <span class="current">Lista</span>
+        <div style="margin-left:auto">
+          <button class="btn primary" onclick="showView('create')" style="padding:6px 14px;font-size:0.8rem">+ Novo template</button>
+        </div>
+      </div>
+      <div id="listContent">
+        <div class="empty-state">Carregando...</div>
+      </div>
     </div>
+  </div>
 
-    <!-- BOTTOM: Test Data -->
-    <div class="bottom-panel" id="bottomPanel">
-      <span class="bottom-label">Dados de teste</span>
-      <div id="testDataFields" style="display:flex;flex-wrap:wrap;gap:10px"></div>
+  <!-- VIEW: Create -->
+  <div class="full-view" id="view-create" style="display:none">
+    <div class="full-view-inner">
+      <div class="breadcrumb">
+        <a onclick="showView('landing')">Templates de Arte</a>
+        <span class="sep">/</span>
+        <span class="current">Criar novo</span>
+      </div>
+      <div class="create-form">
+        <div class="form-group">
+          <label class="form-label">Tipo de arte <span style="color:#9f3f37">*</span></label>
+          <select class="form-input" id="createTipo">
+            <option value="cartao-boas-vindas">Cartão de Boas-vindas</option>
+            <option value="assinatura-email">Assinatura de E-mail</option>
+            <option value="_custom">+ Tipo personalizado…</option>
+          </select>
+          <input class="form-input" id="createTipoCustom" placeholder="Ex: cartao-comemorativo" style="display:none;margin-top:8px">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Nome do template <span style="color:#9f3f37">*</span></label>
+          <input class="form-input" id="createName" placeholder='Ex: "Cartão minimalista v2"'>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Começar a partir de</label>
+          <div class="radio-group">
+            <label class="radio-option">
+              <input type="radio" name="createStart" value="blank" checked onchange="onCreateStartChange()">
+              <div>
+                <div class="radio-label">Template em branco</div>
+                <div class="radio-label-sub">Canvas 1080×1080 vazio, sem layers</div>
+              </div>
+            </label>
+            <label class="radio-option">
+              <input type="radio" name="createStart" value="clone" onchange="onCreateStartChange()">
+              <div>
+                <div class="radio-label">Clonar de um existente</div>
+                <div class="radio-label-sub">Copia config e layers de outro template</div>
+              </div>
+            </label>
+          </div>
+          <select class="form-input" id="createCloneSelect" style="display:none;margin-top:12px">
+            <option value="">Selecione um template…</option>
+          </select>
+        </div>
+        <div id="createError" style="display:none;color:#dc2626;font-size:0.82rem;margin-bottom:12px;padding:8px 12px;background:#fef2f2;border-radius:8px;border:1px solid #fecaca"></div>
+        <div class="form-actions">
+          <button class="btn" onclick="showView('landing')">Cancelar</button>
+          <button class="btn primary" id="createBtn" onclick="submitCreate()">Criar e abrir</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- VIEW: Editor -->
+  <div id="view-editor" style="display:none">
+    <div class="editor-layout">
+
+      <!-- LEFT: Layers -->
+      <div class="panel" id="leftPanel">
+        <div class="panel-tmpl-header">
+          <div class="panel-tmpl-name" id="panelTmplName">—</div>
+          <div class="panel-tmpl-tipo" id="panelTmplTipo">—</div>
+        </div>
+        <div class="panel-title">Layers</div>
+        <div id="layersList"></div>
+        <div class="add-layer-section" id="addLayerSection">
+          <button class="add-layer-btn" onclick="addLayer('text-line')">+ Texto (linha)</button>
+          <button class="add-layer-btn" onclick="addLayer('text-block')">+ Texto (bloco)</button>
+          <button class="add-layer-btn" onclick="addLayer('image')">+ Imagem</button>
+        </div>
+      </div>
+
+      <!-- CENTER: Canvas -->
+      <div class="canvas-panel" id="canvasPanel">
+        <div class="canvas-toolbar">
+          <button onclick="requestBack()" style="padding:5px 10px;gap:4px;display:inline-flex;align-items:center">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+            Voltar
+          </button>
+          <div class="toolbar-sep"></div>
+          <!-- Template name (inline edit) -->
+          <div class="name-edit-wrap">
+            <input class="name-edit-input" id="tmplNameInput" value="" onchange="renameTemplate(this.value)" title="Clique para renomear">
+            <span class="name-edit-pencil" title="Renomear">✎</span>
+          </div>
+          <!-- Active badge -->
+          <span id="activeBadge"></span>
+          <div class="toolbar-sep"></div>
+          <!-- Zoom -->
+          <button onclick="zoomOut()" style="padding:5px 9px;min-width:28px">−</button>
+          <span id="zoomLevel" style="font-size:0.78rem;color:#aaa;min-width:44px;text-align:center">100%</span>
+          <button onclick="zoomIn()" style="padding:5px 9px;min-width:28px">+</button>
+          <button onclick="fitToView()" title="Ajustar à tela">Ajustar</button>
+          <div class="toolbar-sep"></div>
+          <!-- Mode -->
+          <div class="mode-toggle">
+            <button id="btnModeEdit" class="active" onclick="setMode('edit')">Editar</button>
+            <button id="btnModePreview" onclick="setMode('preview')">Preview</button>
+          </div>
+          <select class="bg-variant-select" id="bgVariantSelect" style="display:none" onchange="onBgVariantChange(this.value)"></select>
+          <!-- Live preview toggle + spinner -->
+          <button class="live-toggle on" id="liveToggleBtn" onclick="toggleLive()" title="Live preview automático">● Live</button>
+          <div class="rendering-indicator" id="renderingIndicator">
+            <div class="spinner"></div>
+            <span>Renderizando…</span>
+          </div>
+          <span class="unsaved-badge" id="unsavedBadge">● não salvo</span>
+          <button class="primary" onclick="saveTemplate()" style="margin-left:auto">Salvar</button>
+        </div>
+        <div class="canvas-scroll" id="canvasScroll">
+          <div class="no-template" id="noTemplate">Carregando template…</div>
+          <div class="canvas-wrap" id="canvasWrap" style="display:none">
+            <img class="bg-img" id="bgImg" src="" alt="" draggable="false">
+            <img class="canvas-preview-img" id="previewImg" alt="Preview">
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT: Properties -->
+      <div class="panel props-panel" id="propsPanel">
+        <div class="panel-title">Propriedades</div>
+        <div class="props-empty" id="propsEmpty">Selecione uma layer no canvas ou na lista</div>
+        <div id="propsContent" style="display:none"></div>
+      </div>
+
+      <!-- BOTTOM: Test Data -->
+      <div class="bottom-panel" id="bottomPanel">
+        <span class="bottom-label">Dados de teste</span>
+        <div id="testDataFields" style="display:flex;flex-wrap:wrap;gap:10px"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Unsaved changes -->
+  <div class="modal-overlay" id="unsavedModal">
+    <div class="modal-box">
+      <div class="modal-title">Alterações não salvas</div>
+      <div class="modal-desc">Você tem edições não salvas neste template. O que deseja fazer?</div>
+      <div class="modal-actions">
+        <button class="modal-btn ghost" onclick="closeUnsavedModal()">Cancelar</button>
+        <button class="modal-btn" onclick="exitWithoutSave()">Sair sem salvar</button>
+        <button class="modal-btn primary" onclick="saveAndExit()">Salvar e sair</button>
+      </div>
     </div>
   </div>
 
@@ -177,16 +382,323 @@
       'cartao-boas-vindas': ['nome_cliente','nome_assinatura','unidade','contrato_label','contrato_social','is_private_key'],
     };
 
-    let templates = [];
-    let currentTipo = null;
-    let currentTemplate = null;
+    const TIPO_LABELS = {
+      'cartao-boas-vindas': 'Cartão de Boas-vindas',
+      'assinatura-email':   'Assinatura de E-mail',
+    };
+
+    // ── State ───────────────────────────────────────────────────
+    let currentView = 'landing';
+    let allTemplates = [];
+    let currentTemplateMeta = null;   // { id, tipo, name, is_active }
+    let currentTemplate = null;       // config object
     let selectedLayerId = null;
     let isDirty = false;
     let mode = 'edit';
     let bgVariantKey = null;
     let testData = {};
     let canvasScale = parseFloat(sessionStorage.getItem('svn_canvas_zoom') || '0') || 1;
+    let liveEnabled = true;
+    let previewDebounce = null;
+    let previewAbortCtrl = null;
+    let pendingNavAction = null;      // fn to call after unsaved modal
 
+    // ── Helpers ─────────────────────────────────────────────────
+    function esc(str) {
+      if (!str) return '';
+      const d = document.createElement('div');
+      d.textContent = String(str);
+      return d.innerHTML;
+    }
+    function humanizeTipo(tipo) {
+      return TIPO_LABELS[tipo] || tipo.replace(/-/g,' ').replace(/\b\w/g, c=>c.toUpperCase());
+    }
+    function timeAgo(dateStr) {
+      if (!dateStr) return '—';
+      const d = new Date(dateStr);
+      const diff = Math.floor((Date.now() - d.getTime()) / 1000);
+      if (diff < 60) return 'Agora';
+      if (diff < 3600) return `Há ${Math.floor(diff/60)} min`;
+      if (diff < 86400) return `Há ${Math.floor(diff/3600)}h`;
+      if (diff < 604800) return `Há ${Math.floor(diff/86400)} dias`;
+      return d.toLocaleDateString('pt-BR');
+    }
+
+    // ── View navigation ─────────────────────────────────────────
+    function showView(view) {
+      currentView = view;
+      document.getElementById('view-landing').style.display = view === 'landing' ? 'flex' : 'none';
+      document.getElementById('view-list').style.display    = view === 'list'    ? 'flex' : 'none';
+      document.getElementById('view-create').style.display  = view === 'create'  ? 'flex' : 'none';
+      document.getElementById('view-editor').style.display  = view === 'editor'  ? 'block' : 'none';
+    }
+
+    async function goToList() {
+      await loadAllTemplates();
+      renderListView();
+      showView('list');
+    }
+
+    // ── Unsaved guard ────────────────────────────────────────────
+    function requestBack() {
+      if (!isDirty) { goToList(); return; }
+      pendingNavAction = goToList;
+      document.getElementById('unsavedModal').classList.add('open');
+    }
+    function closeUnsavedModal() {
+      document.getElementById('unsavedModal').classList.remove('open');
+      pendingNavAction = null;
+    }
+    function exitWithoutSave() {
+      isDirty = false;
+      closeUnsavedModal();
+      if (pendingNavAction) pendingNavAction();
+    }
+    async function saveAndExit() {
+      await saveTemplate();
+      closeUnsavedModal();
+      if (pendingNavAction) pendingNavAction();
+    }
+
+    // ── Init ─────────────────────────────────────────────────────
+    async function init() {
+      await _configReady;
+      await Auth.init();
+      if (!Auth.isAuthenticated()) { window.location.href = '/auth/login?redirect=/admin-templates.html'; return; }
+      if (!Auth.isAdmin()) { window.location.href = '/dashboard.html'; return; }
+      Auth.renderHeader(document.getElementById('mainHeader'));
+      await loadAllTemplates();
+      showView('landing');
+    }
+
+    async function loadAllTemplates() {
+      const res = await fetch('/api/admin/art-templates');
+      if (!res.ok) return;
+      allTemplates = await res.json();
+    }
+
+    // ── List view ────────────────────────────────────────────────
+    function renderListView() {
+      const el = document.getElementById('listContent');
+      if (!allTemplates || allTemplates.length === 0) {
+        el.innerHTML = '<div class="empty-state">Nenhum template criado ainda.<br>Comece criando um.</div>';
+        return;
+      }
+      const grouped = {};
+      for (const t of allTemplates) {
+        if (!grouped[t.tipo]) grouped[t.tipo] = [];
+        grouped[t.tipo].push(t);
+      }
+      let html = '';
+      for (const [tipo, items] of Object.entries(grouped)) {
+        html += `<div class="list-group-title">${esc(humanizeTipo(tipo))}</div>`;
+        for (const t of items) {
+          const badge = t.is_active
+            ? `<span class="badge-active">Ativo</span>`
+            : '';
+          const activateBtn = t.is_active ? '' : `<button class="row-btn primary" onclick="activateTemplateFromList(${t.id})">Ativar</button>`;
+          const deleteBtn = `<button class="row-btn danger" onclick="deleteTemplateConfirm(${t.id},'${esc(t.name)}',${t.is_active})">Excluir</button>`;
+          html += `
+            <div class="template-row">
+              <div class="template-row-indicator ${t.is_active ? 'active' : 'inactive'}"></div>
+              <div class="template-row-body">
+                <div class="template-row-name">${esc(t.name)} ${badge}</div>
+                <div class="template-row-meta">Atualizado ${timeAgo(t.updated_at)}</div>
+              </div>
+              <div class="template-row-actions">
+                <button class="row-btn" onclick="openEditor(${t.id})">Editar</button>
+                <button class="row-btn" onclick="duplicateTemplateFromList(${t.id},'${esc(t.name)}')">Duplicar</button>
+                ${activateBtn}
+                ${deleteBtn}
+              </div>
+            </div>`;
+        }
+      }
+      el.innerHTML = html;
+    }
+
+    async function activateTemplateFromList(id) {
+      const t = allTemplates.find(x => x.id === id);
+      if (!t) return;
+      const confirmed = confirm(`Trocar para este template como ativo afeta todas as próximas solicitações de "${humanizeTipo(t.tipo)}". Confirma?`);
+      if (!confirmed) return;
+      const res = await fetch(`/api/admin/art-templates/${id}/activate`, { method: 'PATCH' });
+      if (!res.ok) {
+        const d = await res.json().catch(() => ({}));
+        alert(d.error || 'Erro ao ativar template.');
+        return;
+      }
+      await loadAllTemplates();
+      renderListView();
+    }
+
+    async function deleteTemplateConfirm(id, name, isActive) {
+      if (isActive) { alert('Não é possível deletar o template ativo. Ative outro primeiro.'); return; }
+      if (!confirm(`Deletar "${name}"? Esta ação não pode ser desfeita.`)) return;
+      const res = await fetch(`/api/admin/art-templates/${id}`, { method: 'DELETE' });
+      const d = await res.json().catch(() => ({}));
+      if (!res.ok) { alert(d.error || 'Erro ao deletar template.'); return; }
+      await loadAllTemplates();
+      renderListView();
+    }
+
+    async function duplicateTemplateFromList(id, sourceName) {
+      const newName = prompt('Nome do template duplicado:', `${sourceName} (cópia)`);
+      if (newName === null) return;
+      const res = await fetch(`/api/admin/art-templates/${id}/duplicate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: newName || `${sourceName} (cópia)` }),
+      });
+      if (!res.ok) { const d = await res.json().catch(() => ({})); alert(d.error || 'Erro ao duplicar.'); return; }
+      await loadAllTemplates();
+      renderListView();
+    }
+
+    // ── Create view ──────────────────────────────────────────────
+    document.addEventListener('DOMContentLoaded', () => {
+      const tipoSel = document.getElementById('createTipo');
+      if (tipoSel) tipoSel.addEventListener('change', () => {
+        const custom = document.getElementById('createTipoCustom');
+        custom.style.display = tipoSel.value === '_custom' ? 'block' : 'none';
+      });
+    });
+
+    function onCreateStartChange() {
+      const val = document.querySelector('input[name="createStart"]:checked')?.value;
+      const cloneSel = document.getElementById('createCloneSelect');
+      cloneSel.style.display = val === 'clone' ? 'block' : 'none';
+      if (val === 'clone') {
+        cloneSel.innerHTML = '<option value="">Selecione…</option>' +
+          allTemplates.map(t => `<option value="${t.id}">${esc(humanizeTipo(t.tipo))} — ${esc(t.name)}</option>`).join('');
+      }
+    }
+
+    async function submitCreate() {
+      const tipoSel = document.getElementById('createTipo');
+      const tipo = tipoSel.value === '_custom'
+        ? document.getElementById('createTipoCustom').value.trim()
+        : tipoSel.value;
+      const name = document.getElementById('createName').value.trim();
+      const startVal = document.querySelector('input[name="createStart"]:checked')?.value;
+      const cloneId = parseInt(document.getElementById('createCloneSelect').value) || null;
+      const errEl = document.getElementById('createError');
+      errEl.style.display = 'none';
+
+      if (!tipo) { errEl.textContent = 'Selecione ou informe um tipo.'; errEl.style.display = 'block'; return; }
+      if (!name) { errEl.textContent = 'Informe um nome para o template.'; errEl.style.display = 'block'; return; }
+      if (startVal === 'clone' && !cloneId) { errEl.textContent = 'Selecione um template para clonar.'; errEl.style.display = 'block'; return; }
+
+      const btn = document.getElementById('createBtn');
+      btn.disabled = true; btn.textContent = 'Criando…';
+
+      try {
+        let config = null;
+        if (startVal === 'clone' && cloneId) {
+          const src = await fetch(`/api/admin/art-templates/${cloneId}`).then(r => r.json());
+          config = JSON.parse(JSON.stringify(src.config));
+        }
+        const res = await fetch('/api/admin/art-templates', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ tipo, name, config }),
+        });
+        const data = await res.json();
+        if (!res.ok) { errEl.textContent = data.error || 'Erro ao criar template.'; errEl.style.display = 'block'; return; }
+        await loadAllTemplates();
+        await openEditor(data.id);
+      } finally {
+        btn.disabled = false; btn.textContent = 'Criar e abrir';
+      }
+    }
+
+    // ── Editor ───────────────────────────────────────────────────
+    async function openEditor(id) {
+      const res = await fetch(`/api/admin/art-templates/${id}`);
+      if (!res.ok) { alert('Erro ao carregar template.'); return; }
+      const row = await res.json();
+
+      currentTemplateMeta = { id: row.id, tipo: row.tipo, name: row.name, is_active: row.is_active };
+      currentTemplate = JSON.parse(JSON.stringify(row.config));
+      selectedLayerId = null;
+      isDirty = false;
+      bgVariantKey = null;
+
+      document.getElementById('panelTmplName').textContent = row.name;
+      document.getElementById('panelTmplTipo').textContent = humanizeTipo(row.tipo);
+      document.getElementById('tmplNameInput').value = row.name;
+      renderActiveBadge();
+      document.getElementById('unsavedBadge').classList.remove('visible');
+
+      await loadSampleData();
+      renderBgVariantSelect();
+      renderCanvas();
+      renderLayersList();
+      showProps(null);
+      document.getElementById('noTemplate').style.display = 'none';
+      document.getElementById('canvasWrap').style.display = 'inline-block';
+      setMode('edit');
+      showView('editor');
+      fitToView();
+    }
+
+    function renderActiveBadge() {
+      const el = document.getElementById('activeBadge');
+      if (!currentTemplateMeta) { el.innerHTML = ''; return; }
+      if (currentTemplateMeta.is_active) {
+        el.innerHTML = `<span class="badge-editor-active">Ativo</span>`;
+      } else {
+        el.innerHTML = `<span class="badge-editor-inactive" onclick="activateCurrentTemplate()" title="Tornar este o template ativo">Inativo — Ativar</span>`;
+      }
+    }
+
+    async function activateCurrentTemplate() {
+      if (!currentTemplateMeta) return;
+      const confirmed = confirm(`Tornar "${currentTemplateMeta.name}" o template ativo para "${humanizeTipo(currentTemplateMeta.tipo)}"? Isso afeta todas as próximas geradoras desta arte.`);
+      if (!confirmed) return;
+      const res = await fetch(`/api/admin/art-templates/${currentTemplateMeta.id}/activate`, { method: 'PATCH' });
+      if (!res.ok) { const d = await res.json().catch(()=>({})); alert(d.error || 'Erro ao ativar.'); return; }
+      currentTemplateMeta.is_active = true;
+      renderActiveBadge();
+      await loadAllTemplates();
+    }
+
+    async function renameTemplate(newName) {
+      if (!currentTemplateMeta || !newName.trim() || newName.trim() === currentTemplateMeta.name) return;
+      currentTemplateMeta.name = newName.trim();
+      document.getElementById('panelTmplName').textContent = newName.trim();
+      const res = await fetch(`/api/admin/art-templates/${currentTemplateMeta.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: newName.trim() }),
+      });
+      if (!res.ok) { const d = await res.json().catch(()=>({})); alert(d.error || 'Erro ao renomear.'); }
+      await loadAllTemplates();
+    }
+
+    async function loadSampleData() {
+      const tipo = currentTemplateMeta?.tipo;
+      if (!tipo) return;
+      const res = await fetch(`/api/admin/art-templates/sample-data/${tipo}`);
+      testData = await res.json();
+      renderTestDataPanel();
+    }
+
+    function renderTestDataPanel() {
+      const tipo = currentTemplateMeta?.tipo;
+      const placeholders = PLACEHOLDERS_BY_TIPO[tipo] || [];
+      const el = document.getElementById('testDataFields');
+      el.innerHTML = placeholders.map(key => `
+        <div class="test-field">
+          <label>${key}</label>
+          <input type="text" value="${esc(testData[key] || '')}"
+            oninput="testData['${key}']=this.value; scheduleLivePreview(1200)"
+            onchange="testData['${key}']=this.value; scheduleLivePreview(1200)">
+        </div>
+      `).join('');
+    }
+
+    // ── Canvas ───────────────────────────────────────────────────
     function fitToView() {
       if (!currentTemplate) return;
       const scrollEl = document.getElementById('canvasScroll');
@@ -197,7 +709,6 @@
       canvasScale = Math.min(sW, sH, 1);
       applyCanvasScale();
     }
-
     function applyCanvasScale() {
       if (!currentTemplate) return;
       const wrap = document.getElementById('canvasWrap');
@@ -206,82 +717,11 @@
       try { sessionStorage.setItem('svn_canvas_zoom', String(canvasScale)); } catch {}
       renderCanvas();
     }
-
     function updateZoomLabel() {
       document.getElementById('zoomLevel').textContent = Math.round(canvasScale * 100) + '%';
     }
-
-    function zoomIn()  { canvasScale = Math.min(canvasScale + 0.1, 2);  applyCanvasScale(); }
+    function zoomIn()  { canvasScale = Math.min(canvasScale + 0.1, 2);   applyCanvasScale(); }
     function zoomOut() { canvasScale = Math.max(canvasScale - 0.1, 0.1); applyCanvasScale(); }
-
-    async function init() {
-      await _configReady;
-      await Auth.init();
-      if (!Auth.isAuthenticated()) { window.location.href = '/auth/login?redirect=/admin-templates.html'; return; }
-      if (!Auth.isAdmin()) { window.location.href = '/dashboard.html'; return; }
-      Auth.renderHeader(document.getElementById('mainHeader'));
-      await loadTemplatesList();
-    }
-
-    async function loadTemplatesList() {
-      const res = await fetch('/api/admin/art-templates');
-      templates = await res.json();
-      const el = document.getElementById('templatesList');
-      el.innerHTML = templates.map(t => `
-        <div class="template-item" id="titem-${t.tipo}" onclick="loadTemplate('${t.tipo}')">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
-          ${humanizeTipo(t.tipo)}
-          <span class="dirty-dot"></span>
-        </div>
-      `).join('');
-    }
-
-    function humanizeTipo(tipo) {
-      const map = { 'cartao-boas-vindas': 'Cartão de Boas-vindas', 'assinatura-email': 'Assinatura de E-mail' };
-      return map[tipo] || tipo.replace(/-/g,' ').replace(/\b\w/g, c=>c.toUpperCase());
-    }
-
-    async function loadTemplate(tipo) {
-      if (isDirty && currentTipo && !confirm('Há alterações não salvas. Deseja descartar?')) return;
-      currentTipo = tipo;
-      const res = await fetch(`/api/admin/art-templates/${tipo}`);
-      const row = await res.json();
-      currentTemplate = JSON.parse(JSON.stringify(row.config));
-      selectedLayerId = null;
-      isDirty = false;
-      bgVariantKey = null;
-      document.querySelectorAll('.template-item').forEach(el => el.classList.remove('active'));
-      document.getElementById(`titem-${tipo}`)?.classList.add('active');
-      document.getElementById('templateTitle').textContent = humanizeTipo(tipo);
-      document.getElementById('unsavedBadge').classList.remove('visible');
-      await loadSampleData();
-      renderBgVariantSelect();
-      renderCanvas();
-      renderLayersList();
-      showProps(null);
-      document.getElementById('noTemplate').style.display = 'none';
-      document.getElementById('canvasWrap').style.display = 'inline-block';
-      document.getElementById('addLayerSection').style.display = 'block';
-      setMode('edit');
-      fitToView();
-    }
-
-    async function loadSampleData() {
-      const res = await fetch(`/api/admin/art-templates/${currentTipo}/sample-data`);
-      testData = await res.json();
-      renderTestDataPanel();
-    }
-
-    function renderTestDataPanel() {
-      const placeholders = PLACEHOLDERS_BY_TIPO[currentTipo] || [];
-      const el = document.getElementById('testDataFields');
-      el.innerHTML = placeholders.map(key => `
-        <div class="test-field">
-          <label>${key}</label>
-          <input type="text" value="${esc(testData[key] || '')}" onchange="testData['${key}']=this.value" oninput="testData['${key}']=this.value">
-        </div>
-      `).join('');
-    }
 
     function renderBgVariantSelect() {
       const sel = document.getElementById('bgVariantSelect');
@@ -292,48 +732,44 @@
       bgVariantKey = bgVariantKey || variants[0];
       sel.value = bgVariantKey;
     }
-
     function onBgVariantChange(val) {
       bgVariantKey = val;
       updateBgImage();
+      scheduleLivePreview(700);
     }
-
     function getBgUrl() {
       if (!currentTemplate?.bg) return '';
       const bg = currentTemplate.bg;
       if (bg.type === 'static') return bg.url;
       const key = bgVariantKey || Object.keys(bg.variants)[0];
       const url = bg.variants[key] || '';
-      if (url.startsWith('http')) return url;
-      return '';
+      return url.startsWith('http') ? url : '';
     }
-
     function updateBgImage() {
       const bgImg = document.getElementById('bgImg');
       const url = getBgUrl();
       if (url) {
-        bgImg.src = url;
-        bgImg.style.display = 'block';
+        bgImg.src = url; bgImg.style.display = 'block';
       } else {
-        bgImg.style.display = 'none';
-        const wrap = document.getElementById('canvasWrap');
-        const ar = currentTemplate.canvas.height / currentTemplate.canvas.width;
-        wrap.style.background = '#2c2c2c';
+        const W = currentTemplate.canvas.width, H = currentTemplate.canvas.height;
+        bgImg.src = `data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='${W}' height='${H}'><rect fill='%232c2c2c' width='100%25' height='100%25'/><text x='50%25' y='50%25' fill='%23666' font-size='48' text-anchor='middle' dominant-baseline='middle'>(sem fundo)</text></svg>`;
         bgImg.style.display = 'block';
-        bgImg.src = `data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='${currentTemplate.canvas.width}' height='${currentTemplate.canvas.height}'><rect fill='%232c2c2c' width='100%25' height='100%25'/><text x='50%25' y='50%25' fill='%23666' font-size='48' text-anchor='middle'>(bg local — preview via botão)</text></svg>`;
       }
     }
-
     function getScale() {
       const wrap = document.getElementById('canvasWrap');
       return wrap.offsetWidth / currentTemplate.canvas.width;
     }
-
     function renderCanvas() {
       if (!currentTemplate) return;
       updateBgImage();
       document.querySelectorAll('.layer-box').forEach(el => el.remove());
-      if (mode === 'preview') return;
+      const previewImg = document.getElementById('previewImg');
+      if (mode === 'preview') {
+        previewImg.style.display = 'block';
+        return;
+      }
+      previewImg.style.display = 'none';
       const wrap = document.getElementById('canvasWrap');
       const SCALE = getScale();
       for (const layer of currentTemplate.layers) {
@@ -353,7 +789,6 @@
         setupInteract(div);
       }
     }
-
     function setupInteract(el) {
       interact(el)
         .draggable({
@@ -366,12 +801,12 @@
             },
             end() {
               const SCALE = getScale();
-              const layer = getLayer(el.dataset.id);
-              if (!layer) return;
+              const layer = getLayer(el.dataset.id); if (!layer) return;
               layer.x = Math.round(parseFloat(el.style.left) / SCALE);
-              layer.y = Math.round(parseFloat(el.style.top) / SCALE);
+              layer.y = Math.round(parseFloat(el.style.top)  / SCALE);
               markDirty();
               if (el.dataset.id === selectedLayerId) showProps(selectedLayerId);
+              scheduleLivePreview(700);
             }
           }
         })
@@ -383,52 +818,81 @@
               x = (parseFloat(x) || 0) + event.deltaRect.left;
               y = (parseFloat(y) || 0) + event.deltaRect.top;
               Object.assign(event.target.style, {
-                width: `${event.rect.width}px`,
+                width:  `${event.rect.width}px`,
                 height: `${event.rect.height}px`,
                 left: `${parseFloat(event.target.style.left) + event.deltaRect.left}px`,
-                top:  `${parseFloat(event.target.style.top) + event.deltaRect.top}px`,
+                top:  `${parseFloat(event.target.style.top)  + event.deltaRect.top}px`,
               });
               event.target.dataset.x = x;
               event.target.dataset.y = y;
             },
             end(event) {
               const SCALE = getScale();
-              const layer = getLayer(event.target.dataset.id);
-              if (!layer) return;
+              const layer = getLayer(event.target.dataset.id); if (!layer) return;
               layer.x = Math.round(parseFloat(event.target.style.left) / SCALE);
-              layer.y = Math.round(parseFloat(event.target.style.top) / SCALE);
+              layer.y = Math.round(parseFloat(event.target.style.top)  / SCALE);
               layer.w = Math.round(event.rect.width / SCALE);
               if (layer.type !== 'text-line') layer.h = Math.round(event.rect.height / SCALE);
               markDirty();
               if (event.target.dataset.id === selectedLayerId) showProps(selectedLayerId);
+              scheduleLivePreview(700);
             }
           },
           modifiers: [interact.modifiers.restrictEdges({ outer: 'parent' })]
         });
     }
 
+    // ── Layers ───────────────────────────────────────────────────
     function renderLayersList() {
       const el = document.getElementById('layersList');
       if (!currentTemplate) { el.innerHTML = ''; return; }
-      el.innerHTML = currentTemplate.layers.map((layer, i) => `
+      if (currentTemplate.layers.length === 0) {
+        el.innerHTML = '<div style="padding:16px 14px;font-size:0.78rem;opacity:0.4;text-align:center">Nenhuma layer.<br>Adicione uma abaixo.</div>';
+        return;
+      }
+      el.innerHTML = currentTemplate.layers.map(layer => `
         <div class="layer-item${layer.id === selectedLayerId ? ' active' : ''}" id="litem-${layer.id}" onclick="selectLayer('${layer.id}')">
-          <span>${layer.name || layer.id}</span>
+          <span>${esc(layer.name || layer.id)}</span>
           <span class="layer-type-badge">${layer.type}</span>
         </div>
       `).join('');
     }
-
     function selectLayer(id) {
       selectedLayerId = id;
       document.querySelectorAll('.layer-box').forEach(el => el.classList.toggle('selected', el.dataset.id === id));
       document.querySelectorAll('.layer-item').forEach(el => el.classList.toggle('active', el.id === `litem-${id}`));
       showProps(id);
     }
-
     function getLayer(id) {
       return currentTemplate?.layers.find(l => l.id === id) || null;
     }
+    function addLayer(type) {
+      if (!currentTemplate) return;
+      const id = type + '_' + Date.now();
+      const base = { id, name: 'Nova layer', x: 100, y: 100 };
+      let layer;
+      if (type === 'text-line') layer = { ...base, type, font_family: 'Nunito Sans Light', font_size: 48, color: '#ffffff', align: 'left', content: 'Texto', w: 400 };
+      else if (type === 'text-block') layer = { ...base, type, font_family: 'Nunito Sans Light', font_size: 32, color: '#ffffff', align: 'left', content: 'Bloco de texto', w: 400, h: 200, line_height: 1.4, paragraph_spacing: 0 };
+      else layer = { ...base, type, w: 200, h: 200, source: { type: 'static', url: '' }, blend_mode: 'normal', resize_mode: 'contain' };
+      currentTemplate.layers.push(layer);
+      markDirty();
+      renderCanvas();
+      renderLayersList();
+      selectLayer(id);
+      scheduleLivePreview(700);
+    }
+    function deleteLayer(id) {
+      if (!confirm('Deletar esta layer?')) return;
+      currentTemplate.layers = currentTemplate.layers.filter(l => l.id !== id);
+      if (selectedLayerId === id) selectedLayerId = null;
+      markDirty();
+      renderCanvas();
+      renderLayersList();
+      showProps(null);
+      scheduleLivePreview(700);
+    }
 
+    // ── Props panel ──────────────────────────────────────────────
     function showProps(id) {
       const empty = document.getElementById('propsEmpty');
       const content = document.getElementById('propsContent');
@@ -437,20 +901,19 @@
       if (!layer) { empty.style.display='block'; content.style.display='none'; return; }
       empty.style.display = 'none';
       content.style.display = 'block';
-      const placeholders = PLACEHOLDERS_BY_TIPO[currentTipo] || [];
-      const fontOptions = ['Taviraj Light','Nunito Sans Light','Ivy Journal Light','Roobert PRO TRIAL Light'].map(f => `<option${layer.font_family===f?' selected':''}>${f}</option>`).join('');
-      const alignBtns = ['left','center','right'].map(a => `<button class="align-btn${layer.align===a?' active':''}" onclick="updLayer('${id}','align','${a}');renderAlignBtns('${id}')" title="${a}">${a==='left'?'←':a==='center'?'↔':'→'}</button>`).join('');
+      const tipo = currentTemplateMeta?.tipo;
+      const placeholders = PLACEHOLDERS_BY_TIPO[tipo] || [];
+      const fontOptions = ['Taviraj Light','Nunito Sans Light','Ivy Journal Light','Roobert PRO TRIAL Light']
+        .map(f => `<option${layer.font_family===f?' selected':''}>${f}</option>`).join('');
+      const alignBtns = ['left','center','right']
+        .map(a => `<button class="align-btn${layer.align===a?' active':''}" onclick="updLayer('${id}','align','${a}');renderAlignBtns('${id}')" title="${a}">${a==='left'?'←':a==='center'?'↔':'→'}</button>`).join('');
 
       let html = `
         <div class="props-section">
           <div class="props-label">ID / Nome</div>
           <div class="props-row">
-            <div>
-              <input class="props-input" value="${esc(layer.id)}" onchange="updLayer('${id}','id',this.value)" placeholder="id">
-            </div>
-            <div>
-              <input class="props-input" value="${esc(layer.name)}" onchange="updLayer('${id}','name',this.value)" placeholder="nome">
-            </div>
+            <div><input class="props-input" value="${esc(layer.id)}" onchange="updLayer('${id}','id',this.value)" placeholder="id"></div>
+            <div><input class="props-input" value="${esc(layer.name)}" onchange="updLayer('${id}','name',this.value)" placeholder="nome"></div>
           </div>
           <div class="props-label">Posição / Tamanho</div>
           <div class="props-row">
@@ -459,7 +922,7 @@
           </div>
           <div class="props-row">
             <div><div class="props-label">W</div><input class="props-input" type="number" value="${layer.w||0}" onchange="updLayerN('${id}','w',this.value)"></div>
-            ${layer.type!=='text-line' ? `<div><div class="props-label">H</div><input class="props-input" type="number" value="${layer.h||0}" onchange="updLayerN('${id}','h',this.value)"></div>` : '<div></div>'}
+            ${layer.type!=='text-line'?`<div><div class="props-label">H</div><input class="props-input" type="number" value="${layer.h||0}" onchange="updLayerN('${id}','h',this.value)"></div>`:'<div></div>'}
           </div>
         </div>`;
 
@@ -474,19 +937,19 @@
           </div>
           <div class="props-label">Alinhamento</div>
           <div class="align-btns" id="alignBtns-${id}">${alignBtns}</div>
-          ${layer.type==='text-block' ? `
+          ${layer.type==='text-block'?`
           <div class="props-row" style="margin-top:8px">
             <div><div class="props-label">Line height</div><input class="props-input" type="number" value="${layer.line_height||0}" onchange="updLayerN('${id}','line_height',this.value)"></div>
             <div><div class="props-label">Parágrafo</div><input class="props-input" type="number" value="${layer.paragraph_spacing||0}" onchange="updLayerN('${id}','paragraph_spacing',this.value)"></div>
-          </div>` : ''}
-          ${layer.auto_fit ? `
+          </div>`:''}
+          ${layer.auto_fit?`
           <div class="props-label" style="margin-top:8px">Auto-fit min</div>
           <input class="props-input" type="number" value="${layer.auto_fit.min_font_size}" onchange="updLayer('${id}','auto_fit',{enabled:true,min_font_size:+this.value})">
-          ` : ''}
+          `:''}
         </div>
         <div class="props-section">
           <div class="props-label">Conteúdo</div>
-          <textarea class="props-input props-textarea" onchange="updLayer('${id}','content',this.value)">${esc(layer.content||'')}</textarea>
+          <textarea class="props-input props-textarea" onchange="updLayer('${id}','content',this.value);scheduleLivePreview(1200)">${esc(layer.content||'')}</textarea>
           <div class="placeholder-chips">${placeholders.map(p=>`<span class="placeholder-chip" onclick="insertPlaceholder('${id}','${p}')">{{${p}}}</span>`).join('')}</div>
         </div>`;
       }
@@ -500,17 +963,17 @@
             <option${srcType==='static'?' selected':''}>static</option>
             <option${srcType==='variant'?' selected':''}>variant</option>
           </select>
-          ${srcType==='static' ? `
+          ${srcType==='static'?`
           <div class="props-label" style="margin-top:6px">URL</div>
           <input class="props-input" value="${esc(layer.source.url||'')}" onchange="updLayer('${id}','source',{type:'static',url:this.value})">
-          ` : `
-          <div class="props-label" style="margin-top:6px">variant_source (campo de dados)</div>
+          `:`
+          <div class="props-label" style="margin-top:6px">variant_source</div>
           <input class="props-input" value="${esc(layer.source.variant_source||'')}" onchange="updImageVariantSource('${id}',this.value)">
-          <div class="props-label" style="margin-top:4px">Variantes (key=url, uma por linha)</div>
+          <div class="props-label" style="margin-top:4px">Variantes (key=url)</div>
           <textarea class="props-input props-textarea" onchange="updImageVariants('${id}',this.value)">${Object.entries(layer.source.variants||{}).map(([k,v])=>`${k}=${v}`).join('\n')}</textarea>
           `}
           <div class="props-row" style="margin-top:8px">
-            <div><div class="props-label">Blend mode</div>
+            <div><div class="props-label">Blend</div>
               <select class="props-input" onchange="updLayer('${id}','blend_mode',this.value)">
                 ${['normal','screen','multiply'].map(b=>`<option${layer.blend_mode===b?' selected':''}>${b}</option>`).join('')}
               </select>
@@ -527,42 +990,35 @@
       html += `<div class="props-section"><button class="btn-delete-layer" onclick="deleteLayer('${id}')">Deletar layer</button></div>`;
       content.innerHTML = html;
     }
-
     function renderAlignBtns(id) {
-      const layer = getLayer(id);
-      if (!layer) return;
+      const layer = getLayer(id); if (!layer) return;
       document.querySelectorAll(`#alignBtns-${id} .align-btn`).forEach(btn => {
         btn.classList.toggle('active', btn.getAttribute('title') === layer.align);
       });
     }
 
+    // ── Layer updates ────────────────────────────────────────────
     function updLayer(id, key, value) {
       const layer = getLayer(id); if (!layer) return;
       if (key === 'id') {
-        const oldId = layer.id;
-        layer.id = value;
+        const oldId = layer.id; layer.id = value;
         if (selectedLayerId === oldId) selectedLayerId = value;
-      } else {
-        layer[key] = value;
-      }
+      } else { layer[key] = value; }
       markDirty();
       renderCanvas();
       renderLayersList();
+      scheduleLivePreview(800);
     }
-
     function updLayerN(id, key, value) { updLayer(id, key, parseFloat(value) || 0); }
-
     function updImageSourceType(id, type) {
       const layer = getLayer(id); if (!layer) return;
       layer.source = type === 'static' ? { type: 'static', url: '' } : { type: 'variant', variants: {}, variant_source: '' };
       markDirty(); showProps(id);
     }
-
     function updImageVariantSource(id, val) {
       const layer = getLayer(id); if (!layer) return;
       layer.source.variant_source = val; markDirty();
     }
-
     function updImageVariants(id, text) {
       const layer = getLayer(id); if (!layer) return;
       const variants = {};
@@ -572,105 +1028,90 @@
       });
       layer.source.variants = variants; markDirty();
     }
-
     function insertPlaceholder(id, placeholder) {
       const layer = getLayer(id); if (!layer) return;
-      const tag = `{{${placeholder}}}`;
-      layer.content = (layer.content || '') + tag;
-      markDirty(); showProps(id);
+      layer.content = (layer.content || '') + `{{${placeholder}}}`;
+      markDirty(); showProps(id); scheduleLivePreview(1200);
     }
 
-    function addLayer(type) {
-      if (!currentTemplate) return;
-      const id = type + '_' + Date.now();
-      const base = { id, name: 'Nova layer', x: 100, y: 100 };
-      let layer;
-      if (type === 'text-line') layer = { ...base, type, w: 400, content: 'Texto', font_family: 'Nunito Sans Light', font_size: 48, color: '#ffffff', align: 'left' };
-      else if (type === 'text-block') layer = { ...base, type, w: 400, h: 200, content: 'Texto', font_family: 'Nunito Sans Light', font_size: 36, line_height: 50, paragraph_spacing: 20, color: '#ffffff', align: 'left' };
-      else layer = { ...base, type: 'image', w: 200, h: 100, source: { type: 'static', url: '' }, blend_mode: 'normal', resize_mode: 'contain' };
-      currentTemplate.layers.push(layer);
-      markDirty(); renderCanvas(); renderLayersList(); selectLayer(id);
-    }
-
-    function deleteLayer(id) {
-      if (!currentTemplate || !confirm('Remover esta layer?')) return;
-      currentTemplate.layers = currentTemplate.layers.filter(l => l.id !== id);
-      if (selectedLayerId === id) { selectedLayerId = null; showProps(null); }
-      markDirty(); renderCanvas(); renderLayersList();
-    }
-
+    // ── Dirty state ──────────────────────────────────────────────
     function markDirty() {
       isDirty = true;
       document.getElementById('unsavedBadge').classList.add('visible');
-      document.getElementById(`titem-${currentTipo}`)?.classList.add('dirty');
     }
 
+    // ── Mode toggle ──────────────────────────────────────────────
     function setMode(m) {
       mode = m;
-      document.getElementById('btnModeEdit').classList.toggle('active', m==='edit');
-      document.getElementById('btnModePreview').classList.toggle('active', m==='preview');
-      const previewImg = document.getElementById('previewImg');
-      if (m === 'edit') {
-        previewImg.style.display = 'none';
-        renderCanvas();
-      } else {
-        document.querySelectorAll('.layer-box').forEach(el => el.remove());
-        if (previewImg.src && previewImg.src !== window.location.href) previewImg.style.display = 'block';
+      document.getElementById('btnModeEdit').classList.toggle('active', m === 'edit');
+      document.getElementById('btnModePreview').classList.toggle('active', m === 'preview');
+      renderCanvas();
+      if (m === 'preview') { scheduleLivePreview(0); }
+    }
+
+    // ── Live preview ─────────────────────────────────────────────
+    function toggleLive() {
+      liveEnabled = !liveEnabled;
+      const btn = document.getElementById('liveToggleBtn');
+      btn.classList.toggle('on', liveEnabled);
+      btn.textContent = liveEnabled ? '● Live' : '○ Live';
+      if (liveEnabled && mode === 'preview') scheduleLivePreview(0);
+    }
+
+    function scheduleLivePreview(delay = 700) {
+      if (!liveEnabled || mode !== 'preview') return;
+      if (previewDebounce) clearTimeout(previewDebounce);
+      previewDebounce = setTimeout(() => doLivePreview(), delay);
+    }
+
+    async function doLivePreview() {
+      if (!currentTemplate) return;
+      if (previewAbortCtrl) previewAbortCtrl.abort();
+      previewAbortCtrl = new AbortController();
+      showRenderingIndicator(true);
+      try {
+        const res = await fetch('/api/admin/art-templates/preview', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ config: currentTemplate, data: testData }),
+          signal: previewAbortCtrl.signal,
+        });
+        if (!res.ok) return;
+        const blob = await res.blob();
+        const img = document.getElementById('previewImg');
+        const oldUrl = img.src;
+        img.src = URL.createObjectURL(blob);
+        img.style.display = 'block';
+        if (oldUrl && oldUrl.startsWith('blob:')) URL.revokeObjectURL(oldUrl);
+      } catch (e) {
+        if (e.name !== 'AbortError') console.error('[live preview]', e);
+      } finally {
+        showRenderingIndicator(false);
       }
     }
 
-    async function renderPreview() {
-      setMode('preview');
-      const previewImg = document.getElementById('previewImg');
-      previewImg.style.display = 'none';
-      const loadingDiv = document.createElement('div');
-      loadingDiv.id = 'previewLoading';
-      loadingDiv.style.cssText = 'position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.5);color:#fff;font-size:0.9rem;z-index:10';
-      loadingDiv.textContent = 'Renderizando…';
-      document.getElementById('canvasWrap').appendChild(loadingDiv);
-      try {
-        const body = { config: currentTemplate, data: testData };
-        const res = await fetch(`/api/admin/art-templates/${currentTipo}/preview`, {
-          method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify(body),
-        });
-        if (!res.ok) { const e = await res.json(); alert('Erro: ' + (e.error || res.status)); setMode('edit'); return; }
-        const blob = await res.blob();
-        previewImg.src = URL.createObjectURL(blob);
-        previewImg.style.display = 'block';
-      } catch(e) { alert('Erro ao gerar preview: ' + e.message); setMode('edit'); }
-      finally { document.getElementById('previewLoading')?.remove(); }
+    function showRenderingIndicator(visible) {
+      document.getElementById('renderingIndicator').classList.toggle('visible', visible);
     }
 
+    // ── Save ─────────────────────────────────────────────────────
     async function saveTemplate() {
-      if (!currentTemplate) return;
-      const btn = document.querySelector('.canvas-toolbar button.primary');
-      const orig = btn.textContent; btn.textContent = 'Salvando…'; btn.disabled = true;
-      try {
-        const res = await fetch(`/api/admin/art-templates/${currentTipo}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
-          body: JSON.stringify({ config: currentTemplate }),
-        });
-        const data = await res.json();
-        if (!res.ok) { alert('Erro ao salvar: ' + (data.error || res.status)); return; }
-        isDirty = false;
-        document.getElementById('unsavedBadge').classList.remove('visible');
-        document.getElementById(`titem-${currentTipo}`)?.classList.remove('dirty');
-      } catch(e) { alert('Erro: ' + e.message); }
-      finally { btn.textContent = orig; btn.disabled = false; }
+      if (!currentTemplateMeta || !currentTemplate) return;
+      const res = await fetch(`/api/admin/art-templates/${currentTemplateMeta.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ config: currentTemplate }),
+      });
+      if (!res.ok) {
+        const d = await res.json().catch(() => ({}));
+        alert(d.error || 'Erro ao salvar.');
+        return;
+      }
+      isDirty = false;
+      document.getElementById('unsavedBadge').classList.remove('visible');
+      await loadAllTemplates();
     }
-
-    function esc(str) {
-      if (str == null) return '';
-      return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-    }
-
-    window.addEventListener('beforeunload', (e) => {
-      if (isDirty) { e.preventDefault(); e.returnValue = ''; }
-    });
-
-    window.addEventListener('resize', () => { if (currentTemplate && mode === 'edit') fitToView(); });
 
     init();
   </script>

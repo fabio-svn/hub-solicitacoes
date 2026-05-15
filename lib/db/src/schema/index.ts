@@ -1,4 +1,4 @@
-import { pgTable, serial, varchar, text, integer, jsonb, timestamp, unique } from "drizzle-orm/pg-core";
+import { pgTable, serial, varchar, text, integer, jsonb, timestamp, unique, boolean } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
@@ -61,8 +61,11 @@ export type UserTipoAssignment = typeof userTipoAssignmentsTable.$inferSelect;
 
 export const artTemplatesTable = pgTable("art_templates", {
   id: serial("id").primaryKey(),
-  tipo: varchar("tipo", { length: 100 }).notNull().unique(),
+  tipo: varchar("tipo", { length: 100 }).notNull(),
+  name: varchar("name", { length: 200 }).notNull().default(""),
   config: jsonb("config").notNull(),
+  is_active: boolean("is_active").notNull().default(false),
+  created_at: timestamp("created_at").defaultNow().notNull(),
   updated_at: timestamp("updated_at").defaultNow().notNull(),
   updated_by: integer("updated_by").references(() => usersTable.id),
 });

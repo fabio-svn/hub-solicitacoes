@@ -180,14 +180,39 @@ function validateTemplateConfig(config: any): string | null {
   return null;
 }
 
+const SAMPLE_DATA: Record<string, Record<string, string>> = {
+  'cartao-boas-vindas': {
+    nome_cliente:    'Cliente Teste',
+    nome_assinatura: 'João Sardeto',
+    unidade:         'SVN Maringá',
+    contrato_social: 'svn-investimentos',
+    contrato_label:  'SVN Investimentos',
+    is_private_key:  'padrao',
+  },
+  'assinatura-email': {
+    nome:        'Maria da Silva',
+    cargo:       'Assessora de Investimentos',
+    telefone:    '(44) 99999-9999',
+    email:       'maria@svninvest.com.br',
+    marca:       'svn-investimentos',
+    marca_label: 'SVN Investimentos',
+    tem_cfp:     'nao',
+  },
+};
+
+// GET /art-templates — list all templates (no config for perf)
 router.get("/art-templates", requireAuth, requireRole("admin"), async (req, res): Promise<void> => {
   try {
     const rows = await db.select({
       id:         artTemplatesTable.id,
       tipo:       artTemplatesTable.tipo,
+      name:       artTemplatesTable.name,
+      is_active:  artTemplatesTable.is_active,
+      created_at: artTemplatesTable.created_at,
       updated_at: artTemplatesTable.updated_at,
       updated_by: artTemplatesTable.updated_by,
-    }).from(artTemplatesTable);
+    }).from(artTemplatesTable)
+      .orderBy(artTemplatesTable.tipo, artTemplatesTable.created_at);
     res.json(rows);
   } catch (err) {
     logger.error({ err }, "Erro ao listar art-templates");
@@ -195,41 +220,13 @@ router.get("/art-templates", requireAuth, requireRole("admin"), async (req, res)
   }
 });
 
-router.get("/art-templates/:tipo", requireAuth, requireRole("admin"), async (req, res): Promise<void> => {
-  try {
-    const [row] = await db.select().from(artTemplatesTable)
-      .where(eq(artTemplatesTable.tipo, req.params.tipo));
-    if (!row) { res.status(404).json({ error: "Template não encontrado" }); return; }
-    res.json(row);
-  } catch (err) {
-    logger.error({ err }, "Erro ao buscar art-template");
-    res.status(500).json({ error: "Erro ao buscar template" });
-  }
+// GET /art-templates/sample-data/:tipo — must come before /:id
+router.get("/art-templates/sample-data/:tipo", requireAuth, requireRole("admin"), async (req, res): Promise<void> => {
+  res.json(SAMPLE_DATA[req.params.tipo] || {});
 });
 
-router.put("/art-templates/:tipo", requireAuth, requireRole("admin"), async (req, res): Promise<void> => {
-  try {
-    const user = req.session.user!;
-    const { config } = req.body as { config: any };
-    if (!config) { res.status(400).json({ error: "Campo config obrigatório" }); return; }
-    const validationError = validateTemplateConfig(config);
-    if (validationError) { res.status(400).json({ error: validationError }); return; }
-    const [userRow] = await db.select({ id: usersTable.id })
-      .from(usersTable).where(eq(usersTable.email, user.email));
-    await db.insert(artTemplatesTable)
-      .values({ tipo: req.params.tipo, config, updated_at: new Date(), updated_by: userRow?.id })
-      .onConflictDoUpdate({
-        target: artTemplatesTable.tipo,
-        set: { config, updated_at: new Date(), updated_by: userRow?.id ?? null },
-      });
-    res.json({ success: true });
-  } catch (err) {
-    logger.error({ err }, "Erro ao salvar art-template");
-    res.status(500).json({ error: "Erro ao salvar template" });
-  }
-});
-
-router.post("/art-templates/:tipo/preview", requireAuth, requireRole("admin"), async (req, res): Promise<void> => {
+// POST /art-templates/preview — ad-hoc render, must come before /:id routes
+router.post("/art-templates/preview", requireAuth, requireRole("admin"), async (req, res): Promise<void> => {
   try {
     const { config, data } = req.body as { config: any; data: Record<string, any> };
     if (!config) { res.status(400).json({ error: "Campo config obrigatório" }); return; }
@@ -241,27 +238,130 @@ router.post("/art-templates/:tipo/preview", requireAuth, requireRole("admin"), a
   }
 });
 
-router.get("/art-templates/:tipo/sample-data", requireAuth, requireRole("admin"), async (req, res): Promise<void> => {
-  const defaults: Record<string, Record<string, string>> = {
-    'cartao-boas-vindas': {
-      nome_cliente:    'Cliente Teste',
-      nome_assinatura: 'João Sardeto',
-      unidade:         'SVN Maringá',
-      contrato_social: 'svn-investimentos',
-      contrato_label:  'SVN Investimentos',
-      is_private_key:  'padrao',
-    },
-    'assinatura-email': {
-      nome:       'Maria da Silva',
-      cargo:      'Assessora de Investimentos',
-      telefone:   '(44) 99999-9999',
-      email:      'maria@svninvest.com.br',
-      marca:      'svn-investimentos',
-      marca_label:'SVN Investimentos',
-      tem_cfp:    'nao',
-    },
-  };
-  res.json(defaults[req.params.tipo] || {});
+// GET /art-templates/:id — full template with config
+router.get("/art-templates/:id", requireAuth, requireRole("admin"), async (req, res): Promise<void> => {
+  try {
+    const id = parseInt(req.params.id);
+    if (isNaN(id)) { res.status(400).json({ error: "ID inválido" }); return; }
+    const [row] = await db.select().from(artTemplatesTable).where(eq(artTemplatesTable.id, id));
+    if (!row) { res.status(404).json({ error: "Template não encontrado" }); return; }
+    res.json(row);
+  } catch (err) {
+    logger.error({ err }, "Erro ao buscar art-template");
+    res.status(500).json({ error: "Erro ao buscar template" });
+  }
+});
+
+// POST /art-templates — create new template
+router.post("/art-templates", requireAuth, requireRole("admin"), async (req, res): Promise<void> => {
+  try {
+    const user = req.session.user!;
+    const { tipo, name, config } = req.body as { tipo: string; name: string; config: any };
+    if (!tipo) { res.status(400).json({ error: "Campo tipo obrigatório" }); return; }
+    if (!name) { res.status(400).json({ error: "Campo name obrigatório" }); return; }
+    const effectiveConfig = config || { canvas: { width: 1080, height: 1080 }, bg: { type: 'static', url: '' }, layers: [] };
+    const validationError = validateTemplateConfig(effectiveConfig);
+    if (validationError) { res.status(400).json({ error: validationError }); return; }
+    const [userRow] = await db.select({ id: usersTable.id }).from(usersTable).where(eq(usersTable.email, user.email));
+    const [inserted] = await db.insert(artTemplatesTable)
+      .values({ tipo, name, config: effectiveConfig, is_active: false, updated_at: new Date(), updated_by: userRow?.id ?? null })
+      .returning();
+    res.json(inserted);
+  } catch (err) {
+    logger.error({ err }, "Erro ao criar art-template");
+    res.status(500).json({ error: "Erro ao criar template" });
+  }
+});
+
+// PUT /art-templates/:id — update name and/or config
+router.put("/art-templates/:id", requireAuth, requireRole("admin"), async (req, res): Promise<void> => {
+  try {
+    const user = req.session.user!;
+    const id = parseInt(req.params.id);
+    if (isNaN(id)) { res.status(400).json({ error: "ID inválido" }); return; }
+    const { name, config } = req.body as { name?: string; config?: any };
+    if (config) {
+      const validationError = validateTemplateConfig(config);
+      if (validationError) { res.status(400).json({ error: validationError }); return; }
+    }
+    const [userRow] = await db.select({ id: usersTable.id }).from(usersTable).where(eq(usersTable.email, user.email));
+    const updateData: Record<string, any> = { updated_at: new Date(), updated_by: userRow?.id ?? null };
+    if (name !== undefined) updateData.name = name;
+    if (config !== undefined) updateData.config = config;
+    const [updated] = await db.update(artTemplatesTable).set(updateData).where(eq(artTemplatesTable.id, id)).returning();
+    if (!updated) { res.status(404).json({ error: "Template não encontrado" }); return; }
+    res.json({ success: true, template: updated });
+  } catch (err) {
+    logger.error({ err }, "Erro ao atualizar art-template");
+    res.status(500).json({ error: "Erro ao atualizar template" });
+  }
+});
+
+// PATCH /art-templates/:id/activate — mark as active, deactivate siblings
+router.patch("/art-templates/:id/activate", requireAuth, requireRole("admin"), async (req, res): Promise<void> => {
+  try {
+    const id = parseInt(req.params.id);
+    if (isNaN(id)) { res.status(400).json({ error: "ID inválido" }); return; }
+    await db.transaction(async (tx) => {
+      const [target] = await tx.select().from(artTemplatesTable).where(eq(artTemplatesTable.id, id));
+      if (!target) throw Object.assign(new Error("Template não encontrado"), { status: 404 });
+      await tx.update(artTemplatesTable).set({ is_active: false }).where(eq(artTemplatesTable.tipo, target.tipo));
+      await tx.update(artTemplatesTable).set({ is_active: true }).where(eq(artTemplatesTable.id, id));
+    });
+    res.json({ success: true });
+  } catch (err: any) {
+    logger.error({ err }, "Erro ao ativar art-template");
+    res.status(err?.status || 500).json({ error: err?.message || "Erro ao ativar template" });
+  }
+});
+
+// DELETE /art-templates/:id — delete (blocked if active or last of tipo)
+router.delete("/art-templates/:id", requireAuth, requireRole("admin"), async (req, res): Promise<void> => {
+  try {
+    const id = parseInt(req.params.id);
+    if (isNaN(id)) { res.status(400).json({ error: "ID inválido" }); return; }
+    const [target] = await db.select().from(artTemplatesTable).where(eq(artTemplatesTable.id, id));
+    if (!target) { res.status(404).json({ error: "Template não encontrado" }); return; }
+    if (target.is_active) {
+      res.status(400).json({ error: "Não é possível deletar o template ativo. Ative outro primeiro." }); return;
+    }
+    const siblings = await db.select({ id: artTemplatesTable.id }).from(artTemplatesTable).where(eq(artTemplatesTable.tipo, target.tipo));
+    if (siblings.length <= 1) {
+      res.status(400).json({ error: `Este é o único template do tipo "${target.tipo}". Crie outro antes de deletar este.` }); return;
+    }
+    await db.delete(artTemplatesTable).where(eq(artTemplatesTable.id, id));
+    res.json({ success: true });
+  } catch (err) {
+    logger.error({ err }, "Erro ao deletar art-template");
+    res.status(500).json({ error: "Erro ao deletar template" });
+  }
+});
+
+// POST /art-templates/:id/duplicate — clone a template
+router.post("/art-templates/:id/duplicate", requireAuth, requireRole("admin"), async (req, res): Promise<void> => {
+  try {
+    const user = req.session.user!;
+    const id = parseInt(req.params.id);
+    if (isNaN(id)) { res.status(400).json({ error: "ID inválido" }); return; }
+    const { name } = req.body as { name?: string };
+    const [source] = await db.select().from(artTemplatesTable).where(eq(artTemplatesTable.id, id));
+    if (!source) { res.status(404).json({ error: "Template não encontrado" }); return; }
+    const [userRow] = await db.select({ id: usersTable.id }).from(usersTable).where(eq(usersTable.email, user.email));
+    const [inserted] = await db.insert(artTemplatesTable)
+      .values({
+        tipo: source.tipo,
+        name: name || `${source.name} (cópia)`,
+        config: source.config,
+        is_active: false,
+        updated_at: new Date(),
+        updated_by: userRow?.id ?? null,
+      })
+      .returning();
+    res.json(inserted);
+  } catch (err) {
+    logger.error({ err }, "Erro ao duplicar art-template");
+    res.status(500).json({ error: "Erro ao duplicar template" });
+  }
 });
 
 export default router;

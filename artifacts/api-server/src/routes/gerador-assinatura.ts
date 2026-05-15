@@ -3,7 +3,7 @@ import * as path from "path";
 import * as os from "os";
 import { db } from "@workspace/db";
 import { solicitacoesTable, artTemplatesTable } from "@workspace/db";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import { uploadToR2 } from "./r2";
 import { logger } from "../lib/logger";
 import { renderFromTemplate } from "../services/template-renderer";
@@ -52,9 +52,12 @@ export async function gerarAssinaturaEmail(
     const [templateRow] = await db
       .select()
       .from(artTemplatesTable)
-      .where(eq(artTemplatesTable.tipo, 'assinatura-email'));
+      .where(and(
+        eq(artTemplatesTable.tipo, 'assinatura-email'),
+        eq(artTemplatesTable.is_active, true)
+      ));
 
-    if (!templateRow) throw new Error('Template "assinatura-email" não encontrado. Execute o seed.');
+    if (!templateRow) throw new Error('Nenhum template ativo para assinatura-email. Ative um template no painel admin.');
 
     const pngBuffer = await renderFromTemplate(templateRow.config as any, {
       nome,
