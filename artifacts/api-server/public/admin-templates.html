@@ -1877,7 +1877,7 @@
       status.textContent = 'Enviando…';
       const fd = new FormData(); fd.append('file', file);
       try {
-        const r = await fetch('/api/admin/assets', { method: 'POST', body: fd });
+        const r = await fetch('/api/admin/assets/upload', { method: 'POST', body: fd });
         const d = await r.json();
         if (!r.ok) { status.textContent = d.error || 'Erro.'; return; }
         status.textContent = '✓ Upload concluído';
@@ -1892,7 +1892,7 @@
       const fd = new FormData(); fd.append('file', file);
       try {
         showToast('Enviando imagem…', 'info');
-        const r = await fetch('/api/admin/assets', { method: 'POST', body: fd });
+        const r = await fetch('/api/admin/assets/upload', { method: 'POST', body: fd });
         const d = await r.json();
         if (!r.ok) { showToast(d.error || 'Erro no upload.', 'error'); return; }
         cb(d.url);

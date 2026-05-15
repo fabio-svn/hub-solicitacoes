@@ -325,7 +325,7 @@
       if (file.size > 5 * 1024 * 1024) { showToast(`${file.name}: arquivo muito grande (máx. 5MB)`, 'error'); done++; progressBar.style.width = (done/arr.length*100)+'%'; continue; }
       const fd = new FormData(); fd.append('file', file);
       try {
-        const r = await fetch('/api/admin/assets', { method: 'POST', body: fd });
+        const r = await fetch('/api/admin/assets/upload', { method: 'POST', body: fd });
         const d = await r.json();
         if (!r.ok) { showToast(`${file.name}: ${d.error || 'Erro'}`, 'error'); } else { results.push(d); }
       } catch { showToast(`${file.name}: erro de rede.`, 'error'); }
