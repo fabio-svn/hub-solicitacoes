@@ -95,6 +95,27 @@ router.post("/impersonate/stop", requireAuth, async (req, res): Promise<void> =>
   }
 });
 
+router.put("/users/:id/clickup_user_id", requireAuth, requireRole("admin"), async (req, res): Promise<void> => {
+  try {
+    const userId = parseInt(String(req.params.id));
+    if (isNaN(userId)) {
+      res.status(400).json({ error: "ID inválido" });
+      return;
+    }
+    const { clickup_user_id } = req.body as { clickup_user_id: string | null };
+    const [targetUser] = await db.select().from(usersTable).where(eq(usersTable.id, userId));
+    if (!targetUser) {
+      res.status(404).json({ error: "Usuário não encontrado" });
+      return;
+    }
+    await db.update(usersTable).set({ clickup_user_id: clickup_user_id || null }).where(eq(usersTable.id, userId));
+    res.json({ success: true });
+  } catch (err) {
+    logger.error({ err }, "Error updating clickup_user_id");
+    res.status(500).json({ error: "Erro ao atualizar ClickUp User ID" });
+  }
+});
+
 router.get("/activity-log", requireAuth, async (req, res): Promise<void> => {
   try {
     const user = req.session.user!;

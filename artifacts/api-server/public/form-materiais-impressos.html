@@ -40,6 +40,10 @@
           <div style="height:1px;background:var(--border-light);margin-bottom:24px"></div>
 
           <div class="field">
+            <label>Telefone <span style="color:var(--ruby-red)">*</span></label>
+            <input type="tel" id="telefone" placeholder="(00) 00000-0000" oninput="mascaraTelefone(this)" required>
+          </div>
+          <div class="field">
             <label>Setor <span style="color:var(--ruby-red)">*</span></label>
             <select id="setor" required>
               <option value="">Selecione seu setor</option>
@@ -142,6 +146,8 @@
       await Auth.init();
       if (!Auth.isAuthenticated()) { window.location.href = '/auth/login?redirect=/form-materiais-impressos.html'; return; }
       Auth.renderHeader(document.getElementById('mainHeader'));
+
+      Auth.aplicarPerfilNoCampo('telefone', Auth.getTelefone());
 
       const setorSel = document.getElementById('setor');
       if (setorSel) { SETORES.filter(s => s !== 'Selecione seu setor').forEach(s => { const o = document.createElement('option'); o.value = s; o.textContent = s; setorSel.appendChild(o); }); }
@@ -491,28 +497,23 @@
       const arquivoInput = document.getElementById('arquivoApoio');
       if (arquivoInput?.files[0]) formData.append('arquivo', arquivoInput.files[0]);
 
-      try {
-        const res = await fetch('/api/solicitacoes', { method: 'POST', body: formData });
-        if (res.ok) {
-          try {
-            sessionStorage.setItem('svn_ultimo_resumo', JSON.stringify({
-              tipo: TIPO_SOLICITACAO_LABELS[TIPO] || TIPO,
-              solicitante: Auth.getUserName(),
-              setor: dados.setor,
-              data: new Date().toLocaleDateString('pt-BR'),
-              hora: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
-            }));
-          } catch {}
-          window.location.href = '/thankyou.html';
-        } else {
-          const d = await res.json().catch(() => ({}));
-          const errEl = document.getElementById('submitError');
-          if (errEl) { errEl.style.display = 'block'; errEl.textContent = d.error || 'Erro ao enviar. Tente novamente.'; }
-          btn.disabled = false; btn.textContent = 'Enviar';
-        }
-      } catch {
+      const res = await fetch('/api/solicitacoes', { method: 'POST', body: formData });
+      const d = await res.json().catch(() => ({}));
+      if (res.ok) {
+        try {
+          sessionStorage.setItem('svn_ultimo_resumo', JSON.stringify({
+            tipo: TIPO_SOLICITACAO_LABELS[TIPO] || TIPO,
+            solicitante: Auth.getUserName(),
+            setor: dados.setor,
+            data: new Date().toLocaleDateString('pt-BR'),
+            hora: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+            id: d.id,
+          }));
+        } catch {}
+        window.location.href = '/thankyou.html';
+      } else {
         const errEl = document.getElementById('submitError');
-        if (errEl) { errEl.style.display = 'block'; errEl.textContent = 'Erro de conexão. Verifique sua internet e tente novamente.'; }
+        if (errEl) { errEl.style.display = 'block'; errEl.textContent = d.error || 'Erro ao enviar. Tente novamente.'; }
         btn.disabled = false; btn.textContent = 'Enviar';
       }
     }

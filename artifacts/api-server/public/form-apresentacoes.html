@@ -62,6 +62,10 @@
         </div>
 
         <div class="field">
+          <label>Telefone <span style="color:var(--ruby-red)">*</span></label>
+          <input type="tel" id="telefone" placeholder="(00) 00000-0000" oninput="mascaraTelefone(this)" required>
+        </div>
+        <div class="field">
           <label>Setor <span style="color:var(--ruby-red)">*</span></label>
           <select id="setor" required>
             <option value="">Selecione seu setor</option>
@@ -175,6 +179,7 @@
     <span>Início</span>
   </a>
 
+  <script src="utils.js"></script>
   <script src="upload-feedback.js"></script>
   <script src="config.js"></script>
   <script src="auth.js"></script>
@@ -246,6 +251,8 @@
 
       const setorSel = document.getElementById('setor');
       if (setorSel) { SETORES.filter(s => s !== 'Selecione seu setor').forEach(s => { const o = document.createElement('option'); o.value = s; o.textContent = s; setorSel.appendChild(o); }); }
+
+      Auth.aplicarPerfilNoCampo('telefone', Auth.getTelefone());
 
       restoreDraft();
     }
@@ -357,6 +364,7 @@
       formData.append('subtipo', subtipo);
       const dados = {
         nome: Auth.getUserName(),
+        telefone: document.getElementById('telefone').value,
         setor: document.getElementById('setor')?.value || '',
         titulo: document.getElementById('titulo').value,
         finalidade: document.getElementById('finalidade').value,
@@ -377,34 +385,40 @@
       const apoio = document.getElementById('arquivoApoio').files[0];
       if (apoio) formData.append('arquivoApoio', apoio);
 
-      try {
-        const res = await fetch('/api/solicitacoes', { method: 'POST', body: formData });
-        if (res.ok) {
-          sessionStorage.removeItem('form-apresentacoes');
-          try {
-            const resumo = {
-              tipo: TIPO_SOLICITACAO_LABELS[formData.get('tipo_solicitacao')] || formData.get('tipo_solicitacao'),
-              subtipo: formData.get('subtipo') || '',
-              titulo: dados.titulo || '',
-              solicitante: dados.nome || Auth.getUserName(),
-              setor: dados.setor || '',
-              data: new Date().toLocaleDateString('pt-BR'),
-              hora: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
-              materiais: [],
-              natureza: '',
-              maturidade: '',
-            };
-            sessionStorage.setItem('svn_ultimo_resumo', JSON.stringify(resumo));
-          } catch {}
-          window.location.href = '/thankyou.html';
-        }
-        else { alert('Erro ao enviar.'); btn.disabled = false; btn.textContent = 'Enviar'; }
-      } catch (e) { alert('Erro de conexão.'); btn.disabled = false; btn.textContent = 'Enviar'; }
+      const res = await fetch('/api/solicitacoes', { method: 'POST', body: formData });
+      const d = await res.json().catch(() => ({}));
+      if (res.ok) {
+        sessionStorage.removeItem('form-apresentacoes');
+        try {
+          const resumo = {
+            tipo: TIPO_SOLICITACAO_LABELS[formData.get('tipo_solicitacao')] || formData.get('tipo_solicitacao'),
+            subtipo: formData.get('subtipo') || '',
+            titulo: dados.titulo || '',
+            solicitante: dados.nome || Auth.getUserName(),
+            setor: dados.setor || '',
+            data: new Date().toLocaleDateString('pt-BR'),
+            hora: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+            materiais: [],
+            natureza: '',
+            maturidade: '',
+            id: d.id,
+          };
+          sessionStorage.setItem('svn_ultimo_resumo', JSON.stringify(resumo));
+        } catch {}
+        window.location.href = '/thankyou.html';
+      }
+      else { 
+        const errEl = document.getElementById('submitError');
+        if (errEl) { errEl.style.display = 'block'; errEl.textContent = d.error || 'Erro ao enviar. Tente novamente.'; }
+        else { alert(d.error || 'Erro ao enviar. Tente novamente.'); }
+        btn.disabled = false; btn.textContent = 'Enviar'; 
+      }
     }
 
     function saveDraft() {
       try {
         sessionStorage.setItem('form-apresentacoes', JSON.stringify({
+          telefone: document.getElementById('telefone')?.value || '',
           setor: document.getElementById('setor')?.value || '',
           titulo: document.getElementById('titulo')?.value || '',
           finalidade: document.getElementById('finalidade')?.value || '',
@@ -418,6 +432,7 @@
         const raw = sessionStorage.getItem('form-apresentacoes');
         if (!raw) return;
         const d = JSON.parse(raw);
+        if (d.telefone) document.getElementById('telefone').value = d.telefone;
         for (const [k, v] of Object.entries(d)) {
           const el = document.getElementById(k);
           if (el) el.value = v;

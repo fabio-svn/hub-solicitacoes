@@ -404,10 +404,11 @@ function buildGeneralTaskName(tipo: string, _subtipo: string, dados: FormDados, 
 // Description section builders — Eventos
 // ─────────────────────────────────────────────
 
-function buildRequesterSection(user: UserData): string {
+function buildRequesterSection(user: UserData, dados?: FormDados): string {
   const items: string[] = [];
   items.push(`• Solicitante: ${user.name}`);
   items.push(`• E-mail: ${user.email}`);
+  if (dados) addLine(items, "Telefone", str(dados.telefone as string));
   logger.info({ nome: user.name, email: user.email }, "ClickUp: bloco solicitante montado");
   return `👤 SOLICITANTE\n━━━━━━━━━━━━━━━━━━━━━━\n\n${items.join("\n")}`;
 }
@@ -499,7 +500,7 @@ function buildMateriaisSection(dados: FormDados): string | null {
 
 function buildEventDescription(dados: FormDados, user: UserData, arquivos: ArquivosMap): string {
   const blocks: string[] = [];
-  blocks.push(buildRequesterSection(user));
+  blocks.push(buildRequesterSection(user, dados));
   blocks.push(buildResumoSection(dados));
   const palestrantes = buildPalestrantesSection(dados);
   if (palestrantes) blocks.push(palestrantes);
@@ -591,7 +592,7 @@ function buildGeneralDescription(
 ): string {
   const blocks: string[] = [];
 
-  blocks.push(buildRequesterSection(user));
+  blocks.push(buildRequesterSection(user, dados));
 
   const tipoHuman = humanizeRequestType(tipo);
   const setor = getUserDepartment(user, dados);
@@ -625,7 +626,7 @@ function buildGeneralDescription(
 
 function buildCartaoFisicoDescription(dados: FormDados, user: UserData): string {
   const blocks: string[] = [];
-  blocks.push(buildRequesterSection(user));
+  blocks.push(buildRequesterSection(user, dados));
   const items: string[] = [];
   items.push(`• Nome: ${str(dados.nomeCartao)}`);
   items.push(`• WhatsApp: ${str(dados.whatsapp)}`);
@@ -639,7 +640,7 @@ function buildCartaoFisicoDescription(dados: FormDados, user: UserData): string 
 
 function buildPatrocinioDescription(dados: FormDados, user: UserData, arquivos: ArquivosMap): string {
   const blocks: string[] = [];
-  blocks.push(buildRequesterSection(user));
+  blocks.push(buildRequesterSection(user, dados));
 
   const resumoItems: string[] = [];
   addLine(resumoItems, "Título do evento", str(dados.tituloEvento));
@@ -682,7 +683,7 @@ function buildPatrocinioDescription(dados: FormDados, user: UserData, arquivos: 
 
 function buildBrindesDescription(dados: FormDados, user: UserData, arquivos: ArquivosMap): string {
   const blocks: string[] = [];
-  blocks.push(buildRequesterSection(user));
+  blocks.push(buildRequesterSection(user, dados));
 
   const items: string[] = [];
   addLine(items, "Setor", str(dados.setor as string));
@@ -705,7 +706,7 @@ function buildBrindesDescription(dados: FormDados, user: UserData, arquivos: Arq
 
 function buildPaginaOnlineDescription(dados: FormDados, user: UserData, arquivos: ArquivosMap): string {
   const blocks: string[] = [];
-  blocks.push(buildRequesterSection(user));
+  blocks.push(buildRequesterSection(user, dados));
 
   const items: string[] = [];
   addLine(items, "Setor", str(dados.setor as string));
@@ -722,7 +723,7 @@ function buildPaginaOnlineDescription(dados: FormDados, user: UserData, arquivos
 
 function buildMateriaisImpressosDescription(dados: FormDados, user: UserData, arquivos: ArquivosMap): string {
   const blocks: string[] = [];
-  blocks.push(buildRequesterSection(user));
+  blocks.push(buildRequesterSection(user, dados));
 
   const items: string[] = [];
   addLine(items, "Setor", str(dados.setor as string));
@@ -750,7 +751,7 @@ function buildMateriaisImpressosDescription(dados: FormDados, user: UserData, ar
 
 function buildEmailMarketingDescription(dados: FormDados, user: UserData, arquivos: ArquivosMap): string {
   const blocks: string[] = [];
-  blocks.push(buildRequesterSection(user));
+  blocks.push(buildRequesterSection(user, dados));
 
   const items: string[] = [];
   addLine(items, "Setor", str(dados.setor as string));
@@ -770,7 +771,7 @@ function buildEmailMarketingDescription(dados: FormDados, user: UserData, arquiv
 
 function buildProducaoAudiovisualDescription(dados: FormDados, user: UserData, arquivos: ArquivosMap, tipo: string): string {
   const blocks: string[] = [];
-  blocks.push(buildRequesterSection(user));
+  blocks.push(buildRequesterSection(user, dados));
 
   const isVideo = tipo === "producao-video";
 
@@ -794,7 +795,7 @@ function buildProducaoAudiovisualDescription(dados: FormDados, user: UserData, a
 
 function buildOutroDescription(dados: FormDados, user: UserData, arquivos: ArquivosMap): string {
   const blocks: string[] = [];
-  blocks.push(buildRequesterSection(user));
+  blocks.push(buildRequesterSection(user, dados));
 
   const items: string[] = [];
   addLine(items, "Setor", str(dados.setor as string));

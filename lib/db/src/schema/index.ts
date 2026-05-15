@@ -7,6 +7,8 @@ export const usersTable = pgTable("users", {
   email: varchar("email", { length: 255 }).notNull().unique(),
   name: varchar("name", { length: 255 }),
   role: varchar("role", { length: 20 }).default("colaborador").notNull(),
+  telefone: varchar("telefone", { length: 30 }),
+  clickup_user_id: varchar("clickup_user_id", { length: 100 }),
   created_at: timestamp("created_at").defaultNow().notNull(),
 });
 

@@ -35,7 +35,8 @@
         <input type="tel" id="telefone" placeholder="(00) 00000-0000" oninput="mascaraTelefone(this)" required>
       </div>
       <div class="field">
-        <label>E-mail de Assessor (Assessores) ou E-mail corporativo (Time de Gestão) <span style="color:var(--ruby-red)">*</span></label>
+        <label>E-mail <span style="color:var(--ruby-red)">*</span></label>
+        <div class="field-hint">Assessores: use seu e-mail de assessor. Time de Gestão: use seu e-mail corporativo.</div>
         <input type="email" id="emailCorporativo" placeholder="seu@svninvest.com.br" required>
       </div>
       <div class="field">
@@ -205,6 +206,7 @@
 
       try {
         const res = await fetch('/api/solicitacoes', { method: 'POST', body: formData });
+        const d = await res.json().catch(() => ({}));
         if (res.ok) {
           sessionStorage.removeItem('form-assinatura-email');
           try {
@@ -214,11 +216,11 @@
               solicitante: Auth.getUserName(),
               data: new Date().toLocaleDateString('pt-BR'),
               hora: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+              id: d.id,
             }));
           } catch {}
           window.location.href = '/thankyou.html';
         } else {
-          const d = await res.json().catch(() => ({}));
           const errEl = document.getElementById('submitError');
           if (errEl) { errEl.style.display = 'block'; errEl.textContent = d.error || 'Erro ao enviar. Tente novamente.'; }
           btn.disabled = false; btn.textContent = 'Enviar';

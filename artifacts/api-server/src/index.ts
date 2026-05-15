@@ -28,12 +28,14 @@ const DB_STATEMENTS = [
 
   // Usuários
   `CREATE TABLE IF NOT EXISTS "users" (
-    "id"         SERIAL       PRIMARY KEY,
-    "email"      VARCHAR(255) NOT NULL UNIQUE,
-    "name"       VARCHAR(255),
-    "role"       VARCHAR(20)  NOT NULL DEFAULT 'colaborador',
-    "created_at" TIMESTAMP    NOT NULL DEFAULT NOW()
+    "id"               SERIAL       PRIMARY KEY,
+    "email"            VARCHAR(255) NOT NULL UNIQUE,
+    "name"             VARCHAR(255),
+    "role"             VARCHAR(20)  NOT NULL DEFAULT 'colaborador',
+    "created_at"       TIMESTAMP    NOT NULL DEFAULT NOW()
   )`,
+  `ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "telefone" VARCHAR(30)`,
+  `ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "clickup_user_id" VARCHAR(100)`,
 
   // Solicitações
   `CREATE TABLE IF NOT EXISTS "solicitacoes" (

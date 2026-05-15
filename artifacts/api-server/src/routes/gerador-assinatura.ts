@@ -18,14 +18,17 @@ export async function gerarAssinaturaEmail(
   const telefone = String(dados.telefone || "").trim();
   const email    = String(dados.emailCorporativo || "").trim();
   const cfp      = String(dados.cfp || "").toLowerCase() === "sim";
+  const marca    = String(dados.marca || "svn-investimentos").trim();
+  const cargo    = String(dados.cargo || "").trim();
 
   try {
     const { pngBuffer, fitNome } = await gerarAssinatura({
       nome,
       telefone,
       email,
+      cargo: cargo || undefined,
       temCFP: cfp,
-      marca: "svn-investimentos",
+      marca,
     });
 
     if (fitNome.belowFloor) {

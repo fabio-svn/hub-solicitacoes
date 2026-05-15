@@ -27,6 +27,10 @@
       </div>
 
       <div class="field">
+        <label>Telefone <span style="color:var(--ruby-red)">*</span></label>
+        <input type="tel" id="telefone" placeholder="(00) 00000-0000" oninput="mascaraTelefone(this)" required>
+      </div>
+      <div class="field">
         <label>Setor <span style="color:var(--ruby-red)">*</span></label>
         <select id="setor" required>
           <option value="">Selecione seu setor</option>
@@ -109,6 +113,8 @@
       if (!Auth.isAuthenticated()) { window.location.href = '/auth/login?redirect=/form-email-marketing.html'; return; }
       Auth.renderHeader(document.getElementById('mainHeader'));
 
+      Auth.aplicarPerfilNoCampo('telefone', Auth.getTelefone());
+
       const setorSel = document.getElementById('setor');
       if (setorSel) { SETORES.filter(s => s !== 'Selecione seu setor').forEach(s => { const o = document.createElement('option'); o.value = s; o.textContent = s; setorSel.appendChild(o); }); }
 
@@ -118,6 +124,7 @@
     function saveSession() {
       try {
         sessionStorage.setItem('form-email-marketing', JSON.stringify({
+          telefone: document.getElementById('telefone')?.value || '',
           setor: document.getElementById('setor')?.value || '',
           assunto: document.getElementById('assunto')?.value || '',
           finalidade: document.getElementById('finalidade')?.value || '',
@@ -132,6 +139,7 @@
       try {
         const data = JSON.parse(sessionStorage.getItem('form-email-marketing'));
         if (!data) return;
+        if (data.telefone) document.getElementById('telefone').value = data.telefone;
         if (data.setor) { const el = document.getElementById('setor'); if (el) el.value = data.setor; }
         if (data.assunto) document.getElementById('assunto').value = data.assunto;
         if (data.finalidade) document.getElementById('finalidade').value = data.finalidade;
@@ -167,6 +175,7 @@
 
       const dados = {
         nome: Auth.getUserName(),
+        telefone: document.getElementById('telefone').value,
         setor: document.getElementById('setor')?.value || '',
         assunto: document.getElementById('assunto').value,
         finalidade: document.getElementById('finalidade').value,
@@ -181,29 +190,24 @@
       const baseInput = document.getElementById('baseDisparo');
       if (baseInput?.files[0]) formData.append('arquivo', baseInput.files[0]);
 
-      try {
-        const res = await fetch('/api/solicitacoes', { method: 'POST', body: formData });
-        if (res.ok) {
-          sessionStorage.removeItem('form-email-marketing');
-          try {
-            sessionStorage.setItem('svn_ultimo_resumo', JSON.stringify({
-              tipo: TIPO_SOLICITACAO_LABELS[TIPO] || TIPO,
-              solicitante: Auth.getUserName(),
-              setor: dados.setor,
-              data: new Date().toLocaleDateString('pt-BR'),
-              hora: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
-            }));
-          } catch {}
-          window.location.href = '/thankyou.html';
-        } else {
-          const d = await res.json().catch(() => ({}));
-          const errEl = document.getElementById('submitError');
-          if (errEl) { errEl.style.display = 'block'; errEl.textContent = d.error || 'Erro ao enviar. Tente novamente.'; }
-          btn.disabled = false; btn.textContent = 'Enviar';
-        }
-      } catch {
+      const res = await fetch('/api/solicitacoes', { method: 'POST', body: formData });
+      const d = await res.json().catch(() => ({}));
+      if (res.ok) {
+        sessionStorage.removeItem('form-email-marketing');
+        try {
+          sessionStorage.setItem('svn_ultimo_resumo', JSON.stringify({
+            tipo: TIPO_SOLICITACAO_LABELS[TIPO] || TIPO,
+            solicitante: Auth.getUserName(),
+            setor: dados.setor,
+            data: new Date().toLocaleDateString('pt-BR'),
+            hora: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+            id: d.id,
+          }));
+        } catch {}
+        window.location.href = '/thankyou.html';
+      } else {
         const errEl = document.getElementById('submitError');
-        if (errEl) { errEl.style.display = 'block'; errEl.textContent = 'Erro de conexão. Verifique sua internet e tente novamente.'; }
+        if (errEl) { errEl.style.display = 'block'; errEl.textContent = d.error || 'Erro ao enviar. Tente novamente.'; }
         btn.disabled = false; btn.textContent = 'Enviar';
       }
     }

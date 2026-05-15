@@ -1850,8 +1850,10 @@
       const key = normalizeSlug(raw);
       if (map[key]) return map[key];
       let h = titleCasePtBr(raw.replace(/[_-]+/g,' ').trim());
-      [[/\bPadrao\b/g,'Padrão'],[/\bProducao\b/g,'Produção'],[/\bNao\b/g,'Não'],
-       [/\bPagina\b/g,'Página'],[/\bDivulgacao\b/g,'Divulgação'],[/\bAtualizacao\b/g,'Atualização']
+      [[/\bApresentacao\b/g,'Apresentação'],[/\bSolicitacao\b/g,'Solicitação'],
+       [/\bPadrao\b/g,'Padrão'],[/\bProducao\b/g,'Produção'],[/\bNao\b/g,'Não'],
+       [/\bPagina\b/g,'Página'],[/\bDivulgacao\b/g,'Divulgação'],[/\bAtualizacao\b/g,'Atualização'],
+       [/\bPublico\b/g,'Público'],[/\bCertificacao\b/g,'Certificação']
       ].forEach(([p,r]) => { h = h.replace(p, r); });
       return h;
     }

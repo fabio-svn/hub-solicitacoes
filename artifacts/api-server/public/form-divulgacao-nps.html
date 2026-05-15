@@ -27,6 +27,10 @@
       </div>
 
       <div class="field">
+        <label>Telefone <span style="color:var(--ruby-red)">*</span></label>
+        <input type="tel" id="telefone" placeholder="(00) 00000-0000" oninput="mascaraTelefone(this)" required>
+      </div>
+      <div class="field">
         <label>Nome para assinatura <span style="color:var(--ruby-red)">*</span></label>
         <input type="text" id="nomeAssinatura" placeholder="Nome do assessor para assinar a arte" required>
       </div>
@@ -109,12 +113,14 @@
       if (cargoSel) { CARGOS_ASSESSOR.forEach(c => { const o = document.createElement('option'); o.value = c; o.textContent = c; cargoSel.appendChild(o); }); }
 
       FileUpload.bind('fotoPerfil', 'fotoPerfilName', { maxMB: 5, accept: '.jpg,.jpeg,.png,.webp' });
+      Auth.aplicarPerfilNoCampo('telefone', Auth.getTelefone());
       restoreSession();
     }
 
     function saveSession() {
       try {
         sessionStorage.setItem('form-divulgacao-nps', JSON.stringify({
+          telefone: document.getElementById('telefone')?.value || '',
           nomeAssinatura: document.getElementById('nomeAssinatura')?.value || '',
           cargo: document.getElementById('cargo')?.value || '',
           agradecimento: document.getElementById('agradecimento')?.value || '',
@@ -127,6 +133,7 @@
       try {
         const data = JSON.parse(sessionStorage.getItem('form-divulgacao-nps'));
         if (!data) return;
+        if (data.telefone) document.getElementById('telefone').value = data.telefone;
         if (data.nomeAssinatura) document.getElementById('nomeAssinatura').value = data.nomeAssinatura;
         if (data.cargo) { const el = document.getElementById('cargo'); if (el) el.value = data.cargo; }
         if (data.agradecimento) document.getElementById('agradecimento').value = data.agradecimento;
@@ -166,6 +173,7 @@
 
       const dados = {
         nome: Auth.getUserName(),
+        telefone: document.getElementById('telefone').value,
         nomeAssinatura: document.getElementById('nomeAssinatura').value,
         cargo: document.getElementById('cargo').value,
         agradecimento: document.getElementById('agradecimento').value,
@@ -180,6 +188,7 @@
 
       try {
         const res = await fetch('/api/solicitacoes', { method: 'POST', body: formData });
+        const d = await res.json().catch(() => ({}));
         if (res.ok) {
           sessionStorage.removeItem('form-divulgacao-nps');
           try {
@@ -189,11 +198,11 @@
               solicitante: Auth.getUserName(),
               data: new Date().toLocaleDateString('pt-BR'),
               hora: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+              id: d.id,
             }));
           } catch {}
           window.location.href = '/thankyou.html';
         } else {
-          const d = await res.json().catch(() => ({}));
           const errEl = document.getElementById('submitError');
           if (errEl) { errEl.style.display = 'block'; errEl.textContent = d.error || 'Erro ao enviar. Tente novamente.'; }
           btn.disabled = false; btn.textContent = 'Enviar';

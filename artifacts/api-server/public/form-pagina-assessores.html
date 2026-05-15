@@ -71,10 +71,8 @@
 
         <h2 style="font-weight:600;font-size:1.1rem;margin-bottom:20px">Informações do assessor</h2>
         <div class="field">
-          <label>Setor <span style="color:var(--ruby-red)">*</span></label>
-          <select id="setor" required>
-            <option value="">Selecione seu setor</option>
-          </select>
+          <label>Telefone <span style="color:var(--ruby-red)">*</span></label>
+          <input type="tel" id="telefone" placeholder="(00) 00000-0000" oninput="mascaraTelefone(this)" required>
         </div>
         <div class="field" id="field_nomeCompleto">
           <label>Nome completo</label>
@@ -228,6 +226,7 @@
     <span>Início</span>
   </a>
 
+  <script src="utils.js"></script>
   <script src="upload-feedback.js"></script>
   <script src="config.js"></script>
   <script src="auth.js"></script>
@@ -332,8 +331,7 @@
 
       renderSelos();
 
-      const setorSel = document.getElementById('setor');
-      if (setorSel) { SETORES.filter(s => s !== 'Selecione seu setor').forEach(s => { const o = document.createElement('option'); o.value = s; o.textContent = s; setorSel.appendChild(o); }); }
+      Auth.aplicarPerfilNoCampo('telefone', Auth.getTelefone());
 
       FileUpload.bind('fotoPerfil', 'fotoPerfilName', {
         accept: '.jpg,.jpeg,.png,.webp',
@@ -535,7 +533,7 @@
       formData.append('subtipo', subtipo);
       const dados = {
         nome: Auth.getUserName(),
-        setor: document.getElementById('setor')?.value || '',
+        telefone: document.getElementById('telefone').value,
         nomeCompleto: document.getElementById('nomeCompleto').value,
         codigoAssessor: document.getElementById('codigoAssessor').value,
         unidade: document.getElementById('unidade').value,
@@ -553,6 +551,7 @@
 
       try {
         const res = await fetch('/api/solicitacoes', { method: 'POST', body: formData });
+        const d = await res.json().catch(() => ({}));
         if (res.ok) {
           sessionStorage.removeItem('form-assessores');
           try {
@@ -560,21 +559,19 @@
               tipo: TIPO_SOLICITACAO_LABELS[formData.get('tipo_solicitacao')] || formData.get('tipo_solicitacao'),
               subtipo: formData.get('subtipo') || '', titulo: dados.nomeCompleto || '',
               solicitante: dados.nome || Auth.getUserName(),
-              setor: dados.setor || '',
               data: new Date().toLocaleDateString('pt-BR'),
               hora: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
               materiais: dados.materiais || [],
               natureza: dados.natureza || '',
               maturidade: dados.maturidade || '',
+              id: d.id,
             };
             sessionStorage.setItem('svn_ultimo_resumo', JSON.stringify(resumo));
           } catch {}
           window.location.href = '/thankyou.html';
         }
         else {
-          let errMsg = 'Erro ao enviar. Tente novamente.';
-          try { const errData = await res.json(); if (errData.error) errMsg = errData.error; } catch {}
-          showSubmitError(errMsg);
+          showSubmitError(d.error || 'Erro ao enviar. Tente novamente.');
           btn.disabled = false; btn.textContent = 'Enviar';
         }
       } catch (e) {
@@ -586,6 +583,7 @@
     function saveDraft() {
       try {
         sessionStorage.setItem('form-assessores', JSON.stringify({
+          telefone:       document.getElementById('telefone')?.value       || '',
           nomeCompleto:   document.getElementById('nomeCompleto')?.value   || '',
           codigoAssessor: document.getElementById('codigoAssessor')?.value || '',
           unidade:        document.getElementById('unidade')?.value        || '',

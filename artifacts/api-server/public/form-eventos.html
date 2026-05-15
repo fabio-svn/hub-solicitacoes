@@ -46,6 +46,10 @@
               </label>
             </div>
             <div class="field" style="margin-top:16px">
+              <label>Telefone <span style="color:var(--ruby-red)">*</span></label>
+              <input type="tel" id="telefone" placeholder="(00) 00000-0000" oninput="mascaraTelefone(this)" required>
+            </div>
+            <div class="field" style="margin-top:16px">
               <label>Setor <span style="color:var(--ruby-red)">*</span></label>
               <select id="setor" required>
                 <option value="">Selecione seu setor</option>
@@ -273,6 +277,7 @@
     <span>Início</span>
   </a>
 
+  <script src="utils.js"></script>
   <script src="upload-feedback.js"></script>
   <script src="config.js"></script>
   <script src="auth.js"></script>
@@ -392,11 +397,15 @@
       Auth.renderHeader(document.getElementById('mainHeader'));
       document.getElementById('tutorialLink').href = URL_TUTORIAL_TRANSMISSAO;
 
+      Auth.aplicarPerfilNoCampo('telefone', Auth.getTelefone());
+
       const ratSel = document.getElementById('rateio');
       OPCOES_RATEIO.forEach(r => { const o = document.createElement('option'); o.value = r; o.textContent = r; ratSel.appendChild(o); });
 
       const setorSel = document.getElementById('setor');
       if (setorSel) { SETORES.filter(s => s !== 'Selecione seu setor').forEach(s => { const o = document.createElement('option'); o.value = s; o.textContent = s; setorSel.appendChild(o); }); }
+
+      Auth.aplicarPerfilNoCampo('telefone', Auth.getTelefone());
 
       restoreFormState();
 
@@ -1496,6 +1505,7 @@
 
       try {
         const res = await fetch('/api/solicitacoes', { method: 'POST', body: formData });
+        const d = await res.json().catch(() => ({}));
         if (res.ok) {
           clearFormStorage();
           try {
@@ -1509,6 +1519,7 @@
               materiais: dados.materiais || [],
               natureza: dados.natureza || '',
               maturidade: dados.maturidade || '',
+              id: d.id,
             };
             sessionStorage.setItem('svn_ultimo_resumo', JSON.stringify(resumo));
           } catch {}
@@ -1517,10 +1528,8 @@
         }
         else {
           clearInterval(msgInterval);
-          let errMsg = 'Erro ao enviar. Tente novamente.';
-          try { const errData = await res.json(); if (errData.error) errMsg = errData.error; } catch {}
           const errEl = document.getElementById('submitError');
-          if (errEl) { errEl.style.display = 'block'; errEl.textContent = errMsg; }
+          if (errEl) { errEl.style.display = 'block'; errEl.textContent = d.error || 'Erro ao enviar. Tente novamente.'; }
           btn.disabled = false; btn.textContent = 'Enviar';
         }
       } catch (e) {

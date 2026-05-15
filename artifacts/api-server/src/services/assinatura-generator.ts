@@ -38,7 +38,7 @@ const SHARED_URLS = {
 };
 
 const LOGO_URLS: Record<string, string> = {
-  "svn-investimentos":           `${ASSETS_BASE}/assinaturas_assinatura_logo_svn.png`,
+  "svn-investimentos":           `${ASSETS_BASE}/assinaturas_assinatura_svn.png`,
   "svn-capital":                 `${ASSETS_BASE}/assinaturas_assinatura_logo_svn_capital.png`,
   "svn-connect":                 `${ASSETS_BASE}/assinaturas_assinatura_logo_svn_connect.png`,
   "svn-gestao":                  `${ASSETS_BASE}/assinaturas_assinatura_logo_svn_gestao.png`,
@@ -48,6 +48,16 @@ const LOGO_URLS: Record<string, string> = {
   "svn-protecao-patrimonial":    `${ASSETS_BASE}/assinaturas_assinatura_logo_svn_protecaopatrimonial.png`,
   "svn-wealth-planning":         `${ASSETS_BASE}/assinaturas_assinatura_logo_svn_wealthplanning.png`,
 };
+
+// Marcas que exibem campo "cargo" na assinatura
+const MARCAS_COM_CARGO = new Set([
+  "svn-gestao",
+  "svn-global",
+  "svn-imb",
+  "svn-agro-cambio-commodities",
+  "svn-protecao-patrimonial",
+  "svn-wealth-planning",
+]);
 
 // Cache em memória (vida útil = vida do processo)
 const assetCache = new Map<string, Buffer>();
@@ -64,7 +74,7 @@ async function getAsset(url: string): Promise<Buffer> {
   return buf;
 }
 
-// ── Layout ──────────────────────────────────────────────────────────────────
+// ── Layout — sem cargo (padrão) ──────────────────────────────────────────────
 const LAYOUT = {
   canvas: { w: 4078, h: 988 },
   logo:   { x: 284,  y: 444 },
@@ -76,9 +86,23 @@ const LAYOUT = {
   selos:  { x: 3400, y: 240 },
 };
 
+// ── Layout — com cargo (6 marcas) ────────────────────────────────────────────
+const LAYOUT_COM_CARGO = {
+  canvas: { w: 4078, h: 988 },
+  logo:   { x: 284,  y: 444 },
+  linha:  { x: 1756, y: 341 },
+  nome:   { x: 2007, y_top: 210 },
+  cargo:  { x: 2007, y_top: 345 },
+  tel:    { x: 2005, y_top: 447 },
+  email:  { x: 2005, y_top: 562 },
+  cfp:    { x: 2007, y: 676 },
+  selos:  { x: 3400, y: 240 },
+};
+
 const FONT_SIZES = {
   nome_default:  149,
   nome_min:       90,
+  cargo:          64,
   tel:            64,
   email_default:  64,
   email_min:      42,
@@ -155,6 +179,7 @@ export interface AssinaturaInput {
   nome: string;
   telefone: string;
   email: string;
+  cargo?: string;
   temCFP?: boolean;
   marca?: string;
 }
@@ -170,6 +195,8 @@ export async function gerarAssinatura(input: AssinaturaInput): Promise<Assinatur
   const fdisplay = getFontDisplay();
   const fbody    = getFontBody();
   const marca    = input.marca ?? "svn-investimentos";
+  const temCargo = MARCAS_COM_CARGO.has(marca) && !!input.cargo?.trim();
+  const layout   = temCargo ? LAYOUT_COM_CARGO : LAYOUT;
 
   const logoUrl = LOGO_URLS[marca];
   if (!logoUrl) {
@@ -179,28 +206,39 @@ export async function gerarAssinatura(input: AssinaturaInput): Promise<Assinatur
   const fitNome  = autoFit(fdisplay, input.nome,  FONT_SIZES.nome_default,  FONT_SIZES.nome_min,  SAFE_AREA_W);
   const fitEmail = autoFit(fbody,    input.email, FONT_SIZES.email_default, FONT_SIZES.email_min, SAFE_AREA_W);
 
-  const [bgBuf, logoBuf, linhaBuf, selosBuf, nomeBuf, telBuf, emailBuf, cfpBuf] = await Promise.all([
+  const cargoText = (temCargo ? input.cargo! : "").trim();
+
+  const [bgBuf, logoBuf, linhaBuf, selosBuf, nomeBuf, cargoBuf, telBuf, emailBuf, cfpBuf] = await Promise.all([
     getAsset(SHARED_URLS.bg),
     getAsset(logoUrl),
     getAsset(SHARED_URLS.linha),
     getAsset(SHARED_URLS.selos),
     renderText(fdisplay, input.nome,     fitNome.size),
+    temCargo ? renderText(fbody, cargoText, FONT_SIZES.cargo) : Promise.resolve(null as Buffer | null),
     renderText(fbody,    input.telefone, FONT_SIZES.tel),
     renderText(fbody,    input.email,    fitEmail.size),
     input.temCFP ? getAsset(SHARED_URLS.cfp) : Promise.resolve(null as Buffer | null),
   ]);
 
   const composites: import("sharp").OverlayOptions[] = [
-    { input: logoBuf,  top: LAYOUT.logo.y,  left: LAYOUT.logo.x,  blend: "screen" },
-    { input: linhaBuf, top: LAYOUT.linha.y, left: LAYOUT.linha.x, blend: "screen" },
-    { input: nomeBuf,  top: topForText(fdisplay, fitNome.size,   LAYOUT.nome.y_top),  left: LAYOUT.nome.x  },
-    { input: telBuf,   top: topForText(fbody,    FONT_SIZES.tel,  LAYOUT.tel.y_top),  left: LAYOUT.tel.x   },
-    { input: emailBuf, top: topForText(fbody,    fitEmail.size,   LAYOUT.email.y_top), left: LAYOUT.email.x },
-    { input: selosBuf, top: LAYOUT.selos.y, left: LAYOUT.selos.x, blend: "screen" },
+    { input: logoBuf,  top: layout.logo.y,  left: layout.logo.x,  blend: "screen" },
+    { input: linhaBuf, top: layout.linha.y, left: layout.linha.x, blend: "screen" },
+    { input: nomeBuf,  top: topForText(fdisplay, fitNome.size,   layout.nome.y_top),  left: layout.nome.x  },
+    { input: telBuf,   top: topForText(fbody,    FONT_SIZES.tel,  layout.tel.y_top),  left: layout.tel.x   },
+    { input: emailBuf, top: topForText(fbody,    fitEmail.size,   layout.email.y_top), left: layout.email.x },
+    { input: selosBuf, top: layout.selos.y, left: layout.selos.x, blend: "screen" },
   ];
 
+  if (temCargo && cargoBuf) {
+    composites.push({
+      input: cargoBuf,
+      top: topForText(fbody, FONT_SIZES.cargo, (layout as typeof LAYOUT_COM_CARGO).cargo.y_top),
+      left: layout.nome.x,
+    });
+  }
+
   if (input.temCFP && cfpBuf) {
-    composites.push({ input: cfpBuf, top: LAYOUT.cfp.y, left: LAYOUT.cfp.x, blend: "screen" });
+    composites.push({ input: cfpBuf, top: layout.cfp.y, left: layout.cfp.x, blend: "screen" });
   }
 
   const pngBuffer = await sharp(bgBuf)

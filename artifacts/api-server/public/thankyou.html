@@ -71,7 +71,12 @@
 
       document.getElementById('title').textContent = titulo;
       document.getElementById('subtitle').textContent = subtitulo;
-      document.getElementById('ctaBtn').textContent = _botaoLabel;
+      if (resumo.id) {
+        document.getElementById('ctaBtn').href = '/solicitacoes/' + resumo.id;
+        document.getElementById('ctaBtn').textContent = 'Ver solicitação';
+      } else {
+        document.getElementById('ctaBtn').textContent = _botaoLabel;
+      }
 
       const itens = [];
       if (resumo.tipo)        itens.push({ label: 'Tipo',             valor: resumo.tipo });
