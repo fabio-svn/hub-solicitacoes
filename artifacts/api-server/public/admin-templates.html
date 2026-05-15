@@ -510,7 +510,7 @@
         layer.id = value;
         if (selectedLayerId === oldId) selectedLayerId = value;
       } else {
-        (layer as any)[key] = value;
+        layer[key] = value;
       }
       markDirty();
       renderCanvas();
@@ -520,19 +520,19 @@
     function updLayerN(id, key, value) { updLayer(id, key, parseFloat(value) || 0); }
 
     function updImageSourceType(id, type) {
-      const layer = getLayer(id) as any; if (!layer) return;
+      const layer = getLayer(id); if (!layer) return;
       layer.source = type === 'static' ? { type: 'static', url: '' } : { type: 'variant', variants: {}, variant_source: '' };
       markDirty(); showProps(id);
     }
 
     function updImageVariantSource(id, val) {
-      const layer = getLayer(id) as any; if (!layer) return;
+      const layer = getLayer(id); if (!layer) return;
       layer.source.variant_source = val; markDirty();
     }
 
     function updImageVariants(id, text) {
-      const layer = getLayer(id) as any; if (!layer) return;
-      const variants: Record<string,string> = {};
+      const layer = getLayer(id); if (!layer) return;
+      const variants = {};
       text.split('\n').forEach(line => {
         const eq = line.indexOf('='); if (eq < 0) return;
         variants[line.slice(0,eq).trim()] = line.slice(eq+1).trim();
@@ -543,15 +543,15 @@
     function insertPlaceholder(id, placeholder) {
       const layer = getLayer(id); if (!layer) return;
       const tag = `{{${placeholder}}}`;
-      (layer as any).content = ((layer as any).content || '') + tag;
+      layer.content = (layer.content || '') + tag;
       markDirty(); showProps(id);
     }
 
-    function addLayer(type: string) {
+    function addLayer(type) {
       if (!currentTemplate) return;
       const id = type + '_' + Date.now();
       const base = { id, name: 'Nova layer', x: 100, y: 100 };
-      let layer: any;
+      let layer;
       if (type === 'text-line') layer = { ...base, type, w: 400, content: 'Texto', font_family: 'Nunito Sans Light', font_size: 48, color: '#ffffff', align: 'left' };
       else if (type === 'text-block') layer = { ...base, type, w: 400, h: 200, content: 'Texto', font_family: 'Nunito Sans Light', font_size: 36, line_height: 50, paragraph_spacing: 20, color: '#ffffff', align: 'left' };
       else layer = { ...base, type: 'image', w: 200, h: 100, source: { type: 'static', url: '' }, blend_mode: 'normal', resize_mode: 'contain' };
@@ -604,13 +604,13 @@
         const blob = await res.blob();
         previewImg.src = URL.createObjectURL(blob);
         previewImg.style.display = 'block';
-      } catch(e: any) { alert('Erro ao gerar preview: ' + e.message); setMode('edit'); }
+      } catch(e) { alert('Erro ao gerar preview: ' + e.message); setMode('edit'); }
       finally { document.getElementById('previewLoading')?.remove(); }
     }
 
     async function saveTemplate() {
       if (!currentTemplate) return;
-      const btn = document.querySelector('.canvas-toolbar button.primary') as HTMLButtonElement;
+      const btn = document.querySelector('.canvas-toolbar button.primary');
       const orig = btn.textContent; btn.textContent = 'Salvando…'; btn.disabled = true;
       try {
         const res = await fetch(`/api/admin/art-templates/${currentTipo}`, {
@@ -624,11 +624,11 @@
         isDirty = false;
         document.getElementById('unsavedBadge').classList.remove('visible');
         document.getElementById(`titem-${currentTipo}`)?.classList.remove('dirty');
-      } catch(e: any) { alert('Erro: ' + e.message); }
+      } catch(e) { alert('Erro: ' + e.message); }
       finally { btn.textContent = orig; btn.disabled = false; }
     }
 
-    function esc(str: string) {
+    function esc(str) {
       if (str == null) return '';
       return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
     }
