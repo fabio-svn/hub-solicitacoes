@@ -174,7 +174,9 @@ async function renderTextBlock(
 async function renderImage(
   layer: ImageLayer,
   data: Record<string, string>,
-  composites: sharp.OverlayOptions[]
+  composites: sharp.OverlayOptions[],
+  bgWidth: number,
+  bgHeight: number
 ) {
   let url: string;
   if (layer.source.type === 'static') {
@@ -190,11 +192,30 @@ async function renderImage(
 
   let input: Buffer;
   if (layer.w > 0 && layer.h > 0) {
+    const safeW = Math.min(layer.w, bgWidth - layer.x);
+    const safeH = Math.min(layer.h, bgHeight - layer.y);
+    if (safeW !== layer.w || safeH !== layer.h) {
+      console.warn(`[render] image ${layer.id} dimensions capped: ${layer.w}x${layer.h} → ${safeW}x${safeH} (bg=${bgWidth}x${bgHeight})`);
+    }
+    if (safeW <= 0 || safeH <= 0) {
+      console.warn(`[render] image ${layer.id} skipped: zero or negative safe dimensions`);
+      return;
+    }
     input = await sharp(raw)
-      .resize(layer.w, layer.h, { fit: layer.resize_mode ?? 'contain' })
+      .resize(safeW, safeH, { fit: layer.resize_mode ?? 'contain' })
       .toBuffer();
   } else {
-    input = raw;
+    const meta = await sharp(raw).metadata();
+    const rawW = meta.width ?? 0;
+    const rawH = meta.height ?? 0;
+    if (rawW > bgWidth || rawH > bgHeight) {
+      console.warn(`[render] image ${layer.id} (no explicit size) exceeds bg: ${rawW}x${rawH} > ${bgWidth}x${bgHeight}, resizing`);
+      input = await sharp(raw)
+        .resize(Math.min(rawW, bgWidth), Math.min(rawH, bgHeight), { fit: 'inside' })
+        .toBuffer();
+    } else {
+      input = raw;
+    }
   }
 
   const composite: sharp.OverlayOptions = {
@@ -225,13 +246,41 @@ export async function renderFromTemplate(
     bgUrl = template.bg.variants[variantKey];
     if (!bgUrl) throw new Error(`Variante de bg não encontrada: ${variantKey}`);
   }
-  const bgBuf = await getRemoteAsset(bgUrl);
+  const bgRaw = await getRemoteAsset(bgUrl);
+
+  const canvasW = template.canvas.width;
+  const canvasH = template.canvas.height;
+
+  // Normalizar bg para as dimensões exatas do canvas.
+  // Isso evita o erro "Image to composite must have same dimensions or smaller"
+  // quando a imagem remota retorna com dimensões diferentes do esperado.
+  const bgMeta = await sharp(bgRaw).metadata();
+  console.log(`[render] tipo=${template.tipo} bg_raw=${bgMeta.width}x${bgMeta.height} canvas=${canvasW}x${canvasH}`);
+
+  let bgBuf: Buffer;
+  if (bgMeta.width === canvasW && bgMeta.height === canvasH) {
+    bgBuf = bgRaw;
+  } else {
+    console.warn(`[render] bg dimensions mismatch — resizing ${bgMeta.width}x${bgMeta.height} → ${canvasW}x${canvasH}`);
+    bgBuf = await sharp(bgRaw)
+      .resize(canvasW, canvasH, { fit: 'fill' })
+      .toBuffer();
+  }
 
   const composites: sharp.OverlayOptions[] = [];
   for (const layer of template.layers) {
     if (layer.type === 'text-line')  await renderTextLine(layer, dataStr, composites);
     if (layer.type === 'text-block') await renderTextBlock(layer, dataStr, composites);
-    if (layer.type === 'image')      await renderImage(layer, dataStr, composites);
+    if (layer.type === 'image')      await renderImage(layer, dataStr, composites, canvasW, canvasH);
+  }
+
+  // Log de diagnóstico de cada composite antes de montar
+  for (let i = 0; i < composites.length; i++) {
+    const c = composites[i];
+    if (Buffer.isBuffer(c.input)) {
+      const m = await sharp(c.input).metadata();
+      console.log(`[render] composite[${i}]: ${m.width}x${m.height} @ (left=${c.left}, top=${c.top})`);
+    }
   }
 
   return sharp(bgBuf).composite(composites).png().toBuffer();

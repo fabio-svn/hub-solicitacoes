@@ -1,0 +1,44 @@
+Achei! O erro é do Sharp: uma das layers que está sendo composta tem dimensões MAIORES que o bg base. Sharp não permite isso.
+Causa mais provável: o bg de assinatura-email está menor do que o esperado (ou alguma layer está com dimensões absurdas).
+Manda essa mensagem pro agente:
+
+O template-renderer.ts está crashando com Image to composite must have same dimensions or smaller ao renderizar assinatura-email. Diagnóstico + fix:
+1. Adicionar logging detalhado em renderFromTemplate:
+Logo após carregar o bgBuf, antes do composite final, logar dimensões do bg e de cada overlay:
+ts// após resolver bgBuf:
+const bgMeta = await sharp(bgBuf).metadata();
+console.log(`[render] tipo=${template.tipo} bg=${bgMeta.width}x${bgMeta.height} canvas_config=${template.canvas.width}x${template.canvas.height}`);
+
+// ... renderiza todas as layers normalmente ...
+
+// antes do return sharp(bgBuf).composite(composites).png().toBuffer():
+for (let i = 0; i < composites.length; i++) {
+  const c = composites[i];
+  if (Buffer.isBuffer(c.input)) {
+    const m = await sharp(c.input).metadata();
+    console.log(`[render] composite[${i}]: ${m.width}x${m.height} @ (${c.left}, ${c.top})`);
+  }
+}
+2. Adicionar safety guard no renderImage:
+tsasync function renderImage(layer: ImageLayer, data, composites, bgWidth, bgHeight) {
+  // ... resolver url e raw ...
+  const safeW = Math.min(layer.w, bgWidth);
+  const safeH = Math.min(layer.h, bgHeight);
+  if (safeW !== layer.w || safeH !== layer.h) {
+    console.warn(`[render] image ${layer.id} dimensions capped: ${layer.w}x${layer.h} → ${safeW}x${safeH}`);
+  }
+  const resized = await sharp(raw).resize(safeW, safeH, { fit: layer.resize_mode ?? 'contain' }).toBuffer();
+  // ...
+}
+Passar bgMeta.width e bgMeta.height pra renderImage (e pras outras funções de render se necessário).
+3. Conferir se o bg da template assinatura-email está correto:
+Rodar query no DB:
+sqlSELECT config->'canvas' AS canvas, config->'bg' AS bg FROM art_templates WHERE tipo = 'assinatura-email';
+Conferir se:
+
+canvas.width = 4078 e canvas.height = 988
+bg.url aponta pra https://solicitacoes.portalsvn.com.br/assinatura_email/bg_assinatura.png
+
+Se a URL estiver errada ou se a imagem hospedada tiver dimensões diferentes, o erro vem daí.
+4. Rebuild + testar:
+Depois disso, dispara um preview no template assinatura-email e me manda o output do log (especialmente as linhas [render] composite[N]). Com isso identifico qual overlay específico está estourando.
