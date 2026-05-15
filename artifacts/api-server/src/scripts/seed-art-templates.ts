@@ -1,6 +1,6 @@
 import { db } from "@workspace/db";
 import { artTemplatesTable } from "@workspace/db";
-import { sql } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { ArtTemplate } from "../types/art-template";
 
 const ASSETS_BASE = "https://solicitacoes.portalsvn.com.br/assinatura_email";
@@ -158,25 +158,31 @@ const ASSINATURA_EMAIL_TEMPLATE: ArtTemplate = {
   ],
 };
 
-async function seed() {
-  const templates = [CARTAO_BOAS_VINDAS_TEMPLATE, ASSINATURA_EMAIL_TEMPLATE];
+const SEEDS: { name: string; template: ArtTemplate }[] = [
+  { name: 'Cartão Boas-Vindas (padrão)',  template: CARTAO_BOAS_VINDAS_TEMPLATE },
+  { name: 'Assinatura de E-mail (padrão)', template: ASSINATURA_EMAIL_TEMPLATE },
+];
 
-  for (const template of templates) {
-    await db
-      .insert(artTemplatesTable)
-      .values({
-        tipo: template.tipo,
-        config: template as any,
-        updated_at: new Date(),
-      })
-      .onConflictDoUpdate({
-        target: artTemplatesTable.tipo,
-        set: {
-          config: sql`EXCLUDED.config`,
-          updated_at: sql`NOW()`,
-        },
-      });
-    console.log(`✓ Template "${template.tipo}" inserido/atualizado`);
+async function seed() {
+  for (const { name, template } of SEEDS) {
+    const existing = await db
+      .select({ id: artTemplatesTable.id })
+      .from(artTemplatesTable)
+      .where(eq(artTemplatesTable.tipo, template.tipo));
+
+    if (existing.length > 0) {
+      console.log(`⏭  Template "${template.tipo}" já existe (${existing.length} registro(s)) — pulando.`);
+      continue;
+    }
+
+    await db.insert(artTemplatesTable).values({
+      tipo:       template.tipo,
+      name,
+      config:     template as any,
+      is_active:  true,
+      updated_at: new Date(),
+    });
+    console.log(`✓ Template "${template.tipo}" inserido como ativo.`);
   }
 
   console.log('Seed concluído.');
