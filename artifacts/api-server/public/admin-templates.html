@@ -1153,10 +1153,18 @@
       const btn = document.getElementById('createBtn');
       btn.disabled = true; btn.textContent = 'Criando…';
       try {
-        let config = null;
+        let config;
         if (startVal === 'clone' && cloneId) {
           const src = await fetch(`/api/admin/art-templates/${cloneId}`).then(r => r.json());
           config = JSON.parse(JSON.stringify(src.config));
+          config.tipo = tipo;
+        } else {
+          config = {
+            tipo,
+            canvas: { width: 1080, height: 1080 },
+            bg: { type: 'static', url: '' },
+            layers: [],
+          };
         }
         const res = await fetch('/api/admin/art-templates', {
           method: 'POST', headers: { 'Content-Type': 'application/json' },

@@ -33,6 +33,7 @@ function getFont(family: string): any {
 
 const assetCache = new Map<string, Buffer>();
 async function getRemoteAsset(url: string): Promise<Buffer> {
+  if (!url || url.trim() === '') throw new Error('URL de asset vazia');
   if (url.startsWith('http')) {
     const cached = assetCache.get(url);
     if (cached) return cached;
@@ -42,7 +43,11 @@ async function getRemoteAsset(url: string): Promise<Buffer> {
     assetCache.set(url, buf);
     return buf;
   }
-  return fs.promises.readFile(url.startsWith('/') ? url : path.join(ASSETS_DIR, url));
+  const fullPath = url.startsWith('/') ? url : path.join(ASSETS_DIR, url);
+  const stats = await fs.promises.stat(fullPath).catch(() => null);
+  if (!stats) throw new Error(`Asset não encontrado: ${fullPath}`);
+  if (stats.isDirectory()) throw new Error(`Path é diretório, não arquivo: ${fullPath}`);
+  return fs.promises.readFile(fullPath);
 }
 
 function measureTextWidth(font: any, text: string, fontSize: number): number {
@@ -254,40 +259,46 @@ export async function renderFromTemplate(
     dataStr[k] = String(v ?? '');
   }
 
-  let bgUrl: string;
-  if (template.bg.type === 'static') {
-    bgUrl = template.bg.url;
-  } else {
-    const variantKey = dataStr[template.bg.variant_source];
-    bgUrl = template.bg.variants[variantKey];
-    if (!bgUrl) throw new Error(`Variante de bg não encontrada: ${variantKey}`);
-  }
-  const bgRaw = await getRemoteAsset(bgUrl);
-
   const canvasW = template.canvas.width;
   const canvasH = template.canvas.height;
 
-  // Normalizar bg para as dimensões exatas do canvas.
-  // Isso evita o erro "Image to composite must have same dimensions or smaller"
-  // quando a imagem remota retorna com dimensões diferentes do esperado.
-  const bgMeta = await sharp(bgRaw).metadata();
-  console.log(`[render] tipo=${template.tipo} bg_raw=${bgMeta.width}x${bgMeta.height} canvas=${canvasW}x${canvasH}`);
-
+  // ── Background ────────────────────────────────────────────────
   let bgBuf: Buffer;
-  if (bgMeta.width === canvasW && bgMeta.height === canvasH) {
-    bgBuf = bgRaw;
-  } else {
-    console.warn(`[render] bg dimensions mismatch — resizing ${bgMeta.width}x${bgMeta.height} → ${canvasW}x${canvasH}`);
-    bgBuf = await sharp(bgRaw)
-      .resize(canvasW, canvasH, { fit: 'fill' })
-      .toBuffer();
+  try {
+    let bgUrl: string;
+    if (template.bg.type === 'static') {
+      bgUrl = template.bg.url;
+    } else {
+      const variantKey = dataStr[template.bg.variant_source];
+      bgUrl = template.bg.variants?.[variantKey] ?? '';
+      if (!bgUrl) throw new Error(`Variante de bg não encontrada: ${variantKey}`);
+    }
+    const bgRaw = await getRemoteAsset(bgUrl);
+    const bgMeta = await sharp(bgRaw).metadata();
+    console.log(`[render] tipo=${template.tipo} bg_raw=${bgMeta.width}x${bgMeta.height} canvas=${canvasW}x${canvasH}`);
+    if (bgMeta.width === canvasW && bgMeta.height === canvasH) {
+      bgBuf = bgRaw;
+    } else {
+      console.warn(`[render] bg dimensions mismatch — resizing ${bgMeta.width}x${bgMeta.height} → ${canvasW}x${canvasH}`);
+      bgBuf = await sharp(bgRaw).resize(canvasW, canvasH, { fit: 'fill' }).toBuffer();
+    }
+  } catch (err: any) {
+    console.warn(`[render] bg inválido (${err.message}), usando placeholder cinza`);
+    bgBuf = await sharp({
+      create: { width: canvasW, height: canvasH, channels: 4, background: { r: 64, g: 64, b: 68, alpha: 1 } },
+    }).png().toBuffer();
   }
 
+  // ── Layers ────────────────────────────────────────────────────
   const composites: sharp.OverlayOptions[] = [];
   for (const layer of template.layers) {
-    if (layer.type === 'text-line')  await renderTextLine(layer, dataStr, composites);
-    if (layer.type === 'text-block') await renderTextBlock(layer, dataStr, composites);
-    if (layer.type === 'image')      await renderImage(layer, dataStr, composites, canvasW, canvasH);
+    try {
+      if (layer.type === 'text-line')  await renderTextLine(layer, dataStr, composites);
+      if (layer.type === 'text-block') await renderTextBlock(layer, dataStr, composites);
+      if (layer.type === 'image')      await renderImage(layer, dataStr, composites, canvasW, canvasH);
+    } catch (err: any) {
+      console.warn(`[render] layer "${layer.id}" ignorada (${err.message})`);
+    }
   }
 
   // Log de diagnóstico de cada composite antes de montar
