@@ -133,6 +133,10 @@
     <div class="canvas-panel" id="canvasPanel">
       <div class="canvas-toolbar">
         <span style="font-size:0.8rem;color:#aaa;font-weight:600" id="templateTitle">—</span>
+        <button onclick="zoomOut()" title="Reduzir" style="padding:5px 10px;min-width:28px">−</button>
+        <span id="zoomLevel" style="font-size:0.78rem;color:#aaa;min-width:48px;text-align:center">100%</span>
+        <button onclick="zoomIn()" title="Ampliar" style="padding:5px 10px;min-width:28px">+</button>
+        <button onclick="fitToView()" title="Ajustar à tela">Ajustar</button>
         <div class="mode-toggle">
           <button id="btnModeEdit" class="active" onclick="setMode('edit')">Editar</button>
           <button id="btnModePreview" onclick="setMode('preview')">Preview</button>
@@ -181,6 +185,34 @@
     let mode = 'edit';
     let bgVariantKey = null;
     let testData = {};
+    let canvasScale = parseFloat(sessionStorage.getItem('svn_canvas_zoom') || '0') || 1;
+
+    function fitToView() {
+      if (!currentTemplate) return;
+      const scrollEl = document.getElementById('canvasScroll');
+      const availW = scrollEl.clientWidth - 48;
+      const availH = scrollEl.clientHeight - 48;
+      const sW = availW / currentTemplate.canvas.width;
+      const sH = availH / currentTemplate.canvas.height;
+      canvasScale = Math.min(sW, sH, 1);
+      applyCanvasScale();
+    }
+
+    function applyCanvasScale() {
+      if (!currentTemplate) return;
+      const wrap = document.getElementById('canvasWrap');
+      wrap.style.width = (currentTemplate.canvas.width * canvasScale) + 'px';
+      updateZoomLabel();
+      try { sessionStorage.setItem('svn_canvas_zoom', String(canvasScale)); } catch {}
+      renderCanvas();
+    }
+
+    function updateZoomLabel() {
+      document.getElementById('zoomLevel').textContent = Math.round(canvasScale * 100) + '%';
+    }
+
+    function zoomIn()  { canvasScale = Math.min(canvasScale + 0.1, 2);  applyCanvasScale(); }
+    function zoomOut() { canvasScale = Math.max(canvasScale - 0.1, 0.1); applyCanvasScale(); }
 
     async function init() {
       await _configReady;
@@ -231,6 +263,7 @@
       document.getElementById('canvasWrap').style.display = 'inline-block';
       document.getElementById('addLayerSection').style.display = 'block';
       setMode('edit');
+      fitToView();
     }
 
     async function loadSampleData() {
@@ -637,7 +670,7 @@
       if (isDirty) { e.preventDefault(); e.returnValue = ''; }
     });
 
-    window.addEventListener('resize', () => { if (currentTemplate && mode==='edit') renderCanvas(); });
+    window.addEventListener('resize', () => { if (currentTemplate && mode === 'edit') fitToView(); });
 
     init();
   </script>

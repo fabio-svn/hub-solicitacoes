@@ -428,7 +428,7 @@
       loadStats();
       // Restore tab from localStorage and load it first
       switchTab(currentTab);
-      if (currentTab !== 'admin') {
+      if (currentTab === 'geral' || currentTab === 'eventos') {
         loadList(currentTab);
         const otherTab = currentTab === 'geral' ? 'eventos' : 'geral';
         setTimeout(() => loadList(otherTab), 800);
@@ -615,6 +615,8 @@
       } else if (tab === 'log') {
         logPage = 1;
         loadLog();
+      } else if (tab === 'usuarios') {
+        loadUsuarios();
       } else {
         const listEl = document.getElementById(tab === 'eventos' ? 'listEventos' : 'listGeral');
         if (listEl && !listEl.hasChildNodes()) loadList(tab);
