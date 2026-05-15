@@ -1867,7 +1867,8 @@
         if (orphanOnly) url += '?orphan=1';
         const r = await fetch(url);
         if (!r.ok) { body.innerHTML = '<div class="asset-empty">Erro ao carregar assets.</div>'; return; }
-        const assets = await r.json();
+        const data = await r.json();
+        const assets = data.assets || [];
         if (!assets.length) { body.innerHTML = '<div class="asset-empty">Nenhum asset encontrado.<br>Faça upload de uma imagem abaixo.</div>'; return; }
         body.innerHTML = `<div class="asset-grid">${assets.map(a => `
           <div class="asset-card">

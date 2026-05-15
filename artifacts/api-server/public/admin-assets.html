@@ -191,7 +191,7 @@
       if (tipo) url += 'tipo=' + encodeURIComponent(tipo) + '&';
       const r = await fetch(url);
       if (!r.ok) { document.getElementById('assetsContainer').innerHTML = '<div class="empty-state"><h3>Erro ao carregar assets.</h3></div>'; return; }
-      allAssets = await r.json();
+      allAssets = (await r.json()).assets || [];
       applySearch();
     } catch(e) { document.getElementById('assetsContainer').innerHTML = '<div class="empty-state"><h3>Erro de rede.</h3></div>'; }
   }
