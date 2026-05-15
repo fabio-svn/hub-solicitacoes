@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Editor de Templates — Hub SVN</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap" media="print" onload="this.media='all'">
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/interactjs@1.10.27/dist/interact.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    body { margin: 0; font-family: 'Nunito Sans', sans-serif; background: var(--bg-light, #f5f3f0); color: var(--text-dark, #221b19); }
+    .editor-layout {
+      display: grid;
+      grid-template-columns: 220px 1fr 280px;
+      grid-template-rows: 1fr auto;
+      height: calc(100vh - 56px);
+      gap: 0;
+    }
+    .panel { background: #fff; border-right: 1px solid #e8e2dc; overflow-y: auto; }
+    .panel-title { font-size: 0.7rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(34,27,25,0.45); padding: 14px 14px 6px; }
+    .template-item {
+      padding: 10px 14px; cursor: pointer; border-left: 3px solid transparent;
+      font-size: 0.85rem; font-weight: 500; display: flex; align-items: center; gap: 8px;
+      transition: background 0.15s;
+    }
+    .template-item:hover { background: #f5f3f0; }
+    .template-item.active { border-left-color: #9f3f37; background: #fdf5f5; color: #9f3f37; }
+    .template-item .dirty-dot { width: 6px; height: 6px; border-radius: 50%; background: #c8a96e; margin-left: auto; flex-shrink: 0; display: none; }
+    .template-item.dirty .dirty-dot { display: block; }
+    .layer-item {
+      padding: 8px 14px; cursor: pointer; border-left: 3px solid transparent;
+      font-size: 0.8rem; display: flex; align-items: center; gap: 8px;
+      color: rgba(34,27,25,0.7);
+    }
+    .layer-item:hover { background: #f5f3f0; }
+    .layer-item.active { border-left-color: #3b82f6; background: #eff6ff; color: #1d4ed8; }
+    .layer-type-badge { font-size: 0.65rem; padding: 1px 5px; border-radius: 4px; background: #e8e2dc; color: #6b5e58; white-space: nowrap; }
+    .canvas-panel { background: #2a2a2a; display: flex; flex-direction: column; overflow: hidden; }
+    .canvas-toolbar {
+      background: #1e1e1e; padding: 8px 14px; display: flex; align-items: center; gap: 10px;
+      border-bottom: 1px solid #333; flex-shrink: 0;
+    }
+    .canvas-toolbar button { font-size: 0.78rem; padding: 5px 12px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.15); background: rgba(255,255,255,0.08); color: #fff; cursor: pointer; font-family: 'Nunito Sans', sans-serif; transition: background 0.15s; }
+    .canvas-toolbar button:hover { background: rgba(255,255,255,0.15); }
+    .canvas-toolbar button.primary { background: #9f3f37; border-color: #9f3f37; }
+    .canvas-toolbar button.primary:hover { background: #b44b42; }
+    .canvas-toolbar .mode-toggle { display: flex; gap: 0; border: 1px solid rgba(255,255,255,0.2); border-radius: 6px; overflow: hidden; }
+    .canvas-toolbar .mode-toggle button { border: none; border-radius: 0; background: transparent; }
+    .canvas-toolbar .mode-toggle button.active { background: rgba(255,255,255,0.2); }
+    .canvas-toolbar .unsaved-badge { font-size: 0.72rem; color: #c8a96e; margin-left: auto; display: none; }
+    .canvas-toolbar .unsaved-badge.visible { display: block; }
+    .canvas-scroll { flex: 1; overflow: auto; display: flex; align-items: flex-start; justify-content: center; padding: 24px; }
+    .canvas-wrap {
+      position: relative; display: inline-block;
+      box-shadow: 0 4px 40px rgba(0,0,0,0.6);
+      flex-shrink: 0;
+    }
+    .canvas-wrap img.bg-img { display: block; width: 100%; height: auto; }
+    .layer-box {
+      position: absolute; cursor: move;
+      border: 1.5px dashed rgba(59,130,246,0.6);
+      box-sizing: border-box;
+    }
+    .layer-box.selected { border: 2px solid #3b82f6; box-shadow: 0 0 0 2px rgba(59,130,246,0.25); }
+    .layer-box.error { border-color: #ef4444; }
+    .layer-box .layer-label {
+      position: absolute; top: -18px; left: 0;
+      font-size: 9px; background: #3b82f6; color: #fff;
+      padding: 1px 5px; border-radius: 3px 3px 3px 0; white-space: nowrap; line-height: 16px;
+    }
+    .layer-box.error .layer-label { background: #ef4444; }
+    .canvas-preview-img { display: none; width: 100%; height: auto; }
+    .props-panel { border-right: none; border-left: 1px solid #e8e2dc; }
+    .props-section { padding: 12px 14px; border-bottom: 1px solid #f0ece8; }
+    .props-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
+    .props-row.single { grid-template-columns: 1fr; }
+    .props-label { font-size: 0.72rem; color: rgba(34,27,25,0.5); font-weight: 600; margin-bottom: 3px; letter-spacing: 0.03em; }
+    .props-input {
+      width: 100%; padding: 5px 8px; border: 1px solid #e8e2dc; border-radius: 6px;
+      font-size: 0.8rem; font-family: 'Nunito Sans', sans-serif; color: #221b19;
+      background: #fff; transition: border-color 0.15s;
+    }
+    .props-input:focus { outline: none; border-color: #3b82f6; }
+    .props-input[type="color"] { padding: 2px 4px; height: 30px; cursor: pointer; }
+    .props-textarea { height: 90px; resize: vertical; }
+    .props-empty { padding: 40px 14px; text-align: center; color: rgba(34,27,25,0.35); font-size: 0.82rem; }
+    .btn-delete-layer { width: 100%; padding: 7px; border: 1px solid #fecaca; background: #fff5f5; color: #ef4444; border-radius: 6px; cursor: pointer; font-size: 0.78rem; font-family: 'Nunito Sans', sans-serif; font-weight: 600; transition: background 0.15s; }
+    .btn-delete-layer:hover { background: #fef2f2; }
+    .bottom-panel {
+      grid-column: 1 / -1; background: #fff; border-top: 1px solid #e8e2dc;
+      padding: 12px 18px; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; max-height: 120px; overflow-y: auto;
+    }
+    .bottom-label { font-size: 0.7rem; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase; color: rgba(34,27,25,0.4); margin-right: 4px; white-space: nowrap; }
+    .test-field { display: flex; flex-direction: column; gap: 2px; }
+    .test-field label { font-size: 0.7rem; color: rgba(34,27,25,0.5); }
+    .test-field input, .test-field select { padding: 4px 8px; border: 1px solid #e8e2dc; border-radius: 5px; font-size: 0.78rem; font-family: 'Nunito Sans', sans-serif; min-width: 120px; }
+    .add-layer-section { padding: 8px 14px 14px; }
+    .add-layer-btn { font-size: 0.75rem; padding: 5px 10px; border: 1px dashed #ccc; background: transparent; border-radius: 5px; cursor: pointer; color: rgba(34,27,25,0.55); font-family: 'Nunito Sans',sans-serif; width: 100%; margin-bottom: 4px; }
+    .add-layer-btn:hover { border-color: #9f3f37; color: #9f3f37; background: #fdf5f5; }
+    .bg-variant-select { font-size: 0.75rem; padding: 4px 8px; border: 1px solid rgba(255,255,255,0.2); border-radius: 5px; background: rgba(255,255,255,0.08); color: #fff; font-family: 'Nunito Sans',sans-serif; }
+    .bg-variant-select option { background: #222; }
+    .no-template { display: flex; align-items: center; justify-content: center; flex: 1; color: rgba(255,255,255,0.3); font-size: 0.9rem; }
+    .placeholder-chips { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
+    .placeholder-chip { font-size: 0.68rem; padding: 2px 7px; background: #eff6ff; color: #1d4ed8; border-radius: 10px; cursor: pointer; border: 1px solid #bfdbfe; }
+    .placeholder-chip:hover { background: #dbeafe; }
+    .align-btns { display: flex; border: 1px solid #e8e2dc; border-radius: 6px; overflow: hidden; }
+    .align-btn { flex: 1; padding: 5px 0; border: none; background: #fff; cursor: pointer; font-family: 'Nunito Sans',sans-serif; font-size: 0.75rem; transition: background 0.15s; }
+    .align-btn:hover { background: #f5f3f0; }
+    .align-btn.active { background: #eff6ff; color: #1d4ed8; font-weight: 600; }
+  </style>
+</head>
+<body class="page-light">
+  <header class="header" id="mainHeader"></header>
+
+  <div class="editor-layout">
+    <!-- LEFT: Templates + Layers -->
+    <div class="panel" id="leftPanel">
+      <div class="panel-title">Templates</div>
+      <div id="templatesList"></div>
+      <div style="height:1px;background:#f0ece8;margin:4px 0"></div>
+      <div class="panel-title">Layers</div>
+      <div id="layersList"></div>
+      <div class="add-layer-section" id="addLayerSection" style="display:none">
+        <button class="add-layer-btn" onclick="addLayer('text-line')">+ Texto (linha)</button>
+        <button class="add-layer-btn" onclick="addLayer('text-block')">+ Texto (bloco)</button>
+        <button class="add-layer-btn" onclick="addLayer('image')">+ Imagem</button>
+      </div>
+    </div>
+
+    <!-- CENTER: Canvas -->
+    <div class="canvas-panel" id="canvasPanel">
+      <div class="canvas-toolbar">
+        <span style="font-size:0.8rem;color:#aaa;font-weight:600" id="templateTitle">—</span>
+        <div class="mode-toggle">
+          <button id="btnModeEdit" class="active" onclick="setMode('edit')">Editar</button>
+          <button id="btnModePreview" onclick="setMode('preview')">Preview</button>
+        </div>
+        <select class="bg-variant-select" id="bgVariantSelect" style="display:none" onchange="onBgVariantChange(this.value)"></select>
+        <button onclick="renderPreview()" style="margin-left:4px">Atualizar Preview</button>
+        <span class="unsaved-badge" id="unsavedBadge">● não salvo</span>
+        <button class="primary" onclick="saveTemplate()" style="margin-left:4px">Salvar</button>
+      </div>
+      <div class="canvas-scroll" id="canvasScroll">
+        <div class="no-template" id="noTemplate">Selecione um template à esquerda</div>
+        <div class="canvas-wrap" id="canvasWrap" style="display:none">
+          <img class="bg-img" id="bgImg" src="" alt="Background" draggable="false">
+          <img class="canvas-preview-img" id="previewImg" alt="Preview renderizado">
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: Properties -->
+    <div class="panel props-panel" id="propsPanel">
+      <div class="panel-title">Propriedades</div>
+      <div class="props-empty" id="propsEmpty">Selecione uma layer no canvas ou na lista</div>
+      <div id="propsContent" style="display:none"></div>
+    </div>
+
+    <!-- BOTTOM: Test Data -->
+    <div class="bottom-panel" id="bottomPanel">
+      <span class="bottom-label">Dados de teste</span>
+      <div id="testDataFields" style="display:flex;flex-wrap:wrap;gap:10px"></div>
+    </div>
+  </div>
+
+  <script src="config.js"></script>
+  <script src="auth.js"></script>
+  <script>
+    const PLACEHOLDERS_BY_TIPO = {
+      'assinatura-email':   ['nome','cargo','telefone','email','marca_label','tem_cfp','marca'],
+      'cartao-boas-vindas': ['nome_cliente','nome_assinatura','unidade','contrato_label','contrato_social','is_private_key'],
+    };
+
+    let templates = [];
+    let currentTipo = null;
+    let currentTemplate = null;
+    let selectedLayerId = null;
+    let isDirty = false;
+    let mode = 'edit';
+    let bgVariantKey = null;
+    let testData = {};
+
+    async function init() {
+      await _configReady;
+      await Auth.init();
+      if (!Auth.isAuthenticated()) { window.location.href = '/auth/login?redirect=/admin-templates.html'; return; }
+      if (!Auth.isAdmin()) { window.location.href = '/dashboard.html'; return; }
+      Auth.renderHeader(document.getElementById('mainHeader'));
+      await loadTemplatesList();
+    }
+
+    async function loadTemplatesList() {
+      const res = await fetch('/api/admin/art-templates');
+      templates = await res.json();
+      const el = document.getElementById('templatesList');
+      el.innerHTML = templates.map(t => `
+        <div class="template-item" id="titem-${t.tipo}" onclick="loadTemplate('${t.tipo}')">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+          ${humanizeTipo(t.tipo)}
+          <span class="dirty-dot"></span>
+        </div>
+      `).join('');
+    }
+
+    function humanizeTipo(tipo) {
+      const map = { 'cartao-boas-vindas': 'Cartão de Boas-vindas', 'assinatura-email': 'Assinatura de E-mail' };
+      return map[tipo] || tipo.replace(/-/g,' ').replace(/\b\w/g, c=>c.toUpperCase());
+    }
+
+    async function loadTemplate(tipo) {
+      if (isDirty && currentTipo && !confirm('Há alterações não salvas. Deseja descartar?')) return;
+      currentTipo = tipo;
+      const res = await fetch(`/api/admin/art-templates/${tipo}`);
+      const row = await res.json();
+      currentTemplate = JSON.parse(JSON.stringify(row.config));
+      selectedLayerId = null;
+      isDirty = false;
+      bgVariantKey = null;
+      document.querySelectorAll('.template-item').forEach(el => el.classList.remove('active'));
+      document.getElementById(`titem-${tipo}`)?.classList.add('active');
+      document.getElementById('templateTitle').textContent = humanizeTipo(tipo);
+      document.getElementById('unsavedBadge').classList.remove('visible');
+      await loadSampleData();
+      renderBgVariantSelect();
+      renderCanvas();
+      renderLayersList();
+      showProps(null);
+      document.getElementById('noTemplate').style.display = 'none';
+      document.getElementById('canvasWrap').style.display = 'inline-block';
+      document.getElementById('addLayerSection').style.display = 'block';
+      setMode('edit');
+    }
+
+    async function loadSampleData() {
+      const res = await fetch(`/api/admin/art-templates/${currentTipo}/sample-data`);
+      testData = await res.json();
+      renderTestDataPanel();
+    }
+
+    function renderTestDataPanel() {
+      const placeholders = PLACEHOLDERS_BY_TIPO[currentTipo] || [];
+      const el = document.getElementById('testDataFields');
+      el.innerHTML = placeholders.map(key => `
+        <div class="test-field">
+          <label>${key}</label>
+          <input type="text" value="${esc(testData[key] || '')}" onchange="testData['${key}']=this.value" oninput="testData['${key}']=this.value">
+        </div>
+      `).join('');
+    }
+
+    function renderBgVariantSelect() {
+      const sel = document.getElementById('bgVariantSelect');
+      if (!currentTemplate?.bg || currentTemplate.bg.type !== 'variant') { sel.style.display='none'; return; }
+      const variants = Object.keys(currentTemplate.bg.variants);
+      sel.style.display = 'block';
+      sel.innerHTML = variants.map(v => `<option value="${v}">${v}</option>`).join('');
+      bgVariantKey = bgVariantKey || variants[0];
+      sel.value = bgVariantKey;
+    }
+
+    function onBgVariantChange(val) {
+      bgVariantKey = val;
+      updateBgImage();
+    }
+
+    function getBgUrl() {
+      if (!currentTemplate?.bg) return '';
+      const bg = currentTemplate.bg;
+      if (bg.type === 'static') return bg.url;
+      const key = bgVariantKey || Object.keys(bg.variants)[0];
+      const url = bg.variants[key] || '';
+      if (url.startsWith('http')) return url;
+      return '';
+    }
+
+    function updateBgImage() {
+      const bgImg = document.getElementById('bgImg');
+      const url = getBgUrl();
+      if (url) {
+        bgImg.src = url;
+        bgImg.style.display = 'block';
+      } else {
+        bgImg.style.display = 'none';
+        const wrap = document.getElementById('canvasWrap');
+        const ar = currentTemplate.canvas.height / currentTemplate.canvas.width;
+        wrap.style.background = '#2c2c2c';
+        bgImg.style.display = 'block';
+        bgImg.src = `data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='${currentTemplate.canvas.width}' height='${currentTemplate.canvas.height}'><rect fill='%232c2c2c' width='100%25' height='100%25'/><text x='50%25' y='50%25' fill='%23666' font-size='48' text-anchor='middle'>(bg local — preview via botão)</text></svg>`;
+      }
+    }
+
+    function getScale() {
+      const wrap = document.getElementById('canvasWrap');
+      return wrap.offsetWidth / currentTemplate.canvas.width;
+    }
+
+    function renderCanvas() {
+      if (!currentTemplate) return;
+      updateBgImage();
+      document.querySelectorAll('.layer-box').forEach(el => el.remove());
+      if (mode === 'preview') return;
+      const wrap = document.getElementById('canvasWrap');
+      const SCALE = getScale();
+      for (const layer of currentTemplate.layers) {
+        const div = document.createElement('div');
+        div.className = 'layer-box' + (layer.id === selectedLayerId ? ' selected' : '');
+        div.dataset.id = layer.id;
+        const x = layer.x * SCALE, y = layer.y * SCALE;
+        const w = (layer.w || 80) * SCALE;
+        const h = (layer.h || (layer.type === 'text-line' ? 40 : 80)) * SCALE;
+        div.style.cssText = `left:${x}px;top:${y}px;width:${w}px;height:${h < 18 ? 18 : h}px;`;
+        const lbl = document.createElement('div');
+        lbl.className = 'layer-label';
+        lbl.textContent = layer.name || layer.id;
+        div.appendChild(lbl);
+        div.addEventListener('click', (e) => { e.stopPropagation(); selectLayer(layer.id); });
+        wrap.appendChild(div);
+        setupInteract(div);
+      }
+    }
+
+    function setupInteract(el) {
+      interact(el)
+        .draggable({
+          listeners: {
+            move(event) {
+              const cur = parseFloat(el.style.left) || 0;
+              const curt = parseFloat(el.style.top) || 0;
+              el.style.left = (cur + event.dx) + 'px';
+              el.style.top  = (curt + event.dy) + 'px';
+            },
+            end() {
+              const SCALE = getScale();
+              const layer = getLayer(el.dataset.id);
+              if (!layer) return;
+              layer.x = Math.round(parseFloat(el.style.left) / SCALE);
+              layer.y = Math.round(parseFloat(el.style.top) / SCALE);
+              markDirty();
+              if (el.dataset.id === selectedLayerId) showProps(selectedLayerId);
+            }
+          }
+        })
+        .resizable({
+          edges: { left: true, right: true, bottom: true, top: true },
+          listeners: {
+            move(event) {
+              let { x, y } = event.target.dataset;
+              x = (parseFloat(x) || 0) + event.deltaRect.left;
+              y = (parseFloat(y) || 0) + event.deltaRect.top;
+              Object.assign(event.target.style, {
+                width: `${event.rect.width}px`,
+                height: `${event.rect.height}px`,
+                left: `${parseFloat(event.target.style.left) + event.deltaRect.left}px`,
+                top:  `${parseFloat(event.target.style.top) + event.deltaRect.top}px`,
+              });
+              event.target.dataset.x = x;
+              event.target.dataset.y = y;
+            },
+            end(event) {
+              const SCALE = getScale();
+              const layer = getLayer(event.target.dataset.id);
+              if (!layer) return;
+              layer.x = Math.round(parseFloat(event.target.style.left) / SCALE);
+              layer.y = Math.round(parseFloat(event.target.style.top) / SCALE);
+              layer.w = Math.round(event.rect.width / SCALE);
+              if (layer.type !== 'text-line') layer.h = Math.round(event.rect.height / SCALE);
+              markDirty();
+              if (event.target.dataset.id === selectedLayerId) showProps(selectedLayerId);
+            }
+          },
+          modifiers: [interact.modifiers.restrictEdges({ outer: 'parent' })]
+        });
+    }
+
+    function renderLayersList() {
+      const el = document.getElementById('layersList');
+      if (!currentTemplate) { el.innerHTML = ''; return; }
+      el.innerHTML = currentTemplate.layers.map((layer, i) => `
+        <div class="layer-item${layer.id === selectedLayerId ? ' active' : ''}" id="litem-${layer.id}" onclick="selectLayer('${layer.id}')">
+          <span>${layer.name || layer.id}</span>
+          <span class="layer-type-badge">${layer.type}</span>
+        </div>
+      `).join('');
+    }
+
+    function selectLayer(id) {
+      selectedLayerId = id;
+      document.querySelectorAll('.layer-box').forEach(el => el.classList.toggle('selected', el.dataset.id === id));
+      document.querySelectorAll('.layer-item').forEach(el => el.classList.toggle('active', el.id === `litem-${id}`));
+      showProps(id);
+    }
+
+    function getLayer(id) {
+      return currentTemplate?.layers.find(l => l.id === id) || null;
+    }
+
+    function showProps(id) {
+      const empty = document.getElementById('propsEmpty');
+      const content = document.getElementById('propsContent');
+      if (!id) { empty.style.display='block'; content.style.display='none'; content.innerHTML=''; return; }
+      const layer = getLayer(id);
+      if (!layer) { empty.style.display='block'; content.style.display='none'; return; }
+      empty.style.display = 'none';
+      content.style.display = 'block';
+      const placeholders = PLACEHOLDERS_BY_TIPO[currentTipo] || [];
+      const fontOptions = ['Taviraj Light','Nunito Sans Light','Ivy Journal Light','Roobert PRO TRIAL Light'].map(f => `<option${layer.font_family===f?' selected':''}>${f}</option>`).join('');
+      const alignBtns = ['left','center','right'].map(a => `<button class="align-btn${layer.align===a?' active':''}" onclick="updLayer('${id}','align','${a}');renderAlignBtns('${id}')" title="${a}">${a==='left'?'←':a==='center'?'↔':'→'}</button>`).join('');
+
+      let html = `
+        <div class="props-section">
+          <div class="props-label">ID / Nome</div>
+          <div class="props-row">
+            <div>
+              <input class="props-input" value="${esc(layer.id)}" onchange="updLayer('${id}','id',this.value)" placeholder="id">
+            </div>
+            <div>
+              <input class="props-input" value="${esc(layer.name)}" onchange="updLayer('${id}','name',this.value)" placeholder="nome">
+            </div>
+          </div>
+          <div class="props-label">Posição / Tamanho</div>
+          <div class="props-row">
+            <div><div class="props-label">X</div><input class="props-input" type="number" value="${layer.x}" onchange="updLayerN('${id}','x',this.value)"></div>
+            <div><div class="props-label">Y</div><input class="props-input" type="number" value="${layer.y}" onchange="updLayerN('${id}','y',this.value)"></div>
+          </div>
+          <div class="props-row">
+            <div><div class="props-label">W</div><input class="props-input" type="number" value="${layer.w||0}" onchange="updLayerN('${id}','w',this.value)"></div>
+            ${layer.type!=='text-line' ? `<div><div class="props-label">H</div><input class="props-input" type="number" value="${layer.h||0}" onchange="updLayerN('${id}','h',this.value)"></div>` : '<div></div>'}
+          </div>
+        </div>`;
+
+      if (layer.type === 'text-line' || layer.type === 'text-block') {
+        html += `
+        <div class="props-section">
+          <div class="props-label">Fonte</div>
+          <div class="props-row single"><select class="props-input" onchange="updLayer('${id}','font_family',this.value)">${fontOptions}</select></div>
+          <div class="props-row">
+            <div><div class="props-label">Tamanho</div><input class="props-input" type="number" value="${layer.font_size}" onchange="updLayerN('${id}','font_size',this.value)"></div>
+            <div><div class="props-label">Cor</div><input class="props-input" type="color" value="${layer.color||'#ffffff'}" onchange="updLayer('${id}','color',this.value)"></div>
+          </div>
+          <div class="props-label">Alinhamento</div>
+          <div class="align-btns" id="alignBtns-${id}">${alignBtns}</div>
+          ${layer.type==='text-block' ? `
+          <div class="props-row" style="margin-top:8px">
+            <div><div class="props-label">Line height</div><input class="props-input" type="number" value="${layer.line_height||0}" onchange="updLayerN('${id}','line_height',this.value)"></div>
+            <div><div class="props-label">Parágrafo</div><input class="props-input" type="number" value="${layer.paragraph_spacing||0}" onchange="updLayerN('${id}','paragraph_spacing',this.value)"></div>
+          </div>` : ''}
+          ${layer.auto_fit ? `
+          <div class="props-label" style="margin-top:8px">Auto-fit min</div>
+          <input class="props-input" type="number" value="${layer.auto_fit.min_font_size}" onchange="updLayer('${id}','auto_fit',{enabled:true,min_font_size:+this.value})">
+          ` : ''}
+        </div>
+        <div class="props-section">
+          <div class="props-label">Conteúdo</div>
+          <textarea class="props-input props-textarea" onchange="updLayer('${id}','content',this.value)">${esc(layer.content||'')}</textarea>
+          <div class="placeholder-chips">${placeholders.map(p=>`<span class="placeholder-chip" onclick="insertPlaceholder('${id}','${p}')">{{${p}}}</span>`).join('')}</div>
+        </div>`;
+      }
+
+      if (layer.type === 'image') {
+        const srcType = layer.source?.type || 'static';
+        html += `
+        <div class="props-section">
+          <div class="props-label">Fonte da imagem</div>
+          <select class="props-input" onchange="updImageSourceType('${id}',this.value)">
+            <option${srcType==='static'?' selected':''}>static</option>
+            <option${srcType==='variant'?' selected':''}>variant</option>
+          </select>
+          ${srcType==='static' ? `
+          <div class="props-label" style="margin-top:6px">URL</div>
+          <input class="props-input" value="${esc(layer.source.url||'')}" onchange="updLayer('${id}','source',{type:'static',url:this.value})">
+          ` : `
+          <div class="props-label" style="margin-top:6px">variant_source (campo de dados)</div>
+          <input class="props-input" value="${esc(layer.source.variant_source||'')}" onchange="updImageVariantSource('${id}',this.value)">
+          <div class="props-label" style="margin-top:4px">Variantes (key=url, uma por linha)</div>
+          <textarea class="props-input props-textarea" onchange="updImageVariants('${id}',this.value)">${Object.entries(layer.source.variants||{}).map(([k,v])=>`${k}=${v}`).join('\n')}</textarea>
+          `}
+          <div class="props-row" style="margin-top:8px">
+            <div><div class="props-label">Blend mode</div>
+              <select class="props-input" onchange="updLayer('${id}','blend_mode',this.value)">
+                ${['normal','screen','multiply'].map(b=>`<option${layer.blend_mode===b?' selected':''}>${b}</option>`).join('')}
+              </select>
+            </div>
+            <div><div class="props-label">Resize</div>
+              <select class="props-input" onchange="updLayer('${id}','resize_mode',this.value)">
+                ${['contain','cover','fill'].map(b=>`<option${layer.resize_mode===b?' selected':''}>${b}</option>`).join('')}
+              </select>
+            </div>
+          </div>
+        </div>`;
+      }
+
+      html += `<div class="props-section"><button class="btn-delete-layer" onclick="deleteLayer('${id}')">Deletar layer</button></div>`;
+      content.innerHTML = html;
+    }
+
+    function renderAlignBtns(id) {
+      const layer = getLayer(id);
+      if (!layer) return;
+      document.querySelectorAll(`#alignBtns-${id} .align-btn`).forEach(btn => {
+        btn.classList.toggle('active', btn.getAttribute('title') === layer.align);
+      });
+    }
+
+    function updLayer(id, key, value) {
+      const layer = getLayer(id); if (!layer) return;
+      if (key === 'id') {
+        const oldId = layer.id;
+        layer.id = value;
+        if (selectedLayerId === oldId) selectedLayerId = value;
+      } else {
+        (layer as any)[key] = value;
+      }
+      markDirty();
+      renderCanvas();
+      renderLayersList();
+    }
+
+    function updLayerN(id, key, value) { updLayer(id, key, parseFloat(value) || 0); }
+
+    function updImageSourceType(id, type) {
+      const layer = getLayer(id) as any; if (!layer) return;
+      layer.source = type === 'static' ? { type: 'static', url: '' } : { type: 'variant', variants: {}, variant_source: '' };
+      markDirty(); showProps(id);
+    }
+
+    function updImageVariantSource(id, val) {
+      const layer = getLayer(id) as any; if (!layer) return;
+      layer.source.variant_source = val; markDirty();
+    }
+
+    function updImageVariants(id, text) {
+      const layer = getLayer(id) as any; if (!layer) return;
+      const variants: Record<string,string> = {};
+      text.split('\n').forEach(line => {
+        const eq = line.indexOf('='); if (eq < 0) return;
+        variants[line.slice(0,eq).trim()] = line.slice(eq+1).trim();
+      });
+      layer.source.variants = variants; markDirty();
+    }
+
+    function insertPlaceholder(id, placeholder) {
+      const layer = getLayer(id); if (!layer) return;
+      const tag = `{{${placeholder}}}`;
+      (layer as any).content = ((layer as any).content || '') + tag;
+      markDirty(); showProps(id);
+    }
+
+    function addLayer(type: string) {
+      if (!currentTemplate) return;
+      const id = type + '_' + Date.now();
+      const base = { id, name: 'Nova layer', x: 100, y: 100 };
+      let layer: any;
+      if (type === 'text-line') layer = { ...base, type, w: 400, content: 'Texto', font_family: 'Nunito Sans Light', font_size: 48, color: '#ffffff', align: 'left' };
+      else if (type === 'text-block') layer = { ...base, type, w: 400, h: 200, content: 'Texto', font_family: 'Nunito Sans Light', font_size: 36, line_height: 50, paragraph_spacing: 20, color: '#ffffff', align: 'left' };
+      else layer = { ...base, type: 'image', w: 200, h: 100, source: { type: 'static', url: '' }, blend_mode: 'normal', resize_mode: 'contain' };
+      currentTemplate.layers.push(layer);
+      markDirty(); renderCanvas(); renderLayersList(); selectLayer(id);
+    }
+
+    function deleteLayer(id) {
+      if (!currentTemplate || !confirm('Remover esta layer?')) return;
+      currentTemplate.layers = currentTemplate.layers.filter(l => l.id !== id);
+      if (selectedLayerId === id) { selectedLayerId = null; showProps(null); }
+      markDirty(); renderCanvas(); renderLayersList();
+    }
+
+    function markDirty() {
+      isDirty = true;
+      document.getElementById('unsavedBadge').classList.add('visible');
+      document.getElementById(`titem-${currentTipo}`)?.classList.add('dirty');
+    }
+
+    function setMode(m) {
+      mode = m;
+      document.getElementById('btnModeEdit').classList.toggle('active', m==='edit');
+      document.getElementById('btnModePreview').classList.toggle('active', m==='preview');
+      const previewImg = document.getElementById('previewImg');
+      if (m === 'edit') {
+        previewImg.style.display = 'none';
+        renderCanvas();
+      } else {
+        document.querySelectorAll('.layer-box').forEach(el => el.remove());
+        if (previewImg.src && previewImg.src !== window.location.href) previewImg.style.display = 'block';
+      }
+    }
+
+    async function renderPreview() {
+      setMode('preview');
+      const previewImg = document.getElementById('previewImg');
+      previewImg.style.display = 'none';
+      const loadingDiv = document.createElement('div');
+      loadingDiv.id = 'previewLoading';
+      loadingDiv.style.cssText = 'position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.5);color:#fff;font-size:0.9rem;z-index:10';
+      loadingDiv.textContent = 'Renderizando…';
+      document.getElementById('canvasWrap').appendChild(loadingDiv);
+      try {
+        const body = { config: currentTemplate, data: testData };
+        const res = await fetch(`/api/admin/art-templates/${currentTipo}/preview`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify(body),
+        });
+        if (!res.ok) { const e = await res.json(); alert('Erro: ' + (e.error || res.status)); setMode('edit'); return; }
+        const blob = await res.blob();
+        previewImg.src = URL.createObjectURL(blob);
+        previewImg.style.display = 'block';
+      } catch(e: any) { alert('Erro ao gerar preview: ' + e.message); setMode('edit'); }
+      finally { document.getElementById('previewLoading')?.remove(); }
+    }
+
+    async function saveTemplate() {
+      if (!currentTemplate) return;
+      const btn = document.querySelector('.canvas-toolbar button.primary') as HTMLButtonElement;
+      const orig = btn.textContent; btn.textContent = 'Salvando…'; btn.disabled = true;
+      try {
+        const res = await fetch(`/api/admin/art-templates/${currentTipo}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ config: currentTemplate }),
+        });
+        const data = await res.json();
+        if (!res.ok) { alert('Erro ao salvar: ' + (data.error || res.status)); return; }
+        isDirty = false;
+        document.getElementById('unsavedBadge').classList.remove('visible');
+        document.getElementById(`titem-${currentTipo}`)?.classList.remove('dirty');
+      } catch(e: any) { alert('Erro: ' + e.message); }
+      finally { btn.textContent = orig; btn.disabled = false; }
+    }
+
+    function esc(str: string) {
+      if (str == null) return '';
+      return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    window.addEventListener('beforeunload', (e) => {
+      if (isDirty) { e.preventDefault(); e.returnValue = ''; }
+    });
+
+    window.addEventListener('resize', () => { if (currentTemplate && mode==='edit') renderCanvas(); });
+
+    init();
+  </script>
+</body>
+</html>

@@ -59,6 +59,16 @@ export const userTipoAssignmentsTable = pgTable("user_tipo_assignments", {
 
 export type UserTipoAssignment = typeof userTipoAssignmentsTable.$inferSelect;
 
+export const artTemplatesTable = pgTable("art_templates", {
+  id: serial("id").primaryKey(),
+  tipo: varchar("tipo", { length: 100 }).notNull().unique(),
+  config: jsonb("config").notNull(),
+  updated_at: timestamp("updated_at").defaultNow().notNull(),
+  updated_by: integer("updated_by").references(() => usersTable.id),
+});
+
+export type ArtTemplateRow = typeof artTemplatesTable.$inferSelect;
+
 export const activityLogTable = pgTable("activity_log", {
   id: serial("id").primaryKey(),
   created_at: timestamp("created_at").defaultNow().notNull(),
