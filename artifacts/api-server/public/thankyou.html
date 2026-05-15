@@ -34,11 +34,26 @@
           <div id="resumoItens"></div>
         </div>
       </div>
+      <div id="artefatoCard" style="display:none;margin-top:28px;width:100%">
+        <div style="border-top:1px solid rgba(255,248,243,0.12);padding-top:24px">
+          <div id="artefatoPolling" style="text-align:center;padding:16px 0">
+            <div style="display:inline-block;width:20px;height:20px;border:2px solid rgba(255,248,243,0.3);border-top-color:#c8a96e;border-radius:50%;animation:spin 0.9s linear infinite"></div>
+            <p style="margin-top:10px;font-size:0.8rem;color:rgba(255,248,243,0.6)">Gerando seu material…</p>
+          </div>
+          <div id="artefatoReady" style="display:none">
+            <p style="font-size:0.7rem;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:rgba(255,248,243,0.6);margin-bottom:14px">Material disponível</p>
+            <div id="artefatoLinks"></div>
+          </div>
+        </div>
+      </div>
       <div style="margin-top:40px;opacity:0" id="logoWrap">
         <img id="logo" style="height:24px;opacity:1" alt="SVN">
       </div>
     </div>
   </div>
+  <style>
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
 
   <script src="config.js"></script>
   <script>
@@ -51,6 +66,52 @@
       'certificado-eventos',
       'cartao-comemorativo',
     ];
+
+    const TIPOS_ARTEFATO_GERADO = ['assinatura-email', 'cartao-boas-vindas'];
+
+    let _artefatoPollingTimer = null;
+    function iniciarPollingArtefato(solicitacaoId) {
+      const card = document.getElementById('artefatoCard');
+      if (card) card.style.display = 'block';
+
+      let tentativas = 0;
+      const MAX_TENTATIVAS = 40;
+
+      function poll() {
+        fetch('/api/solicitacoes/' + solicitacaoId + '/artefato', { credentials: 'include' })
+          .then(r => r.json())
+          .then(data => {
+            if (data.ready && data.links && data.links.length > 0) {
+              document.getElementById('artefatoPolling').style.display = 'none';
+              const readyEl = document.getElementById('artefatoReady');
+              const linksEl = document.getElementById('artefatoLinks');
+              if (readyEl && linksEl) {
+                linksEl.innerHTML = data.links.map(link =>
+                  `<a href="${link.url}" download target="_blank" rel="noopener"
+                     style="display:inline-flex;align-items:center;gap:8px;padding:12px 24px;background:linear-gradient(135deg,#c8a96e,#a8885a);color:#fff;font-weight:600;font-size:0.9rem;border-radius:8px;text-decoration:none;margin-top:4px">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                    ${link.label || 'Fazer download'}
+                  </a>`
+                ).join('');
+                readyEl.style.display = 'block';
+              }
+            } else {
+              tentativas++;
+              if (tentativas < MAX_TENTATIVAS) {
+                _artefatoPollingTimer = setTimeout(poll, 3000);
+              } else {
+                const pollingEl = document.getElementById('artefatoPolling');
+                if (pollingEl) pollingEl.innerHTML = '<p style="font-size:0.8rem;color:rgba(255,248,243,0.5)">Material em geração — verifique sua solicitação em breve.</p>';
+              }
+            }
+          })
+          .catch(() => {
+            tentativas++;
+            if (tentativas < MAX_TENTATIVAS) _artefatoPollingTimer = setTimeout(poll, 5000);
+          });
+      }
+      setTimeout(poll, 2000);
+    }
 
     document.getElementById('bgVideo').src = URL_VIDEO_HERO;
     document.getElementById('logo').src = URL_LOGO_BRANCA;
@@ -67,6 +128,10 @@
       if (resumo.tipo_id && TIPOS_AUTOMACAO.includes(resumo.tipo_id)) {
         titulo = 'Solicitação enviada com sucesso!';
         subtitulo = 'Seu material será gerado automaticamente e enviado para o e-mail informado em breve.';
+      }
+
+      if (resumo.tipo_id && TIPOS_ARTEFATO_GERADO.includes(resumo.tipo_id) && resumo.id) {
+        iniciarPollingArtefato(resumo.id);
       }
 
       document.getElementById('title').textContent = titulo;

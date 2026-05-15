@@ -169,6 +169,12 @@ importers:
       '@azure/msal-node':
         specifier: ^5.1.2
         version: 5.1.2
+      '@fontsource/nunito-sans':
+        specifier: ^5.2.7
+        version: 5.2.7
+      '@fontsource/taviraj':
+        specifier: ^5.2.8
+        version: 5.2.8
       '@workspace/api-zod':
         specifier: workspace:*
         version: link:../../lib/api-zod
@@ -786,6 +792,12 @@ packages:
 
   '@floating-ui/utils@0.2.11':
     resolution: {integrity: sha512-RiB/yIh78pcIxl6lLMG0CgBXAZ2Y0eVHqMPYugu+9U0AeT6YBeiJpf7lbdJNIugFP5SIjwNRgo4DhR1Qxi26Gg==}
+
+  '@fontsource/nunito-sans@5.2.7':
+    resolution: {integrity: sha512-Vh+xhMsrH1eA9Q83Va82su3rDmNilYg+ur/TfHAOyr5kTpCOWMB8B1tDoJvSe+yJPpZ2jEWtnBHGqI2LUPVxUA==}
+
+  '@fontsource/taviraj@5.2.8':
+    resolution: {integrity: sha512-GcXmcVVln0h6PuzyYgYRezYoKqOg6UHTIh9C8Cn+1wXxs05LiS3ri7mmX6f4imNSkS1zecoeC4EtsSTPiEbtvw==}
 
   '@gerrit0/mini-shiki@3.23.0':
     resolution: {integrity: sha512-bEMORlG0cqdjVyCEuU0cDQbORWX+kYCeo0kV1lbxF5bt4r7SID2l9bqsxJEM0zndaxpOUT7riCyIVEuqq/Ynxg==}
@@ -4364,6 +4376,10 @@ snapshots:
       react-dom: 19.1.0(react@19.1.0)
 
   '@floating-ui/utils@0.2.11': {}
+
+  '@fontsource/nunito-sans@5.2.7': {}
+
+  '@fontsource/taviraj@5.2.8': {}
 
   '@gerrit0/mini-shiki@3.23.0':
     dependencies:

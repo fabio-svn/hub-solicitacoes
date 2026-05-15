@@ -8,6 +8,7 @@ import { requireAuth } from "../middleware/auth.middleware";
 import { createClickUpTask, getClickUpTaskStatus, type ArquivosMap } from "./clickup";
 import { uploadToR2 } from "./r2";
 import { gerarAssinaturaEmail } from "./gerador-assinatura";
+import { gerarCartaoBoasVindasHandler } from "./gerador-cartao-boas-vindas";
 import { logger } from "../lib/logger";
 
 const router = Router();
@@ -411,6 +412,12 @@ router.post("/solicitacoes", requireAuth, upload.any(), async (req, res): Promis
       });
     }
 
+    if (tipo_solicitacao === "cartao-boas-vindas") {
+      gerarCartaoBoasVindasHandler(solicitacao.id, parsedDados).catch(err => {
+        logger.error({ err }, "Erro ao gerar Cartão de Boas-vindas");
+      });
+    }
+
     await logAtividade({
       userEmail: user.email, userName: user.name,
       tipo: "solicitacao_criada", nivel: "info",
@@ -732,6 +739,31 @@ router.post("/solicitacoes/:id/entrega", requireAuth, async (req, res): Promise<
     res.json({ success: true });
   } catch (err) {
     logger.error({ err }, "Erro ao salvar entrega");
+    res.status(500).json({ error: "Erro" });
+  }
+});
+
+router.get("/solicitacoes/:id/artefato", requireAuth, async (req, res): Promise<void> => {
+  try {
+    const user = req.session.user!;
+    const id = parseInt(String(req.params.id));
+    if (isNaN(id)) { res.status(400).json({ error: "ID inválido" }); return; }
+
+    const conditions: ReturnType<typeof eq>[] = [eq(solicitacoesTable.id, id)];
+    if (user.role !== "admin" && user.role !== "gestor") {
+      conditions.push(eq(solicitacoesTable.user_email, user.email));
+    }
+
+    const [sol] = await db
+      .select({ entrega_links: solicitacoesTable.entrega_links, status: solicitacoesTable.status })
+      .from(solicitacoesTable)
+      .where(and(...conditions));
+    if (!sol) { res.status(404).json({ error: "Não encontrada" }); return; }
+
+    const links = (sol.entrega_links as Array<{ label: string; url: string }> | null) || [];
+    res.json({ ready: links.length > 0, links, status: sol.status });
+  } catch (err) {
+    logger.error({ err }, "Erro ao buscar artefato");
     res.status(500).json({ error: "Erro" });
   }
 });

@@ -115,12 +115,19 @@
       Auth.renderHeader(document.getElementById('mainHeader'));
 
       const contratoSel = document.getElementById('contratoSocial');
-      if (contratoSel) { CONTRATOS_SOCIAIS.forEach(c => { const o = document.createElement('option'); o.value = c; o.textContent = c; contratoSel.appendChild(o); }); }
+      if (contratoSel) {
+        [
+          { id: 'svn-investimentos', label: 'SVN Investimentos' },
+          { id: 'svn-capital',       label: 'SVN Capital' },
+          { id: 'svn-connect',       label: 'SVN Connect' },
+        ].forEach(c => { const o = document.createElement('option'); o.value = c.id; o.textContent = c.label; contratoSel.appendChild(o); });
+      }
 
       const unidadeSel = document.getElementById('unidade');
       if (unidadeSel) { UNIDADES_SVN.forEach(u => { const o = document.createElement('option'); o.value = u.nome; o.textContent = u.nome; unidadeSel.appendChild(o); }); }
 
       Auth.aplicarPerfilNoCampo('telefone', Auth.getTelefone());
+      Auth.aplicarPerfilNoCampo('nomeAssinatura', Auth.getUserName());
 
       restoreSession();
     }
