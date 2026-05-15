@@ -137,7 +137,7 @@
       document.getElementById('title').textContent = titulo;
       document.getElementById('subtitle').textContent = subtitulo;
       if (resumo.id) {
-        document.getElementById('ctaBtn').href = '/solicitacoes/' + resumo.id;
+        document.getElementById('ctaBtn').href = '/solicitacao.html?id=' + resumo.id;
         document.getElementById('ctaBtn').textContent = 'Ver solicitação';
       } else {
         document.getElementById('ctaBtn').textContent = _botaoLabel;
