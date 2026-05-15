@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { db } from "@workspace/db";
-import { usersTable, activityLogTable, artTemplatesTable } from "@workspace/db";
-import { eq, desc, sql, and } from "drizzle-orm";
+import { usersTable, activityLogTable, artTemplatesTable, solicitacoesTable } from "@workspace/db";
+import { eq, desc, sql, and, count } from "drizzle-orm";
 import { requireAuth, requireRole } from "../middleware/auth.middleware";
 import { logger } from "../lib/logger";
 import { renderFromTemplate } from "../services/template-renderer";
@@ -327,7 +327,11 @@ router.delete("/art-templates/:id", requireAuth, requireRole("admin"), async (re
     }
     const siblings = await db.select({ id: artTemplatesTable.id }).from(artTemplatesTable).where(eq(artTemplatesTable.tipo, target.tipo));
     if (siblings.length <= 1) {
-      res.status(400).json({ error: `Este é o único template do tipo "${target.tipo}". Crie outro antes de deletar este.` }); return;
+      const [{ total }] = await db.select({ total: count() }).from(solicitacoesTable)
+        .where(eq(solicitacoesTable.tipo_solicitacao, target.tipo));
+      if (total > 0) {
+        res.status(400).json({ error: `Este é o único template do tipo "${target.tipo}" e há ${total} solicitação(ões) associada(s). Crie outro template antes de deletar este.` }); return;
+      }
     }
     await db.delete(artTemplatesTable).where(eq(artTemplatesTable.id, id));
     res.json({ success: true });

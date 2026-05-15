@@ -149,6 +149,7 @@
         </div>
 
         <div id="submitError" class="alert-card alert-danger" style="display:none;margin-bottom:16px"></div>
+        <div id="formStatusArea" style="display:none;margin-top:16px"></div>
         <div style="border-top:1px solid rgba(34,27,25,.08);margin:28px 0 20px;padding-top:22px">
           <div class="form-nav" style="justify-content:space-between">
             <button class="btn btn-secondary" onclick="voltarDoStep2()">Voltar</button>
@@ -525,7 +526,7 @@
       }
 
       const btn = document.getElementById('btnSubmit');
-      btn.disabled = true; btn.textContent = 'Enviando...';
+      btn.disabled = true; btn.textContent = 'Enviando...'; if(window.formLockUI)window.formLockUI(btn);
 
       const validDepos = depoimentos.filter(d => d.nome && d.texto);
       const formData = new FormData();
@@ -572,11 +573,11 @@
         }
         else {
           showSubmitError(d.error || 'Erro ao enviar. Tente novamente.');
-          btn.disabled = false; btn.textContent = 'Enviar';
+          if(window.formUnlockUI)window.formUnlockUI(btn); else { btn.disabled = false; btn.textContent = 'Enviar'; }
         }
       } catch (e) {
         showSubmitError('Erro de conexão. Verifique sua internet.');
-        btn.disabled = false; btn.textContent = 'Enviar';
+        if(window.formUnlockUI)window.formUnlockUI(btn); else { btn.disabled = false; btn.textContent = 'Enviar'; }
       }
     }
 

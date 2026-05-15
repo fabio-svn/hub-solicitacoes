@@ -244,7 +244,7 @@
       const canais = [...document.querySelectorAll('#canais input:checked')].map(c => c.value);
 
       const btn = document.getElementById('btnSubmit');
-      btn.disabled = true; btn.textContent = 'Enviando...';
+      btn.disabled = true; btn.textContent = 'Enviando...'; if(window.formLockUI)window.formLockUI(btn);
 
       const formData = new FormData();
       formData.append('tipo_solicitacao', TIPOS[subtipo] || TIPOS.informativo);
@@ -293,7 +293,7 @@
         const errEl = document.getElementById('submitError');
         if (errEl) { errEl.style.display = 'block'; errEl.textContent = d.error || 'Erro ao enviar. Tente novamente.'; }
         else { alert(d.error || 'Erro ao enviar. Tente novamente.'); }
-        btn.disabled = false; btn.textContent = 'Enviar';
+        if(window.formUnlockUI)window.formUnlockUI(btn); else { btn.disabled = false; btn.textContent = 'Enviar'; }
       }
     }
 

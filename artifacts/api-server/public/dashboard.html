@@ -427,7 +427,12 @@
       initAdmin();
       loadStats();
       // Restore tab from localStorage and load it first
-      switchTab(currentTab);
+      const _urlTab = new URLSearchParams(window.location.search).get('tab');
+      if (_urlTab && ['geral', 'eventos', 'admin', 'log', 'usuarios'].includes(_urlTab)) {
+        switchTab(_urlTab);
+      } else {
+        switchTab(currentTab);
+      }
       if (currentTab === 'geral' || currentTab === 'eventos') {
         loadList(currentTab);
         const otherTab = currentTab === 'geral' ? 'eventos' : 'geral';
@@ -1085,8 +1090,7 @@
       if (!Auth.isAdmin()) return;
       document.getElementById('tabAdmin').style.display = '';
       document.getElementById('tabLog').style.display = '';
-      document.getElementById('tabUsuarios').style.display = '';
-      document.getElementById('tabTemplates').style.display = '';
+      
       initLog();
       loadUsuarios();
       renderDropdownTipos();

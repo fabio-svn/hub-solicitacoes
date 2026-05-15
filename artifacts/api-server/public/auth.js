@@ -222,6 +222,16 @@ const Auth = {
               Minhas solicitações
               <span id="notifBadgeMenu" class="notif-badge-menu" style="${badgeCount > 0 ? '' : 'display:none'}">Novo</span>
             </a>
+            ${this.isAdmin() ? `
+              <a href="/dashboard.html?tab=usuarios" style="display:flex;align-items:center;gap:8px;padding:10px 16px;font-size:0.85rem;font-weight:600;color:var(--carbon-black);text-decoration:none" onmouseover="this.style.background='var(--icon-bg)'" onmouseout="this.style.background='transparent'">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+                Usuários <span style="font-size:0.7rem;opacity:0.5;font-weight:400">(admin)</span>
+              </a>
+              <a href="/admin-templates.html" style="display:flex;align-items:center;gap:8px;padding:10px 16px;font-size:0.85rem;font-weight:600;color:var(--carbon-black);text-decoration:none;border-bottom:1px solid var(--border-light)" onmouseover="this.style.background='var(--icon-bg)'" onmouseout="this.style.background='transparent'">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+                Templates de Arte <span style="font-size:0.7rem;opacity:0.5;font-weight:400">(admin)</span>
+              </a>
+            ` : ''}
             <button onclick="Auth.logout()" style="display:flex;align-items:center;gap:8px;padding:10px 16px;font-size:0.85rem;font-weight:600;color:var(--carbon-black);background:none;border:none;cursor:pointer;width:100%;text-align:left;font-family:'Nunito Sans',sans-serif" onmouseover="this.style.background='var(--icon-bg)'" onmouseout="this.style.background='transparent'">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
               Sair

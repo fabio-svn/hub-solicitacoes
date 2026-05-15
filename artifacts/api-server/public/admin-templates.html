@@ -102,7 +102,7 @@
     .layer-item:hover { background: #f5f3f0; }
     .layer-item.active { border-left-color: #3b82f6; background: #eff6ff; color: #1d4ed8; }
     .layer-type-badge { font-size: 0.65rem; padding: 1px 5px; border-radius: 4px; background: #e8e2dc; color: #6b5e58; white-space: nowrap; }
-    .canvas-panel { background: #2a2a2a; display: flex; flex-direction: column; overflow: hidden; }
+    .canvas-panel { background: #2a2a2a; display: flex; flex-direction: column; overflow: hidden; border-radius: 12px; }
     .canvas-toolbar {
       background: #1e1e1e; padding: 8px 12px; display: flex; align-items: center; gap: 8px;
       border-bottom: 1px solid #333; flex-shrink: 0; flex-wrap: wrap;
@@ -1152,6 +1152,15 @@
     }
     function zoomIn()  { canvasScale = Math.min(canvasScale + 0.1, 2);   applyCanvasScale(); }
     function zoomOut() { canvasScale = Math.max(canvasScale - 0.1, 0.1); applyCanvasScale(); }
+
+    document.getElementById('canvasScroll').addEventListener('wheel', function(e) {
+      if (!(e.ctrlKey || e.metaKey)) return;
+      e.preventDefault();
+      const delta = -e.deltaY * 0.001;
+      canvasScale = Math.max(0.1, Math.min(2, canvasScale + delta));
+      applyCanvasScale();
+      updateZoomLabel();
+    }, { passive: false });
 
     function renderBgVariantSelect() {
       const sel = document.getElementById('bgVariantSelect');

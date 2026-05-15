@@ -355,7 +355,7 @@
       }
 
       const btn = document.getElementById('btnSubmit');
-      btn.disabled = true; btn.textContent = 'Enviando...';
+      btn.disabled = true; btn.textContent = 'Enviando...'; if(window.formLockUI)window.formLockUI(btn);
 
       const elementos = [...document.querySelectorAll('#elementos input:checked')].map(c => c.value);
 
@@ -411,7 +411,7 @@
         const errEl = document.getElementById('submitError');
         if (errEl) { errEl.style.display = 'block'; errEl.textContent = d.error || 'Erro ao enviar. Tente novamente.'; }
         else { alert(d.error || 'Erro ao enviar. Tente novamente.'); }
-        btn.disabled = false; btn.textContent = 'Enviar'; 
+        if(window.formUnlockUI)window.formUnlockUI(btn); else { btn.disabled = false; btn.textContent = 'Enviar'; } 
       }
     }
 

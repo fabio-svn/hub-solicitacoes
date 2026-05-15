@@ -278,7 +278,7 @@
     async function submitFormFisico() {
       if (!validateStep('step2Fisico')) return;
       const btn = document.getElementById('btnSubmitFisico');
-      btn.disabled = true; btn.textContent = 'Enviando...';
+      btn.disabled = true; btn.textContent = 'Enviando...'; if(window.formLockUI)window.formLockUI(btn);
 
       const dados = {
         nome: Auth.getUserName(),
@@ -311,14 +311,14 @@
       } else {
         const errEl = document.getElementById('submitErrorFisico');
         if (errEl) { errEl.style.display = 'block'; errEl.textContent = d.error || 'Erro ao enviar. Tente novamente.'; }
-        btn.disabled = false; btn.textContent = 'Enviar';
+        if(window.formUnlockUI)window.formUnlockUI(btn); else { btn.disabled = false; btn.textContent = 'Enviar'; }
       }
     }
 
     async function submitFormDigital() {
       if (!validateStep('step2Digital')) return;
       const btn = document.getElementById('btnSubmitDigital');
-      btn.disabled = true; btn.textContent = 'Enviando...';
+      btn.disabled = true; btn.textContent = 'Enviando...'; if(window.formLockUI)window.formLockUI(btn);
 
       const dados = {
         nome: Auth.getUserName(),
@@ -352,7 +352,7 @@
       } else {
         const errEl = document.getElementById('submitErrorDigital');
         if (errEl) { errEl.style.display = 'block'; errEl.textContent = d.error || 'Erro ao enviar. Tente novamente.'; }
-        btn.disabled = false; btn.textContent = 'Enviar';
+        if(window.formUnlockUI)window.formUnlockUI(btn); else { btn.disabled = false; btn.textContent = 'Enviar'; }
       }
     }
 
