@@ -1,5 +1,7 @@
 import { logger } from "../lib/logger";
 import { randomInt } from "crypto";
+import { db, usersTable, userTipoAssignmentsTable } from "@workspace/db";
+import { eq } from "drizzle-orm";
 
 const CLICKUP_API_TOKEN = process.env.CLICKUP_API_TOKEN || "";
 
@@ -1091,17 +1093,28 @@ function proximaQuarta(): Date {
   return d;
 }
 
-const ASSIGNEE_GERAL      = process.env.CLICKUP_ASSIGNEE_GERAL      || "";
-const ASSIGNEE_EVENTOS    = process.env.CLICKUP_ASSIGNEE_EVENTOS    || "";
-const ASSIGNEE_PATROCINIO = process.env.CLICKUP_ASSIGNEE_PATROCINIO || "";
-const ASSIGNEE_BRINDES    = process.env.CLICKUP_ASSIGNEE_BRINDES    || "";
-
 const ASSIGNEE_NOMES: Record<string, string> = {
   "55140303":  "João Sardeto",
   "112032406": "Julia Rodrigues",
   "55127950":  "Camilla Fernandes",
   "99968866":  "Taynara Rodrigues",
 };
+
+async function getAssigneesForTipo(tipo: string): Promise<number[]> {
+  try {
+    const rows = await db
+      .select({ clickup_user_id: usersTable.clickup_user_id })
+      .from(userTipoAssignmentsTable)
+      .innerJoin(usersTable, eq(userTipoAssignmentsTable.user_id, usersTable.id))
+      .where(eq(userTipoAssignmentsTable.tipo, tipo));
+    return rows
+      .map(r => parseInt(r.clickup_user_id ?? ""))
+      .filter(n => !isNaN(n));
+  } catch (err) {
+    logger.error({ err, tipo }, "getAssigneesForTipo: erro ao buscar assignees no DB");
+    return [];
+  }
+}
 
 export async function createClickUpTask(
   solicitacao: SolicitacaoData,
@@ -1193,18 +1206,13 @@ export async function createClickUpTask(
   taskPayload.due_date_time = false;
   logger.info({ tipo, prazo: prazoDate.toISOString() }, "ClickUp: prazo calculado");
 
-  // Responsável por tipo
-  const assigneeId =
-    tipo === "eventos"    ? ASSIGNEE_EVENTOS    :
-    tipo === "patrocinio" ? ASSIGNEE_PATROCINIO :
-    tipo === "brindes"    ? ASSIGNEE_BRINDES    :
-    ASSIGNEE_GERAL;
-  const assigneeIdNum = parseInt(assigneeId);
-  if (!isNaN(assigneeIdNum)) {
-    taskPayload.assignees = [assigneeIdNum];
-    logger.info({ assigneeId, assigneeIdNum, tipo }, "ClickUp: assignee definido");
-  } else if (assigneeId) {
-    logger.warn({ assigneeId, tipo }, "ClickUp: assigneeId inválido (não numérico), pulando");
+  // Responsáveis por tipo (via DB)
+  const assigneeIds = await getAssigneesForTipo(tipo);
+  if (assigneeIds.length > 0) {
+    taskPayload.assignees = assigneeIds;
+    logger.info({ assigneeIds, tipo }, "ClickUp: assignees definidos via DB");
+  } else {
+    logger.warn({ tipo }, "ClickUp: nenhum assignee encontrado no DB para este tipo");
   }
 
   let taskId: string | null = null;
@@ -1248,7 +1256,7 @@ export async function createClickUpTask(
     { clickupType: "short_text", raw: idSolicitacao }
   );
 
-  const responsavel = ASSIGNEE_NOMES[assigneeId] || "";
+  const responsavel = assigneeIds.length > 0 ? (ASSIGNEE_NOMES[String(assigneeIds[0])] || "") : "";
 
   return { taskId, taskName, responsavel };
 }

@@ -1,4 +1,4 @@
-import { pgTable, serial, varchar, text, integer, jsonb, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, serial, varchar, text, integer, jsonb, timestamp, unique } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
@@ -50,6 +50,14 @@ export const arquivosTable = pgTable("arquivos", {
 export const insertArquivoSchema = createInsertSchema(arquivosTable).omit({ id: true, created_at: true });
 export type InsertArquivo = z.infer<typeof insertArquivoSchema>;
 export type Arquivo = typeof arquivosTable.$inferSelect;
+
+export const userTipoAssignmentsTable = pgTable("user_tipo_assignments", {
+  id: serial("id").primaryKey(),
+  user_id: integer("user_id").notNull().references(() => usersTable.id, { onDelete: "cascade" }),
+  tipo: varchar("tipo", { length: 50 }).notNull(),
+}, (t) => [unique().on(t.user_id, t.tipo)]);
+
+export type UserTipoAssignment = typeof userTipoAssignmentsTable.$inferSelect;
 
 export const activityLogTable = pgTable("activity_log", {
   id: serial("id").primaryKey(),
