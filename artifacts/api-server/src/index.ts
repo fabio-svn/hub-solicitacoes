@@ -88,6 +88,20 @@ const DB_STATEMENTS = [
   `CREATE INDEX IF NOT EXISTS "IDX_activity_log_created_at"     ON "activity_log" ("created_at" DESC)`,
   `CREATE INDEX IF NOT EXISTS "IDX_activity_log_solicitacao_id" ON "activity_log" ("solicitacao_id")`,
 
+  // Art templates (templates de artes para solicitações)
+  `CREATE TABLE IF NOT EXISTS "art_templates" (
+    "id"         SERIAL        PRIMARY KEY,
+    "tipo"       VARCHAR(100)  NOT NULL,
+    "config"     JSONB         NOT NULL,
+    "updated_at" TIMESTAMP     NOT NULL DEFAULT NOW(),
+    "updated_by" INTEGER       REFERENCES "users" ("id")
+  )`,
+  // Remove UNIQUE(tipo) que existia na versão original — permite múltiplos templates por tipo
+  `ALTER TABLE "art_templates" DROP CONSTRAINT IF EXISTS "art_templates_tipo_unique"`,
+  `ALTER TABLE "art_templates" ADD COLUMN IF NOT EXISTS "name"       VARCHAR(200) NOT NULL DEFAULT ''`,
+  `ALTER TABLE "art_templates" ADD COLUMN IF NOT EXISTS "is_active"  BOOLEAN      NOT NULL DEFAULT false`,
+  `ALTER TABLE "art_templates" ADD COLUMN IF NOT EXISTS "created_at" TIMESTAMP    NOT NULL DEFAULT NOW()`,
+
   // Art assets (imagens da biblioteca de templates)
   `CREATE TABLE IF NOT EXISTS "art_assets" (
     "id"                    SERIAL        PRIMARY KEY,
