@@ -14,9 +14,9 @@ router.get("/users", requireAuth, requireRole("admin"), async (req, res) => {
   try {
     const users = await db.select().from(usersTable);
     res.json(users);
-  } catch (err) {
-    logger.error({ err }, "Error listing users");
-    res.status(500).json({ error: "Erro ao listar usuários" });
+  } catch (err: any) {
+    req.log.error({ err, body: req.body }, "Erro ao listar usuários");
+    res.status(500).json({ error: err.message || "Erro ao listar usuários", code: err.code, details: err.stack?.split('\n').slice(0, 3).join('\n') });
   }
 });
 
@@ -49,9 +49,9 @@ router.put("/users/:id/role", requireAuth, requireRole("admin"), async (req, res
     await db.update(usersTable).set({ role }).where(eq(usersTable.id, userId));
 
     res.json({ success: true });
-  } catch (err) {
-    logger.error({ err }, "Error updating user role");
-    res.status(500).json({ error: "Erro ao alterar role" });
+  } catch (err: any) {
+    req.log.error({ err, body: req.body }, "Erro ao alterar role");
+    res.status(500).json({ error: err.message || "Erro ao alterar role", code: err.code, details: err.stack?.split('\n').slice(0, 3).join('\n') });
   }
 });
 
@@ -66,15 +66,15 @@ router.post("/impersonate", requireAuth, requireRole("admin", "gestor"), async (
     req.session.user = { email, name: email.split("@")[0], role: "user" };
     req.session.save((err) => {
       if (err) {
-        logger.error({ err }, "Erro ao salvar sessão de impersonar");
-        res.status(500).json({ error: "Erro ao impersonar" });
+        req.log.error({ err }, "Erro ao salvar sessão de impersonar");
+        res.status(500).json({ error: err.message || "Erro ao impersonar", code: (err as any).code });
         return;
       }
       res.json({ success: true, email });
     });
-  } catch (err) {
-    logger.error({ err }, "Erro ao impersonar");
-    res.status(500).json({ error: "Erro ao impersonar" });
+  } catch (err: any) {
+    req.log.error({ err, body: req.body }, "Erro ao impersonar");
+    res.status(500).json({ error: err.message || "Erro ao impersonar", code: err.code, details: err.stack?.split('\n').slice(0, 3).join('\n') });
   }
 });
 
@@ -86,15 +86,15 @@ router.post("/impersonate/stop", requireAuth, async (req, res): Promise<void> =>
     }
     req.session.save((err) => {
       if (err) {
-        logger.error({ err }, "Erro ao salvar sessão ao sair impersonar");
-        res.status(500).json({ error: "Erro ao sair" });
+        req.log.error({ err }, "Erro ao salvar sessão ao sair impersonar");
+        res.status(500).json({ error: err.message || "Erro ao sair", code: (err as any).code });
         return;
       }
       res.json({ success: true });
     });
-  } catch (err) {
-    logger.error({ err }, "Erro ao sair impersonar");
-    res.status(500).json({ error: "Erro ao sair" });
+  } catch (err: any) {
+    req.log.error({ err, body: req.body }, "Erro ao sair impersonar");
+    res.status(500).json({ error: err.message || "Erro ao sair", code: err.code, details: err.stack?.split('\n').slice(0, 3).join('\n') });
   }
 });
 
@@ -113,9 +113,9 @@ router.put("/users/:id/clickup_user_id", requireAuth, requireRole("admin"), asyn
     }
     await db.update(usersTable).set({ clickup_user_id: clickup_user_id || null }).where(eq(usersTable.id, userId));
     res.json({ success: true });
-  } catch (err) {
-    logger.error({ err }, "Error updating clickup_user_id");
-    res.status(500).json({ error: "Erro ao atualizar ClickUp User ID" });
+  } catch (err: any) {
+    req.log.error({ err, body: req.body }, "Erro ao atualizar clickup_user_id");
+    res.status(500).json({ error: err.message || "Erro ao atualizar ClickUp User ID", code: err.code, details: err.stack?.split('\n').slice(0, 3).join('\n') });
   }
 });
 
@@ -152,9 +152,9 @@ router.get("/activity-log", requireAuth, async (req, res): Promise<void> => {
 
     const total = Number(countResult.count);
     res.json({ data: results, total, page, limit, totalPages: Math.ceil(total / limit) });
-  } catch (err) {
-    logger.error({ err }, "Erro ao buscar activity log");
-    res.status(500).json({ error: "Erro ao buscar log" });
+  } catch (err: any) {
+    req.log.error({ err }, "Erro ao buscar activity log");
+    res.status(500).json({ error: err.message || "Erro ao buscar log", code: err.code, details: err.stack?.split('\n').slice(0, 3).join('\n') });
   }
 });
 
@@ -215,9 +215,9 @@ router.get("/art-templates", requireAuth, requireRole("admin"), async (req, res)
     }).from(artTemplatesTable)
       .orderBy(artTemplatesTable.tipo, artTemplatesTable.created_at);
     res.json(rows);
-  } catch (err) {
-    logger.error({ err }, "Erro ao listar art-templates");
-    res.status(500).json({ error: "Erro ao listar templates" });
+  } catch (err: any) {
+    req.log.error({ err }, "Erro ao listar art-templates");
+    res.status(500).json({ error: err.message || "Erro ao listar templates", code: err.code, details: err.stack?.split('\n').slice(0, 3).join('\n') });
   }
 });
 
@@ -234,8 +234,8 @@ router.post("/art-templates/preview", requireAuth, requireRole("admin"), async (
     const pngBuffer = await renderFromTemplate(config, data || {});
     res.set('Content-Type', 'image/png').send(pngBuffer);
   } catch (err: any) {
-    logger.error({ err }, "Erro ao renderizar preview");
-    res.status(500).json({ error: err?.message || "Erro ao renderizar preview" });
+    req.log.error({ err, body: req.body }, "Erro ao renderizar preview");
+    res.status(500).json({ error: err.message || "Erro ao renderizar preview", code: err.code, details: err.stack?.split('\n').slice(0, 3).join('\n') });
   }
 });
 
@@ -247,9 +247,9 @@ router.get("/art-templates/:id", requireAuth, requireRole("admin"), async (req, 
     const [row] = await db.select().from(artTemplatesTable).where(eq(artTemplatesTable.id, id));
     if (!row) { res.status(404).json({ error: "Template não encontrado" }); return; }
     res.json(row);
-  } catch (err) {
-    logger.error({ err }, "Erro ao buscar art-template");
-    res.status(500).json({ error: "Erro ao buscar template" });
+  } catch (err: any) {
+    req.log.error({ err }, "Erro ao buscar art-template");
+    res.status(500).json({ error: err.message || "Erro ao buscar template", code: err.code, details: err.stack?.split('\n').slice(0, 3).join('\n') });
   }
 });
 
@@ -268,9 +268,9 @@ router.post("/art-templates", requireAuth, requireRole("admin"), async (req, res
       .values({ tipo, name, config: effectiveConfig, is_active: false, updated_at: new Date(), updated_by: userRow?.id ?? null })
       .returning();
     res.json(inserted);
-  } catch (err) {
-    logger.error({ err }, "Erro ao criar art-template");
-    res.status(500).json({ error: "Erro ao criar template" });
+  } catch (err: any) {
+    req.log.error({ err, body: req.body }, "Erro ao criar art-template");
+    res.status(500).json({ error: err.message || "Erro ao criar template", code: err.code, details: err.stack?.split('\n').slice(0, 3).join('\n') });
   }
 });
 
@@ -292,9 +292,9 @@ router.put("/art-templates/:id", requireAuth, requireRole("admin"), async (req, 
     const [updated] = await db.update(artTemplatesTable).set(updateData).where(eq(artTemplatesTable.id, id)).returning();
     if (!updated) { res.status(404).json({ error: "Template não encontrado" }); return; }
     res.json({ success: true, template: updated });
-  } catch (err) {
-    logger.error({ err }, "Erro ao atualizar art-template");
-    res.status(500).json({ error: "Erro ao atualizar template" });
+  } catch (err: any) {
+    req.log.error({ err, body: req.body }, "Erro ao atualizar art-template");
+    res.status(500).json({ error: err.message || "Erro ao atualizar template", code: err.code, details: err.stack?.split('\n').slice(0, 3).join('\n') });
   }
 });
 
@@ -311,8 +311,8 @@ router.patch("/art-templates/:id/activate", requireAuth, requireRole("admin"), a
     });
     res.json({ success: true });
   } catch (err: any) {
-    logger.error({ err }, "Erro ao ativar art-template");
-    res.status(err?.status || 500).json({ error: err?.message || "Erro ao ativar template" });
+    req.log.error({ err, body: req.body }, "Erro ao ativar art-template");
+    res.status(err.status || 500).json({ error: err.message || "Erro ao ativar template", code: err.code, details: err.stack?.split('\n').slice(0, 3).join('\n') });
   }
 });
 
@@ -336,13 +336,12 @@ router.delete("/art-templates/:id", requireAuth, requireRole("admin"), async (re
     }
     await db.delete(artTemplatesTable).where(eq(artTemplatesTable.id, id));
     res.json({ success: true });
-  } catch (err) {
-    logger.error({ err }, "Erro ao deletar art-template");
-    res.status(500).json({ error: "Erro ao deletar template" });
+  } catch (err: any) {
+    req.log.error({ err, body: req.body }, "Erro ao deletar art-template");
+    res.status(500).json({ error: err.message || "Erro ao deletar template", code: err.code, details: err.stack?.split('\n').slice(0, 3).join('\n') });
   }
 });
 
-// POST /art-templates/:id/duplicate — clone a template
 // ── Form schemas ─────────────────────────────────────────────────
 router.get("/form-schemas", requireAuth, requireRole("admin"), (_req, res) => {
   res.json(getFormSchemaList());
@@ -354,6 +353,7 @@ router.get("/form-schemas/:tipo", requireAuth, requireRole("admin"), (req, res):
   res.json(schema);
 });
 
+// POST /art-templates/:id/duplicate — clone a template
 router.post("/art-templates/:id/duplicate", requireAuth, requireRole("admin"), async (req, res): Promise<void> => {
   try {
     const user = req.session.user!;
@@ -374,9 +374,9 @@ router.post("/art-templates/:id/duplicate", requireAuth, requireRole("admin"), a
       })
       .returning();
     res.json(inserted);
-  } catch (err) {
-    logger.error({ err }, "Erro ao duplicar art-template");
-    res.status(500).json({ error: "Erro ao duplicar template" });
+  } catch (err: any) {
+    req.log.error({ err, body: req.body }, "Erro ao duplicar art-template");
+    res.status(500).json({ error: err.message || "Erro ao duplicar template", code: err.code, details: err.stack?.split('\n').slice(0, 3).join('\n') });
   }
 });
 
