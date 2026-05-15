@@ -89,8 +89,9 @@
     .editor-layout {
       display: grid;
       grid-template-columns: 220px 1fr 280px;
-      grid-template-rows: 1fr auto;
-      height: calc(100vh - 56px);
+      grid-template-rows: 1fr;
+      flex: 1;
+      min-height: 0;
       gap: 0;
     }
     .panel { background: #fff; border-right: 1px solid #e8e2dc; overflow-y: auto; }
@@ -102,7 +103,7 @@
     .layer-item:hover { background: #f5f3f0; }
     .layer-item.active { border-left-color: #3b82f6; background: #eff6ff; color: #1d4ed8; }
     .layer-type-badge { font-size: 0.65rem; padding: 1px 5px; border-radius: 4px; background: #e8e2dc; color: #6b5e58; white-space: nowrap; }
-    .canvas-panel { background: #2a2a2a; display: flex; flex-direction: column; overflow: hidden; border-radius: 12px; }
+    .canvas-panel { background: #2a2a2a; display: flex; flex-direction: column; overflow: hidden; border-radius: 12px; position: relative; }
     .canvas-toolbar {
       background: #1e1e1e; padding: 8px 12px; display: flex; align-items: center; gap: 8px;
       border-bottom: 1px solid #333; flex-shrink: 0; flex-wrap: wrap;
@@ -169,11 +170,17 @@
     .props-empty { padding: 40px 14px; text-align: center; color: rgba(34,27,25,0.35); font-size: 0.82rem; }
     .btn-delete-layer { width: 100%; padding: 7px; border: 1px solid #fecaca; background: #fff5f5; color: #ef4444; border-radius: 6px; cursor: pointer; font-size: 0.78rem; font-family: 'Nunito Sans', sans-serif; font-weight: 600; transition: background 0.15s; }
     .btn-delete-layer:hover { background: #fef2f2; }
-    .bottom-panel { grid-column: 1 / -1; background: #fff; border-top: 1px solid #e8e2dc; padding: 12px 18px; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; max-height: 120px; overflow-y: auto; }
-    .bottom-label { font-size: 0.7rem; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase; color: rgba(34,27,25,0.4); margin-right: 4px; white-space: nowrap; }
     .test-field { display: flex; flex-direction: column; gap: 2px; }
     .test-field label { font-size: 0.7rem; color: rgba(34,27,25,0.5); }
     .test-field input, .test-field select { padding: 4px 8px; border: 1px solid #e8e2dc; border-radius: 5px; font-size: 0.78rem; font-family: 'Nunito Sans', sans-serif; min-width: 120px; }
+
+    /* ── Test data modal ── */
+    .test-data-modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 2000; display: none; align-items: flex-end; justify-content: center; }
+    .test-data-modal-overlay.open { display: flex; }
+    .test-data-modal { background: #fff; border-radius: 16px 16px 0 0; width: 100%; max-height: 60vh; display: flex; flex-direction: column; box-shadow: 0 -8px 40px rgba(0,0,0,0.2); }
+    .test-data-modal-header { padding: 14px 18px 10px; border-bottom: 1px solid #e8e2dc; display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+    .test-data-modal-title { font-size: 0.9rem; font-weight: 700; flex: 1; }
+    .test-data-modal-body { flex: 1; overflow-y: auto; padding: 14px 18px; display: flex; flex-wrap: wrap; gap: 12px; align-content: flex-start; }
     .add-layer-section { padding: 8px 14px 14px; }
     .add-layer-btn { font-size: 0.75rem; padding: 5px 10px; border: 1px dashed #ccc; background: transparent; border-radius: 5px; cursor: pointer; color: rgba(34,27,25,0.55); font-family: 'Nunito Sans',sans-serif; width: 100%; margin-bottom: 4px; }
     .add-layer-btn:hover { border-color: #9f3f37; color: #9f3f37; background: #fdf5f5; }
@@ -197,8 +204,8 @@
     .editor-back-btn { display: inline-flex; align-items: center; gap: 5px; padding: 5px 12px; border: 1.5px solid #e8e2dc; border-radius: 7px; background: #fff; font-size: 0.8rem; font-weight: 600; cursor: pointer; font-family: 'Nunito Sans', sans-serif; color: rgba(34,27,25,0.7); transition: background 0.15s; }
     .editor-back-btn:hover { background: #f5f3f0; }
     .editor-page-header-title { font-size: 0.82rem; font-weight: 600; color: rgba(34,27,25,0.55); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    #view-editor { display: flex; flex-direction: column; height: 100%; overflow: hidden; }
-    #view-editor .editor-layout { flex: 1; overflow: hidden; }
+    #view-editor { display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+    #view-editor .editor-layout { flex: 1; overflow: hidden; min-height: 0; }
 
     /* ── Zoom floating pill ── */
     .zoom-floating { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.75); backdrop-filter: blur(8px); color: #fff; padding: 5px 8px; border-radius: 24px; display: flex; align-items: center; gap: 4px; box-shadow: 0 4px 12px rgba(0,0,0,0.35); z-index: 20; pointer-events: all; }
@@ -463,24 +470,25 @@
           <div class="toolbar-sep"></div>
           <button id="btnUndo" onclick="undo()" disabled title="Desfazer (Ctrl+Z)" style="padding:5px 10px">↶</button>
           <button id="btnRedo" onclick="redo()" disabled title="Refazer (Ctrl+Shift+Z)" style="padding:5px 10px">↷</button>
+          <button onclick="openTestDataModal()" title="Editar dados de teste para preview">Dados de teste</button>
           <button class="primary" onclick="saveTemplate()" style="margin-left:auto">Salvar</button>
         </div>
         <!-- Variant switches bar -->
         <div class="variant-switches-bar" id="variantSwitchesBar" style="display:none">
           <div id="variantSwitchesInner" style="display:flex;align-items:center;flex-wrap:wrap;gap:10px"></div>
         </div>
-        <div class="canvas-scroll" id="canvasScroll" style="position:relative">
+        <div class="canvas-scroll" id="canvasScroll">
           <div class="no-template" id="noTemplate" style="display:flex;align-items:center;justify-content:center;flex:1;color:rgba(255,255,255,0.3);font-size:0.9rem">Carregando template…</div>
           <div class="canvas-wrap" id="canvasWrap" style="display:none">
             <img class="bg-img" id="bgImg" src="" alt="" draggable="false">
             <img class="canvas-preview-img" id="previewImg" alt="Preview">
           </div>
-          <div class="zoom-floating" id="zoomFloating">
-            <button onclick="zoomOut()" title="Reduzir">−</button>
-            <span class="zoom-val" id="zoomLevel">35%</span>
-            <button onclick="zoomIn()" title="Ampliar">+</button>
-            <button onclick="fitToView()" title="Ajustar à tela" style="font-size:1rem">⊡</button>
-          </div>
+        </div>
+        <div class="zoom-floating" id="zoomFloating">
+          <button onclick="zoomOut()" title="Reduzir">−</button>
+          <span class="zoom-val" id="zoomLevel">35%</span>
+          <button onclick="zoomIn()" title="Ampliar">+</button>
+          <button onclick="fitToView()" title="Ajustar à tela" style="font-size:0.75rem;padding:3px 10px">Ajustar</button>
         </div>
       </div>
 
@@ -501,11 +509,17 @@
         </div>
       </div>
 
-      <!-- BOTTOM: Test Data -->
-      <div class="bottom-panel" id="bottomPanel">
-        <span class="bottom-label">Dados de teste</span>
-        <div id="testDataFields" style="display:flex;flex-wrap:wrap;gap:10px"></div>
+    </div>
+  </div>
+
+  <!-- Modal: Test data -->
+  <div class="test-data-modal-overlay" id="testDataModalOverlay" onclick="if(event.target===this)closeTestDataModal()">
+    <div class="test-data-modal">
+      <div class="test-data-modal-header">
+        <span class="test-data-modal-title">Dados de teste</span>
+        <button onclick="closeTestDataModal()" style="background:none;border:none;cursor:pointer;font-size:1.2rem;color:rgba(34,27,25,0.5);padding:4px 8px">×</button>
       </div>
+      <div class="test-data-modal-body" id="testDataFields"></div>
     </div>
   </div>
 
@@ -967,6 +981,8 @@
     // ── View navigation ──────────────────────────────────────────
     function showView(view) {
       currentView = view;
+      const mainHeader = document.getElementById('mainHeader');
+      if (mainHeader) mainHeader.style.display = view === 'editor' ? 'none' : '';
       document.getElementById('view-landing').style.display = view === 'landing' ? 'flex' : 'none';
       document.getElementById('view-list').style.display    = view === 'list'    ? 'flex' : 'none';
       document.getElementById('view-create').style.display  = view === 'create'  ? 'flex' : 'none';
@@ -986,6 +1002,15 @@
       await loadAllTemplates();
       renderListView();
       showView('list');
+    }
+
+    // ── Test data modal ──────────────────────────────────────────
+    function openTestDataModal() {
+      renderTestDataPanel();
+      document.getElementById('testDataModalOverlay').classList.add('open');
+    }
+    function closeTestDataModal() {
+      document.getElementById('testDataModalOverlay').classList.remove('open');
     }
 
     // ── Unsaved guard ────────────────────────────────────────────
@@ -1302,8 +1327,10 @@
     function fitToView() {
       if (!currentTemplate) return;
       const scrollEl = document.getElementById('canvasScroll');
-      const availW = scrollEl.clientWidth - 48;
-      const availH = scrollEl.clientHeight - 48;
+      const rect = scrollEl.getBoundingClientRect();
+      const availW = (rect.width  || scrollEl.offsetWidth)  - 48;
+      const availH = (rect.height || scrollEl.offsetHeight) - 48;
+      if (availW <= 0 || availH <= 0) return;
       const sW = availW / currentTemplate.canvas.width;
       const sH = availH / currentTemplate.canvas.height;
       canvasScale = Math.min(sW, sH, 1);

@@ -1,4 +1,4 @@
-import express, { type Express } from "express";
+import express, { type Express, type Request, type Response, type NextFunction } from "express";
 import cors from "cors";
 import session from "express-session";
 import pgSession from "connect-pg-simple";
@@ -10,6 +10,7 @@ import router from "./routes";
 import authRouter from "./routes/auth";
 import { logger } from "./lib/logger";
 import { pool } from "@workspace/db";
+import { ApiError } from "./utils/api-error";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -101,6 +102,23 @@ app.use(express.static(publicDir));
 
 app.get("/{*catchAll}", (_req, res) => {
   res.sendFile(path.join(publicDir, "index.html"));
+});
+
+app.use((err: Error, req: Request, res: Response, _next: NextFunction) => {
+  if (err instanceof ApiError) {
+    res.status(err.statusCode).json({
+      error: err.message,
+      code: err.code,
+      ...(err.details !== undefined ? { details: err.details } : {}),
+    });
+    return;
+  }
+  const anyErr = err as any;
+  req.log?.error({ err }, "Unhandled error");
+  res.status(500).json({
+    error: anyErr.message || "Erro interno do servidor",
+    code: anyErr.code,
+  });
 });
 
 export default app;
