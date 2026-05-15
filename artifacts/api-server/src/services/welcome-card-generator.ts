@@ -24,10 +24,10 @@ function getFontBody(): any {
 const LAYOUT = {
   nomeCliente:    { x: 338, y: 188,  w: 764, fontSize: 70, color: '#FFF8F3' },
   fraseInicial:   { x: 296, y: 278,  w: 848, fontSize: 40, color: '#FFF8F3' },
-  mensagem:       { x: 297, y: 528,  w: 847, fontSize: 37, lineHeight: 50, paragraphSpacing: 25, color: '#221B19' },
+  mensagem:       { x: 297, y: 528,  w: 847, fontSize: 37, lineHeight: 45, paragraphSpacing: 20, color: '#221B19' },
   fraseBoasVindas:{ x: 297, y: 1169, w: 847, fontSize: 35, color: '#221B19' },
-  nomeAssinatura: { x: 349, y: 1281, w: 743, fontSize: 40, color: '#FFF8F3' },
-  unidade:        { x: 349, y: 1346, w: 743, fontSize: 40, color: '#FFF8F3' },
+  nomeAssinatura: { x: 349, y: 1281, w: 743, fontSize: 40, color: '#221B19' },
+  unidade:        { x: 349, y: 1346, w: 743, fontSize: 40, color: '#221B19' },
   logo:           { x: 419, y: 1585, w: 603, h: 62 },
 };
 
