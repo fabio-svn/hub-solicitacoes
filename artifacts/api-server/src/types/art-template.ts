@@ -47,6 +47,7 @@ export type TextBlockLayer = LayerBase & {
   paragraph_spacing: number;
   color: string;
   align: 'left' | 'center' | 'right';
+  vertical_align?: 'top' | 'middle' | 'bottom';
 };
 
 export type ImageLayer = LayerBase & {

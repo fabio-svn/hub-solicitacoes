@@ -152,9 +152,25 @@ async function renderTextBlock(
   const font = getFont(layer.font_family);
   const paragraphs = text.split(/\n\n+/);
 
+  // Pre-calculate wrapped lines for vertical alignment
+  const wrappedParagraphs: string[][] = paragraphs.map(p =>
+    wrapTextToLines(font, p, layer.font_size, layer.w)
+  );
+  const totalLineCount = wrappedParagraphs.reduce(
+    (sum, lines) => sum + lines.filter(l => l.trim()).length, 0
+  );
+  const contentHeight = totalLineCount * layer.line_height
+    + Math.max(0, paragraphs.length - 1) * (layer.paragraph_spacing || 0);
+
   let yCursor = layer.y;
-  for (let p = 0; p < paragraphs.length; p++) {
-    const lines = wrapTextToLines(font, paragraphs[p], layer.font_size, layer.w);
+  if (layer.vertical_align === 'middle') {
+    yCursor = layer.y + (layer.h - contentHeight) / 2;
+  } else if (layer.vertical_align === 'bottom') {
+    yCursor = layer.y + layer.h - contentHeight;
+  }
+
+  for (let p = 0; p < wrappedParagraphs.length; p++) {
+    const lines = wrappedParagraphs[p];
     for (const line of lines) {
       if (!line.trim()) continue;
       const { buffer, width } = await renderTextBuffer(font, line, layer.font_size, layer.color);
@@ -165,8 +181,8 @@ async function renderTextBlock(
       });
       yCursor += layer.line_height;
     }
-    if (p < paragraphs.length - 1) {
-      yCursor += layer.paragraph_spacing;
+    if (p < wrappedParagraphs.length - 1) {
+      yCursor += layer.paragraph_spacing || 0;
     }
   }
 }

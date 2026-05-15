@@ -112,6 +112,8 @@
     .canvas-toolbar button.primary { background: #9f3f37; border-color: #9f3f37; }
     .canvas-toolbar button.primary:hover { background: #b44b42; }
     .canvas-toolbar button.active { background: rgba(255,255,255,0.2); }
+    .canvas-toolbar button:disabled { opacity: 0.3; cursor: not-allowed; }
+    .canvas-toolbar button:disabled:hover { background: rgba(255,255,255,0.08); }
     .canvas-toolbar .unsaved-badge { font-size: 0.72rem; color: #c8a96e; display: none; }
     .canvas-toolbar .unsaved-badge.visible { display: block; }
     .toolbar-sep { width: 1px; height: 18px; background: rgba(255,255,255,0.1); flex-shrink: 0; }
@@ -126,6 +128,23 @@
     @keyframes spin { to { transform: rotate(360deg); } }
     .live-toggle { font-size: 0.72rem; color: #aaa; cursor: pointer; padding: 4px 8px; border-radius: 5px; border: 1px solid rgba(255,255,255,0.1); background: transparent; }
     .live-toggle.on { color: #c8a96e; border-color: rgba(200,169,110,0.3); background: rgba(200,169,110,0.1); }
+
+    /* ── Variant switches bar ── */
+    .variant-switches-bar {
+      background: #252525; border-bottom: 1px solid #333; padding: 6px 12px;
+      display: flex; align-items: center; flex-wrap: wrap; gap: 10px; flex-shrink: 0;
+    }
+    .vsw-group { display: flex; align-items: center; gap: 5px; }
+    .vsw-label { font-size: 0.68rem; color: #888; font-weight: 600; text-transform: capitalize; white-space: nowrap; margin-right: 2px; }
+    .vsw-btn {
+      font-size: 0.72rem; padding: 3px 9px; border-radius: 12px;
+      border: 1px solid rgba(255,255,255,0.15); background: rgba(255,255,255,0.06);
+      color: #ccc; cursor: pointer; font-family: 'Nunito Sans', sans-serif;
+      transition: background 0.12s, color 0.12s; white-space: nowrap;
+    }
+    .vsw-btn:hover { background: rgba(255,255,255,0.12); color: #fff; }
+    .vsw-btn.active { background: #9f3f37; border-color: #9f3f37; color: #fff; font-weight: 700; }
+
     .canvas-scroll { flex: 1; overflow: auto; display: flex; align-items: flex-start; justify-content: center; padding: 24px; }
     .canvas-wrap { position: relative; display: inline-block; box-shadow: 0 4px 40px rgba(0,0,0,0.6); flex-shrink: 0; }
     .canvas-wrap img.bg-img { display: block; width: 100%; height: auto; }
@@ -135,8 +154,10 @@
     .layer-box .layer-label { display: none; position: absolute; top: -18px; left: 0; font-size: 9px; background: #3b82f6; color: #fff; padding: 1px 5px; border-radius: 3px 3px 3px 0; white-space: nowrap; line-height: 16px; pointer-events: none; }
     .layer-box:hover .layer-label, .layer-box.selected .layer-label { display: block; }
     .canvas-preview-img { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: fill; z-index: 1; display: none; }
-    .no-template { display: flex; align-items: center; justify-content: center; flex: 1; color: rgba(255,255,255,0.3); font-size: 0.9rem; }
-    .props-panel { border-right: none; border-left: 1px solid #e8e2dc; }
+    .no-template { display: flex; align-items: center; justify-content: flex: 1; color: rgba(255,255,255,0.3); font-size: 0.9rem; }
+
+    /* ── Props panel ── */
+    .props-panel { border-right: none; border-left: 1px solid #e8e2dc; display: flex; flex-direction: column; overflow: hidden; }
     .props-section { padding: 12px 14px; border-bottom: 1px solid #f0ece8; }
     .props-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
     .props-row.single { grid-template-columns: 1fr; }
@@ -166,12 +187,51 @@
     .align-btn:hover { background: #f5f3f0; }
     .align-btn.active { background: #eff6ff; color: #1d4ed8; font-weight: 600; }
 
+    /* ── Panel tabs (Layer / Documento) ── */
+    .panel-tabs-header {
+      display: flex; border-bottom: 1px solid #e8e2dc; background: #faf9f7; flex-shrink: 0;
+    }
+    .panel-tab {
+      flex: 1; padding: 9px 6px; border: none; background: transparent; font-size: 0.76rem;
+      font-weight: 600; color: rgba(34,27,25,0.45); cursor: pointer; font-family: 'Nunito Sans', sans-serif;
+      border-bottom: 2px solid transparent; transition: color 0.15s, border-color 0.15s; margin-bottom: -1px;
+    }
+    .panel-tab:hover { color: rgba(34,27,25,0.7); }
+    .panel-tab.active { color: #9f3f37; border-bottom-color: #9f3f37; }
+    .panel-scroll { flex: 1; overflow-y: auto; }
+
+    /* ── Document panel ── */
+    .preset-btn {
+      font-size: 0.68rem; padding: 3px 7px; border: 1px solid #e8e2dc; border-radius: 5px;
+      background: #fff; cursor: pointer; font-family: 'Nunito Sans', sans-serif;
+      color: rgba(34,27,25,0.55); transition: background 0.12s; white-space: nowrap;
+    }
+    .preset-btn:hover { background: #f5f3f0; border-color: #c8a96e; }
+    .preset-btn.active { background: #eff6ff; border-color: #93c5fd; color: #1d4ed8; font-weight: 600; }
+
+    /* ── Variant field rows ── */
+    .variant-row { display: flex; align-items: center; gap: 6px; margin-bottom: 5px; }
+    .variant-row-label { font-size: 0.73rem; font-weight: 600; color: rgba(34,27,25,0.6); min-width: 110px; flex-shrink: 0; }
+    .variant-row-input { flex: 1; min-width: 0; }
+
     /* ── Inline name edit ── */
     .name-edit-wrap { display: flex; align-items: center; gap: 6px; }
     .name-edit-input { background: transparent; border: none; border-bottom: 1px solid rgba(255,255,255,0.3); color: #ddd; font-size: 0.8rem; font-weight: 600; font-family: 'Nunito Sans',sans-serif; padding: 2px 4px; max-width: 160px; outline: none; }
     .name-edit-input:focus { border-bottom-color: #c8a96e; color: #fff; }
     .name-edit-pencil { font-size: 0.7rem; color: rgba(255,255,255,0.3); cursor: pointer; }
     .name-edit-pencil:hover { color: rgba(255,255,255,0.6); }
+
+    /* ── Toast ── */
+    .toast-container { position: fixed; top: 68px; right: 16px; z-index: 9999; display: flex; flex-direction: column; gap: 8px; pointer-events: none; }
+    .toast {
+      padding: 10px 16px; border-radius: 10px; font-size: 0.82rem; font-weight: 600;
+      font-family: 'Nunito Sans', sans-serif; box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+      pointer-events: auto; opacity: 1; transform: translateX(0);
+      transition: opacity 0.4s ease, transform 0.4s ease; max-width: 320px;
+    }
+    .toast.success { background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; }
+    .toast.error   { background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; }
+    .toast.fade-out { opacity: 0; transform: translateX(20px); }
 
     /* ── Unsaved changes modal ── */
     .modal-overlay { display: none; position: fixed; inset: 0; z-index: 500; background: rgba(34,27,25,0.5); backdrop-filter: blur(4px); align-items: center; justify-content: center; }
@@ -189,6 +249,7 @@
 </head>
 <body class="page-light">
   <header class="header" id="mainHeader"></header>
+  <div class="toast-container" id="toastContainer"></div>
 
   <!-- VIEW: Landing -->
   <div class="full-view" id="view-landing">
@@ -307,22 +368,18 @@
             Voltar
           </button>
           <div class="toolbar-sep"></div>
-          <!-- Template name (inline edit) -->
           <div class="name-edit-wrap">
             <input class="name-edit-input" id="tmplNameInput" value="" onchange="renameTemplate(this.value)" title="Clique para renomear">
             <span class="name-edit-pencil" title="Renomear">✎</span>
           </div>
-          <!-- Active badge -->
           <span id="activeBadge"></span>
           <div class="toolbar-sep"></div>
-          <!-- Zoom -->
           <button onclick="zoomOut()" style="padding:5px 9px;min-width:28px">−</button>
           <span id="zoomLevel" style="font-size:0.78rem;color:#aaa;min-width:44px;text-align:center">100%</span>
           <button onclick="zoomIn()" style="padding:5px 9px;min-width:28px">+</button>
           <button onclick="fitToView()" title="Ajustar à tela">Ajustar</button>
           <div class="toolbar-sep"></div>
           <select class="bg-variant-select" id="bgVariantSelect" style="display:none" onchange="onBgVariantChange(this.value)"></select>
-          <!-- Live preview toggle + spinner -->
           <button class="live-toggle on" id="liveToggleBtn" onclick="toggleLive()" title="Live preview automático">● Live</button>
           <button id="manualPreviewBtn" onclick="doLivePreview()" style="display:none;padding:5px 10px;font-size:0.78rem;border-radius:6px;border:1px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.08);color:#fff;cursor:pointer;font-family:'Nunito Sans',sans-serif">Atualizar preview</button>
           <div class="rendering-indicator" id="renderingIndicator">
@@ -330,10 +387,17 @@
             <span>Renderizando…</span>
           </div>
           <span class="unsaved-badge" id="unsavedBadge">● não salvo</span>
+          <div class="toolbar-sep"></div>
+          <button id="btnUndo" onclick="undo()" disabled title="Desfazer (Ctrl+Z)" style="padding:5px 10px">↶</button>
+          <button id="btnRedo" onclick="redo()" disabled title="Refazer (Ctrl+Shift+Z)" style="padding:5px 10px">↷</button>
           <button class="primary" onclick="saveTemplate()" style="margin-left:auto">Salvar</button>
         </div>
+        <!-- Variant switches bar -->
+        <div class="variant-switches-bar" id="variantSwitchesBar" style="display:none">
+          <div id="variantSwitchesInner" style="display:flex;align-items:center;flex-wrap:wrap;gap:10px"></div>
+        </div>
         <div class="canvas-scroll" id="canvasScroll">
-          <div class="no-template" id="noTemplate">Carregando template…</div>
+          <div class="no-template" id="noTemplate" style="display:flex;align-items:center;justify-content:center;flex:1;color:rgba(255,255,255,0.3);font-size:0.9rem">Carregando template…</div>
           <div class="canvas-wrap" id="canvasWrap" style="display:none">
             <img class="bg-img" id="bgImg" src="" alt="" draggable="false">
             <img class="canvas-preview-img" id="previewImg" alt="Preview">
@@ -341,11 +405,21 @@
         </div>
       </div>
 
-      <!-- RIGHT: Properties -->
+      <!-- RIGHT: Properties (tabbed) -->
       <div class="panel props-panel" id="propsPanel">
-        <div class="panel-title">Propriedades</div>
-        <div class="props-empty" id="propsEmpty">Selecione uma layer no canvas ou na lista</div>
-        <div id="propsContent" style="display:none"></div>
+        <div class="panel-tabs-header">
+          <button id="tabBtnLayer" class="panel-tab active" onclick="switchRightTab('layer')">Layer</button>
+          <button id="tabBtnDoc" class="panel-tab" onclick="switchRightTab('doc')">Documento</button>
+        </div>
+        <!-- Layer tab -->
+        <div id="layerPanelContent" class="panel-scroll">
+          <div class="props-empty" id="propsEmpty">Selecione uma layer no canvas ou na lista</div>
+          <div id="propsContent" style="display:none"></div>
+        </div>
+        <!-- Document tab -->
+        <div id="docPanelContent" style="display:none" class="panel-scroll">
+          <div id="docPanelInner"></div>
+        </div>
       </div>
 
       <!-- BOTTOM: Test Data -->
@@ -372,21 +446,86 @@
   <script src="config.js"></script>
   <script src="auth.js"></script>
   <script>
+    // ── Constants ────────────────────────────────────────────────
     const PLACEHOLDERS_BY_TIPO = {
       'assinatura-email':   ['nome','cargo','telefone','email','marca_label','tem_cfp','marca'],
       'cartao-boas-vindas': ['nome_cliente','nome_assinatura','unidade','contrato_label','contrato_social','is_private_key'],
     };
 
     const TIPO_LABELS = {
-      'cartao-boas-vindas': 'Cartão de Boas-vindas',
-      'assinatura-email':   'Assinatura de E-mail',
+      'cartao-boas-vindas':           'Cartão de Boas-vindas',
+      'assinatura-email':             'Assinatura de E-mail',
+      'cartao-comemorativo':          'Cartão Comemorativo',
+      'cartao-visita-fisico':         'Cartão de Visita — Físico',
+      'cartao-visita-digital':        'Cartão de Visita — Digital',
+      'apresentacao-nova':            'Apresentação — Nova',
+      'apresentacao-atualizar':       'Apresentação — Atualização',
+      'artes-divulgacao':             'Arte de Divulgação',
+      'divulgacao-nps':               'Arte NPS',
+      'convite-fp':                   'Convite Financial Planning',
+      'certificado-eventos':          'Certificado para Eventos',
+      'pagina-assessores-dados':      'Página de Assessores — Dados',
+      'pagina-assessores-atualizacao':'Página de Assessores — Atualização',
     };
 
-    // ── State ───────────────────────────────────────────────────
+    const KNOWN_TIPOS = [
+      { value: 'cartao-boas-vindas',            label: 'Cartão de Boas-vindas' },
+      { value: 'assinatura-email',              label: 'Assinatura de E-mail' },
+      { value: 'cartao-comemorativo',           label: 'Cartão Comemorativo' },
+      { value: 'cartao-visita-fisico',          label: 'Cartão de Visita — Físico' },
+      { value: 'cartao-visita-digital',         label: 'Cartão de Visita — Digital' },
+      { value: 'apresentacao-nova',             label: 'Apresentação — Nova' },
+      { value: 'apresentacao-atualizar',        label: 'Apresentação — Atualização' },
+      { value: 'artes-divulgacao',              label: 'Arte de Divulgação' },
+      { value: 'divulgacao-nps',                label: 'Arte NPS' },
+      { value: 'convite-fp',                    label: 'Convite Financial Planning' },
+      { value: 'certificado-eventos',           label: 'Certificado para Eventos' },
+      { value: 'pagina-assessores-dados',       label: 'Página de Assessores — Dados' },
+      { value: 'pagina-assessores-atualizacao', label: 'Página de Assessores — Atualização' },
+    ];
+
+    const CANVAS_PRESETS = [
+      { label: '1080×1080',  w: 1080, h: 1080 },
+      { label: '1080×1350',  w: 1080, h: 1350 },
+      { label: '1080×1920',  w: 1080, h: 1920 },
+      { label: '1446×1770',  w: 1446, h: 1770 },
+      { label: '4078×988',   w: 4078, h: 988  },
+    ];
+
+    const FIELD_OPTIONS = {
+      'contrato_social': [
+        { value: 'svn-investimentos', label: 'SVN Investimentos' },
+        { value: 'svn-capital',       label: 'SVN Capital' },
+        { value: 'svn-connect',       label: 'SVN Connect' },
+      ],
+      'marca': [
+        { value: 'svn-investimentos',           label: 'SVN Investimentos' },
+        { value: 'svn-capital',                 label: 'SVN Capital' },
+        { value: 'svn-connect',                 label: 'SVN Connect' },
+        { value: 'svn-gestao',                  label: 'SVN Gestão' },
+        { value: 'svn-global',                  label: 'SVN Global' },
+        { value: 'svn-imb',                     label: 'SVN IMB' },
+        { value: 'svn-agro-cambio-commodities', label: 'SVN Agro/Câmbio/Commodities' },
+        { value: 'svn-protecao-patrimonial',    label: 'SVN Proteção Patrimonial' },
+        { value: 'svn-wealth-planning',         label: 'SVN Wealth Planning' },
+      ],
+      'is_private_key': [
+        { value: 'padrao',  label: 'Padrão' },
+        { value: 'private', label: 'Private' },
+      ],
+      'tem_cfp': [
+        { value: 'sim', label: 'Sim' },
+        { value: 'nao', label: 'Não' },
+      ],
+    };
+
+    const MAX_HISTORY = 50;
+
+    // ── State ────────────────────────────────────────────────────
     let currentView = 'landing';
     let allTemplates = [];
-    let currentTemplateMeta = null;   // { id, tipo, name, is_active }
-    let currentTemplate = null;       // config object
+    let currentTemplateMeta = null;
+    let currentTemplate = null;
     let selectedLayerId = null;
     let isDirty = false;
     let bgVariantKey = null;
@@ -395,9 +534,13 @@
     let liveEnabled = true;
     let previewDebounce = null;
     let previewAbortCtrl = null;
-    let pendingNavAction = null;      // fn to call after unsaved modal
+    let pendingNavAction = null;
+    let rightTab = 'layer';
+    let history = [];
+    let historyIndex = -1;
+    let historyDebounce = null;
 
-    // ── Helpers ─────────────────────────────────────────────────
+    // ── Helpers ──────────────────────────────────────────────────
     function esc(str) {
       if (!str) return '';
       const d = document.createElement('div');
@@ -418,7 +561,294 @@
       return d.toLocaleDateString('pt-BR');
     }
 
-    // ── View navigation ─────────────────────────────────────────
+    // ── Toast ────────────────────────────────────────────────────
+    function showToast(message, type = 'success', duration = 3000) {
+      const container = document.getElementById('toastContainer');
+      const toast = document.createElement('div');
+      toast.className = `toast ${type}`;
+      toast.textContent = message;
+      container.appendChild(toast);
+      setTimeout(() => toast.classList.add('fade-out'), duration - 500);
+      setTimeout(() => toast.remove(), duration);
+    }
+
+    // ── History (Undo/Redo) ──────────────────────────────────────
+    function pushHistory() {
+      if (!currentTemplate) return;
+      history = history.slice(0, historyIndex + 1);
+      history.push(JSON.parse(JSON.stringify(currentTemplate)));
+      if (history.length > MAX_HISTORY) history.shift();
+      historyIndex = history.length - 1;
+      updateUndoRedoBtns();
+    }
+    function debouncedPushHistory() {
+      if (historyDebounce) clearTimeout(historyDebounce);
+      historyDebounce = setTimeout(pushHistory, 500);
+    }
+    function undo() {
+      if (historyIndex <= 0) return;
+      historyIndex--;
+      currentTemplate = JSON.parse(JSON.stringify(history[historyIndex]));
+      isDirty = true;
+      document.getElementById('unsavedBadge').classList.add('visible');
+      reRender();
+    }
+    function redo() {
+      if (historyIndex >= history.length - 1) return;
+      historyIndex++;
+      currentTemplate = JSON.parse(JSON.stringify(history[historyIndex]));
+      isDirty = true;
+      document.getElementById('unsavedBadge').classList.add('visible');
+      reRender();
+    }
+    function updateUndoRedoBtns() {
+      const u = document.getElementById('btnUndo');
+      const r = document.getElementById('btnRedo');
+      if (u) u.disabled = historyIndex <= 0;
+      if (r) r.disabled = historyIndex >= history.length - 1;
+    }
+    function reRender() {
+      const wrap = document.getElementById('canvasWrap');
+      if (wrap && currentTemplate) {
+        wrap.style.width = (currentTemplate.canvas.width * canvasScale) + 'px';
+      }
+      renderCanvas();
+      renderLayersList();
+      renderBgVariantSelect();
+      renderVariantSwitches();
+      if (rightTab === 'doc') renderDocumentPanel();
+      else showProps(selectedLayerId);
+      updateUndoRedoBtns();
+      scheduleLivePreview(500);
+    }
+
+    // ── Panel tabs ───────────────────────────────────────────────
+    function switchRightTab(tab) {
+      rightTab = tab;
+      document.getElementById('tabBtnLayer').classList.toggle('active', tab === 'layer');
+      document.getElementById('tabBtnDoc').classList.toggle('active', tab === 'doc');
+      document.getElementById('layerPanelContent').style.display = tab === 'layer' ? '' : 'none';
+      document.getElementById('docPanelContent').style.display = tab === 'doc' ? '' : 'none';
+      if (tab === 'doc') renderDocumentPanel();
+    }
+
+    // ── Document panel ───────────────────────────────────────────
+    function renderDocumentPanel() {
+      const el = document.getElementById('docPanelInner');
+      if (!el || !currentTemplate) return;
+      const tipo = currentTemplateMeta?.tipo || '';
+      const canvas = currentTemplate.canvas || { width: 1080, height: 1080 };
+      const bg = currentTemplate.bg || { type: 'static', url: '' };
+      const isKnownTipo = KNOWN_TIPOS.some(t => t.value === tipo);
+
+      const presetsHtml = CANVAS_PRESETS.map(p => {
+        const active = canvas.width === p.w && canvas.height === p.h;
+        return `<button class="preset-btn${active ? ' active' : ''}" onclick="applyCanvasPreset(${p.w},${p.h})" title="${p.w}×${p.h}">${esc(p.label)}</button>`;
+      }).join('');
+
+      let bgHtml = '';
+      if (bg.type === 'static') {
+        bgHtml = `<input class="props-input" value="${esc(bg.url || '')}" placeholder="URL do fundo…" onchange="updDocBgUrl(this.value)">`;
+      } else {
+        const varSrc = bg.variant_source || '';
+        const knownOpts = FIELD_OPTIONS[varSrc] || null;
+        bgHtml = `
+          <div class="props-label" style="margin-top:6px">Campo variável</div>
+          <select class="props-input" onchange="updDocBgVariantSource(this.value)">
+            <option value="">Selecione…</option>
+            ${Object.keys(FIELD_OPTIONS).map(k => `<option value="${k}"${varSrc===k?' selected':''}>${k}</option>`).join('')}
+            ${varSrc && !FIELD_OPTIONS[varSrc] ? `<option value="${esc(varSrc)}" selected>${esc(varSrc)}</option>` : ''}
+          </select>`;
+        if (varSrc && knownOpts) {
+          bgHtml += `<div style="margin-top:8px">${knownOpts.map(opt => `
+            <div class="variant-row">
+              <span class="variant-row-label">${esc(opt.label)}</span>
+              <input class="props-input variant-row-input" placeholder="URL…"
+                value="${esc((bg.variants || {})[opt.value] || '')}"
+                oninput="updDocBgVariantUrl('${opt.value}',this.value)">
+            </div>`).join('')}</div>`;
+        } else if (varSrc) {
+          bgHtml += `
+            <div class="props-label" style="margin-top:4px">Variantes (key=url)</div>
+            <textarea class="props-input props-textarea" onchange="updDocBgVariantsText(this.value)">${Object.entries(bg.variants || {}).map(([k,v]) => `${k}=${v}`).join('\n')}</textarea>`;
+        }
+      }
+
+      const placeholderHtml = (PLACEHOLDERS_BY_TIPO[tipo] || []).map(p =>
+        `<span class="placeholder-chip" style="cursor:default">{{${p}}}</span>`
+      ).join('') || '<span style="opacity:0.4;font-size:0.75rem">Nenhum configurado</span>';
+
+      el.innerHTML = `
+      <div class="props-section">
+        <div class="props-label">Tipo / Form associado</div>
+        <select class="props-input" id="docTipoSelect" onchange="updDocTipo(this.value)">
+          ${KNOWN_TIPOS.map(t => `<option value="${t.value}"${tipo===t.value?' selected':''}>${esc(t.label)}</option>`).join('')}
+          <option value="_custom"${!isKnownTipo?' selected':''}>+ Personalizado…</option>
+        </select>
+        ${!isKnownTipo ? `<input class="props-input" style="margin-top:6px" id="docTipoCustom" value="${esc(tipo)}" placeholder="tipo-da-arte" onchange="updDocTipoCustom(this.value)">` : ''}
+      </div>
+      <div class="props-section">
+        <div class="props-label">Canvas</div>
+        <div class="props-row">
+          <div><div class="props-label">Largura</div><input class="props-input" type="number" value="${canvas.width}" onchange="updDocCanvas('width',+this.value)"></div>
+          <div><div class="props-label">Altura</div><input class="props-input" type="number" value="${canvas.height}" onchange="updDocCanvas('height',+this.value)"></div>
+        </div>
+        <div class="props-label" style="margin-top:4px">Presets</div>
+        <div style="display:flex;flex-wrap:wrap;gap:4px">${presetsHtml}</div>
+      </div>
+      <div class="props-section">
+        <div class="props-label">Background</div>
+        <div style="display:flex;gap:12px;margin-bottom:8px">
+          <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:0.8rem">
+            <input type="radio" name="docBgType" value="static" ${bg.type==='static'?'checked':''} onchange="updDocBgType('static')" style="accent-color:#9f3f37"> Estático
+          </label>
+          <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:0.8rem">
+            <input type="radio" name="docBgType" value="variant" ${bg.type==='variant'?'checked':''} onchange="updDocBgType('variant')" style="accent-color:#9f3f37"> Variante
+          </label>
+        </div>
+        ${bgHtml}
+      </div>
+      <div class="props-section">
+        <div class="props-label" style="margin-bottom:4px">Placeholders disponíveis</div>
+        <div class="placeholder-chips">${placeholderHtml}</div>
+      </div>`;
+    }
+
+    function updDocTipo(val) {
+      if (!currentTemplateMeta) return;
+      if (val === '_custom') return;
+      const oldTipo = currentTemplateMeta.tipo;
+      if (val !== oldTipo) {
+        const confirmed = confirm(`Mudar o tipo de "${oldTipo}" para "${val}" pode afetar a associação com o form atual. Confirma?`);
+        if (!confirmed) { renderDocumentPanel(); return; }
+        currentTemplateMeta.tipo = val;
+        document.getElementById('panelTmplTipo').textContent = humanizeTipo(val);
+      }
+      renderDocumentPanel();
+    }
+    function updDocTipoCustom(val) {
+      if (!currentTemplateMeta || !val.trim()) return;
+      currentTemplateMeta.tipo = val.trim();
+      document.getElementById('panelTmplTipo').textContent = humanizeTipo(val.trim());
+    }
+    function updDocCanvas(key, value) {
+      if (!currentTemplate) return;
+      currentTemplate.canvas[key] = Math.max(1, value);
+      markDirty();
+      debouncedPushHistory();
+      applyCanvasScale();
+      renderDocumentPanel();
+    }
+    function applyCanvasPreset(w, h) {
+      if (!currentTemplate) return;
+      currentTemplate.canvas.width = w;
+      currentTemplate.canvas.height = h;
+      markDirty();
+      pushHistory();
+      applyCanvasScale();
+      fitToView();
+      renderDocumentPanel();
+    }
+    function updDocBgType(type) {
+      if (!currentTemplate) return;
+      currentTemplate.bg = type === 'static'
+        ? { type: 'static', url: '' }
+        : { type: 'variant', variants: {}, variant_source: '' };
+      markDirty();
+      pushHistory();
+      renderBgVariantSelect();
+      renderVariantSwitches();
+      renderDocumentPanel();
+      scheduleLivePreview(500);
+    }
+    function updDocBgUrl(url) {
+      if (!currentTemplate || currentTemplate.bg.type !== 'static') return;
+      currentTemplate.bg.url = url;
+      markDirty();
+      debouncedPushHistory();
+      updateBgImage();
+      scheduleLivePreview(1000);
+    }
+    function updDocBgVariantSource(source) {
+      if (!currentTemplate || currentTemplate.bg.type !== 'variant') return;
+      currentTemplate.bg.variant_source = source;
+      if (source && FIELD_OPTIONS[source]) {
+        const newVariants = {};
+        for (const opt of FIELD_OPTIONS[source]) {
+          newVariants[opt.value] = (currentTemplate.bg.variants || {})[opt.value] || '';
+        }
+        currentTemplate.bg.variants = newVariants;
+      }
+      markDirty();
+      debouncedPushHistory();
+      renderBgVariantSelect();
+      renderVariantSwitches();
+      renderDocumentPanel();
+      scheduleLivePreview(500);
+    }
+    function updDocBgVariantUrl(key, url) {
+      if (!currentTemplate || currentTemplate.bg.type !== 'variant') return;
+      if (!currentTemplate.bg.variants) currentTemplate.bg.variants = {};
+      currentTemplate.bg.variants[key] = url;
+      markDirty();
+      debouncedPushHistory();
+      scheduleLivePreview(1000);
+    }
+    function updDocBgVariantsText(text) {
+      if (!currentTemplate || currentTemplate.bg.type !== 'variant') return;
+      const variants = {};
+      text.split('\n').forEach(line => {
+        const eq = line.indexOf('='); if (eq < 0) return;
+        variants[line.slice(0,eq).trim()] = line.slice(eq+1).trim();
+      });
+      currentTemplate.bg.variants = variants;
+      markDirty();
+      debouncedPushHistory();
+      scheduleLivePreview(800);
+    }
+
+    // ── Variant switches ─────────────────────────────────────────
+    function renderVariantSwitches() {
+      const bar = document.getElementById('variantSwitchesBar');
+      const inner = document.getElementById('variantSwitchesInner');
+      if (!bar || !inner || !currentTemplate) return;
+
+      const sourcesSet = new Set();
+      if (currentTemplate.bg?.type === 'variant' && currentTemplate.bg.variant_source) {
+        sourcesSet.add(currentTemplate.bg.variant_source);
+      }
+      for (const layer of currentTemplate.layers) {
+        if (layer.type === 'image' && layer.source?.type === 'variant' && layer.source.variant_source) {
+          sourcesSet.add(layer.source.variant_source);
+        }
+      }
+      const sources = [...sourcesSet].filter(s => FIELD_OPTIONS[s]);
+      if (sources.length === 0) { bar.style.display = 'none'; return; }
+
+      bar.style.display = 'block';
+      inner.innerHTML = sources.map(source => {
+        const options = FIELD_OPTIONS[source];
+        if (!testData[source]) testData[source] = options[0]?.value || '';
+        const currentVal = testData[source];
+        return `<div class="vsw-group">
+          <span class="vsw-label">${esc(source.replace(/_/g,' '))}:</span>
+          ${options.map(opt => `<button class="vsw-btn${currentVal===opt.value?' active':''}" onclick="setVariantSwitch('${source}','${opt.value}')">${esc(opt.label)}</button>`).join('')}
+        </div>`;
+      }).join('');
+    }
+    function setVariantSwitch(source, value) {
+      testData[source] = value;
+      if (currentTemplate?.bg?.type === 'variant' && currentTemplate.bg.variant_source === source) {
+        bgVariantKey = value;
+        const sel = document.getElementById('bgVariantSelect');
+        if (sel) sel.value = value;
+        updateBgImage();
+      }
+      renderVariantSwitches();
+      scheduleLivePreview(300);
+    }
+
+    // ── View navigation ──────────────────────────────────────────
     function showView(view) {
       currentView = view;
       document.getElementById('view-landing').style.display = view === 'landing' ? 'flex' : 'none';
@@ -426,7 +856,6 @@
       document.getElementById('view-create').style.display  = view === 'create'  ? 'flex' : 'none';
       document.getElementById('view-editor').style.display  = view === 'editor'  ? 'block' : 'none';
     }
-
     async function goToList() {
       await loadAllTemplates();
       renderListView();
@@ -487,66 +916,53 @@
       for (const [tipo, items] of Object.entries(grouped)) {
         html += `<div class="list-group-title">${esc(humanizeTipo(tipo))}</div>`;
         for (const t of items) {
-          const badge = t.is_active
-            ? `<span class="badge-active">Ativo</span>`
-            : '';
+          const badge = t.is_active ? `<span class="badge-active">Ativo</span>` : '';
           const activateBtn = t.is_active ? '' : `<button class="row-btn primary" onclick="activateTemplateFromList(${t.id})">Ativar</button>`;
           const deleteBtn = `<button class="row-btn danger" onclick="deleteTemplateConfirm(${t.id},'${esc(t.name)}',${t.is_active})">Excluir</button>`;
-          html += `
-            <div class="template-row">
-              <div class="template-row-indicator ${t.is_active ? 'active' : 'inactive'}"></div>
-              <div class="template-row-body">
-                <div class="template-row-name">${esc(t.name)} ${badge}</div>
-                <div class="template-row-meta">Atualizado ${timeAgo(t.updated_at)}</div>
-              </div>
-              <div class="template-row-actions">
-                <button class="row-btn" onclick="openEditor(${t.id})">Editar</button>
-                <button class="row-btn" onclick="duplicateTemplateFromList(${t.id},'${esc(t.name)}')">Duplicar</button>
-                ${activateBtn}
-                ${deleteBtn}
-              </div>
-            </div>`;
+          html += `<div class="template-row">
+            <div class="template-row-indicator ${t.is_active ? 'active' : 'inactive'}"></div>
+            <div class="template-row-body">
+              <div class="template-row-name">${esc(t.name)} ${badge}</div>
+              <div class="template-row-meta">Atualizado ${timeAgo(t.updated_at)}</div>
+            </div>
+            <div class="template-row-actions">
+              <button class="row-btn" onclick="openEditor(${t.id})">Editar</button>
+              <button class="row-btn" onclick="duplicateTemplateFromList(${t.id},'${esc(t.name)}')">Duplicar</button>
+              ${activateBtn}${deleteBtn}
+            </div>
+          </div>`;
         }
       }
       el.innerHTML = html;
     }
 
     async function activateTemplateFromList(id) {
-      const t = allTemplates.find(x => x.id === id);
-      if (!t) return;
+      const t = allTemplates.find(x => x.id === id); if (!t) return;
       const confirmed = confirm(`Trocar para este template como ativo afeta todas as próximas solicitações de "${humanizeTipo(t.tipo)}". Confirma?`);
       if (!confirmed) return;
       const res = await fetch(`/api/admin/art-templates/${id}/activate`, { method: 'PATCH' });
-      if (!res.ok) {
-        const d = await res.json().catch(() => ({}));
-        alert(d.error || 'Erro ao ativar template.');
-        return;
-      }
-      await loadAllTemplates();
-      renderListView();
+      if (!res.ok) { const d = await res.json().catch(()=>({})); alert(d.error || 'Erro ao ativar template.'); return; }
+      await loadAllTemplates(); renderListView();
     }
 
     async function deleteTemplateConfirm(id, name, isActive) {
       if (isActive) { alert('Não é possível deletar o template ativo. Ative outro primeiro.'); return; }
       if (!confirm(`Deletar "${name}"? Esta ação não pode ser desfeita.`)) return;
       const res = await fetch(`/api/admin/art-templates/${id}`, { method: 'DELETE' });
-      const d = await res.json().catch(() => ({}));
+      const d = await res.json().catch(()=>({}));
       if (!res.ok) { alert(d.error || 'Erro ao deletar template.'); return; }
-      await loadAllTemplates();
-      renderListView();
+      await loadAllTemplates(); renderListView();
     }
 
     async function duplicateTemplateFromList(id, sourceName) {
       const newName = prompt('Nome do template duplicado:', `${sourceName} (cópia)`);
       if (newName === null) return;
       const res = await fetch(`/api/admin/art-templates/${id}/duplicate`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name: newName || `${sourceName} (cópia)` }),
       });
-      if (!res.ok) { const d = await res.json().catch(() => ({})); alert(d.error || 'Erro ao duplicar.'); return; }
-      await loadAllTemplates();
-      renderListView();
+      if (!res.ok) { const d = await res.json().catch(()=>({})); alert(d.error || 'Erro ao duplicar.'); return; }
+      await loadAllTemplates(); renderListView();
     }
 
     // ── Create view ──────────────────────────────────────────────
@@ -578,14 +994,11 @@
       const cloneId = parseInt(document.getElementById('createCloneSelect').value) || null;
       const errEl = document.getElementById('createError');
       errEl.style.display = 'none';
-
       if (!tipo) { errEl.textContent = 'Selecione ou informe um tipo.'; errEl.style.display = 'block'; return; }
       if (!name) { errEl.textContent = 'Informe um nome para o template.'; errEl.style.display = 'block'; return; }
       if (startVal === 'clone' && !cloneId) { errEl.textContent = 'Selecione um template para clonar.'; errEl.style.display = 'block'; return; }
-
       const btn = document.getElementById('createBtn');
       btn.disabled = true; btn.textContent = 'Criando…';
-
       try {
         let config = null;
         if (startVal === 'clone' && cloneId) {
@@ -593,8 +1006,7 @@
           config = JSON.parse(JSON.stringify(src.config));
         }
         const res = await fetch('/api/admin/art-templates', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ tipo, name, config }),
         });
         const data = await res.json();
@@ -617,23 +1029,34 @@
       selectedLayerId = null;
       isDirty = false;
       bgVariantKey = null;
+      rightTab = 'layer';
+
+      // Reset history
+      history = [];
+      historyIndex = -1;
 
       document.getElementById('panelTmplName').textContent = row.name;
       document.getElementById('panelTmplTipo').textContent = humanizeTipo(row.tipo);
       document.getElementById('tmplNameInput').value = row.name;
       renderActiveBadge();
       document.getElementById('unsavedBadge').classList.remove('visible');
+      switchRightTab('layer');
 
       await loadSampleData();
       renderBgVariantSelect();
       renderCanvas();
       renderLayersList();
       showProps(null);
+      renderVariantSwitches();
       document.getElementById('noTemplate').style.display = 'none';
       document.getElementById('canvasWrap').style.display = 'inline-block';
       showView('editor');
       fitToView();
       doLivePreview();
+
+      // Push initial state to history
+      pushHistory();
+      updateUndoRedoBtns();
     }
 
     function renderActiveBadge() {
@@ -662,8 +1085,7 @@
       currentTemplateMeta.name = newName.trim();
       document.getElementById('panelTmplName').textContent = newName.trim();
       const res = await fetch(`/api/admin/art-templates/${currentTemplateMeta.id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        method: 'PUT', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name: newName.trim() }),
       });
       if (!res.ok) { const d = await res.json().catch(()=>({})); alert(d.error || 'Erro ao renomear.'); }
@@ -675,6 +1097,20 @@
       if (!tipo) return;
       const res = await fetch(`/api/admin/art-templates/sample-data/${tipo}`);
       testData = await res.json();
+
+      // Seed variant fields into testData from FIELD_OPTIONS defaults
+      if (currentTemplate) {
+        if (currentTemplate.bg?.type === 'variant' && currentTemplate.bg.variant_source) {
+          const src = currentTemplate.bg.variant_source;
+          if (!testData[src] && FIELD_OPTIONS[src]) testData[src] = FIELD_OPTIONS[src][0]?.value || '';
+        }
+        for (const layer of currentTemplate.layers) {
+          if (layer.type === 'image' && layer.source?.type === 'variant' && layer.source.variant_source) {
+            const src = layer.source.variant_source;
+            if (!testData[src] && FIELD_OPTIONS[src]) testData[src] = FIELD_OPTIONS[src][0]?.value || '';
+          }
+        }
+      }
       renderTestDataPanel();
     }
 
@@ -793,6 +1229,7 @@
               layer.x = Math.round(parseFloat(el.style.left) / SCALE);
               layer.y = Math.round(parseFloat(el.style.top)  / SCALE);
               markDirty();
+              pushHistory();
               if (el.dataset.id === selectedLayerId) showProps(selectedLayerId);
               scheduleLivePreview(700);
             }
@@ -822,6 +1259,7 @@
               layer.w = Math.round(event.rect.width / SCALE);
               if (layer.type !== 'text-line') layer.h = Math.round(event.rect.height / SCALE);
               markDirty();
+              pushHistory();
               if (event.target.dataset.id === selectedLayerId) showProps(selectedLayerId);
               scheduleLivePreview(700);
             }
@@ -849,6 +1287,7 @@
       selectedLayerId = id;
       document.querySelectorAll('.layer-box').forEach(el => el.classList.toggle('selected', el.dataset.id === id));
       document.querySelectorAll('.layer-item').forEach(el => el.classList.toggle('active', el.id === `litem-${id}`));
+      if (rightTab !== 'layer') switchRightTab('layer');
       showProps(id);
     }
     function getLayer(id) {
@@ -860,10 +1299,11 @@
       const base = { id, name: 'Nova layer', x: 100, y: 100 };
       let layer;
       if (type === 'text-line') layer = { ...base, type, font_family: 'Nunito Sans Light', font_size: 48, color: '#ffffff', align: 'left', content: 'Texto', w: 400 };
-      else if (type === 'text-block') layer = { ...base, type, font_family: 'Nunito Sans Light', font_size: 32, color: '#ffffff', align: 'left', content: 'Bloco de texto', w: 400, h: 200, line_height: 1.4, paragraph_spacing: 0 };
+      else if (type === 'text-block') layer = { ...base, type, font_family: 'Nunito Sans Light', font_size: 32, color: '#ffffff', align: 'left', vertical_align: 'top', content: 'Bloco de texto', w: 400, h: 200, line_height: 1.4, paragraph_spacing: 0 };
       else layer = { ...base, type, w: 200, h: 200, source: { type: 'static', url: '' }, blend_mode: 'normal', resize_mode: 'contain' };
       currentTemplate.layers.push(layer);
       markDirty();
+      pushHistory();
       renderCanvas();
       renderLayersList();
       selectLayer(id);
@@ -874,6 +1314,7 @@
       currentTemplate.layers = currentTemplate.layers.filter(l => l.id !== id);
       if (selectedLayerId === id) selectedLayerId = null;
       markDirty();
+      pushHistory();
       renderCanvas();
       renderLayersList();
       showProps(null);
@@ -915,6 +1356,10 @@
         </div>`;
 
       if (layer.type === 'text-line' || layer.type === 'text-block') {
+        const va = layer.vertical_align || 'top';
+        const valignBtns = layer.type === 'text-block'
+          ? ['top','middle','bottom'].map(a => `<button class="align-btn${va===a?' active':''}" onclick="updLayer('${id}','vertical_align','${a}');renderVAlignBtns('${id}')" title="${a}">${a==='top'?'↑':a==='middle'?'↕':'↓'}</button>`).join('')
+          : '';
         html += `
         <div class="props-section">
           <div class="props-label">Fonte</div>
@@ -923,9 +1368,11 @@
             <div><div class="props-label">Tamanho</div><input class="props-input" type="number" value="${layer.font_size}" onchange="updLayerN('${id}','font_size',this.value)"></div>
             <div><div class="props-label">Cor</div><input class="props-input" type="color" value="${layer.color||'#ffffff'}" onchange="updLayer('${id}','color',this.value)"></div>
           </div>
-          <div class="props-label">Alinhamento</div>
+          <div class="props-label">Alinhamento horiz.</div>
           <div class="align-btns" id="alignBtns-${id}">${alignBtns}</div>
           ${layer.type==='text-block'?`
+          <div class="props-label" style="margin-top:8px">Alinhamento vert.</div>
+          <div class="align-btns" id="valignBtns-${id}">${valignBtns}</div>
           <div class="props-row" style="margin-top:8px">
             <div><div class="props-label">Line height</div><input class="props-input" type="number" value="${layer.line_height||0}" onchange="updLayerN('${id}','line_height',this.value)"></div>
             <div><div class="props-label">Parágrafo</div><input class="props-input" type="number" value="${layer.paragraph_spacing||0}" onchange="updLayerN('${id}','paragraph_spacing',this.value)"></div>
@@ -944,6 +1391,34 @@
 
       if (layer.type === 'image') {
         const srcType = layer.source?.type || 'static';
+        const varSrc = layer.source?.variant_source || '';
+        const knownOpts = FIELD_OPTIONS[varSrc] || null;
+
+        let variantHtml = '';
+        if (srcType === 'variant') {
+          variantHtml = `
+          <div class="props-label" style="margin-top:6px">Campo variável</div>
+          <select class="props-input" onchange="updImageVariantSource('${id}',this.value)">
+            <option value="">Selecione…</option>
+            ${Object.keys(FIELD_OPTIONS).map(k => `<option value="${k}"${varSrc===k?' selected':''}>${k}</option>`).join('')}
+            ${varSrc && !FIELD_OPTIONS[varSrc] ? `<option value="${esc(varSrc)}" selected>${esc(varSrc)} (custom)</option>` : ''}
+          </select>`;
+
+          if (varSrc && knownOpts) {
+            variantHtml += `<div style="margin-top:8px">${knownOpts.map(opt => `
+              <div class="variant-row">
+                <span class="variant-row-label">${esc(opt.label)}</span>
+                <input class="props-input variant-row-input" placeholder="URL…"
+                  value="${esc((layer.source.variants || {})[opt.value] || '')}"
+                  oninput="updImageVariantUrl('${id}','${opt.value}',this.value)">
+              </div>`).join('')}</div>`;
+          } else {
+            variantHtml += `
+            <div class="props-label" style="margin-top:4px">Variantes (key=url)</div>
+            <textarea class="props-input props-textarea" onchange="updImageVariants('${id}',this.value)">${Object.entries(layer.source.variants||{}).map(([k,v])=>`${k}=${v}`).join('\n')}</textarea>`;
+          }
+        }
+
         html += `
         <div class="props-section">
           <div class="props-label">Fonte da imagem</div>
@@ -954,12 +1429,7 @@
           ${srcType==='static'?`
           <div class="props-label" style="margin-top:6px">URL</div>
           <input class="props-input" value="${esc(layer.source.url||'')}" onchange="updLayer('${id}','source',{type:'static',url:this.value})">
-          `:`
-          <div class="props-label" style="margin-top:6px">variant_source</div>
-          <input class="props-input" value="${esc(layer.source.variant_source||'')}" onchange="updImageVariantSource('${id}',this.value)">
-          <div class="props-label" style="margin-top:4px">Variantes (key=url)</div>
-          <textarea class="props-input props-textarea" onchange="updImageVariants('${id}',this.value)">${Object.entries(layer.source.variants||{}).map(([k,v])=>`${k}=${v}`).join('\n')}</textarea>
-          `}
+          `:variantHtml}
           <div class="props-row" style="margin-top:8px">
             <div><div class="props-label">Blend</div>
               <select class="props-input" onchange="updLayer('${id}','blend_mode',this.value)">
@@ -978,10 +1448,17 @@
       html += `<div class="props-section"><button class="btn-delete-layer" onclick="deleteLayer('${id}')">Deletar layer</button></div>`;
       content.innerHTML = html;
     }
+
     function renderAlignBtns(id) {
       const layer = getLayer(id); if (!layer) return;
       document.querySelectorAll(`#alignBtns-${id} .align-btn`).forEach(btn => {
         btn.classList.toggle('active', btn.getAttribute('title') === layer.align);
+      });
+    }
+    function renderVAlignBtns(id) {
+      const layer = getLayer(id); if (!layer) return;
+      document.querySelectorAll(`#valignBtns-${id} .align-btn`).forEach(btn => {
+        btn.classList.toggle('active', btn.getAttribute('title') === (layer.vertical_align || 'top'));
       });
     }
 
@@ -993,19 +1470,44 @@
         if (selectedLayerId === oldId) selectedLayerId = value;
       } else { layer[key] = value; }
       markDirty();
+      debouncedPushHistory();
       renderCanvas();
       renderLayersList();
       scheduleLivePreview(800);
     }
     function updLayerN(id, key, value) { updLayer(id, key, parseFloat(value) || 0); }
+
     function updImageSourceType(id, type) {
       const layer = getLayer(id); if (!layer) return;
       layer.source = type === 'static' ? { type: 'static', url: '' } : { type: 'variant', variants: {}, variant_source: '' };
-      markDirty(); showProps(id);
+      markDirty();
+      pushHistory();
+      showProps(id);
+      renderVariantSwitches();
     }
     function updImageVariantSource(id, val) {
       const layer = getLayer(id); if (!layer) return;
-      layer.source.variant_source = val; markDirty();
+      layer.source.variant_source = val;
+      if (val && FIELD_OPTIONS[val]) {
+        const newVariants = {};
+        for (const opt of FIELD_OPTIONS[val]) {
+          newVariants[opt.value] = (layer.source.variants || {})[opt.value] || '';
+        }
+        layer.source.variants = newVariants;
+        if (!testData[val]) testData[val] = FIELD_OPTIONS[val][0]?.value || '';
+      }
+      markDirty();
+      debouncedPushHistory();
+      showProps(id);
+      renderVariantSwitches();
+    }
+    function updImageVariantUrl(id, key, url) {
+      const layer = getLayer(id); if (!layer) return;
+      if (!layer.source.variants) layer.source.variants = {};
+      layer.source.variants[key] = url;
+      markDirty();
+      debouncedPushHistory();
+      scheduleLivePreview(1200);
     }
     function updImageVariants(id, text) {
       const layer = getLayer(id); if (!layer) return;
@@ -1014,18 +1516,24 @@
         const eq = line.indexOf('='); if (eq < 0) return;
         variants[line.slice(0,eq).trim()] = line.slice(eq+1).trim();
       });
-      layer.source.variants = variants; markDirty();
+      layer.source.variants = variants;
+      markDirty();
+      debouncedPushHistory();
     }
     function insertPlaceholder(id, placeholder) {
       const layer = getLayer(id); if (!layer) return;
       layer.content = (layer.content || '') + `{{${placeholder}}}`;
-      markDirty(); showProps(id); scheduleLivePreview(1200);
+      markDirty();
+      debouncedPushHistory();
+      showProps(id);
+      scheduleLivePreview(1200);
     }
 
     // ── Dirty state ──────────────────────────────────────────────
     function markDirty() {
       isDirty = true;
       document.getElementById('unsavedBadge').classList.add('visible');
+      updateUndoRedoBtns();
     }
 
     // ── Live preview ─────────────────────────────────────────────
@@ -1038,13 +1546,11 @@
       if (manualBtn) manualBtn.style.display = liveEnabled ? 'none' : '';
       if (liveEnabled) scheduleLivePreview(0);
     }
-
     function scheduleLivePreview(delay = 700) {
       if (!liveEnabled) return;
       if (previewDebounce) clearTimeout(previewDebounce);
       previewDebounce = setTimeout(() => doLivePreview(), delay);
     }
-
     async function doLivePreview() {
       if (!currentTemplate) return;
       if (previewAbortCtrl) previewAbortCtrl.abort();
@@ -1071,7 +1577,6 @@
         showRenderingIndicator(false);
       }
     }
-
     function showRenderingIndicator(visible) {
       document.getElementById('renderingIndicator').classList.toggle('visible', visible);
     }
@@ -1086,13 +1591,36 @@
       });
       if (!res.ok) {
         const d = await res.json().catch(() => ({}));
-        alert(d.error || 'Erro ao salvar.');
+        showToast(`Erro ao salvar: ${d.error || 'erro desconhecido'}`, 'error', 5000);
         return;
       }
       isDirty = false;
       document.getElementById('unsavedBadge').classList.remove('visible');
+      showToast('✓ Template salvo', 'success');
       await loadAllTemplates();
     }
+
+    // ── Keyboard shortcuts ───────────────────────────────────────
+    document.addEventListener('keydown', (e) => {
+      const tag = document.activeElement?.tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+      if (currentView !== 'editor') return;
+      if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) {
+        e.preventDefault(); undo();
+      }
+      if (((e.ctrlKey || e.metaKey) && e.key === 'z' && e.shiftKey) ||
+          ((e.ctrlKey || e.metaKey) && e.key === 'y')) {
+        e.preventDefault(); redo();
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+        e.preventDefault(); saveTemplate();
+      }
+    });
+
+    // ── Beforeunload guard ───────────────────────────────────────
+    window.addEventListener('beforeunload', (e) => {
+      if (isDirty) { e.preventDefault(); e.returnValue = ''; }
+    });
 
     init();
   </script>
