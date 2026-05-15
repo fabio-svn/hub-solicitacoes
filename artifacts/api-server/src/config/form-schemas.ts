@@ -1,0 +1,215 @@
+export type FormFieldSchema = {
+  name: string;
+  label: string;
+  type: 'text' | 'email' | 'tel' | 'select' | 'radio' | 'textarea' | 'file';
+  options?: { value: string; label: string }[];
+  required?: boolean;
+};
+
+export type FormSchema = {
+  tipo: string;
+  label: string;
+  description?: string;
+  fields: FormFieldSchema[];
+  computed?: { name: string; label: string; derived_from?: string }[];
+};
+
+const CONTRATOS_OPTS = [
+  { value: 'svn-investimentos', label: 'SVN Investimentos' },
+  { value: 'svn-capital',       label: 'SVN Capital' },
+  { value: 'svn-connect',       label: 'SVN Connect' },
+];
+
+const MARCAS_OPTS = [
+  { value: 'svn-investimentos',           label: 'SVN Investimentos' },
+  { value: 'svn-capital',                 label: 'SVN Capital' },
+  { value: 'svn-connect',                 label: 'SVN Connect' },
+  { value: 'svn-gestao',                  label: 'SVN Gestão' },
+  { value: 'svn-global',                  label: 'SVN Global' },
+  { value: 'svn-imb',                     label: 'SVN Investment & Merchant Banking' },
+  { value: 'svn-agro-cambio-commodities', label: 'SVN Agro, Câmbio & Commodities' },
+  { value: 'svn-protecao-patrimonial',    label: 'SVN Proteção Patrimonial' },
+  { value: 'svn-wealth-planning',         label: 'SVN Wealth Planning' },
+];
+
+const CARGOS_OPTS = [
+  { value: 'assessor',        label: 'Assessor de Investimentos' },
+  { value: 'assessora',       label: 'Assessora de Investimentos' },
+  { value: 'socio-assessor',  label: 'Sócio e Assessor de Investimentos' },
+  { value: 'socia-assessora', label: 'Sócia e Assessora de Investimentos' },
+];
+
+export const FORM_SCHEMAS: Record<string, FormSchema> = {
+  'cartao-boas-vindas': {
+    tipo: 'cartao-boas-vindas',
+    label: 'Cartão de Boas-vindas',
+    fields: [
+      { name: 'telefone',        label: 'Telefone',              type: 'tel',    required: true },
+      { name: 'nome_cliente',    label: 'Nome do cliente',        type: 'text',   required: true },
+      { name: 'nome_assinatura', label: 'Nome para assinatura',   type: 'text',   required: true },
+      { name: 'unidade',         label: 'Unidade',                type: 'text',   required: true },
+      {
+        name: 'contrato_social', label: 'Contrato Social', type: 'select', required: true,
+        options: CONTRATOS_OPTS,
+      },
+      {
+        name: 'is_private_key', label: 'Cliente Private?', type: 'radio', required: true,
+        options: [
+          { value: 'padrao',  label: 'Padrão' },
+          { value: 'private', label: 'Private' },
+        ],
+      },
+    ],
+    computed: [
+      { name: 'contrato_label', label: 'Contrato (label)', derived_from: 'contrato_social' },
+    ],
+  },
+
+  'cartao-visita-fisico': {
+    tipo: 'cartao-visita-fisico',
+    label: 'Cartão de Visita — Físico',
+    fields: [
+      { name: 'nome',            label: 'Nome completo',   type: 'text',   required: true },
+      { name: 'whatsapp',        label: 'WhatsApp',         type: 'tel',    required: true },
+      { name: 'email',           label: 'E-mail corporativo', type: 'email', required: true },
+      { name: 'unidade',         label: 'Unidade',          type: 'text',   required: true },
+      {
+        name: 'contrato_social', label: 'Contrato Social', type: 'select', required: true,
+        options: CONTRATOS_OPTS,
+      },
+    ],
+    computed: [
+      { name: 'contrato_label', label: 'Contrato (label)', derived_from: 'contrato_social' },
+    ],
+  },
+
+  'cartao-visita-digital': {
+    tipo: 'cartao-visita-digital',
+    label: 'Cartão de Visita — Digital',
+    fields: [
+      { name: 'nome',            label: 'Nome completo',    type: 'text',   required: true },
+      { name: 'telefone',        label: 'Telefone',          type: 'tel',    required: true },
+      { name: 'email',           label: 'E-mail corporativo', type: 'email', required: true },
+      {
+        name: 'contrato_social', label: 'Contrato Social', type: 'select', required: true,
+        options: CONTRATOS_OPTS,
+      },
+      { name: 'foto_perfil', label: 'Foto de perfil', type: 'file' },
+    ],
+    computed: [
+      { name: 'contrato_label', label: 'Contrato (label)', derived_from: 'contrato_social' },
+    ],
+  },
+
+  'divulgacao-nps': {
+    tipo: 'divulgacao-nps',
+    label: 'Arte NPS',
+    fields: [
+      { name: 'telefone',        label: 'Telefone',            type: 'tel',      required: true },
+      { name: 'nome_assinatura', label: 'Nome para assinatura', type: 'text',    required: true },
+      {
+        name: 'cargo', label: 'Cargo', type: 'select', required: true,
+        options: CARGOS_OPTS,
+      },
+      { name: 'agradecimento',   label: 'Mensagem de agradecimento', type: 'textarea', required: true },
+      {
+        name: 'modelo_arte', label: 'Modelo da arte', type: 'select', required: true,
+        options: [
+          { value: 'com-foto',  label: 'Com foto' },
+          { value: 'sem-foto',  label: 'Sem foto' },
+        ],
+      },
+      { name: 'foto_perfil', label: 'Foto de perfil', type: 'file' },
+    ],
+  },
+
+  'convite-fp': {
+    tipo: 'convite-fp',
+    label: 'Convite Financial Planning',
+    fields: [
+      { name: 'telefone',         label: 'Telefone',            type: 'tel',    required: true },
+      { name: 'codigo_assessor',  label: 'Código do assessor',  type: 'text',   required: true },
+      { name: 'nome_assinatura',  label: 'Nome para assinatura', type: 'text',  required: true },
+      {
+        name: 'cargo', label: 'Cargo', type: 'select', required: true,
+        options: CARGOS_OPTS,
+      },
+      {
+        name: 'contrato_social', label: 'Contrato Social', type: 'select', required: true,
+        options: CONTRATOS_OPTS,
+      },
+    ],
+    computed: [
+      { name: 'contrato_label', label: 'Contrato (label)', derived_from: 'contrato_social' },
+    ],
+  },
+
+  'certificado-eventos': {
+    tipo: 'certificado-eventos',
+    label: 'Certificado para Eventos',
+    fields: [
+      { name: 'telefone',       label: 'Telefone',          type: 'tel',   required: true },
+      { name: 'nome_completo',  label: 'Nome completo',      type: 'text',  required: true },
+      { name: 'email',          label: 'E-mail',             type: 'email', required: true },
+      { name: 'nome_evento',    label: 'Nome do evento',     type: 'text',  required: true },
+      { name: 'id_evento',      label: 'ID do evento',       type: 'text',  required: true },
+      { name: 'carga_horaria',  label: 'Carga horária',      type: 'text',  required: true },
+    ],
+  },
+
+  'cartao-comemorativo': {
+    tipo: 'cartao-comemorativo',
+    label: 'Cartão Comemorativo',
+    fields: [
+      { name: 'telefone',           label: 'Telefone',           type: 'tel',      required: true },
+      { name: 'nome_aniversariante', label: 'Nome do aniversariante', type: 'text', required: true },
+      {
+        name: 'modelo_cartao', label: 'Modelo do cartão', type: 'select', required: true,
+        options: [
+          { value: 'dourado',   label: 'Dourado' },
+          { value: 'vermelho',  label: 'Vermelho' },
+        ],
+      },
+      { name: 'mensagem',           label: 'Mensagem',           type: 'textarea' },
+      { name: 'assinatura',         label: 'Assinatura',         type: 'textarea' },
+      { name: 'email_destinatario', label: 'E-mail do destinatário', type: 'email', required: true },
+    ],
+  },
+
+  'assinatura-email': {
+    tipo: 'assinatura-email',
+    label: 'Assinatura de E-mail',
+    fields: [
+      { name: 'nome',              label: 'Nome completo',    type: 'text',  required: true },
+      { name: 'telefone',          label: 'Telefone',          type: 'tel',   required: true },
+      { name: 'email',             label: 'E-mail corporativo', type: 'email', required: true },
+      {
+        name: 'marca', label: 'Marca / empresa', type: 'select', required: true,
+        options: MARCAS_OPTS,
+      },
+      { name: 'cargo',             label: 'Cargo',             type: 'text',  required: true },
+      {
+        name: 'tem_cfp', label: 'Tem CFP?', type: 'radio', required: true,
+        options: [
+          { value: 'sim', label: 'Sim' },
+          { value: 'nao', label: 'Não' },
+        ],
+      },
+    ],
+    computed: [
+      { name: 'marca_label', label: 'Marca (label)', derived_from: 'marca' },
+    ],
+  },
+};
+
+export function getFormSchemaList() {
+  return Object.values(FORM_SCHEMAS).map(s => ({
+    tipo: s.tipo,
+    label: s.label,
+    description: s.description,
+    placeholders: [
+      ...s.fields.map(f => f.name),
+      ...(s.computed || []).map(c => c.name),
+    ],
+  }));
+}

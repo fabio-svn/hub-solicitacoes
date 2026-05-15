@@ -87,6 +87,24 @@ const DB_STATEMENTS = [
   )`,
   `CREATE INDEX IF NOT EXISTS "IDX_activity_log_created_at"     ON "activity_log" ("created_at" DESC)`,
   `CREATE INDEX IF NOT EXISTS "IDX_activity_log_solicitacao_id" ON "activity_log" ("solicitacao_id")`,
+
+  // Art assets (imagens da biblioteca de templates)
+  `CREATE TABLE IF NOT EXISTS "art_assets" (
+    "id"                    SERIAL        PRIMARY KEY,
+    "filename"              VARCHAR(300)  NOT NULL,
+    "storage_key"           VARCHAR(500)  NOT NULL UNIQUE,
+    "url"                   VARCHAR(500)  NOT NULL,
+    "mime_type"             VARCHAR(100)  NOT NULL,
+    "size_bytes"            BIGINT        NOT NULL,
+    "width"                 INTEGER,
+    "height"                INTEGER,
+    "uploaded_by"           INTEGER       REFERENCES "users" ("id"),
+    "uploaded_at"           TIMESTAMP     NOT NULL DEFAULT NOW(),
+    "used_in_template_ids"  INTEGER[]     NOT NULL DEFAULT '{}',
+    "last_used_at"          TIMESTAMP
+  )`,
+  `CREATE INDEX IF NOT EXISTS "IDX_art_assets_uploaded_at"    ON "art_assets" ("uploaded_at" DESC)`,
+  `CREATE INDEX IF NOT EXISTS "IDX_art_assets_used_template"  ON "art_assets" USING GIN ("used_in_template_ids")`,
 ];
 
 async function start() {

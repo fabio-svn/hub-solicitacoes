@@ -6,6 +6,7 @@ import { requireAuth, requireRole } from "../middleware/auth.middleware";
 import { logger } from "../lib/logger";
 import { renderFromTemplate } from "../services/template-renderer";
 import { AVAILABLE_FONTS } from "../types/art-template";
+import { FORM_SCHEMAS, getFormSchemaList } from "../config/form-schemas";
 
 const router = Router();
 
@@ -342,6 +343,17 @@ router.delete("/art-templates/:id", requireAuth, requireRole("admin"), async (re
 });
 
 // POST /art-templates/:id/duplicate — clone a template
+// ── Form schemas ─────────────────────────────────────────────────
+router.get("/form-schemas", requireAuth, requireRole("admin"), (_req, res) => {
+  res.json(getFormSchemaList());
+});
+
+router.get("/form-schemas/:tipo", requireAuth, requireRole("admin"), (req, res): void => {
+  const schema = FORM_SCHEMAS[req.params.tipo];
+  if (!schema) { res.status(404).json({ error: "Schema não encontrado para este tipo" }); return; }
+  res.json(schema);
+});
+
 router.post("/art-templates/:id/duplicate", requireAuth, requireRole("admin"), async (req, res): Promise<void> => {
   try {
     const user = req.session.user!;

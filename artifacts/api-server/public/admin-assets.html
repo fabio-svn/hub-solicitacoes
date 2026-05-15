@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Assets de Templates — SVN</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+  <script src="/auth.js"></script>
+  <style>
+    :root {
+      --carbon-black: #221b19;
+      --ruby-red: #9f3f37;
+      --border-light: #e8e2dc;
+      --card-white: #fff;
+      --icon-bg: #f5f3f0;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Nunito Sans', sans-serif; background: #f5f3f0; color: var(--carbon-black); min-height: 100vh; }
+    .header { background: var(--card-white); border-bottom: 1px solid var(--border-light); padding: 0 24px; height: 58px; }
+    .header-inner { display: flex; align-items: center; justify-content: space-between; height: 100%; max-width: 1400px; margin: 0 auto; }
+    .header-logo img { display: block; }
+    .avatar { width: 34px; height: 34px; border-radius: 50%; background: var(--ruby-red); color: #fff; font-size: 0.78rem; font-weight: 700; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+    .user-name { font-size: 0.82rem; font-weight: 600; }
+    .notif-badge { position: absolute; top: -3px; right: -3px; background: #dc2626; color: #fff; border-radius: 50%; width: 16px; height: 16px; font-size: 0.6rem; display: flex; align-items: center; justify-content: center; font-weight: 700; }
+    .notif-badge-menu { background: #dc2626; color: #fff; border-radius: 4px; padding: 1px 5px; font-size: 0.65rem; font-weight: 700; margin-left: auto; }
+    .page-wrap { max-width: 1300px; margin: 0 auto; padding: 28px 24px; }
+    .page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; gap: 16px; flex-wrap: wrap; }
+    .page-title { font-size: 1.3rem; font-weight: 900; }
+    .page-title span { font-size: 0.82rem; font-weight: 600; color: rgba(34,27,25,0.4); margin-left: 8px; }
+    .toolbar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .btn { display: inline-flex; align-items: center; gap: 6px; padding: 7px 16px; border-radius: 8px; border: 1.5px solid var(--border-light); background: var(--card-white); font-family: 'Nunito Sans', sans-serif; font-size: 0.82rem; font-weight: 600; cursor: pointer; color: var(--carbon-black); text-decoration: none; transition: background 0.15s; }
+    .btn:hover { background: #f5f3f0; }
+    .btn.primary { background: var(--ruby-red); color: #fff; border-color: var(--ruby-red); }
+    .btn.primary:hover { background: #7a2e28; border-color: #7a2e28; }
+    .search-input { padding: 7px 12px; border: 1.5px solid var(--border-light); border-radius: 8px; font-family: 'Nunito Sans', sans-serif; font-size: 0.82rem; min-width: 220px; }
+    .search-input:focus { outline: none; border-color: var(--ruby-red); }
+    .filter-select { padding: 7px 10px; border: 1.5px solid var(--border-light); border-radius: 8px; font-family: 'Nunito Sans', sans-serif; font-size: 0.82rem; background: var(--card-white); cursor: pointer; }
+    .stats-bar { display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
+    .stat-pill { background: var(--card-white); border: 1px solid var(--border-light); border-radius: 8px; padding: 8px 14px; font-size: 0.78rem; font-weight: 600; color: rgba(34,27,25,0.6); }
+    .stat-pill strong { color: var(--carbon-black); }
+    .asset-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 14px; }
+    .asset-card { background: var(--card-white); border: 1.5px solid var(--border-light); border-radius: 12px; overflow: hidden; transition: box-shadow 0.15s, border-color 0.15s; }
+    .asset-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.08); border-color: #d0cac4; }
+    .asset-card.selected { border-color: var(--ruby-red); box-shadow: 0 0 0 2px rgba(159,63,55,0.2); }
+    .asset-thumb { width: 100%; aspect-ratio: 1; background: #f0ece8; display: flex; align-items: center; justify-content: center; overflow: hidden; cursor: pointer; position: relative; }
+    .asset-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .asset-thumb .no-thumb { font-size: 2rem; opacity: 0.2; }
+    .asset-thumb .overlay { position: absolute; inset: 0; background: rgba(159,63,55,0.7); display: none; align-items: center; justify-content: center; gap: 8px; }
+    .asset-card:hover .overlay { display: flex; }
+    .overlay-btn { background: #fff; border: none; border-radius: 6px; padding: 6px 12px; font-size: 0.75rem; font-weight: 700; cursor: pointer; font-family: 'Nunito Sans', sans-serif; transition: background 0.12s; }
+    .overlay-btn:hover { background: #f5f3f0; }
+    .asset-info { padding: 10px 12px; }
+    .asset-name { font-size: 0.78rem; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-bottom: 3px; }
+    .asset-meta { font-size: 0.68rem; color: rgba(34,27,25,0.4); display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+    .usage-badge { display: inline-block; font-size: 0.65rem; padding: 2px 6px; border-radius: 4px; font-weight: 700; }
+    .usage-badge.used { background: #dcfce7; color: #166534; }
+    .usage-badge.orphan { background: #fef9c3; color: #854d0e; }
+    .asset-actions { padding: 0 10px 10px; display: flex; gap: 6px; }
+    .asset-act-btn { flex: 1; padding: 5px; font-size: 0.72rem; border-radius: 6px; border: 1px solid var(--border-light); background: var(--icon-bg); cursor: pointer; font-family: 'Nunito Sans', sans-serif; text-align: center; transition: background 0.12s; }
+    .asset-act-btn:hover { background: #e8e2dc; }
+    .asset-act-btn.danger { color: #dc2626; border-color: #fecaca; }
+    .asset-act-btn.danger:hover { background: #fef2f2; }
+    .empty-state { text-align: center; padding: 80px 24px; color: rgba(34,27,25,0.35); }
+    .empty-state svg { margin: 0 auto 16px; opacity: 0.2; display: block; }
+    .empty-state h3 { font-size: 1rem; font-weight: 700; margin-bottom: 6px; color: rgba(34,27,25,0.5); }
+    .empty-state p { font-size: 0.82rem; }
+    .loading-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 14px; }
+    .skeleton { background: linear-gradient(90deg, #f0ece8 25%, #e8e2dc 50%, #f0ece8 75%); background-size: 200% 100%; animation: shimmer 1.4s infinite; border-radius: 12px; aspect-ratio: 1; }
+    @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+    .toast { position: fixed; bottom: 24px; right: 24px; background: #221b19; color: #fff; padding: 10px 18px; border-radius: 10px; font-size: 0.82rem; font-weight: 600; z-index: 9000; transition: opacity 0.3s; box-shadow: 0 4px 16px rgba(0,0,0,0.2); }
+    .toast.success { background: #166534; }
+    .toast.error { background: #dc2626; }
+    .pagination { display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 28px; padding-bottom: 40px; }
+    .page-btn { padding: 6px 12px; border: 1.5px solid var(--border-light); border-radius: 7px; background: var(--card-white); font-family: 'Nunito Sans', sans-serif; font-size: 0.78rem; cursor: pointer; transition: background 0.12s; }
+    .page-btn:hover { background: #f5f3f0; }
+    .page-btn.active { background: var(--ruby-red); color: #fff; border-color: var(--ruby-red); }
+    .page-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+    /* Upload drop zone */
+    .upload-zone { border: 2px dashed var(--border-light); border-radius: 12px; padding: 28px; text-align: center; margin-bottom: 20px; cursor: pointer; transition: border-color 0.15s, background 0.15s; }
+    .upload-zone:hover, .upload-zone.drag-over { border-color: var(--ruby-red); background: rgba(159,63,55,0.04); }
+    .upload-zone p { font-size: 0.82rem; color: rgba(34,27,25,0.5); margin-top: 6px; }
+    .upload-zone strong { color: var(--ruby-red); }
+    .upload-progress { height: 4px; background: #f0ece8; border-radius: 2px; margin-top: 10px; overflow: hidden; display: none; }
+    .upload-progress-bar { height: 100%; background: var(--ruby-red); transition: width 0.3s; }
+  </style>
+</head>
+<body>
+
+<div class="header" id="headerContainer"></div>
+
+<div class="page-wrap">
+  <div class="page-header">
+    <div>
+      <div class="page-title">Assets de Templates <span id="totalCount"></span></div>
+    </div>
+    <div class="toolbar">
+      <input type="text" class="search-input" id="searchInput" placeholder="Buscar por nome…" oninput="debounceSearch()">
+      <select class="filter-select" id="filterTipo" onchange="loadAssets()">
+        <option value="">Todos os formulários</option>
+      </select>
+      <select class="filter-select" id="filterUsage" onchange="loadAssets()">
+        <option value="">Todos os status</option>
+        <option value="orphan">Não utilizados</option>
+        <option value="used">Em uso</option>
+      </select>
+      <label class="btn primary" style="cursor:pointer">
+        ⬆ Upload
+        <input type="file" id="uploadInput" accept="image/png,image/jpeg,image/webp,image/svg+xml" multiple style="display:none" onchange="uploadFiles(this.files)">
+      </label>
+    </div>
+  </div>
+
+  <!-- Drop zone -->
+  <div class="upload-zone" id="uploadZone" onclick="document.getElementById('uploadInput').click()">
+    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="rgba(34,27,25,0.25)" stroke-width="1.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+    <p>Arraste imagens aqui ou <strong>clique para selecionar</strong></p>
+    <p style="font-size:0.72rem;margin-top:3px">PNG, JPG, WebP, SVG — máx. 5MB por arquivo</p>
+    <div class="upload-progress" id="uploadProgress">
+      <div class="upload-progress-bar" id="uploadProgressBar" style="width:0%"></div>
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats-bar" id="statsBar"></div>
+
+  <!-- Grid -->
+  <div id="assetsContainer">
+    <div class="loading-grid" id="loadingSkeleton">
+      ${Array(8).fill('<div class="skeleton"></div>').join('')}
+    </div>
+  </div>
+
+  <!-- Pagination -->
+  <div class="pagination" id="pagination"></div>
+</div>
+
+<script>
+  const URL_LOGO_PRETA = '/logo-preta.png';
+  const URL_LOGO_BRANCA = '/logo-branca.png';
+
+  let allAssets = [];
+  let filteredAssets = [];
+  let currentPage = 1;
+  const PAGE_SIZE = 40;
+  let searchTimer = null;
+
+  function esc(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+  function showToast(msg, type = 'info', duration = 3000) {
+    const t = document.createElement('div');
+    t.className = `toast ${type}`;
+    t.textContent = msg;
+    document.body.appendChild(t);
+    setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.remove(), 300); }, duration);
+  }
+
+  async function init() {
+    await Auth.init();
+    if (!Auth.isAuthenticated()) { window.location.href = '/auth/login?redirect=' + encodeURIComponent(window.location.pathname); return; }
+    if (!Auth.isAdmin()) { window.location.href = '/solicitacoes.html'; return; }
+    Auth.renderHeader(document.getElementById('headerContainer'));
+    await loadFormSchemas();
+    await loadAssets();
+    setupDropZone();
+  }
+
+  async function loadFormSchemas() {
+    try {
+      const r = await fetch('/api/admin/form-schemas');
+      if (!r.ok) return;
+      const schemas = await r.json();
+      const sel = document.getElementById('filterTipo');
+      for (const s of schemas) {
+        const opt = document.createElement('option');
+        opt.value = s.tipo; opt.textContent = s.label;
+        sel.appendChild(opt);
+      }
+    } catch {}
+  }
+
+  async function loadAssets() {
+    document.getElementById('loadingSkeleton').style.display = 'grid';
+    document.getElementById('assetsContainer').innerHTML = '<div class="loading-grid" id="loadingSkeleton">' + Array(8).fill('<div class="skeleton"></div>').join('') + '</div>';
+    try {
+      const usage = document.getElementById('filterUsage').value;
+      const tipo = document.getElementById('filterTipo').value;
+      let url = '/api/admin/assets?';
+      if (usage === 'orphan') url += 'orphan=1&';
+      if (tipo) url += 'tipo=' + encodeURIComponent(tipo) + '&';
+      const r = await fetch(url);
+      if (!r.ok) { document.getElementById('assetsContainer').innerHTML = '<div class="empty-state"><h3>Erro ao carregar assets.</h3></div>'; return; }
+      allAssets = await r.json();
+      applySearch();
+    } catch(e) { document.getElementById('assetsContainer').innerHTML = '<div class="empty-state"><h3>Erro de rede.</h3></div>'; }
+  }
+
+  function debounceSearch() {
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(applySearch, 250);
+  }
+
+  function applySearch() {
+    const q = document.getElementById('searchInput').value.trim().toLowerCase();
+    filteredAssets = q ? allAssets.filter(a => a.filename.toLowerCase().includes(q)) : [...allAssets];
+    currentPage = 1;
+    renderStats();
+    renderGrid();
+    renderPagination();
+  }
+
+  function renderStats() {
+    const total = filteredAssets.length;
+    const orphan = filteredAssets.filter(a => !a.usage_count || a.usage_count === 0).length;
+    const used = total - orphan;
+    document.getElementById('totalCount').textContent = `(${total})`;
+    document.getElementById('statsBar').innerHTML = `
+      <div class="stat-pill"><strong>${total}</strong> assets</div>
+      <div class="stat-pill"><strong>${used}</strong> em uso</div>
+      <div class="stat-pill"><strong>${orphan}</strong> não utilizados</div>
+    `;
+  }
+
+  function renderGrid() {
+    const container = document.getElementById('assetsContainer');
+    const start = (currentPage - 1) * PAGE_SIZE;
+    const page = filteredAssets.slice(start, start + PAGE_SIZE);
+    if (!page.length) {
+      container.innerHTML = `<div class="empty-state">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+        <h3>Nenhum asset encontrado</h3>
+        <p>Faça upload de imagens usando o botão acima ou arrastando para a área de upload.</p>
+      </div>`;
+      return;
+    }
+    container.innerHTML = `<div class="asset-grid">${page.map(a => {
+      const isOrphan = !a.usage_count || a.usage_count === 0;
+      const sizeKb = Math.round(a.size_bytes / 1024);
+      const sizeStr = sizeKb >= 1024 ? (sizeKb/1024).toFixed(1) + 'MB' : sizeKb + 'KB';
+      return `<div class="asset-card" id="ac-${a.id}">
+        <div class="asset-thumb" onclick="previewAsset('${esc(a.url)}')">
+          <img src="${esc(a.url)}" alt="${esc(a.filename)}" loading="lazy" onerror="this.parentElement.innerHTML='<div class=\\"no-thumb\\">🖼</div>'">
+          <div class="overlay">
+            <button class="overlay-btn" onclick="event.stopPropagation();copyUrl('${esc(a.url)}')">Copiar URL</button>
+            <button class="overlay-btn" onclick="event.stopPropagation();deleteAsset(${a.id})">Deletar</button>
+          </div>
+        </div>
+        <div class="asset-info">
+          <div class="asset-name" title="${esc(a.filename)}">${esc(a.filename)}</div>
+          <div class="asset-meta">
+            <span>${sizeStr}</span>
+            ${a.width ? `<span>${a.width}×${a.height}</span>` : ''}
+            <span class="usage-badge ${isOrphan ? 'orphan' : 'used'}">${isOrphan ? 'não usado' : `${a.usage_count} uso${a.usage_count>1?'s':''}`}</span>
+          </div>
+        </div>
+        <div class="asset-actions">
+          <button class="asset-act-btn" onclick="copyUrl('${esc(a.url)}')">Copiar URL</button>
+          <button class="asset-act-btn danger" onclick="deleteAsset(${a.id})">Deletar</button>
+        </div>
+      </div>`;
+    }).join('')}</div>`;
+  }
+
+  function renderPagination() {
+    const total = filteredAssets.length;
+    const pages = Math.ceil(total / PAGE_SIZE);
+    if (pages <= 1) { document.getElementById('pagination').innerHTML = ''; return; }
+    let html = `<button class="page-btn" onclick="goPage(${currentPage-1})" ${currentPage===1?'disabled':''}>← Ant.</button>`;
+    for (let i = 1; i <= pages; i++) {
+      if (i === 1 || i === pages || Math.abs(i - currentPage) <= 2) {
+        html += `<button class="page-btn ${i===currentPage?'active':''}" onclick="goPage(${i})">${i}</button>`;
+      } else if (Math.abs(i - currentPage) === 3) {
+        html += `<span style="padding:6px 4px;font-size:0.78rem;opacity:0.4">…</span>`;
+      }
+    }
+    html += `<button class="page-btn" onclick="goPage(${currentPage+1})" ${currentPage===pages?'disabled':''}>Próx. →</button>`;
+    document.getElementById('pagination').innerHTML = html;
+  }
+
+  function goPage(p) {
+    currentPage = p;
+    renderGrid();
+    renderPagination();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function copyUrl(url) {
+    navigator.clipboard.writeText(url).then(() => showToast('URL copiada!', 'success')).catch(() => {
+      const inp = document.createElement('input');
+      inp.value = url; document.body.appendChild(inp); inp.select(); document.execCommand('copy'); inp.remove();
+      showToast('URL copiada!', 'success');
+    });
+  }
+
+  function previewAsset(url) {
+    const overlay = document.createElement('div');
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:9000;display:flex;align-items:center;justify-content:center;cursor:zoom-out';
+    overlay.onclick = () => overlay.remove();
+    const img = document.createElement('img');
+    img.src = url;
+    img.style.cssText = 'max-width:90vw;max-height:90vh;border-radius:8px;box-shadow:0 20px 60px rgba(0,0,0,0.5)';
+    overlay.appendChild(img);
+    document.body.appendChild(overlay);
+  }
+
+  async function deleteAsset(id) {
+    if (!confirm('Deletar este asset permanentemente? Esta ação não pode ser desfeita.')) return;
+    const r = await fetch(`/api/admin/assets/${id}`, { method: 'DELETE' });
+    if (!r.ok) { const d = await r.json().catch(()=>({})); showToast(d.error || 'Erro ao deletar.', 'error'); return; }
+    showToast('Asset deletado.', 'success');
+    allAssets = allAssets.filter(a => a.id !== id);
+    applySearch();
+  }
+
+  async function uploadFiles(files) {
+    if (!files || !files.length) return;
+    const arr = Array.from(files);
+    const progressWrap = document.getElementById('uploadProgress');
+    const progressBar = document.getElementById('uploadProgressBar');
+    progressWrap.style.display = 'block';
+    let done = 0;
+    const results = [];
+    for (const file of arr) {
+      if (file.size > 5 * 1024 * 1024) { showToast(`${file.name}: arquivo muito grande (máx. 5MB)`, 'error'); done++; progressBar.style.width = (done/arr.length*100)+'%'; continue; }
+      const fd = new FormData(); fd.append('file', file);
+      try {
+        const r = await fetch('/api/admin/assets', { method: 'POST', body: fd });
+        const d = await r.json();
+        if (!r.ok) { showToast(`${file.name}: ${d.error || 'Erro'}`, 'error'); } else { results.push(d); }
+      } catch { showToast(`${file.name}: erro de rede.`, 'error'); }
+      done++;
+      progressBar.style.width = (done/arr.length*100)+'%';
+    }
+    setTimeout(() => { progressWrap.style.display = 'none'; progressBar.style.width = '0%'; }, 600);
+    if (results.length) {
+      showToast(`✓ ${results.length} arquivo${results.length>1?'s':''} enviado${results.length>1?'s':''}`, 'success');
+      await loadAssets();
+    }
+    document.getElementById('uploadInput').value = '';
+  }
+
+  function setupDropZone() {
+    const zone = document.getElementById('uploadZone');
+    zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag-over'); });
+    zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
+    zone.addEventListener('drop', e => {
+      e.preventDefault();
+      zone.classList.remove('drag-over');
+      uploadFiles(e.dataTransfer.files);
+    });
+  }
+
+  init();
+</script>
+</body>
+</html>

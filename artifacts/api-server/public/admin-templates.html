@@ -187,6 +187,58 @@
     .align-btn:hover { background: #f5f3f0; }
     .align-btn.active { background: #eff6ff; color: #1d4ed8; font-weight: 600; }
 
+    /* ── Layer type icons ── */
+    .layer-icon-t  { font-size: 0.78rem; font-weight: 900; color: #9f3f37; min-width: 18px; text-align: center; flex-shrink: 0; letter-spacing: -0.04em; }
+    .layer-icon-img { flex-shrink: 0; color: #9f3f37; }
+    .add-layer-btn { display: flex; align-items: center; gap: 6px; }
+
+    /* ── Editor page header ── */
+    .editor-page-header { display: flex; align-items: center; gap: 12px; padding: 9px 14px; background: #fff; border-bottom: 1px solid #e8e2dc; flex-shrink: 0; }
+    .editor-back-btn { display: inline-flex; align-items: center; gap: 5px; padding: 5px 12px; border: 1.5px solid #e8e2dc; border-radius: 7px; background: #fff; font-size: 0.8rem; font-weight: 600; cursor: pointer; font-family: 'Nunito Sans', sans-serif; color: rgba(34,27,25,0.7); transition: background 0.15s; }
+    .editor-back-btn:hover { background: #f5f3f0; }
+    .editor-page-header-title { font-size: 0.82rem; font-weight: 600; color: rgba(34,27,25,0.55); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    #view-editor { display: flex; flex-direction: column; height: 100%; overflow: hidden; }
+    #view-editor .editor-layout { flex: 1; overflow: hidden; }
+
+    /* ── Zoom floating pill ── */
+    .zoom-floating { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.75); backdrop-filter: blur(8px); color: #fff; padding: 5px 8px; border-radius: 24px; display: flex; align-items: center; gap: 4px; box-shadow: 0 4px 12px rgba(0,0,0,0.35); z-index: 20; pointer-events: all; }
+    .zoom-floating button { background: transparent; border: none; color: #fff; cursor: pointer; padding: 3px 8px; border-radius: 4px; font-size: 0.88rem; line-height: 1; font-family: 'Nunito Sans', sans-serif; }
+    .zoom-floating button:hover { background: rgba(255,255,255,0.18); }
+    .zoom-floating .zoom-val { font-size: 0.75rem; min-width: 38px; text-align: center; color: rgba(255,255,255,0.85); }
+
+    /* ── Center snap indicator ── */
+    .center-indicator { position: fixed; bottom: 76px; left: 50%; transform: translateX(-50%); background: #e040fb; color: #fff; padding: 5px 14px; border-radius: 6px; font-size: 0.75rem; font-weight: 700; opacity: 0; transition: opacity 0.15s; pointer-events: none; z-index: 9999; letter-spacing: 0.02em; }
+    .center-indicator.visible { opacity: 1; }
+
+    /* ── URL input + upload/library buttons ── */
+    .url-row { display: flex; gap: 4px; align-items: center; }
+    .url-row .props-input { flex: 1; min-width: 0; }
+    .url-action-btn { padding: 5px 7px; border-radius: 6px; border: 1px solid #e8e2dc; background: #f5f3f0; font-size: 0.7rem; cursor: pointer; color: rgba(34,27,25,0.65); white-space: nowrap; flex-shrink: 0; font-family: 'Nunito Sans', sans-serif; transition: background 0.15s; }
+    .url-action-btn:hover { background: #ede8e4; }
+    .url-upload-status { font-size: 0.7rem; color: #9f3f37; margin-top: 2px; }
+
+    /* ── Asset library modal ── */
+    .asset-modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 3000; display: flex; align-items: center; justify-content: center; }
+    .asset-modal { background: #fff; border-radius: 16px; width: 880px; max-width: 96vw; max-height: 86vh; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,0.25); }
+    .asset-modal-header { padding: 14px 18px; border-bottom: 1px solid #e8e2dc; display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+    .asset-modal-title { font-size: 0.95rem; font-weight: 700; flex: 1; }
+    .asset-modal-filters { display: flex; gap: 8px; align-items: center; }
+    .asset-modal-filters label { font-size: 0.78rem; color: rgba(34,27,25,0.6); display: flex; align-items: center; gap: 4px; cursor: pointer; }
+    .asset-modal-body { flex: 1; overflow-y: auto; padding: 14px; }
+    .asset-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; }
+    .asset-card { border: 1.5px solid #e8e2dc; border-radius: 10px; overflow: hidden; transition: border-color 0.15s, box-shadow 0.15s; cursor: pointer; }
+    .asset-card:hover { border-color: #9f3f37; box-shadow: 0 2px 8px rgba(159,63,55,0.15); }
+    .asset-thumb-wrap { width: 100%; aspect-ratio: 1; background: #f5f3f0; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+    .asset-thumb-wrap img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .asset-card-info { padding: 5px 7px 0; }
+    .asset-card-name { font-size: 0.68rem; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #221b19; }
+    .asset-card-meta { font-size: 0.63rem; color: rgba(34,27,25,0.4); margin-top: 1px; }
+    .asset-card-actions { padding: 4px 6px 6px; display: flex; gap: 4px; }
+    .asset-action-btn { flex: 1; padding: 3px 5px; font-size: 0.67rem; border-radius: 5px; border: 1px solid #e8e2dc; background: #f5f3f0; cursor: pointer; font-family: 'Nunito Sans', sans-serif; text-align: center; }
+    .asset-action-btn.primary { background: #9f3f37; color: #fff; border-color: #9f3f37; }
+    .asset-modal-footer { padding: 10px 16px; border-top: 1px solid #e8e2dc; display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+    .asset-empty { padding: 40px; text-align: center; color: rgba(34,27,25,0.35); font-size: 0.85rem; }
+
     /* ── Panel tabs (Layer / Documento) ── */
     .panel-tabs-header {
       display: flex; border-bottom: 1px solid #e8e2dc; background: #faf9f7; flex-shrink: 0;
@@ -298,13 +350,11 @@
       </div>
       <div class="create-form">
         <div class="form-group">
-          <label class="form-label">Tipo de arte <span style="color:#9f3f37">*</span></label>
-          <select class="form-input" id="createTipo">
-            <option value="cartao-boas-vindas">Cartão de Boas-vindas</option>
-            <option value="assinatura-email">Assinatura de E-mail</option>
-            <option value="_custom">+ Tipo personalizado…</option>
+          <label class="form-label">Para qual formulário esta arte será usada? <span style="color:#9f3f37">*</span></label>
+          <select class="form-input" id="createTipo" onchange="onCreateTipoChange()">
+            <option value="">Selecione um formulário…</option>
           </select>
-          <input class="form-input" id="createTipoCustom" placeholder="Ex: cartao-comemorativo" style="display:none;margin-top:8px">
+          <div id="createTipoLoading" style="display:none;font-size:0.75rem;color:rgba(34,27,25,0.4);margin-top:4px">Carregando formulários…</div>
         </div>
         <div class="form-group">
           <label class="form-label">Nome do template <span style="color:#9f3f37">*</span></label>
@@ -320,11 +370,11 @@
                 <div class="radio-label-sub">Canvas 1080×1080 vazio, sem layers</div>
               </div>
             </label>
-            <label class="radio-option">
-              <input type="radio" name="createStart" value="clone" onchange="onCreateStartChange()">
+            <label class="radio-option" id="cloneOptionLabel">
+              <input type="radio" name="createStart" value="clone" id="cloneRadio" onchange="onCreateStartChange()">
               <div>
                 <div class="radio-label">Clonar de um existente</div>
-                <div class="radio-label-sub">Copia config e layers de outro template</div>
+                <div class="radio-label-sub" id="cloneRadioSub">Copia config e layers de outro template do mesmo form</div>
               </div>
             </label>
           </div>
@@ -335,14 +385,47 @@
         <div id="createError" style="display:none;color:#dc2626;font-size:0.82rem;margin-bottom:12px;padding:8px 12px;background:#fef2f2;border-radius:8px;border:1px solid #fecaca"></div>
         <div class="form-actions">
           <button class="btn" onclick="showView('landing')">Cancelar</button>
-          <button class="btn primary" id="createBtn" onclick="submitCreate()">Criar e abrir</button>
+          <button class="btn primary" id="createBtn" onclick="submitCreate()" disabled>Criar e abrir</button>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CENTER SNAP INDICATOR -->
+  <div class="center-indicator" id="centerIndicator"></div>
+
+  <!-- ASSET LIBRARY MODAL -->
+  <div class="asset-modal-overlay" id="assetLibraryOverlay" style="display:none" onclick="if(event.target===this)closeAssetLibrary()">
+    <div class="asset-modal">
+      <div class="asset-modal-header">
+        <span class="asset-modal-title">Biblioteca de Assets</span>
+        <div class="asset-modal-filters">
+          <label><input type="checkbox" id="assetFilterOrphan" onchange="loadAssets()"> Apenas não usados</label>
+        </div>
+        <button onclick="closeAssetLibrary()" style="background:none;border:none;cursor:pointer;font-size:1.2rem;color:rgba(34,27,25,0.5);padding:4px 8px">×</button>
+      </div>
+      <div class="asset-modal-body" id="assetModalBody">
+        <div class="asset-empty">Carregando…</div>
+      </div>
+      <div class="asset-modal-footer">
+        <label class="btn" style="cursor:pointer">
+          ⬆ Upload novo asset
+          <input type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml" style="display:none" onchange="uploadAssetFromModal(this)">
+        </label>
+        <span id="assetModalStatus" style="font-size:0.78rem;color:rgba(34,27,25,0.5)"></span>
       </div>
     </div>
   </div>
 
   <!-- VIEW: Editor -->
   <div id="view-editor" style="display:none">
+    <div class="editor-page-header">
+      <button class="editor-back-btn" onclick="requestBack()">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+        Voltar
+      </button>
+      <span class="editor-page-header-title" id="editorHeaderTitle">Editar template</span>
+    </div>
     <div class="editor-layout">
 
       <!-- LEFT: Layers -->
@@ -354,30 +437,20 @@
         <div class="panel-title">Layers</div>
         <div id="layersList"></div>
         <div class="add-layer-section" id="addLayerSection">
-          <button class="add-layer-btn" onclick="addLayer('text-line')">+ Texto (linha)</button>
-          <button class="add-layer-btn" onclick="addLayer('text-block')">+ Texto (bloco)</button>
-          <button class="add-layer-btn" onclick="addLayer('image')">+ Imagem</button>
+          <button class="add-layer-btn" onclick="addLayer('text-line')"><span class="layer-icon-t">T</span> Texto (linha)</button>
+          <button class="add-layer-btn" onclick="addLayer('text-block')"><span class="layer-icon-t">Tt</span> Texto (bloco)</button>
+          <button class="add-layer-btn" onclick="addLayer('image')"><svg class="layer-icon-img" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg> Imagem</button>
         </div>
       </div>
 
       <!-- CENTER: Canvas -->
       <div class="canvas-panel" id="canvasPanel">
         <div class="canvas-toolbar">
-          <button onclick="requestBack()" style="padding:5px 10px;gap:4px;display:inline-flex;align-items:center">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
-            Voltar
-          </button>
-          <div class="toolbar-sep"></div>
           <div class="name-edit-wrap">
             <input class="name-edit-input" id="tmplNameInput" value="" onchange="renameTemplate(this.value)" title="Clique para renomear">
             <span class="name-edit-pencil" title="Renomear">✎</span>
           </div>
           <span id="activeBadge"></span>
-          <div class="toolbar-sep"></div>
-          <button onclick="zoomOut()" style="padding:5px 9px;min-width:28px">−</button>
-          <span id="zoomLevel" style="font-size:0.78rem;color:#aaa;min-width:44px;text-align:center">100%</span>
-          <button onclick="zoomIn()" style="padding:5px 9px;min-width:28px">+</button>
-          <button onclick="fitToView()" title="Ajustar à tela">Ajustar</button>
           <div class="toolbar-sep"></div>
           <select class="bg-variant-select" id="bgVariantSelect" style="display:none" onchange="onBgVariantChange(this.value)"></select>
           <button class="live-toggle on" id="liveToggleBtn" onclick="toggleLive()" title="Live preview automático">● Live</button>
@@ -396,11 +469,17 @@
         <div class="variant-switches-bar" id="variantSwitchesBar" style="display:none">
           <div id="variantSwitchesInner" style="display:flex;align-items:center;flex-wrap:wrap;gap:10px"></div>
         </div>
-        <div class="canvas-scroll" id="canvasScroll">
+        <div class="canvas-scroll" id="canvasScroll" style="position:relative">
           <div class="no-template" id="noTemplate" style="display:flex;align-items:center;justify-content:center;flex:1;color:rgba(255,255,255,0.3);font-size:0.9rem">Carregando template…</div>
           <div class="canvas-wrap" id="canvasWrap" style="display:none">
             <img class="bg-img" id="bgImg" src="" alt="" draggable="false">
             <img class="canvas-preview-img" id="previewImg" alt="Preview">
+          </div>
+          <div class="zoom-floating" id="zoomFloating">
+            <button onclick="zoomOut()" title="Reduzir">−</button>
+            <span class="zoom-val" id="zoomLevel">35%</span>
+            <button onclick="zoomIn()" title="Ampliar">+</button>
+            <button onclick="fitToView()" title="Ajustar à tela" style="font-size:1rem">⊡</button>
           </div>
         </div>
       </div>
@@ -520,6 +599,40 @@
     };
 
     const MAX_HISTORY = 50;
+
+    // ── Dynamic schema state ──────────────────────────────────────
+    let formSchema = null;
+    let centerIndicatorTimer = null;
+
+    function getActiveFieldOptions() {
+      if (!formSchema) return FIELD_OPTIONS;
+      const opts = {};
+      for (const f of formSchema.fields) {
+        if ((f.type === 'select' || f.type === 'radio') && f.options && f.options.length) {
+          opts[f.name] = f.options;
+        }
+      }
+      return opts;
+    }
+
+    function getActivePlaceholders(tipo) {
+      if (formSchema) {
+        return [
+          ...formSchema.fields.filter(f => f.type !== 'file').map(f => f.name),
+          ...(formSchema.computed || []).map(c => c.name),
+        ];
+      }
+      return PLACEHOLDERS_BY_TIPO[tipo] || [];
+    }
+
+    function showCenterIndicator(text) {
+      const el = document.getElementById('centerIndicator');
+      if (!el) return;
+      el.textContent = '↔ ' + text;
+      el.classList.add('visible');
+      clearTimeout(centerIndicatorTimer);
+      centerIndicatorTimer = setTimeout(() => el.classList.remove('visible'), 800);
+    }
 
     // ── State ────────────────────────────────────────────────────
     let currentView = 'landing';
@@ -651,13 +764,14 @@
         bgHtml = `<input class="props-input" value="${esc(bg.url || '')}" placeholder="URL do fundo…" onchange="updDocBgUrl(this.value)">`;
       } else {
         const varSrc = bg.variant_source || '';
-        const knownOpts = FIELD_OPTIONS[varSrc] || null;
+        const _afo = getActiveFieldOptions();
+        const knownOpts = _afo[varSrc] || null;
         bgHtml = `
           <div class="props-label" style="margin-top:6px">Campo variável</div>
           <select class="props-input" onchange="updDocBgVariantSource(this.value)">
             <option value="">Selecione…</option>
-            ${Object.keys(FIELD_OPTIONS).map(k => `<option value="${k}"${varSrc===k?' selected':''}>${k}</option>`).join('')}
-            ${varSrc && !FIELD_OPTIONS[varSrc] ? `<option value="${esc(varSrc)}" selected>${esc(varSrc)}</option>` : ''}
+            ${Object.keys(_afo).map(k => `<option value="${k}"${varSrc===k?' selected':''}>${k}</option>`).join('')}
+            ${varSrc && !_afo[varSrc] ? `<option value="${esc(varSrc)}" selected>${esc(varSrc)}</option>` : ''}
           </select>`;
         if (varSrc && knownOpts) {
           bgHtml += `<div style="margin-top:8px">${knownOpts.map(opt => `
@@ -674,7 +788,7 @@
         }
       }
 
-      const placeholderHtml = (PLACEHOLDERS_BY_TIPO[tipo] || []).map(p =>
+      const placeholderHtml = getActivePlaceholders(tipo).map(p =>
         `<span class="placeholder-chip" style="cursor:default">{{${p}}}</span>`
       ).join('') || '<span style="opacity:0.4;font-size:0.75rem">Nenhum configurado</span>';
 
@@ -772,9 +886,10 @@
     function updDocBgVariantSource(source) {
       if (!currentTemplate || currentTemplate.bg.type !== 'variant') return;
       currentTemplate.bg.variant_source = source;
-      if (source && FIELD_OPTIONS[source]) {
+      const _afo2 = getActiveFieldOptions();
+      if (source && _afo2[source]) {
         const newVariants = {};
-        for (const opt of FIELD_OPTIONS[source]) {
+        for (const opt of _afo2[source]) {
           newVariants[opt.value] = (currentTemplate.bg.variants || {})[opt.value] || '';
         }
         currentTemplate.bg.variants = newVariants;
@@ -822,12 +937,13 @@
           sourcesSet.add(layer.source.variant_source);
         }
       }
-      const sources = [...sourcesSet].filter(s => FIELD_OPTIONS[s]);
+      const _afo4 = getActiveFieldOptions();
+      const sources = [...sourcesSet].filter(s => _afo4[s]);
       if (sources.length === 0) { bar.style.display = 'none'; return; }
 
       bar.style.display = 'block';
       inner.innerHTML = sources.map(source => {
-        const options = FIELD_OPTIONS[source];
+        const options = _afo4[source];
         if (!testData[source]) testData[source] = options[0]?.value || '';
         const currentVal = testData[source];
         return `<div class="vsw-group">
@@ -854,7 +970,17 @@
       document.getElementById('view-landing').style.display = view === 'landing' ? 'flex' : 'none';
       document.getElementById('view-list').style.display    = view === 'list'    ? 'flex' : 'none';
       document.getElementById('view-create').style.display  = view === 'create'  ? 'flex' : 'none';
-      document.getElementById('view-editor').style.display  = view === 'editor'  ? 'block' : 'none';
+      document.getElementById('view-editor').style.display  = view === 'editor'  ? 'flex' : 'none';
+      if (view === 'create') {
+        loadCreateFormSchemas();
+        // reset form
+        document.getElementById('createName').value = '';
+        document.getElementById('createError').style.display = 'none';
+        document.querySelector('input[name="createStart"][value="blank"]').checked = true;
+        document.getElementById('createCloneSelect').style.display = 'none';
+        const btn = document.getElementById('createBtn');
+        if (btn) btn.disabled = true;
+      }
     }
     async function goToList() {
       await loadAllTemplates();
@@ -966,35 +1092,62 @@
     }
 
     // ── Create view ──────────────────────────────────────────────
-    document.addEventListener('DOMContentLoaded', () => {
-      const tipoSel = document.getElementById('createTipo');
-      if (tipoSel) tipoSel.addEventListener('change', () => {
-        const custom = document.getElementById('createTipoCustom');
-        custom.style.display = tipoSel.value === '_custom' ? 'block' : 'none';
-      });
-    });
+    let createFormSchemas = [];
+
+    async function loadCreateFormSchemas() {
+      const loadEl = document.getElementById('createTipoLoading');
+      if (loadEl) loadEl.style.display = 'block';
+      try {
+        const r = await fetch('/api/admin/form-schemas');
+        if (!r.ok) return;
+        createFormSchemas = await r.json();
+        const sel = document.getElementById('createTipo');
+        if (!sel) return;
+        sel.innerHTML = '<option value="">Selecione um formulário…</option>' +
+          createFormSchemas.map(s => `<option value="${s.tipo}">${esc(s.label)}</option>`).join('');
+      } catch(e) { console.error('Erro ao carregar schemas:', e); }
+      finally { if (loadEl) loadEl.style.display = 'none'; }
+    }
+
+    function onCreateTipoChange() {
+      const tipo = document.getElementById('createTipo').value;
+      const btn = document.getElementById('createBtn');
+      if (btn) btn.disabled = !tipo;
+      // Update clone select based on selected tipo
+      const startVal = document.querySelector('input[name="createStart"]:checked')?.value;
+      if (startVal === 'clone') onCreateStartChange();
+      // Check if there are templates for this tipo
+      const matching = allTemplates.filter(t => t.tipo === tipo);
+      const cloneRadio = document.getElementById('cloneRadio');
+      const cloneOptionLabel = document.getElementById('cloneOptionLabel');
+      if (cloneOptionLabel) cloneOptionLabel.style.opacity = matching.length ? '1' : '0.4';
+      if (cloneRadio) cloneRadio.disabled = matching.length === 0;
+      if (matching.length === 0 && cloneRadio?.checked) {
+        document.querySelector('input[name="createStart"][value="blank"]').checked = true;
+        onCreateStartChange();
+      }
+    }
 
     function onCreateStartChange() {
       const val = document.querySelector('input[name="createStart"]:checked')?.value;
       const cloneSel = document.getElementById('createCloneSelect');
       cloneSel.style.display = val === 'clone' ? 'block' : 'none';
       if (val === 'clone') {
+        const tipo = document.getElementById('createTipo').value;
+        const filtered = tipo ? allTemplates.filter(t => t.tipo === tipo) : allTemplates;
         cloneSel.innerHTML = '<option value="">Selecione…</option>' +
-          allTemplates.map(t => `<option value="${t.id}">${esc(humanizeTipo(t.tipo))} — ${esc(t.name)}</option>`).join('');
+          filtered.map(t => `<option value="${t.id}">${esc(humanizeTipo(t.tipo))} — ${esc(t.name)}</option>`).join('');
       }
     }
 
     async function submitCreate() {
-      const tipoSel = document.getElementById('createTipo');
-      const tipo = tipoSel.value === '_custom'
-        ? document.getElementById('createTipoCustom').value.trim()
-        : tipoSel.value;
+      const tipo = document.getElementById('createTipo').value;
       const name = document.getElementById('createName').value.trim();
       const startVal = document.querySelector('input[name="createStart"]:checked')?.value;
       const cloneId = parseInt(document.getElementById('createCloneSelect').value) || null;
       const errEl = document.getElementById('createError');
       errEl.style.display = 'none';
-      if (!tipo) { errEl.textContent = 'Selecione ou informe um tipo.'; errEl.style.display = 'block'; return; }
+      if (!tipo) { errEl.textContent = 'Selecione o formulário de destino.'; errEl.style.display = 'block'; return; }
       if (!name) { errEl.textContent = 'Informe um nome para o template.'; errEl.style.display = 'block'; return; }
       if (startVal === 'clone' && !cloneId) { errEl.textContent = 'Selecione um template para clonar.'; errEl.style.display = 'block'; return; }
       const btn = document.getElementById('createBtn');
@@ -1038,9 +1191,17 @@
       document.getElementById('panelTmplName').textContent = row.name;
       document.getElementById('panelTmplTipo').textContent = humanizeTipo(row.tipo);
       document.getElementById('tmplNameInput').value = row.name;
+      document.getElementById('editorHeaderTitle').textContent = 'Editar template: ' + row.name;
       renderActiveBadge();
       document.getElementById('unsavedBadge').classList.remove('visible');
       switchRightTab('layer');
+
+      // Load form schema for this tipo (dynamic variant options + placeholders)
+      formSchema = null;
+      fetch(`/api/admin/form-schemas/${row.tipo}`)
+        .then(r => r.ok ? r.json() : null)
+        .then(schema => { formSchema = schema; reRender(); })
+        .catch(() => { formSchema = null; });
 
       await loadSampleData();
       renderBgVariantSelect();
@@ -1098,16 +1259,17 @@
       const res = await fetch(`/api/admin/art-templates/sample-data/${tipo}`);
       testData = await res.json();
 
-      // Seed variant fields into testData from FIELD_OPTIONS defaults
+      // Seed variant fields into testData from active field options
       if (currentTemplate) {
+        const _afo5 = getActiveFieldOptions();
         if (currentTemplate.bg?.type === 'variant' && currentTemplate.bg.variant_source) {
           const src = currentTemplate.bg.variant_source;
-          if (!testData[src] && FIELD_OPTIONS[src]) testData[src] = FIELD_OPTIONS[src][0]?.value || '';
+          if (!testData[src] && _afo5[src]) testData[src] = _afo5[src][0]?.value || '';
         }
         for (const layer of currentTemplate.layers) {
           if (layer.type === 'image' && layer.source?.type === 'variant' && layer.source.variant_source) {
             const src = layer.source.variant_source;
-            if (!testData[src] && FIELD_OPTIONS[src]) testData[src] = FIELD_OPTIONS[src][0]?.value || '';
+            if (!testData[src] && _afo5[src]) testData[src] = _afo5[src][0]?.value || '';
           }
         }
       }
@@ -1116,7 +1278,7 @@
 
     function renderTestDataPanel() {
       const tipo = currentTemplateMeta?.tipo;
-      const placeholders = PLACEHOLDERS_BY_TIPO[tipo] || [];
+      const placeholders = getActivePlaceholders(tipo);
       const el = document.getElementById('testDataFields');
       el.innerHTML = placeholders.map(key => `
         <div class="test-field">
@@ -1278,6 +1440,11 @@
     }
 
     // ── Layers ───────────────────────────────────────────────────
+    function layerTypeIcon(type) {
+      if (type === 'text-line') return `<span class="layer-icon-t" title="Texto (linha)">T</span>`;
+      if (type === 'text-block') return `<span class="layer-icon-t" title="Texto (bloco)">Tt</span>`;
+      return `<svg class="layer-icon-img" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" title="Imagem"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>`;
+    }
     function renderLayersList() {
       const el = document.getElementById('layersList');
       if (!currentTemplate) { el.innerHTML = ''; return; }
@@ -1287,8 +1454,8 @@
       }
       el.innerHTML = currentTemplate.layers.map(layer => `
         <div class="layer-item${layer.id === selectedLayerId ? ' active' : ''}" id="litem-${layer.id}" onclick="selectLayer('${layer.id}')">
-          <span>${esc(layer.name || layer.id)}</span>
-          <span class="layer-type-badge">${layer.type}</span>
+          ${layerTypeIcon(layer.type)}
+          <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(layer.name || layer.id)}</span>
         </div>
       `).join('');
     }
@@ -1340,7 +1507,7 @@
       empty.style.display = 'none';
       content.style.display = 'block';
       const tipo = currentTemplateMeta?.tipo;
-      const placeholders = PLACEHOLDERS_BY_TIPO[tipo] || [];
+      const placeholders = getActivePlaceholders(tipo);
       const fontOptions = ['Taviraj Light','Nunito Sans Light','Ivy Journal Light','Roobert PRO TRIAL Light']
         .map(f => `<option${layer.font_family===f?' selected':''}>${f}</option>`).join('');
       const alignBtns = ['left','center','right']
@@ -1401,7 +1568,8 @@
       if (layer.type === 'image') {
         const srcType = layer.source?.type || 'static';
         const varSrc = layer.source?.variant_source || '';
-        const knownOpts = FIELD_OPTIONS[varSrc] || null;
+        const _afo6 = getActiveFieldOptions();
+        const knownOpts = _afo6[varSrc] || null;
 
         let variantHtml = '';
         if (srcType === 'variant') {
@@ -1409,17 +1577,21 @@
           <div class="props-label" style="margin-top:6px">Campo variável</div>
           <select class="props-input" onchange="updImageVariantSource('${id}',this.value)">
             <option value="">Selecione…</option>
-            ${Object.keys(FIELD_OPTIONS).map(k => `<option value="${k}"${varSrc===k?' selected':''}>${k}</option>`).join('')}
-            ${varSrc && !FIELD_OPTIONS[varSrc] ? `<option value="${esc(varSrc)}" selected>${esc(varSrc)} (custom)</option>` : ''}
+            ${Object.keys(_afo6).map(k => `<option value="${k}"${varSrc===k?' selected':''}>${k}</option>`).join('')}
+            ${varSrc && !_afo6[varSrc] ? `<option value="${esc(varSrc)}" selected>${esc(varSrc)} (custom)</option>` : ''}
           </select>`;
 
           if (varSrc && knownOpts) {
             variantHtml += `<div style="margin-top:8px">${knownOpts.map(opt => `
               <div class="variant-row">
                 <span class="variant-row-label">${esc(opt.label)}</span>
-                <input class="props-input variant-row-input" placeholder="URL…"
-                  value="${esc((layer.source.variants || {})[opt.value] || '')}"
-                  oninput="updImageVariantUrl('${id}','${opt.value}',this.value)">
+                <div class="url-row">
+                  <input class="props-input variant-row-input" placeholder="URL…"
+                    value="${esc((layer.source.variants || {})[opt.value] || '')}"
+                    oninput="updImageVariantUrl('${id}','${opt.value}',this.value)">
+                  <button class="url-action-btn" onclick="openAssetLibrary(url => updImageVariantUrl('${id}','${opt.value}',url))" title="Biblioteca">🖼</button>
+                  <label class="url-action-btn" style="cursor:pointer" title="Upload">⬆<input type="file" accept="image/*" style="display:none" onchange="uploadAndSetUrl(this,url=>updImageVariantUrl('${id}','${opt.value}',url))"></label>
+                </div>
               </div>`).join('')}</div>`;
           } else {
             variantHtml += `
@@ -1437,7 +1609,11 @@
           </select>
           ${srcType==='static'?`
           <div class="props-label" style="margin-top:6px">URL</div>
-          <input class="props-input" value="${esc(layer.source.url||'')}" onchange="updLayer('${id}','source',{type:'static',url:this.value})">
+          <div class="url-row">
+            <input class="props-input" value="${esc(layer.source.url||'')}" id="imgUrlInput-${id}" onchange="updLayer('${id}','source',{type:'static',url:this.value})">
+            <button class="url-action-btn" onclick="openAssetLibrary(url => { const l=getLayer('${id}'); if(l){l.source={type:'static',url};markDirty();debouncedPushHistory();showProps('${id}');scheduleLivePreview(500);} })" title="Biblioteca">🖼</button>
+            <label class="url-action-btn" style="cursor:pointer" title="Upload">⬆<input type="file" accept="image/*" style="display:none" onchange="uploadAndSetUrl(this,url=>{const l=getLayer('${id}');if(l){l.source={type:'static',url};markDirty();debouncedPushHistory();showProps('${id}');scheduleLivePreview(500);}})"></label>
+          </div>
           `:variantHtml}
           <div class="props-row" style="margin-top:8px">
             <div><div class="props-label">Blend</div>
@@ -1497,13 +1673,14 @@
     function updImageVariantSource(id, val) {
       const layer = getLayer(id); if (!layer) return;
       layer.source.variant_source = val;
-      if (val && FIELD_OPTIONS[val]) {
+      const _afo7 = getActiveFieldOptions();
+      if (val && _afo7[val]) {
         const newVariants = {};
-        for (const opt of FIELD_OPTIONS[val]) {
+        for (const opt of _afo7[val]) {
           newVariants[opt.value] = (layer.source.variants || {})[opt.value] || '';
         }
         layer.source.variants = newVariants;
-        if (!testData[val]) testData[val] = FIELD_OPTIONS[val][0]?.value || '';
+        if (!testData[val]) testData[val] = _afo7[val][0]?.value || '';
       }
       markDirty();
       debouncedPushHistory();
@@ -1632,6 +1809,89 @@
     });
 
     init();
+
+    // ── Asset Library ─────────────────────────────────────────────
+    let _assetLibraryCallback = null;
+
+    function openAssetLibrary(cb) {
+      _assetLibraryCallback = cb;
+      document.getElementById('assetLibraryOverlay').style.display = 'flex';
+      loadAssets();
+    }
+    function closeAssetLibrary() {
+      document.getElementById('assetLibraryOverlay').style.display = 'none';
+      _assetLibraryCallback = null;
+    }
+
+    async function loadAssets() {
+      const body = document.getElementById('assetModalBody');
+      const orphanOnly = document.getElementById('assetFilterOrphan')?.checked;
+      body.innerHTML = '<div class="asset-empty">Carregando…</div>';
+      try {
+        let url = '/api/admin/assets';
+        if (orphanOnly) url += '?orphan=1';
+        const r = await fetch(url);
+        if (!r.ok) { body.innerHTML = '<div class="asset-empty">Erro ao carregar assets.</div>'; return; }
+        const assets = await r.json();
+        if (!assets.length) { body.innerHTML = '<div class="asset-empty">Nenhum asset encontrado.<br>Faça upload de uma imagem abaixo.</div>'; return; }
+        body.innerHTML = `<div class="asset-grid">${assets.map(a => `
+          <div class="asset-card">
+            <div class="asset-thumb-wrap">
+              <img src="${esc(a.url)}" alt="${esc(a.filename)}" loading="lazy" onerror="this.style.display='none'">
+            </div>
+            <div class="asset-card-info">
+              <div class="asset-card-name" title="${esc(a.filename)}">${esc(a.filename)}</div>
+              <div class="asset-card-meta">${Math.round(a.size_bytes/1024)}KB${a.tipo ? ' · ' + esc(a.tipo) : ''}</div>
+            </div>
+            <div class="asset-card-actions">
+              <button class="asset-action-btn primary" onclick="selectAsset('${esc(a.url)}')">Usar</button>
+              <button class="asset-action-btn" onclick="deleteAsset(${a.id})">🗑</button>
+            </div>
+          </div>`).join('')}</div>`;
+      } catch(e) { body.innerHTML = '<div class="asset-empty">Erro ao carregar assets.</div>'; }
+    }
+
+    function selectAsset(url) {
+      if (_assetLibraryCallback) { _assetLibraryCallback(url); }
+      closeAssetLibrary();
+    }
+
+    async function deleteAsset(id) {
+      if (!confirm('Deletar este asset permanentemente?')) return;
+      const r = await fetch(`/api/admin/assets/${id}`, { method: 'DELETE' });
+      if (!r.ok) { const d = await r.json().catch(()=>({})); alert(d.error || 'Erro ao deletar.'); return; }
+      loadAssets();
+    }
+
+    async function uploadAssetFromModal(input) {
+      const file = input.files[0]; if (!file) return;
+      const status = document.getElementById('assetModalStatus');
+      status.textContent = 'Enviando…';
+      const fd = new FormData(); fd.append('file', file);
+      try {
+        const r = await fetch('/api/admin/assets', { method: 'POST', body: fd });
+        const d = await r.json();
+        if (!r.ok) { status.textContent = d.error || 'Erro.'; return; }
+        status.textContent = '✓ Upload concluído';
+        setTimeout(() => { status.textContent = ''; }, 3000);
+        loadAssets();
+      } catch(e) { status.textContent = 'Erro de rede.'; }
+      input.value = '';
+    }
+
+    async function uploadAndSetUrl(input, cb) {
+      const file = input.files[0]; if (!file) return;
+      const fd = new FormData(); fd.append('file', file);
+      try {
+        showToast('Enviando imagem…', 'info');
+        const r = await fetch('/api/admin/assets', { method: 'POST', body: fd });
+        const d = await r.json();
+        if (!r.ok) { showToast(d.error || 'Erro no upload.', 'error'); return; }
+        cb(d.url);
+        showToast('✓ Upload concluído', 'success');
+      } catch(e) { showToast('Erro de rede.', 'error'); }
+      input.value = '';
+    }
   </script>
 </body>
 </html>

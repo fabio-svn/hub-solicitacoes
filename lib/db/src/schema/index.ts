@@ -1,4 +1,4 @@
-import { pgTable, serial, varchar, text, integer, jsonb, timestamp, unique, boolean } from "drizzle-orm/pg-core";
+import { pgTable, serial, varchar, text, integer, bigint, jsonb, timestamp, unique, boolean } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
@@ -71,6 +71,23 @@ export const artTemplatesTable = pgTable("art_templates", {
 });
 
 export type ArtTemplateRow = typeof artTemplatesTable.$inferSelect;
+
+export const artAssetsTable = pgTable("art_assets", {
+  id: serial("id").primaryKey(),
+  filename: varchar("filename", { length: 300 }).notNull(),
+  storage_key: varchar("storage_key", { length: 500 }).notNull().unique(),
+  url: varchar("url", { length: 500 }).notNull(),
+  mime_type: varchar("mime_type", { length: 100 }).notNull(),
+  size_bytes: bigint("size_bytes", { mode: "number" }).notNull(),
+  width: integer("width"),
+  height: integer("height"),
+  uploaded_by: integer("uploaded_by").references(() => usersTable.id),
+  uploaded_at: timestamp("uploaded_at").defaultNow().notNull(),
+  used_in_template_ids: integer("used_in_template_ids").array().default([]),
+  last_used_at: timestamp("last_used_at"),
+});
+
+export type ArtAssetRow = typeof artAssetsTable.$inferSelect;
 
 export const activityLogTable = pgTable("activity_log", {
   id: serial("id").primaryKey(),
