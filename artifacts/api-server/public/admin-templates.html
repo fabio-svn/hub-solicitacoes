@@ -112,9 +112,6 @@
     .canvas-toolbar button.primary { background: #9f3f37; border-color: #9f3f37; }
     .canvas-toolbar button.primary:hover { background: #b44b42; }
     .canvas-toolbar button.active { background: rgba(255,255,255,0.2); }
-    .canvas-toolbar .mode-toggle { display: flex; gap: 0; border: 1px solid rgba(255,255,255,0.2); border-radius: 6px; overflow: hidden; }
-    .canvas-toolbar .mode-toggle button { border: none; border-radius: 0; background: transparent; }
-    .canvas-toolbar .mode-toggle button.active { background: rgba(255,255,255,0.2); }
     .canvas-toolbar .unsaved-badge { font-size: 0.72rem; color: #c8a96e; display: none; }
     .canvas-toolbar .unsaved-badge.visible { display: block; }
     .toolbar-sep { width: 1px; height: 18px; background: rgba(255,255,255,0.1); flex-shrink: 0; }
@@ -132,10 +129,12 @@
     .canvas-scroll { flex: 1; overflow: auto; display: flex; align-items: flex-start; justify-content: center; padding: 24px; }
     .canvas-wrap { position: relative; display: inline-block; box-shadow: 0 4px 40px rgba(0,0,0,0.6); flex-shrink: 0; }
     .canvas-wrap img.bg-img { display: block; width: 100%; height: auto; }
-    .layer-box { position: absolute; cursor: move; border: 1.5px dashed rgba(59,130,246,0.6); box-sizing: border-box; }
+    .layer-box { position: absolute; cursor: move; border: 1px dashed rgba(59,130,246,0.25); background: transparent; box-sizing: border-box; z-index: 2; transition: border 0.1s; }
+    .layer-box:hover { border: 1.5px dashed rgba(59,130,246,0.6); }
     .layer-box.selected { border: 2px solid #3b82f6; box-shadow: 0 0 0 2px rgba(59,130,246,0.25); }
-    .layer-box .layer-label { position: absolute; top: -18px; left: 0; font-size: 9px; background: #3b82f6; color: #fff; padding: 1px 5px; border-radius: 3px 3px 3px 0; white-space: nowrap; line-height: 16px; }
-    .canvas-preview-img { display: none; width: 100%; height: auto; }
+    .layer-box .layer-label { display: none; position: absolute; top: -18px; left: 0; font-size: 9px; background: #3b82f6; color: #fff; padding: 1px 5px; border-radius: 3px 3px 3px 0; white-space: nowrap; line-height: 16px; pointer-events: none; }
+    .layer-box:hover .layer-label, .layer-box.selected .layer-label { display: block; }
+    .canvas-preview-img { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: fill; z-index: 1; display: none; }
     .no-template { display: flex; align-items: center; justify-content: center; flex: 1; color: rgba(255,255,255,0.3); font-size: 0.9rem; }
     .props-panel { border-right: none; border-left: 1px solid #e8e2dc; }
     .props-section { padding: 12px 14px; border-bottom: 1px solid #f0ece8; }
@@ -322,14 +321,10 @@
           <button onclick="zoomIn()" style="padding:5px 9px;min-width:28px">+</button>
           <button onclick="fitToView()" title="Ajustar à tela">Ajustar</button>
           <div class="toolbar-sep"></div>
-          <!-- Mode -->
-          <div class="mode-toggle">
-            <button id="btnModeEdit" class="active" onclick="setMode('edit')">Editar</button>
-            <button id="btnModePreview" onclick="setMode('preview')">Preview</button>
-          </div>
           <select class="bg-variant-select" id="bgVariantSelect" style="display:none" onchange="onBgVariantChange(this.value)"></select>
           <!-- Live preview toggle + spinner -->
           <button class="live-toggle on" id="liveToggleBtn" onclick="toggleLive()" title="Live preview automático">● Live</button>
+          <button id="manualPreviewBtn" onclick="doLivePreview()" style="display:none;padding:5px 10px;font-size:0.78rem;border-radius:6px;border:1px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.08);color:#fff;cursor:pointer;font-family:'Nunito Sans',sans-serif">Atualizar preview</button>
           <div class="rendering-indicator" id="renderingIndicator">
             <div class="spinner"></div>
             <span>Renderizando…</span>
@@ -394,7 +389,6 @@
     let currentTemplate = null;       // config object
     let selectedLayerId = null;
     let isDirty = false;
-    let mode = 'edit';
     let bgVariantKey = null;
     let testData = {};
     let canvasScale = parseFloat(sessionStorage.getItem('svn_canvas_zoom') || '0') || 1;
@@ -637,9 +631,9 @@
       showProps(null);
       document.getElementById('noTemplate').style.display = 'none';
       document.getElementById('canvasWrap').style.display = 'inline-block';
-      setMode('edit');
       showView('editor');
       fitToView();
+      doLivePreview();
     }
 
     function renderActiveBadge() {
@@ -692,8 +686,8 @@
         <div class="test-field">
           <label>${key}</label>
           <input type="text" value="${esc(testData[key] || '')}"
-            oninput="testData['${key}']=this.value; scheduleLivePreview(1200)"
-            onchange="testData['${key}']=this.value; scheduleLivePreview(1200)">
+            oninput="testData['${key}']=this.value; scheduleLivePreview(1000)"
+            onchange="testData['${key}']=this.value; scheduleLivePreview(1000)">
         </div>
       `).join('');
     }
@@ -735,7 +729,7 @@
     function onBgVariantChange(val) {
       bgVariantKey = val;
       updateBgImage();
-      scheduleLivePreview(700);
+      scheduleLivePreview(300);
     }
     function getBgUrl() {
       if (!currentTemplate?.bg) return '';
@@ -764,12 +758,6 @@
       if (!currentTemplate) return;
       updateBgImage();
       document.querySelectorAll('.layer-box').forEach(el => el.remove());
-      const previewImg = document.getElementById('previewImg');
-      if (mode === 'preview') {
-        previewImg.style.display = 'block';
-        return;
-      }
-      previewImg.style.display = 'none';
       const wrap = document.getElementById('canvasWrap');
       const SCALE = getScale();
       for (const layer of currentTemplate.layers) {
@@ -1040,26 +1028,19 @@
       document.getElementById('unsavedBadge').classList.add('visible');
     }
 
-    // ── Mode toggle ──────────────────────────────────────────────
-    function setMode(m) {
-      mode = m;
-      document.getElementById('btnModeEdit').classList.toggle('active', m === 'edit');
-      document.getElementById('btnModePreview').classList.toggle('active', m === 'preview');
-      renderCanvas();
-      if (m === 'preview') { scheduleLivePreview(0); }
-    }
-
     // ── Live preview ─────────────────────────────────────────────
     function toggleLive() {
       liveEnabled = !liveEnabled;
       const btn = document.getElementById('liveToggleBtn');
       btn.classList.toggle('on', liveEnabled);
       btn.textContent = liveEnabled ? '● Live' : '○ Live';
-      if (liveEnabled && mode === 'preview') scheduleLivePreview(0);
+      const manualBtn = document.getElementById('manualPreviewBtn');
+      if (manualBtn) manualBtn.style.display = liveEnabled ? 'none' : '';
+      if (liveEnabled) scheduleLivePreview(0);
     }
 
     function scheduleLivePreview(delay = 700) {
-      if (!liveEnabled || mode !== 'preview') return;
+      if (!liveEnabled) return;
       if (previewDebounce) clearTimeout(previewDebounce);
       previewDebounce = setTimeout(() => doLivePreview(), delay);
     }
