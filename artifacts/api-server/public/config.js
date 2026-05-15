@@ -118,7 +118,6 @@ const TIPO_SOLICITACAO_LABELS = {
 const CONTRATOS_SOCIAIS = ["SVN Capital", "SVN Connect", "SVN Investimentos"];
 
 const MARCAS_SVN = [
-  "SVN",
   "SVN Investimentos",
   "SVN Capital",
   "SVN Connect",
@@ -140,7 +139,7 @@ const CARGOS_ASSESSOR = [
 const DRAWER_FIELD_LABELS = {
   nomeCartao:          "Nome no cartão",
   whatsapp:            "WhatsApp",
-  emailCorporativo:    "E-mail corporativo",
+  emailCorporativo:    "E-mail",
   marca:               "Marca",
   nomeCliente:         "Nome do cliente",
   isPrivate:           "Cliente Private?",
