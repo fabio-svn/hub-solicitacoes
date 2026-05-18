@@ -183,6 +183,7 @@ export const FORM_SCHEMAS: Record<string, FormSchema> = {
   'assinatura-email': {
     tipo: 'assinatura-email',
     label: 'Assinatura de E-mail',
+    template_variant_field: 'marca',
     fields: [
       { name: 'nome',              label: 'Nome completo',    type: 'text',  required: true },
       { name: 'telefone',          label: 'Telefone',          type: 'tel',   required: true },

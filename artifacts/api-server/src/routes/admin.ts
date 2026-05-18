@@ -400,14 +400,14 @@ router.post("/art-templates/:id/duplicate", requireAuth, requireRole("admin"), a
     const user = req.session.user!;
     const id = parseInt(req.params.id);
     if (isNaN(id)) { res.status(400).json({ error: "ID inválido" }); return; }
-    const { name } = req.body as { name?: string };
+    const { name, variant_value } = req.body as { name?: string; variant_value?: string };
     const [source] = await db.select().from(artTemplatesTable).where(eq(artTemplatesTable.id, id));
     if (!source) { res.status(404).json({ error: "Template não encontrado" }); return; }
     const [userRow] = await db.select({ id: usersTable.id }).from(usersTable).where(eq(usersTable.email, user.email));
     const [inserted] = await db.insert(artTemplatesTable)
       .values({
         tipo: source.tipo,
-        variant_value: source.variant_value,
+        variant_value: variant_value !== undefined ? (variant_value || null) : source.variant_value,
         name: name || `${source.name} (cópia)`,
         config: source.config,
         is_active: false,

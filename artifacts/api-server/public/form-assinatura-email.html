@@ -113,7 +113,18 @@
   <script src="shell.js"></script>
   <script>
     const TIPO = 'assinatura-email';
-    const MARCAS_CONTRATO = ['SVN Capital', 'SVN Connect', 'SVN Investimentos'];
+    const MARCAS_OPTS_FORM = [
+      { value: 'svn-investimentos',           label: 'SVN Investimentos' },
+      { value: 'svn-capital',                 label: 'SVN Capital' },
+      { value: 'svn-connect',                 label: 'SVN Connect' },
+      { value: 'svn-gestao',                  label: 'SVN Gestão' },
+      { value: 'svn-global',                  label: 'SVN Global' },
+      { value: 'svn-imb',                     label: 'SVN Investment & Merchant Banking' },
+      { value: 'svn-agro-cambio-commodities', label: 'SVN Agro, Câmbio & Commodities' },
+      { value: 'svn-protecao-patrimonial',    label: 'SVN Proteção Patrimonial' },
+      { value: 'svn-wealth-planning',         label: 'SVN Wealth Planning' },
+    ];
+    const MARCAS_CONTRATO = ['svn-investimentos', 'svn-capital', 'svn-connect'];
 
     async function init() {
       await _configReady;
@@ -122,7 +133,7 @@
       Shell.render({ activeRoute: 'nova-solicitacao', contentEl: document.getElementById('pageContent') });
 
       const marcaSel = document.getElementById('marca');
-      if (marcaSel) { MARCAS_SVN.forEach(m => { const o = document.createElement('option'); o.value = m; o.textContent = m; marcaSel.appendChild(o); }); }
+      if (marcaSel) { MARCAS_OPTS_FORM.forEach(m => { const o = document.createElement('option'); o.value = m.value; o.textContent = m.label; marcaSel.appendChild(o); }); }
 
       Auth.aplicarPerfilNoCampo('telefone', Auth.getTelefone());
 
@@ -147,12 +158,12 @@
     function saveSession() {
       try {
         sessionStorage.setItem('form-assinatura-email', JSON.stringify({
-          nomeCompleto: document.getElementById('nomeCompleto')?.value || '',
+          nome: document.getElementById('nomeCompleto')?.value || '',
           cargo: document.getElementById('cargo')?.value || '',
           telefone: document.getElementById('telefone')?.value || '',
-          emailCorporativo: document.getElementById('emailCorporativo')?.value || '',
+          email: document.getElementById('emailCorporativo')?.value || '',
           marca: document.getElementById('marca')?.value || '',
-          cfp: document.querySelector('input[name="cfp"]:checked')?.value || '',
+          tem_cfp: document.querySelector('input[name="cfp"]:checked')?.value || '',
         }));
       } catch {}
     }
@@ -161,12 +172,12 @@
       try {
         const data = JSON.parse(sessionStorage.getItem('form-assinatura-email'));
         if (!data) return;
-        if (data.nomeCompleto) document.getElementById('nomeCompleto').value = data.nomeCompleto;
+        if (data.nome) document.getElementById('nomeCompleto').value = data.nome;
         if (data.cargo) { const el = document.getElementById('cargo'); if (el) el.value = data.cargo; }
         if (data.telefone) document.getElementById('telefone').value = data.telefone;
-        if (data.emailCorporativo) document.getElementById('emailCorporativo').value = data.emailCorporativo;
+        if (data.email) document.getElementById('emailCorporativo').value = data.email;
         if (data.marca) { const el = document.getElementById('marca'); if (el) { el.value = data.marca; handleMarcaChange(); } }
-        if (data.cfp) { const el = document.querySelector(`input[name="cfp"][value="${data.cfp}"]`); if (el) el.checked = true; }
+        if (data.tem_cfp) { const el = document.querySelector(`input[name="cfp"][value="${data.tem_cfp}"]`); if (el) el.checked = true; }
       } catch {}
     }
 
@@ -200,12 +211,11 @@
       const isContrato = MARCAS_CONTRATO.includes(marca);
 
       const dados = {
-        nome: Auth.getUserName(),
-        nomeCompleto: document.getElementById('nomeCompleto').value,
+        nome: document.getElementById('nomeCompleto').value,
         cargo: isContrato ? '' : (document.getElementById('cargo')?.value || ''),
-        cfp: isContrato ? (document.querySelector('input[name="cfp"]:checked')?.value || '') : '',
+        tem_cfp: isContrato ? (document.querySelector('input[name="cfp"]:checked')?.value || '') : '',
         telefone: document.getElementById('telefone').value,
-        emailCorporativo: document.getElementById('emailCorporativo').value,
+        email: document.getElementById('emailCorporativo').value,
         marca: marca,
       };
 

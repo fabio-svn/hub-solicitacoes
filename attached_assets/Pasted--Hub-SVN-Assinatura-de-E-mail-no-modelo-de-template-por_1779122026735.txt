@@ -1,0 +1,197 @@
+# Hub SVN — Assinatura de E-mail no modelo de template por variante + botão Duplicar
+
+## Contexto
+
+Após análise, ficou claro que Assinatura de E-mail **NÃO** se encaixa no modelo de "variant source no layer" porque cada marca tem:
+- Logo com dimensões diferentes (precisa de posicionamento individual)
+- Algumas marcas (Gestão/Global/IMB/Agro/Proteção/Wealth) usam layout dual com cargo, outras não
+
+Esses são casos de **layout específico por variante** — mesmo modelo do Cartão Comemorativo. Cada marca vira um template independente.
+
+---
+
+## Etapa 1 — FORM_SCHEMAS: adicionar `template_variant_field` em assinatura-email
+
+Em `src/config/form-schemas.ts`, atualizar a entrada de `assinatura-email`:
+
+```ts
+'assinatura-email': {
+  tipo: 'assinatura-email',
+  label: 'Assinatura de E-mail',
+  template_variant_field: 'marca',  // ← ADICIONAR
+  fields: [
+    { name: 'nome',     label: 'Nome',     type: 'text', required: true },
+    { name: 'cargo',    label: 'Cargo',    type: 'text', required: false },
+    { name: 'telefone', label: 'Telefone', type: 'tel',  required: true },
+    { name: 'email',    label: 'E-mail',   type: 'email', required: true },
+    {
+      name: 'marca',
+      label: 'Marca',
+      type: 'select',
+      required: true,
+      options: [
+        { value: 'svn-investimentos', label: 'SVN Investimentos' },
+        { value: 'svn-capital',       label: 'SVN Capital' },
+        { value: 'svn-connect',       label: 'SVN Connect' },
+        { value: 'svn-gestao',        label: 'SVN Gestão' },
+        { value: 'svn-global',        label: 'SVN Global' },
+        { value: 'svn-imb',           label: 'SVN IMB' },
+        { value: 'svn-agro',          label: 'SVN Agro' },
+        { value: 'svn-protecao',      label: 'SVN Proteção' },
+        { value: 'svn-wealth',        label: 'SVN Wealth' },
+      ],
+    },
+    { name: 'tem_cfp', label: 'Tem CFP?', type: 'radio', options: [
+      { value: 'sim', label: 'Sim' },
+      { value: 'nao', label: 'Não' },
+    ]},
+  ],
+}
+```
+
+**Importante:** confirmar com o código do form HTML qual o nome exato do campo da marca (camelCase como `marca`/`marcaSelecionada`, ou snake_case). Garantir que **`template_variant_field` casa exatamente com o nome do campo no payload do form**. Se houver mismatch, normalizar ambos os lados pra mesma convenção (snake_case recomendado).
+
+---
+
+## Etapa 2 — Desativar template antigo via migração manual
+
+Como o layout dos 9 templates novos será específico de cada marca, **NÃO** fazer migração automática. O usuário vai recriar manualmente.
+
+Comando que o **usuário** executa no Shell após o deploy:
+
+```bash
+psql "DATABASE_PUBLIC_URL" -c "UPDATE art_templates SET is_active = false WHERE tipo = 'assinatura-email' AND variant_value IS NULL;"
+```
+
+Documentar esse passo no output do prompt pra o usuário lembrar.
+
+---
+
+## Etapa 3 — Botão "Duplicar pra outra variante" na listagem
+
+Na página `/admin/templates`, adicionar botão em cada template **que pertence a um tipo com `template_variant_field`**.
+
+### UI
+
+Próximo aos botões existentes (Editar / Ativar/Desativar / Deletar), em cada linha:
+
+```
+[ Editar ]  [ Duplicar pra outra variante ]  [ Ativar ]  [ Deletar ]
+```
+
+### Modal ao clicar
+
+```
+┌─ Duplicar template ─────────────────────────────┐
+│                                                 │
+│  Você está duplicando: "Assinatura SVN Inves."  │
+│                                                 │
+│  Pra qual variante o novo template será?        │
+│  [SVN Capital                              ▾]   │
+│  (opções: marcas do schema, excluindo as já     │
+│   existentes em templates de assinatura-email)  │
+│                                                 │
+│  Nome do novo template *                        │
+│  [Assinatura SVN Capital                     ]  │
+│  (sugestão automática: substitui o sufixo)      │
+│                                                 │
+│  [ Cancelar ]                  [ Duplicar ]     │
+│                                                 │
+└─────────────────────────────────────────────────┘
+```
+
+### Comportamento
+
+Ao confirmar:
+
+```ts
+async function duplicateToVariant(sourceTemplateId, newVariantValue, newName) {
+  const source = await db.query.artTemplates.findFirst({ where: eq(id, sourceTemplateId) });
+  
+  const newConfig = JSON.parse(JSON.stringify(source.config));
+  // Atualizar tipo dentro do config (não muda, mas pra garantir)
+  newConfig.tipo = source.tipo;
+  
+  const [created] = await db.insert(artTemplates).values({
+    tipo: source.tipo,
+    name: newName,
+    variant_value: newVariantValue,
+    config: newConfig,
+    is_active: false,  // criado inativo, usuário ativa após editar
+    updated_by: req.user.id,
+  }).returning();
+  
+  // Redireciona pro editor do novo
+  res.json({ id: created.id, redirect: `/admin/templates/${created.id}/edit` });
+}
+```
+
+### Filtro de variantes disponíveis
+
+O dropdown mostra **apenas variantes que ainda não têm template** pra esse tipo. Lógica:
+
+```ts
+const formSchema = FORM_SCHEMAS[source.tipo];
+const allOptions = formSchema.fields.find(f => f.name === formSchema.template_variant_field)?.options || [];
+const existingVariants = await db.select({ v: artTemplates.variant_value })
+  .from(artTemplates)
+  .where(eq(artTemplates.tipo, source.tipo));
+const existingSet = new Set(existingVariants.map(r => r.v));
+const availableOptions = allOptions.filter(opt => !existingSet.has(opt.value));
+```
+
+Se `availableOptions.length === 0` (todas variantes já têm template), o botão "Duplicar" aparece desabilitado com tooltip "Todas variantes já têm template".
+
+### Nome sugerido automático
+
+Tentar inferir o sufixo da variante atual e trocar:
+
+```ts
+// Se template atual chama "Assinatura SVN Investimentos" e ele tem variant_value='svn-investimentos':
+// Substitui "SVN Investimentos" por "SVN Capital" (label da nova variante)
+const sourceVariantLabel = options.find(o => o.value === source.variant_value)?.label;
+const newVariantLabel = options.find(o => o.value === newVariantValue)?.label;
+const suggestedName = source.name.replace(sourceVariantLabel, newVariantLabel) || `${source.name} (${newVariantLabel})`;
+```
+
+Esse nome é só sugestão — o usuário pode editar antes de confirmar.
+
+---
+
+## Etapa 4 — Validação
+
+### Smoke tests
+
+1. **FORM_SCHEMAS atualizado**: criar template novo escolhendo Assinatura de E-mail → deve aparecer campo "Para qual marca?" com as 9 opções (mesmo padrão do cartão comemorativo)
+
+2. **Template antigo desativado**: após desativar via SQL, submeter solicitação de assinatura → renderer NÃO encontra template ativo, log mostra "sem template ativo, pulando geração" (esperado até criar os novos)
+
+3. **Criar template SVN Investimentos**:
+   - Form: Assinatura de E-mail
+   - Marca: SVN Investimentos
+   - Posiciona layers, salva, ativa
+
+4. **Duplicar pra outra variante**:
+   - Na listagem, clica em "Duplicar pra outra variante" no template recém-criado
+   - Modal abre listando 8 opções (SVN Capital, Connect, Gestão, etc. — exclui Investimentos)
+   - Escolhe SVN Capital
+   - Nome sugerido: "Assinatura SVN Capital" (deduzido)
+   - Confirma → cria template + redireciona pro editor
+   - No editor, layout já está clonado — só precisa trocar o logo e ajustar posição se necessário
+   - Salva, ativa
+
+5. **Submeter solicitação**:
+   - Solicitante preenche form escolhendo marca = SVN Investimentos
+   - Backend busca template ativo com `tipo='assinatura-email' AND variant_value='svn-investimentos'`
+   - Renderiza com o template específico
+   - Arte gerada, download disponível
+
+6. **Repetir o Duplicar** pras outras 7 marcas → 9 templates ativos no total
+
+### Output esperado do agente
+
+Após implementar:
+- Confirmar mudanças no FORM_SCHEMAS de assinatura-email
+- Confirmar comando SQL exato pra usuário rodar (desativar template antigo em prod)
+- Confirmar que botão "Duplicar pra outra variante" aparece e funciona em dev
+- Confirmar que filtro de variantes disponíveis funciona (não duplica)
