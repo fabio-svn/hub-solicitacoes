@@ -73,15 +73,13 @@
       'cartao-comemorativo',
     ];
 
-    const TIPOS_ARTEFATO_GERADO = [
-      'assinatura-email',
-      'cartao-visita-digital',
-      'cartao-boas-vindas',
-      'divulgacao-nps',
-      'convite-fp',
-      'certificado-eventos',
-      'cartao-comemorativo',
-    ];
+    function isTipoComArtefato(tipoId) {
+      if (window._svnFormSchemas?.tipos) {
+        return window._svnFormSchemas.tipos.some(t => t.id === tipoId && t.is_automation);
+      }
+      return ['assinatura-email','cartao-visita-digital','cartao-boas-vindas',
+              'divulgacao-nps','convite-fp','certificado-eventos','cartao-comemorativo'].includes(tipoId);
+    }
 
     let _artefatoPollingTimer = null;
     function iniciarPollingArtefato(solicitacaoId) {
@@ -143,7 +141,7 @@
         subtitulo = 'Seu material será gerado automaticamente e enviado para o e-mail informado em breve.';
       }
 
-      if (resumo.tipo_id && TIPOS_ARTEFATO_GERADO.includes(resumo.tipo_id) && resumo.id) {
+      if (resumo.tipo_id && isTipoComArtefato(resumo.tipo_id) && resumo.id) {
         iniciarPollingArtefato(resumo.id);
       }
 

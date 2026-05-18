@@ -529,6 +529,7 @@
     }
   </style>
 
+  <script src="utils.js"></script>
   <script src="config.js"></script>
   <script src="auth.js"></script>
   <script src="shell.js"></script>
@@ -546,15 +547,9 @@
       <path fill="url(#cu2b)" d="M27.5,16.9l-18,15.5l-8.3-9.7L27.6,0l26.2,22.7l-8.4,9.6L27.5,16.9z"/>
     </svg>`;
 
-    const TIPOS_AUTOMACAO = [
-      'assinatura-email',
-      'cartao-visita-digital',
-      'cartao-boas-vindas',
-      'divulgacao-nps',
-      'convite-fp',
-      'certificado-eventos',
-      'cartao-comemorativo',
-    ];
+    function isTipoAutomacao(tipo) {
+      return (window._svnFormSchemas?.tipos || []).some(t => t.id === tipo && t.is_automation);
+    }
 
     const params = new URLSearchParams(window.location.search);
     const solicitacaoId = params.get('id');
@@ -630,7 +625,7 @@
         || { label: item.status, bg: '#f1f5f9', text: '#475569' };
 
       // ── Layout clean para todos os tipos de automação ──────────────
-      if (TIPOS_AUTOMACAO.includes(item.tipo_solicitacao)) {
+      if (isTipoAutomacao(item.tipo_solicitacao)) {
         const isAdm = typeof Auth !== 'undefined' && Auth.isAdmin && Auth.isAdmin();
 
         const tEl = document.getElementById('solTitulo');
@@ -708,7 +703,7 @@
       }
 
       renderFluxo(item);
-      if (TIPOS_AUTOMACAO.includes(item.tipo_solicitacao)) {
+      if (isTipoAutomacao(item.tipo_solicitacao)) {
         renderEntregaAutomacao(item);
       } else {
         renderAprovacao(item, dados);
@@ -765,7 +760,7 @@
     /* ── renderFluxo (horizontal rail) ─────────── */
     function renderFluxo(item) {
       const card = document.getElementById('fluxoCard');
-      if (TIPOS_AUTOMACAO.includes(item.tipo_solicitacao)) { card.style.display = 'none'; return; }
+      if (isTipoAutomacao(item.tipo_solicitacao)) { card.style.display = 'none'; return; }
       const tipoKey = item.tipo_solicitacao === 'eventos' ? 'eventos' : '_default';
       const fluxo = (typeof FLUXOS_ETAPAS !== 'undefined')
         ? (FLUXOS_ETAPAS[item.tipo_solicitacao] || FLUXOS_ETAPAS[tipoKey] || [])
@@ -875,7 +870,7 @@
     async function renderEntregaAutomacao(item) {
       const card = document.getElementById('aprovacaoCard');
 
-      if (!TIPOS_AUTOMACAO.includes(item.tipo_solicitacao)) return;
+      if (!isTipoAutomacao(item.tipo_solicitacao)) return;
 
       let links = [];
       try {
@@ -1753,14 +1748,6 @@
     }
 
     /* ── renderDados ──────────────────────────── */
-    const WIDE_KEYS = new Set([
-      'conteudo','finalidade','observacoes','observacoesFinais','briefing','descricao',
-      'descricaoEvento','texto','detalhes','contexto','informacaoAdicional','resumo',
-      'expectativas','objetivos','estrategia','canais','materiais','selos','publico',
-      'ideaQuando','localSugestoes','linkTransmissao','personalizacao',
-      'textoCartaoPresente','mensagem','assinatura','agradecimento','conteudoMaterial'
-    ]);
-
     function renderDados(dados, item) {
       if (item.tipo_solicitacao === 'assinatura-email') {
         const dadosCard = document.getElementById('dadosCard');
@@ -1773,15 +1760,13 @@
       let palestrantesBlock = '';
       let hasContent = false;
 
-      const SKIP_KEYS = new Set(['idSolicitacao', 'natureza', 'setor', 'nome', 'materiaisDetalhes']);
-
       for (const [key, value] of Object.entries(dados)) {
         if (value === null || value === undefined || value === '') continue;
         if (/^palFoto\d$/.test(key)) continue;
-        if (SKIP_KEYS.has(key)) continue;
+        if (typeof DRAWER_FIELD_LABELS !== 'undefined' && DRAWER_FIELD_LABELS[key]?.skip) continue;
 
-        const label = (typeof DRAWER_FIELD_LABELS !== 'undefined' && DRAWER_FIELD_LABELS[key]) || key;
-        const isWide = WIDE_KEYS.has(key);
+        const label = (typeof DRAWER_FIELD_LABELS_FLAT !== 'undefined' && DRAWER_FIELD_LABELS_FLAT[key]) || key;
+        const isWide = typeof DRAWER_FIELD_LABELS !== 'undefined' && !!(DRAWER_FIELD_LABELS[key]?.wide);
         const wideClass = isWide ? ' dados-grid-wide' : '';
 
         if (key === 'temPalestrante') {
@@ -1851,141 +1836,6 @@
       }
       html += '</div>';
       container.innerHTML = html;
-    }
-
-    /* ── humanize helpers ─────────────────────── */
-    function normalizeSlug(v) {
-      return String(v ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim().toLowerCase();
-    }
-    function titleCasePtBr(text) {
-      const keep = new Set(['de','da','do','das','dos','e','em','para','ao','aos','a','o']);
-      return String(text).split(' ').filter(Boolean).map((w, i) => {
-        if (i > 0 && keep.has(w.toLowerCase())) return w.toLowerCase();
-        return w.charAt(0).toUpperCase() + w.slice(1).toLowerCase();
-      }).join(' ');
-    }
-    function humanizeSlug(value) {
-      const raw = String(value ?? '').trim();
-      if (!raw) return raw;
-      const map = {
-        'pacote-padrao':'Pacote Padrão','em-producao':'Em produção','nao-definido':'Não definido',
-        'aberto ao publico em geral':'Aberto ao público em geral','base-existente':'Base existente',
-      };
-      const key = normalizeSlug(raw);
-      if (map[key]) return map[key];
-      let h = titleCasePtBr(raw.replace(/[_-]+/g,' ').trim());
-      [[/\bApresentacao\b/g,'Apresentação'],[/\bSolicitacao\b/g,'Solicitação'],
-       [/\bPadrao\b/g,'Padrão'],[/\bProducao\b/g,'Produção'],[/\bNao\b/g,'Não'],
-       [/\bPagina\b/g,'Página'],[/\bDivulgacao\b/g,'Divulgação'],[/\bAtualizacao\b/g,'Atualização'],
-       [/\bPublico\b/g,'Público'],[/\bCertificacao\b/g,'Certificação']
-      ].forEach(([p,r]) => { h = h.replace(p, r); });
-      return h;
-    }
-    function formatarData(raw) {
-      if (!raw) return '';
-      const meses = ['janeiro','fevereiro','março','abril','maio','junho',
-                     'julho','agosto','setembro','outubro','novembro','dezembro'];
-      let d;
-      const matchISO = String(raw).match(/^(\d{4})-(\d{2})-(\d{2})/);
-      if (matchISO) {
-        d = new Date(parseInt(matchISO[1]), parseInt(matchISO[2])-1, parseInt(matchISO[3]));
-      } else {
-        d = new Date(raw);
-      }
-      if (isNaN(d.getTime())) return String(raw);
-      const dia = d.getDate();
-      const mes = meses[d.getMonth()];
-      const ano = d.getFullYear();
-      const diaFmt = String(dia).padStart(2, '0');
-      const mesFmt = String(d.getMonth() + 1).padStart(2, '0');
-      return `${dia} de ${mes} de ${ano} (${diaFmt}/${mesFmt}/${ano})`;
-    }
-
-    function humanizeValue(key, value) {
-      if (key === 'tipoMaterial' || key === 'tipoImpresso') {
-        const map = {
-          'cracha':'Crachá','crachá':'Crachá','roll-up':'Roll-Up','banner':'Banner',
-          'flyer':'Flyer','folder':'Folder','totem':'Totem','adesivo':'Adesivo',
-          'cartao':'Cartão','cartaz':'Cartaz','camisa':'Camisa','brinde':'Brinde',
-        };
-        const lv = String(value).toLowerCase();
-        return map[lv] || humanizeSlug(String(value));
-      }
-      const dataCampos = ['dataEvento', 'prazoEntrega'];
-      if (dataCampos.includes(key) && typeof value === 'string') {
-        const formatted = formatarData(value);
-        if (formatted !== value) return formatted;
-      }
-      if (key === 'isPrivate' || key === 'private') {
-        return (value === 'sim' || value === 'Sim') ? 'Sim' : 'Não';
-      }
-      if (key === 'modeloCartao') {
-        const map = { dourado: 'Dourado', vermelho: 'Vermelho' };
-        return map[String(value).toLowerCase()] || humanizeSlug(String(value));
-      }
-      if (key === 'modeloArte') {
-        const map = { 'com-foto': 'Com foto', 'sem-foto': 'Sem foto' };
-        return map[String(value)] || humanizeSlug(String(value));
-      }
-      if (key === 'estado') {
-        const IBGE_ESTADOS = {
-          "12":"Acre","27":"Alagoas","16":"Amapá","13":"Amazonas",
-          "29":"Bahia","23":"Ceará","53":"Distrito Federal","32":"Espírito Santo",
-          "52":"Goiás","21":"Maranhão","51":"Mato Grosso","50":"Mato Grosso do Sul",
-          "31":"Minas Gerais","15":"Pará","25":"Paraíba","41":"Paraná",
-          "26":"Pernambuco","22":"Piauí","33":"Rio de Janeiro","24":"Rio Grande do Norte",
-          "43":"Rio Grande do Sul","11":"Rondônia","14":"Roraima","42":"Santa Catarina",
-          "35":"São Paulo","28":"Sergipe","17":"Tocantins",
-        };
-        if (IBGE_ESTADOS[String(value)]) return IBGE_ESTADOS[String(value)];
-        return String(value);
-      }
-      const maps = {
-        natureza: { presencial:'Presencial', online:'Online' },
-        maturidade: { 1:'Tenho a maioria das informações', 2:'Tenho algumas informações', 3:'Ainda estou estruturando' },
-        localEvento: { unidade:'Unidade SVN', externo:'Local externo', 'nao-definido':'Não definido' },
-      };
-      const matMap = {};
-      if (typeof ITENS_MATERIAIS !== 'undefined') ITENS_MATERIAIS.forEach(i => { matMap[normalizeSlug(i.id)] = i.label; });
-      if (typeof ITENS_MATERIAIS_ONLINE !== 'undefined') ITENS_MATERIAIS_ONLINE.forEach(i => { matMap[normalizeSlug(i.id)] = i.label; });
-      if (key === 'materiais' && Array.isArray(value)) return value.map(v => matMap[normalizeSlug(v)] || humanizeSlug(v)).join(', ');
-      if (key === 'selos' && Array.isArray(value)) {
-        const SELOS_FALLBACK = {
-          'ancord':'Ancord','cea':'CEA','cfp':'CFP','cga':'CGA','cnpi':'CNPI',
-          'cpa10':'CPA-10','cpa20':'CPA-20','xp-private':'XP Private','palestrante-svn':'Palestrante SVN',
-        };
-        const sm = { ...SELOS_FALLBACK };
-        if (typeof SELOS_ASSESSOR !== 'undefined') SELOS_ASSESSOR.forEach(s => { sm[normalizeSlug(s.id)] = s.label; });
-        return value.map(v => sm[normalizeSlug(v)] || String(v).toUpperCase()).join(' · ');
-      }
-      if (maps[key]) {
-        const nv = normalizeSlug(String(value));
-        for (const [mk, ml] of Object.entries(maps[key])) { if (normalizeSlug(String(mk)) === nv) return ml; }
-      }
-      const marcasMap = {
-        'svn-investimentos':                    'SVN Investimentos',
-        'svn-capital':                          'SVN Capital',
-        'svn-connect':                          'SVN Connect',
-        'svn-gestao':                           'SVN Gestão',
-        'svn-global':                           'SVN Global',
-        'svn-imb':                              'SVN IMB',
-        'svn-agro-cambio-commodities':          'SVN Agro, Câmbio & Commodities',
-        'svn-protecao-patrimonial':             'SVN Proteção Patrimonial',
-        'svn-wealth-planning':                  'SVN Wealth Planning',
-        'SVN':                                  'SVN Investimentos',
-        'SVN Investimentos':                    'SVN Investimentos',
-        'SVN Capital':                          'SVN Capital',
-        'SVN Connect':                          'SVN Connect',
-        'SVN Gestão':                           'SVN Gestão',
-        'SVN Global':                           'SVN Global',
-        'SVN Investment & Merchant Banking':    'SVN Investment & Merchant Banking',
-        'SVN Agro, Câmbio & Commodities':       'SVN Agro, Câmbio & Commodities',
-        'SVN Proteção Patrimonial':             'SVN Proteção Patrimonial',
-        'SVN Wealth Planning':                  'SVN Wealth Planning',
-      };
-      if (typeof value === 'string' && marcasMap[value]) return marcasMap[value];
-      if (typeof value === 'string' && (value.includes('-') || value.includes('_'))) return humanizeSlug(value);
-      return value;
     }
 
     init();

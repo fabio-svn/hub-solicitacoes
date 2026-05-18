@@ -21,15 +21,19 @@ export type FormSchema = {
   fields: FormFieldSchema[];
   computed?: ComputedField[];
   template_variant_field?: string;
+  is_automation: boolean;
+  has_clickup: boolean;
+  has_approval_flow: boolean;
+  has_downloadable_artifact: boolean;
 };
 
-const CONTRATOS_OPTS = [
+export const CONTRATOS_OPTS = [
   { value: 'svn-investimentos', label: 'SVN Investimentos' },
   { value: 'svn-capital',       label: 'SVN Capital' },
   { value: 'svn-connect',       label: 'SVN Connect' },
 ];
 
-const MARCAS_OPTS = [
+export const MARCAS_OPTS = [
   { value: 'svn-investimentos',           label: 'SVN Investimentos' },
   { value: 'svn-capital',                 label: 'SVN Capital' },
   { value: 'svn-connect',                 label: 'SVN Connect' },
@@ -41,17 +45,33 @@ const MARCAS_OPTS = [
   { value: 'svn-wealth-planning',         label: 'SVN Wealth Planning' },
 ];
 
-const CARGOS_OPTS = [
+export const CARGOS_OPTS = [
   { value: 'assessor',        label: 'Assessor de Investimentos' },
   { value: 'assessora',       label: 'Assessora de Investimentos' },
   { value: 'socio-assessor',  label: 'Sócio e Assessor de Investimentos' },
   { value: 'socia-assessora', label: 'Sócia e Assessora de Investimentos' },
 ];
 
+export const SETORES_LIST = [
+  "Administração", "Alocação", "Aracaju", "Câmbio", "Campo Grande",
+  "Capital Humano", "Cascavel", "Commodities", "Connect", "Corporate",
+  "Cuiabá", "Curitiba", "Curitiba Digital", "Digital", "Financeiro",
+  "Foz do Iguaçu", "Institucional", "Jurídico", "Londrina", "Marketing",
+  "Marketing Digital", "Maringá", "Maringá Digital", "Middle", "Performance",
+  "Produto", "Proteção Patrimonial", "Renda Fixa", "Renda Variável", "Salvador",
+  "São Paulo", "São Paulo Digital", "SVN Gestão", "SVN Global",
+  "SVN Investment & Merchant Banking (M&A)", "Toledo", "Universidade SVN",
+  "Vitória da Conquista", "Wealth Planning",
+];
+
 export const FORM_SCHEMAS: Record<string, FormSchema> = {
   'cartao-boas-vindas': {
     tipo: 'cartao-boas-vindas',
     label: 'Cartão de Boas-vindas',
+    is_automation: true,
+    has_clickup: false,
+    has_approval_flow: false,
+    has_downloadable_artifact: true,
     fields: [
       { name: 'telefone',        label: 'Telefone',              type: 'tel',    required: true },
       { name: 'nome_cliente',    label: 'Nome do cliente',        type: 'text',   required: true },
@@ -78,6 +98,10 @@ export const FORM_SCHEMAS: Record<string, FormSchema> = {
   'cartao-visita-fisico': {
     tipo: 'cartao-visita-fisico',
     label: 'Cartão de Visita — Físico',
+    is_automation: false,
+    has_clickup: true,
+    has_approval_flow: true,
+    has_downloadable_artifact: false,
     fields: [
       { name: 'nome',            label: 'Nome completo',   type: 'text',   required: true },
       { name: 'whatsapp',        label: 'WhatsApp',         type: 'tel',    required: true },
@@ -96,6 +120,10 @@ export const FORM_SCHEMAS: Record<string, FormSchema> = {
   'cartao-visita-digital': {
     tipo: 'cartao-visita-digital',
     label: 'Cartão de Visita — Digital',
+    is_automation: true,
+    has_clickup: false,
+    has_approval_flow: false,
+    has_downloadable_artifact: true,
     template_variant_field: 'contrato_social',
     fields: [
       { name: 'nome',            label: 'Nome completo',       type: 'text',   required: true },
@@ -133,6 +161,10 @@ export const FORM_SCHEMAS: Record<string, FormSchema> = {
   'divulgacao-nps': {
     tipo: 'divulgacao-nps',
     label: 'Arte NPS',
+    is_automation: true,
+    has_clickup: false,
+    has_approval_flow: false,
+    has_downloadable_artifact: true,
     fields: [
       { name: 'telefone',        label: 'Telefone',            type: 'tel',      required: true },
       { name: 'nome_assinatura', label: 'Nome para assinatura', type: 'text',    required: true },
@@ -156,6 +188,10 @@ export const FORM_SCHEMAS: Record<string, FormSchema> = {
   'convite-fp': {
     tipo: 'convite-fp',
     label: 'Convite Financial Planning',
+    is_automation: true,
+    has_clickup: false,
+    has_approval_flow: false,
+    has_downloadable_artifact: true,
     fields: [
       { name: 'telefone',         label: 'Telefone',            type: 'tel',    required: true },
       { name: 'codigo_assessor',  label: 'Código do assessor',  type: 'text',   required: true },
@@ -177,6 +213,10 @@ export const FORM_SCHEMAS: Record<string, FormSchema> = {
   'certificado-eventos': {
     tipo: 'certificado-eventos',
     label: 'Certificado para Eventos',
+    is_automation: true,
+    has_clickup: false,
+    has_approval_flow: false,
+    has_downloadable_artifact: true,
     fields: [
       { name: 'telefone',       label: 'Telefone',          type: 'tel',   required: true },
       { name: 'nome_completo',  label: 'Nome completo',      type: 'text',  required: true },
@@ -190,6 +230,10 @@ export const FORM_SCHEMAS: Record<string, FormSchema> = {
   'cartao-comemorativo': {
     tipo: 'cartao-comemorativo',
     label: 'Cartão Comemorativo',
+    is_automation: true,
+    has_clickup: false,
+    has_approval_flow: false,
+    has_downloadable_artifact: true,
     fields: [
       { name: 'telefone',           label: 'Telefone',           type: 'tel',      required: true },
       { name: 'nome_aniversariante', label: 'Nome do aniversariante', type: 'text', required: true },
@@ -210,6 +254,10 @@ export const FORM_SCHEMAS: Record<string, FormSchema> = {
   'assinatura-email': {
     tipo: 'assinatura-email',
     label: 'Assinatura de E-mail',
+    is_automation: true,
+    has_clickup: false,
+    has_approval_flow: false,
+    has_downloadable_artifact: true,
     template_variant_field: 'marca',
     fields: [
       { name: 'nome',              label: 'Nome completo',    type: 'text',  required: true },
@@ -246,6 +294,10 @@ export function getFormSchemaList() {
       description: s.description,
       template_variant_field: variantField ?? null,
       template_variant_options: variantOptions,
+      is_automation: s.is_automation,
+      has_clickup: s.has_clickup,
+      has_approval_flow: s.has_approval_flow,
+      has_downloadable_artifact: s.has_downloadable_artifact,
       placeholders: [
         ...s.fields.map(f => f.name),
         ...(s.computed || []).map(c => c.name),

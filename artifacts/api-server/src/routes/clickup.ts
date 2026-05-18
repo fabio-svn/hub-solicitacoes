@@ -2,6 +2,8 @@ import { logger } from "../lib/logger";
 import { randomInt } from "crypto";
 import { db, usersTable, userTipoAssignmentsTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
+import { mapClickUpStatus } from "../config/clickup-status";
+import { FORM_SCHEMAS } from "../config/form-schemas";
 
 const CLICKUP_API_TOKEN = process.env.CLICKUP_API_TOKEN || "";
 
@@ -10,48 +12,6 @@ const CLICKUP_LIST_GERAL     = process.env.CLICKUP_LIST_GERAL     || "9013006735
 const CLICKUP_LIST_BRINDES   = process.env.CLICKUP_LIST_BRINDES   || "900100469662";
 const CLICKUP_LIST_PATROCINIO = process.env.CLICKUP_LIST_PATROCINIO || "901324638951";
 
-function normalizeStatusKey(raw: string): string {
-  return raw
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .trim();
-}
-
-const CLICKUP_STATUS_MAP: Record<string, string> = {
-  "to do":                      "recebido",
-  "recebido":                   "recebido",
-  "in progress":                "em-producao",
-  "em analise":                 "em-analise",
-  "em andamento":               "em-producao",
-  "em producao":                "em-producao",
-  "em producao.":               "em-producao",
-  "em revisao":                 "em-revisao",
-  "em aprovacao":               "em-aprovacao",
-  "alinhamentos":               "alinhamentos",
-  "cotacao-aprovacao":          "cotacao-aprovacao",
-  "cotacao aprovacao":          "cotacao-aprovacao",
-  "em cotacao / aprovacao":     "cotacao-aprovacao",
-  "em cotacao":                 "cotacao-aprovacao",
-  "aguardando":                 "aguardando",
-  "aguardando informacao":      "aguardando",
-  "aguardando informacao.":     "aguardando",
-  "waiting":                    "aguardando",
-  "waiting on rh":              "aguardando",
-  "aguardando rh":              "aguardando-rh",
-  "aguardando pagamento":       "aguardando-pagamento",
-  "aguardando finalizacao":     "aguardando-finalizacao",
-  "em espera":                  "em-espera",
-  "complete":                   "concluido",
-  "concluido":                  "concluido",
-  "done":                       "concluido",
-  "closed":                     "concluido",
-  "cancelled":                  "cancelado",
-  "canceled":                   "cancelado",
-  "cancelado":                  "cancelado",
-  "reprovado":                  "reprovado",
-  "reprovado / cancelado":      "reprovado",
-};
 
 const IBGE_STATE_MAP: Record<string, string> = {
   "12": "Acre", "27": "Alagoas", "16": "Amapá", "13": "Amazonas",
@@ -1074,15 +1034,6 @@ const PRAZO_DIAS_UTEIS: Record<string, number> = {
   "patrocinio":                    30,
 };
 
-const TIPOS_SEM_CLICKUP = [
-  "assinatura-email",
-  "cartao-visita-digital",
-  "cartao-boas-vindas",
-  "divulgacao-nps",
-  "convite-fp",
-  "certificado-eventos",
-  "cartao-comemorativo",
-];
 
 function proximaQuarta(): Date {
   const d = new Date();
@@ -1129,7 +1080,7 @@ export async function createClickUpTask(
 
   const tipo = solicitacao.tipo_solicitacao;
 
-  if (TIPOS_SEM_CLICKUP.includes(tipo)) {
+  if (FORM_SCHEMAS[tipo]?.has_clickup === false) {
     logger.info({ tipo }, "ClickUp: tipo sem integração, pulando");
     return { taskId: null, taskName: "", responsavel: "" };
   }
@@ -1269,8 +1220,7 @@ export async function getClickUpTaskStatus(taskId: string): Promise<string | nul
     });
     if (!response.ok) return null;
     const data = await response.json() as { status?: { status?: string } };
-    const clickupStatus = normalizeStatusKey(data.status?.status || "");
-    return CLICKUP_STATUS_MAP[clickupStatus] || null;
+    return mapClickUpStatus(data.status?.status || "");
   } catch {
     return null;
   }

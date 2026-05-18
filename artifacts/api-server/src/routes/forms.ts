@@ -11,9 +11,20 @@ import { gerarAssinaturaEmail } from "./gerador-assinatura";
 import { gerarCartaoBoasVindasHandler } from "./gerador-cartao-boas-vindas";
 import { gerarArteParaSolicitacao } from "../services/art-generator";
 import { logger } from "../lib/logger";
+import { CONTRATOS_OPTS, MARCAS_OPTS, CARGOS_OPTS, SETORES_LIST, getFormSchemaList } from "../config/form-schemas";
 
 const router = Router();
 const upload = multer({ dest: os.tmpdir(), limits: { fileSize: 250 * 1024 * 1024, files: 10, fields: 20 } });
+
+router.get("/form-schemas", (_req, res) => {
+  res.json({
+    marcas:    MARCAS_OPTS,
+    contratos: CONTRATOS_OPTS,
+    cargos:    CARGOS_OPTS,
+    setores:   SETORES_LIST,
+    tipos:     getFormSchemaList(),
+  });
+});
 
 async function logAtividade(params: {
   userEmail?: string; userName?: string;

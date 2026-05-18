@@ -1,0 +1,269 @@
+## Contexto
+
+Esta é uma refatoração de deduplicação. O projeto tem várias listas e 
+funções espalhadas em múltiplos arquivos. O objetivo é estabelecer uma 
+fonte única de verdade pra cada um, sem mudar comportamento externo.
+
+Cobre 8 itens (P1.1, P1.2, P1.3, P1.4, P1.11, P1.12, P1.16, P1.17).
+
+## Estratégia geral
+
+Para cada item: identifica todas as duplicações via grep, escolhe o 
+arquivo canônico, refatora os consumidores pra usar a fonte canônica, 
+deleta as duplicações.
+
+---
+
+## Tarefa 1 — MARCAS, CONTRATOS, CARGOS via API público
+
+Hoje essas listas vivem em 4 lugares:
+- artifacts/api-server/public/config.js (frontend)
+- artifacts/api-server/src/config/form-schemas.ts (backend)
+- artifacts/api-server/public/form-cartao-boas-vindas.html (inline 
+  CONTRATOS hardcoded)
+- artifacts/api-server/public/admin-templates.html (FIELD_OPTIONS inline)
+
+Confirmar com:
+  grep -rln "svn-investimentos\|svn-capital\|svn-connect" \
+    artifacts/api-server/
+
+Ação:
+
+1. Em artifacts/api-server/src/routes/forms.ts (ou criar um novo arquivo 
+   src/routes/form-schemas-public.ts), exponha um endpoint público 
+   GET /api/form-schemas que retorna:
+
+     {
+       "marcas": [...],     // MARCAS_OPTS
+       "contratos": [...],  // CONTRATOS_OPTS
+       "cargos": [...],     // CARGOS_OPTS
+       "setores": [...],    // SETORES
+       "tipos": [
+         { "id": "cartao-boas-vindas", "label": "...", 
+           "is_automation": true, "has_approval_flow": false, ... },
+         ...
+       ]
+     }
+
+   IMPORTANTE: este endpoint não precisa de auth (forms públicos consomem). 
+   Pode ter rate limit básico (10 req/min por IP).
+
+2. Em config.js, substituir as listas hardcoded por uma carga assíncrona 
+   do endpoint, populando as mesmas variáveis (MARCAS_SVN, 
+   CONTRATOS_SOCIAIS, CARGOS_ASSESSOR, SETORES) DEPOIS do fetch.
+
+   Manter compatibilidade com o `_configReady` Promise — quem espera por 
+   ele deve receber os dados carregados.
+
+3. Em form-cartao-boas-vindas.html, remover a definição inline de 
+   contratos e usar CONTRATOS_SOCIAIS do config.
+
+4. Em admin-templates.html, FIELD_OPTIONS deve consumir do mesmo endpoint 
+   ou do config.js já populado.
+
+---
+
+## Tarefa 2 — TIPOS_AUTOMACAO unificada via flag is_automation
+
+Hoje a lista dos 7 tipos de automação está hardcoded em 6 lugares:
+- src/routes/forms.ts (em 2 lugares — REQUIRED_FIELDS implícito e o 
+  endpoint /entrega)
+- src/routes/clickup.ts (TIPOS_SEM_CLICKUP)
+- public/thankyou.html (TIPOS_ARTEFATO_GERADO — já corrigido em P0)
+- public/solicitacao.html (TIPOS_AUTOMACAO)
+- public/admin-templates.html (KNOWN_TIPOS)
+
+Confirmar:
+  grep -rln "TIPOS_AUTOMACAO\|TIPOS_SEM_CLICKUP\|TIPOS_ARTEFATO_GERADO" \
+    artifacts/api-server/
+
+Ação:
+
+1. Em src/config/form-schemas.ts, garantir que cada tipo tem flags:
+     {
+       is_automation: boolean,
+       has_approval_flow: boolean,
+       has_downloadable_artifact: boolean,  
+       has_clickup: boolean,
+     }
+
+2. O endpoint /api/form-schemas (Tarefa 1) deve expor essas flags.
+
+3. Em clickup.ts: substituir TIPOS_SEM_CLICKUP por filtro via 
+   `!tipo.has_clickup` consultando FORM_SCHEMAS.
+
+4. Em solicitacao.html e thankyou.html: substituir as listas inline 
+   por consulta ao config (que já vem carregado).
+
+5. Em admin-templates.html: idem.
+
+---
+
+## Tarefa 3 — humanizeValue unificado em utils.js
+
+Existe em 3 versões diferentes:
+- dashboard.html (versão completa, ~70 linhas)
+- solicitacao.html (versão mais completa, ~90 linhas, com IBGE_ESTADOS)
+- admin.html (versão mini, ~15 linhas)
+
+Confirmar:
+  grep -ln "function humanizeValue" \
+    artifacts/api-server/public/
+
+Ação:
+
+1. Em artifacts/api-server/public/utils.js, adicione a função 
+   humanizeValue completa — use a versão de solicitacao.html como base 
+   (é a mais completa).
+
+2. Adicione também as funções auxiliares que ela usa: normalizeSlug, 
+   titleCasePtBr, humanizeSlug, formatarData.
+
+3. Deletar a definição de humanizeValue em dashboard.html, solicitacao.html 
+   e admin.html. As chamadas continuam funcionando porque utils.js já é 
+   importado em todas essas páginas (verificar com grep que utils.js 
+   está no <script src>).
+
+4. Se utils.js não estiver importado em algum dos 3 arquivos, adicione.
+
+---
+
+## Tarefa 4 — CLICKUP_STATUS_MAP unificado
+
+Hoje em 2 lugares com cardinalidades diferentes:
+- src/routes/webhook.ts (27 statuses)
+- src/routes/clickup.ts (29 statuses)
+
+Ação:
+
+1. Criar artifacts/api-server/lib/clickup-status.ts (ou em src/config/ 
+   se preferir):
+
+     export const CLICKUP_STATUS_MAP: Record<string, string> = {
+       // ... merge dos 2 maps existentes, escolhendo a versão mais 
+       // recente/correta quando houver divergência
+     };
+
+2. webhook.ts e clickup.ts importam de lá. Deletar as definições inline.
+
+3. Se houver divergência entre os 2 maps em algum status, ESCOLHA O 
+   VALOR DE clickup.ts (29 entries — provavelmente o mais atualizado) 
+   e me reporte quais statuses tinham valores diferentes.
+
+---
+
+## Tarefa 5 — DRAWER_FIELD_LABELS estendido com metadata
+
+Hoje em solicitacao.html há duas Sets soltos:
+  const WIDE_KEYS = new Set([...20 keys...]);
+  const SKIP_KEYS = new Set(['idSolicitacao', 'natureza', 'setor', 'nome', 'materiaisDetalhes']);
+
+E em config.js há DRAWER_FIELD_LABELS = { key: 'Label', ... }.
+
+Ação:
+
+1. Em config.js, transforme DRAWER_FIELD_LABELS em objetos com metadata:
+
+     const DRAWER_FIELD_LABELS = {
+       conteudo: { label: 'Conteúdo', wide: true },
+       finalidade: { label: 'Finalidade', wide: true },
+       idSolicitacao: { label: 'ID', skip: true },
+       // ... etc
+     };
+
+2. Pra retrocompatibilidade, exporte também uma versão flat 
+   (DRAWER_FIELD_LABELS_FLAT) que é { key: 'Label' }, caso outros 
+   arquivos consumam só o label.
+
+3. Em solicitacao.html, substitua WIDE_KEYS.has(key) por 
+   DRAWER_FIELD_LABELS[key]?.wide. Substitua SKIP_KEYS.has(key) por 
+   DRAWER_FIELD_LABELS[key]?.skip.
+
+4. Delete as Sets WIDE_KEYS e SKIP_KEYS de solicitacao.html.
+
+---
+
+## Tarefa 6 — Header dedup entre auth.js e shell.js
+
+Hoje renderHeader existe em 2 lugares:
+- auth.js (Auth.renderHeader — legacy)
+- shell.js (Shell._buildHeader — atual)
+
+Ação:
+
+1. Procure por chamadas a Auth.renderHeader em todo o frontend:
+     grep -rn "Auth.renderHeader" artifacts/api-server/public/
+
+2. Se ZERO chamadas (provável), delete Auth.renderHeader de auth.js.
+
+3. Se houver chamadas, refatore-as pra Shell.render({ activeRoute: ... }).
+
+---
+
+## Tarefa 7 — IBGE_ESTADOS no config.js
+
+Hoje hardcoded inline em solicitacao.html (dentro do humanizeValue) e 
+provavelmente em outros lugares.
+
+Ação:
+
+1. Em config.js, adicione:
+
+     const IBGE_ESTADOS = {
+       "11":"Rondônia", "12":"Acre", "13":"Amazonas", ...
+       // 27 estados brasileiros
+     };
+
+2. solicitacao.html e form-eventos.html consomem dessa constante.
+
+3. Delete a definição inline em solicitacao.html.
+
+---
+
+## Tarefa 8 — UI de gestão de usuários consolidada
+
+Hoje existem 2 UIs:
+- admin.html: seção colapsável "Gestão de usuários" (linhas com 
+  loadUsers, changeRole)
+- admin-usuarios.html: página dedicada
+
+Ambas fazem a mesma coisa. Escolha uma e delete a outra.
+
+Recomendação: manter admin-usuarios.html (página dedicada é mais limpa). 
+Remover a seção de usuários de admin.html (incluindo loadUsers, 
+changeRole, toggleUsers, e o DOM correspondente).
+
+NOTA: este task assume que P0.7 (PATCH→PUT em admin-usuarios.html) já 
+foi aplicado. Se admin-usuarios.html ainda tiver PATCH, NÃO faça este 
+task — me avise.
+
+---
+
+## Critério de validação consolidado
+
+1. Grep tests:
+   - grep -rln "svn-investimentos.*label" artifacts/api-server/public/
+     → não deve haver lista inline (só consumidores)
+   - grep -ln "function humanizeValue" artifacts/api-server/public/
+     → apenas utils.js
+   - grep -rn "CLICKUP_STATUS_MAP" artifacts/api-server/src/
+     → apenas lib/clickup-status.ts (definição) + imports nos consumidores
+   - grep -rn "TIPOS_AUTOMACAO\s*=" artifacts/api-server/public/
+     → não deve haver mais definições inline; só consumidores
+
+2. Smoke tests manuais:
+   - Submete form-cartao-boas-vindas — funciona normalmente
+   - Abre /solicitacao.html?id=X de uma solicitação concluída — 
+     humanizeValue renderiza valores corretamente
+   - Abre /thankyou.html depois de submeter — polling funciona pros 7 tipos
+   - Abre /admin.html — sem erro de console, dropdowns funcionam
+
+3. Console do browser limpo (sem ReferenceError de variáveis movidas).
+
+## Não faça
+
+- Não delete os legacy generators (gerador-*.ts) — é Prompt 2
+- Não mexa em ApiError, logger ou status flow — é Prompt 2  
+- Não toque em form-base.js nem rodadas backend — é Prompt 3
+- Não delete a tabela de form_schemas no banco se existir
+- Não quebre a estrutura de _configReady em config.js

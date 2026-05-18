@@ -196,56 +196,6 @@ const Auth = {
     const dd = document.getElementById('userDropdown');
     if (dd) dd.style.display = dd.style.display === 'none' ? 'block' : 'none';
   },
-
-  renderHeader(container, options = {}) {
-    if (!container) return;
-    const { dark = false } = options;
-    const logoUrl = dark ? URL_LOGO_BRANCA : URL_LOGO_PRETA;
-    if (!this.user) return;
-    const initials = this.getInitials();
-    const name = this.getUserName();
-    const lidos = this._getLidos();
-    const naoLidos = [...this._pendenteIds].filter(id => !lidos.has(id));
-    const badgeCount = naoLidos.length;
-
-    container.innerHTML = `
-      <div class="header-inner">
-        <a href="/solicitacoes.html" class="header-logo"><img src="${logoUrl}" alt="SVN" height="24"></a>
-        <div class="header-user" style="position:relative">
-          <div id="userMenuTrigger" style="display:flex;align-items:center;gap:8px;cursor:pointer" onclick="Auth.toggleUserMenu()">
-            <div class="avatar" style="position:relative">
-              ${initials}
-              <span id="notifBadgeAvatar" class="notif-badge" style="${badgeCount > 0 ? '' : 'display:none'}">${badgeCount > 9 ? '9+' : badgeCount}</span>
-            </div>
-            <span class="user-name">${name}</span>
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="opacity:0.4"><polyline points="6 9 12 15 18 9"/></svg>
-          </div>
-          <div id="userDropdown" style="display:none;position:absolute;top:calc(100% + 8px);right:0;background:var(--card-white);border:1px solid var(--border-light);border-radius:10px;box-shadow:0 4px 16px rgba(0,0,0,0.12);min-width:180px;z-index:200;overflow:hidden">
-            <a href="/dashboard.html" style="display:flex;align-items:center;gap:8px;padding:10px 16px;font-size:0.85rem;font-weight:600;color:var(--carbon-black);text-decoration:none" onmouseover="this.style.background='var(--icon-bg)'" onmouseout="this.style.background='transparent'">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/></svg>
-              Minhas solicitações
-              <span id="notifBadgeMenu" class="notif-badge-menu" style="${badgeCount > 0 ? '' : 'display:none'}">Novo</span>
-            </a>
-            <button onclick="Auth.logout()" style="display:flex;align-items:center;gap:8px;padding:10px 16px;font-size:0.85rem;font-weight:600;color:var(--carbon-black);background:none;border:none;cursor:pointer;width:100%;text-align:left;font-family:'Nunito Sans',sans-serif;border-top:1px solid var(--border-light)" onmouseover="this.style.background='var(--icon-bg)'" onmouseout="this.style.background='transparent'">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-              Sair
-            </button>
-          </div>
-        </div>
-      </div>
-    `;
-
-    if (!Auth._outsideClickListenerAdded) {
-      Auth._outsideClickListenerAdded = true;
-      document.addEventListener('click', function(e) {
-        const trigger = document.getElementById('userMenuTrigger');
-        const dd = document.getElementById('userDropdown');
-        if (dd && trigger && !trigger.contains(e.target) && !dd.contains(e.target)) {
-          dd.style.display = 'none';
-        }
-      });
-    }
-  }
 };
 
 // ── INTERCEPTOR GLOBAL DE FETCH — sessão expirada ─────────────

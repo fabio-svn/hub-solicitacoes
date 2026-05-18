@@ -1,0 +1,163 @@
+## Contexto
+
+Esta tarefa agrupa 6 fixes pequenos e isolados em arquivos diferentes do 
+Hub de Solicitações SVN. Cada item é independente. Se algum não puder 
+ser aplicado, pule e reporte o motivo no final.
+
+---
+
+## Item 1 — Padronizar cor ruby-red
+
+A cor da marca SVN é #AC3631 (definida no style.css). Alguns arquivos 
+têm uma variante incorreta #9f3f37.
+
+Ação:
+1. Buscar todas as ocorrências:
+     grep -rn "#9f3f37" artifacts/api-server/public/
+
+2. Substituir cada ocorrência por #AC3631.
+
+3. Confirmar que --ruby-red em style.css continua #AC3631 (não 
+   substituir lá se já estiver correto).
+
+---
+
+## Item 2 — Asterisco no label "Seu cliente se enquadra como Private?"
+
+No arquivo artifacts/api-server/public/form-cartao-boas-vindas.html, 
+o label desse campo não tem o asterisco vermelho que indica campo 
+obrigatório, mas o input radio TEM atributo required.
+
+Ação:
+Localizar o label "Seu cliente se enquadra como Private?" e adicionar 
+o asterisco no mesmo padrão dos outros campos obrigatórios:
+
+  <label>Seu cliente se enquadra como Private? <span style="color:var(--ruby-red)">*</span></label>
+
+---
+
+## Item 3 — Adicionar 'patrocinio' no NATUREZA_LABEL
+
+No arquivo artifacts/api-server/public/dashboard.html, a constante 
+NATUREZA_LABEL tem mapeamento pra 'presencial' e 'online', mas não 
+pra 'patrocinio'. Resultado: solicitações com natureza='patrocinio' 
+renderizam string raw em vez do label.
+
+Ação:
+Localizar a constante NATUREZA_LABEL e adicionar:
+  patrocinio: 'Patrocínio',
+
+A versão final deve ter os 3 valores: presencial, online, patrocinio.
+
+---
+
+## Item 4 — Flash visual `${...}` em admin-assets.html
+
+No arquivo artifacts/api-server/public/admin-assets.html, há um 
+template literal `${Array(8).fill(...)}` escrito DENTRO de HTML 
+estático (fora de qualquer crase de template literal). Resultado: 
+até o JS rodar, o user vê literalmente "${Array(8).fill(...)}" 
+na tela.
+
+Ação:
+Localizar o bloco:
+
+  <div id="assetsContainer">
+    <div class="loading-grid" id="loadingSkeleton">
+      ${Array(8).fill('<div class="skeleton"></div>').join('')}
+    </div>
+  </div>
+
+Substituir por 8 divs skeleton estáticas:
+
+  <div id="assetsContainer">
+    <div class="loading-grid" id="loadingSkeleton">
+      <div class="skeleton"></div>
+      <div class="skeleton"></div>
+      <div class="skeleton"></div>
+      <div class="skeleton"></div>
+      <div class="skeleton"></div>
+      <div class="skeleton"></div>
+      <div class="skeleton"></div>
+      <div class="skeleton"></div>
+    </div>
+  </div>
+
+---
+
+## Item 5 — Deletar dead code em admin-assets.html
+
+No arquivo admin-assets.html, há 2 constantes declaradas no início 
+do script mas nunca usadas:
+
+  const URL_LOGO_PRETA = '/logo-preta.png';
+  const URL_LOGO_BRANCA = '/logo-branca.png';
+
+Ação:
+Confirmar com grep que não são referenciadas:
+  grep -n "URL_LOGO_PRETA\|URL_LOGO_BRANCA" \
+    artifacts/api-server/public/admin-assets.html
+
+Se aparecerem APENAS nas linhas de declaração, deletar essas 2 linhas. 
+Se aparecerem em outras linhas, NÃO deletar — me reportar.
+
+---
+
+## Item 6 — Filtro "Em uso" funcional em admin-assets.html
+
+No arquivo admin-assets.html, o select de filtro tem 3 opções:
+- "" (todos)
+- "orphan" (não utilizados)
+- "used" (em uso)
+
+Mas o JS só mapeia 'orphan' pro endpoint:
+  if (usage === 'orphan') url += 'orphan=1&';
+
+Filtrar por "Em uso" hoje retorna TODOS os assets em vez de só os 
+em uso.
+
+Ação:
+Verificar primeiro se o backend src/routes/assets.ts aceita um 
+parâmetro de filtro inverso (ex: ?used=1).
+
+- Se SIM: adicionar no JS:
+    if (usage === 'used') url += 'used=1&';
+
+- Se NÃO: filtrar no frontend após receber a resposta. Adicionar 
+  depois do filtro existente:
+    if (usage === 'used') {
+      allAssets = allAssets.filter(a => a.usage_count > 0);
+    }
+
+---
+
+## Critério de validação consolidado
+
+1. grep -rn "#9f3f37" artifacts/api-server/public/
+   → não retorna nada (ou só comentários explicativos)
+
+2. Inspecionar form-cartao-boas-vindas.html no browser: o label 
+   "Seu cliente se enquadra como Private?" tem asterisco vermelho.
+
+3. grep -n "patrocinio" artifacts/api-server/public/dashboard.html
+   → mostra a nova entrada NATUREZA_LABEL.patrocinio
+
+4. Abrir admin-assets.html no browser. ANTES do JS terminar de 
+   rodar, o skeleton de loading aparece visualmente (sem "${" 
+   literal na tela).
+
+5. grep -n "URL_LOGO_PRETA\|URL_LOGO_BRANCA" \
+     artifacts/api-server/public/admin-assets.html
+   → não retorna nada (ou retornar e reportar caso esteja sendo 
+   usado em outro lugar).
+
+6. Em admin-assets.html, selecionar filtro "Em uso" — só assets 
+   com usage_count > 0 devem aparecer.
+
+## Não faça
+
+- Não touch em outros arquivos além dos mencionados
+- Não rode build, lint, format
+- Não delete outras constantes "dead-looking" sem confirmar primeiro
+- Se algum item não puder ser aplicado (arquivo mudou, código não 
+  encontrado, etc), pule e reporte ao final — não invente substituições

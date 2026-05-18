@@ -1054,6 +1054,12 @@
     // ── Init ─────────────────────────────────────────────────────
     async function init() {
       await _configReady;
+      if (window._svnFormSchemas) {
+        if (window._svnFormSchemas.contratos?.length)
+          FIELD_OPTIONS['contrato_social'] = window._svnFormSchemas.contratos.map(c => ({ value: c.id, label: c.label }));
+        if (window._svnFormSchemas.marcas?.length)
+          FIELD_OPTIONS['marca'] = window._svnFormSchemas.marcas.map(m => ({ value: m.id, label: m.label }));
+      }
       await Auth.init();
       if (!Auth.isAuthenticated()) { window.location.href = '/auth/login?redirect=/admin-templates.html'; return; }
       if (!Auth.isAdmin()) { window.location.href = '/dashboard.html'; return; }

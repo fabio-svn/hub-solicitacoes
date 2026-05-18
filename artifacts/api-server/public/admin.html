@@ -158,13 +158,6 @@
       <div class="pagination" id="paginationGeral"></div>
     </div>
 
-    <div id="usersSection" style="margin-top:40px;display:none">
-      <div class="collapsible-header" onclick="toggleUsers()">
-        <h2 style="font-size:1.1rem;font-weight:600">Gestão de usuários</h2>
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" id="usersChevron"><polyline points="6 9 12 15 18 9"/></svg>
-      </div>
-      <div class="collapsible-content" id="usersList"></div>
-    </div>
   </div>
 
   <div class="drawer-overlay" id="drawerOverlay" onclick="closeDrawer()"></div>
@@ -181,6 +174,7 @@
   </div>
 
   </div>
+  <script src="utils.js"></script>
   <script src="config.js"></script>
   <script src="auth.js"></script>
   <script src="shell.js"></script>
@@ -220,10 +214,6 @@
       loadAdminStats();
       loadTable('eventos');
       loadTable('geral');
-      if (Auth.getUserRole() === 'admin') {
-        document.getElementById('usersSection').style.display = 'block';
-        loadUsers();
-      }
     }
 
     async function loadStats() {
@@ -317,67 +307,10 @@
       searchTimeout = setTimeout(() => { adminPages[tab] = 1; loadTable(tab); }, 300);
     }
 
-    async function loadUsers() {
-      try {
-        const res = await fetch('/api/admin/users');
-        const users = await res.json();
-        const container = document.getElementById('usersList');
-        container.innerHTML = users.map(u => {
-          const roleColors = { admin: 'var(--ruby-red)', gestor: 'var(--sage-green)', colaborador: 'var(--carbon-black)' };
-          const isSelf = u.email === Auth.getUserEmail();
-          const uid = parseInt(u.id, 10);
-          return `<div class="user-row">
-            <div class="user-info">
-              <div style="font-weight:600">${esc(u.name || u.email)}</div>
-              <div class="user-email">${esc(u.email)}</div>
-            </div>
-            <span class="role-badge" style="background:${roleColors[u.role]||'gray'};color:var(--paper-white)">${esc(u.role)}</span>
-            ${isSelf ? '' : `<div class="role-actions">
-              ${u.role !== 'admin' ? `<button class="role-btn" onclick="changeRole(${uid},'admin')">Admin</button>` : ''}
-              ${u.role !== 'gestor' ? `<button class="role-btn" onclick="changeRole(${uid},'gestor')">Gestor</button>` : ''}
-              ${u.role !== 'colaborador' ? `<button class="role-btn" onclick="changeRole(${uid},'colaborador')">Colaborador</button>` : ''}
-            </div>`}
-          </div>`;
-        }).join('');
-      } catch (e) { console.error(e); }
-    }
-
-    async function changeRole(userId, role) {
-      if (!confirm(`Alterar role para ${role}?`)) return;
-      try {
-        await fetch(`/api/admin/users/${userId}/role`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ role }),
-        });
-        loadUsers();
-      } catch (e) { alert('Erro ao alterar role'); }
-    }
-
-    function toggleUsers() {
-      const content = document.getElementById('usersList');
-      content.classList.toggle('open');
-      const chevron = document.getElementById('usersChevron');
-      chevron.style.transform = content.classList.contains('open') ? 'rotate(180deg)' : '';
-    }
-
     function openDrawerByKey(key) {
       const item = adminItemsCache[key];
       if (!item) return;
       openDrawer(item);
-    }
-
-    function humanizeValue(key, value) {
-      if (value === null || value === undefined) return '—';
-      if (typeof value === 'boolean') return value ? 'Sim' : 'Não';
-      if (key === 'natureza') {
-        const map = { presencial: 'Presencial', online: 'Online', patrocinio: 'Patrocínio' };
-        return map[String(value).toLowerCase()] || String(value);
-      }
-      if (typeof value === 'string' && (value.includes('-') || value.includes('_'))) {
-        return value.replace(/[-_]/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
-      }
-      return value;
     }
 
     function renderAdminDrawer(item) {
@@ -398,8 +331,8 @@
       body += '<div class="drawer-section"><div class="drawer-section-title">Dados</div>';
       for (const [key, value] of Object.entries(dados)) {
         if (value === null || value === undefined || value === '') continue;
-        const label = (typeof DRAWER_FIELD_LABELS !== 'undefined' && DRAWER_FIELD_LABELS[key])
-          ? DRAWER_FIELD_LABELS[key] : key;
+        const label = (typeof DRAWER_FIELD_LABELS_FLAT !== 'undefined' && DRAWER_FIELD_LABELS_FLAT[key])
+          ? DRAWER_FIELD_LABELS_FLAT[key] : key;
 
         if (Array.isArray(value)) {
           if (value.length === 0) continue;

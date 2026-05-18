@@ -14,7 +14,10 @@ let PACOTE_PADRAO_IMAGENS = [
 
 let EMAIL_UPLOAD = "gabriela.franca@svninvest.com.br";
 
-const _configReady = fetch('/api/config').then(r => r.json()).then(cfg => {
+const _configReady = Promise.all([
+  fetch('/api/config').then(r => r.json()).catch(() => ({})),
+  fetch('/api/form-schemas').then(r => r.json()).catch(() => ({})),
+]).then(([cfg, schemas]) => {
   if (cfg.urlManual) URL_MANUAL = cfg.urlManual;
   if (cfg.urlTutorialTransmissao) URL_TUTORIAL_TRANSMISSAO = cfg.urlTutorialTransmissao;
   if (cfg.urlVideoHero) URL_VIDEO_HERO = cfg.urlVideoHero;
@@ -27,7 +30,12 @@ const _configReady = fetch('/api/config').then(r => r.json()).then(cfg => {
       cfg.r2PublicUrl + '/tela1.png'
     ];
   }
-}).catch(() => {});
+  if (schemas.marcas && schemas.marcas.length) MARCAS_SVN = schemas.marcas.map(m => m.label);
+  if (schemas.contratos && schemas.contratos.length) CONTRATOS_SOCIAIS = schemas.contratos.map(c => c.label);
+  if (schemas.cargos && schemas.cargos.length) CARGOS_ASSESSOR = schemas.cargos.map(c => c.label);
+  if (schemas.setores && schemas.setores.length) SETORES = ['Selecione seu setor', ...schemas.setores];
+  if (schemas.tipos) window._svnFormSchemas = schemas;
+});
 
 const MSG_THANKYOU_TITULO = "Solicitação enviada com sucesso!";
 const MSG_THANKYOU_SUBTITULO = "Sua solicitação foi recebida! Nossa equipe de Marketing analisará em breve e entrará em contato.";
@@ -115,9 +123,9 @@ const TIPO_SOLICITACAO_LABELS = {
   "outro":                          "Outro",
 };
 
-const CONTRATOS_SOCIAIS = ["SVN Capital", "SVN Connect", "SVN Investimentos"];
+let CONTRATOS_SOCIAIS = ["SVN Capital", "SVN Connect", "SVN Investimentos"];
 
-const MARCAS_SVN = [
+let MARCAS_SVN = [
   "SVN Investimentos",
   "SVN Capital",
   "SVN Connect",
@@ -129,7 +137,7 @@ const MARCAS_SVN = [
   "SVN Wealth Planning",
 ];
 
-const CARGOS_ASSESSOR = [
+let CARGOS_ASSESSOR = [
   "Assessor de Investimentos",
   "Assessora de Investimentos",
   "Sócio e Assessor de Investimentos",
@@ -137,56 +145,85 @@ const CARGOS_ASSESSOR = [
 ];
 
 const DRAWER_FIELD_LABELS = {
-  nomeCartao:          "Nome no cartão",
-  whatsapp:            "WhatsApp",
-  emailCorporativo:    "E-mail",
-  marca:               "Marca",
-  nomeCliente:         "Nome do cliente",
-  isPrivate:           "Cliente Private?",
-  nomeAssinatura:      "Nome para assinatura",
-  cargo:               "Cargo",
-  agradecimento:       "Agradecimento",
-  modeloArte:          "Modelo de arte",
-  idEvento:            "ID do evento",
-  cargaHoraria:        "Carga horária",
-  tituloPagina:        "Título da página",
-  cfp:                 "Possui CFP?",
-  nomeCompleto:        "Nome completo",
-  telefone:            "Telefone",
-  setor:               "Setor",
-  codigoAssessor:      "Código do assessor",
-  contratoSocial:      "Contrato social",
-  unidade:             "Unidade",
-  nomeAniversariante:  "Nome do aniversariante",
-  modeloCartao:        "Modelo do cartão",
-  mensagem:            "Mensagem",
-  assinatura:          "Assinatura",
-  dataEntrega:         "Data de entrega",
-  itens:               "Itens solicitados",
-  centroCusto:         "Centro de custo",
-  valorCota:           "Valor da cota",
-  orcamentoTotal:      "Orçamento total",
-  expectativaRetorno:  "Expectativa de retorno",
-  assunto:             "Assunto do e-mail",
-  tema:                "Tema e resumo",
-  dataDisparo:         "Data de disparo",
-  assinaturaEmail:     "Assinatura do e-mail",
-  ideia:               "Ideia / Descrição",
-  formato:             "Formato",
-  tipoMaterial:        "Tipo de material",
-  orientacao:          "Orientação",
-  formatoPapel:        "Formato do papel",
-  conteudoMaterial:    "Conteúdo do material",
-  finalidade:          "Finalidade",
-  descricao:           "Descrição",
-  tituloEvento:        "Título do evento",
-  dataEvento:          "Data do evento",
-  horario:             "Horário",
-  local:               "Local",
-  tipoEvento:          "Tipo de evento",
-  publico:             "Público",
-  explicacao:          "Explicação / justificativa",
+  nomeCartao:          { label: "Nome no cartão" },
+  whatsapp:            { label: "WhatsApp" },
+  emailCorporativo:    { label: "E-mail" },
+  marca:               { label: "Marca" },
+  nomeCliente:         { label: "Nome do cliente" },
+  isPrivate:           { label: "Cliente Private?" },
+  nomeAssinatura:      { label: "Nome para assinatura" },
+  cargo:               { label: "Cargo" },
+  agradecimento:       { label: "Agradecimento",              wide: true },
+  modeloArte:          { label: "Modelo de arte" },
+  idEvento:            { label: "ID do evento" },
+  cargaHoraria:        { label: "Carga horária" },
+  tituloPagina:        { label: "Título da página" },
+  cfp:                 { label: "Possui CFP?" },
+  nomeCompleto:        { label: "Nome completo" },
+  telefone:            { label: "Telefone" },
+  setor:               { label: "Setor",                      skip: true },
+  codigoAssessor:      { label: "Código do assessor" },
+  contratoSocial:      { label: "Contrato social" },
+  unidade:             { label: "Unidade" },
+  nomeAniversariante:  { label: "Nome do aniversariante" },
+  modeloCartao:        { label: "Modelo do cartão" },
+  mensagem:            { label: "Mensagem",                   wide: true },
+  assinatura:          { label: "Assinatura",                 wide: true },
+  dataEntrega:         { label: "Data de entrega" },
+  itens:               { label: "Itens solicitados",          wide: true },
+  centroCusto:         { label: "Centro de custo" },
+  valorCota:           { label: "Valor da cota" },
+  orcamentoTotal:      { label: "Orçamento total" },
+  expectativaRetorno:  { label: "Expectativa de retorno",     wide: true },
+  assunto:             { label: "Assunto do e-mail" },
+  tema:                { label: "Tema e resumo",              wide: true },
+  dataDisparo:         { label: "Data de disparo" },
+  assinaturaEmail:     { label: "Assinatura do e-mail" },
+  ideia:               { label: "Ideia / Descrição",          wide: true },
+  formato:             { label: "Formato" },
+  tipoMaterial:        { label: "Tipo de material" },
+  orientacao:          { label: "Orientação" },
+  formatoPapel:        { label: "Formato do papel" },
+  conteudoMaterial:    { label: "Conteúdo do material",       wide: true },
+  finalidade:          { label: "Finalidade",                 wide: true },
+  descricao:           { label: "Descrição",                  wide: true },
+  tituloEvento:        { label: "Título do evento" },
+  dataEvento:          { label: "Data do evento" },
+  horario:             { label: "Horário" },
+  local:               { label: "Local" },
+  tipoEvento:          { label: "Tipo de evento" },
+  publico:             { label: "Público",                    wide: true },
+  explicacao:          { label: "Explicação / justificativa", wide: true },
+  conteudo:            { label: "Conteúdo",                   wide: true },
+  observacoes:         { label: "Observações",                wide: true },
+  observacoesFinais:   { label: "Observações finais",         wide: true },
+  briefing:            { label: "Briefing",                   wide: true },
+  descricaoEvento:     { label: "Descrição do evento",        wide: true },
+  texto:               { label: "Texto",                      wide: true },
+  detalhes:            { label: "Detalhes",                   wide: true },
+  contexto:            { label: "Contexto",                   wide: true },
+  informacaoAdicional: { label: "Informação adicional",       wide: true },
+  resumo:              { label: "Resumo",                     wide: true },
+  expectativas:        { label: "Expectativas",               wide: true },
+  objetivos:           { label: "Objetivos",                  wide: true },
+  estrategia:          { label: "Estratégia",                 wide: true },
+  canais:              { label: "Canais",                     wide: true },
+  materiais:           { label: "Materiais",                  wide: true },
+  selos:               { label: "Selos",                      wide: true },
+  ideaQuando:          { label: "Ideia / Quando",             wide: true },
+  localSugestoes:      { label: "Local (sugestões)",          wide: true },
+  linkTransmissao:     { label: "Link da transmissão",        wide: true },
+  personalizacao:      { label: "Personalização",             wide: true },
+  textoCartaoPresente: { label: "Texto do cartão presente",   wide: true },
+  idSolicitacao:       { label: "ID",                         skip: true },
+  natureza:            { label: "Natureza",                   skip: true },
+  nome:                { label: "Nome",                       skip: true },
+  materiaisDetalhes:   { label: "Detalhes dos materiais",     skip: true },
 };
+
+const DRAWER_FIELD_LABELS_FLAT = Object.fromEntries(
+  Object.entries(DRAWER_FIELD_LABELS).map(([k, v]) => [k, v.label])
+);
 
 const SELOS_ASSESSOR = [
   { id: "ancord",          label: "Ancord",         icon_url: "https://pub-a2132f9b61f940659cc98265acfcf64c.r2.dev/ancord.webp" },
@@ -219,7 +256,7 @@ const STATUS_SOLICITACAO = [
   { id: "em-espera",              label: "Em espera",                  bg: "#4D545F", text: "#FFFFFF",  cor: "--carbon-black"  },
 ];
 
-const SETORES = [
+let SETORES = [
   "Selecione seu setor",
   "Administração",
   "Alocação",
@@ -261,6 +298,16 @@ const SETORES = [
   "Vitória da Conquista",
   "Wealth Planning",
 ];
+
+const IBGE_ESTADOS = {
+  "12":"Acre","27":"Alagoas","16":"Amapá","13":"Amazonas",
+  "29":"Bahia","23":"Ceará","53":"Distrito Federal","32":"Espírito Santo",
+  "52":"Goiás","21":"Maranhão","51":"Mato Grosso","50":"Mato Grosso do Sul",
+  "31":"Minas Gerais","15":"Pará","25":"Paraíba","41":"Paraná",
+  "26":"Pernambuco","22":"Piauí","33":"Rio de Janeiro","24":"Rio Grande do Norte",
+  "43":"Rio Grande do Sul","11":"Rondônia","14":"Roraima","42":"Santa Catarina",
+  "35":"São Paulo","28":"Sergipe","17":"Tocantins",
+};
 
 // NOTA: Este mapa é intencionalmente duplicado de SETOR_CODIGO_MAP em clickup.ts.
 // config.js roda no browser, clickup.ts no Node.js — não há como compartilhar.
