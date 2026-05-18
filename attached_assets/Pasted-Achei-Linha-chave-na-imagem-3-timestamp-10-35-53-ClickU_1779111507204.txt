@@ -1,0 +1,66 @@
+Achei! Linha-chave na imagem 3, timestamp 10:35:53:
+ClickUp: tipo sem integração, pulando    tipo: cartao-comemorativo
+E logo abaixo o POST retorna 200. Não tem nenhuma chamada de template-renderer, nenhum log de R2 upload, nada.
+Confirmação completa da hipótese:
+
+POST chega → handler salva a solicitação no DB
+Tenta criar task no ClickUp → tipo cartao-comemorativo não tem config → pula
+Retorna 200 → frontend mostra "thankyou"
+A geração de arte usando o template editor que construímos NUNCA é disparada
+
+O template-renderer existe (a gente usa ele no preview do editor), o template ativo existe no DB, mas o handler de /api/solicitacoes não está conectado a ele. Falta wiring.
+
+Manda esse prompt pro agente:
+
+O handler de POST /api/solicitacoes está aceitando solicitações de tipos sem integração de ClickUp (como cartao-comemorativo) e retornando 200, mas não está disparando a geração de arte server-side usando o template-renderer.
+O log do servidor mostra exatamente:
+ClickUp: tipo sem integração, pulando  tipo: cartao-comemorativo
+request completed  POST /api/solicitacoes  200
+Faltam todas as etapas seguintes. Adicionar ao handler, depois de salvar a solicitação no DB e independentemente de ter integração ClickUp:
+1. Verificar se o tipo tem template ativo
+tsconst template = await db.query.artTemplates.findFirst({
+  where: and(eq(artTemplates.tipo, solicitacao.tipo), eq(artTemplates.is_active, true))
+});
+if (!template) {
+  req.log.info({ tipo: solicitacao.tipo }, 'Sem template ativo, pulando geração');
+  return res.json({ id: solicitacao.id, status: 'created' });
+}
+2. Mapear payload do form pros placeholders do template
+O FORM_SCHEMAS (definido pra alimentar o editor) já tem os nomes dos campos de cada form. Usar isso pra montar o objeto de dados:
+tsconst renderData = buildRenderDataFromPayload(solicitacao.tipo, req.body);
+// ex.: { nome_cliente: 'João', modelo_cartao: 'dourado', mensagem: '...' }
+Se os nomes dos campos no form (nomeAniversariante, modeloCartao) diferem dos placeholders do template (nome_cliente, modelo_cartao), criar uma função de mapeamento explícita ou padronizar os nomes nos FORM_SCHEMAS.
+3. Renderizar a arte
+tstry {
+  const pngBuffer = await renderFromTemplate(template.config, renderData);
+  
+  // 4. Upload pro R2
+  const filename = `solicitacao-${solicitacao.id}-${Date.now()}.png`;
+  const storageKey = `geradas/${solicitacao.tipo}/${filename}`;
+  const url = await uploadToR2(storageKey, pngBuffer, 'image/png');
+  
+  // 5. Atualizar registro da solicitação com URL do arquivo gerado
+  await db.update(solicitacoes)
+    .set({ arquivo_gerado_url: url, arquivo_gerado_at: new Date() })
+    .where(eq(solicitacoes.id, solicitacao.id));
+  
+  req.log.info({ solicitacaoId: solicitacao.id, url }, 'Arte gerada e salva');
+} catch (err) {
+  req.log.error({ err, solicitacaoId: solicitacao.id }, 'Falha ao gerar arte');
+  // NÃO falhar a solicitação inteira — apenas marcar como precisando regeneração
+  await db.update(solicitacoes)
+    .set({ erro_geracao: err.message })
+    .where(eq(solicitacoes.id, solicitacao.id));
+}
+4. Schema da tabela solicitacoes
+Garantir que existem as colunas arquivo_gerado_url, arquivo_gerado_at, e erro_geracao. Se não existirem, criar migração + aplicar em prod.
+5. Exibição na lista de solicitações do usuário
+No frontend, na página de "Minhas solicitações" (ou similar onde o usuário vê o que pediu), pra cada solicitação que tem arquivo_gerado_url preenchido, mostrar botão "Baixar". Pra solicitações com erro_geracao preenchido, mostrar status "Erro na geração" + botão "Tentar regenerar" (admin).
+6. Endpoint de regeneração
+Criar POST /api/admin/solicitacoes/:id/regerar que re-executa as etapas 1-3 acima pra uma solicitação específica. Útil pra quando o template é atualizado depois de uma solicitação já ter sido feita, ou quando a geração falha por motivo transitório.
+Validação
+
+Submeter uma solicitação de cartão comemorativo → ver no log linhas tipo [render] iniciando → [r2] upload OK → Arte gerada e salva
+Conferir no banco que arquivo_gerado_url foi preenchido
+Conferir no R2 que o arquivo está lá e acessível pela URL
+Conferir na página de "Minhas solicitações" que aparece o botão "Baixar" e que o download funciona

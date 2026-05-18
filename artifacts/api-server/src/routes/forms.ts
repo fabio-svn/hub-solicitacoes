@@ -9,6 +9,7 @@ import { createClickUpTask, getClickUpTaskStatus, type ArquivosMap } from "./cli
 import { uploadToR2 } from "./r2";
 import { gerarAssinaturaEmail } from "./gerador-assinatura";
 import { gerarCartaoBoasVindasHandler } from "./gerador-cartao-boas-vindas";
+import { gerarArteParaSolicitacao } from "../services/art-generator";
 import { logger } from "../lib/logger";
 
 const router = Router();
@@ -266,11 +267,13 @@ router.post("/solicitacoes", requireAuth, upload.any(), async (req, res): Promis
       gerarAssinaturaEmail(solicitacao.id, parsedDados).catch(err => {
         logger.error({ err }, "Erro ao gerar assinatura de e-mail");
       });
-    }
-
-    if (tipo_solicitacao === "cartao-boas-vindas") {
+    } else if (tipo_solicitacao === "cartao-boas-vindas") {
       gerarCartaoBoasVindasHandler(solicitacao.id, parsedDados).catch(err => {
         logger.error({ err }, "Erro ao gerar Cartão de Boas-vindas");
+      });
+    } else {
+      gerarArteParaSolicitacao(solicitacao.id, tipo_solicitacao, parsedDados).catch(err => {
+        req.log.error({ err, tipo: tipo_solicitacao }, "Erro ao gerar arte");
       });
     }
 

@@ -5,6 +5,9 @@ import { eq, desc, sql, and, count } from "drizzle-orm";
 import { requireAuth, requireRole } from "../middleware/auth.middleware";
 import { logger } from "../lib/logger";
 import { renderFromTemplate } from "../services/template-renderer";
+import { gerarArteParaSolicitacao } from "../services/art-generator";
+import { gerarAssinaturaEmail } from "./gerador-assinatura";
+import { gerarCartaoBoasVindasHandler } from "./gerador-cartao-boas-vindas";
 import { AVAILABLE_FONTS } from "../types/art-template";
 import { FORM_SCHEMAS, getFormSchemaList } from "../config/form-schemas";
 
@@ -351,6 +354,39 @@ router.get("/form-schemas/:tipo", requireAuth, requireRole("admin"), (req, res):
   const schema = FORM_SCHEMAS[req.params.tipo];
   if (!schema) { res.status(404).json({ error: "Schema não encontrado para este tipo" }); return; }
   res.json(schema);
+});
+
+// POST /solicitacoes/:id/regerar — re-execute art generation for a specific request
+router.post("/solicitacoes/:id/regerar", requireAuth, requireRole("admin", "gestor"), async (req, res): Promise<void> => {
+  try {
+    const id = parseInt(String(req.params.id));
+    if (isNaN(id)) { res.status(400).json({ error: "ID inválido" }); return; }
+
+    const [sol] = await db.select().from(solicitacoesTable).where(eq(solicitacoesTable.id, id));
+    if (!sol) { res.status(404).json({ error: "Solicitação não encontrada" }); return; }
+
+    const tipo = sol.tipo_solicitacao;
+    const dados = (sol.dados ?? {}) as Record<string, unknown>;
+
+    req.log.info({ solicitacaoId: id, tipo }, "Regenerando arte por solicitação do admin");
+
+    try {
+      if (tipo === "assinatura-email") {
+        await gerarAssinaturaEmail(id, dados);
+      } else if (tipo === "cartao-boas-vindas") {
+        await gerarCartaoBoasVindasHandler(id, dados);
+      } else {
+        await gerarArteParaSolicitacao(id, tipo, dados);
+      }
+      res.json({ ok: true, message: "Arte regenerada com sucesso" });
+    } catch (genErr: any) {
+      req.log.error({ err: genErr, solicitacaoId: id, tipo }, "Falha ao regenerar arte");
+      res.status(500).json({ error: genErr.message || "Falha ao gerar arte", details: genErr.stack?.split('\n').slice(0, 3).join('\n') });
+    }
+  } catch (err: any) {
+    req.log.error({ err }, "Erro no endpoint de regeneração");
+    res.status(500).json({ error: "Erro interno" });
+  }
 });
 
 // POST /art-templates/:id/duplicate — clone a template
