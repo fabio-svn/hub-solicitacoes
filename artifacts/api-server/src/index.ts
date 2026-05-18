@@ -120,6 +120,7 @@ const DB_STATEMENTS = [
   )`,
   `CREATE INDEX IF NOT EXISTS "IDX_art_assets_uploaded_at"    ON "art_assets" ("uploaded_at" DESC)`,
   `CREATE INDEX IF NOT EXISTS "IDX_art_assets_used_template"  ON "art_assets" USING GIN ("used_in_template_ids")`,
+  `ALTER TABLE "solicitacoes" ADD COLUMN IF NOT EXISTS "erro_geracao" text`,
 ];
 
 async function start() {

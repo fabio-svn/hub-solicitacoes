@@ -657,6 +657,9 @@
     };
 
     const MAX_HISTORY = 50;
+    const QUICK_DEBOUNCE  = 300;
+    const NORMAL_DEBOUNCE = 600;
+    const SLOW_DEBOUNCE   = 1200;
 
     // ── Dynamic schema state ──────────────────────────────────────
     let formSchema = null;
@@ -689,7 +692,7 @@
       el.textContent = '↔ ' + text;
       el.classList.add('visible');
       clearTimeout(centerIndicatorTimer);
-      centerIndicatorTimer = setTimeout(() => el.classList.remove('visible'), 800);
+      centerIndicatorTimer = setTimeout(() => el.classList.remove('visible'), NORMAL_DEBOUNCE);
     }
 
     // ── State ────────────────────────────────────────────────────
@@ -702,7 +705,7 @@
     let _draggedLayerId = null;
     let bgVariantKey = null;
     let testData = {};
-    let canvasScale = parseFloat(sessionStorage.getItem('svn_canvas_zoom') || '0') || 1;
+    let canvasScale = 1;
     let liveEnabled = true;
     let previewDebounce = null;
     let previewAbortCtrl = null;
@@ -748,19 +751,21 @@
     function pushHistory() {
       if (!currentTemplate) return;
       history = history.slice(0, historyIndex + 1);
-      history.push(JSON.parse(JSON.stringify(currentTemplate)));
+      history.push({ template: JSON.parse(JSON.stringify(currentTemplate)), selectedLayerId });
       if (history.length > MAX_HISTORY) history.shift();
       historyIndex = history.length - 1;
       updateUndoRedoBtns();
     }
     function debouncedPushHistory() {
       if (historyDebounce) clearTimeout(historyDebounce);
-      historyDebounce = setTimeout(pushHistory, 500);
+      historyDebounce = setTimeout(pushHistory, NORMAL_DEBOUNCE);
     }
     function undo() {
       if (historyIndex <= 0) return;
       historyIndex--;
-      currentTemplate = JSON.parse(JSON.stringify(history[historyIndex]));
+      const snap = history[historyIndex];
+      currentTemplate = JSON.parse(JSON.stringify(snap.template));
+      selectedLayerId = snap.selectedLayerId;
       isDirty = true;
       document.getElementById('unsavedBadge').classList.add('visible');
       reRender();
@@ -768,7 +773,9 @@
     function redo() {
       if (historyIndex >= history.length - 1) return;
       historyIndex++;
-      currentTemplate = JSON.parse(JSON.stringify(history[historyIndex]));
+      const snap = history[historyIndex];
+      currentTemplate = JSON.parse(JSON.stringify(snap.template));
+      selectedLayerId = snap.selectedLayerId;
       isDirty = true;
       document.getElementById('unsavedBadge').classList.add('visible');
       reRender();
@@ -790,7 +797,7 @@
       if (rightTab === 'doc') renderDocumentPanel();
       else showProps(selectedLayerId);
       updateUndoRedoBtns();
-      scheduleLivePreview(500);
+      scheduleLivePreview(NORMAL_DEBOUNCE);
     }
 
     // ── Panel tabs ───────────────────────────────────────────────
@@ -943,7 +950,7 @@
       pushHistory();
       renderBgVariantSelect();
       renderDocumentPanel();
-      scheduleLivePreview(500);
+      scheduleLivePreview(NORMAL_DEBOUNCE);
     }
     function updDocBgUrl(url) {
       if (!currentTemplate || currentTemplate.bg.type !== 'static') return;
@@ -951,7 +958,7 @@
       markDirty();
       debouncedPushHistory();
       updateBgImage();
-      scheduleLivePreview(1000);
+      scheduleLivePreview(SLOW_DEBOUNCE);
     }
     function updDocBgVariantSource(source) {
       if (!currentTemplate || currentTemplate.bg.type !== 'variant') return;
@@ -968,7 +975,7 @@
       debouncedPushHistory();
       renderBgVariantSelect();
       renderDocumentPanel();
-      scheduleLivePreview(500);
+      scheduleLivePreview(NORMAL_DEBOUNCE);
     }
     function updDocBgVariantUrl(key, url) {
       if (!currentTemplate || currentTemplate.bg.type !== 'variant') return;
@@ -976,7 +983,7 @@
       currentTemplate.bg.variants[key] = url;
       markDirty();
       debouncedPushHistory();
-      scheduleLivePreview(1000);
+      scheduleLivePreview(SLOW_DEBOUNCE);
     }
     function updDocBgVariantsText(text) {
       if (!currentTemplate || currentTemplate.bg.type !== 'variant') return;
@@ -988,7 +995,7 @@
       currentTemplate.bg.variants = variants;
       markDirty();
       debouncedPushHistory();
-      scheduleLivePreview(800);
+      scheduleLivePreview(NORMAL_DEBOUNCE);
     }
 
     // ── View navigation ──────────────────────────────────────────
@@ -1382,6 +1389,8 @@
       document.getElementById('canvasWrap').style.display = 'inline-block';
       showView('editor');
       fitToView();
+      const _savedScale = loadCanvasScale(currentTemplateMeta.id);
+      if (_savedScale !== null) { canvasScale = _savedScale; applyCanvasScale(); }
       doLivePreview();
 
       // Push initial state to history
@@ -1454,8 +1463,8 @@
         <div class="test-field">
           <label>${key}</label>
           <input type="text" value="${esc(testData[key] || '')}"
-            oninput="testData['${key}']=this.value; scheduleLivePreview(1000)"
-            onchange="testData['${key}']=this.value; scheduleLivePreview(1000)">
+            oninput="testData['${key}']=this.value; scheduleLivePreview(SLOW_DEBOUNCE)"
+            onchange="testData['${key}']=this.value; scheduleLivePreview(SLOW_DEBOUNCE)">
         </div>
       `).join('');
     }
@@ -1473,12 +1482,26 @@
       canvasScale = Math.min(sW, sH, 1);
       applyCanvasScale();
     }
+    function saveCanvasScale(templateId, scale) {
+      try {
+        const all = JSON.parse(sessionStorage.getItem('canvas_scales') || '{}');
+        all[String(templateId)] = scale;
+        sessionStorage.setItem('canvas_scales', JSON.stringify(all));
+      } catch {}
+    }
+    function loadCanvasScale(templateId) {
+      try {
+        const all = JSON.parse(sessionStorage.getItem('canvas_scales') || '{}');
+        const key = String(templateId);
+        return Object.prototype.hasOwnProperty.call(all, key) ? all[key] : null;
+      } catch { return null; }
+    }
     function applyCanvasScale() {
       if (!currentTemplate) return;
       const wrap = document.getElementById('canvasWrap');
       wrap.style.width = (currentTemplate.canvas.width * canvasScale) + 'px';
       updateZoomLabel();
-      try { sessionStorage.setItem('svn_canvas_zoom', String(canvasScale)); } catch {}
+      if (currentTemplateMeta) saveCanvasScale(currentTemplateMeta.id, canvasScale);
       renderCanvas();
     }
     function updateZoomLabel() {
@@ -1508,7 +1531,7 @@
     function onBgVariantChange(val) {
       bgVariantKey = val;
       updateBgImage();
-      scheduleLivePreview(300);
+      scheduleLivePreview(QUICK_DEBOUNCE);
     }
     function getBgUrl() {
       if (!currentTemplate?.bg) return '';
@@ -1578,7 +1601,7 @@
               markDirty();
               pushHistory();
               if (el.dataset.id === selectedLayerId) showProps(selectedLayerId);
-              scheduleLivePreview(700);
+              scheduleLivePreview(NORMAL_DEBOUNCE);
             }
           }
         })
@@ -1608,7 +1631,7 @@
               markDirty();
               pushHistory();
               if (event.target.dataset.id === selectedLayerId) showProps(selectedLayerId);
-              scheduleLivePreview(700);
+              scheduleLivePreview(NORMAL_DEBOUNCE);
             }
           },
           modifiers: [interact.modifiers.restrictEdges({ outer: 'parent' })]
@@ -1665,7 +1688,7 @@
       renderCanvas();
       renderLayersList();
       selectLayer(id);
-      scheduleLivePreview(700);
+      scheduleLivePreview(NORMAL_DEBOUNCE);
     }
     function deleteLayer(id) {
       if (!confirm('Deletar esta layer?')) return;
@@ -1676,7 +1699,7 @@
       renderCanvas();
       renderLayersList();
       showProps(null);
-      scheduleLivePreview(700);
+      scheduleLivePreview(NORMAL_DEBOUNCE);
     }
 
     // ── Layer reordering ─────────────────────────────────────────
@@ -1692,7 +1715,7 @@
       pushHistory();
       renderLayersList();
       renderCanvas();
-      scheduleLivePreview(500);
+      scheduleLivePreview(NORMAL_DEBOUNCE);
     }
     function moveLayerDown(id) {
       if (!currentTemplate) return;
@@ -1704,7 +1727,7 @@
       pushHistory();
       renderLayersList();
       renderCanvas();
-      scheduleLivePreview(500);
+      scheduleLivePreview(NORMAL_DEBOUNCE);
     }
     function reorderLayer(id, newIdx) {
       if (!currentTemplate) return;
@@ -1718,7 +1741,7 @@
       pushHistory();
       renderLayersList();
       renderCanvas();
-      scheduleLivePreview(500);
+      scheduleLivePreview(NORMAL_DEBOUNCE);
     }
     function setupLayerListDrag() {
       interact('.layer-drag-handle').draggable({
@@ -1876,8 +1899,8 @@
           <div class="props-label" style="margin-top:6px">URL</div>
           <div class="url-row">
             <input class="props-input" value="${esc(layer.source.url||'')}" id="imgUrlInput-${id}" onchange="updLayer('${id}','source',{type:'static',url:this.value})">
-            <button class="url-action-btn" onclick="openAssetLibrary(url => { const l=getLayer('${id}'); if(l){l.source={type:'static',url};markDirty();debouncedPushHistory();showProps('${id}');scheduleLivePreview(500);} })" title="Biblioteca">🖼</button>
-            <label class="url-action-btn" style="cursor:pointer" title="Upload">⬆<input type="file" accept="image/*" style="display:none" onchange="uploadAndSetUrl(this,url=>{const l=getLayer('${id}');if(l){l.source={type:'static',url};markDirty();debouncedPushHistory();showProps('${id}');scheduleLivePreview(500);}})"></label>
+            <button class="url-action-btn" onclick="openAssetLibrary(url => { const l=getLayer('${id}'); if(l){l.source={type:'static',url};markDirty();debouncedPushHistory();showProps('${id}');scheduleLivePreview(NORMAL_DEBOUNCE);} })" title="Biblioteca">🖼</button>
+            <label class="url-action-btn" style="cursor:pointer" title="Upload">⬆<input type="file" accept="image/*" style="display:none" onchange="uploadAndSetUrl(this,url=>{const l=getLayer('${id}');if(l){l.source={type:'static',url};markDirty();debouncedPushHistory();showProps('${id}');scheduleLivePreview(NORMAL_DEBOUNCE);}})"></label>
           </div>
           `:srcType==='placeholder'?`
           <div class="props-label" style="margin-top:6px">Campo (placeholder)</div>
@@ -1963,7 +1986,7 @@
       debouncedPushHistory();
       renderCanvas();
       renderLayersList();
-      scheduleLivePreview(800);
+      scheduleLivePreview(NORMAL_DEBOUNCE);
     }
     function updLayerN(id, key, value) { updLayer(id, key, parseFloat(value) || 0); }
 
@@ -1990,19 +2013,19 @@
     function updLayerShape(id, shape) {
       const layer = getLayer(id); if (!layer) return;
       if (shape === 'rectangle') delete layer.shape; else layer.shape = shape;
-      markDirty(); debouncedPushHistory(); scheduleLivePreview(500);
+      markDirty(); debouncedPushHistory(); scheduleLivePreview(NORMAL_DEBOUNCE);
     }
     function updLayerBorderWidth(id, width) {
       const layer = getLayer(id); if (!layer) return;
       if (!layer.border) layer.border = { width: 0, color: '#ffffff' };
       layer.border.width = width;
-      markDirty(); debouncedPushHistory(); scheduleLivePreview(500);
+      markDirty(); debouncedPushHistory(); scheduleLivePreview(NORMAL_DEBOUNCE);
     }
     function updLayerBorderColor(id, color) {
       const layer = getLayer(id); if (!layer) return;
       if (!layer.border) layer.border = { width: 1, color: '#ffffff' };
       layer.border.color = color;
-      markDirty(); debouncedPushHistory(); scheduleLivePreview(500);
+      markDirty(); debouncedPushHistory(); scheduleLivePreview(NORMAL_DEBOUNCE);
     }
 
     function updImageSourceType(id, type) {

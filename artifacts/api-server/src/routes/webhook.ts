@@ -95,6 +95,11 @@ router.post(
 
       if (solicitacao.status === hubStatus) return;
 
+      if (solicitacao.status === 'gerando' || solicitacao.status === 'erro') {
+        logger.info({ taskId, status: solicitacao.status }, "ClickUp webhook: status em render, ignorando");
+        return;
+      }
+
       await db
         .update(solicitacoesTable)
         .set({ status: hubStatus, updated_at: new Date() })

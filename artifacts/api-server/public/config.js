@@ -254,6 +254,8 @@ const STATUS_SOLICITACAO = [
   { id: "reprovado",              label: "Reprovado / Cancelado",      bg: "#C82828", text: "#FFFFFF",  cor: "--ruby-red"      },
   { id: "cancelado",              label: "Cancelado",                  bg: "#C82828", text: "#FFFFFF",  cor: "--carbon-black"  },
   { id: "em-espera",              label: "Em espera",                  bg: "#4D545F", text: "#FFFFFF",  cor: "--carbon-black"  },
+  { id: "gerando",                label: "Gerando arte",               bg: "#dbeafe", text: "#1e40af" },
+  { id: "erro",                   label: "Erro",                       bg: "#fee2e2", text: "#991b1b" },
 ];
 
 let SETORES = [

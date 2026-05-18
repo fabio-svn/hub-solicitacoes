@@ -101,48 +101,67 @@ export async function gerarArteParaSolicitacao(
     return;
   }
 
-  const renderData = buildRenderData(resolvedDados);
-  logger.info({ solicitacaoId, tipo, keys: Object.keys(renderData) }, "[render] dados mapeados, renderizando");
-
-  const config = templateRow.config as any;
-  const outputFormat: "png" | "pdf" = config.output_format === "pdf" ? "pdf" : "png";
-
-  let artBuffer: Buffer;
-  let mimetype: string;
-  let ext: string;
-
-  if (outputFormat === "pdf") {
-    artBuffer = await renderTemplateToPdf(config, renderData);
-    mimetype = "application/pdf";
-    ext = "pdf";
-  } else {
-    artBuffer = await renderFromTemplate(config, renderData);
-    mimetype = "image/png";
-    ext = "png";
-  }
-
-  const filename = `${tipo}-${solicitacaoId}-${Date.now()}.${ext}`;
-  const tmpPath = path.join(os.tmpdir(), filename);
-  await fs.promises.writeFile(tmpPath, artBuffer);
-
-  const url = await uploadToR2(
-    { path: tmpPath, originalname: `${tipo}.${ext}`, mimetype },
-    solicitacaoId,
-    tipo,
-  );
-
-  await fs.promises.unlink(tmpPath).catch(() => {});
-
-  logger.info({ solicitacaoId, tipo, url }, "[r2] upload OK");
-
-  const label = TIPO_LABELS[tipo] || tipo;
   await db.update(solicitacoesTable)
-    .set({
-      entrega_links: [{ label, url }],
-      status: "concluido",
-      updated_at: new Date(),
-    })
+    .set({ status: "gerando", updated_at: new Date() })
     .where(eq(solicitacoesTable.id, solicitacaoId));
 
-  logger.info({ solicitacaoId, tipo, url }, "Arte gerada e salva");
+  try {
+    const renderData = buildRenderData(resolvedDados);
+    logger.info({ solicitacaoId, tipo, keys: Object.keys(renderData) }, "[render] dados mapeados, renderizando");
+
+    const config = templateRow.config as any;
+    const outputFormat: "png" | "pdf" = config.output_format === "pdf" ? "pdf" : "png";
+
+    let artBuffer: Buffer;
+    let mimetype: string;
+    let ext: string;
+
+    if (outputFormat === "pdf") {
+      artBuffer = await renderTemplateToPdf(config, renderData);
+      mimetype = "application/pdf";
+      ext = "pdf";
+    } else {
+      artBuffer = await renderFromTemplate(config, renderData);
+      mimetype = "image/png";
+      ext = "png";
+    }
+
+    const filename = `${tipo}-${solicitacaoId}-${Date.now()}.${ext}`;
+    const tmpPath = path.join(os.tmpdir(), filename);
+    await fs.promises.writeFile(tmpPath, artBuffer);
+
+    const url = await uploadToR2(
+      { path: tmpPath, originalname: `${tipo}.${ext}`, mimetype },
+      solicitacaoId,
+      tipo,
+    );
+
+    await fs.promises.unlink(tmpPath).catch(() => {});
+
+    logger.info({ solicitacaoId, tipo, url }, "[r2] upload OK");
+
+    const label = TIPO_LABELS[tipo] || tipo;
+    await db.update(solicitacoesTable)
+      .set({
+        entrega_links: [{ label, url }],
+        status: "concluido",
+        erro_geracao: null,
+        updated_at: new Date(),
+      })
+      .where(eq(solicitacoesTable.id, solicitacaoId));
+
+    logger.info({ solicitacaoId, tipo, url }, "Arte gerada e salva");
+  } catch (error) {
+    logger.error({ solicitacaoId, tipo, error }, "art generation failed");
+
+    await db.update(solicitacoesTable)
+      .set({
+        status: "erro",
+        erro_geracao: error instanceof Error ? error.message : String(error),
+        updated_at: new Date(),
+      })
+      .where(eq(solicitacoesTable.id, solicitacaoId));
+
+    throw error;
+  }
 }
