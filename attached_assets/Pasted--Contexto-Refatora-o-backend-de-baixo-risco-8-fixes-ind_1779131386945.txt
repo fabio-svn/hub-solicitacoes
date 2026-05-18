@@ -1,0 +1,193 @@
+## Contexto
+
+Refatoração backend de baixo risco. 8 fixes independentes em arquivos 
+diferentes. Sem mudança de comportamento externo — só qualidade interna 
+e duas constraints no DB.
+
+## Estratégia
+
+Cada item é independente. Se um falhar, pular e reportar.
+
+---
+
+## Item 1 — CLICKUP_STATUS_MAP unificado
+
+Hoje em 2 lugares com cardinalidade diferente:
+- src/routes/webhook.ts (27 statuses)
+- src/routes/clickup.ts (29 statuses)
+
+Ação:
+1. Criar artifacts/api-server/src/lib/clickup-status.ts:
+
+   export const CLICKUP_STATUS_MAP: Record<string, string> = {
+     // ... merge dos 2 maps, escolhendo valor de clickup.ts quando 
+     // houver divergência (29 entries é mais atualizado)
+   };
+
+2. webhook.ts e clickup.ts importam de lá. Deletar definições inline.
+
+3. Se houver divergência entre os 2 maps em algum status, ESCOLHA O 
+   VALOR DE clickup.ts e reporte os status divergentes.
+
+---
+
+## Item 2 — Logger pino consistente
+
+Hoje template-renderer.ts usa console.*. Outros lugares usam logger pino.
+
+Ação:
+1. Buscar todos os console.*:
+     grep -rn "console\." artifacts/api-server/src/
+
+2. Em cada ocorrência (exceto src/lib/logger.ts), substituir:
+   - console.log → logger.info
+   - console.warn → logger.warn
+   - console.error → logger.error
+
+3. Importar logger no topo do arquivo se ainda não estiver.
+
+---
+
+## Item 3 — Code quality minor
+
+Ação:
+1. parseInt sem radix — buscar:
+     grep -rn "parseInt(" artifacts/api-server/src/ | grep -v ", 10"
+   
+   Adicionar ", 10" como segundo argumento em cada ocorrência.
+
+2. Remover `as any` casts em template-renderer.ts e pdf-renderer.ts. 
+   Os tipos do sharp/fontkit têm shape, border, placeholder corretos. 
+   Substituir por casts mais específicos ou tipos corretos.
+
+3. Magic numbers → constants no template-renderer.ts (ex: timeouts, 
+   max iterations). Definir constantes no topo do arquivo.
+
+---
+
+## Item 4 — Type safety Request via declaration merging
+
+Hoje req.user, req.solicitacao etc são acessados sem tipo correto.
+
+Ação:
+1. Criar artifacts/api-server/src/types/express.d.ts:
+
+   declare global {
+     namespace Express {
+       interface Request {
+         user?: {
+           id: number;
+           email: string;
+           role: 'admin' | 'gestor' | 'colaborador';
+         };
+         solicitacao?: any; // refinar conforme uso
+       }
+     }
+   }
+   export {};
+
+2. Confirmar que tsconfig.json inclui esse arquivo (compilerOptions.types 
+   ou include).
+
+3. Remover `(req as any).user` casts existentes — usar req.user direto.
+
+---
+
+## Item 5 — Build hygiene
+
+Ação:
+1. Adicionar typecheck antes do build em package.json:
+     "build": "tsc --noEmit && node build.mjs"
+
+2. Em build.mjs, verificar lista de externals — pode haver libs 
+   listadas mas não usadas. Limpar.
+
+3. Confirmar que build local roda sem warnings.
+
+---
+
+## Item 6 — Template renderer LRU cache + DEBUG_RENDER
+
+Hoje assetCache é unbounded (cresce indefinidamente).
+
+Ação:
+1. Em src/services/template-renderer.ts, substituir assetCache 
+   por uma LRU bounded. Pode usar `lru-cache` npm (já deve estar 
+   no projeto — verificar) ou implementar Map com size limit.
+
+   Tamanho sugerido: 100 entries.
+
+2. Adicionar flag DEBUG_RENDER (env var). Quando ativa, logar:
+   - Cada placeholder substituído
+   - Cache hits/misses
+   - Tempo total de render
+
+   No código:
+   const DEBUG = process.env.DEBUG_RENDER === '1';
+   if (DEBUG) logger.info({ placeholder, value }, '...');
+
+---
+
+## Item 7 — UNIQUE constraint clickup_task_id
+
+Antes de aplicar a migration, verificar se há duplicatas:
+
+  SELECT clickup_task_id, COUNT(*) 
+  FROM solicitacoes 
+  WHERE clickup_task_id IS NOT NULL 
+  GROUP BY clickup_task_id 
+  HAVING COUNT(*) > 1;
+
+Se retornar linhas, REPORTAR e NÃO aplicar — precisa resolver dupes 
+antes. Se vazio, prosseguir.
+
+Adicionar em src/index.ts DB_STATEMENTS (ou em migrations/):
+
+  CREATE UNIQUE INDEX IF NOT EXISTS idx_solicitacoes_clickup_task_id 
+    ON solicitacoes(clickup_task_id) 
+    WHERE clickup_task_id IS NOT NULL;
+
+---
+
+## Item 8 — Polling strategy unify
+
+Hoje thankyou.html usa 40 × 3s e solicitacao.html usa 6 × 10s.
+
+Ação:
+1. Padronizar pra 30 × 4s (2 minutos total, intervalo médio).
+
+2. Em ambos arquivos (public/thankyou.html e public/solicitacao.html), 
+   localizar o setInterval/setTimeout que faz o polling e atualizar:
+   - max tentativas: 30
+   - intervalo: 4000ms
+
+3. (Opcional) Extrair pra utils.js como FormPolling.start(callback, 
+   options). Se for muito intrusivo, deixar inline mesmo.
+
+---
+
+## Critério de validação consolidado
+
+1. grep -rn "CLICKUP_STATUS_MAP\s*=" artifacts/api-server/src/
+   → só em lib/clickup-status.ts
+
+2. grep -rn "console\." artifacts/api-server/src/ | grep -v "lib/logger.ts"
+   → vazio
+
+3. pnpm run build
+   → executa typecheck + bundle sem erros
+
+4. SQL no DB:
+   \d solicitacoes
+   → mostra idx_solicitacoes_clickup_task_id
+
+5. Submeter um form-cartao-comemorativo, observar /thankyou.html:
+   → polling roda no novo intervalo (4s entre attempts)
+
+## Não faça
+
+- Não touch em routes/admin.ts (ApiError é P1 médio)
+- Não delete legacy generators (P1.6, depende de P0.1 estável)
+- Não toque em testes (não há testes, dificil de validar)
+- Se não houver `lru-cache` no package.json, NÃO instalar — usar 
+  implementação manual

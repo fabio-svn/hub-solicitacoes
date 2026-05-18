@@ -59,6 +59,7 @@ const DB_STATEMENTS = [
   `CREATE INDEX IF NOT EXISTS "IDX_solicitacoes_tipo_solicitacao" ON "solicitacoes" ("tipo_solicitacao")`,
   `CREATE INDEX IF NOT EXISTS "IDX_solicitacoes_status"           ON "solicitacoes" ("status")`,
   `CREATE INDEX IF NOT EXISTS "IDX_solicitacoes_created_at"       ON "solicitacoes" ("created_at" DESC)`,
+  `CREATE UNIQUE INDEX IF NOT EXISTS "idx_solicitacoes_clickup_task_id" ON "solicitacoes" ("clickup_task_id") WHERE "clickup_task_id" IS NOT NULL`,
 
   // Arquivos
   `CREATE TABLE IF NOT EXISTS "arquivos" (

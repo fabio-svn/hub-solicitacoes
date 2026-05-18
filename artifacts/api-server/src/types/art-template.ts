@@ -1,4 +1,5 @@
 export type ArtTemplate = {
+  id?: number;
   tipo: string;
   output_format?: 'png' | 'pdf';
   canvas: { width: number; height: number };
@@ -87,6 +88,10 @@ export const AVAILABLE_FONTS = [
 
 export const PLACEHOLDERS_BY_TIPO: Record<string, string[]> = {
   'assinatura-email':      ['nome', 'cargo', 'telefone', 'email', 'marca_label', 'tem_cfp', 'marca'],
-  'cartao-boas-vindas':    ['nome_cliente', 'nome_assinatura', 'unidade', 'contrato_label', 'contrato_social', 'is_private_key'],
+  'cartao-boas-vindas':    ['telefone', 'nome_cliente', 'nome_assinatura', 'unidade', 'contrato_social', 'is_private_key', 'contrato_label'],
   'cartao-visita-digital': ['nome', 'telefone', 'email', 'contrato_social', 'foto_perfil', 'contrato_label', 'telefone_digits', 'site_url'],
+  'divulgacao-nps':        ['telefone', 'nome_assinatura', 'cargo', 'agradecimento', 'modelo_arte', 'foto_perfil'],
+  'convite-fp':            ['telefone', 'codigo_assessor', 'nome_assinatura', 'cargo', 'contrato_social', 'contrato_label'],
+  'certificado-eventos':   ['telefone', 'nome_completo', 'email', 'nome_evento', 'id_evento', 'carga_horaria'],
+  'cartao-comemorativo':   ['telefone', 'nome_aniversariante', 'modelo_cartao', 'mensagem', 'assinatura', 'email_destinatario'],
 };

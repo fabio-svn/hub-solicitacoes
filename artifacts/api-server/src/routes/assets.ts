@@ -142,8 +142,8 @@ router.get("/", requireAuth, requireRole("admin"), async (req, res): Promise<voi
       if (!isNaN(d.getTime())) conditions.push(lt(artAssetsTable.uploaded_at, d));
     }
 
-    const pageNum  = Math.max(1, parseInt(page || "1"));
-    const pageSize = Math.min(200, Math.max(1, parseInt(lim || "50")));
+    const pageNum  = Math.max(1, parseInt(page || "1", 10));
+    const pageSize = Math.min(200, Math.max(1, parseInt(lim || "50", 10)));
     const offset   = (pageNum - 1) * pageSize;
 
     const rows = await db
@@ -167,7 +167,7 @@ router.get("/", requireAuth, requireRole("admin"), async (req, res): Promise<voi
 // ── DELETE /api/admin/assets/:id ──────────────────────────────────
 router.delete("/:id", requireAuth, requireRole("admin"), async (req, res): Promise<void> => {
   try {
-    const id = parseInt(req.params.id);
+    const id = parseInt(req.params.id, 10);
     if (isNaN(id)) { res.status(400).json({ error: "ID inválido" }); return; }
 
     const [asset] = await db.select().from(artAssetsTable).where(eq(artAssetsTable.id, id));

@@ -235,7 +235,7 @@ router.post("/solicitacoes", requireAuth, upload.any(), async (req, res): Promis
     }
 
     if (maturidade !== undefined && maturidade !== null && maturidade !== "") {
-      const m = parseInt(maturidade);
+      const m = parseInt(maturidade, 10);
       if (isNaN(m) || m < 1 || m > 3) {
         res.status(400).json({ error: "maturidade deve ser 1, 2 ou 3" });
         return;
@@ -258,7 +258,7 @@ router.post("/solicitacoes", requireAuth, upload.any(), async (req, res): Promis
       user_email: user.email,
       tipo_solicitacao,
       subtipo: subtipo || null,
-      maturidade: maturidade ? parseInt(maturidade) : null,
+      maturidade: maturidade ? parseInt(maturidade, 10) : null,
       dados: parsedDados,
       status: "recebido",
     }).returning();
@@ -391,7 +391,7 @@ router.get("/solicitacoes", requireAuth, async (req, res) => {
       }
     }
     if (req.query.maturidade) {
-      const m = parseInt(String(req.query.maturidade));
+      const m = parseInt(String(req.query.maturidade), 10);
       if (!isNaN(m) && m >= 1 && m <= 3) {
         conditions.push(eq(solicitacoesTable.maturidade, m));
       }
@@ -438,8 +438,8 @@ router.get("/solicitacoes", requireAuth, async (req, res) => {
       }
     }
 
-    const page = Math.max(1, parseInt(String(req.query.page)) || 1);
-    const limit = Math.min(100, Math.max(1, parseInt(String(req.query.limit)) || 20));
+    const page = Math.max(1, parseInt(String(req.query.page), 10) || 1);
+    const limit = Math.min(100, Math.max(1, parseInt(String(req.query.limit), 10) || 20));
     const offset = (page - 1) * limit;
 
     const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
@@ -540,7 +540,7 @@ router.get("/solicitacoes/pendentes-aprovacao", requireAuth, async (req, res): P
 router.get("/solicitacoes/:id", requireAuth, async (req, res): Promise<void> => {
   try {
     const user = req.session.user!;
-    const id = parseInt(String(req.params.id));
+    const id = parseInt(String(req.params.id), 10);
     if (isNaN(id)) {
       res.status(400).json({ error: "ID inválido" });
       return;
@@ -571,7 +571,7 @@ router.get("/solicitacoes/:id", requireAuth, async (req, res): Promise<void> => 
 router.get("/solicitacoes/:id/status", requireAuth, async (req, res): Promise<void> => {
   try {
     const user = req.session.user!;
-    const id = parseInt(String(req.params.id));
+    const id = parseInt(String(req.params.id), 10);
     if (isNaN(id)) {
       res.status(400).json({ error: "ID inválido" });
       return;
@@ -615,7 +615,7 @@ router.get("/solicitacoes/:id/status", requireAuth, async (req, res): Promise<vo
 
 router.post("/solicitacoes/:id/entrega", requireAuth, async (req, res): Promise<void> => {
   try {
-    const id = parseInt(String(req.params.id));
+    const id = parseInt(String(req.params.id), 10);
     if (isNaN(id)) { res.status(400).json({ error: "ID inválido" }); return; }
 
     const internalSecret = process.env.INTERNAL_API_SECRET;
@@ -663,7 +663,7 @@ router.post("/solicitacoes/:id/entrega", requireAuth, async (req, res): Promise<
 router.get("/solicitacoes/:id/artefato", requireAuth, async (req, res): Promise<void> => {
   try {
     const user = req.session.user!;
-    const id = parseInt(String(req.params.id));
+    const id = parseInt(String(req.params.id), 10);
     if (isNaN(id)) { res.status(400).json({ error: "ID inválido" }); return; }
 
     const conditions: ReturnType<typeof eq>[] = [eq(solicitacoesTable.id, id)];
@@ -688,7 +688,7 @@ router.get("/solicitacoes/:id/artefato", requireAuth, async (req, res): Promise<
 router.get("/solicitacoes/:id/entrega", requireAuth, async (req, res): Promise<void> => {
   try {
     const user = req.session.user!;
-    const id = parseInt(String(req.params.id));
+    const id = parseInt(String(req.params.id), 10);
     if (isNaN(id)) { res.status(400).json({ error: "ID inválido" }); return; }
 
     const conditions: ReturnType<typeof eq>[] = [eq(solicitacoesTable.id, id)];
@@ -801,7 +801,7 @@ router.get("/solicitacoes/:id/entrega", requireAuth, async (req, res): Promise<v
 router.post("/solicitacoes/:id/alteracao", requireAuth, async (req, res): Promise<void> => {
   try {
     const user = req.session.user!;
-    const id = parseInt(String(req.params.id));
+    const id = parseInt(String(req.params.id), 10);
     if (isNaN(id)) { res.status(400).json({ error: "ID inválido" }); return; }
 
     const { mensagem } = req.body as { mensagem: string };
@@ -866,7 +866,7 @@ router.post("/solicitacoes/:id/alteracao", requireAuth, async (req, res): Promis
 router.post("/solicitacoes/:id/aprovacao", requireAuth, async (req, res): Promise<void> => {
   try {
     const user = req.session.user!;
-    const id = parseInt(String(req.params.id));
+    const id = parseInt(String(req.params.id), 10);
     if (isNaN(id)) { res.status(400).json({ error: "ID inválido" }); return; }
 
     const conditions: ReturnType<typeof eq>[] = [eq(solicitacoesTable.id, id), eq(solicitacoesTable.user_email, user.email)];
@@ -919,7 +919,7 @@ router.get("/admin/stats", requireAuth, async (req, res): Promise<void> => {
       res.status(403).json({ error: "Acesso negado" }); return;
     }
 
-    const dias = Math.min(365, Math.max(1, parseInt(String(req.query.dias)) || 7));
+    const dias = Math.min(365, Math.max(1, parseInt(String(req.query.dias), 10) || 7));
     const now = new Date();
     const periodoAtual = new Date(now.getTime() - dias * 86400000);
     const periodoAnterior = new Date(periodoAtual.getTime() - dias * 86400000);
@@ -998,8 +998,8 @@ router.get("/admin/historico", requireAuth, async (req, res): Promise<void> => {
       res.status(403).json({ error: "Acesso negado" }); return;
     }
 
-    const page = Math.max(1, parseInt(String(req.query.page)) || 1);
-    const limit = Math.min(50, Math.max(1, parseInt(String(req.query.limit)) || 25));
+    const page = Math.max(1, parseInt(String(req.query.page), 10) || 1);
+    const limit = Math.min(50, Math.max(1, parseInt(String(req.query.limit), 10) || 25));
     const offset = (page - 1) * limit;
 
     const conditions: ReturnType<typeof sql>[] = [];
@@ -1108,7 +1108,7 @@ router.delete("/solicitacoes/:id", requireAuth, async (req, res): Promise<void> 
       res.status(403).json({ error: "Acesso negado" }); return;
     }
 
-    const id = parseInt(String(req.params.id));
+    const id = parseInt(String(req.params.id), 10);
     if (isNaN(id)) { res.status(400).json({ error: "ID inválido" }); return; }
 
     const [solicitacao] = await db.select()
@@ -1139,7 +1139,7 @@ router.delete("/solicitacoes/:id", requireAuth, async (req, res): Promise<void> 
 router.post("/solicitacoes/:id/avaliacao", requireAuth, async (req, res): Promise<void> => {
   try {
     const user = req.session.user!;
-    const id = parseInt(String(req.params.id));
+    const id = parseInt(String(req.params.id), 10);
     if (isNaN(id)) { res.status(400).json({ error: "ID inválido" }); return; }
 
     const { nota, comentario } = req.body as { nota: number; comentario?: string };
@@ -1171,7 +1171,7 @@ router.get("/solicitacoes/:id/avaliacao", requireAuth, async (req, res): Promise
     if (user.role !== "admin" && user.role !== "gestor") {
       res.status(403).json({ error: "Acesso negado" }); return;
     }
-    const id = parseInt(String(req.params.id));
+    const id = parseInt(String(req.params.id), 10);
     if (isNaN(id)) { res.status(400).json({ error: "ID inválido" }); return; }
     const [sol] = await db.select({ avaliacao: solicitacoesTable.avaliacao })
       .from(solicitacoesTable)

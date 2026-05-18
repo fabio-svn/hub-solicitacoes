@@ -87,7 +87,7 @@
       if (card) card.style.display = 'block';
 
       let tentativas = 0;
-      const MAX_TENTATIVAS = 40;
+      const MAX_TENTATIVAS = 30;
 
       function poll() {
         fetch('/api/solicitacoes/' + solicitacaoId + '/artefato', { credentials: 'include' })
@@ -109,7 +109,7 @@
             } else {
               tentativas++;
               if (tentativas < MAX_TENTATIVAS) {
-                _artefatoPollingTimer = setTimeout(poll, 3000);
+                _artefatoPollingTimer = setTimeout(poll, 4000);
               } else {
                 const pollingEl = document.getElementById('artefatoPolling');
                 if (pollingEl) pollingEl.innerHTML = '<p style="font-size:0.8rem;color:rgba(255,248,243,0.5)">Material em geração — verifique sua solicitação em breve.</p>';
@@ -118,7 +118,7 @@
           })
           .catch(() => {
             tentativas++;
-            if (tentativas < MAX_TENTATIVAS) _artefatoPollingTimer = setTimeout(poll, 5000);
+            if (tentativas < MAX_TENTATIVAS) _artefatoPollingTimer = setTimeout(poll, 4000);
           });
       }
       setTimeout(poll, 2000);

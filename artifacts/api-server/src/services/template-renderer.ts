@@ -32,15 +32,32 @@ function getFont(family: string): any {
   return loadFont(file);
 }
 
-const assetCache = new Map<string, Buffer>();
+class BoundedCache<K, V> {
+  private _map = new Map<K, V>();
+  constructor(private readonly _max: number) {}
+  get(key: K): V | undefined { return this._map.get(key); }
+  set(key: K, value: V): void {
+    if (this._map.has(key)) this._map.delete(key);
+    else if (this._map.size >= this._max) this._map.delete(this._map.keys().next().value!);
+    this._map.set(key, value);
+  }
+}
+
+const DEBUG_RENDER = process.env.DEBUG_RENDER === '1';
+const assetCache = new BoundedCache<string, Buffer>(100);
+
 async function getRemoteAsset(url: string): Promise<Buffer> {
   if (!url || url.trim() === '') throw new Error('URL de asset vazia');
   if (url.startsWith('http')) {
     const cached = assetCache.get(url);
-    if (cached) return cached;
+    if (cached) {
+      if (DEBUG_RENDER) logger.info({ url }, 'render: asset cache hit');
+      return cached;
+    }
     const res = await fetch(url);
     if (!res.ok) throw new Error(`Falha ao buscar ${url}: ${res.status}`);
     const buf = Buffer.from(await res.arrayBuffer());
+    if (DEBUG_RENDER) logger.info({ url }, 'render: asset cache miss');
     assetCache.set(url, buf);
     return buf;
   }
@@ -212,8 +229,8 @@ async function renderImage(
   let url: string;
   if (layer.source.type === 'static') {
     url = layer.source.url;
-  } else if ((layer.source as any).type === 'placeholder') {
-    url = data[(layer.source as any).field] || '';
+  } else if (layer.source.type === 'placeholder') {
+    url = data[layer.source.field] || '';
     if (!url) return;
   } else {
     const src = layer.source as { type: 'variant'; variants: Record<string, string>; variant_source: string };
@@ -224,7 +241,7 @@ async function renderImage(
   if (!url) return;
 
   const raw = await getRemoteAsset(url);
-  const isCircle = (layer as any).shape === 'circle';
+  const isCircle = layer.shape === 'circle';
 
   let safeW: number;
   let safeH: number;
@@ -234,10 +251,10 @@ async function renderImage(
     safeW = Math.min(layer.w, bgWidth - layer.x);
     safeH = Math.min(layer.h, bgHeight - layer.y);
     if (safeW !== layer.w || safeH !== layer.h) {
-      console.warn(`[render] image ${layer.id} dimensions capped: ${layer.w}x${layer.h} → ${safeW}x${safeH} (bg=${bgWidth}x${bgHeight})`);
+      logger.warn(`[render] image ${layer.id} dimensions capped: ${layer.w}x${layer.h} → ${safeW}x${safeH} (bg=${bgWidth}x${bgHeight})`);
     }
     if (safeW <= 0 || safeH <= 0) {
-      console.warn(`[render] image ${layer.id} skipped: zero or negative safe dimensions`);
+      logger.warn(`[render] image ${layer.id} skipped: zero or negative safe dimensions`);
       return;
     }
     const fitMode = isCircle ? 'cover' : (layer.resize_mode ?? 'contain');
@@ -249,7 +266,7 @@ async function renderImage(
     const rawW = meta.width ?? 0;
     const rawH = meta.height ?? 0;
     if (rawW > bgWidth || rawH > bgHeight) {
-      console.warn(`[render] image ${layer.id} (no explicit size) exceeds bg: ${rawW}x${rawH} > ${bgWidth}x${bgHeight}, resizing`);
+      logger.warn(`[render] image ${layer.id} (no explicit size) exceeds bg: ${rawW}x${rawH} > ${bgWidth}x${bgHeight}, resizing`);
       input = await sharp(raw)
         .resize(Math.min(rawW, bgWidth), Math.min(rawH, bgHeight), { fit: 'inside' })
         .toBuffer();
@@ -282,11 +299,11 @@ async function renderImage(
     left: layer.x,
   };
   if (layer.blend_mode && layer.blend_mode !== 'normal') {
-    composite.blend = layer.blend_mode as any;
+    composite.blend = layer.blend_mode as sharp.Blend;
   }
   composites.push(composite);
 
-  const border = (layer as any).border as { width: number; color: string } | undefined;
+  const border = layer.border;
   if (border && border.width > 0) {
     const hw = border.width / 2;
     const borderSvg = isCircle
@@ -321,15 +338,15 @@ export async function renderFromTemplate(
     }
     const bgRaw = await getRemoteAsset(bgUrl);
     const bgMeta = await sharp(bgRaw).metadata();
-    console.log(`[render] tipo=${template.tipo} bg_raw=${bgMeta.width}x${bgMeta.height} canvas=${canvasW}x${canvasH}`);
+    logger.info(`[render] tipo=${template.tipo} bg_raw=${bgMeta.width}x${bgMeta.height} canvas=${canvasW}x${canvasH}`);
     if (bgMeta.width === canvasW && bgMeta.height === canvasH) {
       bgBuf = bgRaw;
     } else {
-      console.warn(`[render] bg dimensions mismatch — resizing ${bgMeta.width}x${bgMeta.height} → ${canvasW}x${canvasH}`);
+      logger.warn(`[render] bg dimensions mismatch — resizing ${bgMeta.width}x${bgMeta.height} → ${canvasW}x${canvasH}`);
       bgBuf = await sharp(bgRaw).resize(canvasW, canvasH, { fit: 'fill' }).toBuffer();
     }
   } catch (err: any) {
-    console.warn(`[render] bg inválido (${err.message}), usando placeholder cinza`);
+    logger.warn(`[render] bg inválido (${err.message}), usando placeholder cinza`);
     bgBuf = await sharp({
       create: { width: canvasW, height: canvasH, channels: 4, background: { r: 64, g: 64, b: 68, alpha: 1 } },
     }).png().toBuffer();
@@ -337,14 +354,15 @@ export async function renderFromTemplate(
 
   // ── Layers ────────────────────────────────────────────────────
   const composites: sharp.OverlayOptions[] = [];
-  const renderCtx = { tipo: template.tipo, layoutId: (template as any).id };
+  const t0 = DEBUG_RENDER ? Date.now() : 0;
+  const renderCtx = { tipo: template.tipo, layoutId: template.id };
   for (const layer of template.layers) {
     try {
       if (layer.type === 'text-line')  await renderTextLine(layer, dataStr, composites, renderCtx);
       if (layer.type === 'text-block') await renderTextBlock(layer, dataStr, composites, renderCtx);
       if (layer.type === 'image')      await renderImage(layer, dataStr, composites, canvasW, canvasH);
     } catch (err: any) {
-      console.warn(`[render] layer "${layer.id}" ignorada (${err.message})`);
+      logger.warn(`[render] layer "${layer.id}" ignorada (${err.message})`);
     }
   }
 
@@ -353,9 +371,11 @@ export async function renderFromTemplate(
     const c = composites[i];
     if (Buffer.isBuffer(c.input)) {
       const m = await sharp(c.input).metadata();
-      console.log(`[render] composite[${i}]: ${m.width}x${m.height} @ (left=${c.left}, top=${c.top})`);
+      logger.info(`[render] composite[${i}]: ${m.width}x${m.height} @ (left=${c.left}, top=${c.top})`);
     }
   }
 
-  return sharp(bgBuf).composite(composites).png().toBuffer();
+  const result = await sharp(bgBuf).composite(composites).png().toBuffer();
+  if (DEBUG_RENDER) logger.info({ tipo: template.tipo, layoutId: template.id, ms: Date.now() - t0 }, 'render: concluído');
+  return result;
 }

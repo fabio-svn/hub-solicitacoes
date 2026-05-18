@@ -1059,7 +1059,7 @@ async function getAssigneesForTipo(tipo: string): Promise<number[]> {
       .innerJoin(usersTable, eq(userTipoAssignmentsTable.user_id, usersTable.id))
       .where(eq(userTipoAssignmentsTable.tipo, tipo));
     return rows
-      .map(r => parseInt(r.clickup_user_id ?? ""))
+      .map(r => parseInt(r.clickup_user_id ?? "", 10))
       .filter(n => !isNaN(n));
   } catch (err) {
     logger.error({ err, tipo }, "getAssigneesForTipo: erro ao buscar assignees no DB");
@@ -1147,7 +1147,7 @@ export async function createClickUpTask(
   } else {
     let diasUteis = PRAZO_DIAS_UTEIS[tipo] ?? 3;
     if (tipo === "apresentacao-nova" || tipo === "apresentacao-atualizar") {
-      const qtd = parseInt(String((dados as Record<string, unknown>).qtdPaginas || "0"));
+      const qtd = parseInt(String((dados as Record<string, unknown>).qtdPaginas || "0"), 10);
       if (qtd > 20) diasUteis = 15;
     }
     prazoDate = addBusinessDays(new Date(), diasUteis);
