@@ -1,0 +1,351 @@
+# Hub SVN — Refinamentos UI do Template Editor
+
+4 ajustes focados em usabilidade. Build + restart no final.
+
+---
+
+## #1 — Drag também pela tag "new layer"
+
+**Problema:** layers de texto de uma linha têm box pequeno, e a área útil pra arrastar é mínima. A tag azul que flutua acima da layer (com o nome dela) **também deveria ser um drag handle**.
+
+**Correção:**
+
+A tag deve fazer parte do mesmo elemento "drag-able" da layer (ou ser um handle adicional reconhecido pelo interact.js).
+
+### Implementação
+
+1. **Garantir que a tag é filha do layer element** (não um overlay separado):
+
+```html
+<div class="layer-el" data-layer-id="${id}">
+  <div class="layer-tag">Nome da camada</div>  <!-- ← tag interna -->
+  <div class="layer-content">
+    <!-- conteúdo: texto, imagem etc. -->
+  </div>
+</div>
+```
+
+2. **Configurar `allowFrom` no interact.js** pra reconhecer múltiplos handles:
+
+```js
+interact(layerEl).draggable({
+  allowFrom: '.layer-tag, .layer-content',
+  listeners: {
+    start(event) {
+      event.stopPropagation();
+      selectLayer(layerId);
+      isDragging = true;
+    },
+    move(event) {
+      // ... mover o layer-el inteiro (tag + content vão juntos)
+    },
+    end() { setTimeout(() => { isDragging = false; }, 50); }
+  }
+});
+```
+
+3. **CSS** garantindo que a tag tem cursor de drag e área clicável:
+
+```css
+.layer-tag {
+  position: absolute;
+  top: -22px;
+  left: 0;
+  background: #3b82f6;
+  color: #fff;
+  font-size: 0.7rem;
+  padding: 2px 8px;
+  border-radius: 4px 4px 0 0;
+  cursor: move;
+  user-select: none;
+  white-space: nowrap;
+}
+.layer-tag:hover { background: #2563eb; }
+```
+
+**Validação**: criar layer de texto de uma linha (altura ~20px). Arrastar pela tag azul → layer se move como esperado. Arrastar pelo conteúdo → também funciona. Selecionar via click na tag → layer fica selecionada.
+
+---
+
+## #2 — Setas de reordenação mais visíveis + posição fixa à direita
+
+**Problema:** as setas ↑↓ ficaram apagadas e em posição variável dentro do item da lista de layers.
+
+**Correção CSS no item da layer no painel lateral:**
+
+### Estrutura HTML
+
+```html
+<div class="layer-item" data-layer-id="${id}">
+  <span class="layer-icon">${iconSvg}</span>
+  <span class="layer-name">${layer.name}</span>
+  <div class="layer-actions">
+    <button class="layer-vis-btn"  onclick="toggleLayerVisibility('${id}')">👁</button>
+    <button class="layer-lock-btn" onclick="toggleLayerLock('${id}')">🔓</button>
+    <div class="layer-reorder">
+      <button class="layer-up-btn"   onclick="moveLayerUp('${id}')"   title="Mover pra cima">↑</button>
+      <button class="layer-down-btn" onclick="moveLayerDown('${id}')" title="Mover pra baixo">↓</button>
+    </div>
+  </div>
+</div>
+```
+
+### CSS
+
+```css
+.layer-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  cursor: pointer;
+}
+.layer-item:hover { background: rgba(0,0,0,0.04); }
+.layer-item.selected { border-color: #3b82f6; background: rgba(59,130,246,0.08); }
+
+.layer-icon { display: flex; align-items: center; width: 18px; height: 18px; opacity: 0.7; }
+.layer-name { flex: 1; font-size: 0.85rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.layer-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: auto;  /* empurra pra direita */
+}
+
+.layer-vis-btn, .layer-lock-btn {
+  background: transparent;
+  border: none;
+  padding: 4px;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  opacity: 0.6;
+}
+.layer-vis-btn:hover, .layer-lock-btn:hover { opacity: 1; background: rgba(0,0,0,0.05); }
+
+.layer-reorder {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  margin-left: 4px;
+}
+.layer-up-btn, .layer-down-btn {
+  background: rgba(0,0,0,0.08);
+  border: none;
+  width: 22px;
+  height: 16px;
+  padding: 0;
+  font-size: 0.7rem;
+  cursor: pointer;
+  color: rgba(0,0,0,0.7);     /* ← mais visível que antes */
+  border-radius: 3px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.layer-up-btn:hover, .layer-down-btn:hover {
+  background: rgba(0,0,0,0.15);
+  color: rgba(0,0,0,1);
+}
+.layer-up-btn:disabled, .layer-down-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+```
+
+**Validação**: as setas têm fundo cinza claro visível mesmo sem hover, ficam empilhadas verticalmente à direita do item (depois dos ícones de visibilidade e lock), e em todos os itens da lista ficam alinhadas na mesma posição.
+
+---
+
+## #3 — Painel de "Dados de teste" inline, abaixo do header do canvas
+
+**Problema:** hoje aparece como modal largo no rodapé. Quer que apareça como uma **strip horizontal expansível** logo abaixo da toolbar do canvas — preservando contexto visual.
+
+### Layout esperado
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│ [Header padrão do hub - botão Voltar à esquerda]            │
+├─────────────────────────────────────────────────────────────┤
+│ Nome do template • [ATIVO]  |  Variantes |  [Salvar] [Dados para teste]
+├─────────────────────────────────────────────────────────────┤
+│ ⬇ Dados para teste (clicar pra colapsar)                    │  ← strip
+│ [nome_cliente: ...] [contrato: ▾] [is_private: ●○]          │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│              [Canvas escuro com artboard]                   │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### Implementação
+
+Remover o modal/popup atual. Substituir por uma strip:
+
+```html
+<div id="testDataStrip" class="test-data-strip" style="display:none">
+  <div class="test-data-header" onclick="toggleTestDataStrip()">
+    <span class="test-data-toggle">⬇</span>
+    <span>Dados para teste</span>
+    <span class="test-data-hint">(usados apenas no preview)</span>
+  </div>
+  <div class="test-data-fields" id="testDataFields">
+    <!-- Inputs renderizados via JS conforme schema do form -->
+  </div>
+</div>
+```
+
+```css
+.test-data-strip {
+  background: #f8f7f5;
+  border-bottom: 1px solid #e5e3df;
+  padding: 0;
+}
+.test-data-header {
+  padding: 8px 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  background: #f0eee9;
+  user-select: none;
+}
+.test-data-header:hover { background: #e9e7e2; }
+.test-data-toggle { font-size: 0.7rem; transition: transform 0.2s; }
+.test-data-strip.collapsed .test-data-toggle { transform: rotate(-90deg); }
+.test-data-hint { color: rgba(0,0,0,0.5); font-size: 0.75rem; margin-left: auto; }
+
+.test-data-fields {
+  padding: 12px 16px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: flex-end;
+}
+.test-data-strip.collapsed .test-data-fields { display: none; }
+
+.test-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 180px;
+}
+.test-field label { font-size: 0.72rem; color: rgba(0,0,0,0.6); }
+.test-field input, .test-field select {
+  padding: 4px 8px;
+  border: 1px solid #d4d2cd;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  font-family: inherit;
+}
+```
+
+```js
+function toggleTestDataStrip() {
+  const strip = document.getElementById('testDataStrip');
+  strip.classList.toggle('collapsed');
+}
+
+function openTestDataStrip() {
+  const strip = document.getElementById('testDataStrip');
+  strip.style.display = 'block';
+  strip.classList.remove('collapsed');
+  renderTestDataFields();  // popula os inputs conforme schema
+}
+
+// Botão "Dados para teste" da toolbar chama openTestDataStrip().
+// O strip fica aberto até o usuário colapsá-lo ou fechá-lo explicitamente.
+```
+
+### Posicionamento no layout
+
+A strip fica **entre a toolbar do canvas e a área do canvas (canvas-scroll)**. No grid/flex que organiza o editor:
+
+```
+.editor-canvas-column {
+  display: flex;
+  flex-direction: column;
+}
+.editor-canvas-column > .canvas-toolbar   { flex: 0 0 auto; }
+.editor-canvas-column > .test-data-strip  { flex: 0 0 auto; }  ← novo
+.editor-canvas-column > .canvas-scroll    { flex: 1 1 auto; overflow: auto; }
+```
+
+Quando a strip está aberta, ela ocupa só o espaço necessário (header + fields). O canvas-scroll abaixo ajusta automaticamente.
+
+### Renderização dos campos
+
+A função `renderTestDataFields` permanece igual ao que já estava — ela monta inputs conforme o schema do form (etapa 1 do prompt anterior). Só muda onde os inputs são montados (`#testDataFields` dentro da strip em vez do modal).
+
+**Validação**: editor abre com strip oculta. Click no botão "Dados para teste" → strip aparece com inputs em linha. Click no header da strip → colapsa (esconde fields mas mantém header visível). Click de novo → expande. Conteúdo dos inputs alimenta o preview (live preview funciona como antes).
+
+---
+
+## #4 — Ícones SVG pras layers de texto
+
+**Problema:** os ícones de texto-linha e texto-bloco hoje são apenas letras (`T` e `Tt`). Ficou cru.
+
+**Correção:** usar SVG decentes pra representar visualmente.
+
+### Sugestão de ícones (inline SVG)
+
+Substituir no código que renderiza o ícone de cada layer:
+
+```js
+const LAYER_ICONS = {
+  'text-line': `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>`,
+  // ícone clássico de "Type" (Lucide), representa texto em geral
+
+  'text-block': `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="17" y1="10" x2="3" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="17" y1="18" x2="3" y2="18"/></svg>`,
+  // ícone de "Align Left" (Lucide), representa bloco de parágrafo
+
+  'image': `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>`,
+  // ícone clássico de imagem (Lucide)
+};
+```
+
+Usar:
+
+```js
+function renderLayerIcon(type) {
+  return `<span class="layer-icon">${LAYER_ICONS[type] || ''}</span>`;
+}
+```
+
+CSS pra que o SVG herde a cor do texto e fique bem dimensionado:
+
+```css
+.layer-icon svg { width: 16px; height: 16px; stroke: currentColor; }
+```
+
+### Aplicar em 3 lugares
+
+1. **Lista de layers no painel lateral** (cada `.layer-item`)
+2. **Botões "Adicionar layer"** na seção que cria layers nova
+3. **Tag flutuante "new layer"** acima de cada layer no canvas, se também usa o ícone
+
+Mesmo conjunto de ícones nos três lugares pra consistência.
+
+**Validação**: visualmente os ícones têm aparência refinada (não mais letras desenhadas). Tamanho consistente (16x16). Herdam cor do texto do contexto onde estão.
+
+---
+
+## Build e validação
+
+```bash
+cd artifacts/api-server && pnpm run build
+# Restart
+```
+
+### Smoke tests integrados
+
+1. Criar template novo com layer de texto de uma linha + layer de imagem grande
+2. **Drag pela tag**: arrastar a tag azul "Nome da camada" do texto → layer se move (não só pela box pequena)
+3. **Setas visíveis**: as setas ↑↓ aparecem com fundo cinza claro à direita de cada item da lista, sempre alinhadas
+4. **Reordenar funciona**: click na seta ↑ → layer sobe na lista E sobe no canvas (vira topo do z-index)
+5. **Painel de teste inline**: click em "Dados para teste" → strip aparece abaixo da toolbar do canvas (não como modal grande). Click no header → colapsa. Inputs mudam → preview atualiza
+6. **Ícones SVG**: layers na lista, botões de adicionar, e tags flutuantes mostram ícones SVG ao invés de letras

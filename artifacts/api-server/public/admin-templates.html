@@ -108,9 +108,10 @@
     .layer-drag-handle { cursor: grab; color: rgba(34,27,25,0.2); font-size: 0.65rem; letter-spacing: 1px; flex-shrink: 0; user-select: none; padding: 2px 1px; }
     .layer-drag-handle:active { cursor: grabbing; }
     .layer-item:hover .layer-drag-handle { color: rgba(34,27,25,0.4); }
-    .layer-order-btn { background: none; border: none; cursor: pointer; padding: 2px 4px; font-size: 0.7rem; color: rgba(34,27,25,0.3); border-radius: 3px; flex-shrink: 0; line-height: 1; }
-    .layer-order-btn:hover:not(:disabled) { background: rgba(34,27,25,0.08); color: rgba(34,27,25,0.65); }
-    .layer-order-btn:disabled { opacity: 0.15; cursor: default; }
+    .layer-reorder { display: flex; flex-direction: column; gap: 1px; flex-shrink: 0; }
+    .layer-order-btn { background: rgba(34,27,25,0.09); border: none; cursor: pointer; width: 22px; height: 16px; padding: 0; font-size: 0.68rem; color: rgba(34,27,25,0.65); border-radius: 3px; display: flex; align-items: center; justify-content: center; }
+    .layer-order-btn:hover:not(:disabled) { background: rgba(34,27,25,0.18); color: rgba(34,27,25,0.9); }
+    .layer-order-btn:disabled { opacity: 0.22; cursor: default; }
     .layer-type-badge { font-size: 0.65rem; padding: 1px 5px; border-radius: 4px; background: #e8e2dc; color: #6b5e58; white-space: nowrap; }
     .canvas-panel { background: #2a2a2a; display: flex; flex-direction: column; overflow: hidden; border-radius: 12px; position: relative; }
     .canvas-toolbar {
@@ -161,7 +162,7 @@
     .layer-box { position: absolute; cursor: move; border: 1px dashed rgba(59,130,246,0.25); background: transparent; box-sizing: border-box; z-index: 2; transition: border 0.1s; }
     .layer-box:hover { border: 1.5px dashed rgba(59,130,246,0.6); }
     .layer-box.selected { border: 2px solid #3b82f6; box-shadow: 0 0 0 2px rgba(59,130,246,0.25); }
-    .layer-box .layer-label { display: none; position: absolute; top: -18px; left: 0; font-size: 9px; background: #3b82f6; color: #fff; padding: 1px 5px; border-radius: 3px 3px 3px 0; white-space: nowrap; line-height: 16px; pointer-events: none; }
+    .layer-box .layer-label { display: none; position: absolute; top: -18px; left: 0; font-size: 9px; background: #3b82f6; color: #fff; padding: 1px 5px; border-radius: 3px 3px 3px 0; white-space: nowrap; line-height: 16px; cursor: move; user-select: none; }
     .layer-box:hover .layer-label, .layer-box.selected .layer-label { display: block; }
     .canvas-preview-img { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: fill; z-index: 1; display: none; }
     .no-template { display: flex; align-items: center; justify-content: flex: 1; color: rgba(255,255,255,0.3); font-size: 0.9rem; }
@@ -179,17 +180,19 @@
     .props-empty { padding: 40px 14px; text-align: center; color: rgba(34,27,25,0.35); font-size: 0.82rem; }
     .btn-delete-layer { width: 100%; padding: 7px; border: 1px solid #fecaca; background: #fff5f5; color: #ef4444; border-radius: 6px; cursor: pointer; font-size: 0.78rem; font-family: 'Nunito Sans', sans-serif; font-weight: 600; transition: background 0.15s; }
     .btn-delete-layer:hover { background: #fef2f2; }
-    .test-field { display: flex; flex-direction: column; gap: 2px; }
-    .test-field label { font-size: 0.7rem; color: rgba(34,27,25,0.5); }
-    .test-field input, .test-field select { padding: 4px 8px; border: 1px solid #e8e2dc; border-radius: 5px; font-size: 0.78rem; font-family: 'Nunito Sans', sans-serif; min-width: 120px; }
-
-    /* ── Test data modal ── */
-    .test-data-modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 2000; display: none; align-items: flex-end; justify-content: center; }
-    .test-data-modal-overlay.open { display: flex; }
-    .test-data-modal { background: #fff; border-radius: 16px 16px 0 0; width: 100%; max-height: 60vh; display: flex; flex-direction: column; box-shadow: 0 -8px 40px rgba(0,0,0,0.2); }
-    .test-data-modal-header { padding: 14px 18px 10px; border-bottom: 1px solid #e8e2dc; display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
-    .test-data-modal-title { font-size: 0.9rem; font-weight: 700; flex: 1; }
-    .test-data-modal-body { flex: 1; overflow-y: auto; padding: 14px 18px; display: flex; flex-wrap: wrap; gap: 12px; align-content: flex-start; }
+    /* ── Test data strip ── */
+    .test-data-strip { background: #1a1a1a; border-bottom: 1px solid rgba(255,255,255,0.07); flex-shrink: 0; display: none; }
+    .test-data-strip.open { display: block; }
+    .test-data-strip-header { padding: 7px 14px; display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.78rem; color: rgba(255,255,255,0.6); user-select: none; }
+    .test-data-strip-header:hover { background: rgba(255,255,255,0.04); }
+    .test-data-strip-toggle { font-size: 0.65rem; transition: transform 0.15s; }
+    .test-data-strip.collapsed .test-data-strip-toggle { transform: rotate(-90deg); }
+    .test-data-strip-hint { color: rgba(255,255,255,0.3); font-size: 0.72rem; margin-left: auto; }
+    .test-data-strip-fields { padding: 10px 14px; display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-end; }
+    .test-data-strip.collapsed .test-data-strip-fields { display: none; }
+    .test-field { display: flex; flex-direction: column; gap: 3px; min-width: 160px; }
+    .test-field label { font-size: 0.7rem; color: rgba(255,255,255,0.45); }
+    .test-field input, .test-field select { padding: 4px 8px; border: 1px solid rgba(255,255,255,0.12); border-radius: 4px; font-size: 0.82rem; font-family: inherit; background: rgba(255,255,255,0.07); color: #fff; }
     .add-layer-section { padding: 8px 14px 14px; }
     .add-layer-btn { font-size: 0.75rem; padding: 5px 10px; border: 1px dashed #ccc; background: transparent; border-radius: 5px; cursor: pointer; color: rgba(34,27,25,0.55); font-family: 'Nunito Sans',sans-serif; width: 100%; margin-bottom: 4px; }
     .add-layer-btn:hover { border-color: #9f3f37; color: #9f3f37; background: #fdf5f5; }
@@ -479,12 +482,21 @@
           <div class="toolbar-sep"></div>
           <button id="btnUndo" onclick="undo()" disabled title="Desfazer (Ctrl+Z)" style="padding:5px 10px">↶</button>
           <button id="btnRedo" onclick="redo()" disabled title="Refazer (Ctrl+Shift+Z)" style="padding:5px 10px">↷</button>
-          <button onclick="openTestDataModal()" title="Editar dados de teste para preview">Dados de teste</button>
+          <button onclick="openTestDataStrip()" title="Editar dados de teste para preview">Dados de teste</button>
           <button class="primary" onclick="saveTemplate()" style="margin-left:auto">Salvar</button>
         </div>
         <!-- Variant switches bar -->
         <div class="variant-switches-bar" id="variantSwitchesBar" style="display:none">
           <div id="variantSwitchesInner" style="display:flex;align-items:center;flex-wrap:wrap;gap:10px"></div>
+        </div>
+        <!-- Test data strip (inline, abaixo da toolbar) -->
+        <div class="test-data-strip" id="testDataStrip">
+          <div class="test-data-strip-header" onclick="toggleTestDataStrip()">
+            <span class="test-data-strip-toggle">▾</span>
+            <span>Dados de teste</span>
+            <span class="test-data-strip-hint">usados apenas no preview</span>
+          </div>
+          <div class="test-data-strip-fields" id="testDataFields"></div>
         </div>
         <div class="canvas-scroll" id="canvasScroll">
           <div class="no-template" id="noTemplate" style="display:flex;align-items:center;justify-content:center;flex:1;color:rgba(255,255,255,0.3);font-size:0.9rem">Carregando template…</div>
@@ -521,16 +533,6 @@
     </div>
   </div>
 
-  <!-- Modal: Test data -->
-  <div class="test-data-modal-overlay" id="testDataModalOverlay" onclick="if(event.target===this)closeTestDataModal()">
-    <div class="test-data-modal">
-      <div class="test-data-modal-header">
-        <span class="test-data-modal-title">Dados de teste</span>
-        <button onclick="closeTestDataModal()" style="background:none;border:none;cursor:pointer;font-size:1.2rem;color:rgba(34,27,25,0.5);padding:4px 8px">×</button>
-      </div>
-      <div class="test-data-modal-body" id="testDataFields"></div>
-    </div>
-  </div>
 
   <!-- Modal: Unsaved changes -->
   <div class="modal-overlay" id="unsavedModal">
@@ -1014,13 +1016,15 @@
       showView('list');
     }
 
-    // ── Test data modal ──────────────────────────────────────────
-    function openTestDataModal() {
+    // ── Test data strip ──────────────────────────────────────────
+    function openTestDataStrip() {
       renderTestDataPanel();
-      document.getElementById('testDataModalOverlay').classList.add('open');
+      const strip = document.getElementById('testDataStrip');
+      strip.classList.add('open');
+      strip.classList.remove('collapsed');
     }
-    function closeTestDataModal() {
-      document.getElementById('testDataModalOverlay').classList.remove('open');
+    function toggleTestDataStrip() {
+      document.getElementById('testDataStrip').classList.toggle('collapsed');
     }
 
     // ── Unsaved guard ────────────────────────────────────────────
@@ -1435,6 +1439,7 @@
     function setupInteract(el) {
       interact(el)
         .draggable({
+          allowFrom: '.layer-label, .layer-box',
           listeners: {
             move(event) {
               const cur = parseFloat(el.style.left) || 0;
@@ -1489,9 +1494,9 @@
 
     // ── Layers ───────────────────────────────────────────────────
     function layerTypeIcon(type) {
-      if (type === 'text-line') return `<span class="layer-icon-t" title="Texto (linha)">T</span>`;
-      if (type === 'text-block') return `<span class="layer-icon-t" title="Texto (bloco)">Tt</span>`;
-      return `<svg class="layer-icon-img" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" title="Imagem"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>`;
+      if (type === 'text-line') return `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" title="Texto (linha)" style="flex-shrink:0"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>`;
+      if (type === 'text-block') return `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" title="Texto (bloco)" style="flex-shrink:0"><line x1="17" y1="10" x2="3" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="17" y1="18" x2="3" y2="18"/></svg>`;
+      return `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" title="Imagem" style="flex-shrink:0"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>`;
     }
     // Convenção Figma: índice 0 = frente do canvas (topo da lista), último = fundo
     function renderLayersList() {
@@ -1507,8 +1512,10 @@
           <span class="layer-drag-handle" title="Arrastar para reordenar">⋮⋮</span>
           ${layerTypeIcon(layer.type)}
           <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(layer.name || layer.id)}</span>
-          <button class="layer-order-btn" onclick="event.stopPropagation();moveLayerUp('${layer.id}')" title="Trazer para frente" ${idx === 0 ? 'disabled' : ''}>↑</button>
-          <button class="layer-order-btn" onclick="event.stopPropagation();moveLayerDown('${layer.id}')" title="Enviar para trás" ${idx === total - 1 ? 'disabled' : ''}>↓</button>
+          <div class="layer-reorder">
+            <button class="layer-order-btn" onclick="event.stopPropagation();moveLayerUp('${layer.id}')" title="Trazer para frente" ${idx === 0 ? 'disabled' : ''}>↑</button>
+            <button class="layer-order-btn" onclick="event.stopPropagation();moveLayerDown('${layer.id}')" title="Enviar para trás" ${idx === total - 1 ? 'disabled' : ''}>↓</button>
+          </div>
         </div>
       `).join('');
     }

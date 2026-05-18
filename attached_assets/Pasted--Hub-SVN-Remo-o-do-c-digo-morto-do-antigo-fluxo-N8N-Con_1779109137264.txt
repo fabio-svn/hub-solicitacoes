@@ -1,0 +1,130 @@
+# Hub SVN — Remoção do código morto do antigo fluxo N8N
+
+**Contexto:** o hub originalmente enviava cada solicitação de automação pra N8N via webhook, que então gerava a arte e criava a task no ClickUp. Agora a geração de arte é feita server-side pelo template-renderer e a task é criada direto pelo backend chamando a API do ClickUp. O fluxo via N8N virou código morto.
+
+**Objetivo:** auditoria + remoção sistemática de tudo relacionado ao webhook N8N pra solicitações de automação. Manter intacto o que ainda é usado (ClickUp API direto, geração de arte server-side).
+
+---
+
+## Etapa 1 — Inventário
+
+Antes de remover, listar tudo que existe. Buscar nos arquivos:
+
+```bash
+grep -rn "webhook" artifacts/api-server/src --include="*.ts"
+grep -rn "n8n" artifacts/api-server/src --include="*.ts" -i
+grep -rn "WEBHOOK_URL" artifacts/api-server --include="*.ts" --include="*.env*"
+```
+
+Provavelmente vai encontrar:
+
+- **Env vars** tipo `WEBHOOK_URL_CARTAO_BOAS_VINDAS`, `WEBHOOK_URL_ASSINATURA_EMAIL`, `WEBHOOK_URL_*` (uma pra cada tipo de automação)
+- **Service/helper** que dispara webhooks (provavelmente `src/services/webhook.ts` ou `src/utils/webhook-dispatcher.ts`)
+- **Loader de config** que loga `[Webhook] URL configurada para tipo=...` no boot (visto no log do servidor)
+- **Chamadas** desse helper nos handlers de form submission
+- **Possivelmente** validação de payload, retry logic, ou queue stuff
+
+Compilar uma **lista** com cada arquivo + linhas afetadas antes de mexer.
+
+---
+
+## Etapa 2 — Confirmar que está obsoleto
+
+Pra cada chamada de webhook encontrada, verificar:
+
+1. **Já tem substituto ativo?** Ex.: o handler do form `cartao-comemorativo` tem código pra:
+   - Renderizar arte server-side via `template-renderer`
+   - Criar task no ClickUp via API direta
+   - Anexar arte renderizada à task
+
+Se sim → webhook é redundante, pode remover. Se não → **NÃO REMOVER ainda**, completar o fluxo novo primeiro.
+
+2. **Algum form de automação ainda depende exclusivamente do webhook?** Se algum tipo ainda não migrou pra geração server-side, manter o webhook DELE até a migração estar completa.
+
+Lista esperada de tipos completamente migrados (sem webhook necessário):
+- `cartao-boas-vindas`
+- `assinatura-email`
+- `cartao-comemorativo`
+- (provavelmente os outros 5: `cartao-visita-fisico`, `cartao-visita-digital`, `divulgacao-nps`, `convite-fp`, `certificado-eventos` — confirmar caso a caso)
+
+Pra cada tipo confirmado como migrado, OK pra remover sua dispatcher de webhook.
+
+---
+
+## Etapa 3 — Remoção
+
+### 3.1 Código
+
+Para cada item do inventário (Etapa 1) que foi confirmado obsoleto (Etapa 2):
+
+- Deletar o **service de webhook** completo se ele só serve pra N8N (`src/services/webhook.ts` ou similar)
+- Remover **chamadas** ao dispatcher dos handlers de form
+- Remover **loader de config** que lia env vars de webhook
+- Remover **logs de boot** `[Webhook] URL configurada para tipo=...`
+- Remover **types/interfaces** específicos do payload de webhook se não usados em outro lugar
+
+### 3.2 Env vars
+
+No `.env.example` (ou equivalente), remover:
+- Todas as `WEBHOOK_URL_*`
+- Qualquer `N8N_*` se houver
+
+**No Replit** e **no Railway**, depois do código limpo, remover essas env vars dos painéis de Variables. Isso NÃO é feito pelo agente — só o usuário acessa esses painéis. Listar quais env vars o usuário precisa remover manualmente.
+
+### 3.3 Dependências
+
+Verificar se alguma dependência foi instalada SÓ pro fluxo de webhook (ex.: `axios` se só usado pra POSTs N8N, alguma lib de retry, etc.). Se confirmado que não é usado em outro lugar, remover do `package.json` e rodar `pnpm install`.
+
+⚠️ **Cuidado:** dependências como `axios`, `node-fetch`, etc. provavelmente são usadas em outros lugares (ClickUp API, R2 client). Conferir com `grep` antes de remover.
+
+### 3.4 Testes/scripts
+
+Se houver scripts em `scripts/` ou `tests/` específicos pra testar webhooks (ex.: `test-webhook.ts`, `seed-webhooks.ts`), revisar e remover se obsoletos.
+
+---
+
+## Etapa 4 — Validação
+
+Após remoção, rebuild e teste:
+
+```bash
+cd artifacts/api-server && pnpm run build
+```
+
+Esperar:
+- Build sem erros nem warnings de imports não-resolvidos
+- Boot do servidor SEM mais aparecer `[Webhook] URL configurada para tipo=...`
+- Submeter um form de cada automação migrada → arte gerada, task criada no ClickUp, anexo OK
+- Nenhuma chamada outbound pra N8N nos logs
+
+### Smoke tests por tipo
+
+Submeter via UI:
+1. **Cartão de boas-vindas** → arte gerada, task no ClickUp com anexo
+2. **Cartão comemorativo** → idem
+3. **Assinatura de e-mail** → idem
+4. (Demais tipos migrados) → idem
+
+Conferir nos logs do servidor que **nenhuma** request HTTP saiu pra `auto.portalsvn.com.br` ou outro endpoint N8N.
+
+---
+
+## Etapa 5 — Documentação
+
+Atualizar o README do projeto (ou arquivo de docs equivalente) removendo qualquer referência ao fluxo N8N. Se houver diagrama de arquitetura, atualizar.
+
+Mencionar no commit message qual era o fluxo antigo e por que foi removido, pra histórico.
+
+---
+
+## Output esperado pra mim
+
+Ao final da execução, fornecer:
+
+1. **Lista de arquivos removidos** (paths)
+2. **Lista de arquivos modificados** (paths + linhas removidas)
+3. **Lista de env vars** que o usuário deve remover do Replit e Railway manualmente
+4. **Lista de dependências** removidas do `package.json` (se houver)
+5. **Confirmação** de que os smoke tests passaram
+
+Se algum tipo de automação ainda não está totalmente migrado e o webhook DELE foi mantido, explicitar quais e por quê.
