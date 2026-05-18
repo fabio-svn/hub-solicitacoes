@@ -43,6 +43,61 @@
       </div>
     </div>
 
+    <!-- Filtro de período para o gráfico -->
+    <div style="display:flex;align-items:center;gap:10px;margin-top:24px;flex-wrap:wrap">
+      <span style="font-size:0.8rem;font-weight:600;opacity:0.5">Período:</span>
+      <div style="display:flex;gap:6px;flex-wrap:wrap" id="adminPeriodoBtns">
+        <button class="filter-chip active" data-dias="7" onclick="setAdminPeriodo(this)">7 dias</button>
+        <button class="filter-chip" data-dias="14" onclick="setAdminPeriodo(this)">14 dias</button>
+        <button class="filter-chip" data-dias="30" onclick="setAdminPeriodo(this)">30 dias</button>
+        <button class="filter-chip" data-dias="90" onclick="setAdminPeriodo(this)">90 dias</button>
+      </div>
+      <div style="display:flex;gap:6px;align-items:center;margin-left:auto">
+        <input type="date" id="adminDe" style="padding:5px 10px;border:1px solid var(--border-light);border-radius:7px;font-size:0.8rem;font-family:'Nunito Sans',sans-serif" onchange="setAdminCustomPeriodo()">
+        <span style="font-size:0.8rem;opacity:0.4">até</span>
+        <input type="date" id="adminAte" style="padding:5px 10px;border:1px solid var(--border-light);border-radius:7px;font-size:0.8rem;font-family:'Nunito Sans',sans-serif" onchange="setAdminCustomPeriodo()">
+      </div>
+    </div>
+
+    <!-- Cards de resumo do período -->
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-top:16px;margin-bottom:24px">
+      <div class="stat-card">
+        <div class="stat-number" id="adminTotal">—</div>
+        <div class="stat-label">Solicitações</div>
+        <div id="adminDelta" style="font-size:0.75rem;margin-top:4px;font-weight:600"></div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number" id="adminAvaliacoes">—</div>
+        <div class="stat-label">Com avaliação</div>
+        <div id="adminMediaNota" style="font-size:0.75rem;margin-top:4px;font-weight:600;opacity:0.6"></div>
+      </div>
+    </div>
+
+    <!-- Gráfico de distribuição (donut) -->
+    <div class="form-card" style="padding:20px;margin-bottom:28px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px">
+        <span style="font-size:0.8rem;font-weight:700;opacity:0.5;text-transform:uppercase;letter-spacing:0.06em">Distribuição</span>
+        <div style="display:flex;gap:6px">
+          <div style="position:relative" id="graficoDropdownTipoWrap">
+            <button id="graficoBtnTipo" onclick="toggleGraficoDropdown('tipo')" style="display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:8px;border:1px solid var(--border-light);background:var(--carbon-black);color:white;font-family:'Nunito Sans',sans-serif;font-size:0.8rem;font-weight:600;cursor:pointer;white-space:nowrap;transition:all 0.15s">
+              Por tipo
+              <svg id="graficoChevronTipo" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="transition:transform 0.2s"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+          </div>
+          <div style="position:relative" id="graficoDropdownStatusWrap">
+            <button id="graficoBtnStatus" onclick="toggleGraficoDropdown('status')" style="display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:8px;border:1px solid var(--border-light);background:var(--card-white);color:var(--carbon-black);font-family:'Nunito Sans',sans-serif;font-size:0.8rem;font-weight:600;cursor:pointer;white-space:nowrap;transition:all 0.15s">
+              Por status
+              <svg id="graficoChevronStatus" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="transition:transform 0.2s"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+      <div id="graficoContainer" style="display:flex;gap:24px;align-items:center;flex-wrap:wrap">
+        <canvas id="adminPizza" width="200" height="200" style="flex-shrink:0;max-width:200px"></canvas>
+        <div id="adminLegenda" style="flex:1;min-width:180px;display:flex;flex-direction:column;gap:8px"></div>
+      </div>
+    </div>
+
     <div class="tabs">
       <button class="tab active" data-tab="eventos" onclick="switchTab('eventos')">Eventos</button>
       <button class="tab" data-tab="geral" onclick="switchTab('geral')">Solicitações gerais</button>
@@ -130,6 +185,12 @@
     let searchTimeout;
     let adminItemsCache = {};
 
+    // ── Gráfico / Stats ─────────────────────────────────────────
+    let adminDias = 7;
+    let adminGraficoModo = 'tipo';
+    let adminGraficoData = null;
+    let graficoFiltrosAtivos = null;
+
     function esc(str) {
       if (!str) return '';
       const d = document.createElement('div');
@@ -150,6 +211,7 @@
       }
       Shell.render({ activeRoute: 'admin-painel', contentEl: document.getElementById('pageContent') });
       loadStats();
+      loadAdminStats();
       loadTable('eventos');
       loadTable('geral');
       if (Auth.getUserRole() === 'admin') {
@@ -376,7 +438,303 @@
     }
 
     document.addEventListener('keydown', e => { if (e.key === 'Escape') closeDrawer(); });
+
+    // ── Gráfico de distribuição ──────────────────────────────────
+    function setAdminPeriodo(btn) {
+      document.querySelectorAll('#adminPeriodoBtns .filter-chip').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      adminDias = parseInt(btn.dataset.dias);
+      document.getElementById('adminDe').value = '';
+      document.getElementById('adminAte').value = '';
+      loadAdminStats();
+    }
+
+    function setAdminCustomPeriodo() {
+      document.querySelectorAll('#adminPeriodoBtns .filter-chip').forEach(b => b.classList.remove('active'));
+      adminDias = null;
+      loadAdminStats();
+    }
+
+    async function loadAdminStats() {
+      try {
+        let url = '/api/admin/stats';
+        const de = document.getElementById('adminDe').value;
+        const ate = document.getElementById('adminAte').value;
+        if (de && ate) {
+          const diff = Math.ceil((new Date(ate) - new Date(de)) / 86400000);
+          url += '?dias=' + Math.max(1, diff);
+        } else {
+          url += '?dias=' + (adminDias || 7);
+        }
+        const res = await fetch(url);
+        const data = await res.json();
+
+        document.getElementById('adminTotal').textContent = data.total;
+        document.getElementById('adminAvaliacoes').textContent = data.avaliacoes;
+        document.getElementById('adminMediaNota').textContent =
+          data.mediaNotas ? 'Média: ' + data.mediaNotas + '/10' : 'Sem notas ainda';
+
+        const deltaEl = document.getElementById('adminDelta');
+        if (data.delta !== undefined) {
+          const sinal = data.deltaPositivo ? '+' : '';
+          const cor = data.delta === 0 ? 'rgba(34,27,25,0.4)' : data.deltaPositivo ? '#16a34a' : '#dc2626';
+          deltaEl.innerHTML = '<span style="color:' + cor + '">' + sinal + data.delta + '% vs período anterior</span>';
+        }
+
+        adminGraficoData = data;
+        renderAdminGrafico();
+      } catch (e) { console.error(e); }
+    }
+
+    function switchGrafico(modo) {
+      adminGraficoModo = modo;
+      graficoFiltrosAtivos = null;
+      const btnTipo = document.getElementById('graficoBtnTipo');
+      const btnStatus = document.getElementById('graficoBtnStatus');
+      if (btnTipo) { btnTipo.style.background = modo === 'tipo' ? 'var(--carbon-black)' : 'var(--card-white)'; btnTipo.style.color = modo === 'tipo' ? 'white' : 'var(--carbon-black)'; }
+      if (btnStatus) { btnStatus.style.background = modo === 'status' ? 'var(--carbon-black)' : 'var(--card-white)'; btnStatus.style.color = modo === 'status' ? 'white' : 'var(--carbon-black)'; }
+      renderAdminGrafico();
+    }
+
+    function toggleGraficoFiltro(id) {
+      if (!graficoFiltrosAtivos) return;
+      if (graficoFiltrosAtivos.has(id)) { graficoFiltrosAtivos.delete(id); } else { graficoFiltrosAtivos.add(id); }
+      renderAdminGrafico();
+      renderGraficoDropdown(adminGraficoModo);
+    }
+
+    function resetGraficoFiltros() {
+      graficoFiltrosAtivos = null;
+      renderAdminGrafico();
+      renderGraficoDropdown(adminGraficoModo);
+    }
+
+    function toggleGraficoDropdown(modo) {
+      const ddTipo     = document.getElementById('graficoDropdownTipo');
+      const ddStatus   = document.getElementById('graficoDropdownStatus');
+      const chevTipo   = document.getElementById('graficoChevronTipo');
+      const chevStatus = document.getElementById('graficoChevronStatus');
+      const btnTipo    = document.getElementById('graficoBtnTipo');
+      const btnStatus  = document.getElementById('graficoBtnStatus');
+
+      function posicionarDropdown(dd, btn) {
+        const rect = btn.getBoundingClientRect();
+        const ddWidth = 280;
+        let left = rect.right - ddWidth;
+        if (left < 8) left = 8;
+        dd.style.top  = (rect.bottom + 6) + 'px';
+        dd.style.left = left + 'px';
+      }
+
+      if (modo === 'tipo') {
+        const isOpen = ddTipo.style.display === 'block';
+        ddTipo.style.display   = isOpen ? 'none' : 'block';
+        ddStatus.style.display = 'none';
+        chevTipo.style.transform   = isOpen ? 'rotate(0)' : 'rotate(180deg)';
+        chevStatus.style.transform = 'rotate(0)';
+        if (!isOpen) {
+          posicionarDropdown(ddTipo, btnTipo);
+          if (adminGraficoModo !== 'tipo') switchGrafico('tipo');
+          renderGraficoDropdown('tipo');
+        }
+      } else {
+        const isOpen = ddStatus.style.display === 'block';
+        ddStatus.style.display = isOpen ? 'none' : 'block';
+        ddTipo.style.display   = 'none';
+        chevStatus.style.transform = isOpen ? 'rotate(0)' : 'rotate(180deg)';
+        chevTipo.style.transform   = 'rotate(0)';
+        if (!isOpen) {
+          posicionarDropdown(ddStatus, btnStatus);
+          if (adminGraficoModo !== 'status') switchGrafico('status');
+          renderGraficoDropdown('status');
+        }
+      }
+    }
+
+    function renderGraficoDropdown(modo) {
+      if (!adminGraficoData) return;
+      const container = document.getElementById(modo === 'tipo' ? 'graficoDropdownTipo' : 'graficoDropdownStatus');
+      if (!container) return;
+      const CORES = ['#AC3631','#221B19','#4a7c2f','#1e40af','#9333ea','#ea580c','#0891b2','#be123c','#854d0e','#166534'];
+      const todosItens = modo === 'tipo'
+        ? adminGraficoData.porTipo.map(i => ({ id: i.tipo, label: (typeof TIPO_SOLICITACAO_LABELS !== 'undefined' && TIPO_SOLICITACAO_LABELS[i.tipo]) || i.tipo, value: i.count }))
+        : adminGraficoData.porStatus.map(i => ({ id: i.status, label: STATUS_SOLICITACAO?.find(s => s.id === i.status)?.label || i.status, value: i.count, cor: STATUS_SOLICITACAO?.find(s => s.id === i.status)?.bg || null }));
+
+      const header = document.createElement('div');
+      header.style.cssText = 'display:flex;justify-content:space-between;align-items:center;padding:4px 6px 8px;border-bottom:1px solid var(--border-light);margin-bottom:4px';
+      header.innerHTML = '<span style="font-size:0.72rem;font-weight:700;opacity:0.4;text-transform:uppercase;letter-spacing:0.05em">Filtrar</span>' +
+        '<button onclick="resetGraficoFiltros()" style="font-size:0.75rem;color:var(--ruby-red);background:none;border:none;cursor:pointer;font-family:\'Nunito Sans\',sans-serif;font-weight:600;padding:0">Todos</button>';
+      container.innerHTML = '';
+      container.appendChild(header);
+
+      todosItens.forEach((item, i) => {
+        const isAtivo = graficoFiltrosAtivos ? graficoFiltrosAtivos.has(item.id) : true;
+        const cor = item.cor || CORES[i % CORES.length];
+        const label = document.createElement('label');
+        label.className = 'dropdown-checkbox-label';
+        label.innerHTML = '<input type="checkbox" ' + (isAtivo ? 'checked' : '') + ' style="accent-color:' + cor + '">' +
+          '<span style="width:8px;height:8px;border-radius:2px;background:' + cor + ';flex-shrink:0;display:inline-block"></span>' +
+          '<span style="flex:1">' + esc(item.label) + '</span>' +
+          '<span style="font-size:0.72rem;opacity:0.4;margin-left:4px">' + item.value + '</span>';
+        label.querySelector('input').addEventListener('change', () => toggleGraficoFiltro(item.id));
+        container.appendChild(label);
+      });
+    }
+
+    function renderAdminGrafico() {
+      if (!adminGraficoData) return;
+
+      const todosItens = adminGraficoModo === 'tipo'
+        ? adminGraficoData.porTipo
+            .filter(i => i.count > 0)
+            .sort((a, b) => b.count - a.count)
+            .map(i => ({
+              id: i.tipo,
+              label: (typeof TIPO_SOLICITACAO_LABELS !== 'undefined' && TIPO_SOLICITACAO_LABELS[i.tipo]) || i.tipo,
+              value: i.count
+            }))
+        : adminGraficoData.porStatus
+            .filter(i => i.count > 0)
+            .sort((a, b) => b.count - a.count)
+            .map(i => ({
+              id: i.status,
+              label: (STATUS_SOLICITACAO?.find(s => s.id === i.status)?.label) || i.status,
+              value: i.count,
+              cor: STATUS_SOLICITACAO?.find(s => s.id === i.status)?.bg || null,
+            }));
+
+      if (graficoFiltrosAtivos === null) {
+        graficoFiltrosAtivos = new Set(todosItens.map(i => i.id));
+      }
+
+      const itens = todosItens.filter(i => graficoFiltrosAtivos.has(i.id));
+      const canvas = document.getElementById('adminPizza');
+      const legenda = document.getElementById('adminLegenda');
+
+      canvas.style.transition = 'opacity 0.18s ease';
+      legenda.style.transition = 'opacity 0.18s ease';
+      canvas.style.opacity = '0';
+      legenda.style.opacity = '0';
+
+      setTimeout(() => {
+        const total = itens.reduce((a, b) => a + b.value, 0);
+        if (total === 0) {
+          legenda.innerHTML = '<p style="opacity:0.4;font-size:0.85rem">Nenhuma solicitação no período.</p>';
+          const ctx = canvas.getContext('2d');
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          canvas.style.opacity = '1';
+          legenda.style.opacity = '1';
+          return;
+        }
+
+        const CORES = ['#AC3631','#221B19','#4a7c2f','#1e40af','#9333ea','#ea580c','#0891b2','#be123c','#854d0e','#166534'];
+        canvas.width = 200; canvas.height = 200;
+        const ctx = canvas.getContext('2d');
+        const cx = 100, cy = 100, r = 85, rInner = 50;
+
+        const slices = itens.map((item, i) => ({
+          angle: (item.value / total) * 2 * Math.PI,
+          cor: item.cor || CORES[i % CORES.length],
+        }));
+
+        const duration = 350;
+        const startTime = performance.now();
+
+        function drawFrame(now) {
+          const elapsed = now - startTime;
+          const progress = Math.min(elapsed / duration, 1);
+          const ease = 1 - Math.pow(1 - progress, 3);
+
+          ctx.clearRect(0, 0, 200, 200);
+
+          let sa = -Math.PI / 2;
+          slices.forEach(slice => {
+            const ang = slice.angle * ease;
+            ctx.beginPath();
+            ctx.moveTo(cx, cy);
+            ctx.arc(cx, cy, r, sa, sa + ang);
+            ctx.closePath();
+            ctx.fillStyle = slice.cor;
+            ctx.fill();
+            sa += ang;
+          });
+
+          ctx.beginPath();
+          ctx.arc(cx, cy, rInner, 0, 2 * Math.PI);
+          ctx.fillStyle = getComputedStyle(document.body).getPropertyValue('--paper-white').trim() || '#FFF8F3';
+          ctx.fill();
+
+          if (progress > 0.6) {
+            const alpha = Math.min((progress - 0.6) / 0.4, 1);
+            ctx.globalAlpha = alpha;
+            ctx.fillStyle = '#221B19';
+            ctx.font = 'bold 24px "Nunito Sans", sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(total, cx, cy - 6);
+            ctx.font = '11px "Nunito Sans", sans-serif';
+            ctx.fillStyle = 'rgba(34,27,25,0.4)';
+            ctx.fillText('total', cx, cy + 14);
+            ctx.globalAlpha = 1;
+          }
+
+          if (progress < 1) requestAnimationFrame(drawFrame);
+        }
+
+        requestAnimationFrame(drawFrame);
+
+        legenda.innerHTML = itens.map((item, i) => {
+          const pct = Math.round((item.value / total) * 100);
+          const cor = item.cor || CORES[i % CORES.length];
+          return '<div style="display:flex;align-items:center;gap:8px">' +
+            '<div style="width:10px;height:10px;border-radius:2px;background:' + cor + ';flex-shrink:0"></div>' +
+            '<span style="font-size:0.8rem;flex:1;line-height:1.3">' + esc(item.label) + '</span>' +
+            '<span style="font-size:0.8rem;font-weight:700;opacity:0.7">' + pct + '%</span>' +
+            '<span style="font-size:0.75rem;opacity:0.4">' + item.value + '</span>' +
+            '</div>';
+        }).join('');
+
+        canvas.style.opacity = '1';
+        legenda.style.opacity = '1';
+      }, 180);
+    }
+
+    window.addEventListener('scroll', () => {
+      const ddT = document.getElementById('graficoDropdownTipo');
+      const ddS = document.getElementById('graficoDropdownStatus');
+      if (ddT) ddT.style.display = 'none';
+      if (ddS) ddS.style.display = 'none';
+      const cT = document.getElementById('graficoChevronTipo');
+      const cS = document.getElementById('graficoChevronStatus');
+      if (cT) cT.style.transform = 'rotate(0)';
+      if (cS) cS.style.transform = 'rotate(0)';
+    }, { passive: true });
+
+    document.addEventListener('click', e => {
+      if (!e.target || !document.contains(e.target)) return;
+      const ddTipo   = document.getElementById('graficoDropdownTipo');
+      const ddStatus = document.getElementById('graficoDropdownStatus');
+      const btnTipo   = document.getElementById('graficoBtnTipo');
+      const btnStatus = document.getElementById('graficoBtnStatus');
+      if (ddTipo && ddTipo.style.display === 'block') {
+        if (!btnTipo?.contains(e.target) && !ddTipo.contains(e.target)) {
+          ddTipo.style.display = 'none';
+          const chev = document.getElementById('graficoChevronTipo');
+          if (chev) chev.style.transform = 'rotate(0)';
+        }
+      }
+      if (ddStatus && ddStatus.style.display === 'block') {
+        if (!btnStatus?.contains(e.target) && !ddStatus.contains(e.target)) {
+          ddStatus.style.display = 'none';
+          const chev = document.getElementById('graficoChevronStatus');
+          if (chev) chev.style.transform = 'rotate(0)';
+        }
+      }
+    });
+
     init();
   </script>
+<div id="graficoDropdownTipo" style="display:none;position:fixed;z-index:500;background:var(--card-white);border:1px solid var(--border-light);border-radius:10px;box-shadow:0 4px 20px rgba(0,0,0,.12);padding:8px;min-width:280px"></div>
+<div id="graficoDropdownStatus" style="display:none;position:fixed;z-index:500;background:var(--card-white);border:1px solid var(--border-light);border-radius:10px;box-shadow:0 4px 20px rgba(0,0,0,.12);padding:8px;min-width:280px"></div>
 </body>
 </html>
