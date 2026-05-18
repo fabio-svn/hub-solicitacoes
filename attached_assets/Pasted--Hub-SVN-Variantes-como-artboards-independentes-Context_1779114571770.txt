@@ -1,0 +1,277 @@
+# Hub SVN — Variantes como artboards independentes
+
+## Contexto e problema
+
+O editor atual trata "variantes" como trocas de imagens (bg, logo) com layout compartilhado entre elas. Funciona pra casos simples (ex.: assinatura de e-mail onde só o logo muda), mas falha pra casos onde cada variante tem **layout completamente diferente** — caso real: Cartão Comemorativo modelo dourado vs vermelho, onde a posição do nome do aniversariante, alinhamento da mensagem, etc., variam radicalmente.
+
+**Objetivo:** refatorar pra que cada variante seja uma "arte" totalmente independente, com seu próprio background, suas próprias layers, suas próprias posições. Mantém-se a vinculação ao tipo de form, mas dentro do mesmo tipo, cada variante é editada/salva separadamente.
+
+---
+
+## Modelo conceitual novo
+
+**Hoje:**
+- Tabela `art_templates` tem 1 row por template
+- Cada row contém um `config` com `variants: { dourado: bgUrl1, vermelho: bgUrl2 }` em layers/bg
+- Layout (posições, fontes) compartilhado
+
+**Depois:**
+- Tabela `art_templates` continua, mas cada combinação (tipo + variant_value) vira **uma row separada**
+- Cada row tem seu config completo (bg + layers + canvas) independente
+- Layout, conteúdo, tudo, é por variante
+
+**Exemplo concreto:**
+
+Antes:
+- 1 row: `cartao-comemorativo`, name="Padrão", config={bg: variants{dourado, vermelho}, layers:[...]}
+
+Depois:
+- Row A: `cartao-comemorativo`, name="Padrão", variant_value="dourado", config={bg:{static, url:doirado}, layers:[...]}
+- Row B: `cartao-comemorativo`, name="Padrão", variant_value="vermelho", config={bg:{static, url:vermelho}, layers:[...]}
+
+---
+
+## Etapa 1 — Schema
+
+### 1.1 Coluna nova
+
+```sql
+ALTER TABLE art_templates ADD COLUMN variant_value VARCHAR(100);
+```
+
+`variant_value` armazena o valor da variante (ex.: 'dourado', 'vermelho') ou NULL pra tipos sem variantes.
+
+### 1.2 Constraint de ativação
+
+Substituir o índice partial existente (`is_active` único por tipo):
+
+```sql
+DROP INDEX IF EXISTS art_templates_active_tipo_idx;
+
+-- Agora o "único ativo" é por (tipo, variant_value)
+CREATE UNIQUE INDEX art_templates_active_tipo_variant_idx 
+  ON art_templates(tipo, COALESCE(variant_value, '')) 
+  WHERE is_active = true;
+```
+
+Isso garante: pra cada combinação `(tipo, variant_value)`, só um template está ativo por vez. Tipos sem variantes (variant_value=NULL) continuam funcionando com apenas 1 ativo.
+
+### 1.3 Coluna pra indicar campo de variante
+
+Adicionar metadado no nível do tipo, opcionalmente. Pode ficar no FORM_SCHEMAS (já existente):
+
+```ts
+// form-schemas.ts
+'cartao-comemorativo': {
+  tipo: 'cartao-comemorativo',
+  label: 'Cartão Comemorativo',
+  // Indica qual campo do form determina a variante usada na renderização
+  template_variant_field: 'modelo_cartao',
+  fields: [
+    {
+      name: 'modelo_cartao',
+      label: 'Modelo',
+      type: 'select',
+      options: [
+        { value: 'dourado',  label: 'Dourado' },
+        { value: 'vermelho', label: 'Vermelho' },
+      ],
+    },
+    // ... outros campos
+  ],
+}
+```
+
+`template_variant_field` aponta pra qual campo do form a tabela `art_templates` usa pra resolver `variant_value` no momento de selecionar o template ativo na renderização.
+
+---
+
+## Etapa 2 — Editor de templates
+
+### 2.1 Tela de criação
+
+Ao criar template, depois de escolher o formulário, **se o form tem `template_variant_field`**, perguntar qual variante este template é:
+
+```
+Para qual formulário esta arte será usada? *
+[Cartão Comemorativo                          ▾]
+
+Para qual modelo? *
+[Dourado                                       ▾]
+(opções vêm do schema do form)
+
+Nome do template *
+[Ex: "Cartão Dourado v1"                       ]
+
+Começar a partir de:
+( ) Template em branco
+(●) Clonar de existente
+    [Filtrar por: mesmo tipo e variante ▾]
+```
+
+Se o form NÃO tem `template_variant_field` (ex.: assinatura-email no fluxo atual), o campo "Para qual modelo?" não aparece — comportamento atual mantido.
+
+### 2.2 Tela de edição
+
+**Remover o switcher de variantes do topo do canvas.** Cada template no editor é independente; não há mais "alternância entre variantes" porque cada variante é seu próprio template.
+
+A toolbar do canvas mostra:
+- Nome do template
+- Badge **ATIVO** (se `is_active=true`)
+- **Variante: Dourado** (visualmente, como informação contextual — não interativo)
+- Botão "Dados para teste"
+- Botão "Salvar"
+
+### 2.3 Tela de listagem (`/admin/templates`)
+
+A lista mostra todos os templates, com filtros:
+- Por formulário (tipo)
+- Por variante (quando aplicável)
+- Por status (ativo/inativo)
+
+Cada item da lista mostra:
+- Nome
+- Tipo (humanizado)
+- Variante (se aplicável, ex.: "Modelo: Dourado")
+- Badge ATIVO se aplicável
+- Última edição
+
+### 2.4 Aba "Documento" (configurações do template)
+
+Adicionar campo readonly:
+
+```
+Variante: Dourado
+(definido na criação, não editável depois)
+```
+
+Se quiser mudar variante de um template existente, criar novo template e arquivar o antigo.
+
+### 2.5 Tipos de layer com `variant` source — deprecar
+
+Hoje uma layer image pode ter `source: { type: 'variant', variants: {dourado: url1, vermelho: url2} }`. Como agora cada variante é um template separado, esse tipo de source não faz mais sentido.
+
+**Manter compatibilidade** com templates antigos (renderer ainda entende variant source), mas **na criação de novas layers, oferecer apenas `static` ou `placeholder`**.
+
+---
+
+## Etapa 3 — Renderer
+
+### 3.1 Resolver template ativo a partir do payload
+
+No handler `/api/solicitacoes` (etapa 1 do prompt anterior), em vez de:
+
+```ts
+const template = await db.query.artTemplates.findFirst({
+  where: and(eq(artTemplates.tipo, solicitacao.tipo), eq(artTemplates.is_active, true))
+});
+```
+
+Trocar por:
+
+```ts
+const formSchema = FORM_SCHEMAS[solicitacao.tipo];
+const variantField = formSchema?.template_variant_field;
+const variantValue = variantField ? req.body[variantField] : null;
+
+const template = await db.query.artTemplates.findFirst({
+  where: and(
+    eq(artTemplates.tipo, solicitacao.tipo),
+    eq(artTemplates.is_active, true),
+    variantValue
+      ? eq(artTemplates.variant_value, variantValue)
+      : isNull(artTemplates.variant_value)
+  )
+});
+
+if (!template) {
+  req.log.warn({ tipo: solicitacao.tipo, variantValue }, 'Sem template ativo pra essa variante');
+  // Continuar sem gerar arte, ou retornar erro — decidir conforme UX
+}
+```
+
+### 3.2 Renderizar normalmente
+
+Como cada template já tem config completo e independente, a função `renderFromTemplate(template.config, renderData)` continua funcionando sem mudança. Não precisa mais lidar com "variants" no nível do layer/bg (a não ser pra compatibilidade com templates antigos).
+
+---
+
+## Etapa 4 — Migração de templates existentes
+
+### 4.1 Estratégia
+
+Templates existentes que usam `variants` em layers/bg precisam ser **"explodidos"** em múltiplos templates (um por variante).
+
+Script de migração: `scripts/migrate-variant-templates.ts`
+
+```ts
+async function migrateVariantTemplates() {
+  const allTemplates = await db.select().from(artTemplates);
+  
+  for (const t of allTemplates) {
+    const variantsInConfig = extractVariantsFromConfig(t.config);
+    if (variantsInConfig.size === 0) {
+      // Template sem variantes — só preencher variant_value=NULL se ainda não está
+      continue;
+    }
+    
+    // Pra cada variante, criar novo template
+    for (const variantValue of variantsInConfig) {
+      const flattenedConfig = flattenConfigForVariant(t.config, variantValue);
+      await db.insert(artTemplates).values({
+        tipo: t.tipo,
+        name: `${t.name} - ${variantValue}`,
+        variant_value: variantValue,
+        config: flattenedConfig,
+        is_active: t.is_active,  // todas as variantes ativadas
+        // ... outros campos
+      });
+    }
+    
+    // Arquivar (não deletar) o template original — desativar pra não conflitar
+    await db.update(artTemplates).set({ is_active: false }).where(eq(artTemplates.id, t.id));
+  }
+}
+
+function flattenConfigForVariant(config, variantValue) {
+  const cloned = JSON.parse(JSON.stringify(config));
+  // Resolver bg
+  if (cloned.bg.type === 'variant') {
+    cloned.bg = { type: 'static', url: cloned.bg.variants[variantValue] || '' };
+  }
+  // Resolver cada layer
+  for (const layer of cloned.layers) {
+    if (layer.type === 'image' && layer.source?.type === 'variant') {
+      layer.source = { type: 'static', url: layer.source.variants[variantValue] || '' };
+    }
+  }
+  return cloned;
+}
+```
+
+Rodar com flag `--dry-run` primeiro pra inspecionar o que vai criar antes de aplicar.
+
+### 4.2 Aplicação manual em prod
+
+Igual aos casos anteriores:
+1. Aplicar migração de schema (Etapa 1) em prod via `drizzle-kit push` apontando pra DATABASE_URL de prod
+2. Rodar script de migração de dados em prod
+
+---
+
+## Etapa 5 — Validação
+
+1. **Criar template novo de Cartão Comemorativo - Dourado** → editar layers livremente
+2. **Criar template novo de Cartão Comemorativo - Vermelho** → editar layers com layout TOTALMENTE diferente do dourado
+3. Ativar ambos (devem coexistir já que `(tipo, variant_value)` é o único par único)
+4. **Submeter solicitação** escolhendo modelo dourado → arte gerada usa o template dourado
+5. **Submeter outra solicitação** escolhendo vermelho → arte gerada usa o template vermelho com layout independente
+6. **Migração**: rodar o script em dev → templates antigos com variantes viram N templates separados, originais arquivados. Submeter solicitação em tipo migrado → ainda funciona
+
+---
+
+## Considerações de UX
+
+- **Cópia entre variantes**: na listagem, oferecer botão "Duplicar pra outra variante" — clona o template atual e permite escolher pra qual variant_value, facilitando começar uma variante a partir de outra
+- **Conscientização do usuário**: na tela de listagem, agrupar visualmente templates do mesmo tipo (ex.: "Cartão Comemorativo (2 variantes ativas)" expandível)
+- **Templates órfãos**: se um form muda suas opções de variante (ex.: removeu "dourado"), os templates antigos com `variant_value='dourado'` ficam órfãos. Mostrar warning na listagem

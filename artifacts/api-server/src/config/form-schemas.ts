@@ -12,6 +12,7 @@ export type FormSchema = {
   description?: string;
   fields: FormFieldSchema[];
   computed?: { name: string; label: string; derived_from?: string }[];
+  template_variant_field?: string;
 };
 
 const CONTRATOS_OPTS = [
@@ -63,6 +64,7 @@ export const FORM_SCHEMAS: Record<string, FormSchema> = {
     computed: [
       { name: 'contrato_label', label: 'Contrato (label)', derived_from: 'contrato_social' },
     ],
+    template_variant_field: 'is_private_key',
   },
 
   'cartao-visita-fisico': {
@@ -121,6 +123,7 @@ export const FORM_SCHEMAS: Record<string, FormSchema> = {
       },
       { name: 'foto_perfil', label: 'Foto de perfil', type: 'file' },
     ],
+    template_variant_field: 'modelo_arte',
   },
 
   'convite-fp': {
@@ -174,6 +177,7 @@ export const FORM_SCHEMAS: Record<string, FormSchema> = {
       { name: 'assinatura',         label: 'Assinatura',         type: 'textarea' },
       { name: 'email_destinatario', label: 'E-mail do destinatário', type: 'email', required: true },
     ],
+    template_variant_field: 'modelo_cartao',
   },
 
   'assinatura-email': {
@@ -203,13 +207,21 @@ export const FORM_SCHEMAS: Record<string, FormSchema> = {
 };
 
 export function getFormSchemaList() {
-  return Object.values(FORM_SCHEMAS).map(s => ({
-    tipo: s.tipo,
-    label: s.label,
-    description: s.description,
-    placeholders: [
-      ...s.fields.map(f => f.name),
-      ...(s.computed || []).map(c => c.name),
-    ],
-  }));
+  return Object.values(FORM_SCHEMAS).map(s => {
+    const variantField = s.template_variant_field;
+    const variantOptions = variantField
+      ? (s.fields.find(f => f.name === variantField)?.options ?? [])
+      : [];
+    return {
+      tipo: s.tipo,
+      label: s.label,
+      description: s.description,
+      template_variant_field: variantField ?? null,
+      template_variant_options: variantOptions,
+      placeholders: [
+        ...s.fields.map(f => f.name),
+        ...(s.computed || []).map(c => c.name),
+      ],
+    };
+  });
 }

@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { db } from "@workspace/db";
 import { usersTable, activityLogTable, artTemplatesTable, solicitacoesTable } from "@workspace/db";
-import { eq, desc, sql, and, count } from "drizzle-orm";
+import { eq, desc, sql, and, count, isNull } from "drizzle-orm";
 import { requireAuth, requireRole } from "../middleware/auth.middleware";
 import { logger } from "../lib/logger";
 import { renderFromTemplate } from "../services/template-renderer";
@@ -208,13 +208,14 @@ const SAMPLE_DATA: Record<string, Record<string, string>> = {
 router.get("/art-templates", requireAuth, requireRole("admin"), async (req, res): Promise<void> => {
   try {
     const rows = await db.select({
-      id:         artTemplatesTable.id,
-      tipo:       artTemplatesTable.tipo,
-      name:       artTemplatesTable.name,
-      is_active:  artTemplatesTable.is_active,
-      created_at: artTemplatesTable.created_at,
-      updated_at: artTemplatesTable.updated_at,
-      updated_by: artTemplatesTable.updated_by,
+      id:            artTemplatesTable.id,
+      tipo:          artTemplatesTable.tipo,
+      variant_value: artTemplatesTable.variant_value,
+      name:          artTemplatesTable.name,
+      is_active:     artTemplatesTable.is_active,
+      created_at:    artTemplatesTable.created_at,
+      updated_at:    artTemplatesTable.updated_at,
+      updated_by:    artTemplatesTable.updated_by,
     }).from(artTemplatesTable)
       .orderBy(artTemplatesTable.tipo, artTemplatesTable.created_at);
     res.json(rows);
@@ -260,7 +261,7 @@ router.get("/art-templates/:id", requireAuth, requireRole("admin"), async (req, 
 router.post("/art-templates", requireAuth, requireRole("admin"), async (req, res): Promise<void> => {
   try {
     const user = req.session.user!;
-    const { tipo, name, config } = req.body as { tipo: string; name: string; config: any };
+    const { tipo, name, config, variant_value } = req.body as { tipo: string; name: string; config: any; variant_value?: string };
     if (!tipo) { res.status(400).json({ error: "Campo tipo obrigatório" }); return; }
     if (!name) { res.status(400).json({ error: "Campo name obrigatório" }); return; }
     const effectiveConfig = config || { canvas: { width: 1080, height: 1080 }, bg: { type: 'static', url: '' }, layers: [] };
@@ -268,7 +269,7 @@ router.post("/art-templates", requireAuth, requireRole("admin"), async (req, res
     if (validationError) { res.status(400).json({ error: validationError }); return; }
     const [userRow] = await db.select({ id: usersTable.id }).from(usersTable).where(eq(usersTable.email, user.email));
     const [inserted] = await db.insert(artTemplatesTable)
-      .values({ tipo, name, config: effectiveConfig, is_active: false, updated_at: new Date(), updated_by: userRow?.id ?? null })
+      .values({ tipo, name, config: effectiveConfig, is_active: false, variant_value: variant_value || null, updated_at: new Date(), updated_by: userRow?.id ?? null })
       .returning();
     res.json(inserted);
   } catch (err: any) {
@@ -283,7 +284,7 @@ router.put("/art-templates/:id", requireAuth, requireRole("admin"), async (req, 
     const user = req.session.user!;
     const id = parseInt(req.params.id);
     if (isNaN(id)) { res.status(400).json({ error: "ID inválido" }); return; }
-    const { name, config } = req.body as { name?: string; config?: any };
+    const { name, config, variant_value } = req.body as { name?: string; config?: any; variant_value?: string };
     if (config) {
       const validationError = validateTemplateConfig(config);
       if (validationError) { res.status(400).json({ error: validationError }); return; }
@@ -292,6 +293,7 @@ router.put("/art-templates/:id", requireAuth, requireRole("admin"), async (req, 
     const updateData: Record<string, any> = { updated_at: new Date(), updated_by: userRow?.id ?? null };
     if (name !== undefined) updateData.name = name;
     if (config !== undefined) updateData.config = config;
+    if ('variant_value' in req.body) updateData.variant_value = variant_value || null;
     const [updated] = await db.update(artTemplatesTable).set(updateData).where(eq(artTemplatesTable.id, id)).returning();
     if (!updated) { res.status(404).json({ error: "Template não encontrado" }); return; }
     res.json({ success: true, template: updated });
@@ -309,7 +311,10 @@ router.patch("/art-templates/:id/activate", requireAuth, requireRole("admin"), a
     await db.transaction(async (tx) => {
       const [target] = await tx.select().from(artTemplatesTable).where(eq(artTemplatesTable.id, id));
       if (!target) throw Object.assign(new Error("Template não encontrado"), { status: 404 });
-      await tx.update(artTemplatesTable).set({ is_active: false }).where(eq(artTemplatesTable.tipo, target.tipo));
+      const deactivateWhere = target.variant_value !== null && target.variant_value !== undefined
+        ? and(eq(artTemplatesTable.tipo, target.tipo), eq(artTemplatesTable.variant_value, target.variant_value))
+        : and(eq(artTemplatesTable.tipo, target.tipo), isNull(artTemplatesTable.variant_value));
+      await tx.update(artTemplatesTable).set({ is_active: false }).where(deactivateWhere);
       await tx.update(artTemplatesTable).set({ is_active: true }).where(eq(artTemplatesTable.id, id));
     });
     res.json({ success: true });
@@ -402,6 +407,7 @@ router.post("/art-templates/:id/duplicate", requireAuth, requireRole("admin"), a
     const [inserted] = await db.insert(artTemplatesTable)
       .values({
         tipo: source.tipo,
+        variant_value: source.variant_value,
         name: name || `${source.name} (cópia)`,
         config: source.config,
         is_active: false,

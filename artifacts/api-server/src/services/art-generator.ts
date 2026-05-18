@@ -3,10 +3,11 @@ import * as path from "path";
 import * as os from "os";
 import { db } from "@workspace/db";
 import { solicitacoesTable, artTemplatesTable } from "@workspace/db";
-import { eq, and } from "drizzle-orm";
+import { eq, and, isNull } from "drizzle-orm";
 import { uploadToR2 } from "../routes/r2";
 import { logger } from "../lib/logger";
 import { renderFromTemplate } from "./template-renderer";
+import { FORM_SCHEMAS } from "../config/form-schemas";
 
 function camelToSnake(str: string): string {
   return str.replace(/[A-Z]/g, c => "_" + c.toLowerCase());
@@ -41,13 +42,20 @@ export async function gerarArteParaSolicitacao(
 ): Promise<void> {
   logger.info({ solicitacaoId, tipo }, "[render] iniciando geração de arte (template-driven)");
 
+  const formSchema = FORM_SCHEMAS[tipo];
+  const variantField = formSchema?.template_variant_field;
+  const variantValue = variantField && dados[variantField] != null
+    ? String(dados[variantField])
+    : null;
+
+  const templateWhere = variantField && variantValue
+    ? and(eq(artTemplatesTable.tipo, tipo), eq(artTemplatesTable.is_active, true), eq(artTemplatesTable.variant_value, variantValue))
+    : and(eq(artTemplatesTable.tipo, tipo), eq(artTemplatesTable.is_active, true));
+
   const [templateRow] = await db
     .select()
     .from(artTemplatesTable)
-    .where(and(
-      eq(artTemplatesTable.tipo, tipo),
-      eq(artTemplatesTable.is_active, true),
-    ));
+    .where(templateWhere);
 
   if (!templateRow) {
     logger.info({ solicitacaoId, tipo }, "[render] sem template ativo, pulando geração");

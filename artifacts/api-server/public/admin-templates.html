@@ -375,6 +375,12 @@
           </select>
           <div id="createTipoLoading" style="display:none;font-size:0.75rem;color:rgba(34,27,25,0.4);margin-top:4px">Carregando formulários…</div>
         </div>
+        <div class="form-group" id="createVariantGroup" style="display:none">
+          <label class="form-label">Para qual variante? <span style="color:#9f3f37">*</span></label>
+          <select class="form-input" id="createVariant" onchange="onCreateVariantChange()">
+            <option value="">Selecione…</option>
+          </select>
+        </div>
         <div class="form-group">
           <label class="form-label">Nome do template <span style="color:#9f3f37">*</span></label>
           <input class="form-input" id="createName" placeholder='Ex: "Cartão minimalista v2"'>
@@ -781,6 +787,12 @@
       const canvas = currentTemplate.canvas || { width: 1080, height: 1080 };
       const bg = currentTemplate.bg || { type: 'static', url: '' };
       const isKnownTipo = KNOWN_TIPOS.some(t => t.value === tipo);
+      const variantSectionHtml = currentTemplateMeta?.variant_value ? `
+      <div class="props-section">
+        <div class="props-label">Variante</div>
+        <input class="props-input" value="${esc(currentTemplateMeta.variant_value)}" disabled style="opacity:0.6;cursor:not-allowed">
+        <div style="font-size:0.7rem;opacity:0.4;margin-top:3px">Artboard independente — imutável após criação</div>
+      </div>` : '';
 
       const presetsHtml = CANVAS_PRESETS.map(p => {
         const active = canvas.width === p.w && canvas.height === p.h;
@@ -829,6 +841,7 @@
         </select>
         ${!isKnownTipo ? `<input class="props-input" style="margin-top:6px" id="docTipoCustom" value="${esc(tipo)}" placeholder="tipo-da-arte" onchange="updDocTipoCustom(this.value)">` : ''}
       </div>
+      ${variantSectionHtml}
       <div class="props-section">
         <div class="props-label">Canvas</div>
         <div class="props-row">
@@ -1008,6 +1021,8 @@
         document.getElementById('createError').style.display = 'none';
         document.querySelector('input[name="createStart"][value="blank"]').checked = true;
         document.getElementById('createCloneSelect').style.display = 'none';
+        document.getElementById('createVariantGroup').style.display = 'none';
+        document.getElementById('createVariant').value = '';
         const btn = document.getElementById('createBtn');
         if (btn) btn.disabled = true;
       }
@@ -1084,12 +1099,13 @@
         html += `<div class="list-group-title">${esc(humanizeTipo(tipo))}</div>`;
         for (const t of items) {
           const badge = t.is_active ? `<span class="badge-active">Ativo</span>` : '';
+          const variantBadge = t.variant_value ? `<span style="font-size:0.68rem;font-weight:700;padding:2px 7px;border-radius:5px;background:rgba(34,27,25,0.07);color:rgba(34,27,25,0.55);letter-spacing:0.04em;text-transform:uppercase">${esc(t.variant_value)}</span>` : '';
           const activateBtn = t.is_active ? '' : `<button class="row-btn primary" onclick="activateTemplateFromList(${t.id})">Ativar</button>`;
           const deleteBtn = `<button class="row-btn danger" onclick="deleteTemplateConfirm(${t.id},'${esc(t.name)}',${t.is_active})">Excluir</button>`;
           html += `<div class="template-row">
             <div class="template-row-indicator ${t.is_active ? 'active' : 'inactive'}"></div>
             <div class="template-row-body">
-              <div class="template-row-name">${esc(t.name)} ${badge}</div>
+              <div class="template-row-name">${esc(t.name)} ${variantBadge} ${badge}</div>
               <div class="template-row-meta">Atualizado ${timeAgo(t.updated_at)}</div>
             </div>
             <div class="template-row-actions">
@@ -1105,7 +1121,8 @@
 
     async function activateTemplateFromList(id) {
       const t = allTemplates.find(x => x.id === id); if (!t) return;
-      const confirmed = confirm(`Trocar para este template como ativo afeta todas as próximas solicitações de "${humanizeTipo(t.tipo)}". Confirma?`);
+      const vInfo = t.variant_value ? ` [${t.variant_value}]` : '';
+      const confirmed = confirm(`Trocar para este template como ativo afeta as próximas solicitações de "${humanizeTipo(t.tipo)}"${vInfo}. Confirma?`);
       if (!confirmed) return;
       const res = await fetch(`/api/admin/art-templates/${id}/activate`, { method: 'PATCH' });
       if (!res.ok) { const d = await res.json().catch(()=>({})); alert(d.error || 'Erro ao ativar template.'); return; }
@@ -1152,8 +1169,19 @@
 
     function onCreateTipoChange() {
       const tipo = document.getElementById('createTipo').value;
-      const btn = document.getElementById('createBtn');
-      if (btn) btn.disabled = !tipo;
+      // Show/hide variant group
+      const schemaInfo = createFormSchemas.find(s => s.tipo === tipo);
+      const variantGrp = document.getElementById('createVariantGroup');
+      const variantSel = document.getElementById('createVariant');
+      if (schemaInfo?.template_variant_field && schemaInfo.template_variant_options?.length) {
+        variantGrp.style.display = '';
+        variantSel.innerHTML = '<option value="">Selecione…</option>' +
+          schemaInfo.template_variant_options.map(o => `<option value="${esc(o.value)}">${esc(o.label)}</option>`).join('');
+      } else {
+        variantGrp.style.display = 'none';
+        variantSel.value = '';
+      }
+      onCreateVariantChange();
       // Update clone select based on selected tipo
       const startVal = document.querySelector('input[name="createStart"]:checked')?.value;
       if (startVal === 'clone') onCreateStartChange();
@@ -1167,6 +1195,15 @@
         document.querySelector('input[name="createStart"][value="blank"]').checked = true;
         onCreateStartChange();
       }
+    }
+
+    function onCreateVariantChange() {
+      const tipo = document.getElementById('createTipo').value;
+      const schemaInfo = createFormSchemas.find(s => s.tipo === tipo);
+      const needsVariant = !!(schemaInfo?.template_variant_field && schemaInfo.template_variant_options?.length);
+      const variantVal = document.getElementById('createVariant')?.value;
+      const btn = document.getElementById('createBtn');
+      if (btn) btn.disabled = !tipo || (needsVariant && !variantVal);
     }
 
     function onCreateStartChange() {
@@ -1190,6 +1227,10 @@
       errEl.style.display = 'none';
       if (!tipo) { errEl.textContent = 'Selecione o formulário de destino.'; errEl.style.display = 'block'; return; }
       if (!name) { errEl.textContent = 'Informe um nome para o template.'; errEl.style.display = 'block'; return; }
+      const _si = createFormSchemas.find(s => s.tipo === tipo);
+      const _needsVariant = !!(_si?.template_variant_field && _si.template_variant_options?.length);
+      const variantValue = document.getElementById('createVariant')?.value || null;
+      if (_needsVariant && !variantValue) { errEl.textContent = 'Selecione a variante para este template.'; errEl.style.display = 'block'; return; }
       if (startVal === 'clone' && !cloneId) { errEl.textContent = 'Selecione um template para clonar.'; errEl.style.display = 'block'; return; }
       const btn = document.getElementById('createBtn');
       btn.disabled = true; btn.textContent = 'Criando…';
@@ -1209,7 +1250,7 @@
         }
         const res = await fetch('/api/admin/art-templates', {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ tipo, name, config }),
+          body: JSON.stringify({ tipo, name, config, ...(variantValue ? { variant_value: variantValue } : {}) }),
         });
         const data = await res.json();
         if (!res.ok) { errEl.textContent = data.error || 'Erro ao criar template.'; errEl.style.display = 'block'; return; }
@@ -1226,7 +1267,7 @@
       if (!res.ok) { alert('Erro ao carregar template.'); return; }
       const row = await res.json();
 
-      currentTemplateMeta = { id: row.id, tipo: row.tipo, name: row.name, is_active: row.is_active };
+      currentTemplateMeta = { id: row.id, tipo: row.tipo, variant_value: row.variant_value || null, name: row.name, is_active: row.is_active };
       currentTemplate = JSON.parse(JSON.stringify(row.config));
       selectedLayerId = null;
       isDirty = false;
@@ -1238,7 +1279,7 @@
       historyIndex = -1;
 
       document.getElementById('panelTmplName').textContent = row.name;
-      document.getElementById('panelTmplTipo').textContent = humanizeTipo(row.tipo);
+      document.getElementById('panelTmplTipo').textContent = humanizeTipo(row.tipo) + (row.variant_value ? ` — ${row.variant_value}` : '');
       document.getElementById('tmplNameInput').value = row.name;
       document.getElementById('editorHeaderTitle').textContent = 'Editar template: ' + row.name;
       renderActiveBadge();
@@ -1281,7 +1322,8 @@
 
     async function activateCurrentTemplate() {
       if (!currentTemplateMeta) return;
-      const confirmed = confirm(`Tornar "${currentTemplateMeta.name}" o template ativo para "${humanizeTipo(currentTemplateMeta.tipo)}"? Isso afeta todas as próximas geradoras desta arte.`);
+      const vInfo = currentTemplateMeta.variant_value ? ` [variante: ${currentTemplateMeta.variant_value}]` : '';
+      const confirmed = confirm(`Tornar "${currentTemplateMeta.name}" o template ativo para "${humanizeTipo(currentTemplateMeta.tipo)}"${vInfo}? Isso afeta as próximas geradoras desta arte.`);
       if (!confirmed) return;
       const res = await fetch(`/api/admin/art-templates/${currentTemplateMeta.id}/activate`, { method: 'PATCH' });
       if (!res.ok) { const d = await res.json().catch(()=>({})); alert(d.error || 'Erro ao ativar.'); return; }

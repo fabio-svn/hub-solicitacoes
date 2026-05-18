@@ -62,6 +62,7 @@ export type UserTipoAssignment = typeof userTipoAssignmentsTable.$inferSelect;
 export const artTemplatesTable = pgTable("art_templates", {
   id: serial("id").primaryKey(),
   tipo: varchar("tipo", { length: 100 }).notNull(),
+  variant_value: varchar("variant_value", { length: 100 }),
   name: varchar("name", { length: 200 }).notNull().default(""),
   config: jsonb("config").notNull(),
   is_active: boolean("is_active").notNull().default(false),
