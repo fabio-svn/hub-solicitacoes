@@ -382,7 +382,7 @@
           <div id="createTipoLoading" style="display:none;font-size:0.75rem;color:rgba(34,27,25,0.4);margin-top:4px">Carregando formulários…</div>
         </div>
         <div class="form-group" id="createVariantGroup" style="display:none">
-          <label class="form-label">Para qual variante? <span style="color:#9f3f37">*</span></label>
+          <label class="form-label">Para qual modelo? <span style="color:#9f3f37">*</span></label>
           <select class="form-input" id="createVariant" onchange="onCreateVariantChange()">
             <option value="">Selecione…</option>
           </select>
@@ -496,10 +496,6 @@
           <button id="btnRedo" onclick="redo()" disabled title="Refazer (Ctrl+Shift+Z)" style="padding:5px 10px">↷</button>
           <button onclick="openTestDataStrip()" title="Editar dados de teste para preview">Dados de teste</button>
           <button class="primary" onclick="saveTemplate()" style="margin-left:auto">Salvar</button>
-        </div>
-        <!-- Variant switches bar -->
-        <div class="variant-switches-bar" id="variantSwitchesBar" style="display:none">
-          <div id="variantSwitchesInner" style="display:flex;align-items:center;flex-wrap:wrap;gap:10px"></div>
         </div>
         <!-- Test data strip (inline, abaixo da toolbar) -->
         <div class="test-data-strip" id="testDataStrip">
@@ -768,7 +764,6 @@
       renderCanvas();
       renderLayersList();
       renderBgVariantSelect();
-      renderVariantSwitches();
       if (rightTab === 'doc') renderDocumentPanel();
       else showProps(selectedLayerId);
       updateUndoRedoBtns();
@@ -859,14 +854,7 @@
       </div>
       <div class="props-section">
         <div class="props-label">Background</div>
-        <div style="display:flex;gap:12px;margin-bottom:8px">
-          <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:0.8rem">
-            <input type="radio" name="docBgType" value="static" ${bg.type==='static'?'checked':''} onchange="updDocBgType('static')" style="accent-color:#9f3f37"> Estático
-          </label>
-          <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:0.8rem">
-            <input type="radio" name="docBgType" value="variant" ${bg.type==='variant'?'checked':''} onchange="updDocBgType('variant')" style="accent-color:#9f3f37"> Variante
-          </label>
-        </div>
+        ${bg.type==='variant' ? `<div style="font-size:0.72rem;opacity:0.5;margin-bottom:6px">Legado — variante por campo (edição mantida para compatibilidade)</div>` : ''}
         ${bgHtml}
       </div>
       <div class="props-section">
@@ -918,7 +906,6 @@
       markDirty();
       pushHistory();
       renderBgVariantSelect();
-      renderVariantSwitches();
       renderDocumentPanel();
       scheduleLivePreview(500);
     }
@@ -944,7 +931,6 @@
       markDirty();
       debouncedPushHistory();
       renderBgVariantSelect();
-      renderVariantSwitches();
       renderDocumentPanel();
       scheduleLivePreview(500);
     }
@@ -967,48 +953,6 @@
       markDirty();
       debouncedPushHistory();
       scheduleLivePreview(800);
-    }
-
-    // ── Variant switches ─────────────────────────────────────────
-    function renderVariantSwitches() {
-      const bar = document.getElementById('variantSwitchesBar');
-      const inner = document.getElementById('variantSwitchesInner');
-      if (!bar || !inner || !currentTemplate) return;
-
-      const sourcesSet = new Set();
-      if (currentTemplate.bg?.type === 'variant' && currentTemplate.bg.variant_source) {
-        sourcesSet.add(currentTemplate.bg.variant_source);
-      }
-      for (const layer of currentTemplate.layers) {
-        if (layer.type === 'image' && layer.source?.type === 'variant' && layer.source.variant_source) {
-          sourcesSet.add(layer.source.variant_source);
-        }
-      }
-      const _afo4 = getActiveFieldOptions();
-      const sources = [...sourcesSet].filter(s => _afo4[s]);
-      if (sources.length === 0) { bar.style.display = 'none'; return; }
-
-      bar.style.display = 'block';
-      inner.innerHTML = sources.map(source => {
-        const options = _afo4[source];
-        if (!testData[source]) testData[source] = options[0]?.value || '';
-        const currentVal = testData[source];
-        return `<div class="vsw-group">
-          <span class="vsw-label">${esc(source.replace(/_/g,' '))}:</span>
-          ${options.map(opt => `<button class="vsw-btn${currentVal===opt.value?' active':''}" onclick="setVariantSwitch('${source}','${opt.value}')">${esc(opt.label)}</button>`).join('')}
-        </div>`;
-      }).join('');
-    }
-    function setVariantSwitch(source, value) {
-      testData[source] = value;
-      if (currentTemplate?.bg?.type === 'variant' && currentTemplate.bg.variant_source === source) {
-        bgVariantKey = value;
-        const sel = document.getElementById('bgVariantSelect');
-        if (sel) sel.value = value;
-        updateBgImage();
-      }
-      renderVariantSwitches();
-      scheduleLivePreview(300);
     }
 
     // ── View navigation ──────────────────────────────────────────
@@ -1304,7 +1248,6 @@
       renderCanvas();
       renderLayersList();
       showProps(null);
-      renderVariantSwitches();
       document.getElementById('noTemplate').style.display = 'none';
       document.getElementById('canvasWrap').style.display = 'inline-block';
       showView('editor');
@@ -1799,7 +1742,7 @@
           <div class="props-label">Fonte da imagem</div>
           <select class="props-input" onchange="updImageSourceType('${id}',this.value)">
             <option${srcType==='static'?' selected':''}>static</option>
-            <option${srcType==='variant'?' selected':''}>variant</option>
+            ${srcType==='variant' ? `<option selected>variant (legado)</option>` : ''}
           </select>
           ${srcType==='static'?`
           <div class="props-label" style="margin-top:6px">URL</div>
@@ -1862,7 +1805,6 @@
       markDirty();
       pushHistory();
       showProps(id);
-      renderVariantSwitches();
     }
     function updImageVariantSource(id, val) {
       const layer = getLayer(id); if (!layer) return;
@@ -1879,7 +1821,6 @@
       markDirty();
       debouncedPushHistory();
       showProps(id);
-      renderVariantSwitches();
     }
     function updImageVariantUrl(id, key, url) {
       const layer = getLayer(id); if (!layer) return;

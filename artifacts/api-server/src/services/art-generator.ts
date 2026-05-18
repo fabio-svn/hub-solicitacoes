@@ -48,9 +48,9 @@ export async function gerarArteParaSolicitacao(
     ? String(dados[variantField])
     : null;
 
-  const templateWhere = variantField && variantValue
+  const templateWhere = variantValue
     ? and(eq(artTemplatesTable.tipo, tipo), eq(artTemplatesTable.is_active, true), eq(artTemplatesTable.variant_value, variantValue))
-    : and(eq(artTemplatesTable.tipo, tipo), eq(artTemplatesTable.is_active, true));
+    : and(eq(artTemplatesTable.tipo, tipo), eq(artTemplatesTable.is_active, true), isNull(artTemplatesTable.variant_value));
 
   const [templateRow] = await db
     .select()
