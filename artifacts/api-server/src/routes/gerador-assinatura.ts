@@ -41,12 +41,12 @@ export async function gerarAssinaturaEmail(
 
   const nome       = String(dados.nomeCompleto || dados.nome || "").trim();
   const telefone   = String(dados.telefone || "").trim();
-  const email      = String(dados.emailCorporativo || "").trim();
+  const email      = String(dados.emailCorporativo || dados.email || "").trim();
   const marcaRaw   = String(dados.marca || "SVN Investimentos").trim();
   const marca      = normalizeMarca(marcaRaw);
   const marcaLabel = marcaRaw.startsWith('svn-') ? (marcaRaw.replace(/svn-/, 'SVN ').replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase())) : marcaRaw;
   const cargo      = String(dados.cargo || "").trim();
-  const temCFP     = String(dados.cfp || "").toLowerCase() === "sim";
+  const temCFP     = String(dados.tem_cfp || dados.cfp || "").toLowerCase() === "sim";
 
   try {
     const [templateRow] = await db
