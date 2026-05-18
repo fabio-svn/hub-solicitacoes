@@ -261,15 +261,16 @@
         renderList(tab, data);
       } catch (e) {
         console.error(e);
+        listEl.innerHTML = `<div style="padding:24px;text-align:center;color:var(--ruby-red)">Erro ao carregar solicitações. <a href="#" onclick="loadList('${tab}');return false;" style="color:var(--ruby-red);text-decoration:underline">Tentar novamente</a></div>`;
       }
     }
 
     const NATUREZA_LABEL = { presencial: 'Presencial', online: 'Online', patrocinio: 'Patrocínio' };
 
     function isCardPendente(itemId) {
-      if (typeof Auth === 'undefined' || !Auth._pendenteIds) return false;
+      if (typeof Auth === 'undefined' || !Auth.isPendente) return false;
       const lidos = Auth._getLidos ? Auth._getLidos() : new Set();
-      return Auth._pendenteIds.has(itemId) && !lidos.has(itemId);
+      return Auth.isPendente(itemId) && !lidos.has(itemId);
     }
 
     function renderList(tab, data) {
@@ -547,170 +548,6 @@
       });
       html += '<button onclick="limparAdminTipos()" style="margin-top:8px;width:100%;text-align:center;background:none;border:none;font-size:0.78rem;opacity:0.5;cursor:pointer;font-family:\'Nunito Sans\',sans-serif;border-top:1px solid var(--border-light);padding-top:8px">Limpar</button>';
       container.innerHTML = html;
-    }
-
-    let logPage = 1;
-    let logSearchTimeout;
-
-    function initLog() {}
-
-    async function loadLog() {
-      const tbody = document.getElementById('logTabelaBody');
-      tbody.innerHTML = `<tr><td colspan="5" style="padding:24px;text-align:center;opacity:0.4">Carregando...</td></tr>`;
-      const params = new URLSearchParams();
-      params.set('page', logPage);
-      params.set('limit', '30');
-      const busca = document.getElementById('logBusca')?.value?.trim();
-      if (busca) params.set('busca', busca);
-      const nivel = document.getElementById('logFiltroNivel')?.value;
-      if (nivel) params.set('nivel', nivel);
-      try {
-        const res = await fetch('/api/admin/activity-log?' + params.toString());
-        const data = await res.json();
-        renderLog(data);
-      } catch {
-        tbody.innerHTML = `<tr><td colspan="5" style="padding:24px;text-align:center;color:var(--ruby-red)">Erro ao carregar log.</td></tr>`;
-      }
-    }
-
-    const LOG_NIVEL_STYLE = {
-      info:  { bg: 'rgba(37,99,235,0.1)',  text: '#2563eb', label: 'INFO'  },
-      warn:  { bg: 'rgba(234,88,12,0.1)',  text: '#ea580c', label: 'WARN'  },
-      error: { bg: 'rgba(220,38,38,0.1)',  text: '#dc2626', label: 'ERROR' },
-    };
-
-    const LOG_TIPO_LABEL = {
-      solicitacao_criada:    'Solicitação criada',
-      solicitacao_excluida:  'Excluída',
-      massa_excluida:        'Excl. em massa',
-      alteracao_solicitada:  'Alteração solicitada',
-      aprovacao_registrada:  'Aprovada',
-      clickup_erro:          'Erro ClickUp',
-    };
-
-    function renderLog(data) {
-      const tbody = document.getElementById('logTabelaBody');
-      if (!data.data || data.data.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="5" style="padding:24px;text-align:center;opacity:0.4">Nenhum registro encontrado.</td></tr>`;
-        document.getElementById('logPaginacao').innerHTML = '';
-        return;
-      }
-      tbody.innerHTML = data.data.map(item => {
-        const dt = new Date(item.created_at);
-        const data_fmt = dt.toLocaleDateString('pt-BR', { day:'2-digit', month:'2-digit', year:'2-digit' });
-        const hora_fmt = dt.toLocaleTimeString('pt-BR', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
-        const ns = LOG_NIVEL_STYLE[item.nivel] || { bg: '#f1f5f9', text: '#475569', label: item.nivel };
-        const tipoLabel = LOG_TIPO_LABEL[item.tipo] || item.tipo;
-        const userShort = item.user_email ? item.user_email.split('@')[0] : (item.user_name || '—');
-        return `<tr style="border-top:1px solid var(--border-light);transition:background 0.12s;font-family:monospace" onmouseover="this.style.background='var(--icon-bg)'" onmouseout="this.style.background=''">
-          <td style="padding:8px 14px;white-space:nowrap;font-family:monospace">
-            <div style="font-size:0.78rem">${data_fmt}</div>
-            <div style="font-size:0.7rem;opacity:0.45">${hora_fmt}</div>
-          </td>
-          <td style="padding:8px 14px;overflow:hidden">
-            <div style="font-size:0.78rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${esc(item.user_email || '')}">${esc(userShort)}</div>
-          </td>
-          <td style="padding:8px 14px">
-            <span style="display:inline-block;padding:2px 7px;border-radius:5px;font-size:0.68rem;font-weight:800;background:${ns.bg};color:${ns.text};letter-spacing:0.04em">${ns.label}</span>
-          </td>
-          <td style="padding:8px 14px;overflow:hidden">
-            <span style="font-size:0.76rem;opacity:0.8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block" title="${esc(tipoLabel)}">${esc(tipoLabel)}</span>
-            ${item.solicitacao_id ? `<a href="/solicitacao.html?id=${item.solicitacao_id}" target="_blank" style="font-size:0.68rem;opacity:0.4;text-decoration:none;color:inherit">#${item.solicitacao_id}</a>` : ''}
-          </td>
-          <td style="padding:8px 14px;overflow:hidden">
-            <div style="font-size:0.78rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${esc(item.detalhe)}">${esc(item.detalhe)}</div>
-          </td>
-        </tr>`;
-      }).join('');
-
-      const pag = document.getElementById('logPaginacao');
-      if (data.totalPages <= 1) { pag.innerHTML = ''; return; }
-      let html = `<button ${data.page <= 1 ? 'disabled' : ''} onclick="logGoPage(${data.page-1})">&laquo;</button>`;
-      for (let i = Math.max(1, data.page-2); i <= Math.min(data.totalPages, data.page+2); i++) {
-        html += `<button class="${i === data.page ? 'active' : ''}" onclick="logGoPage(${i})">${i}</button>`;
-      }
-      html += `<button ${data.page >= data.totalPages ? 'disabled' : ''} onclick="logGoPage(${data.page+1})">&raquo;</button>`;
-      pag.innerHTML = html;
-    }
-
-    function logGoPage(page) { logPage = page; loadLog(); }
-
-    function debounceLogSearch() {
-      clearTimeout(logSearchTimeout);
-      logSearchTimeout = setTimeout(() => { logPage = 1; loadLog(); }, 300);
-    }
-
-    function exportarLog() {
-      const params = new URLSearchParams({ limit: '1000', order: 'created_at', dir: 'desc' });
-      const busca = document.getElementById('adminBusca')?.value?.trim();
-      if (busca) params.set('busca', busca);
-      if (typeof adminTiposSelecionados !== 'undefined' && adminTiposSelecionados.size > 0)
-        params.set('tipos', [...adminTiposSelecionados].join(','));
-      if (typeof adminStatusesSelecionados !== 'undefined' && adminStatusesSelecionados.size > 0)
-        params.set('statuses', [...adminStatusesSelecionados].join(','));
-      const avaliacaoCb = document.getElementById('adminFiltroAvaliacao');
-      if (avaliacaoCb?.checked) params.set('avaliacao', 'sim');
-      const de = document.getElementById('adminDe')?.value;
-      const ate = document.getElementById('adminAte')?.value;
-      if (de) params.set('de', de);
-      if (ate) params.set('ate', ate);
-      fetch('/api/admin/historico?' + params.toString())
-        .then(r => r.json())
-        .then(data => {
-          if (!data.data) return;
-          const headers = ['Data', 'Hora', 'Solicitante', 'E-mail', 'Tipo', 'Status', 'ClickUp URL'];
-          const rows = data.data.map(item => {
-            const dt = new Date(item.created_at);
-            const tipoLabel = (typeof TIPO_SOLICITACAO_LABELS !== 'undefined' && TIPO_SOLICITACAO_LABELS[item.tipo_solicitacao]) || item.tipo_solicitacao;
-            return [
-              dt.toLocaleDateString('pt-BR'),
-              dt.toLocaleTimeString('pt-BR', { hour:'2-digit', minute:'2-digit' }),
-              item.user_email?.split('@')[0] || '',
-              item.user_email || '',
-              tipoLabel,
-              item.status,
-              item.clickup_url || '',
-            ].map(v => `"${String(v).replace(/"/g,'""')}"`).join(',');
-          });
-          const csv = [headers.join(','), ...rows].join('\n');
-          const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
-          const a = document.createElement('a');
-          a.href = URL.createObjectURL(blob);
-          a.download = 'log-hub-svn-' + new Date().toISOString().split('T')[0] + '.csv';
-          a.click();
-        })
-        .catch(() => alert('Erro ao exportar.'));
-    }
-
-    function initAdmin() {
-      if (!Auth.isAdmin()) return;
-      document.getElementById('tabAdmin').style.display = '';
-      document.getElementById('tabLog').style.display = '';
-      
-      initLog();
-      loadUsuarios();
-      renderDropdownTipos();
-      window.addEventListener('scroll', () => {
-        const ddT = document.getElementById('graficoDropdownTipo');
-        const ddS = document.getElementById('graficoDropdownStatus');
-        if (ddT) ddT.style.display = 'none';
-        if (ddS) ddS.style.display = 'none';
-        const cT = document.getElementById('graficoChevronTipo');
-        const cS = document.getElementById('graficoChevronStatus');
-        if (cT) cT.style.transform = 'rotate(0)';
-        if (cS) cS.style.transform = 'rotate(0)';
-      }, { passive: true });
-      document.addEventListener('click', e => {
-        if (!e.target || !document.contains(e.target)) return;
-        if (!e.target.closest('#dropdownTipoWrap')) {
-          const el = document.getElementById('dropdownTipo');
-          if (el) el.style.display = 'none';
-        }
-        if (!e.target.closest('#dropdownStatusWrap')) {
-          const el = document.getElementById('dropdownStatus');
-          if (el) el.style.display = 'none';
-        }
-      });
     }
 
     function toggleDropdown(tipo) {

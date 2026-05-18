@@ -1,0 +1,293 @@
+## Contexto
+
+13 fixes frontend de baixo risco. Dedups, polish e remoção de código 
+morto. Todos isolados, sem mudança de comportamento user-facing 
+relevante.
+
+## Estratégia
+
+Independentes. Se um falhar, pular e reportar.
+
+---
+
+## Item 1 — humanizeValue unificado em utils.js
+
+Existe em 3 versões:
+- public/dashboard.html (~70 linhas)
+- public/solicitacao.html (~90 linhas, mais completa, com IBGE_ESTADOS)
+- public/admin.html (~15 linhas)
+
+Ação:
+1. Em public/utils.js, adicionar a função humanizeValue (use a versão 
+   de solicitacao.html como base — mais completa).
+
+2. Incluir também as funções auxiliares: normalizeSlug, titleCasePtBr, 
+   humanizeSlug, formatarData.
+
+3. Deletar a definição de humanizeValue em dashboard.html, 
+   solicitacao.html e admin.html.
+
+4. Verificar que utils.js está incluído via <script src> em todas as 
+   3 páginas (deve estar). Se faltar, adicionar.
+
+---
+
+## Item 2 — Header dedup auth.js × shell.js
+
+Existem 2 funções pra render do header:
+- Auth.renderHeader em auth.js (legacy)
+- Shell._buildHeader em shell.js (atual)
+
+Ação:
+1. Buscar callers de Auth.renderHeader:
+     grep -rn "Auth.renderHeader" artifacts/api-server/public/
+
+2. Se ZERO callers: deletar Auth.renderHeader em auth.js.
+
+3. Se houver callers: refatorá-los pra usar Shell.render({ 
+   activeRoute, contentEl }). Depois deletar Auth.renderHeader.
+
+---
+
+## Item 3 — IBGE_ESTADOS → config.js
+
+Hoje hardcoded inline em public/solicitacao.html dentro da função 
+humanizeValue.
+
+Ação:
+1. Em public/config.js, adicionar:
+
+   const IBGE_ESTADOS = {
+     "11":"Rondônia","12":"Acre","13":"Amazonas","14":"Roraima",
+     "15":"Pará","16":"Amapá","17":"Tocantins","21":"Maranhão",
+     "22":"Piauí","23":"Ceará","24":"Rio Grande do Norte",
+     "25":"Paraíba","26":"Pernambuco","27":"Alagoas","28":"Sergipe",
+     "29":"Bahia","31":"Minas Gerais","32":"Espírito Santo",
+     "33":"Rio de Janeiro","35":"São Paulo","41":"Paraná",
+     "42":"Santa Catarina","43":"Rio Grande do Sul","50":"Mato Grosso do Sul",
+     "51":"Mato Grosso","52":"Goiás","53":"Distrito Federal"
+   };
+
+2. Em solicitacao.html, consumir IBGE_ESTADOS do config (deletar 
+   definição inline).
+
+3. Em form-eventos.html também — onde consome IBGE direto, manter 
+   API call pro dropdown mas usar IBGE_ESTADOS como fallback de label.
+
+---
+
+## Item 4 — Email hardcoded em form-eventos.html
+
+Localizar:
+  <div class="field-hint">Caso não consiga, envie para o e-mail: 
+    gabriela.franca@svninvest.com.br</div>
+
+Substituir por interpolação no JS após render do field. Adicionar 
+no init() do form:
+
+  document.querySelectorAll('[data-email-upload]').forEach(el => {
+    el.textContent = EMAIL_UPLOAD;
+  });
+
+E mudar o HTML pra:
+  <div class="field-hint">Caso não consiga, envie para o e-mail: 
+    <span data-email-upload></span></div>
+
+Aplicar APENAS aos campos onde o pattern faz sentido — não em 
+field-hints que mencionam emails específicos pra outros propósitos.
+
+---
+
+## Item 5 — SVN_AVATAR via URL_LOGO_BRANCA
+
+Em public/solicitacao.html, a constante SVN_AVATAR_HTML tem URL 
+hardcoded:
+
+  <img src="https://pub-a2132f9b61f940659cc98265acfcf64c.r2.dev/SVN-1.svg" .../>
+
+Substituir por:
+  <img src="${URL_LOGO_BRANCA}" .../>
+
+URL_LOGO_BRANCA já existe em config.js — confirmar que é a URL correta 
+do logo branco SVN. Se não for, usar a variável correta do config.
+
+---
+
+## Item 6 — Config.js cleanup
+
+Em public/config.js:
+
+1. SETORES: remover entry "Selecione seu setor" se estiver no array. 
+   Lugares que precisam de placeholder devem adicionar `<option>Selecione</option>` 
+   inline, não vir do config.
+
+2. CAMPOS_ETAPA2_FORM2 e CAMPOS_ETAPA2_FORM2_ONLINE: mover pra dentro 
+   de form-eventos.html (são específicos desse form). Config.js só pra 
+   coisas globais.
+
+---
+
+## Item 7 — Auth.isPendente público
+
+Em public/auth.js, hoje há Auth._pendenteIds (privado) que shell.js 
+acessa como Auth._pendenteIds (violando encapsulamento).
+
+Ação:
+1. Adicionar método público:
+   Auth.isPendente = function(id) {
+     return Auth._pendenteIds && Auth._pendenteIds.has(id);
+   };
+
+2. Em shell.js, substituir Auth._pendenteIds.has(id) por 
+   Auth.isPendente(id).
+
+---
+
+## Item 8 — Dashboard error UI loadList()
+
+Em public/dashboard.html, a função loadList() faz fetch mas não tem 
+UI de erro se a request falhar. Hoje fica em loading silencioso pra 
+sempre.
+
+Ação:
+Adicionar try/catch no loadList(). Em caso de erro:
+1. Esconder skeleton de loading
+2. Mostrar mensagem clara no container:
+   "Erro ao carregar solicitações. <a onclick='loadList()'>Tentar novamente</a>"
+
+---
+
+## Item 9 — Interactjs bundle local
+
+Em public/admin-templates.html, interactjs é carregado de CDN sem 
+fallback. Se CDN cair, editor quebra.
+
+Ação:
+1. Baixar interactjs minified e salvar em 
+   public/vendor/interact.min.js.
+
+2. Trocar o <script src="https://..."> por src="/vendor/interact.min.js".
+
+3. Manter o CDN como fallback opcional (adicionar tag <script> que 
+   roda se interact estiver undefined).
+
+---
+
+## Item 10 — Form try/catch automation forms
+
+Os 6 forms automation podem ter submitForm sem try/catch ao redor 
+do fetch. Se rede cair, botão fica "Enviando..." pra sempre.
+
+Arquivos:
+- form-assinatura-email.html
+- form-cartao-visita.html (digital block)
+- form-cartao-boas-vindas.html
+- form-divulgacao-nps.html
+- form-convite-fp.html
+- form-cartao-comemorativo.html
+
+Ação para cada:
+Localizar `submitForm` function. Envolver o bloco do fetch em try/catch:
+
+  async function submitForm() {
+    // ... validação ...
+    btn.disabled = true; 
+    btn.textContent = 'Enviando...';
+    try {
+      const res = await fetch('/api/solicitacoes', { method: 'POST', body: formData });
+      const d = await res.json().catch(() => ({}));
+      if (res.ok) {
+        // ... sucesso atual ...
+      } else {
+        throw new Error(d.error || 'submit_failed');
+      }
+    } catch (e) {
+      const errEl = document.getElementById('submitError');
+      if (errEl) { 
+        errEl.style.display = 'block'; 
+        errEl.textContent = 'Erro ao enviar. Tente novamente ou verifique sua conexão.';
+      }
+      if (window.formUnlockUI) window.formUnlockUI(btn); 
+      else { btn.disabled = false; btn.textContent = 'Enviar'; }
+    }
+  }
+
+---
+
+## Item 11 — Solicitacoes renderCategories DRY
+
+Em public/solicitacoes.html, a função renderCategories tem 3 layouts 
+quase idênticos (provável copy-paste-mod). Total ~150 linhas.
+
+Ação:
+Extrair lógica comum em buildCategoryCard(cat, options). As 3 chamadas 
+existentes passam options diferentes pra customizar (layout vertical, 
+horizontal, compact, etc).
+
+Se a refatoração for complexa, deixar pra depois e PULAR este item.
+
+---
+
+## Item 12 — Dashboard dead code remove
+
+Em public/dashboard.html, há ~500-700 linhas de funções que existem 
+mas não são usadas (foram movidas pra admin.html):
+
+- initAdmin
+- loadLog, renderLog
+- loadUsuarios
+- loadAdminStats
+- renderAdminGrafico
+- deleteMassaModal (orphan UI)
+- E outras funções relacionadas a admin
+
+Ação:
+1. Buscar callers de cada uma dessas funções APENAS em dashboard.html:
+     grep -n "initAdmin\|loadLog\|loadUsuarios\|loadAdminStats" \
+       artifacts/api-server/public/dashboard.html
+
+2. Se a função SÓ tem definição (não é chamada), deletar.
+
+3. Buscar também orphan DOM (divs/modals que só servem a essas funções).
+
+4. Validar antes de salvar: o dashboard ainda renderiza normalmente 
+   no /dashboard.html.
+
+5. Reportar ao final: quantas linhas foram removidas.
+
+---
+
+## Item 13 — diagnostico-graph.html
+
+Confirmar se public/diagnostico-graph.html é usado:
+
+1. Buscar references:
+     grep -rn "diagnostico-graph" artifacts/api-server/
+
+2. Se ZERO references (provável), DELETE o arquivo.
+
+3. Se houver references, REPORTAR e não deletar.
+
+---
+
+## Critério de validação
+
+1. grep -ln "function humanizeValue" artifacts/api-server/public/
+   → só utils.js
+
+2. Submeter um form-cartao-boas-vindas com rede desconectada (DevTools 
+   Offline). Botão deve voltar a "Enviar" + mensagem de erro.
+
+3. Editor de templates abre normalmente (interactjs funciona via local).
+
+4. /dashboard.html renderiza sem console error.
+
+5. wc -l artifacts/api-server/public/dashboard.html
+   → significativamente menor que antes.
+
+## Não faça
+
+- Não touch em outros arquivos
+- Não delete o diagnostico-graph.html sem confirmar zero references
+- Se algum form não tiver submitForm visível ou tiver estrutura diferente, 
+  pular e reportar

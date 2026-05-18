@@ -1624,7 +1624,7 @@
 
     const SVN_AVATAR_HTML = `
       <div class="chat-avatar">
-        <img src="https://pub-a2132f9b61f940659cc98265acfcf64c.r2.dev/SVN-1.svg" alt="SVN" />
+        <img src="${URL_LOGO_BRANCA}" alt="SVN" />
       </div>`;
 
     async function mensagemSistema(html, isError = false, extraHtml = '') {
@@ -1675,7 +1675,7 @@
         ? new Date(rodada.data).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
         : '--:--';
 
-      const avatarHtml = `<div class="chat-avatar"><img src="https://pub-a2132f9b61f940659cc98265acfcf64c.r2.dev/SVN-1.svg" alt="SVN" /></div>`;
+      const avatarHtml = `<div class="chat-avatar"><img src="${URL_LOGO_BRANCA}" alt="SVN" /></div>`;
       const badgeHtml = `
         <div style="display:flex;align-items:center;justify-content:center;margin-bottom:8px">
           <span style="background:var(--icon-bg);border:1px solid rgba(34,27,25,0.1);border-radius:999px;font-size:0.72rem;font-weight:700;letter-spacing:0.05em;color:rgba(34,27,25,0.45);padding:3px 12px;text-transform:uppercase">Rodada ${rodada.numero}</span>

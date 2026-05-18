@@ -451,31 +451,7 @@ const PRAZOS_MATERIAIS = {
   "email-marketing-online": { label: "3-5 dias úteis" },
 };
 
-// Usados em form-eventos.html para o modo de maturidade 2 (informação parcial)
-const CAMPOS_ETAPA2_FORM2 = [
-  { id: "nome-evento", label: "Nome do evento" },
-  { id: "data-evento", label: "Data do evento" },
-  { id: "horario", label: "Horário do evento" },
-  { id: "descricao", label: "Descrição do evento" },
-  { id: "origem", label: "Origem do evento" },
-  { id: "tipo-evento", label: "Tipo de evento" },
-  { id: "publico", label: "Público do evento" },
-  { id: "estado-cidade", label: "Estado e Cidade" },
-  { id: "local", label: "Local do evento" },
-  { id: "convidados", label: "Número de convidados" },
-];
-
-const CAMPOS_ETAPA2_FORM2_ONLINE = [
-  { id: "titulo-evento", label: "Título do evento" },
-  { id: "descricao", label: "Descrição do evento" },
-  { id: "publico", label: "Público do evento" },
-  { id: "objetivos", label: "Objetivos de retorno" },
-  { id: "canal", label: "Canal de transmissão" },
-  { id: "link-transmissao", label: "Link da transmissão" },
-  { id: "origem", label: "Origem do evento" },
-  { id: "data-evento", label: "Data do evento" },
-  { id: "horario", label: "Horário do evento" },
-];
+const EMAIL_UPLOAD = 'gabriela.franca@svninvest.com.br';
 
 const FORM_ROUTES = {
   "eventos":               "form-eventos.html",

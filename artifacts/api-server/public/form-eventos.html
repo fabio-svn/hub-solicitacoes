@@ -178,7 +178,7 @@
                 <input type="file" id="logoFile" accept=".png,.jpg,.jpeg,.svg,.ai,.pdf">
                 <div class="file-name" id="logoFileName"></div>
               </div>
-              <div class="field-hint">Caso não consiga, envie para o e-mail: gabriela.franca@svninvest.com.br</div>
+              <div class="field-hint">Caso não consiga, envie para o e-mail: <span data-email-upload></span></div>
             </div>
             <div class="field">
               <label>Imagem complementar (opcional)</label>
@@ -290,6 +290,7 @@
   <script src="config.js"></script>
   <script src="auth.js"></script>
   <script src="shell.js"></script>
+  <script src="ibge-loader.js"></script>
   <script>
     const STORAGE_KEY = 'hub_form_eventos';
     const formState = { natureza: null, maturidade: null, materiais: new Set(), palestrantes: [] };
@@ -399,10 +400,36 @@
       try { sessionStorage.removeItem(STORAGE_KEY); } catch {}
     }
 
+    const CAMPOS_ETAPA2_FORM2 = [
+      { id: "nome-evento", label: "Nome do evento" },
+      { id: "data-evento", label: "Data do evento" },
+      { id: "horario", label: "Horário do evento" },
+      { id: "descricao", label: "Descrição do evento" },
+      { id: "origem", label: "Origem do evento" },
+      { id: "tipo-evento", label: "Tipo de evento" },
+      { id: "publico", label: "Público do evento" },
+      { id: "estado-cidade", label: "Estado e Cidade" },
+      { id: "local", label: "Local do evento" },
+      { id: "convidados", label: "Número de convidados" },
+    ];
+
+    const CAMPOS_ETAPA2_FORM2_ONLINE = [
+      { id: "titulo-evento", label: "Título do evento" },
+      { id: "descricao", label: "Descrição do evento" },
+      { id: "publico", label: "Público do evento" },
+      { id: "objetivos", label: "Objetivos de retorno" },
+      { id: "canal", label: "Canal de transmissão" },
+      { id: "link-transmissao", label: "Link da transmissão" },
+      { id: "origem", label: "Origem do evento" },
+      { id: "data-evento", label: "Data do evento" },
+      { id: "horario", label: "Horário do evento" },
+    ];
+
     async function init() {
       await _configReady;
       await Auth.init();
       if (!Auth.isAuthenticated()) { window.location.href = '/auth/login?redirect=/form-eventos.html'; return; }
+      document.querySelectorAll('[data-email-upload]').forEach(el => { el.textContent = EMAIL_UPLOAD; });
       Shell.render({ activeRoute: 'nova-solicitacao', contentEl: document.getElementById('pageContent') });
       document.getElementById('tutorialLink').href = URL_TUTORIAL_TRANSMISSAO;
 
@@ -611,14 +638,12 @@
     }
 
     async function loadEstados() {
+      const sel = document.getElementById('estado');
+      if (!sel) return;
       try {
-        const res = await fetch('https://servicodados.ibge.gov.br/api/v1/localidades/estados?orderBy=nome');
-        estados = await res.json();
-        const sel = document.getElementById('estado');
-        if (!sel) return;
+        estados = await IBGELoader.loadEstados();
         sel.innerHTML = '<option>Selecione</option>';
         estados.forEach(e => { sel.innerHTML += `<option value="${e.id}">${e.sigla} — ${e.nome}</option>`; });
-        // Restaurar estado/cidade após opções carregadas
         try {
           const raw = sessionStorage.getItem(STORAGE_KEY);
           if (raw) {
@@ -629,7 +654,11 @@
             }
           }
         } catch {}
-      } catch (e) { console.error('IBGE error:', e); }
+      } catch (e) {
+        console.error('IBGE error:', e);
+        sel.innerHTML = '<option value="">Erro ao carregar — clique para tentar novamente</option>';
+        sel.onclick = () => { sel.innerHTML = '<option>Carregando...</option>'; sel.onclick = null; sel.onchange = () => loadCidades(); loadEstados(); };
+      }
     }
 
     async function loadCidades(cidadeParaRestaurar) {
@@ -638,13 +667,16 @@
       if (!estadoId || estadoId === 'Selecione') { cidSel.disabled = true; cidSel.innerHTML = '<option>Selecione o estado</option>'; return; }
       cidSel.innerHTML = '<option>Carregando...</option>';
       try {
-        const res = await fetch(`https://servicodados.ibge.gov.br/api/v1/localidades/estados/${estadoId}/municipios?orderBy=nome`);
-        const cidades = await res.json();
+        const cidades = await IBGELoader.loadCidades(estadoId);
         cidSel.innerHTML = '<option>Selecione</option>';
         cidades.forEach(c => { cidSel.innerHTML += `<option>${c.nome}</option>`; });
         cidSel.disabled = false;
         if (cidadeParaRestaurar) cidSel.value = cidadeParaRestaurar;
-      } catch (e) { console.error(e); }
+      } catch (e) {
+        console.error(e);
+        cidSel.innerHTML = '<option value="">Erro ao carregar cidades</option>';
+        cidSel.disabled = false;
+      }
     }
 
     function handleLocal() {

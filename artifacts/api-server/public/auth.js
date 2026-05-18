@@ -65,6 +65,10 @@ const Auth = {
     this._atualizarBadgeHeader();
   },
 
+  isPendente(id) {
+    return !!(this._pendenteIds && this._pendenteIds.has(id));
+  },
+
   temPendencias() {
     const lidos = this._getLidos();
     return [...this._pendenteIds].some(id => !lidos.has(id));

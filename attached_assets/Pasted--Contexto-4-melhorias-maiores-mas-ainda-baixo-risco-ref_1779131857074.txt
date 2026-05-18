@@ -1,0 +1,199 @@
+## Contexto
+
+4 melhorias maiores (mas ainda baixo risco): refatoração interna do 
+form-eventos, extração de ícones SVG pra módulo compartilhado, e 
+limpeza de CSS.
+
+---
+
+## Item 1 — Materiais detalhes declarativo (form-eventos)
+
+Em public/form-eventos.html, há ~100 linhas de IIFE coletando 
+sub-fields de cada material com schema diferente.
+
+Ação:
+1. No topo do arquivo (ou em config.js se quiser global), definir 
+   schema declarativo:
+
+   const MATERIAIS_DETALHES_SCHEMA = {
+     'pacote-personalizado': {
+       fields: [
+         { key: 'personConvite', source: 'input', id: 'matPersonConvite' },
+         { key: 'personPagina', source: 'input', id: 'matPersonPagina' },
+       ],
+     },
+     'banner-impresso': {
+       fields: [
+         { key: 'tamanho', source: 'input', id: 'matBannerTam' },
+         { key: 'conteudo', source: 'input', id: 'matBannerConteudo' },
+       ],
+     },
+     // ... os outros 8 materiais (flyer, brindes-personalizados, 
+     //     captacao-audiovisual, instagram, email-marketing, 
+     //     apoio-live-online, pagina-sorteio, projeto-stand)
+   };
+
+2. Substituir a IIFE de ~100 linhas por uma função genérica:
+
+   function buildMateriaisDetalhes(materiaisSelecionados) {
+     const det = {};
+     for (const matId of materiaisSelecionados) {
+       const schema = MATERIAIS_DETALHES_SCHEMA[matId];
+       if (!schema) continue;
+       const d = {};
+       for (const field of schema.fields) {
+         let val;
+         if (field.source === 'input') {
+           val = document.getElementById(field.id)?.value?.trim();
+         } else if (field.source === 'radio') {
+           val = document.querySelector(`input[name="${field.name}"]:checked`)?.value;
+           if (val && field.transform) val = field.transform(val);
+         }
+         if (val !== undefined && val !== '') d[field.key] = val;
+       }
+       if (Object.keys(d).length) det[matId] = d;
+     }
+     return Object.keys(det).length ? det : undefined;
+   }
+
+3. Validar que o output é IDÊNTICO ao da IIFE original (testar com 
+   diferentes combinações de materiais selecionados).
+
+---
+
+## Item 2 — IBGE cache + error UI
+
+Em public/form-eventos.html, IBGE é chamado direto sem cache. Sem 
+error UI também.
+
+Ação:
+1. Criar public/ibge-loader.js:
+
+   const IBGE_CACHE_KEY = 'svn_ibge_v1';
+   const IBGE_CACHE_TTL_MS = 24 * 60 * 60 * 1000;
+
+   const IBGELoader = {
+     async loadEstados() {
+       try {
+         const cached = JSON.parse(localStorage.getItem(IBGE_CACHE_KEY) || 'null');
+         if (cached && cached.estados && Date.now() - cached.timestamp < IBGE_CACHE_TTL_MS) {
+           return cached.estados;
+         }
+       } catch {}
+       
+       const res = await fetch('https://servicodados.ibge.gov.br/api/v1/localidades/estados?orderBy=nome');
+       if (!res.ok) throw new Error('ibge_estados_failed');
+       const estados = await res.json();
+       
+       try {
+         localStorage.setItem(IBGE_CACHE_KEY, JSON.stringify({ estados, timestamp: Date.now() }));
+       } catch {}
+       
+       return estados;
+     },
+     
+     async loadCidades(estadoId) {
+       const cacheKey = IBGE_CACHE_KEY + '_cidades_' + estadoId;
+       try {
+         const cached = JSON.parse(localStorage.getItem(cacheKey) || 'null');
+         if (cached && cached.cidades && Date.now() - cached.timestamp < IBGE_CACHE_TTL_MS) {
+           return cached.cidades;
+         }
+       } catch {}
+       
+       const res = await fetch(`https://servicodados.ibge.gov.br/api/v1/localidades/estados/${estadoId}/municipios?orderBy=nome`);
+       if (!res.ok) throw new Error('ibge_cidades_failed');
+       const cidades = await res.json();
+       
+       try {
+         localStorage.setItem(cacheKey, JSON.stringify({ cidades, timestamp: Date.now() }));
+       } catch {}
+       
+       return cidades;
+     }
+   };
+
+2. Em form-eventos.html, importar ibge-loader.js via <script src>. 
+   Substituir as chamadas diretas de fetch IBGE por IBGELoader.
+
+3. Error UI: se loadEstados ou loadCidades lançar erro, mostrar no 
+   dropdown:
+
+   sel.innerHTML = '<option value="">Erro ao carregar — clique pra tentar novamente</option>';
+   sel.onchange = () => loadEstados();  // retry
+
+---
+
+## Item 3 — Ícones inline → icons.js compartilhado
+
+Hoje há ~50 SVGs duplicados em vários arquivos:
+- solicitacoes.html (25)
+- admin-templates.html (vários)
+- dashboard.html (vários)
+- form-eventos.html (17)
+- solicitacao.html (vários)
+
+Ação:
+1. Criar public/icons.js exportando objeto Icons com SVGs como strings:
+
+   const Icons = {
+     'plus': '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>',
+     'search': '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>',
+     'home': '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>',
+     'grid': '...',
+     'clickup': '...',
+     'whatsapp': '...',
+     // ... extrair de todos os arquivos, deduplicar
+   };
+
+2. Em cada arquivo HTML, substituir SVGs inline por:
+   <span class="icon">${Icons.plus}</span>
+   ou via JS: element.innerHTML = Icons.plus;
+
+3. Foco nos SVGs MAIS REPETIDOS primeiro (plus, search, home, edit, 
+   delete, close, chevron). Não precisa extrair TODOS — 80/20.
+
+4. Importar icons.js via <script src> nas páginas que consomem.
+
+5. Reportar ao final: quantos SVGs foram consolidados, quantas 
+   ocorrências duplicadas eliminadas.
+
+---
+
+## Item 4 — CSS Tailwind cleanup
+
+Hoje há 2 arquivos CSS:
+- public/style.css (1552 linhas, em uso)
+- public/index.css (Tailwind v4 não usado)
+
+Ação:
+1. Confirmar com grep que nenhum HTML inclui index.css:
+     grep -rn "index.css" artifacts/api-server/public/
+
+2. Se zero references, deletar public/index.css.
+
+3. Se houver references, investigar o que index.css faz. Provavelmente 
+   é dead — mas confirmar antes de deletar.
+
+---
+
+## Critério de validação
+
+1. form-eventos submete normalmente com materiais selecionados, payload 
+   materiaisDetalhes idêntico ao formato antigo.
+
+2. Carregar form-eventos com Network throttling Slow 3G: IBGE estados 
+   carrega da cache se já visitou antes. Sem cache: mostra UI de erro 
+   se IBGE indisponível.
+
+3. Ícones aparecem normalmente em todas as páginas.
+
+4. grep -rn "index.css" artifacts/api-server/public/
+   → vazio (ou arquivo deletado).
+
+## Não faça
+
+- Não extrair TODOS os SVGs (foco nos 80/20). SVGs únicos (usados 1 vez) 
+  podem ficar inline.
+- Não delete style.css.
+- Se index.css tiver references vivas, NÃO delete.
