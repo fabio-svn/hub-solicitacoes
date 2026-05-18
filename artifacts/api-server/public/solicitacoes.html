@@ -11,7 +11,7 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body class="page-light">
-  <header class="header" id="mainHeader"></header>
+  <div id="pageContent">
   <div class="container">
     <h1 style="font-weight:300;font-size:1.3rem;margin-bottom:24px">Que tipo de solicitação você gostaria de realizar?</h1>
     <div id="categoriesContainer"></div>
@@ -22,8 +22,10 @@
     <span>Início</span>
   </a>
 
+  </div>
   <script src="config.js"></script>
   <script src="auth.js"></script>
+  <script src="shell.js"></script>
   <script>
     const ICONS = {
       'icon-user': '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>',
@@ -60,7 +62,7 @@
         window.location.href = '/auth/login?redirect=/solicitacoes.html';
         return;
       }
-      Auth.renderHeader(document.getElementById('mainHeader'));
+      Shell.render({ activeRoute: 'nova-solicitacao', contentEl: document.getElementById('pageContent') });
       renderCategories();
     }
 

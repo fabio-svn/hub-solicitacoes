@@ -11,7 +11,7 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body class="page-light">
-  <header class="header" id="mainHeader"></header>
+  <div id="pageContent">
   <div class="container-narrow" style="padding-top:32px;padding-bottom:80px">
     <div class="form-card">
       <div class="form-progress"><div class="form-progress-bar" id="progressBar" style="width:33%"></div></div>
@@ -139,10 +139,12 @@
     <span>Início</span>
   </a>
 
+  </div>
   <script src="utils.js"></script>
   <script src="upload-feedback.js"></script>
   <script src="config.js"></script>
   <script src="auth.js"></script>
+  <script src="shell.js"></script>
   <script>
     const params = new URLSearchParams(window.location.search);
     let subtipo = params.get('subtipo') || '';
@@ -168,7 +170,7 @@
       await _configReady;
       await Auth.init();
       if (!Auth.isAuthenticated()) { window.location.href = '/auth/login?redirect=/form-criacao-pdf.html'; return; }
-      Auth.renderHeader(document.getElementById('mainHeader'));
+      Shell.render({ activeRoute: 'nova-solicitacao', contentEl: document.getElementById('pageContent') });
       if (subtipo) goToStep2();
 
       document.getElementById('canalOutroCheck').addEventListener('change', () => {

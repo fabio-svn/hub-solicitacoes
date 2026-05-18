@@ -11,7 +11,7 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body class="page-light">
-  <header class="header" id="mainHeader"></header>
+  <div id="pageContent">
   <div class="container">
     <div class="title-row">
       <h1 class="page-title">Painel Administrativo</h1>
@@ -119,8 +119,10 @@
     <div class="drawer-footer" id="drawerFooter"></div>
   </div>
 
+  </div>
   <script src="config.js"></script>
   <script src="auth.js"></script>
+  <script src="shell.js"></script>
   <script>
     let currentTab = 'eventos';
     let adminFilters = { eventos: { periodo: '', status: '' }, geral: { periodo: '', status: '' } };
@@ -146,7 +148,7 @@
         window.location.href = '/dashboard.html';
         return;
       }
-      Auth.renderHeader(document.getElementById('mainHeader'));
+      Shell.render({ activeRoute: 'admin-painel', contentEl: document.getElementById('pageContent') });
       loadStats();
       loadTable('eventos');
       loadTable('geral');

@@ -11,7 +11,7 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body class="page-light">
-  <header class="header" id="mainHeader"></header>
+  <div id="pageContent">
   <div class="container-narrow" style="padding-top:32px;padding-bottom:80px">
 
     <div class="form-card">
@@ -85,10 +85,12 @@
   })();
   </script>
 
+  </div>
   <script src="utils.js"></script>
   <script src="upload-feedback.js"></script>
   <script src="config.js"></script>
   <script src="auth.js"></script>
+  <script src="shell.js"></script>
   <script>
     const TIPO = 'pagina-online';
 
@@ -96,7 +98,7 @@
       await _configReady;
       await Auth.init();
       if (!Auth.isAuthenticated()) { window.location.href = '/auth/login?redirect=/form-pagina-online.html'; return; }
-      Auth.renderHeader(document.getElementById('mainHeader'));
+      Shell.render({ activeRoute: 'nova-solicitacao', contentEl: document.getElementById('pageContent') });
 
       const setorSel = document.getElementById('setor');
       if (setorSel) { SETORES.filter(s => s !== 'Selecione seu setor').forEach(s => { const o = document.createElement('option'); o.value = s; o.textContent = s; setorSel.appendChild(o); }); }

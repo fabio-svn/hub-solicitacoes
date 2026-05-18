@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Usuários - Hub SVN</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap" media="print" onload="this.media='all'">
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap"></noscript>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="page-light">
+  <div id="pageContent">
+    <div class="container" style="padding-top:28px;padding-bottom:60px">
+
+      <div class="title-row" style="margin-bottom:8px">
+        <h1 class="page-title">Usuários</h1>
+        <div style="display:flex;gap:8px">
+          <div class="search-bar" style="margin-bottom:0;height:32px;padding:0 14px;border-radius:8px;min-width:220px">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" opacity="0.4"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" id="userBusca" placeholder="Buscar por nome ou e-mail..." oninput="debounceUserSearch()">
+          </div>
+          <button onclick="loadUsuarios()" style="padding:6px 14px;border-radius:8px;border:1px solid var(--border-light);background:transparent;font-family:'Nunito Sans',sans-serif;font-size:0.8rem;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:6px">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 102.13-9.36L1 10"/></svg>
+            Atualizar
+          </button>
+        </div>
+      </div>
+      <p style="font-size:0.82rem;opacity:0.5;margin:0 0 20px">Gerencie usuários do sistema: funções e IDs do ClickUp. Use o botão "Logar como" para visualizar o sistema como aquele usuário.</p>
+
+      <div style="border-radius:12px;border:1px solid var(--border-light);overflow:hidden">
+        <table style="width:100%;border-collapse:collapse;font-size:0.82rem" id="usuariosTabela">
+          <thead>
+            <tr style="background:var(--carbon-black)">
+              <th style="padding:10px 14px;font-weight:800;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.06em;color:#fff;text-align:left">Nome</th>
+              <th style="padding:10px 14px;font-weight:800;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.06em;color:#fff;text-align:left">E-mail</th>
+              <th style="padding:10px 14px;font-weight:800;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.06em;color:#fff;text-align:left">Função</th>
+              <th style="padding:10px 14px;font-weight:800;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.06em;color:#fff;text-align:left">ClickUp ID</th>
+              <th style="padding:10px 14px;font-weight:800;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.06em;color:#fff;text-align:left">Cadastro</th>
+              <th style="padding:10px 14px;font-weight:800;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.06em;color:#fff;text-align:center">Ações</th>
+            </tr>
+          </thead>
+          <tbody id="usuariosTabelaBody">
+            <tr><td colspan="6" style="padding:24px;text-align:center;opacity:0.4">Carregando...</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Editar função modal -->
+      <div id="editRoleModal" style="display:none;position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,0.45);align-items:center;justify-content:center">
+        <div style="background:var(--card-white);border-radius:16px;padding:28px 32px;max-width:360px;width:90%;box-shadow:0 8px 40px rgba(0,0,0,0.18)">
+          <h3 style="font-size:1rem;font-weight:800;margin:0 0 6px">Alterar função</h3>
+          <p id="editRoleUserName" style="font-size:0.85rem;opacity:0.6;margin:0 0 16px"></p>
+          <div class="field">
+            <label>Função</label>
+            <select id="editRoleSelect" style="width:100%">
+              <option value="colaborador">Colaborador</option>
+              <option value="gestor">Gestor</option>
+              <option value="admin">Admin</option>
+            </select>
+          </div>
+          <div style="display:flex;gap:10px;margin-top:20px">
+            <button onclick="cancelarEditRole()" style="flex:1;padding:9px;border-radius:9px;border:1px solid var(--border-light);background:transparent;font-family:'Nunito Sans',sans-serif;font-size:0.85rem;font-weight:600;cursor:pointer">Cancelar</button>
+            <button onclick="salvarRole()" style="flex:1;padding:9px;border-radius:9px;border:none;background:var(--carbon-black);color:white;font-family:'Nunito Sans',sans-serif;font-size:0.85rem;font-weight:700;cursor:pointer">Salvar</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script src="config.js"></script>
+  <script src="auth.js"></script>
+  <script src="shell.js"></script>
+  <script>
+    let _allUsers = [];
+    let _editingUserId = null;
+    let _userSearchTimeout;
+
+    function esc(str) {
+      if (!str) return '';
+      const d = document.createElement('div');
+      d.textContent = String(str);
+      return d.innerHTML;
+    }
+
+    const ROLE_LABELS = {
+      admin: 'Admin',
+      gestor: 'Gestor',
+      colaborador: 'Colaborador',
+    };
+    const ROLE_COLORS = {
+      admin: 'rgba(159,63,55,0.1);color:var(--ruby-red)',
+      gestor: 'rgba(111,135,123,0.1);color:var(--sage-green)',
+      colaborador: 'rgba(34,27,25,0.07);color:rgba(34,27,25,0.5)',
+    };
+
+    async function loadUsuarios() {
+      const tbody = document.getElementById('usuariosTabelaBody');
+      tbody.innerHTML = `<tr><td colspan="6" style="padding:24px;text-align:center;opacity:0.4">Carregando...</td></tr>`;
+      try {
+        const res = await fetch('/api/admin/users');
+        if (!res.ok) throw new Error('erro');
+        const data = await res.json();
+        _allUsers = data.users || data || [];
+        renderUsuarios(_allUsers);
+      } catch {
+        tbody.innerHTML = `<tr><td colspan="6" style="padding:24px;text-align:center;color:var(--ruby-red)">Erro ao carregar usuários.</td></tr>`;
+      }
+    }
+
+    function renderUsuarios(users) {
+      const tbody = document.getElementById('usuariosTabelaBody');
+      const busca = (document.getElementById('userBusca')?.value || '').trim().toLowerCase();
+      const filtered = busca
+        ? users.filter(u => (u.name || '').toLowerCase().includes(busca) || (u.email || '').toLowerCase().includes(busca))
+        : users;
+
+      if (!filtered.length) {
+        tbody.innerHTML = `<tr><td colspan="6" style="padding:24px;text-align:center;opacity:0.4">Nenhum usuário encontrado.</td></tr>`;
+        return;
+      }
+
+      const meEmail = typeof Auth !== 'undefined' ? Auth.getUserEmail() : '';
+
+      tbody.innerHTML = filtered.map(u => {
+        const dt = u.created_at ? new Date(u.created_at).toLocaleDateString('pt-BR') : '—';
+        const roleStyle = ROLE_COLORS[u.role] || ROLE_COLORS.colaborador;
+        const roleLabel = ROLE_LABELS[u.role] || u.role;
+        const isMe = u.email === meEmail;
+        return `<tr style="border-top:1px solid var(--border-light);transition:background 0.12s" onmouseover="this.style.background='var(--icon-bg)'" onmouseout="this.style.background=''">
+          <td style="padding:10px 14px">
+            <div style="font-weight:600;font-size:0.85rem">${esc(u.name || '—')}</div>
+          </td>
+          <td style="padding:10px 14px">
+            <div style="font-size:0.82rem;opacity:0.7">${esc(u.email || '—')}</div>
+          </td>
+          <td style="padding:10px 14px">
+            <button onclick="abrirEditRole('${esc(u.id)}', '${esc(u.name || u.email)}', '${esc(u.role)}')" style="padding:3px 9px;border-radius:6px;background:${roleStyle};border:none;font-family:'Nunito Sans',sans-serif;font-size:0.78rem;font-weight:700;cursor:pointer">${roleLabel}</button>
+          </td>
+          <td style="padding:10px 14px">
+            <span style="font-size:0.8rem;font-family:monospace;opacity:0.6">${esc(u.clickup_id || '—')}</span>
+          </td>
+          <td style="padding:10px 14px">
+            <span style="font-size:0.8rem;opacity:0.6">${dt}</span>
+          </td>
+          <td style="padding:10px 14px;text-align:center">
+            ${!isMe ? `<button onclick="logarComo('${esc(u.email)}')" title="Visualizar sistema como este usuário" style="padding:5px 12px;border-radius:8px;border:1px solid var(--border-light);background:transparent;font-family:'Nunito Sans',sans-serif;font-size:0.78rem;font-weight:600;cursor:pointer;white-space:nowrap;display:inline-flex;align-items:center;gap:5px">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+              Logar como
+            </button>` : `<span style="font-size:0.75rem;opacity:0.35">Você</span>`}
+          </td>
+        </tr>`;
+      }).join('');
+    }
+
+    function debounceUserSearch() {
+      clearTimeout(_userSearchTimeout);
+      _userSearchTimeout = setTimeout(() => renderUsuarios(_allUsers), 250);
+    }
+
+    async function logarComo(email) {
+      if (!confirm(`Visualizar o sistema como ${email}?`)) return;
+      try {
+        const res = await fetch('/api/admin/impersonate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email }),
+        });
+        if (res.ok) {
+          sessionStorage.setItem('svn_impersonate', email);
+          window.location.href = '/dashboard.html';
+        } else {
+          alert('Não foi possível logar como esse usuário.');
+        }
+      } catch { alert('Erro de conexão.'); }
+    }
+
+    function abrirEditRole(userId, userName, currentRole) {
+      _editingUserId = userId;
+      document.getElementById('editRoleUserName').textContent = userName;
+      document.getElementById('editRoleSelect').value = currentRole;
+      const modal = document.getElementById('editRoleModal');
+      modal.style.display = 'flex';
+    }
+
+    function cancelarEditRole() {
+      document.getElementById('editRoleModal').style.display = 'none';
+      _editingUserId = null;
+    }
+
+    async function salvarRole() {
+      if (!_editingUserId) return;
+      const novaRole = document.getElementById('editRoleSelect').value;
+      try {
+        const res = await fetch(`/api/admin/users/${_editingUserId}/role`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ role: novaRole }),
+        });
+        if (res.ok) {
+          cancelarEditRole();
+          await loadUsuarios();
+        } else {
+          const err = await res.json().catch(() => ({}));
+          alert(err.error || 'Erro ao alterar função.');
+        }
+      } catch { alert('Erro de conexão.'); }
+    }
+
+    async function init() {
+      await _configReady;
+      await Auth.init();
+      if (!Auth.isAuthenticated()) {
+        window.location.href = '/auth/login?redirect=/admin-usuarios.html';
+        return;
+      }
+      if (!Auth.isAdmin()) {
+        window.location.href = '/dashboard.html';
+        return;
+      }
+      Shell.render({ activeRoute: 'admin-usuarios', contentEl: document.getElementById('pageContent') });
+      loadUsuarios();
+
+      document.getElementById('editRoleModal').addEventListener('click', function(e) {
+        if (e.target === this) cancelarEditRole();
+      });
+    }
+
+    init();
+  </script>
+</body>
+</html>

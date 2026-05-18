@@ -21,7 +21,7 @@
     </linearGradient>
   </defs>
 </svg>
-  <header class="header" id="mainHeader"></header>
+  <div id="pageContent">
   <div class="container">
     <div class="title-row">
       <h1 class="page-title">Minhas solicitações</h1>
@@ -51,22 +51,6 @@
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
         Eventos
       </button>
-      <button class="tab" data-tab="admin" id="tabAdmin" onclick="switchTab('admin')" style="display:none;align-items:center;gap:6px">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
-        Painel Admin
-      </button>
-      <button class="tab" data-tab="log" id="tabLog" onclick="switchTab('log')" style="display:none;align-items:center;gap:6px">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-        Log de atividade
-      </button>
-      <button class="tab" data-tab="usuarios" id="tabUsuarios" onclick="switchTab('usuarios')" style="display:none;align-items:center;gap:6px">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
-        Usuários
-      </button>
-      <a href="/admin-templates.html" class="tab" id="tabTemplates" style="display:none;align-items:center;gap:6px;text-decoration:none">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
-        Templates de Arte
-      </a>
     </div>
 
     <div class="tab-content" id="tab-eventos">
@@ -161,247 +145,20 @@
       <div class="pagination" id="paginationGeral"></div>
     </div>
 
-    <div class="tab-content" id="tab-admin" style="display:none">
-
-      <!-- Filtro de período -->
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px;flex-wrap:wrap">
-        <span style="font-size:0.8rem;font-weight:600;opacity:0.5">Período:</span>
-        <div style="display:flex;gap:6px;flex-wrap:wrap" id="adminPeriodoBtns">
-          <button class="filter-chip active" data-dias="7" onclick="setAdminPeriodo(this)">7 dias</button>
-          <button class="filter-chip" data-dias="14" onclick="setAdminPeriodo(this)">14 dias</button>
-          <button class="filter-chip" data-dias="30" onclick="setAdminPeriodo(this)">30 dias</button>
-          <button class="filter-chip" data-dias="90" onclick="setAdminPeriodo(this)">90 dias</button>
-        </div>
-        <div style="display:flex;gap:6px;align-items:center;margin-left:auto">
-          <input type="date" id="adminDe" style="padding:5px 10px;border:1px solid var(--border-light);border-radius:7px;font-size:0.8rem;font-family:'Nunito Sans',sans-serif" onchange="setAdminCustomPeriodo()">
-          <span style="font-size:0.8rem;opacity:0.4">até</span>
-          <input type="date" id="adminAte" style="padding:5px 10px;border:1px solid var(--border-light);border-radius:7px;font-size:0.8rem;font-family:'Nunito Sans',sans-serif" onchange="setAdminCustomPeriodo()">
-        </div>
-      </div>
-
-      <!-- Cards de resumo -->
-      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:24px" id="adminCards">
-        <div class="stat-card" id="adminCardTotal">
-          <div class="stat-number" id="adminTotal">—</div>
-          <div class="stat-label">Solicitações</div>
-          <div id="adminDelta" style="font-size:0.75rem;margin-top:4px;font-weight:600"></div>
-        </div>
-        <div class="stat-card" id="adminCardAvaliacoes">
-          <div class="stat-number" id="adminAvaliacoes">—</div>
-          <div class="stat-label">Com avaliação</div>
-          <div id="adminMediaNota" style="font-size:0.75rem;margin-top:4px;font-weight:600;opacity:0.6"></div>
-        </div>
-      </div>
-
-      <!-- Gráfico de pizza -->
-      <div class="form-card" style="padding:20px;margin-bottom:20px">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px">
-          <span style="font-size:0.8rem;font-weight:700;opacity:0.5;text-transform:uppercase;letter-spacing:0.06em">Distribuição</span>
-          <div style="display:flex;gap:6px">
-            <div style="position:relative" id="graficoDropdownTipoWrap">
-              <button id="graficoBtnTipo" onclick="toggleGraficoDropdown('tipo')" style="display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:8px;border:1px solid var(--border-light);background:var(--carbon-black);color:white;font-family:'Nunito Sans',sans-serif;font-size:0.8rem;font-weight:600;cursor:pointer;white-space:nowrap;transition:all 0.15s">
-                Por tipo
-                <svg id="graficoChevronTipo" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="transition:transform 0.2s"><polyline points="6 9 12 15 18 9"/></svg>
-              </button>
-            </div>
-            <div style="position:relative" id="graficoDropdownStatusWrap">
-              <button id="graficoBtnStatus" onclick="toggleGraficoDropdown('status')" style="display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:8px;border:1px solid var(--border-light);background:var(--card-white);color:var(--carbon-black);font-family:'Nunito Sans',sans-serif;font-size:0.8rem;font-weight:600;cursor:pointer;white-space:nowrap;transition:all 0.15s">
-                Por status
-                <svg id="graficoChevronStatus" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="transition:transform 0.2s"><polyline points="6 9 12 15 18 9"/></svg>
-              </button>
-            </div>
-          </div>
-        </div>
-        <div id="graficoContainer" style="display:flex;gap:24px;align-items:center;flex-wrap:wrap">
-          <canvas id="adminPizza" width="200" height="200" style="flex-shrink:0;max-width:200px"></canvas>
-          <div id="adminLegenda" style="flex:1;min-width:180px;display:flex;flex-direction:column;gap:8px"></div>
-        </div>
-      </div>
-
-      <!-- Histórico -->
-      <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px;flex-wrap:wrap">
-        <div class="search-bar" style="flex:1;max-width:190px;margin-bottom:0;min-width:180px;height:32px;padding:0 14px;border-radius:8px">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" opacity="0.4"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          <input type="text" placeholder="Buscar por título, e-mail..." id="adminBusca" oninput="debounceAdminSearch()">
-        </div>
-
-        <!-- Filtro Tipo (dropdown multi-select) -->
-        <div style="position:relative" id="dropdownTipoWrap">
-          <button class="btn btn-secondary" id="adminFiltroTipoBtn" onclick="toggleDropdown('tipo')" style="font-size:0.8rem;padding:5px 12px;height:32px;gap:4px;display:flex;align-items:center">
-            Tipo<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="margin-left:2px"><polyline points="6 9 12 15 18 9"/></svg>
-            <span class="filter-count-badge" style="display:none"></span>
-          </button>
-          <div id="dropdownTipo" style="display:none;position:absolute;top:36px;left:0;z-index:100;background:#fff;border:1px solid var(--border-light);border-radius:10px;box-shadow:0 4px 20px rgba(0,0,0,.1);padding:8px;min-width:210px;max-height:300px;overflow-y:auto">
-          </div>
-        </div>
-
-        <!-- Filtro Status (dropdown multi-select) -->
-        <div style="position:relative" id="dropdownStatusWrap">
-          <button class="btn btn-secondary" id="adminFiltroStatusBtn" onclick="toggleDropdown('status')" style="font-size:0.8rem;padding:5px 12px;height:32px;gap:4px;display:flex;align-items:center">
-            Status<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="margin-left:2px"><polyline points="6 9 12 15 18 9"/></svg>
-            <span class="filter-count-badge" style="display:none"></span>
-          </button>
-          <div id="dropdownStatus" style="display:none;position:absolute;top:36px;left:0;z-index:100;background:#fff;border:1px solid var(--border-light);border-radius:10px;box-shadow:0 4px 20px rgba(0,0,0,.1);padding:8px;min-width:170px">
-            <div style="font-size:0.72rem;font-weight:700;opacity:0.4;text-transform:uppercase;letter-spacing:.05em;padding:4px 6px 6px">Status</div>
-            <label class="dropdown-checkbox-label"><input type="checkbox" value="recebido" onchange="updateAdminStatusFiltro()"><span class="status-dot" style="background:#4D545F"></span>Recebido</label>
-            <label class="dropdown-checkbox-label"><input type="checkbox" value="em-analise" onchange="updateAdminStatusFiltro()"><span class="status-dot" style="background:#C98A00"></span>Em análise</label>
-            <label class="dropdown-checkbox-label"><input type="checkbox" value="em-producao" onchange="updateAdminStatusFiltro()"><span class="status-dot" style="background:#C85C00"></span>Em produção</label>
-            <label class="dropdown-checkbox-label"><input type="checkbox" value="em-revisao" onchange="updateAdminStatusFiltro()"><span class="status-dot" style="background:#7438B0"></span>Em revisão</label>
-            <label class="dropdown-checkbox-label"><input type="checkbox" value="em-aprovacao" onchange="updateAdminStatusFiltro()"><span class="status-dot" style="background:#2563C0"></span>Em aprovação</label>
-            <label class="dropdown-checkbox-label"><input type="checkbox" value="aguardando" onchange="updateAdminStatusFiltro()"><span class="status-dot" style="background:#8A6040"></span>Aguardando</label>
-            <label class="dropdown-checkbox-label"><input type="checkbox" value="concluido" onchange="updateAdminStatusFiltro()"><span class="status-dot" style="background:#0A9060"></span>Concluído</label>
-            <label class="dropdown-checkbox-label"><input type="checkbox" value="cancelado" onchange="updateAdminStatusFiltro()"><span class="status-dot" style="background:#C82828"></span>Cancelado</label>
-            <button onclick="limparAdminStatuses()" style="margin-top:6px;width:100%;text-align:center;background:none;border:none;font-size:0.78rem;opacity:0.5;cursor:pointer;font-family:'Nunito Sans',sans-serif">Limpar</button>
-          </div>
-        </div>
-
-        <label id="adminAvaliacaoLabel"
-          style="display:inline-flex;align-items:center;gap:6px;padding:0 12px;height:32px;border-radius:8px;border:1.5px solid rgba(34,27,25,0.12);background:transparent;cursor:pointer;font-size:0.82rem;font-weight:600;white-space:nowrap;transition:all 0.15s;user-select:none"
-          onclick="toggleAvaliacaoFiltro()">
-          <input type="checkbox" id="adminFiltroAvaliacao" style="display:none">
-          <svg id="adminAvaliacaoStar" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-          Com avaliação
-        </label>
-      </div>
-
-      <!-- Barra de ações em massa -->
-      <div id="acoesMassaBar" style="display:none;align-items:center;gap:10px;margin-bottom:8px;padding:8px 14px;background:rgba(220,38,38,0.06);border:1px solid rgba(220,38,38,0.2);border-radius:10px">
-        <span id="acoesMassaCount" style="font-size:0.82rem;font-weight:700;color:var(--ruby-red)">0 selecionados</span>
-        <button onclick="excluirSelecionados()" style="padding:5px 14px;border-radius:8px;background:var(--ruby-red);color:white;border:none;font-family:'Nunito Sans',sans-serif;font-size:0.8rem;font-weight:700;cursor:pointer">Excluir selecionados</button>
-        <button onclick="limparSelecao()" style="padding:5px 14px;border-radius:8px;background:transparent;color:var(--carbon-black);border:1px solid var(--border-light);font-family:'Nunito Sans',sans-serif;font-size:0.8rem;font-weight:600;cursor:pointer">Cancelar</button>
-      </div>
-
-      <!-- Tabela -->
-      <div style="border-radius:12px;border:1px solid var(--border-light);position:relative;overflow:hidden" class="admin-tabela-wrap">
-        <table style="width:100%;border-collapse:collapse;font-size:0.82rem;table-layout:fixed" class="admin-table" id="adminTabela">
-          <colgroup>
-            <col style="width:36px">
-            <col style="width:88px">
-            <col style="width:110px">
-            <col style="width:auto">
-            <col style="width:120px">
-            <col style="width:54px">
-            <col style="width:88px">
-            <col style="width:96px">
-          </colgroup>
-          <thead>
-            <tr style="background:var(--carbon-black);text-align:left">
-              <th style="padding:10px 10px;width:36px">
-                <input type="checkbox" id="checkAll" onclick="toggleCheckAll(this)" style="width:14px;height:14px;accent-color:var(--ruby-red);cursor:pointer">
-              </th>
-              <th onclick="sortAdmin('criado_em')" style="padding:10px 14px;cursor:pointer;white-space:nowrap;user-select:none">
-                <span style="font-weight:800;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.06em;color:#ffffff">Data <span id="sortCreated" style="color:white">↓</span></span>
-              </th>
-              <th onclick="sortAdmin('user_email')" style="padding:10px 14px;cursor:pointer;white-space:nowrap;user-select:none">
-                <span style="font-weight:800;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.06em;color:#ffffff">Solicitante <span id="sortEmail" style="color:white"></span></span>
-              </th>
-              <th onclick="sortAdmin('titulo')" style="padding:10px 14px;cursor:pointer;white-space:nowrap;user-select:none">
-                <span style="font-weight:800;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.06em;color:#ffffff">Título <span id="sortTitulo" style="color:white"></span></span>
-              </th>
-              <th onclick="sortAdmin('tipo_solicitacao')" style="padding:10px 14px;cursor:pointer;white-space:nowrap;user-select:none">
-                <span style="font-weight:800;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.06em;color:#ffffff">Tipo <span id="sortTipo" style="color:white"></span></span>
-              </th>
-              <th onclick="sortAdmin('status')" style="padding:10px 14px;cursor:pointer;white-space:nowrap;user-select:none">
-                <span style="font-weight:800;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.06em;color:#ffffff">Status <span id="sortStatus" style="color:white"></span></span>
-              </th>
-              <th style="padding:10px 14px">
-                <span style="font-weight:800;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.06em;color:#ffffff">Avaliação</span>
-              </th>
-              <th style="padding:10px 14px;width:96px;text-align:center">
-                <span style="font-weight:800;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.06em;color:#ffffff">Ações</span>
-              </th>
-            </tr>
-          </thead>
-          <tbody id="adminTabelaBody">
-            <tr><td colspan="8" style="padding:24px;text-align:center;opacity:0.4">Carregando...</td></tr>
-          </tbody>
-        </table>
-      </div>
-      <div class="pagination" id="adminPaginacao" style="margin-top:12px"></div>
-
-    </div>
-
-    <div class="tab-content" id="tab-log" style="display:none">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px">
-        <p style="font-size:0.8rem;opacity:0.5;margin:0">Log detalhado de atividades do sistema: criações, exclusões, aprovações e erros de integração.</p>
-      </div>
-
-      <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;align-items:center">
-        <div class="search-bar" style="flex:1;max-width:260px;margin-bottom:0;height:32px;padding:0 14px;border-radius:8px">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" opacity="0.4"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          <input type="text" id="logBusca" placeholder="Buscar por usuário, detalhe..." oninput="debounceLogSearch()">
-        </div>
-        <select id="logFiltroNivel" onchange="loadLog()" style="height:32px;border:1px solid var(--border-light);border-radius:8px;padding:0 10px;font-family:'Nunito Sans',sans-serif;font-size:0.8rem;background:var(--card-white)">
-          <option value="">Todos os níveis</option>
-          <option value="info">Info</option>
-          <option value="warn">Warn</option>
-          <option value="error">Error</option>
-        </select>
-      </div>
-
-      <div style="border-radius:12px;border:1px solid var(--border-light);overflow:hidden;position:relative">
-        <table style="width:100%;border-collapse:collapse;font-size:0.82rem;table-layout:fixed" id="logTabela">
-          <colgroup>
-            <col style="width:110px">
-            <col style="width:120px">
-            <col style="width:64px">
-            <col style="width:140px">
-            <col style="width:auto">
-          </colgroup>
-          <thead>
-            <tr style="background:var(--carbon-black)">
-              <th style="padding:10px 14px;font-weight:800;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.06em;color:#ffffff;text-align:left">Data/Hora</th>
-              <th style="padding:10px 14px;font-weight:800;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.06em;color:#ffffff;text-align:left">Usuário</th>
-              <th style="padding:10px 14px;font-weight:800;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.06em;color:#ffffff;text-align:left">Nível</th>
-              <th style="padding:10px 14px;font-weight:800;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.06em;color:#ffffff;text-align:left">Tipo</th>
-              <th style="padding:10px 14px;font-weight:800;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.06em;color:#ffffff;text-align:left">Detalhe</th>
-            </tr>
-          </thead>
-          <tbody id="logTabelaBody">
-            <tr><td colspan="5" style="padding:24px;text-align:center;opacity:0.4">Carregando...</td></tr>
-          </tbody>
-        </table>
-      </div>
-      <div class="pagination" id="logPaginacao" style="margin-top:12px"></div>
-    </div>
-
-    <div class="tab-content" id="tab-usuarios" style="display:none">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px">
-        <p style="font-size:0.8rem;opacity:0.5;margin:0">Gerencie usuários do sistema: funções e IDs do ClickUp.</p>
-        <button onclick="loadUsuarios()" style="padding:6px 14px;border-radius:8px;border:1px solid var(--border-light);background:transparent;font-family:'Nunito Sans',sans-serif;font-size:0.8rem;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:6px">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 102.13-9.36L1 10"/></svg>
-          Atualizar
-        </button>
-      </div>
-      <div style="border-radius:12px;border:1px solid var(--border-light);overflow:hidden">
-        <table style="width:100%;border-collapse:collapse;font-size:0.82rem" id="usuariosTabela">
-          <thead>
-            <tr style="background:var(--carbon-black)">
-              <th style="padding:10px 14px;font-weight:800;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.06em;color:#fff;text-align:left">Nome</th>
-              <th style="padding:10px 14px;font-weight:800;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.06em;color:#fff;text-align:left">E-mail</th>
-              <th style="padding:10px 14px;font-weight:800;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.06em;color:#fff;text-align:left">Função</th>
-              <th style="padding:10px 14px;font-weight:800;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.06em;color:#fff;text-align:left">ClickUp ID</th>
-              <th style="padding:10px 14px;font-weight:800;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.06em;color:#fff;text-align:left">Cadastro</th>
-            </tr>
-          </thead>
-          <tbody id="usuariosTabelaBody">
-            <tr><td colspan="5" style="padding:24px;text-align:center;opacity:0.4">Carregando...</td></tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-
+  </div>
   </div>
 
   <script src="config.js"></script>
   <script src="auth.js"></script>
+  <script src="shell.js"></script>
   <script>
     const CLICKUP_ICON = `<svg width="14" height="14" viewBox="0 0 54.8 65.8" xmlns="http://www.w3.org/2000/svg">
       <path fill="url(#cu1)" d="M0,50.6l10.1-7.8c5.4,7,11.1,10.3,17.4,10.3c6.3,0,11.9-3.2,17-10.2l10.3,7.6c-7.4,10-16.6,15.3-27.3,15.3C16.9,65.8,7.6,60.5,0,50.6z"/>
       <path fill="url(#cu2)" d="M27.5,16.9l-18,15.5l-8.3-9.7L27.6,0l26.2,22.7l-8.4,9.6L27.5,16.9z"/>
     </svg>`;
 
-    let currentTab = sessionStorage.getItem('svn_dashboard_tab') || 'geral';
+    let _svnTab = sessionStorage.getItem('svn_dashboard_tab') || 'geral';
+    let currentTab = ['geral', 'eventos'].includes(_svnTab) ? _svnTab : 'geral';
     let filters = {
       eventos: { periodo: '', status: '', natureza: '' },
       geral: { periodo: '', status: '', tipo: '' }
@@ -423,12 +180,11 @@
         window.location.href = '/auth/login?redirect=/dashboard.html';
         return;
       }
-      Auth.renderHeader(document.getElementById('mainHeader'));
-      initAdmin();
+      Shell.render({ activeRoute: 'dashboard', contentEl: document.getElementById('pageContent') });
       loadStats();
       // Restore tab from localStorage and load it first
       const _urlTab = new URLSearchParams(window.location.search).get('tab');
-      if (_urlTab && ['geral', 'eventos', 'admin', 'log', 'usuarios'].includes(_urlTab)) {
+      if (_urlTab && ['geral', 'eventos'].includes(_urlTab)) {
         switchTab(_urlTab);
       } else {
         switchTab(currentTab);
@@ -615,17 +371,8 @@
         c.classList.toggle('active', isActive);
         c.style.display = isActive ? 'block' : 'none';
       });
-      if (tab === 'admin') {
-        Promise.all([loadAdminStats(), loadAdminHistorico()]);
-      } else if (tab === 'log') {
-        logPage = 1;
-        loadLog();
-      } else if (tab === 'usuarios') {
-        loadUsuarios();
-      } else {
         const listEl = document.getElementById(tab === 'eventos' ? 'listEventos' : 'listGeral');
         if (listEl && !listEl.hasChildNodes()) loadList(tab);
-      }
     }
 
     function toggleFilter(el, tab, filterKey) {

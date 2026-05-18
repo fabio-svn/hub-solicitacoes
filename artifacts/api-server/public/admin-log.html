@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Log de Atividade - Hub SVN</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap" media="print" onload="this.media='all'">
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap"></noscript>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="page-light">
+  <div id="pageContent">
+    <div class="container" style="padding-top:28px;padding-bottom:60px">
+
+      <div class="title-row" style="margin-bottom:24px">
+        <h1 class="page-title">Log de atividade</h1>
+        <button onclick="exportarLogCSV()" style="display:inline-flex;align-items:center;gap:6px;padding:7px 16px;border-radius:9px;border:1px solid var(--border-light);background:transparent;font-family:'Nunito Sans',sans-serif;font-size:0.82rem;font-weight:600;cursor:pointer">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Exportar CSV
+        </button>
+      </div>
+
+      <p style="font-size:0.82rem;opacity:0.5;margin:0 0 16px">Log detalhado de atividades do sistema: criações, exclusões, aprovações e erros de integração.</p>
+
+      <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;align-items:center">
+        <div class="search-bar" style="flex:1;max-width:300px;margin-bottom:0;height:32px;padding:0 14px;border-radius:8px">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" opacity="0.4"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" id="logBusca" placeholder="Buscar por usuário, detalhe..." oninput="debounceLogSearch()">
+        </div>
+        <select id="logFiltroNivel" onchange="loadLog()" style="height:32px;border:1px solid var(--border-light);border-radius:8px;padding:0 10px;font-family:'Nunito Sans',sans-serif;font-size:0.8rem;background:var(--card-white)">
+          <option value="">Todos os níveis</option>
+          <option value="info">Info</option>
+          <option value="warn">Warn</option>
+          <option value="error">Error</option>
+        </select>
+      </div>
+
+      <div style="border-radius:12px;border:1px solid var(--border-light);overflow:hidden;position:relative">
+        <table style="width:100%;border-collapse:collapse;font-size:0.82rem;table-layout:fixed" id="logTabela">
+          <colgroup>
+            <col style="width:110px">
+            <col style="width:120px">
+            <col style="width:64px">
+            <col style="width:140px">
+            <col style="width:auto">
+          </colgroup>
+          <thead>
+            <tr style="background:var(--carbon-black)">
+              <th style="padding:10px 14px;font-weight:800;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.06em;color:#fff;text-align:left">Data/Hora</th>
+              <th style="padding:10px 14px;font-weight:800;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.06em;color:#fff;text-align:left">Usuário</th>
+              <th style="padding:10px 14px;font-weight:800;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.06em;color:#fff;text-align:left">Nível</th>
+              <th style="padding:10px 14px;font-weight:800;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.06em;color:#fff;text-align:left">Tipo</th>
+              <th style="padding:10px 14px;font-weight:800;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.06em;color:#fff;text-align:left">Detalhe</th>
+            </tr>
+          </thead>
+          <tbody id="logTabelaBody">
+            <tr><td colspan="5" style="padding:24px;text-align:center;opacity:0.4">Carregando...</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="pagination" id="logPaginacao" style="margin-top:12px"></div>
+
+    </div>
+  </div>
+
+  <script src="config.js"></script>
+  <script src="auth.js"></script>
+  <script src="shell.js"></script>
+  <script>
+    let logPage = 1;
+    let logSearchTimeout;
+
+    function esc(str) {
+      if (!str) return '';
+      const d = document.createElement('div');
+      d.textContent = String(str);
+      return d.innerHTML;
+    }
+
+    const LOG_NIVEL_STYLE = {
+      info:  { bg: 'rgba(37,99,235,0.1)',  text: '#2563eb', label: 'INFO'  },
+      warn:  { bg: 'rgba(234,88,12,0.1)',  text: '#ea580c', label: 'WARN'  },
+      error: { bg: 'rgba(220,38,38,0.1)',  text: '#dc2626', label: 'ERROR' },
+    };
+
+    const LOG_TIPO_LABEL = {
+      solicitacao_criada:    'Solicitação criada',
+      solicitacao_excluida:  'Excluída',
+      massa_excluida:        'Excl. em massa',
+      alteracao_solicitada:  'Alteração solicitada',
+      aprovacao_registrada:  'Aprovada',
+      clickup_erro:          'Erro ClickUp',
+    };
+
+    async function loadLog() {
+      const tbody = document.getElementById('logTabelaBody');
+      tbody.innerHTML = `<tr><td colspan="5" style="padding:24px;text-align:center;opacity:0.4">Carregando...</td></tr>`;
+      const params = new URLSearchParams();
+      params.set('page', logPage);
+      params.set('limit', '30');
+      const busca = document.getElementById('logBusca')?.value?.trim();
+      if (busca) params.set('busca', busca);
+      const nivel = document.getElementById('logFiltroNivel')?.value;
+      if (nivel) params.set('nivel', nivel);
+      try {
+        const res = await fetch('/api/admin/activity-log?' + params.toString());
+        const data = await res.json();
+        renderLog(data);
+      } catch {
+        tbody.innerHTML = `<tr><td colspan="5" style="padding:24px;text-align:center;color:var(--ruby-red)">Erro ao carregar log.</td></tr>`;
+      }
+    }
+
+    function renderLog(data) {
+      const tbody = document.getElementById('logTabelaBody');
+      if (!data.data || data.data.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" style="padding:24px;text-align:center;opacity:0.4">Nenhum registro encontrado.</td></tr>`;
+        document.getElementById('logPaginacao').innerHTML = '';
+        return;
+      }
+      tbody.innerHTML = data.data.map(item => {
+        const dt = new Date(item.created_at);
+        const data_fmt = dt.toLocaleDateString('pt-BR', { day:'2-digit', month:'2-digit', year:'2-digit' });
+        const hora_fmt = dt.toLocaleTimeString('pt-BR', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
+        const ns = LOG_NIVEL_STYLE[item.nivel] || { bg: '#f1f5f9', text: '#475569', label: item.nivel };
+        const tipoLabel = LOG_TIPO_LABEL[item.tipo] || item.tipo;
+        const userShort = item.user_email ? item.user_email.split('@')[0] : (item.user_name || '—');
+        return `<tr style="border-top:1px solid var(--border-light);transition:background 0.12s" onmouseover="this.style.background='var(--icon-bg)'" onmouseout="this.style.background=''">
+          <td style="padding:8px 14px;white-space:nowrap;font-family:monospace">
+            <div style="font-size:0.78rem">${data_fmt}</div>
+            <div style="font-size:0.7rem;opacity:0.45">${hora_fmt}</div>
+          </td>
+          <td style="padding:8px 14px;overflow:hidden">
+            <div style="font-size:0.78rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${esc(item.user_email || '')}">${esc(userShort)}</div>
+          </td>
+          <td style="padding:8px 14px">
+            <span style="display:inline-block;padding:2px 7px;border-radius:5px;font-size:0.68rem;font-weight:800;background:${ns.bg};color:${ns.text};letter-spacing:0.04em">${ns.label}</span>
+          </td>
+          <td style="padding:8px 14px;overflow:hidden">
+            <span style="font-size:0.76rem;opacity:0.8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block" title="${esc(tipoLabel)}">${esc(tipoLabel)}</span>
+            ${item.solicitacao_id ? `<a href="/solicitacao.html?id=${item.solicitacao_id}" target="_blank" style="font-size:0.68rem;opacity:0.4;text-decoration:none;color:inherit">#${item.solicitacao_id}</a>` : ''}
+          </td>
+          <td style="padding:8px 14px;overflow:hidden">
+            <div style="font-size:0.78rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${esc(item.detalhe)}">${esc(item.detalhe)}</div>
+          </td>
+        </tr>`;
+      }).join('');
+
+      const pag = document.getElementById('logPaginacao');
+      if (data.totalPages <= 1) { pag.innerHTML = ''; return; }
+      let html = `<button ${data.page <= 1 ? 'disabled' : ''} onclick="logGoPage(${data.page-1})">&laquo;</button>`;
+      for (let i = Math.max(1, data.page-2); i <= Math.min(data.totalPages, data.page+2); i++) {
+        html += `<button class="${i === data.page ? 'active' : ''}" onclick="logGoPage(${i})">${i}</button>`;
+      }
+      html += `<button ${data.page >= data.totalPages ? 'disabled' : ''} onclick="logGoPage(${data.page+1})">&raquo;</button>`;
+      pag.innerHTML = html;
+    }
+
+    function logGoPage(page) { logPage = page; loadLog(); }
+
+    function debounceLogSearch() {
+      clearTimeout(logSearchTimeout);
+      logSearchTimeout = setTimeout(() => { logPage = 1; loadLog(); }, 300);
+    }
+
+    function exportarLogCSV() {
+      const params = new URLSearchParams({ limit: '1000', order: 'created_at', dir: 'desc' });
+      const busca = document.getElementById('logBusca')?.value?.trim();
+      if (busca) params.set('busca', busca);
+      const nivel = document.getElementById('logFiltroNivel')?.value;
+      if (nivel) params.set('nivel', nivel);
+      fetch('/api/admin/activity-log?' + params.toString())
+        .then(r => r.json())
+        .then(data => {
+          if (!data.data) return;
+          const headers = ['Data', 'Hora', 'Usuário', 'Nível', 'Tipo', 'Detalhe'];
+          const rows = data.data.map(item => {
+            const dt = new Date(item.created_at);
+            const userShort = item.user_email ? item.user_email.split('@')[0] : (item.user_name || '');
+            return [
+              dt.toLocaleDateString('pt-BR'),
+              dt.toLocaleTimeString('pt-BR', { hour:'2-digit', minute:'2-digit', second:'2-digit' }),
+              userShort,
+              item.nivel,
+              LOG_TIPO_LABEL[item.tipo] || item.tipo,
+              item.detalhe || '',
+            ].map(v => `"${String(v).replace(/"/g,'""')}"`).join(',');
+          });
+          const csv = [headers.join(','), ...rows].join('\n');
+          const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+          const a = document.createElement('a');
+          a.href = URL.createObjectURL(blob);
+          a.download = 'log-hub-svn-' + new Date().toISOString().split('T')[0] + '.csv';
+          a.click();
+        })
+        .catch(() => alert('Erro ao exportar.'));
+    }
+
+    async function init() {
+      await _configReady;
+      await Auth.init();
+      if (!Auth.isAuthenticated()) {
+        window.location.href = '/auth/login?redirect=/admin-log.html';
+        return;
+      }
+      if (!Auth.isAdmin()) {
+        window.location.href = '/dashboard.html';
+        return;
+      }
+      Shell.render({ activeRoute: 'admin-log', contentEl: document.getElementById('pageContent') });
+      loadLog();
+    }
+
+    init();
+  </script>
+</body>
+</html>

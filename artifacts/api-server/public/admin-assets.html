@@ -6,7 +6,10 @@
   <title>Assets de Templates — SVN</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+  <script src="/config.js"></script>
   <script src="/auth.js"></script>
+  <script src="/shell.js"></script>
+  <link rel="stylesheet" href="style.css">
   <style>
     :root {
       --carbon-black: #221b19;
@@ -87,9 +90,8 @@
 </head>
 <body>
 
-<div class="header" id="headerContainer"></div>
 
-<div class="page-wrap">
+<div id="pageContent"><div class="page-wrap">
   <div class="page-header">
     <div>
       <div class="page-title">Assets de Templates <span id="totalCount"></span></div>
@@ -157,10 +159,11 @@
   }
 
   async function init() {
+    if (typeof _configReady !== 'undefined') await _configReady;
     await Auth.init();
     if (!Auth.isAuthenticated()) { window.location.href = '/auth/login?redirect=' + encodeURIComponent(window.location.pathname); return; }
     if (!Auth.isAdmin()) { window.location.href = '/solicitacoes.html'; return; }
-    Auth.renderHeader(document.getElementById('headerContainer'));
+    Shell.render({ activeRoute: 'admin-assets', contentEl: document.getElementById('pageContent') });
     await loadFormSchemas();
     await loadAssets();
     setupDropZone();

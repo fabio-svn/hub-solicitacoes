@@ -78,6 +78,10 @@ const Auth = {
     const badgeMenu = document.getElementById('notifBadgeMenu');
     if (badge) { badge.style.display = count > 0 ? '' : 'none'; badge.textContent = count > 9 ? '9+' : String(count); }
     if (badgeMenu) { badgeMenu.style.display = count > 0 ? '' : 'none'; }
+    const shellBadge = document.getElementById('shellNotifBadge');
+    if (shellBadge) { shellBadge.style.display = count > 0 ? '' : 'none'; shellBadge.textContent = count > 9 ? '9+' : String(count); }
+    const shellBadgeMenu = document.getElementById('shellNotifBadgeMenu');
+    if (shellBadgeMenu) { shellBadgeMenu.style.display = count > 0 ? '' : 'none'; }
   },
 
   async init() {
@@ -216,46 +220,16 @@ const Auth = {
             <span class="user-name">${name}</span>
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="opacity:0.4"><polyline points="6 9 12 15 18 9"/></svg>
           </div>
-          <div id="userDropdown" style="display:none;position:absolute;top:calc(100% + 8px);right:0;background:var(--card-white);border:1px solid var(--border-light);border-radius:10px;box-shadow:0 4px 16px rgba(0,0,0,0.12);min-width:200px;z-index:200;overflow:hidden">
-            <a href="/dashboard.html" style="display:flex;align-items:center;gap:8px;padding:10px 16px;font-size:0.85rem;font-weight:600;color:var(--carbon-black);text-decoration:none;border-bottom:1px solid var(--border-light)" onmouseover="this.style.background='var(--icon-bg)'" onmouseout="this.style.background='transparent'">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+          <div id="userDropdown" style="display:none;position:absolute;top:calc(100% + 8px);right:0;background:var(--card-white);border:1px solid var(--border-light);border-radius:10px;box-shadow:0 4px 16px rgba(0,0,0,0.12);min-width:180px;z-index:200;overflow:hidden">
+            <a href="/dashboard.html" style="display:flex;align-items:center;gap:8px;padding:10px 16px;font-size:0.85rem;font-weight:600;color:var(--carbon-black);text-decoration:none" onmouseover="this.style.background='var(--icon-bg)'" onmouseout="this.style.background='transparent'">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/></svg>
               Minhas solicitações
               <span id="notifBadgeMenu" class="notif-badge-menu" style="${badgeCount > 0 ? '' : 'display:none'}">Novo</span>
             </a>
-            ${this.isAdmin() ? `
-              <a href="/dashboard.html?tab=usuarios" style="display:flex;align-items:center;gap:8px;padding:10px 16px;font-size:0.85rem;font-weight:600;color:var(--carbon-black);text-decoration:none" onmouseover="this.style.background='var(--icon-bg)'" onmouseout="this.style.background='transparent'">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
-                Usuários <span style="font-size:0.7rem;opacity:0.5;font-weight:400">(admin)</span>
-              </a>
-              <a href="/admin-templates.html" style="display:flex;align-items:center;gap:8px;padding:10px 16px;font-size:0.85rem;font-weight:600;color:var(--carbon-black);text-decoration:none" onmouseover="this.style.background='var(--icon-bg)'" onmouseout="this.style.background='transparent'">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
-                Templates de Arte <span style="font-size:0.7rem;opacity:0.5;font-weight:400">(admin)</span>
-              </a>
-              <a href="/admin-assets.html" style="display:flex;align-items:center;gap:8px;padding:10px 16px;font-size:0.85rem;font-weight:600;color:var(--carbon-black);text-decoration:none;border-bottom:1px solid var(--border-light)" onmouseover="this.style.background='var(--icon-bg)'" onmouseout="this.style.background='transparent'">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-                Assets de Templates <span style="font-size:0.7rem;opacity:0.5;font-weight:400">(admin)</span>
-              </a>
-            ` : ''}
-            <button onclick="Auth.logout()" style="display:flex;align-items:center;gap:8px;padding:10px 16px;font-size:0.85rem;font-weight:600;color:var(--carbon-black);background:none;border:none;cursor:pointer;width:100%;text-align:left;font-family:'Nunito Sans',sans-serif" onmouseover="this.style.background='var(--icon-bg)'" onmouseout="this.style.background='transparent'">
+            <button onclick="Auth.logout()" style="display:flex;align-items:center;gap:8px;padding:10px 16px;font-size:0.85rem;font-weight:600;color:var(--carbon-black);background:none;border:none;cursor:pointer;width:100%;text-align:left;font-family:'Nunito Sans',sans-serif;border-top:1px solid var(--border-light)" onmouseover="this.style.background='var(--icon-bg)'" onmouseout="this.style.background='transparent'">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
               Sair
             </button>
-            ${this.isAdmin() ? `
-              <div style="border-top:1px solid rgba(34,27,25,0.08);margin:4px 0;padding-top:4px">
-                <div style="padding:6px 12px;font-size:0.72rem;font-weight:700;opacity:0.4;text-transform:uppercase;letter-spacing:0.05em">Admin</div>
-                <div id="impersonarWrap" style="padding:4px 8px">
-                  <div style="font-size:0.78rem;font-weight:600;opacity:0.6;margin-bottom:6px;padding:0 4px">Visualizar como:</div>
-                  <div style="display:flex;gap:6px">
-                    <input type="email" id="impersonarEmailInput" placeholder="email@svninvest.com.br"
-                      style="flex:1;border:1px solid rgba(34,27,25,0.15);border-radius:7px;padding:5px 9px;font-family:'Nunito Sans',sans-serif;font-size:0.78rem;min-width:0"
-                      onclick="event.stopPropagation()">
-                    <button onclick="window._impersonar()" style="padding:5px 10px;background:var(--carbon-black);color:white;border:none;border-radius:7px;font-family:'Nunito Sans',sans-serif;font-size:0.78rem;font-weight:600;cursor:pointer;white-space:nowrap">
-                      Entrar
-                    </button>
-                  </div>
-                </div>
-              </div>
-            ` : ''}
           </div>
         </div>
       </div>
