@@ -4,7 +4,7 @@
   --icon-bg: #f8f4f1;
   --card-white: #ffffff;
   --carbon-black: #221B19;
-  --ruby-red: #9f3f37;
+  --ruby-red: #AC3631;
   --leather-brown: #381811;
   --sage-green: #6f877b;
   --surface: #1a1412;
@@ -167,7 +167,7 @@ img { max-width: 100%; height: auto; }
   flex-shrink: 0;
   width: 16px; height: 16px;
   border: 2px solid rgba(34,27,25,0.15);
-  border-top-color: #9f3f37;
+  border-top-color: #AC3631;
   border-radius: 50%;
   animation: formSpin 0.7s linear infinite;
 }

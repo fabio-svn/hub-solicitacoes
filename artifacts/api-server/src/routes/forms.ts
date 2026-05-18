@@ -123,8 +123,9 @@ function normalizeFormDados(
     modeloArte:    "modelo_arte",
     contratoSocial:"contrato_social",
     nomeCliente:   "nome_cliente",
-    nomeAssinatura:"nome_assinatura",
-    nomeCompleto:  "nome_completo",
+    nomeAssinatura: "nome_assinatura",
+    nomeCompleto:   "nome_completo",
+    codigoAssessor: "codigo_assessor",
   };
   for (const [camel, snake] of Object.entries(KEY_MAP)) {
     if (camel in out && !(snake in out)) {

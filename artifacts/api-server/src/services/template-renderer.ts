@@ -3,6 +3,7 @@ import * as fontkitLib from 'fontkit';
 import * as fs from 'fs';
 import * as path from 'path';
 import { ArtTemplate, TextLineLayer, TextBlockLayer, ImageLayer } from '../types/art-template';
+import { logger } from '../lib/logger';
 
 const fontkit = fontkitLib as any;
 
@@ -118,16 +119,26 @@ function alignedLeft(boxX: number, boxW: number, textWidth: number, align: strin
   return boxX;
 }
 
-function substitute(text: string, data: Record<string, string>): string {
-  return text.replace(/\{\{(\w+)\}\}/g, (_, key) => data[key] ?? `{{${key}}}`);
+function substitute(
+  text: string,
+  data: Record<string, string>,
+  ctx?: { tipo?: string; layoutId?: string | number }
+): string {
+  return text.replace(/\{\{(\w+)\}\}/g, (_, key) => {
+    const val = data[key];
+    if (val !== undefined && val !== null && val !== '') return val;
+    logger.warn({ tipo: ctx?.tipo, key, layoutId: ctx?.layoutId }, 'placeholder sem valor');
+    return process.env.DEBUG_PLACEHOLDERS === '1' ? `{{${key}}}` : '';
+  });
 }
 
 async function renderTextLine(
   layer: TextLineLayer,
   data: Record<string, string>,
-  composites: sharp.OverlayOptions[]
+  composites: sharp.OverlayOptions[],
+  ctx?: { tipo?: string; layoutId?: string | number }
 ) {
-  const text = substitute(layer.content, data);
+  const text = substitute(layer.content, data, ctx);
   if (!text.trim()) return;
   const font = getFont(layer.font_family);
 
@@ -151,9 +162,10 @@ async function renderTextLine(
 async function renderTextBlock(
   layer: TextBlockLayer,
   data: Record<string, string>,
-  composites: sharp.OverlayOptions[]
+  composites: sharp.OverlayOptions[],
+  ctx?: { tipo?: string; layoutId?: string | number }
 ) {
-  const text = substitute(layer.content, data);
+  const text = substitute(layer.content, data, ctx);
   const font = getFont(layer.font_family);
 
   // Split by \n: each newline is a forced line break; empty string = blank spacer
@@ -325,10 +337,11 @@ export async function renderFromTemplate(
 
   // ── Layers ────────────────────────────────────────────────────
   const composites: sharp.OverlayOptions[] = [];
+  const renderCtx = { tipo: template.tipo, layoutId: (template as any).id };
   for (const layer of template.layers) {
     try {
-      if (layer.type === 'text-line')  await renderTextLine(layer, dataStr, composites);
-      if (layer.type === 'text-block') await renderTextBlock(layer, dataStr, composites);
+      if (layer.type === 'text-line')  await renderTextLine(layer, dataStr, composites, renderCtx);
+      if (layer.type === 'text-block') await renderTextBlock(layer, dataStr, composites, renderCtx);
       if (layer.type === 'image')      await renderImage(layer, dataStr, composites, canvasW, canvasH);
     } catch (err: any) {
       console.warn(`[render] layer "${layer.id}" ignorada (${err.message})`);

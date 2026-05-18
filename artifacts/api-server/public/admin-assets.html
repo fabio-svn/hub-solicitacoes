@@ -19,7 +19,7 @@
   <style>
     :root {
       --carbon-black: #221b19;
-      --ruby-red: #9f3f37;
+      --ruby-red: #AC3631;
       --border-light: #e8e2dc;
       --card-white: #fff;
       --icon-bg: #f5f3f0;
@@ -135,7 +135,14 @@
   <!-- Grid -->
   <div id="assetsContainer">
     <div class="loading-grid" id="loadingSkeleton">
-      ${Array(8).fill('<div class="skeleton"></div>').join('')}
+      <div class="skeleton"></div>
+      <div class="skeleton"></div>
+      <div class="skeleton"></div>
+      <div class="skeleton"></div>
+      <div class="skeleton"></div>
+      <div class="skeleton"></div>
+      <div class="skeleton"></div>
+      <div class="skeleton"></div>
     </div>
   </div>
 
@@ -144,9 +151,6 @@
 </div>
 
 <script>
-  const URL_LOGO_PRETA = '/logo-preta.png';
-  const URL_LOGO_BRANCA = '/logo-branca.png';
-
   let allAssets = [];
   let filteredAssets = [];
   let currentPage = 1;
@@ -201,6 +205,7 @@
       const r = await fetch(url);
       if (!r.ok) { document.getElementById('assetsContainer').innerHTML = '<div class="empty-state"><h3>Erro ao carregar assets.</h3></div>'; return; }
       allAssets = (await r.json()).assets || [];
+      if (usage === 'used') allAssets = allAssets.filter(a => a.usage_count > 0);
       applySearch();
     } catch(e) { document.getElementById('assetsContainer').innerHTML = '<div class="empty-state"><h3>Erro de rede.</h3></div>'; }
   }
