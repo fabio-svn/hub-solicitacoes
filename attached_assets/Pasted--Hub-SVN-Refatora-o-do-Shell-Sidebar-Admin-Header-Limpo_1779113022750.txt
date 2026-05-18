@@ -1,0 +1,460 @@
+# Hub SVN — Refatoração do Shell (Sidebar Admin + Header Limpo)
+
+## Contexto e objetivo
+
+Hoje as funcionalidades de admin estão fragmentadas entre abas no dashboard e itens soltos no dropdown do usuário. Queremos consolidar tudo numa sidebar visível apenas pra admins, mantendo a experiência de usuário final simples (sem sidebar).
+
+---
+
+## Princípios
+
+- **Usuário final**: header + conteúdo. Sem sidebar (não há itens suficientes pra justificar).
+- **Admin**: header + sidebar à esquerda + conteúdo. Sidebar com seções "Minhas solicitações" e "Administração".
+- **Páginas internas (formulários, etc.)**: usam o mesmo shell — admin vê sidebar, usuário não.
+- **Tela de login**: sem shell (sem header, sem sidebar).
+
+---
+
+## Etapa 1 — Componente do shell
+
+Criar `static/js/shell.js` (ou similar) que renderiza o layout consistente em todas as páginas autenticadas:
+
+```js
+window.Shell = {
+  /**
+   * Renderiza o shell em volta do conteúdo de uma página.
+   * Detecta automaticamente se o usuário é admin e renderiza sidebar conforme.
+   * 
+   * @param {object} options
+   * @param {string} options.activeRoute - identificador da rota ativa (pra destacar na sidebar)
+   * @param {HTMLElement} options.contentEl - elemento que vai virar o "main" da página
+   * @param {function} options.onBeforeNavigate - callback antes de navegar (pra modais de unsaved)
+   */
+  render({ activeRoute, contentEl, onBeforeNavigate }) {
+    // ...
+  }
+};
+```
+
+A função `Shell.render` faz:
+1. Cria estrutura: header + (sidebar se admin) + main
+2. Injeta o conteúdo passado (`contentEl`) dentro do main
+3. Marca o item ativo da sidebar conforme `activeRoute`
+4. Configura handlers de navegação que respeitam `onBeforeNavigate` (pra unsaved changes)
+
+---
+
+## Etapa 2 — Estrutura HTML do shell
+
+```html
+<div class="app-shell" data-is-admin="${isAdmin}">
+  <header class="app-header">
+    <div class="header-left">
+      <button class="sidebar-toggle" onclick="Shell.toggleSidebar()" title="Recolher menu">«</button>
+      <img src="/assets/svn-logo.svg" alt="SVN" class="header-logo" />
+    </div>
+    <div class="header-right">
+      <div class="user-menu">
+        <div class="user-menu-trigger" onclick="Shell.toggleUserMenu()">
+          <div class="user-avatar">${initials}</div>
+          <span class="user-name">${userName}</span>
+          <span class="user-menu-arrow">▾</span>
+        </div>
+        <div class="user-menu-dropdown" id="userMenuDropdown" style="display:none">
+          <a href="/perfil" class="dropdown-item">Meu perfil</a>
+          <hr class="dropdown-divider" />
+          <a href="/auth/logout" class="dropdown-item">Sair</a>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Sidebar só renderizada se admin -->
+  <aside class="app-sidebar" id="appSidebar">
+    <nav class="sidebar-nav">
+      <a href="/" class="sidebar-link" data-route="dashboard">
+        <span class="sidebar-icon">📥</span>
+        <span class="sidebar-label">Minhas solicitações</span>
+      </a>
+
+      <div class="sidebar-section">
+        <div class="sidebar-section-title">Administração</div>
+        <a href="/admin/painel" class="sidebar-link" data-route="admin-painel">
+          <span class="sidebar-icon">📊</span>
+          <span class="sidebar-label">Painel Admin</span>
+        </a>
+        <a href="/admin/log-atividade" class="sidebar-link" data-route="admin-log">
+          <span class="sidebar-icon">📋</span>
+          <span class="sidebar-label">Log de atividade</span>
+        </a>
+        <a href="/admin/templates" class="sidebar-link" data-route="admin-templates">
+          <span class="sidebar-icon">🎨</span>
+          <span class="sidebar-label">Templates de arte</span>
+        </a>
+        <a href="/admin/assets" class="sidebar-link" data-route="admin-assets">
+          <span class="sidebar-icon">🗂</span>
+          <span class="sidebar-label">Assets</span>
+        </a>
+        <a href="/admin/usuarios" class="sidebar-link" data-route="admin-usuarios">
+          <span class="sidebar-icon">👥</span>
+          <span class="sidebar-label">Usuários</span>
+        </a>
+      </div>
+    </nav>
+  </aside>
+
+  <main class="app-main">
+    <!-- conteúdo da página vai aqui -->
+  </main>
+</div>
+```
+
+Observações:
+- Botão de colapsar `«` só aparece quando há sidebar (admin)
+- Ícones podem ser substituídos por Lucide SVG depois — emojis ficam como placeholder pra simplificar
+- O dropdown do user fica **enxuto**: só "Meu perfil" e "Sair". TUDO de admin sai do dropdown e vai pra sidebar
+
+---
+
+## Etapa 3 — CSS do shell
+
+```css
+.app-shell {
+  display: grid;
+  grid-template-areas:
+    "header header"
+    "sidebar main";
+  grid-template-columns: 240px 1fr;
+  grid-template-rows: auto 1fr;
+  min-height: 100vh;
+  background: #FFF8F3;
+}
+
+/* Quando não é admin: sem sidebar */
+.app-shell:not([data-is-admin="true"]) {
+  grid-template-areas:
+    "header"
+    "main";
+  grid-template-columns: 1fr;
+}
+
+.app-shell:not([data-is-admin="true"]) .app-sidebar { display: none; }
+.app-shell:not([data-is-admin="true"]) .sidebar-toggle { display: none; }
+
+/* Quando colapsada: sidebar fica fininha */
+.app-shell.sidebar-collapsed {
+  grid-template-columns: 60px 1fr;
+}
+.app-shell.sidebar-collapsed .sidebar-label,
+.app-shell.sidebar-collapsed .sidebar-section-title { display: none; }
+.app-shell.sidebar-collapsed .sidebar-link { justify-content: center; }
+
+.app-header {
+  grid-area: header;
+  background: #fff;
+  border-bottom: 1px solid #e5e3df;
+  padding: 12px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 60px;
+}
+
+.header-left { display: flex; align-items: center; gap: 16px; }
+.header-logo { height: 32px; }
+
+.sidebar-toggle {
+  background: transparent;
+  border: 1px solid transparent;
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 1rem;
+  color: #221b19;
+}
+.sidebar-toggle:hover { background: rgba(0,0,0,0.05); }
+
+.app-sidebar {
+  grid-area: sidebar;
+  background: #fff;
+  border-right: 1px solid #e5e3df;
+  padding: 16px 0;
+  overflow-y: auto;
+}
+
+.sidebar-nav { display: flex; flex-direction: column; gap: 2px; }
+
+.sidebar-link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 20px;
+  color: #221b19;
+  text-decoration: none;
+  font-size: 0.9rem;
+  font-family: 'Nunito Sans', sans-serif;
+  border-left: 3px solid transparent;
+}
+.sidebar-link:hover { background: rgba(0,0,0,0.04); }
+.sidebar-link.active { 
+  background: rgba(172,54,49,0.08); 
+  border-left-color: #AC3631; 
+  font-weight: 600;
+}
+
+.sidebar-section { margin-top: 24px; }
+.sidebar-section-title {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: rgba(0,0,0,0.45);
+  padding: 8px 20px;
+  font-weight: 600;
+}
+
+.sidebar-icon { font-size: 1rem; width: 20px; text-align: center; }
+
+.app-main {
+  grid-area: main;
+  padding: 24px 32px;
+  overflow-y: auto;
+}
+
+/* Header user menu */
+.user-menu { position: relative; }
+.user-menu-trigger {
+  display: flex; align-items: center; gap: 8px;
+  cursor: pointer; padding: 4px 12px; border-radius: 24px;
+}
+.user-menu-trigger:hover { background: rgba(0,0,0,0.04); }
+.user-avatar {
+  width: 32px; height: 32px; border-radius: 50%;
+  background: #221b19; color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.75rem; font-weight: 600;
+}
+.user-name { font-size: 0.85rem; }
+.user-menu-arrow { font-size: 0.7rem; color: rgba(0,0,0,0.5); }
+.user-menu-dropdown {
+  position: absolute; top: 100%; right: 0; margin-top: 4px;
+  background: #fff; border: 1px solid #e5e3df; border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  min-width: 180px; padding: 4px 0;
+  z-index: 100;
+}
+.dropdown-item {
+  display: block; padding: 8px 16px;
+  color: #221b19; text-decoration: none; font-size: 0.85rem;
+}
+.dropdown-item:hover { background: rgba(0,0,0,0.04); }
+.dropdown-divider { border: none; border-top: 1px solid #e5e3df; margin: 4px 0; }
+
+/* Mobile: sidebar vira drawer */
+@media (max-width: 768px) {
+  .app-shell {
+    grid-template-areas:
+      "header"
+      "main";
+    grid-template-columns: 1fr;
+  }
+  .app-sidebar {
+    position: fixed;
+    top: 60px; left: 0; bottom: 0;
+    width: 240px;
+    transform: translateX(-100%);
+    transition: transform 0.2s;
+    z-index: 50;
+  }
+  .app-sidebar.mobile-open { transform: translateX(0); }
+  .sidebar-toggle.mobile-trigger { display: flex !important; }
+}
+```
+
+---
+
+## Etapa 4 — Adoção em cada página
+
+Cada página HTML do hub precisa ser refatorada pra usar `Shell.render`. Exemplo de antes/depois:
+
+**Antes** (página `solicitacoes.html`):
+
+```html
+<body>
+  <header class="hub-header">
+    <img src="..." />
+    <div class="user-dropdown">...</div>
+  </header>
+  <div class="page-tabs">
+    <button class="tab active">Solicitações gerais</button>
+    <button class="tab">Eventos</button>
+    <button class="tab admin-only">Painel Admin</button>
+    <button class="tab admin-only">Log de atividade</button>
+  </div>
+  <div class="page-content">
+    <!-- conteúdo principal -->
+  </div>
+</body>
+```
+
+**Depois**:
+
+```html
+<body>
+  <div id="pageContent">
+    <!-- Tabs internas só com Solicitações gerais e Eventos -->
+    <div class="page-tabs">
+      <button class="tab active">Solicitações gerais</button>
+      <button class="tab">Eventos</button>
+    </div>
+    <div class="page-content">
+      <!-- conteúdo principal -->
+    </div>
+  </div>
+
+  <script src="/js/shell.js"></script>
+  <script>
+    Shell.render({
+      activeRoute: 'dashboard',
+      contentEl: document.getElementById('pageContent'),
+    });
+  </script>
+</body>
+```
+
+**Mudanças importantes:**
+- Header e tabs admin saem do HTML da página
+- Tabs ADMIN ("Painel Admin", "Log de atividade") são REMOVIDAS — agora vivem na sidebar como rotas próprias
+- Tabs USER ("Solicitações gerais", "Eventos") permanecem dentro da página, pois são sub-views do Minhas solicitações
+
+### Páginas a refatorar
+
+Todas as páginas autenticadas:
+- `solicitacoes.html` (dashboard / Minhas solicitações)
+- `form-cartao-boas-vindas.html`
+- `form-cartao-comemorativo.html`
+- `form-assinatura-email.html`
+- `form-cartao-visita-fisico.html`
+- `form-cartao-visita-digital.html`
+- `form-divulgacao-nps.html`
+- `form-convite-fp.html`
+- `form-certificado-eventos.html`
+- `nova-solicitacao.html` (página intermediária com cards de tipo)
+- `admin-templates.html` (já existe, integrar no shell)
+- `admin-usuarios.html`
+- `admin-assets.html`
+- `admin-log-atividade.html`
+- `admin-painel.html` (anteriormente uma tab, agora página própria)
+- `thankyou.html`
+- Outras que existam
+
+**Não refatorar:**
+- `login.html` (e similares de auth) — não usam o shell
+
+---
+
+## Etapa 5 — Rotas novas e existentes
+
+Antes:
+- `/solicitacoes` → dashboard com tabs (incluindo Painel Admin e Log como abas)
+
+Depois:
+- `/` ou `/solicitacoes` → Minhas solicitações (com tabs internas Solicitações gerais + Eventos)
+- `/admin/painel` → Painel Admin (página separada)
+- `/admin/log-atividade` → Log de atividade (página separada)
+- `/admin/templates` → já existe
+- `/admin/assets` → já existe
+- `/admin/usuarios` → já existe ou criar
+
+Backend deve servir cada uma dessas rotas (provavelmente como static files, ou via Express com fallback).
+
+---
+
+## Etapa 6 — Impersonar dentro de Usuários
+
+Remover o item "Impersonar usuário" do dropdown do header.
+
+Na página `/admin/usuarios`, em cada linha da tabela de usuários, adicionar coluna "Ações" com botão:
+
+```
+[👤 Logar como]
+```
+
+Click:
+1. Confirma com modal: "Deseja logar como Maria Silva? Sua sessão atual será substituída."
+2. Se confirmar: chama endpoint existente de impersonar (`POST /admin/impersonate/:userId` ou similar)
+3. Redireciona pra `/` (Minhas solicitações) — admin agora vê a UI que aquele usuário vê (sem sidebar, já que está vendo como user comum)
+4. Mostrar banner persistente no topo do header: "🎭 Impersonando Maria Silva — [Voltar pro meu usuário]"
+
+O banner é importante: sem ele, o admin pode esquecer que tá impersonando e fazer ações na conta de outra pessoa.
+
+---
+
+## Etapa 7 — Unsaved changes ao navegar
+
+Páginas com formulários (form-*.html, admin-templates.html, etc.) podem ter mudanças não-salvas. Quando o usuário clica num link da sidebar, deve aparecer o modal de confirmação **antes** de navegar (mesmo padrão do editor de templates).
+
+Implementação:
+
+A página declara que tem unsaved tracking:
+
+```js
+Shell.render({
+  activeRoute: 'admin-templates',
+  contentEl: document.getElementById('pageContent'),
+  onBeforeNavigate: (targetUrl) => {
+    if (!isDirty) return true;  // pode navegar
+    return new Promise((resolve) => {
+      showUnsavedModal({
+        onConfirm: () => resolve(true),
+        onCancel: () => resolve(false),
+      });
+    });
+  }
+});
+```
+
+`Shell` intercepta clicks em links da sidebar (e do dropdown do user) e chama `onBeforeNavigate` antes de seguir. Se retornar `false` ou Promise resolvida com `false`, cancela a navegação.
+
+---
+
+## Etapa 8 — Validação
+
+### Smoke tests usuário final
+
+1. Login como usuário sem role admin → vê header simples, SEM sidebar
+2. Dashboard com tabs internas Solicitações gerais / Eventos funcionando
+3. Click em "Nova solicitação" → vai pra página de seleção de tipos
+4. Click num tipo → vai pro formulário, ainda sem sidebar visível
+5. Dropdown do user tem apenas "Meu perfil" e "Sair" — nenhum item admin
+
+### Smoke tests admin
+
+1. Login como admin → vê header + sidebar à esquerda
+2. Sidebar mostra "Minhas solicitações" + seção "Administração" com 5 itens
+3. Click em "Painel Admin" → navega pra página dedicada, item fica destacado na sidebar
+4. Click em "Templates de arte" → vai pro editor, sidebar continua visível
+5. Botão `«` colapsa a sidebar pra modo ícone-só
+6. Em qualquer formulário, sidebar permanece visível
+7. Mudanças não-salvas + click na sidebar → modal de confirmação aparece antes de navegar
+
+### Smoke tests impersonar
+
+1. Admin em `/admin/usuarios` → click "Logar como" em uma linha → confirma
+2. UI muda: agora admin vê tudo SEM sidebar (como usuário comum)
+3. Banner persistente no topo: "🎭 Impersonando [Nome]"
+4. Click em "Voltar pro meu usuário" no banner → sessão original restaurada, sidebar volta
+
+### Smoke tests mobile
+
+1. Em viewport < 768px → sidebar fica oculta inicialmente
+2. Botão `☰` no header abre a sidebar como drawer
+3. Click num item da sidebar → drawer fecha e navega
+
+---
+
+## Considerações de migração
+
+- Páginas existentes vão precisar perder pedaços de HTML (header próprio, tabs admin) e ganhar o boilerplate do shell
+- Pode fazer em commits separados por página pra deploy incremental sem quebrar tudo
+- Sugestão: começar pelo `solicitacoes.html` (mais crítico) e expandir

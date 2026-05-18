@@ -1,0 +1,396 @@
+# Hub SVN — Readequação da Thank You page com download CTA
+
+## Contexto e objetivo
+
+A Thank You page atual ainda exibe mensagem do fluxo antigo ("enviado para o e-mail"). Como agora o material é gerado server-side e fica disponível pra download direto no hub, precisamos atualizar o copy + adicionar CTA dourado de download do material gerado.
+
+---
+
+## Comportamento esperado
+
+Ao chegar na Thank You page, a página precisa:
+
+1. **Identificar a solicitação** que acabou de ser criada (via query param `?id=` ou sessionStorage)
+2. **Buscar o estado da solicitação** (`GET /api/solicitacoes/:id`) pra saber se o material foi gerado, está pendente ou falhou
+3. **Renderizar conforme o estado:**
+   - ✅ **Material pronto** (`arquivo_gerado_url` preenchido): copy de sucesso + CTA dourado de download
+   - ⏳ **Ainda gerando** (URL ainda nulo, sem erro): mensagem "gerando..." com polling automático
+   - ❌ **Erro na geração** (`erro_geracao` preenchido): mensagem clara + botão "Tentar novamente"
+
+---
+
+## Layout
+
+### Estado 1 — Material pronto
+
+```
+                     ╭───────────────────╮
+                     │     ✓ Sucesso!     │
+                     ╰───────────────────╯
+
+                Sua solicitação foi enviada
+                       com sucesso
+
+         Clique no botão abaixo para baixar seu
+                  Cartão Comemorativo
+
+              ┌──────────────────────────┐
+              │   ⬇  Baixar material     │  ← botão dourado
+              └──────────────────────────┘
+
+
+           [ Ver solicitação ]  [ Nova solicitação ]
+```
+
+### Estado 2 — Ainda gerando
+
+```
+                     ╭───────────────────╮
+                     │     ✓ Sucesso!     │
+                     ╰───────────────────╯
+
+                Sua solicitação foi enviada
+                       com sucesso
+
+              ⏳ Gerando seu material...
+              Isto pode levar alguns segundos
+
+           [ Ver solicitação ]  [ Nova solicitação ]
+```
+
+A página faz polling em `/api/solicitacoes/:id` a cada 2s até `arquivo_gerado_url` ficar preenchido (ou `erro_geracao` aparecer). Quando pronto, troca pro estado 1 sem precisar refresh.
+
+### Estado 3 — Erro
+
+```
+                     ╭───────────────────╮
+                     │   ⚠️ Atenção        │
+                     ╰───────────────────╯
+
+                Sua solicitação foi recebida
+                  mas houve erro na geração
+                       do material
+
+           Nossa equipe foi notificada e vai resolver.
+           Você pode tentar novamente a geração:
+
+              ┌──────────────────────────┐
+              │   ↻  Tentar regerar      │
+              └──────────────────────────┘
+
+           [ Ver solicitação ]  [ Nova solicitação ]
+```
+
+O "Tentar regerar" chama `POST /api/admin/solicitacoes/:id/regerar` (endpoint que deve existir conforme o prompt anterior). Resposta de sucesso → polling retoma → quando pronto vira estado 1.
+
+---
+
+## Implementação
+
+### Marcação HTML (`thankyou.html`)
+
+```html
+<div id="thankyouState" class="thankyou-container">
+  <!-- Loading inicial enquanto busca status -->
+  <div class="thankyou-loading">
+    <div class="spinner"></div>
+    <p>Carregando...</p>
+  </div>
+</div>
+
+<script src="/js/thankyou.js"></script>
+<script>
+  Thankyou.init();
+</script>
+```
+
+### Lógica (`static/js/thankyou.js`)
+
+```js
+window.Thankyou = {
+  solicitacaoId: null,
+  pollInterval: null,
+  formLabels: {
+    'cartao-comemorativo':   'Cartão Comemorativo',
+    'cartao-boas-vindas':    'Cartão de Boas-vindas',
+    'assinatura-email':      'Assinatura de E-mail',
+    'cartao-visita-fisico':  'Cartão de Visita Físico',
+    'cartao-visita-digital': 'Cartão de Visita Digital',
+    'divulgacao-nps':        'Material de Divulgação NPS',
+    'convite-fp':            'Convite FP',
+    'certificado-eventos':   'Certificado de Evento',
+  },
+
+  async init() {
+    // Obter ID da solicitação (query param ou sessionStorage)
+    const params = new URLSearchParams(window.location.search);
+    this.solicitacaoId = params.get('id') || sessionStorage.getItem('lastSolicitacaoId');
+    if (!this.solicitacaoId) {
+      this.renderError('Não foi possível identificar a solicitação.');
+      return;
+    }
+
+    await this.refreshState();
+  },
+
+  async refreshState() {
+    try {
+      const res = await fetch(`/api/solicitacoes/${this.solicitacaoId}`, { credentials: 'include' });
+      if (!res.ok) throw new Error('Falha ao buscar solicitação');
+      const solicitacao = await res.json();
+
+      if (solicitacao.arquivo_gerado_url) {
+        this.renderReady(solicitacao);
+        return;
+      }
+      if (solicitacao.erro_geracao) {
+        this.renderError(solicitacao.erro_geracao);
+        return;
+      }
+      // Ainda gerando — iniciar polling se ainda não estiver
+      this.renderGenerating(solicitacao);
+      if (!this.pollInterval) {
+        this.pollInterval = setInterval(() => this.refreshState(), 2000);
+      }
+    } catch (err) {
+      this.renderError(err.message || 'Erro desconhecido');
+    }
+  },
+
+  renderReady(solicitacao) {
+    if (this.pollInterval) { clearInterval(this.pollInterval); this.pollInterval = null; }
+    const label = this.formLabels[solicitacao.tipo] || 'material';
+    document.getElementById('thankyouState').innerHTML = `
+      <div class="thankyou-card success">
+        <div class="thankyou-badge">✓ Sucesso!</div>
+        <h1 class="thankyou-title">Sua solicitação foi enviada com sucesso</h1>
+        <p class="thankyou-message">Clique no botão abaixo para baixar seu <strong>${this.escape(label)}</strong></p>
+        <a href="${this.escape(solicitacao.arquivo_gerado_url)}" 
+           download
+           class="thankyou-cta-download">
+          ⬇ Baixar material
+        </a>
+        ${this.renderFooterButtons(solicitacao)}
+      </div>
+    `;
+  },
+
+  renderGenerating(solicitacao) {
+    const label = this.formLabels[solicitacao.tipo] || 'material';
+    document.getElementById('thankyouState').innerHTML = `
+      <div class="thankyou-card success">
+        <div class="thankyou-badge">✓ Sucesso!</div>
+        <h1 class="thankyou-title">Sua solicitação foi enviada com sucesso</h1>
+        <p class="thankyou-message"><span class="thankyou-spinner"></span> Gerando seu <strong>${this.escape(label)}</strong>...</p>
+        <p class="thankyou-hint">Isto pode levar alguns segundos</p>
+        ${this.renderFooterButtons(solicitacao)}
+      </div>
+    `;
+  },
+
+  renderError(errorMessage) {
+    if (this.pollInterval) { clearInterval(this.pollInterval); this.pollInterval = null; }
+    document.getElementById('thankyouState').innerHTML = `
+      <div class="thankyou-card warning">
+        <div class="thankyou-badge warning">⚠️ Atenção</div>
+        <h1 class="thankyou-title">Solicitação recebida, mas houve erro na geração</h1>
+        <p class="thankyou-message">Nossa equipe foi notificada e vai resolver. Você pode tentar regerar o material:</p>
+        <button onclick="Thankyou.tryAgain()" class="thankyou-cta-retry">↻ Tentar regerar</button>
+        ${this.renderFooterButtons()}
+        <details class="thankyou-error-details">
+          <summary>Detalhes técnicos</summary>
+          <pre>${this.escape(errorMessage)}</pre>
+        </details>
+      </div>
+    `;
+  },
+
+  async tryAgain() {
+    try {
+      const res = await fetch(`/api/admin/solicitacoes/${this.solicitacaoId}/regerar`, {
+        method: 'POST', credentials: 'include',
+      });
+      if (!res.ok) throw new Error('Falha ao acionar regeração');
+      // Reset e refresh
+      await this.refreshState();
+    } catch (err) {
+      alert('Não foi possível regerar agora. Tente mais tarde.');
+    }
+  },
+
+  renderFooterButtons(solicitacao) {
+    const idAttr = this.solicitacaoId;
+    return `
+      <div class="thankyou-footer">
+        <a href="/solicitacoes#solicitacao-${idAttr}" class="thankyou-btn-secondary">Ver solicitação</a>
+        <a href="/nova-solicitacao" class="thankyou-btn-secondary">Nova solicitação</a>
+      </div>
+    `;
+  },
+
+  escape(s) {
+    return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  },
+};
+```
+
+### CSS
+
+```css
+.thankyou-container {
+  display: flex; align-items: center; justify-content: center;
+  min-height: 100vh; padding: 32px 16px;
+  background: #FFF8F3;
+}
+
+.thankyou-card {
+  background: #fff;
+  border-radius: 16px;
+  padding: 48px 40px;
+  max-width: 560px; width: 100%;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.06);
+  text-align: center;
+  font-family: 'Nunito Sans', sans-serif;
+}
+
+.thankyou-badge {
+  display: inline-block;
+  background: #CFE3DA;
+  color: #166534;
+  padding: 6px 14px;
+  border-radius: 100px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  margin-bottom: 24px;
+}
+.thankyou-badge.warning { background: #FFF3CD; color: #92400e; }
+
+.thankyou-title {
+  font-family: 'Taviraj', serif;
+  font-weight: 300;
+  font-size: 1.6rem;
+  color: #221b19;
+  margin: 0 0 16px;
+  line-height: 1.3;
+}
+
+.thankyou-message {
+  font-size: 0.95rem; color: rgba(0,0,0,0.7);
+  margin: 0 0 8px; line-height: 1.5;
+}
+.thankyou-hint {
+  font-size: 0.8rem; color: rgba(0,0,0,0.5); margin: 0 0 24px;
+}
+
+.thankyou-cta-download {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: linear-gradient(135deg, #d4a437, #b8862d);
+  color: #fff !important;
+  padding: 14px 32px;
+  border-radius: 100px;
+  font-size: 0.95rem; font-weight: 600;
+  text-decoration: none;
+  margin: 24px 0;
+  box-shadow: 0 4px 16px rgba(184, 134, 45, 0.3);
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+.thankyou-cta-download:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(184, 134, 45, 0.4);
+}
+
+.thankyou-cta-retry {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: transparent;
+  color: #AC3631;
+  border: 1.5px solid #AC3631;
+  padding: 12px 28px;
+  border-radius: 100px;
+  font-size: 0.9rem; font-weight: 600;
+  cursor: pointer;
+  margin: 16px 0;
+}
+.thankyou-cta-retry:hover { background: rgba(172,54,49,0.05); }
+
+.thankyou-footer {
+  display: flex; gap: 12px; justify-content: center;
+  margin-top: 32px; padding-top: 24px;
+  border-top: 1px solid #e5e3df;
+}
+
+.thankyou-btn-secondary {
+  padding: 10px 20px;
+  border: 1px solid #e5e3df;
+  border-radius: 100px;
+  text-decoration: none;
+  color: #221b19;
+  font-size: 0.85rem;
+}
+.thankyou-btn-secondary:hover { background: rgba(0,0,0,0.04); }
+
+.thankyou-spinner {
+  display: inline-block; width: 14px; height: 14px;
+  border: 2px solid #e5e3df; border-top-color: #AC3631;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+  vertical-align: middle; margin-right: 6px;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.thankyou-error-details {
+  margin-top: 16px; text-align: left;
+  font-size: 0.75rem; color: rgba(0,0,0,0.5);
+}
+.thankyou-error-details pre {
+  background: rgba(0,0,0,0.04); padding: 10px;
+  border-radius: 6px; overflow: auto; max-height: 120px;
+}
+```
+
+---
+
+## Garantir que o ID da solicitação chega na Thank You
+
+O handler de `POST /api/solicitacoes` deve retornar o ID (já retorna provavelmente). O redirect pra thankyou deve incluir o ID na URL:
+
+No JS de submit do form (em cada `form-*.html`):
+
+```js
+const res = await fetch('/api/solicitacoes', { method: 'POST', body: JSON.stringify(payload), ... });
+const data = await res.json();
+sessionStorage.setItem('lastSolicitacaoId', data.id);
+window.location.href = `/thankyou.html?id=${data.id}`;
+```
+
+Garante tanto a query param quanto o sessionStorage como fallback.
+
+---
+
+## Endpoint backend
+
+Garantir que `GET /api/solicitacoes/:id` retorna todos os campos necessários:
+
+```json
+{
+  "id": 123,
+  "tipo": "cartao-comemorativo",
+  "arquivo_gerado_url": "https://...",     // ou null
+  "arquivo_gerado_at": "2026-05-18T...",   // ou null
+  "erro_geracao": null,                    // ou mensagem
+  "created_at": "2026-05-18T..."
+}
+```
+
+Se o endpoint hoje não retorna esses 3 campos novos (`arquivo_gerado_url`, `arquivo_gerado_at`, `erro_geracao`), adicionar.
+
+Autorização: o endpoint deve permitir o próprio dono da solicitação ver, além de admins.
+
+---
+
+## Validação
+
+1. **Material pronto**: Submeter solicitação que tem template ativo → lands em thankyou → carrega → mostra estado de sucesso com botão dourado de download. Click no botão baixa o arquivo gerado.
+2. **Polling**: Submeter solicitação onde a geração demora (simular delay de 5s no render). Thankyou inicialmente mostra "Gerando..." com spinner. Após 5s, atualiza pra estado de sucesso sem refresh.
+3. **Erro**: Forçar erro na geração (template com bg inválido, por exemplo). Thankyou mostra estado de erro com botão "Tentar regerar". Click → chama endpoint de regeração.
+4. **ID ausente**: Acessar `/thankyou.html` direto (sem query param e sem sessionStorage) → mostra erro "Não foi possível identificar a solicitação".
+5. **Tipo sem template ativo**: Submeter solicitação de tipo que não tem template. O backend deveria retornar a solicitação com `arquivo_gerado_url=null` e `erro_geracao` preenchido. Thankyou mostra estado de erro.
