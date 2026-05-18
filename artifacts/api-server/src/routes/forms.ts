@@ -93,7 +93,7 @@ const REQUIRED_FIELDS: Record<string, string[]> = {
   "apresentacao-atualizar": ["nome", "titulo"],
   "pagina-assessores-dados": ["nome", "nomeCompleto"],
   "pagina-assessores-atualizacao": ["nome"],
-  "assinatura-email":      ["nome", "nomeCompleto", "telefone", "emailCorporativo", "marca"],
+  "assinatura-email":      ["nome", "telefone", "email", "marca"],
   "cartao-visita-fisico":  ["nome", "nomeCartao", "whatsapp", "emailCorporativo", "unidade", "contratoSocial"],
   "cartao-visita-digital": ["nome", "nomeCompleto", "telefone", "emailCorporativo", "contratoSocial"],
   "cartao-boas-vindas":    ["nome", "nomeCliente", "nomeAssinatura", "contratoSocial", "unidade"],
