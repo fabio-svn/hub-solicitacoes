@@ -451,8 +451,6 @@ const PRAZOS_MATERIAIS = {
   "email-marketing-online": { label: "3-5 dias úteis" },
 };
 
-const EMAIL_UPLOAD = 'gabriela.franca@svninvest.com.br';
-
 const FORM_ROUTES = {
   "eventos":               "form-eventos.html",
   "pagina-assessores":     "form-pagina-assessores.html",
