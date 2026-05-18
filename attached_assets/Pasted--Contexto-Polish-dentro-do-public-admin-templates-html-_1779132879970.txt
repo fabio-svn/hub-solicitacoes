@@ -1,0 +1,148 @@
+## Contexto
+
+Polish dentro do public/admin-templates.html (2231 linhas — maior 
+arquivo do projeto). Várias melhorias internas pro editor de templates. 
+Sem mudança de UX externa — só limpeza e bug fixes pequenos.
+
+⚠️ ATENÇÃO: arquivo grande e crítico. Recomendado rodar em modo POWER 
+do Replit. Validar visualmente após cada item.
+
+---
+
+## Item 1 — 16 vars module-level → namespace
+
+Hoje o script inicial define 16 variáveis no escopo global. Conflito 
+potencial e dificulta debugging.
+
+Ação:
+1. Identificar as 16 vars module-level (provavelmente: selectedLayerId, 
+   selectedTipo, currentTemplate, undoStack, redoStack, canvasScale, 
+   isDragging, etc).
+
+2. Agrupar em objeto namespace:
+
+   const Editor = {
+     state: {
+       selectedLayerId: null,
+       selectedTipo: '',
+       currentTemplate: null,
+       undoStack: [],
+       redoStack: [],
+       canvasScale: 1,
+       isDragging: false,
+       // ... etc
+     },
+     // ... métodos que usam state
+   };
+
+3. Atualizar todas as referências no arquivo de `selectedLayerId` para 
+   `Editor.state.selectedLayerId`, etc.
+
+4. Validar: editor abre, drag-drop funciona, save funciona.
+
+---
+
+## Item 2 — Debounces inconsistentes
+
+Hoje há setTimeout com 7 valores diferentes (0, 300, 500, 700, 800, 
+1000, 1200ms) pra debounce em diferentes lugares.
+
+Ação:
+1. Padronizar 3 níveis:
+   - QUICK_DEBOUNCE = 300ms (input em tempo real)
+   - NORMAL_DEBOUNCE = 600ms (auto-save de mudanças)
+   - SLOW_DEBOUNCE = 1200ms (operações pesadas)
+
+2. Definir constantes no topo:
+   const QUICK_DEBOUNCE = 300;
+   const NORMAL_DEBOUNCE = 600;
+   const SLOW_DEBOUNCE = 1200;
+
+3. Substituir todos os timeouts inconsistentes pelos valores adequados:
+   - 300 → QUICK_DEBOUNCE (mantém)
+   - 500 → NORMAL_DEBOUNCE (sobe pra 600)
+   - 700 → NORMAL_DEBOUNCE
+   - 800 → NORMAL_DEBOUNCE
+   - 1000 → SLOW_DEBOUNCE (sobe pra 1200)
+   - 1200 → SLOW_DEBOUNCE (mantém)
+   - 0 → manter como 0 (intencional)
+
+---
+
+## Item 3 — Undo/redo preserva selectedLayerId
+
+Hoje pushHistory não inclui selectedLayerId. Resultado: undo/redo 
+volta o canvas mas deseleciona a layer.
+
+Ação:
+1. Modificar pushHistory pra incluir selectedLayerId no snapshot:
+
+   function pushHistory() {
+     undoStack.push({
+       template: JSON.parse(JSON.stringify(currentTemplate)),
+       selectedLayerId,
+     });
+     redoStack = [];
+   }
+
+2. Modificar undo() e redo() pra restaurar selectedLayerId do snapshot.
+
+---
+
+## Item 4 — canvasScale per-template
+
+Hoje canvasScale é salvo em sessionStorage como variável global. Se 
+você muda de template, o scale anterior persiste (zoom incorreto).
+
+Ação:
+1. Salvar canvasScale por template ID:
+
+   function saveCanvasScale(templateId, scale) {
+     try {
+       const all = JSON.parse(sessionStorage.getItem('canvas_scales') || '{}');
+       all[templateId] = scale;
+       sessionStorage.setItem('canvas_scales', JSON.stringify(all));
+     } catch {}
+   }
+
+   function loadCanvasScale(templateId) {
+     try {
+       const all = JSON.parse(sessionStorage.getItem('canvas_scales') || '{}');
+       return all[templateId] || 1;
+     } catch { return 1; }
+   }
+
+2. Ao trocar de template, carregar o scale específico. Ao mudar scale, 
+   salvar pro template ativo.
+
+3. Validar: abre template A, dá zoom in. Troca pro template B (scale 
+   volta a 1 ou ao último salvo). Volta pro template A: scale do A 
+   é restaurado.
+
+---
+
+## Critério de validação
+
+1. Editor abre normalmente. Console sem erros.
+
+2. Drag/drop de layer funciona, save funciona, load funciona.
+
+3. Undo → desfaz mudança, layer selecionada permanece destacada.
+
+4. Troca de template preserva o scale individual de cada um.
+
+5. Inputs com debounce respondem em tempo razoável (não muito rápido, 
+   não muito lento).
+
+## Não faça
+
+- Não touch em FIELD_OPTIONS, PLACEHOLDERS_BY_TIPO ou TIPO_LABELS 
+  (são parte de outros fixes).
+- Não refatore `_afo2/_afo5/_afo7` agora (esse é médio risco — vazaria 
+  do scope).
+- Não toque no CSS inline do arquivo.
+- Não mude a estrutura da serialização do template (compatibilidade 
+  com templates já salvos).
+- Se a refatoração de namespace ficar muito invasiva (mais de 50 
+  pontos de mudança), parar e reportar — fazer apenas itens 2, 3, 4 
+  como prioridade.
