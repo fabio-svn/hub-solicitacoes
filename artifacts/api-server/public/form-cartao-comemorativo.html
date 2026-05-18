@@ -129,11 +129,11 @@
       try {
         sessionStorage.setItem('form-cartao-comemorativo', JSON.stringify({
           telefone: document.getElementById('telefone')?.value || '',
-          nomeAniversariante: document.getElementById('nomeAniversariante')?.value || '',
-          modeloCartao: document.getElementById('modeloCartao')?.value || '',
+          nome_aniversariante: document.getElementById('nomeAniversariante')?.value || '',
+          modelo_cartao: document.getElementById('modeloCartao')?.value || '',
           mensagem: document.getElementById('mensagem')?.value || '',
           assinatura: document.getElementById('assinatura')?.value || '',
-          emailDestinatario: document.getElementById('emailDestinatario')?.value || '',
+          email_destinatario: document.getElementById('emailDestinatario')?.value || '',
         }));
       } catch {}
     }
@@ -143,11 +143,11 @@
         const data = JSON.parse(sessionStorage.getItem('form-cartao-comemorativo'));
         if (!data) return;
         if (data.telefone) document.getElementById('telefone').value = data.telefone;
-        if (data.nomeAniversariante) document.getElementById('nomeAniversariante').value = data.nomeAniversariante;
-        if (data.modeloCartao) { const el = document.getElementById('modeloCartao'); if (el) el.value = data.modeloCartao; }
+        if (data.nome_aniversariante) document.getElementById('nomeAniversariante').value = data.nome_aniversariante;
+        if (data.modelo_cartao) { const el = document.getElementById('modeloCartao'); if (el) el.value = data.modelo_cartao; }
         if (data.mensagem) document.getElementById('mensagem').value = data.mensagem;
         if (data.assinatura) document.getElementById('assinatura').value = data.assinatura;
-        if (data.emailDestinatario) document.getElementById('emailDestinatario').value = data.emailDestinatario;
+        if (data.email_destinatario) document.getElementById('emailDestinatario').value = data.email_destinatario;
       } catch {}
     }
 
@@ -178,11 +178,11 @@
       const dados = {
         nome: Auth.getUserName(),
         telefone: document.getElementById('telefone').value,
-        nomeAniversariante: document.getElementById('nomeAniversariante').value,
-        modeloCartao: document.getElementById('modeloCartao').value,
+        nome_aniversariante: document.getElementById('nomeAniversariante').value,
+        modelo_cartao: document.getElementById('modeloCartao').value,
         mensagem: document.getElementById('mensagem').value,
         assinatura: document.getElementById('assinatura').value,
-        emailDestinatario: document.getElementById('emailDestinatario').value,
+        email_destinatario: document.getElementById('emailDestinatario').value,
       };
 
       const formData = new FormData();

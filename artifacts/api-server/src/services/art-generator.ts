@@ -48,6 +48,13 @@ export async function gerarArteParaSolicitacao(
     ? String(dados[variantField])
     : null;
 
+  logger.info({
+    tipo,
+    variantField: variantField ?? null,
+    variantValue,
+    bodyKeys: Object.keys(dados),
+  }, '[render] buscando template ativo');
+
   const templateWhere = variantValue
     ? and(eq(artTemplatesTable.tipo, tipo), eq(artTemplatesTable.is_active, true), eq(artTemplatesTable.variant_value, variantValue))
     : and(eq(artTemplatesTable.tipo, tipo), eq(artTemplatesTable.is_active, true), isNull(artTemplatesTable.variant_value));

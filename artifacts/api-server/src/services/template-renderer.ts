@@ -155,17 +155,20 @@ async function renderTextBlock(
 ) {
   const text = substitute(layer.content, data);
   const font = getFont(layer.font_family);
-  const paragraphs = text.split(/\n\n+/);
 
-  // Pre-calculate wrapped lines for vertical alignment
-  const wrappedParagraphs: string[][] = paragraphs.map(p =>
-    wrapTextToLines(font, p, layer.font_size, layer.w)
-  );
-  const totalLineCount = wrappedParagraphs.reduce(
-    (sum, lines) => sum + lines.filter(l => l.trim()).length, 0
-  );
-  const contentHeight = totalLineCount * layer.line_height
-    + Math.max(0, paragraphs.length - 1) * (layer.paragraph_spacing || 0);
+  // Split by \n: each newline is a forced line break; empty string = blank spacer
+  const userLines = text.split('\n');
+  const allLines: string[] = [];
+  for (const userLine of userLines) {
+    if (userLine === '') {
+      allLines.push(''); // blank spacer — advances yCursor by one lineHeight
+    } else {
+      const wrapped = wrapTextToLines(font, userLine, layer.font_size, layer.w);
+      allLines.push(...wrapped);
+    }
+  }
+
+  const contentHeight = allLines.length * layer.line_height;
 
   let yCursor = layer.y;
   if (layer.vertical_align === 'middle') {
@@ -174,21 +177,16 @@ async function renderTextBlock(
     yCursor = layer.y + layer.h - contentHeight;
   }
 
-  for (let p = 0; p < wrappedParagraphs.length; p++) {
-    const lines = wrappedParagraphs[p];
-    for (const line of lines) {
-      if (!line.trim()) continue;
+  for (const line of allLines) {
+    if (line !== '') {
       const { buffer, width } = await renderTextBuffer(font, line, layer.font_size, layer.color);
       composites.push({
         input: buffer,
         top: topForText(font, layer.font_size, yCursor),
         left: alignedLeft(layer.x, layer.w, width, layer.align),
       });
-      yCursor += layer.line_height;
     }
-    if (p < wrappedParagraphs.length - 1) {
-      yCursor += layer.paragraph_spacing || 0;
-    }
+    yCursor += layer.line_height;
   }
 }
 
