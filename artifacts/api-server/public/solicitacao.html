@@ -1239,9 +1239,30 @@
         'Perfeito! Obrigado pela aprovação do material. O time de marketing foi notificado. 🎉',
       ]));
 
+      let sucesso = false;
       try {
-        await fetch('/api/solicitacoes/' + window._chatState.solId + '/aprovacao', { method: 'POST' });
+        const res = await fetch(
+          '/api/solicitacoes/' + window._chatState.solId + '/aprovacao',
+          { method: 'POST' }
+        );
+        sucesso = res.ok;
       } catch {}
+
+      if (!sucesso) {
+        await mensagemSistema(
+          'Houve um erro ao registrar sua aprovação. Tente novamente ou entre em contato com o time de marketing.',
+          true
+        );
+        window._chatState.fase = 'decisao';
+        const chatWrap = document.getElementById('chatWrap');
+        if (chatWrap) {
+          const div = document.createElement('div');
+          div.innerHTML = renderBotoesDecisao();
+          chatWrap.appendChild(div.firstElementChild);
+          scrollChatBottom();
+        }
+        return;
+      }
 
       const rodadas = getRodadas(window._chatState.solId);
       const ultima = rodadas[rodadas.length - 1];

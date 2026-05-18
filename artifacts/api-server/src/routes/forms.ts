@@ -100,6 +100,43 @@ const REQUIRED_FIELDS: Record<string, string[]> = {
   "materiais-impressos":   ["nome", "tipoMaterial"],
 };
 
+function normalizeFormDados(
+  _tipo: string,
+  dados: Record<string, unknown>
+): Record<string, unknown> {
+  const out = { ...dados };
+
+  const KEY_MAP: Record<string, string> = {
+    isPrivate:     "is_private_key",
+    modeloCartao:  "modelo_cartao",
+    modeloArte:    "modelo_arte",
+    contratoSocial:"contrato_social",
+    nomeCliente:   "nome_cliente",
+    nomeAssinatura:"nome_assinatura",
+    nomeCompleto:  "nome_completo",
+  };
+  for (const [camel, snake] of Object.entries(KEY_MAP)) {
+    if (camel in out && !(snake in out)) {
+      out[snake] = out[camel];
+    }
+  }
+
+  if (out.is_private_key === "sim")       out.is_private_key = "private";
+  else if (out.is_private_key === "nao")  out.is_private_key = "padrao";
+
+  for (let i = 1; i <= 4; i++) {
+    const k = "palSvn" + i;
+    const v = out[k];
+    if (typeof v === "string") {
+      const lower = v.toLowerCase();
+      if (lower === "sim")              out[k] = "Sim";
+      else if (lower === "nao" || lower === "não") out[k] = "Não";
+    }
+  }
+
+  return out;
+}
+
 function validateFormDados(tipo: string, dados: Record<string, unknown>): string | null {
   const required = REQUIRED_FIELDS[tipo];
   if (!required) return null;
@@ -197,6 +234,7 @@ router.post("/solicitacoes", requireAuth, upload.any(), async (req, res): Promis
     if (typeof dados.dados === "string") {
       try { parsedDados = JSON.parse(dados.dados); } catch { parsedDados = dados; }
     }
+    parsedDados = normalizeFormDados(tipo_solicitacao, parsedDados);
 
     const validationError = validateFormDados(tipo_solicitacao, parsedDados);
     if (validationError) {

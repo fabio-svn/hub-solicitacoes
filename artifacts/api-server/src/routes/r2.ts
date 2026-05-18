@@ -35,14 +35,10 @@ export async function uploadToR2(
 ): Promise<string> {
   const client = getS3Client();
 
-  if (!client || !R2_BUCKET) {
-    logger.error({ solicitacaoId, campo }, "R2 não configurado — arquivo não salvo, retornando placeholder");
-    await fs.promises.unlink(file.path).catch(() => {});
-    const baseUrl = process.env.R2_PUBLIC_URL?.replace(/\/*$/, "/") || "";
-    if (!baseUrl) {
-      logger.error("R2_PUBLIC_URL ausente — URL do arquivo ficará inválida");
-    }
-    return `${baseUrl}solicitacoes/${solicitacaoId}/${campo}/${file.originalname}`;
+  if (!client || !R2_BUCKET || !R2_ACCOUNT_ID || !R2_ACCESS_KEY || !R2_SECRET_KEY) {
+    throw new Error(
+      "R2 não configurado. Verifique R2_ACCOUNT_ID, R2_BUCKET, R2_ACCESS_KEY e R2_SECRET_KEY no ambiente."
+    );
   }
 
   const ext = file.originalname.split(".").pop() || "";

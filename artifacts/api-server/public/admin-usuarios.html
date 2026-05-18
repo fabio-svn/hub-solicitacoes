@@ -201,7 +201,7 @@
       const novaRole = document.getElementById('editRoleSelect').value;
       try {
         const res = await fetch(`/api/admin/users/${_editingUserId}/role`, {
-          method: 'PATCH',
+          method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ role: novaRole }),
         });
