@@ -1,5 +1,6 @@
 export type ArtTemplate = {
   tipo: string;
+  output_format?: 'png' | 'pdf';
   canvas: { width: number; height: number };
   bg: BgConfig;
   layers: Layer[];
@@ -13,6 +14,11 @@ export type BgConfig =
       variant_source: string;
     };
 
+export type LayerLink =
+  | { type: 'static';      url: string }
+  | { type: 'template';    template: string }
+  | { type: 'placeholder'; placeholder: string };
+
 export type Layer = TextLineLayer | TextBlockLayer | ImageLayer;
 
 export type LayerBase = {
@@ -20,6 +26,7 @@ export type LayerBase = {
   name: string;
   x: number;
   y: number;
+  link?: LayerLink;
 };
 
 export type TextLineLayer = LayerBase & {
@@ -56,6 +63,7 @@ export type ImageLayer = LayerBase & {
   h: number;
   source:
     | { type: 'static'; url: string }
+    | { type: 'placeholder'; field: string }
     | {
         type: 'variant';
         variants: Record<string, string>;
@@ -63,6 +71,11 @@ export type ImageLayer = LayerBase & {
       };
   blend_mode?: 'normal' | 'screen' | 'multiply';
   resize_mode?: 'contain' | 'cover' | 'fill';
+  shape?: 'rectangle' | 'circle';
+  border?: {
+    width: number;
+    color: string;
+  };
 };
 
 export const AVAILABLE_FONTS = [
@@ -73,6 +86,7 @@ export const AVAILABLE_FONTS = [
 ];
 
 export const PLACEHOLDERS_BY_TIPO: Record<string, string[]> = {
-  'assinatura-email': ['nome', 'cargo', 'telefone', 'email', 'marca_label'],
-  'cartao-boas-vindas': ['nome_cliente', 'nome_assinatura', 'unidade', 'contrato_label'],
+  'assinatura-email':      ['nome', 'cargo', 'telefone', 'email', 'marca_label', 'tem_cfp', 'marca'],
+  'cartao-boas-vindas':    ['nome_cliente', 'nome_assinatura', 'unidade', 'contrato_label', 'contrato_social', 'is_private_key'],
+  'cartao-visita-digital': ['nome', 'telefone', 'email', 'contrato_social', 'foto_perfil', 'contrato_label', 'telefone_digits', 'site_url'],
 };

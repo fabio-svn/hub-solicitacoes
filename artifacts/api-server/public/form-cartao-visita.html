@@ -157,9 +157,9 @@
           <label>Contrato social <span style="color:var(--ruby-red)">*</span></label>
           <select id="contratoSocial" required>
             <option value="">Selecione</option>
-            <option value="SVN Capital">SVN Capital</option>
-            <option value="SVN Connect">SVN Connect</option>
-            <option value="SVN Investimentos">SVN Investimentos</option>
+            <option value="svn-capital">SVN Capital</option>
+            <option value="svn-connect">SVN Connect</option>
+            <option value="svn-investimentos">SVN Investimentos</option>
           </select>
         </div>
         <div class="field">
@@ -329,12 +329,10 @@
       btn.disabled = true; btn.textContent = 'Enviando...'; if(window.formLockUI)window.formLockUI(btn);
 
       const dados = {
-        nome: Auth.getUserName(),
-        subTipo: 'digital',
-        nomeCompleto: document.getElementById('nomeCompletoDigital').value,
+        nome: document.getElementById('nomeCompletoDigital').value,
         telefone: document.getElementById('telefoneDigital').value,
-        emailCorporativo: document.getElementById('emailCorporativoDigital').value,
-        contratoSocial: document.getElementById('contratoSocial').value,
+        email: document.getElementById('emailCorporativoDigital').value,
+        contrato_social: document.getElementById('contratoSocial').value,
       };
 
       const formData = new FormData();

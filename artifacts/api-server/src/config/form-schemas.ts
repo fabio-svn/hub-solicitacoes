@@ -6,12 +6,20 @@ export type FormFieldSchema = {
   required?: boolean;
 };
 
+export type ComputedField = {
+  name: string;
+  label: string;
+  derived_from?: string;
+  transform?: 'digits_only' | 'website_by_value' | 'label_by_value';
+  lookup?: Record<string, string>;
+};
+
 export type FormSchema = {
   tipo: string;
   label: string;
   description?: string;
   fields: FormFieldSchema[];
-  computed?: { name: string; label: string; derived_from?: string }[];
+  computed?: ComputedField[];
   template_variant_field?: string;
 };
 
@@ -88,10 +96,11 @@ export const FORM_SCHEMAS: Record<string, FormSchema> = {
   'cartao-visita-digital': {
     tipo: 'cartao-visita-digital',
     label: 'Cartão de Visita — Digital',
+    template_variant_field: 'contrato_social',
     fields: [
-      { name: 'nome',            label: 'Nome completo',    type: 'text',   required: true },
-      { name: 'telefone',        label: 'Telefone',          type: 'tel',    required: true },
-      { name: 'email',           label: 'E-mail corporativo', type: 'email', required: true },
+      { name: 'nome',            label: 'Nome completo',       type: 'text',   required: true },
+      { name: 'telefone',        label: 'Telefone',             type: 'tel',    required: true },
+      { name: 'email',           label: 'E-mail corporativo',   type: 'email',  required: true },
       {
         name: 'contrato_social', label: 'Contrato Social', type: 'select', required: true,
         options: CONTRATOS_OPTS,
@@ -99,7 +108,25 @@ export const FORM_SCHEMAS: Record<string, FormSchema> = {
       { name: 'foto_perfil', label: 'Foto de perfil', type: 'file' },
     ],
     computed: [
-      { name: 'contrato_label', label: 'Contrato (label)', derived_from: 'contrato_social' },
+      {
+        name: 'contrato_label', label: 'Contrato (label)',
+        derived_from: 'contrato_social', transform: 'label_by_value',
+        lookup: {
+          'svn-investimentos': 'SVN Investimentos',
+          'svn-connect':       'SVN Connect',
+          'svn-capital':       'SVN Capital',
+        },
+      },
+      { name: 'telefone_digits', label: 'Telefone (só dígitos + 55)', derived_from: 'telefone', transform: 'digits_only' },
+      {
+        name: 'site_url', label: 'URL do site da marca',
+        derived_from: 'contrato_social', transform: 'website_by_value',
+        lookup: {
+          'svn-investimentos': 'https://svninvestimentos.com.br',
+          'svn-connect':       'https://svnconnect.com.br',
+          'svn-capital':       'https://svncapital.com.br',
+        },
+      },
     ],
   },
 

@@ -232,6 +232,14 @@ router.post("/solicitacoes", requireAuth, upload.any(), async (req, res): Promis
       }
     }
 
+    // Merge uploaded file URLs into dados so art-generator can access them by field name
+    if (Object.keys(arquivosMap).length > 0) {
+      parsedDados = { ...parsedDados, ...arquivosMap };
+      await db.update(solicitacoesTable)
+        .set({ dados: parsedDados })
+        .where(eq(solicitacoesTable.id, solicitacao.id));
+    }
+
     // Gera e persiste título imediatamente (tipos sem ClickUp nunca sobrescrevem)
     const tituloGerado = gerarTituloSolicitacao(tipo_solicitacao, parsedDados, user.name);
     await db.update(solicitacoesTable)

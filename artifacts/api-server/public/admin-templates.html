@@ -579,8 +579,9 @@
   <script>
     // ── Constants ────────────────────────────────────────────────
     const PLACEHOLDERS_BY_TIPO = {
-      'assinatura-email':   ['nome','cargo','telefone','email','marca_label','tem_cfp','marca'],
-      'cartao-boas-vindas': ['nome_cliente','nome_assinatura','unidade','contrato_label','contrato_social','is_private_key'],
+      'assinatura-email':      ['nome','cargo','telefone','email','marca_label','tem_cfp','marca'],
+      'cartao-boas-vindas':    ['nome_cliente','nome_assinatura','unidade','contrato_label','contrato_social','is_private_key'],
+      'cartao-visita-digital': ['nome','telefone','email','contrato_social','foto_perfil','contrato_label','telefone_digits','site_url'],
     };
 
     const TIPO_LABELS = {
@@ -872,6 +873,15 @@
         </div>
         <div class="props-label" style="margin-top:4px">Presets</div>
         <div style="display:flex;flex-wrap:wrap;gap:4px">${presetsHtml}</div>
+      </div>
+      <div class="props-section">
+        <div class="props-label">Formato de saída</div>
+        <div style="display:flex;gap:10px;margin-top:4px">
+          ${['png','pdf'].map(f => `<label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:0.82rem">
+            <input type="radio" name="outputFmt" value="${f}" ${(currentTemplate.output_format||'png')===f?'checked':''} onchange="updDocOutputFormat('${f}')"> ${f.toUpperCase()}
+          </label>`).join('')}
+        </div>
+        <div style="font-size:0.7rem;opacity:0.45;margin-top:3px">PDF preserva links clicáveis configurados nas layers</div>
       </div>
       <div class="props-section">
         <div class="props-label">Background</div>
@@ -1842,12 +1852,14 @@
           }
         }
 
+        const placeholderField = (layer.source?.type === 'placeholder') ? (layer.source.field || '') : '';
         html += `
         <div class="props-section">
           <div class="props-label">Fonte da imagem</div>
           <select class="props-input" onchange="updImageSourceType('${id}',this.value)">
-            <option${srcType==='static'?' selected':''}>static</option>
-            ${srcType==='variant' ? `<option selected>variant (legado)</option>` : ''}
+            <option value="static"${srcType==='static'?' selected':''}>static (URL fixa)</option>
+            <option value="placeholder"${srcType==='placeholder'?' selected':''}>placeholder (campo)</option>
+            ${srcType==='variant' ? `<option value="variant" selected>variant (legado)</option>` : ''}
           </select>
           ${srcType==='static'?`
           <div class="props-label" style="margin-top:6px">URL</div>
@@ -1856,6 +1868,13 @@
             <button class="url-action-btn" onclick="openAssetLibrary(url => { const l=getLayer('${id}'); if(l){l.source={type:'static',url};markDirty();debouncedPushHistory();showProps('${id}');scheduleLivePreview(500);} })" title="Biblioteca">🖼</button>
             <label class="url-action-btn" style="cursor:pointer" title="Upload">⬆<input type="file" accept="image/*" style="display:none" onchange="uploadAndSetUrl(this,url=>{const l=getLayer('${id}');if(l){l.source={type:'static',url};markDirty();debouncedPushHistory();showProps('${id}');scheduleLivePreview(500);}})"></label>
           </div>
+          `:srcType==='placeholder'?`
+          <div class="props-label" style="margin-top:6px">Campo (placeholder)</div>
+          <select class="props-input" onchange="updLayer('${id}','source',{type:'placeholder',field:this.value})">
+            <option value="">Selecione campo…</option>
+            ${placeholders.map(p=>`<option value="${p}"${placeholderField===p?' selected':''}>${p}</option>`).join('')}
+          </select>
+          <div style="font-size:0.7rem;opacity:0.45;margin-top:3px">URL do arquivo será lida de dados[campo] em tempo de render</div>
           `:variantHtml}
           <div class="props-row" style="margin-top:8px">
             <div><div class="props-label">Blend</div>
@@ -1869,9 +1888,42 @@
               </select>
             </div>
           </div>
+        </div>
+        <div class="props-section">
+          <div class="props-label">Forma</div>
+          <select class="props-input" onchange="updLayerShape('${id}',this.value)">
+            <option value="rectangle"${(!layer.shape||layer.shape==='rectangle')?' selected':''}>Retângulo</option>
+            <option value="circle"${layer.shape==='circle'?' selected':''}>Círculo</option>
+          </select>
+          <div class="props-label" style="margin-top:8px">Borda</div>
+          <div class="props-row">
+            <div><div class="props-label">Espessura</div><input class="props-input" type="number" value="${layer.border?.width||0}" onchange="updLayerBorderWidth('${id}',+this.value)"></div>
+            <div><div class="props-label">Cor</div><input class="props-input" type="color" value="${layer.border?.color||'#ffffff'}" onchange="updLayerBorderColor('${id}',this.value)"></div>
+          </div>
         </div>`;
       }
 
+      const linkType = layer.link?.type || '';
+      html += `
+      <div class="props-section">
+        <div class="props-label">Link (clicável no PDF)</div>
+        <select class="props-input" onchange="updLayerLinkType('${id}',this.value)">
+          <option value=""${!linkType?' selected':''}>Sem link</option>
+          <option value="static"${linkType==='static'?' selected':''}>URL fixo</option>
+          <option value="template"${linkType==='template'?' selected':''}>Template {{campo}}</option>
+          <option value="placeholder"${linkType==='placeholder'?' selected':''}>Placeholder (campo)</option>
+        </select>
+        ${linkType==='static'?`
+        <input class="props-input" style="margin-top:6px" value="${esc(layer.link?.url||'')}" placeholder="https://..." onchange="updLayerLinkValue('${id}','url',this.value)">
+        `:linkType==='template'?`
+        <input class="props-input" style="margin-top:6px" value="${esc(layer.link?.template||'')}" placeholder="https://wa.me/{{telefone_digits}}" onchange="updLayerLinkValue('${id}','template',this.value)">
+        `:linkType==='placeholder'?`
+        <select class="props-input" style="margin-top:6px" onchange="updLayerLinkValue('${id}','placeholder',this.value)">
+          <option value="">Selecione campo…</option>
+          ${placeholders.map(p=>`<option value="${p}"${layer.link?.placeholder===p?' selected':''}>${p}</option>`).join('')}
+        </select>
+        `:''}
+      </div>`;
       html += `<div class="props-section"><button class="btn-delete-layer" onclick="deleteLayer('${id}')">Deletar layer</button></div>`;
       content.innerHTML = html;
     }
@@ -1904,9 +1956,49 @@
     }
     function updLayerN(id, key, value) { updLayer(id, key, parseFloat(value) || 0); }
 
+    function updDocOutputFormat(fmt) {
+      if (!currentTemplate) return;
+      currentTemplate.output_format = fmt;
+      markDirty();
+      debouncedPushHistory();
+    }
+
+    function updLayerLinkType(id, type) {
+      const layer = getLayer(id); if (!layer) return;
+      if (!type) { delete layer.link; }
+      else if (type === 'static')      { layer.link = { type: 'static',      url: '' }; }
+      else if (type === 'template')    { layer.link = { type: 'template',    template: '' }; }
+      else if (type === 'placeholder') { layer.link = { type: 'placeholder', placeholder: '' }; }
+      markDirty(); debouncedPushHistory(); showProps(id);
+    }
+    function updLayerLinkValue(id, key, value) {
+      const layer = getLayer(id); if (!layer || !layer.link) return;
+      layer.link[key] = value;
+      markDirty(); debouncedPushHistory();
+    }
+    function updLayerShape(id, shape) {
+      const layer = getLayer(id); if (!layer) return;
+      if (shape === 'rectangle') delete layer.shape; else layer.shape = shape;
+      markDirty(); debouncedPushHistory(); scheduleLivePreview(500);
+    }
+    function updLayerBorderWidth(id, width) {
+      const layer = getLayer(id); if (!layer) return;
+      if (!layer.border) layer.border = { width: 0, color: '#ffffff' };
+      layer.border.width = width;
+      markDirty(); debouncedPushHistory(); scheduleLivePreview(500);
+    }
+    function updLayerBorderColor(id, color) {
+      const layer = getLayer(id); if (!layer) return;
+      if (!layer.border) layer.border = { width: 1, color: '#ffffff' };
+      layer.border.color = color;
+      markDirty(); debouncedPushHistory(); scheduleLivePreview(500);
+    }
+
     function updImageSourceType(id, type) {
       const layer = getLayer(id); if (!layer) return;
-      layer.source = type === 'static' ? { type: 'static', url: '' } : { type: 'variant', variants: {}, variant_source: '' };
+      if (type === 'static')      { layer.source = { type: 'static', url: '' }; }
+      else if (type === 'placeholder') { layer.source = { type: 'placeholder', field: '' }; }
+      else                        { layer.source = { type: 'variant', variants: {}, variant_source: '' }; }
       markDirty();
       pushHistory();
       showProps(id);

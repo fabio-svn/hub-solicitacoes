@@ -200,19 +200,27 @@ async function renderImage(
   let url: string;
   if (layer.source.type === 'static') {
     url = layer.source.url;
+  } else if ((layer.source as any).type === 'placeholder') {
+    url = data[(layer.source as any).field] || '';
+    if (!url) return;
   } else {
-    const variantKey = data[layer.source.variant_source];
-    url = layer.source.variants[variantKey] ?? '';
+    const src = layer.source as { type: 'variant'; variants: Record<string, string>; variant_source: string };
+    const variantKey = data[src.variant_source];
+    url = src.variants[variantKey] ?? '';
     if (!url) return;
   }
   if (!url) return;
 
   const raw = await getRemoteAsset(url);
+  const isCircle = (layer as any).shape === 'circle';
 
+  let safeW: number;
+  let safeH: number;
   let input: Buffer;
+
   if (layer.w > 0 && layer.h > 0) {
-    const safeW = Math.min(layer.w, bgWidth - layer.x);
-    const safeH = Math.min(layer.h, bgHeight - layer.y);
+    safeW = Math.min(layer.w, bgWidth - layer.x);
+    safeH = Math.min(layer.h, bgHeight - layer.y);
     if (safeW !== layer.w || safeH !== layer.h) {
       console.warn(`[render] image ${layer.id} dimensions capped: ${layer.w}x${layer.h} → ${safeW}x${safeH} (bg=${bgWidth}x${bgHeight})`);
     }
@@ -220,8 +228,9 @@ async function renderImage(
       console.warn(`[render] image ${layer.id} skipped: zero or negative safe dimensions`);
       return;
     }
+    const fitMode = isCircle ? 'cover' : (layer.resize_mode ?? 'contain');
     input = await sharp(raw)
-      .resize(safeW, safeH, { fit: layer.resize_mode ?? 'contain' })
+      .resize(safeW, safeH, { fit: fitMode })
       .toBuffer();
   } else {
     const meta = await sharp(raw).metadata();
@@ -235,6 +244,24 @@ async function renderImage(
     } else {
       input = raw;
     }
+    safeW = rawW;
+    safeH = rawH;
+  }
+
+  if (isCircle) {
+    const size = Math.min(safeW, safeH);
+    const mask = Buffer.from(
+      `<svg width="${size}" height="${size}" xmlns="http://www.w3.org/2000/svg">` +
+      `<circle cx="${size / 2}" cy="${size / 2}" r="${size / 2}" fill="white"/>` +
+      `</svg>`
+    );
+    input = await sharp(input)
+      .resize(size, size, { fit: 'cover' })
+      .composite([{ input: mask, blend: 'dest-in' }])
+      .png()
+      .toBuffer();
+    safeW = size;
+    safeH = size;
   }
 
   const composite: sharp.OverlayOptions = {
@@ -246,6 +273,15 @@ async function renderImage(
     composite.blend = layer.blend_mode as any;
   }
   composites.push(composite);
+
+  const border = (layer as any).border as { width: number; color: string } | undefined;
+  if (border && border.width > 0) {
+    const hw = border.width / 2;
+    const borderSvg = isCircle
+      ? `<svg width="${safeW}" height="${safeH}" xmlns="http://www.w3.org/2000/svg"><circle cx="${safeW / 2}" cy="${safeH / 2}" r="${safeW / 2 - hw}" fill="none" stroke="${border.color}" stroke-width="${border.width}"/></svg>`
+      : `<svg width="${safeW}" height="${safeH}" xmlns="http://www.w3.org/2000/svg"><rect x="${hw}" y="${hw}" width="${safeW - border.width}" height="${safeH - border.width}" fill="none" stroke="${border.color}" stroke-width="${border.width}"/></svg>`;
+    composites.push({ input: Buffer.from(borderSvg), left: layer.x, top: layer.y });
+  }
 }
 
 export async function renderFromTemplate(
