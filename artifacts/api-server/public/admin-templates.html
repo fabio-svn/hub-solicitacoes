@@ -1893,7 +1893,7 @@
           <select class="props-input" onchange="updImageSourceType('${id}',this.value)">
             <option value="static"${srcType==='static'?' selected':''}>static (URL fixa)</option>
             <option value="placeholder"${srcType==='placeholder'?' selected':''}>placeholder (campo)</option>
-            ${srcType==='variant' ? `<option value="variant" selected>variant (legado)</option>` : ''}
+            <option value="variant"${srcType==='variant'?' selected':''}>variant (por campo)</option>
           </select>
           ${srcType==='static'?`
           <div class="props-label" style="margin-top:6px">URL</div>
