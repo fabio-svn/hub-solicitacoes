@@ -108,10 +108,10 @@
     }
     .panel { background: #fff; border-right: 1px solid #e8e2dc; overflow-y: auto; }
     .panel-title { font-size: 0.7rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(34,27,25,0.45); padding: 14px 14px 6px; }
-    .panel-tmpl-header { padding: 12px 14px; border-bottom: 1px solid #f0ece8; }
-    .panel-tmpl-name { font-size: 0.82rem; font-weight: 700; color: #221b19; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .panel-tmpl-tipo { font-size: 0.7rem; color: rgba(34,27,25,0.4); margin-top: 2px; }
-    .layer-item { padding: 6px 10px 6px 14px; cursor: pointer; border-left: 3px solid transparent; font-size: 0.8rem; display: flex; align-items: center; gap: 6px; color: rgba(34,27,25,0.7); }
+    .panel-tmpl-header { padding: 8px 14px 12px; border-bottom: 1px solid rgba(34,27,25,0.08); margin-bottom: 8px; }
+    .panel-tmpl-name { font-family: 'Taviraj', serif; font-size: 1rem; font-weight: 600; color: var(--carbon-black); line-height: 1.2; margin-bottom: 2px; }
+    .panel-tmpl-tipo { font-size: 0.74rem; color: rgba(34,27,25,0.55); font-weight: 500; }
+    .layer-item { padding: 6px 10px 6px 14px; cursor: pointer; border-left: 3px solid transparent; border-bottom: 1px solid rgba(34,27,25,0.06); font-size: 0.8rem; display: flex; align-items: center; gap: 6px; color: rgba(34,27,25,0.7); }
     .layer-item:hover { background: #f5f3f0; }
     .layer-item.active { border-left-color: #3b82f6; background: #eff6ff; color: #1d4ed8; }
     .layer-item.dragging { opacity: 0.35; background: #f5f3f0; }
@@ -121,25 +121,25 @@
     .layer-drag-handle:active { cursor: grabbing; }
     .layer-item:hover .layer-drag-handle { color: rgba(34,27,25,0.4); }
     .layer-reorder { display: flex; flex-direction: column; gap: 1px; flex-shrink: 0; }
-    .layer-order-btn { background: rgba(34,27,25,0.09); border: none; cursor: pointer; width: 22px; height: 16px; padding: 0; font-size: 0.68rem; color: rgba(34,27,25,0.65); border-radius: 3px; display: flex; align-items: center; justify-content: center; }
-    .layer-order-btn:hover:not(:disabled) { background: rgba(34,27,25,0.18); color: rgba(34,27,25,0.9); }
+    .layer-order-btn { background: rgba(34,27,25,0.15); border: none; cursor: pointer; width: 24px; height: 18px; padding: 0; font-size: 0.82rem; font-weight: 700; color: rgba(34,27,25,0.85); border-radius: 4px; display: flex; align-items: center; justify-content: center; transition: background 0.12s; }
+    .layer-order-btn:hover:not(:disabled) { background: rgba(34,27,25,0.28); color: var(--carbon-black); }
     .layer-order-btn:disabled { opacity: 0.22; cursor: default; }
     .layer-type-badge { font-size: 0.65rem; padding: 1px 5px; border-radius: 4px; background: #e8e2dc; color: #6b5e58; white-space: nowrap; }
-    .canvas-panel { background: #2a2a2a; display: flex; flex-direction: column; overflow: hidden; border-radius: 12px; position: relative; }
+    .canvas-panel { background: #ede8e4; display: flex; flex-direction: column; overflow: hidden; position: relative; }
     .canvas-toolbar {
-      background: #1e1e1e; padding: 8px 12px; display: flex; align-items: center; gap: 8px;
-      border-bottom: 1px solid #333; flex-shrink: 0; flex-wrap: wrap;
+      background: #f5f3f0; padding: 8px 12px; display: flex; align-items: center; gap: 8px;
+      border-bottom: 1px solid rgba(34,27,25,0.1); flex-shrink: 0; flex-wrap: wrap;
     }
-    .canvas-toolbar button { font-size: 0.78rem; padding: 5px 10px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.15); background: rgba(255,255,255,0.08); color: #fff; cursor: pointer; font-family: 'Nunito Sans', sans-serif; transition: background 0.15s; }
-    .canvas-toolbar button:hover { background: rgba(255,255,255,0.15); }
-    .canvas-toolbar button.primary { background: #AC3631; border-color: #AC3631; }
+    .canvas-toolbar button { font-size: 0.78rem; padding: 5px 10px; border-radius: 6px; border: 1px solid rgba(34,27,25,0.12); background: rgba(34,27,25,0.05); color: var(--carbon-black); cursor: pointer; font-family: 'Nunito Sans', sans-serif; transition: background 0.15s; }
+    .canvas-toolbar button:hover { background: rgba(34,27,25,0.10); }
+    .canvas-toolbar button.primary { background: #AC3631; border-color: #AC3631; color: #fff; }
     .canvas-toolbar button.primary:hover { background: #b44b42; }
-    .canvas-toolbar button.active { background: rgba(255,255,255,0.2); }
+    .canvas-toolbar button.active { background: rgba(34,27,25,0.15); }
     .canvas-toolbar button:disabled { opacity: 0.3; cursor: not-allowed; }
-    .canvas-toolbar button:disabled:hover { background: rgba(255,255,255,0.08); }
+    .canvas-toolbar button:disabled:hover { background: rgba(34,27,25,0.05); }
     .canvas-toolbar .unsaved-badge { font-size: 0.72rem; color: #c8a96e; display: none; }
     .canvas-toolbar .unsaved-badge.visible { display: block; }
-    .toolbar-sep { width: 1px; height: 18px; background: rgba(255,255,255,0.1); flex-shrink: 0; }
+    .toolbar-sep { width: 1px; height: 18px; background: rgba(34,27,25,0.12); flex-shrink: 0; }
     .toolbar-tmpl-name { font-size: 0.8rem; color: #ddd; font-weight: 600; max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; cursor: pointer; }
     .toolbar-tmpl-name:hover { color: #fff; }
     .badge-editor-active { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 0.65rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; background: rgba(10,144,96,0.25); color: #4ade80; border: 1px solid rgba(74,222,128,0.25); }
@@ -201,18 +201,16 @@
     .btn-duplicate-layer { width: 100%; padding: 7px; border: 1px solid #bfdbfe; background: #eff6ff; color: #2563eb; border-radius: 6px; cursor: pointer; font-size: 0.78rem; font-family: 'Nunito Sans', sans-serif; font-weight: 600; transition: background 0.15s; margin-bottom: 6px; }
     .btn-duplicate-layer:hover { background: #dbeafe; }
     /* ── Test data strip ── */
-    .test-data-strip { background: #1a1a1a; border-bottom: 1px solid rgba(255,255,255,0.07); flex-shrink: 0; display: none; }
+    .test-data-strip { background: #ede8e4; border-bottom: 1px solid rgba(34,27,25,0.08); flex-shrink: 0; display: none; }
     .test-data-strip.open { display: block; }
-    .test-data-strip-header { padding: 7px 14px; display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.78rem; color: rgba(255,255,255,0.6); user-select: none; }
-    .test-data-strip-header:hover { background: rgba(255,255,255,0.04); }
-    .test-data-strip-toggle { font-size: 0.65rem; transition: transform 0.15s; }
-    .test-data-strip.collapsed .test-data-strip-toggle { transform: rotate(-90deg); }
-    .test-data-strip-hint { color: rgba(255,255,255,0.3); font-size: 0.72rem; margin-left: auto; }
+    .test-data-strip-header { padding: 7px 14px; display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.78rem; color: rgba(34,27,25,0.65); user-select: none; }
+    .test-data-strip-header:hover { background: rgba(34,27,25,0.04); }
+    .test-data-strip-toggle { font-size: 0.65rem; }
+    .test-data-strip-hint { color: rgba(34,27,25,0.4); font-size: 0.72rem; margin-left: auto; }
     .test-data-strip-fields { padding: 10px 14px; display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-end; }
-    .test-data-strip.collapsed .test-data-strip-fields { display: none; }
     .test-field { display: flex; flex-direction: column; gap: 3px; min-width: 160px; }
-    .test-field label { font-size: 0.7rem; color: rgba(255,255,255,0.45); }
-    .test-field input, .test-field select { padding: 4px 8px; border: 1px solid rgba(255,255,255,0.12); border-radius: 4px; font-size: 0.82rem; font-family: inherit; background: rgba(255,255,255,0.07); color: #fff; }
+    .test-field label { font-size: 0.7rem; color: rgba(34,27,25,0.55); }
+    .test-field input, .test-field select { padding: 4px 8px; border: 1px solid rgba(34,27,25,0.15); border-radius: 4px; font-size: 0.82rem; font-family: inherit; background: #fff; color: var(--carbon-black); }
     .add-layer-section { padding: 8px 14px 14px; }
     .add-layer-btn { font-size: 0.75rem; padding: 5px 10px; border: 1px dashed #ccc; background: transparent; border-radius: 5px; cursor: pointer; color: rgba(34,27,25,0.55); font-family: 'Nunito Sans',sans-serif; width: 100%; margin-bottom: 4px; }
     .add-layer-btn:hover { border-color: #AC3631; color: #AC3631; background: #fdf5f5; }
@@ -233,8 +231,8 @@
 
     /* ── Editor page header ── */
     .editor-page-header { display: flex; align-items: center; gap: 12px; padding: 9px 14px; background: #fff; border-bottom: 1px solid #e8e2dc; flex-shrink: 0; }
-    .editor-back-btn { display: inline-flex; align-items: center; gap: 5px; padding: 5px 12px; border: 1.5px solid #e8e2dc; border-radius: 7px; background: #fff; font-size: 0.8rem; font-weight: 600; cursor: pointer; font-family: 'Nunito Sans', sans-serif; color: rgba(34,27,25,0.7); transition: background 0.15s; }
-    .editor-back-btn:hover { background: #f5f3f0; }
+    .editor-back-btn { display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; border: none; border-radius: 7px; background: var(--carbon-black); font-size: 0.82rem; font-weight: 700; cursor: pointer; font-family: 'Nunito Sans', sans-serif; color: var(--paper-white); transition: background 0.15s; }
+    .editor-back-btn:hover { background: #3a2e2a; }
     .editor-page-header-title { font-size: 0.82rem; font-weight: 600; color: rgba(34,27,25,0.55); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     #view-editor { display: flex; flex-direction: column; overflow: hidden; position: fixed; inset: 0; z-index: 100; background: var(--bg-light, #f5f3f0); }
     #view-editor .editor-layout { flex: 1; overflow: hidden; min-height: 0; }
@@ -307,10 +305,10 @@
 
     /* ── Inline name edit ── */
     .name-edit-wrap { display: flex; align-items: center; gap: 6px; }
-    .name-edit-input { background: transparent; border: none; border-bottom: 1px solid rgba(255,255,255,0.3); color: #ddd; font-size: 0.8rem; font-weight: 600; font-family: 'Nunito Sans',sans-serif; padding: 2px 4px; max-width: 160px; outline: none; }
-    .name-edit-input:focus { border-bottom-color: #c8a96e; color: #fff; }
-    .name-edit-pencil { font-size: 0.7rem; color: rgba(255,255,255,0.3); cursor: pointer; }
-    .name-edit-pencil:hover { color: rgba(255,255,255,0.6); }
+    .name-edit-input { background: transparent; border: none; border-bottom: 1px solid rgba(34,27,25,0.25); color: var(--carbon-black); font-size: 0.8rem; font-weight: 600; font-family: 'Nunito Sans',sans-serif; padding: 2px 4px; max-width: 160px; outline: none; }
+    .name-edit-input:focus { border-bottom-color: var(--ruby-red); }
+    .name-edit-pencil { font-size: 0.7rem; color: rgba(34,27,25,0.5); cursor: pointer; }
+    .name-edit-pencil:hover { color: rgba(34,27,25,0.8); }
 
     /* ── Toast ── */
     .toast-container { position: fixed; top: 68px; right: 16px; z-index: 9999; display: flex; flex-direction: column; gap: 8px; pointer-events: none; }
@@ -476,7 +474,7 @@
           <div class="toolbar-sep"></div>
           <select class="bg-variant-select" id="bgVariantSelect" style="display:none" onchange="onBgVariantChange(this.value)"></select>
           <button class="live-toggle on" id="liveToggleBtn" onclick="toggleLive()" title="Live preview automático">● Live</button>
-          <button id="manualPreviewBtn" onclick="doLivePreview()" style="display:none;padding:5px 10px;font-size:0.78rem;border-radius:6px;border:1px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.08);color:#fff;cursor:pointer;font-family:'Nunito Sans',sans-serif">Atualizar preview</button>
+          <button id="manualPreviewBtn" onclick="doLivePreview()" style="display:none;padding:5px 10px;font-size:0.78rem;border-radius:6px;border:1px solid rgba(34,27,25,0.12);background:rgba(34,27,25,0.05);color:var(--carbon-black);cursor:pointer;font-family:'Nunito Sans',sans-serif">Atualizar preview</button>
           <div class="rendering-indicator" id="renderingIndicator">
             <div class="spinner"></div>
             <span>Renderizando…</span>
@@ -498,7 +496,7 @@
           <div class="test-data-strip-fields" id="testDataFields"></div>
         </div>
         <div class="canvas-scroll" id="canvasScroll">
-          <div class="no-template" id="noTemplate" style="display:flex;align-items:center;justify-content:center;flex:1;color:rgba(255,255,255,0.3);font-size:0.9rem">Carregando template…</div>
+          <div class="no-template" id="noTemplate" style="display:flex;align-items:center;justify-content:center;flex:1;color:rgba(34,27,25,0.3);font-size:0.9rem">Carregando template…</div>
           <div class="canvas-wrap" id="canvasWrap" style="display:none">
             <img class="bg-img" id="bgImg" src="" alt="" draggable="false">
             <img class="canvas-preview-img" id="previewImg" alt="Preview">
@@ -1005,10 +1003,40 @@
       renderTestDataPanel();
       const strip = document.getElementById('testDataStrip');
       strip.classList.add('open');
-      strip.classList.remove('collapsed');
     }
     function toggleTestDataStrip() {
-      document.getElementById('testDataStrip').classList.toggle('collapsed');
+      const strip = document.getElementById('testDataStrip');
+      if (strip.classList.contains('open')) {
+        strip.classList.remove('open');
+      } else {
+        openTestDataStrip();
+      }
+    }
+
+    async function abrirPreviewModal(id) {
+      const overlay = document.getElementById('previewModalOverlay');
+      const content = document.getElementById('previewModalContent');
+      const title = document.getElementById('previewModalTitle');
+      content.innerHTML = '<span style="opacity:0.5;font-size:0.9rem">Carregando…</span>';
+      overlay.style.display = 'flex';
+      try {
+        const res = await fetch(`/api/admin/art-templates/${id}`);
+        if (!res.ok) throw new Error('Erro');
+        const t = await res.json();
+        title.textContent = t.name;
+        const bgUrl = t.config?.bg?.url || t.config?.background_image_url;
+        if (bgUrl) {
+          content.innerHTML = `<img src="${bgUrl}" style="max-width:100%;max-height:70vh;border-radius:6px;display:block">`;
+        } else {
+          content.innerHTML = `<div style="padding:40px;opacity:0.5;font-size:0.9rem;text-align:center">Nenhum background configurado ainda.<br>Abra o editor para pré-visualizar o template.</div>`;
+        }
+      } catch {
+        content.innerHTML = '<span style="opacity:0.5;font-size:0.9rem;padding:24px">Erro ao carregar preview.</span>';
+      }
+    }
+
+    function fecharPreviewModal() {
+      document.getElementById('previewModalOverlay').style.display = 'none';
     }
 
     // ── Unsaved guard ────────────────────────────────────────────
@@ -1098,6 +1126,9 @@
               <div class="template-row-meta">Atualizado ${timeAgo(t.updated_at)}</div>
             </div>
             <div class="template-row-actions">
+              <button class="row-btn" onclick="abrirPreviewModal(${t.id})" title="Visualizar preview" style="padding:5px 8px">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;display:block"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              </button>
               <button class="row-btn" onclick="openEditor(${t.id})">Editar</button>
               ${dupBtn}
               ${activateBtn}${deleteBtn}
@@ -1206,6 +1237,15 @@
         variantGrp.style.display = 'none';
         variantSel.value = '';
       }
+      // Esconder campo nome quando tipo é automation
+      const _createNameGrp = document.getElementById('createName')?.closest('.form-group');
+      const _isAuto = !!schemaInfo?.is_automation;
+      if (_createNameGrp) _createNameGrp.style.display = _isAuto ? 'none' : '';
+      if (_isAuto) {
+        const _vv = document.getElementById('createVariant')?.value;
+        const _vl = schemaInfo.template_variant_options?.find(o => o.value === _vv)?.label;
+        document.getElementById('createName').value = _vl || _vv || tipo;
+      }
       onCreateVariantChange();
       // Update clone select based on selected tipo
       const startVal = document.querySelector('input[name="createStart"]:checked')?.value;
@@ -1227,6 +1267,11 @@
       const schemaInfo = createFormSchemas.find(s => s.tipo === tipo);
       const needsVariant = !!(schemaInfo?.template_variant_field && schemaInfo.template_variant_options?.length);
       const variantVal = document.getElementById('createVariant')?.value;
+      const _autoInfo = createFormSchemas.find(s => s.tipo === tipo);
+      if (_autoInfo?.is_automation && variantVal) {
+        const lbl = _autoInfo.template_variant_options?.find(o => o.value === variantVal)?.label;
+        document.getElementById('createName').value = lbl || variantVal;
+      }
       const btn = document.getElementById('createBtn');
       if (btn) btn.disabled = !tipo || (needsVariant && !variantVal);
     }
@@ -1251,8 +1296,14 @@
       const errEl = document.getElementById('createError');
       errEl.style.display = 'none';
       if (!tipo) { errEl.textContent = 'Selecione o formulário de destino.'; errEl.style.display = 'block'; return; }
-      if (!name) { errEl.textContent = 'Informe um nome para o template.'; errEl.style.display = 'block'; return; }
       const _si = createFormSchemas.find(s => s.tipo === tipo);
+      const _variantValSubmit = document.getElementById('createVariant')?.value || null;
+      let finalName = name;
+      if (_si?.is_automation && _variantValSubmit) {
+        const lbl = _si.template_variant_options?.find(o => o.value === _variantValSubmit)?.label;
+        finalName = lbl || _variantValSubmit;
+      }
+      if (!finalName) { errEl.textContent = 'Informe um nome para o template.'; errEl.style.display = 'block'; return; }
       const _needsVariant = !!(_si?.template_variant_field && _si.template_variant_options?.length);
       const variantValue = document.getElementById('createVariant')?.value || null;
       if (_needsVariant && !variantValue) { errEl.textContent = 'Selecione a variante para este template.'; errEl.style.display = 'block'; return; }
@@ -1275,7 +1326,7 @@
         }
         const res = await fetch('/api/admin/art-templates', {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ tipo, name, config, ...(variantValue ? { variant_value: variantValue } : {}) }),
+          body: JSON.stringify({ tipo, name: finalName, config, ...(variantValue ? { variant_value: variantValue } : {}) }),
         });
         const data = await res.json();
         if (!res.ok) { errEl.textContent = data.error || 'Erro ao criar template.'; errEl.style.display = 'block'; return; }
@@ -1303,8 +1354,14 @@
       history = [];
       historyIndex = -1;
 
-      document.getElementById('panelTmplName').textContent = row.name;
-      document.getElementById('panelTmplTipo').textContent = humanizeTipo(row.tipo) + (row.variant_value ? ` — ${row.variant_value}` : '');
+      const _schemaInfoEditor = createFormSchemas.find(s => s.tipo === row.tipo);
+      const _variantLbl = row.variant_value
+        ? (_schemaInfoEditor?.template_variant_options?.find(o => o.value === row.variant_value)?.label || row.variant_value)
+        : '';
+      document.getElementById('panelTmplName').textContent = _variantLbl || row.name;
+      document.getElementById('panelTmplTipo').textContent = humanizeTipo(row.tipo);
+      const _wrapEl = document.querySelector('.name-edit-wrap');
+      if (_wrapEl) _wrapEl.style.display = _schemaInfoEditor?.is_automation ? 'none' : '';
       document.getElementById('tmplNameInput').value = row.name;
       renderActiveBadge();
       document.getElementById('unsavedBadge').classList.remove('visible');
@@ -2230,5 +2287,15 @@
       input.value = '';
     }
   </script>
+  <!-- Preview Modal -->
+  <div id="previewModalOverlay" style="display:none;position:fixed;inset:0;background:rgba(34,27,25,0.7);z-index:9100;align-items:center;justify-content:center" onclick="if(event.target===this)fecharPreviewModal()">
+    <div style="background:white;padding:20px;border-radius:12px;max-width:90vw;max-height:90vh;overflow:auto;text-align:center;position:relative;min-width:320px">
+      <button onclick="fecharPreviewModal()" style="position:absolute;top:8px;right:8px;background:none;border:none;font-size:1.5rem;cursor:pointer;color:rgba(34,27,25,0.4);padding:4px 10px;line-height:1">×</button>
+      <h3 style="font-family:'Taviraj',serif;margin:0 0 14px;font-size:1.1rem;padding-right:32px;text-align:left" id="previewModalTitle">Preview</h3>
+      <div id="previewModalContent" style="min-width:300px;min-height:200px;display:flex;align-items:center;justify-content:center;background:#f5f3f0;border-radius:8px">
+        <span style="opacity:0.5;font-size:0.9rem">Carregando…</span>
+      </div>
+    </div>
+  </div>
 </body>
 </html>

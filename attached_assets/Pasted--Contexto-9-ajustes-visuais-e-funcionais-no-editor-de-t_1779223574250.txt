@@ -1,0 +1,510 @@
+## Contexto
+
+9 ajustes visuais e funcionais no editor de templates. Todos em um único 
+arquivo: artifacts/api-server/public/admin-templates.html.
+
+Mudanças coordenadas — o item 2 (canvas off-white) força ajustes em itens 
+do canvas toolbar e test-data-strip que estavam pintados pra fundo escuro.
+
+---
+
+## Fix 1 — Canvas sem borda arredondada
+
+LOCALIZAR (~linha 127):
+```css
+.canvas-panel { background: #2a2a2a; display: flex; flex-direction: column; overflow: hidden; border-radius: 12px; position: relative; }
+```
+
+REMOVER apenas `border-radius: 12px;`. Manter o resto. (Item 2 troca o 
+background, fica numa mudança só.)
+
+---
+
+## Fix 2 — Canvas off-white + toolbar adaptado para light
+
+Várias mudanças encadeadas no `<style>`:
+
+### 2.1 — Background do canvas
+LOCALIZAR (~linha 127): `.canvas-panel { background: #2a2a2a; ... }`
+SUBSTITUIR `#2a2a2a` por `#ede8e4` (off-white cinza já usado no projeto).
+
+### 2.2 — Toolbar buttons (canvas agora light, botões precisam ser dark)
+LOCALIZAR (~linha 132-138):
+```css
+.canvas-toolbar button { font-size: 0.78rem; padding: 5px 10px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.15); background: rgba(255,255,255,0.08); color: #fff; cursor: pointer; font-family: 'Nunito Sans', sans-serif; transition: background 0.15s; }
+.canvas-toolbar button:hover { background: rgba(255,255,255,0.15); }
+.canvas-toolbar button.primary { background: #AC3631; border-color: #AC3631; }
+.canvas-toolbar button.primary:hover { background: #b44b42; }
+.canvas-toolbar button.active { background: rgba(255,255,255,0.2); }
+.canvas-toolbar button:disabled { opacity: 0.3; cursor: not-allowed; }
+.canvas-toolbar button:disabled:hover { background: rgba(255,255,255,0.08); }
+```
+
+SUBSTITUIR por:
+```css
+.canvas-toolbar button { font-size: 0.78rem; padding: 5px 10px; border-radius: 6px; border: 1px solid rgba(34,27,25,0.12); background: rgba(34,27,25,0.05); color: var(--carbon-black); cursor: pointer; font-family: 'Nunito Sans', sans-serif; transition: background 0.15s; }
+.canvas-toolbar button:hover { background: rgba(34,27,25,0.10); }
+.canvas-toolbar button.primary { background: #AC3631; border-color: #AC3631; color: #fff; }
+.canvas-toolbar button.primary:hover { background: #b44b42; }
+.canvas-toolbar button.active { background: rgba(34,27,25,0.15); }
+.canvas-toolbar button:disabled { opacity: 0.3; cursor: not-allowed; }
+.canvas-toolbar button:disabled:hover { background: rgba(34,27,25,0.05); }
+```
+
+### 2.3 — Canvas toolbar background (a barra superior dentro do canvas)
+LOCALIZAR (~linha 128-131): `.canvas-toolbar { ... }` 
+Verificar se tem fundo escuro inline. Se tiver `background: #1a1a1a` ou 
+similar, SUBSTITUIR por `background: #f5f3f0` ou remover o background 
+inline (canvas-panel já é off-white).
+
+### 2.4 — name-edit-input (tema dark → light)
+LOCALIZAR (~linha 309):
+```css
+.name-edit-input { background: transparent; border: none; border-bottom: 1px solid rgba(255,255,255,0.3); color: #ddd; font-size: 0.8rem; font-weight: 600; font-family: 'Nunito Sans',sans-serif; padding: 2px 4px; max-width: 160px; outline: none; }
+.name-edit-input:focus { border-bottom-color: #c8a96e; color: #fff; }
+```
+
+SUBSTITUIR por:
+```css
+.name-edit-input { background: transparent; border: none; border-bottom: 1px solid rgba(34,27,25,0.25); color: var(--carbon-black); font-size: 0.8rem; font-weight: 600; font-family: 'Nunito Sans',sans-serif; padding: 2px 4px; max-width: 160px; outline: none; }
+.name-edit-input:focus { border-bottom-color: var(--ruby-red); }
+```
+
+### 2.5 — name-edit-pencil cor
+Se houver `.name-edit-pencil` com color light, ajustar pra dark:
+LOCALIZAR `.name-edit-pencil` e garantir `color: rgba(34,27,25,0.5);`
+
+### 2.6 — Toolbar separator (toolbar-sep)
+Se houver `.toolbar-sep` com `background: rgba(255,255,255,X)`, trocar 
+pra `background: rgba(34,27,25,0.12)`.
+
+### 2.7 — no-template (estado de loading do canvas)
+LOCALIZAR (~linha 500):
+```html
+<div class="no-template" id="noTemplate" style="display:flex;align-items:center;justify-content:center;flex:1;color:rgba(255,255,255,0.3);font-size:0.9rem">Carregando template…</div>
+```
+
+SUBSTITUIR `color:rgba(255,255,255,0.3)` por `color:rgba(34,27,25,0.35)`.
+
+### 2.8 — manualPreviewBtn inline styles
+LOCALIZAR (~linha 478):
+```html
+<button id="manualPreviewBtn" onclick="doLivePreview()" style="display:none;padding:5px 10px;font-size:0.78rem;border-radius:6px;border:1px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.08);color:#fff;cursor:pointer;...">Atualizar preview</button>
+```
+
+SUBSTITUIR `rgba(255,255,255,0.15)` por `rgba(34,27,25,0.12)`, 
+`rgba(255,255,255,0.08)` por `rgba(34,27,25,0.05)`, e `color:#fff` por 
+`color:var(--carbon-black)`.
+
+### 2.9 — unsaved-badge color
+LOCALIZAR `.unsaved-badge` (~linha 139):
+```css
+.canvas-toolbar .unsaved-badge { font-size: 0.72rem; color: #c8a96e; display: none; }
+```
+
+Manter `#c8a96e` (cor dourada — funciona em ambos os fundos), ou ajustar 
+pra `color: #9a6020` se ficar muito apagado no fundo light. Verificar 
+visualmente.
+
+---
+
+## Fix 3 — Botão Voltar mais evidente
+
+LOCALIZAR (~linha 235):
+```css
+.editor-back-btn { display: inline-flex; align-items: center; gap: 5px; padding: 5px 12px; border: 1.5px solid #e8e2dc; border-radius: 7px; background: #fff; font-size: 0.8rem; font-weight: 600; cursor: pointer; font-family: 'Nunito Sans', sans-serif; color: rgba(34,27,25,0.7); transition: background 0.15s; }
+.editor-back-btn:hover { background: #f5f3f0; }
+```
+
+SUBSTITUIR por:
+```css
+.editor-back-btn { display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; border: none; border-radius: 7px; background: var(--carbon-black); font-size: 0.82rem; font-weight: 700; cursor: pointer; font-family: 'Nunito Sans', sans-serif; color: var(--paper-white); transition: background 0.15s; }
+.editor-back-btn:hover { background: #3a2e2a; }
+```
+
+---
+
+## Fix 4 — Divider entre layers
+
+LOCALIZAR (~linha 113):
+```css
+.layer-item { padding: 6px 10px 6px 14px; cursor: pointer; border-left: 3px solid transparent; font-size: 0.8rem; display: flex; align-items: center; gap: 6px; color: rgba(34,27,25,0.7); }
+```
+
+ADICIONAR `border-bottom: 1px solid rgba(34,27,25,0.06);` no final:
+```css
+.layer-item { padding: 6px 10px 6px 14px; cursor: pointer; border-left: 3px solid transparent; border-bottom: 1px solid rgba(34,27,25,0.06); font-size: 0.8rem; display: flex; align-items: center; gap: 6px; color: rgba(34,27,25,0.7); }
+```
+
+NÃO ALTERAR `.layer-item.active`, `.layer-item:hover`, etc. — só a 
+declaração base.
+
+---
+
+## Fix 5 — Botões de layer mais evidentes
+
+### 5.1 — layer-order-btn (botões ↑↓⧉ ao lado de cada layer)
+LOCALIZAR (~linha 123-125):
+```css
+.layer-order-btn { background: rgba(34,27,25,0.09); border: none; cursor: pointer; width: 22px; height: 16px; padding: 0; font-size: 0.68rem; color: rgba(34,27,25,0.65); border-radius: 3px; display: flex; align-items: center; justify-content: center; }
+.layer-order-btn:hover:not(:disabled) { background: rgba(34,27,25,0.18); color: rgba(34,27,25,0.9); }
+```
+
+SUBSTITUIR por:
+```css
+.layer-order-btn { background: rgba(34,27,25,0.15); border: none; cursor: pointer; width: 24px; height: 18px; padding: 0; font-size: 0.82rem; font-weight: 700; color: rgba(34,27,25,0.85); border-radius: 4px; display: flex; align-items: center; justify-content: center; transition: background 0.12s; }
+.layer-order-btn:hover:not(:disabled) { background: rgba(34,27,25,0.28); color: var(--carbon-black); }
+```
+
+### 5.2 — add-layer-btn SVGs (stroke mais grosso)
+LOCALIZAR (~linha 462-463):
+```html
+<button class="add-layer-btn" onclick="addLayer('text-block')"><span class="layer-icon-t">T</span> Texto</button>
+<button class="add-layer-btn" onclick="addLayer('image')"><svg class="layer-icon-img" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg> Imagem</button>
+```
+
+AUMENTAR `stroke-width="2"` para `stroke-width="2.5"` no SVG da imagem.
+
+---
+
+## Fix 6 — Remover nome em templates de automação
+
+Três mudanças coordenadas:
+
+### 6.1 — Esconder campo "Nome do template" quando tipo é automation
+LOCALIZAR a função `onCreateTipoChange()` (~linha 1194):
+
+DENTRO da função, ADICIONAR depois do bloco que mostra/esconde 
+variantGrp (~depois da linha 1207, antes de `onCreateVariantChange()`):
+
+```js
+// Esconder campo nome quando tipo é automation (nome = variante)
+const nameGroup = document.getElementById('createName')?.closest('.form-group');
+const isAuto = !!schemaInfo?.is_automation;
+if (nameGroup) {
+  nameGroup.style.display = isAuto ? 'none' : '';
+}
+// Auto-preencher hidden quando automation (pra não falhar required check)
+if (isAuto) {
+  const variantVal = document.getElementById('createVariant')?.value;
+  const variantLabel = schemaInfo.template_variant_options?.find(o => o.value === variantVal)?.label;
+  document.getElementById('createName').value = variantLabel || variantVal || tipo;
+}
+```
+
+E também em `onCreateVariantChange()` (~linha 1224), DEPOIS da linha 
+`const variantVal = document.getElementById('createVariant')?.value;`:
+
+```js
+// Quando variant muda, atualiza nome automático para automation
+const _autoInfo = createFormSchemas.find(s => s.tipo === tipo);
+if (_autoInfo?.is_automation && variantVal) {
+  const lbl = _autoInfo.template_variant_options?.find(o => o.value === variantVal)?.label;
+  document.getElementById('createName').value = lbl || variantVal;
+}
+```
+
+### 6.2 — submitCreate() name fallback
+LOCALIZAR `submitCreate()` (~linha 1245). DEPOIS de:
+```js
+const tipo = document.getElementById('createTipo').value;
+const name = document.getElementById('createName').value.trim();
+```
+
+ADICIONAR:
+```js
+const _schemaInfoSubmit = createFormSchemas.find(s => s.tipo === tipo);
+const _variantValSubmit = document.getElementById('createVariant')?.value || null;
+let finalName = name;
+if (_schemaInfoSubmit?.is_automation && _variantValSubmit) {
+  const lbl = _schemaInfoSubmit.template_variant_options?.find(o => o.value === _variantValSubmit)?.label;
+  finalName = lbl || _variantValSubmit;
+}
+```
+
+E SUBSTITUIR (mais abaixo na função):
+```js
+if (!name) { errEl.textContent = 'Informe um nome para o template.'; errEl.style.display = 'block'; return; }
+```
+
+POR:
+```js
+if (!finalName) { errEl.textContent = 'Informe um nome para o template.'; errEl.style.display = 'block'; return; }
+```
+
+E no body do POST:
+```js
+body: JSON.stringify({ tipo, name, config, ...(variantValue ? { variant_value: variantValue } : {}) }),
+```
+
+SUBSTITUIR `name` por `finalName`:
+```js
+body: JSON.stringify({ tipo, name: finalName, config, ...(variantValue ? { variant_value: variantValue } : {}) }),
+```
+
+### 6.3 — Esconder name-edit-wrap no canvas toolbar quando automation
+LOCALIZAR a função `openEditor` (~linha 1289). 
+
+DEPOIS da linha:
+```js
+document.getElementById('panelTmplName').textContent = row.name;
+```
+
+ADICIONAR:
+```js
+// Esconder name input no canvas toolbar quando automation (nome = variante)
+const _schInfo = createFormSchemas.find(s => s.tipo === row.tipo);
+const _wrapEl = document.querySelector('.name-edit-wrap');
+if (_wrapEl) _wrapEl.style.display = _schInfo?.is_automation ? 'none' : '';
+```
+
+---
+
+## Fix 7 — Olhinho de preview no card das variações
+
+### 7.1 — Botão preview no template-row
+LOCALIZAR (~linha 1099-1103):
+```js
+<div class="template-row-actions">
+  <button class="row-btn" onclick="openEditor(${t.id})">Editar</button>
+  ${dupBtn}
+  ${activateBtn}${deleteBtn}
+</div>
+```
+
+SUBSTITUIR por:
+```js
+<div class="template-row-actions">
+  <button class="row-btn" onclick="abrirPreviewModal(${t.id})" title="Visualizar preview">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+  </button>
+  <button class="row-btn" onclick="openEditor(${t.id})">Editar</button>
+  ${dupBtn}
+  ${activateBtn}${deleteBtn}
+</div>
+```
+
+### 7.2 — Modal de preview
+ADICIONAR antes do `</body>` (perto dos outros modais como assetLibraryOverlay):
+
+```html
+<!-- Preview Modal -->
+<div id="previewModalOverlay" style="display:none;position:fixed;inset:0;background:rgba(34,27,25,0.7);z-index:9100;align-items:center;justify-content:center" onclick="if(event.target===this)fecharPreviewModal()">
+  <div style="background:white;padding:20px;border-radius:12px;max-width:90vw;max-height:90vh;overflow:auto;text-align:center;position:relative">
+    <button onclick="fecharPreviewModal()" style="position:absolute;top:8px;right:8px;background:none;border:none;font-size:1.5rem;cursor:pointer;color:rgba(34,27,25,0.5);padding:4px 12px">×</button>
+    <h3 style="font-family:'Taviraj',serif;margin-bottom:14px;font-size:1.1rem" id="previewModalTitle">Preview</h3>
+    <div id="previewModalContent" style="min-width:300px;min-height:300px;display:flex;align-items:center;justify-content:center;background:#f5f3f0;border-radius:8px">
+      <span style="opacity:0.5;font-size:0.9rem">Carregando…</span>
+    </div>
+  </div>
+</div>
+```
+
+### 7.3 — Funções abrirPreviewModal e fecharPreviewModal
+ADICIONAR no `<script>` (perto das outras funções da listagem):
+
+```js
+async function abrirPreviewModal(templateId) {
+  const overlay = document.getElementById('previewModalOverlay');
+  const content = document.getElementById('previewModalContent');
+  const title = document.getElementById('previewModalTitle');
+  
+  content.innerHTML = '<span style="opacity:0.5;font-size:0.9rem">Renderizando preview…</span>';
+  overlay.style.display = 'flex';
+  
+  try {
+    // 1. Buscar template
+    const tplRes = await fetch(`/api/admin/art-templates/${templateId}`);
+    if (!tplRes.ok) throw new Error('Template não encontrado');
+    const tplRow = await tplRes.json();
+    
+    const variantLabel = tplRow.variant_value
+      ? (createFormSchemas.find(s => s.tipo === tplRow.tipo)?.template_variant_options?.find(o => o.value === tplRow.variant_value)?.label || tplRow.variant_value)
+      : '';
+    title.textContent = `${humanizeTipo(tplRow.tipo)}${variantLabel ? ' — ' + variantLabel : ''}`;
+    
+    // 2. Buscar dados de exemplo
+    const sampleRes = await fetch(`/api/admin/art-templates/sample-data/${tplRow.tipo}`);
+    const sampleData = sampleRes.ok ? await sampleRes.json() : {};
+    
+    // 3. Renderizar via endpoint preview
+    const prevRes = await fetch('/api/admin/art-templates/preview', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ config: tplRow.config, data: sampleData }),
+    });
+    if (!prevRes.ok) throw new Error('Erro ao renderizar');
+    const blob = await prevRes.blob();
+    const url = URL.createObjectURL(blob);
+    
+    content.innerHTML = `<img src="${url}" alt="Preview" style="max-width:80vw;max-height:70vh;border-radius:6px;box-shadow:0 8px 24px rgba(0,0,0,0.15)">`;
+  } catch (err) {
+    content.innerHTML = `<div style="padding:20px;color:var(--ruby-red)">Erro ao gerar preview: ${esc(err.message || String(err))}</div>`;
+  }
+}
+
+function fecharPreviewModal() {
+  const overlay = document.getElementById('previewModalOverlay');
+  const content = document.getElementById('previewModalContent');
+  // Limpar blob URL se houver
+  const img = content.querySelector('img');
+  if (img && img.src.startsWith('blob:')) URL.revokeObjectURL(img.src);
+  overlay.style.display = 'none';
+  content.innerHTML = '';
+}
+```
+
+---
+
+## Fix 8 — Variante + categoria abaixo do botão Voltar
+
+A estrutura `.panel-tmpl-header` JÁ EXISTE (linhas 455-458). Apenas 
+ajustar pra mostrar variante como nome principal e categoria como label.
+
+### 8.1 — Estilização mais evidente
+LOCALIZAR no `<style>` `.panel-tmpl-name` e `.panel-tmpl-tipo` (provavelmente
+~linhas 240-250). 
+
+Se a regra não existir explicitamente, ADICIONAR no `<style>`:
+```css
+.panel-tmpl-header { padding: 8px 14px 12px; border-bottom: 1px solid rgba(34,27,25,0.08); margin-bottom: 8px; }
+.panel-tmpl-name { font-family: 'Taviraj', serif; font-size: 1rem; font-weight: 600; color: var(--carbon-black); line-height: 1.2; margin-bottom: 2px; }
+.panel-tmpl-tipo { font-size: 0.74rem; color: rgba(34,27,25,0.55); font-weight: 500; }
+```
+
+(Se já existirem regras, AJUSTAR pra ficar visualmente mais destacado.)
+
+### 8.2 — Lógica em openEditor()
+LOCALIZAR (~linhas 1305-1306):
+```js
+document.getElementById('panelTmplName').textContent = row.name;
+document.getElementById('panelTmplTipo').textContent = humanizeTipo(row.tipo) + (row.variant_value ? ` — ${row.variant_value}` : '');
+```
+
+SUBSTITUIR por:
+```js
+// Mostrar variante como nome (quando existir), categoria como tipo
+const _schemaInfoEditor = createFormSchemas.find(s => s.tipo === row.tipo);
+const _variantLbl = row.variant_value
+  ? (_schemaInfoEditor?.template_variant_options?.find(o => o.value === row.variant_value)?.label || row.variant_value)
+  : '';
+document.getElementById('panelTmplName').textContent = _variantLbl || row.name;
+document.getElementById('panelTmplTipo').textContent = humanizeTipo(row.tipo);
+```
+
+---
+
+## Fix 9 — Toggle correto do test-data-strip
+
+### 9.1 — Remover regras .collapsed do CSS
+LOCALIZAR (~linhas 203-211):
+```css
+.test-data-strip { background: #1a1a1a; border-bottom: 1px solid rgba(255,255,255,0.07); flex-shrink: 0; display: none; }
+.test-data-strip.open { display: block; }
+.test-data-strip-header { padding: 7px 14px; display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.78rem; color: rgba(255,255,255,0.6); user-select: none; }
+.test-data-strip-header:hover { background: rgba(255,255,255,0.04); }
+.test-data-strip-toggle { font-size: 0.65rem; transition: transform 0.15s; }
+.test-data-strip.collapsed .test-data-strip-toggle { transform: rotate(-90deg); }
+.test-data-strip-hint { color: rgba(255,255,255,0.3); font-size: 0.72rem; margin-left: auto; }
+.test-data-strip-fields { padding: 10px 14px; display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-end; }
+.test-data-strip.collapsed .test-data-strip-fields { display: none; }
+```
+
+SUBSTITUIR por (light theme + sem `.collapsed`):
+```css
+.test-data-strip { background: #ede8e4; border-bottom: 1px solid rgba(34,27,25,0.08); flex-shrink: 0; display: none; }
+.test-data-strip.open { display: block; }
+.test-data-strip-header { padding: 7px 14px; display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.78rem; color: rgba(34,27,25,0.65); user-select: none; }
+.test-data-strip-header:hover { background: rgba(34,27,25,0.04); }
+.test-data-strip-toggle { font-size: 0.65rem; }
+.test-data-strip-hint { color: rgba(34,27,25,0.4); font-size: 0.72rem; margin-left: auto; }
+.test-data-strip-fields { padding: 10px 14px; display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-end; }
+```
+
+### 9.2 — Função toggleTestDataStrip
+LOCALIZAR (~linha 1009):
+```js
+function toggleTestDataStrip() {
+  document.getElementById('testDataStrip').classList.toggle('collapsed');
+}
+```
+
+SUBSTITUIR por:
+```js
+function toggleTestDataStrip() {
+  const strip = document.getElementById('testDataStrip');
+  if (strip.classList.contains('open')) {
+    strip.classList.remove('open');
+  } else {
+    renderTestDataPanel();
+    strip.classList.add('open');
+  }
+}
+```
+
+### 9.3 — openTestDataStrip continua igual mas remove o classList.remove('collapsed')
+LOCALIZAR (~linha 1003):
+```js
+function openTestDataStrip() {
+  renderTestDataPanel();
+  const strip = document.getElementById('testDataStrip');
+  strip.classList.add('open');
+  strip.classList.remove('collapsed');
+}
+```
+
+SUBSTITUIR por:
+```js
+function openTestDataStrip() {
+  renderTestDataPanel();
+  document.getElementById('testDataStrip').classList.add('open');
+}
+```
+
+---
+
+## Critério de validação
+
+1. `pnpm run build` (se aplicável) sem erros, ou apenas abrir 
+   /admin-templates.html
+2. Listagem de templates:
+   - Cada template-row tem o ícone de olho (👁) — clicar abre modal 
+     com preview renderizado
+   - Modal fecha clicando fora ou no ×
+3. Criar novo template:
+   - Tipo "Cartão de Boas-vindas" (is_automation): campo "Nome" SUMIU
+   - Selecionar variante (ex: "SVN Capital") → backend recebe 
+     name = "SVN Capital"
+   - Tipo "Eventos" (não automation): campo "Nome" APARECE normalmente
+4. Editor (clicar Editar):
+   - Canvas com fundo off-white (não mais preto/cinza escuro)
+   - Sem borda arredondada no canvas
+   - Toolbar buttons com texto escuro, legíveis
+   - Botão "Voltar" carbon-black com texto branco, destaque
+   - Abaixo do botão: nome (variante, ex: "SVN Capital") em fonte 
+     serif, e categoria (ex: "Cartão de Boas-vindas") embaixo
+   - Para automation: input de nome no toolbar do canvas NÃO aparece
+   - Para não-automation: nome editável aparece como antes
+5. Layers panel:
+   - Cada layer tem divider sutil embaixo
+   - Botões ↑↓⧉ visivelmente mais sólidos (mais contraste, fonte maior)
+6. Test data strip:
+   - Clicar "Dados de teste" abre faixa com campos
+   - Clicar de novo: faixa SOME COMPLETAMENTE (não fica header com seta)
+   - Background da faixa: off-white (combina com canvas)
+
+## Não faça
+
+- Não trocar `#AC3631` (ruby-red) por var() neste prompt — fica pra 
+  outro round se necessário
+- Não tocar em outros painéis (.props-panel, .layer-panel-inner, etc.) 
+  que não tenham sido listados — fundo deles é outro contexto
+- Não alterar `.toolbar-sep` se já estiver com cor adaptada (verificar 
+  visualmente)
+- Não criar classes novas além das que estão neste prompt
+- Não tocar no admin.ts ou em outras rotas backend — backend já tem 
+  /preview e /sample-data endpoints, não precisa mexer
+- Se o `is_automation` não estiver disponível em `createFormSchemas`, 
+  REPORTAR — pode ser que o /api/admin/form-schemas não exponha esse 
+  campo (precisa adicionar). Mas pelo round 4 anterior, ele é exposto.

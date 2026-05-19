@@ -1,0 +1,648 @@
+## Contexto
+
+Funcionalidade nova de gerenciamento avançado de usuários. 3 features:
+
+1. Criar usuários manualmente (sem precisar de login MSAL prévio)
+2. Editar ClickUp User ID dos usuários
+3. Atribuir formulários (tipos de solicitação com ClickUp) a usuários — 
+   define quem é o assignee automático da task ClickUp quando alguém 
+   solicita esse tipo.
+
+A infra de DB e backend já tem 80% do necessário:
+- Tabela user_tipo_assignments existe no schema Drizzle
+- clickup.ts.getAssigneesForTipo() já consulta essa tabela e usa nos 
+  assignees da task ClickUp
+- O UPSERT do MSAL preserva role e clickup_user_id quando user já existe
+
+Faltam: tabela DDL (idempotente), endpoints CRUD, UI completa, e tirar 
+um mapa hardcoded de nomes que estava no clickup.ts.
+
+Arquivos:
+- artifacts/api-server/src/index.ts (DDL)
+- artifacts/api-server/src/routes/admin.ts (4 endpoints novos)
+- artifacts/api-server/src/routes/clickup.ts (eliminar ASSIGNEE_NOMES)
+- artifacts/api-server/public/admin-usuarios.html (UI completa)
+
+---
+
+## Parte 1 — DDL da tabela user_tipo_assignments
+
+Em src/index.ts, ANTES do bloco "// Art assets" no array DB_STATEMENTS 
+(~linha 106):
+
+ADICIONAR:
+```ts
+// User-Tipo assignments (responsáveis automáticos no ClickUp por tipo)
+`CREATE TABLE IF NOT EXISTS "user_tipo_assignments" (
+  "id"      SERIAL       PRIMARY KEY,
+  "user_id" INTEGER      NOT NULL REFERENCES "users" ("id") ON DELETE CASCADE,
+  "tipo"    VARCHAR(50)  NOT NULL,
+  UNIQUE ("user_id", "tipo")
+)`,
+`CREATE INDEX IF NOT EXISTS "IDX_user_tipo_assignments_user_id" ON "user_tipo_assignments" ("user_id")`,
+`CREATE INDEX IF NOT EXISTS "IDX_user_tipo_assignments_tipo"    ON "user_tipo_assignments" ("tipo")`,
+```
+
+---
+
+## Parte 2 — Backend: 4 endpoints novos em admin.ts
+
+Em src/routes/admin.ts, ADICIONAR no topo após os imports existentes:
+
+```ts
+import { userTipoAssignmentsTable } from "@workspace/db";
+```
+
+(Se já estiver importado, ignorar.)
+
+ADICIONAR constante após os imports (antes de `const router = Router()`):
+
+```ts
+// Tipos de solicitação que criam task no ClickUp (vs automation que não)
+// Espelhado de TIPO_SOLICITACAO_LABELS em public/config.js
+const TIPOS_COM_CLICKUP: Array<{ tipo: string; label: string }> = [
+  { tipo: "eventos",                       label: "Eventos" },
+  { tipo: "artes-divulgacao",              label: "Artes de Divulgação" },
+  { tipo: "atualizacao-material",          label: "Atualização de Material" },
+  { tipo: "conteudo-pdf-informativo",      label: "PDF — Informativo" },
+  { tipo: "conteudo-pdf-ebook",            label: "PDF — Ebook" },
+  { tipo: "apresentacao-nova",             label: "Apresentação — Nova" },
+  { tipo: "apresentacao-atualizar",        label: "Apresentação — Atualização" },
+  { tipo: "pagina-assessores-dados",       label: "Página de Assessores — Dados" },
+  { tipo: "pagina-assessores-atualizacao", label: "Página de Assessores — Atualização" },
+  { tipo: "cartao-visita-fisico",          label: "Cartão de Visita — Físico" },
+  { tipo: "pagina-online",                 label: "Página Online" },
+  { tipo: "outro",                         label: "Outro" },
+  { tipo: "brindes",                       label: "Brindes" },
+  { tipo: "patrocinio",                    label: "Patrocínio" },
+  { tipo: "email-marketing",               label: "E-mail Marketing" },
+  { tipo: "producao-video",                label: "Produção de Vídeo" },
+  { tipo: "sessao-fotos",                  label: "Sessão de Fotos" },
+  { tipo: "materiais-impressos",           label: "Materiais Impressos" },
+];
+
+const TIPOS_COM_CLICKUP_SET = new Set(TIPOS_COM_CLICKUP.map(t => t.tipo));
+```
+
+### Endpoint 1: GET /tipos-com-clickup
+
+ADICIONAR no admin.ts (antes do `export default router`):
+
+```ts
+router.get("/tipos-com-clickup", requireAuth, requireRole("admin"), (_req, res) => {
+  res.json(TIPOS_COM_CLICKUP);
+});
+```
+
+### Endpoint 2: POST /users (criar manualmente)
+
+ADICIONAR:
+
+```ts
+router.post("/users", requireAuth, requireRole("admin"), async (req, res): Promise<void> => {
+  try {
+    const { email, name, role, clickup_user_id } = req.body as {
+      email: string; name: string; role: string; clickup_user_id?: string | null;
+    };
+
+    if (!email || typeof email !== "string") {
+      res.status(400).json({ error: "email obrigatório" }); return;
+    }
+    const emailNormalized = email.trim().toLowerCase();
+    if (!emailNormalized.endsWith("@svninvest.com.br")) {
+      res.status(400).json({ error: "Apenas e-mails @svninvest.com.br são permitidos" }); return;
+    }
+    if (!name || !name.trim()) {
+      res.status(400).json({ error: "name obrigatório" }); return;
+    }
+    if (!["colaborador", "gestor", "admin"].includes(role)) {
+      res.status(400).json({ error: "Role inválida" }); return;
+    }
+
+    const existing = await db.select({ id: usersTable.id }).from(usersTable).where(eq(usersTable.email, emailNormalized));
+    if (existing.length > 0) {
+      res.status(409).json({ error: "Usuário com este e-mail já existe" }); return;
+    }
+
+    const [inserted] = await db.insert(usersTable).values({
+      email: emailNormalized,
+      name: name.trim(),
+      role,
+      clickup_user_id: clickup_user_id?.trim() || null,
+    }).returning();
+
+    res.json({ success: true, user: inserted });
+  } catch (err: any) {
+    req.log.error({ err, body: req.body }, "Erro ao criar usuário");
+    res.status(500).json(errorPayload(err, "Erro ao criar usuário"));
+  }
+});
+```
+
+(Se `errorPayload` ainda não estiver definido, usar o pattern de error 
+antigo do arquivo até ser refatorado em outro round.)
+
+### Endpoint 3: GET /users (modificar pra incluir assignments)
+
+LOCALIZAR o endpoint existente `GET /users` (~linha 16-24):
+```ts
+router.get("/users", requireAuth, requireRole("admin"), async (req, res) => {
+  try {
+    const users = await db.select().from(usersTable);
+    res.json(users);
+  } catch (err: any) { ... }
+});
+```
+
+SUBSTITUIR por:
+
+```ts
+router.get("/users", requireAuth, requireRole("admin"), async (req, res) => {
+  try {
+    const users = await db.select().from(usersTable);
+    const assignments = await db.select().from(userTipoAssignmentsTable);
+    
+    const byUserId = new Map<number, string[]>();
+    for (const a of assignments) {
+      const list = byUserId.get(a.user_id) || [];
+      list.push(a.tipo);
+      byUserId.set(a.user_id, list);
+    }
+    
+    const enriched = users.map(u => ({
+      ...u,
+      tipos_assigned: byUserId.get(u.id) || [],
+    }));
+    
+    res.json(enriched);
+  } catch (err: any) {
+    req.log.error({ err }, "Erro ao listar usuários");
+    res.status(500).json({ error: err.message || "Erro ao listar usuários", code: err.code });
+  }
+});
+```
+
+### Endpoint 4: PUT /users/:id/assignments
+
+ADICIONAR:
+
+```ts
+router.put("/users/:id/assignments", requireAuth, requireRole("admin"), async (req, res): Promise<void> => {
+  try {
+    const userId = parseInt(String(req.params.id));
+    if (isNaN(userId)) { res.status(400).json({ error: "ID inválido" }); return; }
+
+    const { tipos } = req.body as { tipos: string[] };
+    if (!Array.isArray(tipos)) {
+      res.status(400).json({ error: "tipos deve ser um array" }); return;
+    }
+
+    // Validar que todos os tipos são reconhecidos
+    const invalidos = tipos.filter(t => !TIPOS_COM_CLICKUP_SET.has(t));
+    if (invalidos.length > 0) {
+      res.status(400).json({ error: `Tipos inválidos: ${invalidos.join(", ")}` }); return;
+    }
+
+    const [targetUser] = await db.select({ id: usersTable.id }).from(usersTable).where(eq(usersTable.id, userId));
+    if (!targetUser) {
+      res.status(404).json({ error: "Usuário não encontrado" }); return;
+    }
+
+    await db.transaction(async (tx) => {
+      await tx.delete(userTipoAssignmentsTable).where(eq(userTipoAssignmentsTable.user_id, userId));
+      if (tipos.length > 0) {
+        await tx.insert(userTipoAssignmentsTable).values(
+          tipos.map(tipo => ({ user_id: userId, tipo }))
+        );
+      }
+    });
+
+    res.json({ success: true, tipos });
+  } catch (err: any) {
+    req.log.error({ err, body: req.body }, "Erro ao atualizar assignments");
+    res.status(500).json({ error: err.message || "Erro ao atualizar atribuições", code: err.code });
+  }
+});
+```
+
+---
+
+## Parte 3 — Eliminar ASSIGNEE_NOMES hardcoded em clickup.ts
+
+Em src/routes/clickup.ts:
+
+LOCALIZAR a constante `ASSIGNEE_NOMES` (~linha 1045-1052):
+```ts
+const ASSIGNEE_NOMES: Record<string, string> = {
+  "55127950":  "Camilla Fernandes",
+  "99968866":  "Taynara Rodrigues",
+  // ... outros
+};
+```
+
+DELETAR essa constante completamente.
+
+LOCALIZAR a função `getAssigneesForTipo` (~linha 1054):
+```ts
+async function getAssigneesForTipo(tipo: string): Promise<number[]> {
+  try {
+    const rows = await db
+      .select({ clickup_user_id: usersTable.clickup_user_id })
+      .from(userTipoAssignmentsTable)
+      .innerJoin(usersTable, eq(userTipoAssignmentsTable.user_id, usersTable.id))
+      .where(eq(userTipoAssignmentsTable.tipo, tipo));
+    return rows
+      .map(r => parseInt(r.clickup_user_id ?? "", 10))
+      .filter(n => !isNaN(n));
+  } catch (err) {
+    logger.error({ err, tipo }, "getAssigneesForTipo: erro ao buscar assignees no DB");
+    return [];
+  }
+}
+```
+
+SUBSTITUIR por versão que retorna nome também:
+```ts
+async function getAssigneesForTipo(tipo: string): Promise<Array<{ id: number; name: string }>> {
+  try {
+    const rows = await db
+      .select({
+        clickup_user_id: usersTable.clickup_user_id,
+        name: usersTable.name,
+      })
+      .from(userTipoAssignmentsTable)
+      .innerJoin(usersTable, eq(userTipoAssignmentsTable.user_id, usersTable.id))
+      .where(eq(userTipoAssignmentsTable.tipo, tipo));
+    return rows
+      .map(r => ({ id: parseInt(r.clickup_user_id ?? "", 10), name: r.name ?? "" }))
+      .filter(r => !isNaN(r.id));
+  } catch (err) {
+    logger.error({ err, tipo }, "getAssigneesForTipo: erro ao buscar assignees no DB");
+    return [];
+  }
+}
+```
+
+LOCALIZAR onde a função é chamada (~linha 1161):
+```ts
+const assigneeIds = await getAssigneesForTipo(tipo);
+if (assigneeIds.length > 0) {
+  taskPayload.assignees = assigneeIds;
+  logger.info({ assigneeIds, tipo }, "ClickUp: assignees definidos via DB");
+} else {
+  logger.warn({ tipo }, "ClickUp: nenhum assignee encontrado no DB para este tipo");
+}
+```
+
+SUBSTITUIR por:
+```ts
+const assignees = await getAssigneesForTipo(tipo);
+if (assignees.length > 0) {
+  taskPayload.assignees = assignees.map(a => a.id);
+  logger.info({ assigneeIds: assignees.map(a => a.id), tipo }, "ClickUp: assignees definidos via DB");
+} else {
+  logger.warn({ tipo }, "ClickUp: nenhum assignee encontrado no DB para este tipo");
+}
+```
+
+LOCALIZAR onde `responsavel` é montado (~linha 1210):
+```ts
+const responsavel = assigneeIds.length > 0 ? (ASSIGNEE_NOMES[String(assigneeIds[0])] || "") : "";
+```
+
+SUBSTITUIR por:
+```ts
+const responsavel = assignees.length > 0 ? assignees[0].name : "";
+```
+
+---
+
+## Parte 4 — Frontend: admin-usuarios.html
+
+Em public/admin-usuarios.html.
+
+### 4.1 — Adicionar botão "Adicionar usuário" no topo
+
+LOCALIZAR a barra de busca/filtros no topo da página (provavelmente
+um div com o input de busca de usuários, perto da tabela).
+
+ADICIONAR ao lado direito da busca (mesma row se possível) um botão:
+
+```html
+<button onclick="abrirNovoUsuario()" class="btn btn-primary" style="white-space:nowrap;padding:8px 16px;font-size:0.85rem">
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="vertical-align:middle;margin-right:4px"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+  Adicionar usuário
+</button>
+```
+
+### 4.2 — Modificar a coluna ClickUp ID pra ser clicável
+
+LOCALIZAR (~linha 149 atualmente — após Fix do clickup_user_id):
+```js
+<td style="padding:10px 14px">
+  <span style="font-size:0.8rem;font-family:monospace;opacity:0.6">${esc(u.clickup_user_id || '—')}</span>
+</td>
+```
+
+SUBSTITUIR por:
+```js
+<td style="padding:10px 14px">
+  <button onclick="abrirEditClickup('${esc(u.id)}', '${esc(u.name || u.email)}', '${esc(u.clickup_user_id || '')}')" 
+          style="font-size:0.8rem;font-family:monospace;opacity:0.7;background:transparent;border:1px dashed rgba(34,27,25,0.15);padding:3px 9px;border-radius:5px;cursor:pointer;transition:all 0.15s"
+          onmouseover="this.style.background='var(--icon-bg)';this.style.opacity='1'"
+          onmouseout="this.style.background='transparent';this.style.opacity='0.7'">
+    ${esc(u.clickup_user_id || '— editar —')}
+  </button>
+</td>
+```
+
+### 4.3 — Nova coluna "Formulários atribuídos"
+
+LOCALIZAR o `<thead>` da tabela e ADICIONAR uma nova `<th>` entre 
+"ClickUp ID" e "Criado em":
+
+```html
+<th style="padding:8px 14px;text-align:left;font-size:0.7rem;text-transform:uppercase;letter-spacing:0.07em;opacity:0.5">Formulários</th>
+```
+
+NO `<tbody>` (renderUsuarios), ADICIONAR uma nova `<td>` entre a 
+coluna do ClickUp ID e a data:
+
+```js
+<td style="padding:10px 14px">
+  <button onclick="abrirEditAssignments('${esc(u.id)}', '${esc(u.name || u.email)}')" 
+          style="font-size:0.78rem;background:rgba(34,27,25,0.05);border:none;padding:4px 10px;border-radius:5px;cursor:pointer;display:inline-flex;align-items:center;gap:5px;transition:all 0.15s"
+          onmouseover="this.style.background='var(--icon-bg)'"
+          onmouseout="this.style.background='rgba(34,27,25,0.05)'">
+    <strong>${(u.tipos_assigned || []).length}</strong>
+    <span style="opacity:0.6">${(u.tipos_assigned || []).length === 1 ? 'formulário' : 'formulários'}</span>
+    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="opacity:0.4"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+  </button>
+</td>
+```
+
+E AJUSTAR o `colspan` do tbody loading state (de 6 pra 7):
+```html
+<tr><td colspan="7" style="padding:24px;text-align:center;opacity:0.4">Carregando...</td></tr>
+```
+
+### 4.4 — Modais novos
+
+ADICIONAR antes do `</body>` (ou onde já existem os outros modais):
+
+```html
+<!-- Modal: Adicionar usuário -->
+<div id="novoUsuarioModal" style="display:none;position:fixed;inset:0;background:rgba(34,27,25,0.5);z-index:1000;align-items:center;justify-content:center">
+  <div style="background:white;padding:24px;border-radius:12px;max-width:440px;width:90%;max-height:90vh;overflow:auto">
+    <h2 style="font-family:'Taviraj',serif;font-size:1.3rem;margin-bottom:6px">Adicionar usuário</h2>
+    <p style="font-size:0.82rem;opacity:0.6;margin-bottom:20px">Crie um usuário no banco mesmo antes da pessoa fazer login. Quando ela logar via Microsoft, mantém role e atribuições.</p>
+    
+    <div class="field"><label>E-mail <span style="color:var(--ruby-red)">*</span></label>
+      <input type="email" id="novoUsuarioEmail" placeholder="usuario@svninvest.com.br" required>
+    </div>
+    <div class="field"><label>Nome completo <span style="color:var(--ruby-red)">*</span></label>
+      <input type="text" id="novoUsuarioNome" placeholder="João Silva" required>
+    </div>
+    <div class="field"><label>Função</label>
+      <select id="novoUsuarioRole">
+        <option value="colaborador">Colaborador</option>
+        <option value="gestor">Gestor</option>
+        <option value="admin">Admin</option>
+      </select>
+    </div>
+    <div class="field"><label>ClickUp User ID (opcional)</label>
+      <input type="text" id="novoUsuarioClickup" placeholder="ex: 55127950">
+      <p style="font-size:0.72rem;opacity:0.5;margin-top:4px">Necessário para receber atribuições automáticas de tasks.</p>
+    </div>
+    
+    <div id="novoUsuarioErro" style="display:none;margin:12px 0;padding:10px;background:rgba(220,38,38,0.08);color:#dc2626;border-radius:6px;font-size:0.82rem"></div>
+    
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:20px">
+      <button onclick="cancelarNovoUsuario()" class="btn" style="background:transparent;border:1px solid var(--border-light)">Cancelar</button>
+      <button onclick="salvarNovoUsuario()" class="btn btn-primary">Adicionar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Editar ClickUp ID -->
+<div id="editClickupModal" style="display:none;position:fixed;inset:0;background:rgba(34,27,25,0.5);z-index:1000;align-items:center;justify-content:center">
+  <div style="background:white;padding:24px;border-radius:12px;max-width:400px;width:90%">
+    <h2 style="font-family:'Taviraj',serif;font-size:1.2rem;margin-bottom:6px">ClickUp User ID</h2>
+    <p style="font-size:0.82rem;opacity:0.6;margin-bottom:20px"><strong id="editClickupUserName"></strong></p>
+    
+    <div class="field"><label>ClickUp User ID</label>
+      <input type="text" id="editClickupInput" placeholder="ex: 55127950">
+      <p style="font-size:0.72rem;opacity:0.5;margin-top:4px">Deixe em branco para remover.</p>
+    </div>
+    
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:20px">
+      <button onclick="cancelarEditClickup()" class="btn" style="background:transparent;border:1px solid var(--border-light)">Cancelar</button>
+      <button onclick="salvarEditClickup()" class="btn btn-primary">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Editar formulários atribuídos -->
+<div id="editAssignmentsModal" style="display:none;position:fixed;inset:0;background:rgba(34,27,25,0.5);z-index:1000;align-items:center;justify-content:center">
+  <div style="background:white;padding:24px;border-radius:12px;max-width:520px;width:90%;max-height:90vh;overflow:auto">
+    <h2 style="font-family:'Taviraj',serif;font-size:1.2rem;margin-bottom:6px">Formulários atribuídos</h2>
+    <p style="font-size:0.82rem;opacity:0.6;margin-bottom:16px">Selecione os tipos de solicitação que <strong id="editAssignmentsUserName"></strong> receberá automaticamente no ClickUp.</p>
+    
+    <div id="editAssignmentsList" style="max-height:380px;overflow:auto;border:1px solid var(--border-light);border-radius:8px;padding:8px"></div>
+    
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:20px">
+      <button onclick="cancelarEditAssignments()" class="btn" style="background:transparent;border:1px solid var(--border-light)">Cancelar</button>
+      <button onclick="salvarEditAssignments()" class="btn btn-primary">Salvar</button>
+    </div>
+  </div>
+</div>
+```
+
+### 4.5 — Lógica JS dos modais
+
+ADICIONAR no `<script>` da página (perto das outras funções):
+
+```js
+// ── Estado global do gerenciamento avançado ─────────────────────────
+let _tiposComClickup = [];  // cached
+let _editingClickupUserId = null;
+let _editingAssignmentsUserId = null;
+
+// Carregar tipos com ClickUp uma única vez
+async function _ensureTipos() {
+  if (_tiposComClickup.length > 0) return _tiposComClickup;
+  try {
+    const res = await fetch('/api/admin/tipos-com-clickup');
+    if (res.ok) _tiposComClickup = await res.json();
+  } catch {}
+  return _tiposComClickup;
+}
+
+// ── Modal: Novo usuário ─────────────────────────────────────────────
+function abrirNovoUsuario() {
+  document.getElementById('novoUsuarioEmail').value = '';
+  document.getElementById('novoUsuarioNome').value = '';
+  document.getElementById('novoUsuarioRole').value = 'colaborador';
+  document.getElementById('novoUsuarioClickup').value = '';
+  document.getElementById('novoUsuarioErro').style.display = 'none';
+  document.getElementById('novoUsuarioModal').style.display = 'flex';
+}
+
+function cancelarNovoUsuario() {
+  document.getElementById('novoUsuarioModal').style.display = 'none';
+}
+
+async function salvarNovoUsuario() {
+  const email = document.getElementById('novoUsuarioEmail').value.trim();
+  const name = document.getElementById('novoUsuarioNome').value.trim();
+  const role = document.getElementById('novoUsuarioRole').value;
+  const clickup_user_id = document.getElementById('novoUsuarioClickup').value.trim();
+  const erroEl = document.getElementById('novoUsuarioErro');
+  erroEl.style.display = 'none';
+
+  try {
+    const res = await fetch('/api/admin/users', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, name, role, clickup_user_id: clickup_user_id || null }),
+    });
+    if (res.ok) {
+      cancelarNovoUsuario();
+      await loadUsuarios();
+    } else {
+      const err = await res.json().catch(() => ({}));
+      erroEl.textContent = err.error || 'Erro ao criar usuário.';
+      erroEl.style.display = 'block';
+    }
+  } catch {
+    erroEl.textContent = 'Erro de conexão.';
+    erroEl.style.display = 'block';
+  }
+}
+
+// ── Modal: Editar ClickUp ID ────────────────────────────────────────
+function abrirEditClickup(userId, userName, currentClickup) {
+  _editingClickupUserId = userId;
+  document.getElementById('editClickupUserName').textContent = userName;
+  document.getElementById('editClickupInput').value = currentClickup;
+  document.getElementById('editClickupModal').style.display = 'flex';
+}
+
+function cancelarEditClickup() {
+  document.getElementById('editClickupModal').style.display = 'none';
+  _editingClickupUserId = null;
+}
+
+async function salvarEditClickup() {
+  if (!_editingClickupUserId) return;
+  const novo = document.getElementById('editClickupInput').value.trim();
+  try {
+    const res = await fetch(`/api/admin/users/${_editingClickupUserId}/clickup_user_id`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ clickup_user_id: novo || null }),
+    });
+    if (res.ok) {
+      cancelarEditClickup();
+      await loadUsuarios();
+    } else {
+      const err = await res.json().catch(() => ({}));
+      alert(err.error || 'Erro ao atualizar ClickUp ID.');
+    }
+  } catch { alert('Erro de conexão.'); }
+}
+
+// ── Modal: Editar Assignments ───────────────────────────────────────
+async function abrirEditAssignments(userId, userName) {
+  _editingAssignmentsUserId = userId;
+  document.getElementById('editAssignmentsUserName').textContent = userName;
+  
+  // Pegar tipos atuais do user
+  const user = (_allUsers || []).find(u => String(u.id) === String(userId));
+  const tiposAtuais = new Set(user?.tipos_assigned || []);
+  
+  await _ensureTipos();
+  
+  const listEl = document.getElementById('editAssignmentsList');
+  listEl.innerHTML = _tiposComClickup.map(t => `
+    <label style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:5px;cursor:pointer;transition:background 0.12s" 
+           onmouseover="this.style.background='var(--icon-bg)'" 
+           onmouseout="this.style.background='transparent'">
+      <input type="checkbox" value="${esc(t.tipo)}" ${tiposAtuais.has(t.tipo) ? 'checked' : ''} style="cursor:pointer">
+      <span style="font-size:0.86rem">${esc(t.label)}</span>
+    </label>
+  `).join('');
+  
+  document.getElementById('editAssignmentsModal').style.display = 'flex';
+}
+
+function cancelarEditAssignments() {
+  document.getElementById('editAssignmentsModal').style.display = 'none';
+  _editingAssignmentsUserId = null;
+}
+
+async function salvarEditAssignments() {
+  if (!_editingAssignmentsUserId) return;
+  const checks = document.querySelectorAll('#editAssignmentsList input[type=checkbox]:checked');
+  const tipos = Array.from(checks).map(c => c.value);
+  
+  try {
+    const res = await fetch(`/api/admin/users/${_editingAssignmentsUserId}/assignments`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ tipos }),
+    });
+    if (res.ok) {
+      cancelarEditAssignments();
+      await loadUsuarios();
+    } else {
+      const err = await res.json().catch(() => ({}));
+      alert(err.error || 'Erro ao atualizar atribuições.');
+    }
+  } catch { alert('Erro de conexão.'); }
+}
+```
+
+---
+
+## Critério de validação
+
+### Backend
+1. `pnpm run build` compila sem erros
+2. Endpoint `GET /api/admin/tipos-com-clickup` retorna array com 18 tipos
+3. `POST /api/admin/users` com email não-svninvest retorna 400
+4. `POST /api/admin/users` com email duplicado retorna 409
+5. `POST /api/admin/users` válido cria row no banco
+6. `PUT /api/admin/users/:id/assignments` com tipo inválido retorna 400
+7. `PUT /api/admin/users/:id/assignments` com array vazio remove todos
+8. `GET /api/admin/users` retorna array com `tipos_assigned` em cada user
+
+### Frontend
+9. /admin-usuarios.html mostra botão "Adicionar usuário" no topo
+10. Nova coluna "Formulários" mostra contagem (ex: "3 formulários")
+11. Click no ClickUp ID abre modal de edit
+12. Click em "X formulários" abre modal com checkboxes
+13. Modal de checkboxes mostra os 18 tipos com ClickUp
+14. Salvar atribuições atualiza imediatamente na tabela
+
+### Integração end-to-end
+15. Criar user manualmente: email novo, name, role colaborador, 
+    clickup_user_id "99999999"
+16. Atribuir "eventos" e "patrocinio" a esse user
+17. Submeter solicitação de eventos por OUTRO usuário
+18. Verificar na DB: `responsavel` da solicitação = nome do user criado
+19. Verificar no ClickUp: task tem assignee = clickup_user_id 99999999
+20. Quando o user criado fizer login MSAL pela primeira vez: 
+    name, role, clickup_user_id, assignments MANTIDOS (UPSERT preserva)
+
+## Não faça
+
+- Não remover lógica existente de impersonação ou edit role
+- Não tocar em /auth/* — UPSERT existente já é compatível
+- Não adicionar email/notificação ao criar user (escopo é só DB row)
+- Não adicionar tipos de automation à lista TIPOS_COM_CLICKUP — eles 
+  não criam task ClickUp por design
+- Se algum CSS de modal não bater (`.field`, `.btn-primary`), usar 
+  classes já existentes do projeto. Não criar classes CSS novas.
+- Se a tabela user_tipo_assignments já existir no banco, o CREATE IF 
+  NOT EXISTS é no-op — não há perigo de duplicação.

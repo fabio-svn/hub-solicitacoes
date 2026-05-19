@@ -1044,23 +1044,19 @@ function proximaQuarta(): Date {
   return d;
 }
 
-const ASSIGNEE_NOMES: Record<string, string> = {
-  "55140303":  "João Sardeto",
-  "112032406": "Julia Rodrigues",
-  "55127950":  "Camilla Fernandes",
-  "99968866":  "Taynara Rodrigues",
-};
-
-async function getAssigneesForTipo(tipo: string): Promise<number[]> {
+async function getAssigneesForTipo(tipo: string): Promise<Array<{ id: number; name: string }>> {
   try {
     const rows = await db
-      .select({ clickup_user_id: usersTable.clickup_user_id })
+      .select({
+        clickup_user_id: usersTable.clickup_user_id,
+        name: usersTable.name,
+      })
       .from(userTipoAssignmentsTable)
       .innerJoin(usersTable, eq(userTipoAssignmentsTable.user_id, usersTable.id))
       .where(eq(userTipoAssignmentsTable.tipo, tipo));
     return rows
-      .map(r => parseInt(r.clickup_user_id ?? "", 10))
-      .filter(n => !isNaN(n));
+      .map(r => ({ id: parseInt(r.clickup_user_id ?? "", 10), name: r.name ?? "" }))
+      .filter(r => !isNaN(r.id));
   } catch (err) {
     logger.error({ err, tipo }, "getAssigneesForTipo: erro ao buscar assignees no DB");
     return [];
@@ -1158,10 +1154,10 @@ export async function createClickUpTask(
   logger.info({ tipo, prazo: prazoDate.toISOString() }, "ClickUp: prazo calculado");
 
   // Responsáveis por tipo (via DB)
-  const assigneeIds = await getAssigneesForTipo(tipo);
-  if (assigneeIds.length > 0) {
-    taskPayload.assignees = assigneeIds;
-    logger.info({ assigneeIds, tipo }, "ClickUp: assignees definidos via DB");
+  const assignees = await getAssigneesForTipo(tipo);
+  if (assignees.length > 0) {
+    taskPayload.assignees = assignees.map(a => a.id);
+    logger.info({ assigneeIds: assignees.map(a => a.id), tipo }, "ClickUp: assignees definidos via DB");
   } else {
     logger.warn({ tipo }, "ClickUp: nenhum assignee encontrado no DB para este tipo");
   }
@@ -1207,7 +1203,7 @@ export async function createClickUpTask(
     { clickupType: "short_text", raw: idSolicitacao }
   );
 
-  const responsavel = assigneeIds.length > 0 ? (ASSIGNEE_NOMES[String(assigneeIds[0])] || "") : "";
+  const responsavel = assignees.length > 0 ? assignees[0].name : "";
 
   return { taskId, taskName, responsavel };
 }

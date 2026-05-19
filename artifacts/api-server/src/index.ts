@@ -112,6 +112,7 @@ const DB_STATEMENTS = [
     UNIQUE ("user_id", "tipo")
   )`,
   `CREATE INDEX IF NOT EXISTS "IDX_user_tipo_assignments_user_id" ON "user_tipo_assignments" ("user_id")`,
+  `CREATE INDEX IF NOT EXISTS "IDX_user_tipo_assignments_tipo"    ON "user_tipo_assignments" ("tipo")`,
 
   // Art assets (imagens da biblioteca de templates)
   `CREATE TABLE IF NOT EXISTS "art_assets" (

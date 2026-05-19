@@ -32,6 +32,10 @@
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 102.13-9.36L1 10"/></svg>
             Atualizar
           </button>
+          <button onclick="abrirNovoUsuario()" class="btn btn-primary" style="white-space:nowrap;padding:8px 16px;font-size:0.85rem">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="vertical-align:middle;margin-right:4px"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Adicionar usuário
+          </button>
         </div>
       </div>
       <p style="font-size:0.82rem;opacity:0.5;margin:0 0 20px">Gerencie usuários do sistema: funções e IDs do ClickUp. Use o botão "Logar como" para visualizar o sistema como aquele usuário.</p>
@@ -44,14 +48,74 @@
               <th style="padding:10px 14px;font-weight:800;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.06em;color:#fff;text-align:left">E-mail</th>
               <th style="padding:10px 14px;font-weight:800;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.06em;color:#fff;text-align:left">Função</th>
               <th style="padding:10px 14px;font-weight:800;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.06em;color:#fff;text-align:left">ClickUp ID</th>
+              <th style="padding:10px 14px;font-weight:800;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.06em;color:#fff;text-align:left">Formulários</th>
               <th style="padding:10px 14px;font-weight:800;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.06em;color:#fff;text-align:left">Cadastro</th>
               <th style="padding:10px 14px;font-weight:800;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.06em;color:#fff;text-align:center">Ações</th>
             </tr>
           </thead>
           <tbody id="usuariosTabelaBody">
-            <tr><td colspan="6" style="padding:24px;text-align:center;opacity:0.4">Carregando...</td></tr>
+            <tr><td colspan="7" style="padding:24px;text-align:center;opacity:0.4">Carregando...</td></tr>
           </tbody>
         </table>
+      </div>
+
+      <!-- Modal: Adicionar usuário -->
+      <div id="novoUsuarioModal" style="display:none;position:fixed;inset:0;background:rgba(34,27,25,0.5);z-index:1000;align-items:center;justify-content:center">
+        <div style="background:white;padding:24px;border-radius:12px;max-width:440px;width:90%;max-height:90vh;overflow:auto">
+          <h2 style="font-family:'Taviraj',serif;font-size:1.3rem;margin-bottom:6px">Adicionar usuário</h2>
+          <p style="font-size:0.82rem;opacity:0.6;margin-bottom:20px">Crie um usuário no banco mesmo antes da pessoa fazer login. Quando ela logar via Microsoft, mantém role e atribuições.</p>
+          <div class="field"><label>E-mail <span style="color:var(--ruby-red)">*</span></label>
+            <input type="email" id="novoUsuarioEmail" placeholder="usuario@svninvest.com.br" required>
+          </div>
+          <div class="field"><label>Nome completo <span style="color:var(--ruby-red)">*</span></label>
+            <input type="text" id="novoUsuarioNome" placeholder="João Silva" required>
+          </div>
+          <div class="field"><label>Função</label>
+            <select id="novoUsuarioRole">
+              <option value="colaborador">Colaborador</option>
+              <option value="gestor">Gestor</option>
+              <option value="admin">Admin</option>
+            </select>
+          </div>
+          <div class="field"><label>ClickUp User ID (opcional)</label>
+            <input type="text" id="novoUsuarioClickup" placeholder="ex: 55127950">
+            <p style="font-size:0.72rem;opacity:0.5;margin-top:4px">Necessário para receber atribuições automáticas de tasks.</p>
+          </div>
+          <div id="novoUsuarioErro" style="display:none;margin:12px 0;padding:10px;background:rgba(220,38,38,0.08);color:#dc2626;border-radius:6px;font-size:0.82rem"></div>
+          <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:20px">
+            <button onclick="cancelarNovoUsuario()" class="btn" style="background:transparent;border:1px solid var(--border-light)">Cancelar</button>
+            <button onclick="salvarNovoUsuario()" class="btn btn-primary">Adicionar</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Modal: Editar ClickUp ID -->
+      <div id="editClickupModal" style="display:none;position:fixed;inset:0;background:rgba(34,27,25,0.5);z-index:1000;align-items:center;justify-content:center">
+        <div style="background:white;padding:24px;border-radius:12px;max-width:400px;width:90%">
+          <h2 style="font-family:'Taviraj',serif;font-size:1.2rem;margin-bottom:6px">ClickUp User ID</h2>
+          <p style="font-size:0.82rem;opacity:0.6;margin-bottom:20px"><strong id="editClickupUserName"></strong></p>
+          <div class="field"><label>ClickUp User ID</label>
+            <input type="text" id="editClickupInput" placeholder="ex: 55127950">
+            <p style="font-size:0.72rem;opacity:0.5;margin-top:4px">Deixe em branco para remover.</p>
+          </div>
+          <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:20px">
+            <button onclick="cancelarEditClickup()" class="btn" style="background:transparent;border:1px solid var(--border-light)">Cancelar</button>
+            <button onclick="salvarEditClickup()" class="btn btn-primary">Salvar</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Modal: Editar formulários atribuídos -->
+      <div id="editAssignmentsModal" style="display:none;position:fixed;inset:0;background:rgba(34,27,25,0.5);z-index:1000;align-items:center;justify-content:center">
+        <div style="background:white;padding:24px;border-radius:12px;max-width:520px;width:90%;max-height:90vh;overflow:auto">
+          <h2 style="font-family:'Taviraj',serif;font-size:1.2rem;margin-bottom:6px">Formulários atribuídos</h2>
+          <p style="font-size:0.82rem;opacity:0.6;margin-bottom:16px">Selecione os tipos de solicitação que <strong id="editAssignmentsUserName"></strong> receberá automaticamente no ClickUp.</p>
+          <div id="editAssignmentsList" style="max-height:380px;overflow:auto;border:1px solid var(--border-light);border-radius:8px;padding:8px"></div>
+          <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:20px">
+            <button onclick="cancelarEditAssignments()" class="btn" style="background:transparent;border:1px solid var(--border-light)">Cancelar</button>
+            <button onclick="salvarEditAssignments()" class="btn btn-primary">Salvar</button>
+          </div>
+        </div>
       </div>
 
       <!-- Editar função modal -->
@@ -84,6 +148,9 @@
     let _allUsers = [];
     let _editingUserId = null;
     let _userSearchTimeout;
+    let _tiposComClickup = [];
+    let _editingClickupUserId = null;
+    let _editingAssignmentsUserId = null;
 
     function esc(str) {
       if (!str) return '';
@@ -105,7 +172,7 @@
 
     async function loadUsuarios() {
       const tbody = document.getElementById('usuariosTabelaBody');
-      tbody.innerHTML = `<tr><td colspan="6" style="padding:24px;text-align:center;opacity:0.4">Carregando...</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="7" style="padding:24px;text-align:center;opacity:0.4">Carregando...</td></tr>`;
       try {
         const res = await fetch('/api/admin/users');
         if (!res.ok) throw new Error('erro');
@@ -113,7 +180,7 @@
         _allUsers = data.users || data || [];
         renderUsuarios(_allUsers);
       } catch {
-        tbody.innerHTML = `<tr><td colspan="6" style="padding:24px;text-align:center;color:var(--ruby-red)">Erro ao carregar usuários.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="7" style="padding:24px;text-align:center;color:var(--ruby-red)">Erro ao carregar usuários.</td></tr>`;
       }
     }
 
@@ -125,7 +192,7 @@
         : users;
 
       if (!filtered.length) {
-        tbody.innerHTML = `<tr><td colspan="6" style="padding:24px;text-align:center;opacity:0.4">Nenhum usuário encontrado.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="7" style="padding:24px;text-align:center;opacity:0.4">Nenhum usuário encontrado.</td></tr>`;
         return;
       }
 
@@ -147,7 +214,22 @@
             <button onclick="abrirEditRole('${esc(u.id)}', '${esc(u.name || u.email)}', '${esc(u.role)}')" style="padding:3px 9px;border-radius:6px;background:${roleStyle};border:none;font-family:'Nunito Sans',sans-serif;font-size:0.78rem;font-weight:700;cursor:pointer">${roleLabel}</button>
           </td>
           <td style="padding:10px 14px">
-            <span style="font-size:0.8rem;font-family:monospace;opacity:0.6">${esc(u.clickup_user_id || '—')}</span>
+            <button onclick="abrirEditClickup('${esc(u.id)}', '${esc(u.name || u.email)}', '${esc(u.clickup_user_id || '')}')"
+                    style="font-size:0.8rem;font-family:monospace;opacity:0.7;background:transparent;border:1px dashed rgba(34,27,25,0.15);padding:3px 9px;border-radius:5px;cursor:pointer;transition:all 0.15s"
+                    onmouseover="this.style.background='var(--icon-bg)';this.style.opacity='1'"
+                    onmouseout="this.style.background='transparent';this.style.opacity='0.7'">
+              ${esc(u.clickup_user_id || '— editar —')}
+            </button>
+          </td>
+          <td style="padding:10px 14px">
+            <button onclick="abrirEditAssignments('${esc(u.id)}', '${esc(u.name || u.email)}')"
+                    style="font-size:0.78rem;background:rgba(34,27,25,0.05);border:none;padding:4px 10px;border-radius:5px;cursor:pointer;display:inline-flex;align-items:center;gap:5px;transition:all 0.15s"
+                    onmouseover="this.style.background='var(--icon-bg)'"
+                    onmouseout="this.style.background='rgba(34,27,25,0.05)'">
+              <strong>${(u.tipos_assigned || []).length}</strong>
+              <span style="opacity:0.6">${(u.tipos_assigned || []).length === 1 ? 'formulário' : 'formulários'}</span>
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="opacity:0.4"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            </button>
           </td>
           <td style="padding:10px 14px">
             <span style="font-size:0.8rem;opacity:0.6">${dt}</span>
@@ -216,6 +298,129 @@
       } catch { alert('Erro de conexão.'); }
     }
 
+    async function _ensureTipos() {
+      if (_tiposComClickup.length > 0) return _tiposComClickup;
+      try {
+        const res = await fetch('/api/admin/tipos-com-clickup');
+        if (res.ok) _tiposComClickup = await res.json();
+      } catch {}
+      return _tiposComClickup;
+    }
+
+    function abrirNovoUsuario() {
+      document.getElementById('novoUsuarioEmail').value = '';
+      document.getElementById('novoUsuarioNome').value = '';
+      document.getElementById('novoUsuarioRole').value = 'colaborador';
+      document.getElementById('novoUsuarioClickup').value = '';
+      document.getElementById('novoUsuarioErro').style.display = 'none';
+      document.getElementById('novoUsuarioModal').style.display = 'flex';
+    }
+
+    function cancelarNovoUsuario() {
+      document.getElementById('novoUsuarioModal').style.display = 'none';
+    }
+
+    async function salvarNovoUsuario() {
+      const email = document.getElementById('novoUsuarioEmail').value.trim();
+      const name = document.getElementById('novoUsuarioNome').value.trim();
+      const role = document.getElementById('novoUsuarioRole').value;
+      const clickup_user_id = document.getElementById('novoUsuarioClickup').value.trim();
+      const erroEl = document.getElementById('novoUsuarioErro');
+      erroEl.style.display = 'none';
+      try {
+        const res = await fetch('/api/admin/users', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, name, role, clickup_user_id: clickup_user_id || null }),
+        });
+        if (res.ok) {
+          cancelarNovoUsuario();
+          await loadUsuarios();
+        } else {
+          const err = await res.json().catch(() => ({}));
+          erroEl.textContent = err.error || 'Erro ao criar usuário.';
+          erroEl.style.display = 'block';
+        }
+      } catch {
+        erroEl.textContent = 'Erro de conexão.';
+        erroEl.style.display = 'block';
+      }
+    }
+
+    function abrirEditClickup(userId, userName, currentClickup) {
+      _editingClickupUserId = userId;
+      document.getElementById('editClickupUserName').textContent = userName;
+      document.getElementById('editClickupInput').value = currentClickup;
+      document.getElementById('editClickupModal').style.display = 'flex';
+    }
+
+    function cancelarEditClickup() {
+      document.getElementById('editClickupModal').style.display = 'none';
+      _editingClickupUserId = null;
+    }
+
+    async function salvarEditClickup() {
+      if (!_editingClickupUserId) return;
+      const novo = document.getElementById('editClickupInput').value.trim();
+      try {
+        const res = await fetch(`/api/admin/users/${_editingClickupUserId}/clickup_user_id`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ clickup_user_id: novo || null }),
+        });
+        if (res.ok) {
+          cancelarEditClickup();
+          await loadUsuarios();
+        } else {
+          const err = await res.json().catch(() => ({}));
+          alert(err.error || 'Erro ao atualizar ClickUp ID.');
+        }
+      } catch { alert('Erro de conexão.'); }
+    }
+
+    async function abrirEditAssignments(userId, userName) {
+      _editingAssignmentsUserId = userId;
+      document.getElementById('editAssignmentsUserName').textContent = userName;
+      const user = (_allUsers || []).find(u => String(u.id) === String(userId));
+      const tiposAtuais = new Set(user?.tipos_assigned || []);
+      await _ensureTipos();
+      const listEl = document.getElementById('editAssignmentsList');
+      listEl.innerHTML = _tiposComClickup.map(t => `
+        <label style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:5px;cursor:pointer;transition:background 0.12s"
+               onmouseover="this.style.background='var(--icon-bg)'"
+               onmouseout="this.style.background='transparent'">
+          <input type="checkbox" value="${esc(t.tipo)}" ${tiposAtuais.has(t.tipo) ? 'checked' : ''} style="cursor:pointer">
+          <span style="font-size:0.86rem">${esc(t.label)}</span>
+        </label>
+      `).join('');
+      document.getElementById('editAssignmentsModal').style.display = 'flex';
+    }
+
+    function cancelarEditAssignments() {
+      document.getElementById('editAssignmentsModal').style.display = 'none';
+      _editingAssignmentsUserId = null;
+    }
+
+    async function salvarEditAssignments() {
+      if (!_editingAssignmentsUserId) return;
+      const checks = document.querySelectorAll('#editAssignmentsList input[type=checkbox]:checked');
+      const tipos = Array.from(checks).map(c => c.value);
+      try {
+        const res = await fetch(`/api/admin/users/${_editingAssignmentsUserId}/assignments`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ tipos }),
+        });
+        if (res.ok) {
+          cancelarEditAssignments();
+          await loadUsuarios();
+        } else {
+          const err = await res.json().catch(() => ({}));
+          alert(err.error || 'Erro ao atualizar atribuições.');
+        }
+      } catch { alert('Erro de conexão.'); }
+    }
+
     async function init() {
       await _configReady;
       await Auth.init();
@@ -232,6 +437,15 @@
 
       document.getElementById('editRoleModal').addEventListener('click', function(e) {
         if (e.target === this) cancelarEditRole();
+      });
+      document.getElementById('novoUsuarioModal').addEventListener('click', function(e) {
+        if (e.target === this) cancelarNovoUsuario();
+      });
+      document.getElementById('editClickupModal').addEventListener('click', function(e) {
+        if (e.target === this) cancelarEditClickup();
+      });
+      document.getElementById('editAssignmentsModal').addEventListener('click', function(e) {
+        if (e.target === this) cancelarEditAssignments();
       });
     }
 

@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { db } from "@workspace/db";
-import { usersTable, activityLogTable, artTemplatesTable, solicitacoesTable } from "@workspace/db";
+import { usersTable, activityLogTable, artTemplatesTable, solicitacoesTable, userTipoAssignmentsTable } from "@workspace/db";
 import { eq, desc, sql, and, count, isNull } from "drizzle-orm";
 import { requireAuth, requireRole } from "../middleware/auth.middleware";
 import { logger } from "../lib/logger";
@@ -11,15 +11,51 @@ import { gerarCartaoBoasVindasHandler } from "./gerador-cartao-boas-vindas";
 import { AVAILABLE_FONTS } from "../types/art-template";
 import { FORM_SCHEMAS, getFormSchemaList } from "../config/form-schemas";
 
+const TIPOS_COM_CLICKUP: Array<{ tipo: string; label: string }> = [
+  { tipo: "eventos",                       label: "Eventos" },
+  { tipo: "artes-divulgacao",              label: "Artes de Divulgação" },
+  { tipo: "atualizacao-material",          label: "Atualização de Material" },
+  { tipo: "conteudo-pdf-informativo",      label: "PDF — Informativo" },
+  { tipo: "conteudo-pdf-ebook",            label: "PDF — Ebook" },
+  { tipo: "apresentacao-nova",             label: "Apresentação — Nova" },
+  { tipo: "apresentacao-atualizar",        label: "Apresentação — Atualização" },
+  { tipo: "pagina-assessores-dados",       label: "Página de Assessores — Dados" },
+  { tipo: "pagina-assessores-atualizacao", label: "Página de Assessores — Atualização" },
+  { tipo: "cartao-visita-fisico",          label: "Cartão de Visita — Físico" },
+  { tipo: "pagina-online",                 label: "Página Online" },
+  { tipo: "outro",                         label: "Outro" },
+  { tipo: "brindes",                       label: "Brindes" },
+  { tipo: "patrocinio",                    label: "Patrocínio" },
+  { tipo: "email-marketing",               label: "E-mail Marketing" },
+  { tipo: "producao-video",                label: "Produção de Vídeo" },
+  { tipo: "sessao-fotos",                  label: "Sessão de Fotos" },
+  { tipo: "materiais-impressos",           label: "Materiais Impressos" },
+];
+const TIPOS_COM_CLICKUP_SET = new Set(TIPOS_COM_CLICKUP.map(t => t.tipo));
+
 const router = Router();
 
 router.get("/users", requireAuth, requireRole("admin"), async (req, res) => {
   try {
     const users = await db.select().from(usersTable);
-    res.json(users);
+    const assignments = await db.select().from(userTipoAssignmentsTable);
+
+    const byUserId = new Map<number, string[]>();
+    for (const a of assignments) {
+      const list = byUserId.get(a.user_id) || [];
+      list.push(a.tipo);
+      byUserId.set(a.user_id, list);
+    }
+
+    const enriched = users.map(u => ({
+      ...u,
+      tipos_assigned: byUserId.get(u.id) || [],
+    }));
+
+    res.json(enriched);
   } catch (err: any) {
-    req.log.error({ err, body: req.body }, "Erro ao listar usuários");
-    res.status(500).json({ error: err.message || "Erro ao listar usuários", code: err.code, details: err.stack?.split('\n').slice(0, 3).join('\n') });
+    req.log.error({ err }, "Erro ao listar usuários");
+    res.status(500).json({ error: err.message || "Erro ao listar usuários", code: err.code });
   }
 });
 
@@ -419,6 +455,85 @@ router.post("/art-templates/:id/duplicate", requireAuth, requireRole("admin"), a
   } catch (err: any) {
     req.log.error({ err, body: req.body }, "Erro ao duplicar art-template");
     res.status(500).json({ error: err.message || "Erro ao duplicar template", code: err.code, details: err.stack?.split('\n').slice(0, 3).join('\n') });
+  }
+});
+
+router.get("/tipos-com-clickup", requireAuth, requireRole("admin"), (_req, res) => {
+  res.json(TIPOS_COM_CLICKUP);
+});
+
+router.post("/users", requireAuth, requireRole("admin"), async (req, res): Promise<void> => {
+  try {
+    const { email, name, role, clickup_user_id } = req.body as {
+      email: string; name: string; role: string; clickup_user_id?: string | null;
+    };
+
+    if (!email || typeof email !== "string") {
+      res.status(400).json({ error: "email obrigatório" }); return;
+    }
+    const emailNormalized = email.trim().toLowerCase();
+    if (!emailNormalized.endsWith("@svninvest.com.br")) {
+      res.status(400).json({ error: "Apenas e-mails @svninvest.com.br são permitidos" }); return;
+    }
+    if (!name || !name.trim()) {
+      res.status(400).json({ error: "name obrigatório" }); return;
+    }
+    if (!["colaborador", "gestor", "admin"].includes(role)) {
+      res.status(400).json({ error: "Role inválida" }); return;
+    }
+
+    const existing = await db.select({ id: usersTable.id }).from(usersTable).where(eq(usersTable.email, emailNormalized));
+    if (existing.length > 0) {
+      res.status(409).json({ error: "Usuário com este e-mail já existe" }); return;
+    }
+
+    const [inserted] = await db.insert(usersTable).values({
+      email: emailNormalized,
+      name: name.trim(),
+      role,
+      clickup_user_id: clickup_user_id?.trim() || null,
+    }).returning();
+
+    res.json({ success: true, user: inserted });
+  } catch (err: any) {
+    req.log.error({ err, body: req.body }, "Erro ao criar usuário");
+    res.status(500).json({ error: err.message || "Erro ao criar usuário", code: err.code });
+  }
+});
+
+router.put("/users/:id/assignments", requireAuth, requireRole("admin"), async (req, res): Promise<void> => {
+  try {
+    const userId = parseInt(String(req.params.id));
+    if (isNaN(userId)) { res.status(400).json({ error: "ID inválido" }); return; }
+
+    const { tipos } = req.body as { tipos: string[] };
+    if (!Array.isArray(tipos)) {
+      res.status(400).json({ error: "tipos deve ser um array" }); return;
+    }
+
+    const invalidos = tipos.filter(t => !TIPOS_COM_CLICKUP_SET.has(t));
+    if (invalidos.length > 0) {
+      res.status(400).json({ error: `Tipos inválidos: ${invalidos.join(", ")}` }); return;
+    }
+
+    const [targetUser] = await db.select({ id: usersTable.id }).from(usersTable).where(eq(usersTable.id, userId));
+    if (!targetUser) {
+      res.status(404).json({ error: "Usuário não encontrado" }); return;
+    }
+
+    await db.transaction(async (tx) => {
+      await tx.delete(userTipoAssignmentsTable).where(eq(userTipoAssignmentsTable.user_id, userId));
+      if (tipos.length > 0) {
+        await tx.insert(userTipoAssignmentsTable).values(
+          tipos.map(tipo => ({ user_id: userId, tipo }))
+        );
+      }
+    });
+
+    res.json({ success: true, tipos });
+  } catch (err: any) {
+    req.log.error({ err, body: req.body }, "Erro ao atualizar assignments");
+    res.status(500).json({ error: err.message || "Erro ao atualizar atribuições", code: err.code });
   }
 });
 
