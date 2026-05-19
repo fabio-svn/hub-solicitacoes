@@ -652,10 +652,10 @@
       return opts;
     }
 
-    function getActivePlaceholders(tipo) {
+    function getActivePlaceholders(tipo, includeFiles = false) {
       if (formSchema) {
         return [
-          ...formSchema.fields.filter(f => f.type !== 'file').map(f => f.name),
+          ...formSchema.fields.filter(f => includeFiles || f.type !== 'file').map(f => f.name),
           ...(formSchema.computed || []).map(c => c.name),
         ];
       }
@@ -1883,6 +1883,7 @@
         }
 
         const placeholderField = (layer.source?.type === 'placeholder') ? (layer.source.field || '') : '';
+        const placeholdersWithFiles = getActivePlaceholders(tipo, true);
         html += `
         <div class="props-section">
           <div class="props-label">Fonte da imagem</div>
@@ -1902,7 +1903,7 @@
           <div class="props-label" style="margin-top:6px">Campo (placeholder)</div>
           <select class="props-input" onchange="updLayer('${id}','source',{type:'placeholder',field:this.value})">
             <option value="">Selecione campo…</option>
-            ${placeholders.map(p=>`<option value="${p}"${placeholderField===p?' selected':''}>${p}</option>`).join('')}
+            ${placeholdersWithFiles.map(p=>`<option value="${p}"${placeholderField===p?' selected':''}>${p}</option>`).join('')}
           </select>
           <div style="font-size:0.7rem;opacity:0.45;margin-top:3px">URL do arquivo será lida de dados[campo] em tempo de render</div>
           `:variantHtml}
