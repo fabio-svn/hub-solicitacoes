@@ -1,0 +1,351 @@
+## Contexto
+
+8 fixes operacionais identificados em auditoria. Cada um independente. 
+Se algum falhar, pular e reportar — não bloquear os outros.
+
+Arquivos afetados:
+- artifacts/api-server/src/routes/gerador-assinatura.ts
+- artifacts/api-server/src/routes/gerador-cartao-boas-vindas.ts
+- artifacts/api-server/src/routes/admin.ts
+- artifacts/api-server/src/routes/forms.ts
+- artifacts/api-server/src/services/template-renderer.ts
+- artifacts/api-server/src/services/art-generator.ts
+- artifacts/api-server/public/thankyou.html
+- artifacts/api-server/public/solicitacao.html
+
+---
+
+## Fix 1 — Status flow nos legacy generators
+
+Os 2 wrappers especializados não passam por status='gerando' nem 
+populam erro_geracao em falhas. Resultado: UI fica em loop sem 
+feedback quando algo dá errado.
+
+### Em gerador-assinatura.ts:
+
+LOCALIZAR a função `gerarAssinaturaEmail`.
+
+ADICIONAR antes do `try`:
+
+```ts
+await db.update(solicitacoesTable)
+  .set({ status: "gerando", updated_at: new Date() })
+  .where(eq(solicitacoesTable.id, solicitacaoId));
+```
+
+DENTRO do `catch (err)`, ANTES do `throw err`, ADICIONAR:
+
+```ts
+await db.update(solicitacoesTable)
+  .set({
+    status: "erro",
+    erro_geracao: err instanceof Error ? err.message : String(err),
+    updated_at: new Date(),
+  })
+  .where(eq(solicitacoesTable.id, solicitacaoId));
+```
+
+NO BLOCO DE SUCESSO (onde já tem `status: "concluido"`), GARANTIR 
+que também limpa erro_geracao:
+
+```ts
+.set({
+  entrega_links: [{ label: "Assinatura de E-mail", url }],
+  status: "concluido",
+  erro_geracao: null,  // ← adicionar
+  updated_at: new Date(),
+})
+```
+
+### Em gerador-cartao-boas-vindas.ts:
+
+EXATAMENTE A MESMA LÓGICA. Adicionar status='gerando' antes do try, 
+status='erro' + erro_geracao no catch, erro_geracao: null no sucesso.
+
+---
+
+## Fix 2 — Stack trace gating em admin.ts
+
+Hoje todos os handlers retornam stack trace no JSON de resposta:
+  details: err.stack?.split('\n').slice(0, 3).join('\n')
+
+Isso expõe estrutura interna pro user. Gate por ambiente.
+
+### Adicionar helper no topo do arquivo (após imports):
+
+```ts
+const IS_DEV = process.env.NODE_ENV !== "production";
+
+function errorPayload(err: any, defaultMsg: string): Record<string, unknown> {
+  const payload: Record<string, unknown> = {
+    error: err.message || defaultMsg,
+  };
+  if (err.code) payload.code = err.code;
+  if (IS_DEV && err.stack) {
+    payload.details = err.stack.split('\n').slice(0, 3).join('\n');
+  }
+  return payload;
+}
+```
+
+### Substituir TODOS os blocos catch que têm o pattern:
+
+ANTES:
+```ts
+} catch (err: any) {
+  req.log.error({ err, body: req.body }, "Erro ao ...");
+  res.status(500).json({ 
+    error: err.message || "Erro ao ...", 
+    code: err.code, 
+    details: err.stack?.split('\n').slice(0, 3).join('\n') 
+  });
+}
+```
+
+DEPOIS:
+```ts
+} catch (err: any) {
+  req.log.error({ err, body: req.body }, "Erro ao ...");
+  res.status(500).json(errorPayload(err, "Erro ao ..."));
+}
+```
+
+APLICAR a TODOS os handlers (~11 ocorrências em admin.ts). 
+
+ATENÇÃO: o handler que tem `res.status(err.status || 500)` (activate, 
+linha ~323) deve manter o status dinâmico:
+```ts
+res.status(err.status || 500).json(errorPayload(err, "Erro ao ativar template"));
+```
+
+---
+
+## Fix 4 — Título usando `nome` em vez de `nomeCompleto`
+
+Em routes/forms.ts, função gerarTituloSolicitacao (~linha 188-211).
+
+SUBSTITUIR:
+
+```ts
+case "assinatura-email":     return `[Assinatura de E-mail] ${s(dados.nomeCompleto) || userName}`;
+case "cartao-visita-digital":return `[Cartão Digital] ${s(dados.nomeCompleto) || userName}`;
+```
+
+POR:
+
+```ts
+case "assinatura-email":     return `[Assinatura de E-mail] ${s(dados.nome) || userName}`;
+case "cartao-visita-digital":return `[Cartão Digital] ${s(dados.nome) || userName}`;
+```
+
+(Apenas essas 2 linhas. Outros cases usam outros campos — não tocar.)
+
+---
+
+## Fix 5 — Logs de diagnóstico gated por DEBUG_RENDER
+
+Em services/template-renderer.ts, linhas ~418-425:
+
+ANTES:
+```ts
+// Log de diagnóstico de cada composite antes de montar
+for (let i = 0; i < composites.length; i++) {
+  const c = composites[i];
+  if (Buffer.isBuffer(c.input)) {
+    const m = await sharp(c.input).metadata();
+    logger.info(`[render] composite[${i}]: ${m.width}x${m.height} @ (left=${c.left}, top=${c.top})`);
+  }
+}
+```
+
+DEPOIS:
+```ts
+// Log de diagnóstico de cada composite (somente em DEBUG_RENDER)
+if (DEBUG_RENDER) {
+  for (let i = 0; i < composites.length; i++) {
+    const c = composites[i];
+    if (Buffer.isBuffer(c.input)) {
+      const m = await sharp(c.input).metadata();
+      logger.info(`[render] composite[${i}]: ${m.width}x${m.height} @ (left=${c.left}, top=${c.top})`);
+    }
+  }
+}
+```
+
+Verificar também os logs ao redor (linhas 390, 394) — se forem 
+diagnósticos sem valor em prod, gate também. Mas só se for óbvio 
+que é diagnóstico — não gate logs de WARNING (que são importantes).
+
+---
+
+## Fix 6 — ORDER BY no select de template ativo
+
+Em services/art-generator.ts, linhas ~89-93:
+
+ANTES:
+```ts
+const [templateRow] = await db
+  .select()
+  .from(artTemplatesTable)
+  .where(templateWhere);
+```
+
+DEPOIS:
+```ts
+const [templateRow] = await db
+  .select()
+  .from(artTemplatesTable)
+  .where(templateWhere)
+  .orderBy(desc(artTemplatesTable.id))
+  .limit(1);
+```
+
+GARANTIR que `desc` está importado de "drizzle-orm" no topo do arquivo. 
+Se não estiver:
+```ts
+import { eq, and, isNull, desc } from "drizzle-orm";
+```
+
+---
+
+## Fix 7 — variant_value handling consistente em admin.ts
+
+Hoje há 3 patterns diferentes pra variant_value (POST, PUT, duplicate). 
+Padronizar.
+
+### POST /art-templates (~linha 261):
+
+JÁ ESTÁ OK (`variant_value: variant_value || null`). Manter.
+
+### PUT /art-templates/:id (~linha 282):
+
+MUDAR DE:
+```ts
+if ('variant_value' in req.body) updateData.variant_value = variant_value || null;
+```
+
+PARA:
+```ts
+if (variant_value !== undefined) updateData.variant_value = variant_value || null;
+```
+
+Mesma semântica, mais consistente com o resto do código.
+
+### POST /art-templates/:id/duplicate (~linha 410):
+
+MUDAR DE:
+```ts
+variant_value: variant_value !== undefined ? (variant_value || null) : source.variant_value,
+```
+
+PARA o mais claro:
+```ts
+variant_value: variant_value !== undefined 
+  ? (variant_value || null) 
+  : source.variant_value,
+```
+
+(Apenas quebra a linha pra ficar legível. Lógica é a mesma. Se já tiver 
+quebrado na linha, deixa quieto.)
+
+---
+
+## Fix 8 — enrichDataWithLabels expansível
+
+Em services/template-renderer.ts, função `enrichDataWithLabels` 
+(~linhas 33-45).
+
+ADICIONAR mais 2 derivações pra modelo_arte e modelo_cartao 
+(esses tipos têm variants e podem precisar de labels legíveis no futuro).
+
+ANTES:
+```ts
+function enrichDataWithLabels(data: Record<string, any>): Record<string, any> {
+  const enriched = { ...data };
+  
+  if (typeof data.contrato_social === 'string' && data.contrato_social) {
+    enriched.contrato_label = CONTRATO_LABELS[data.contrato_social] ?? data.contrato_social;
+  }
+  
+  if (typeof data.marca === 'string' && data.marca && !data.marca_label) {
+    enriched.marca_label = MARCA_LABELS[data.marca] ?? data.marca;
+  }
+  
+  return enriched;
+}
+```
+
+DEPOIS — adicionar 2 lookups + 2 derivações:
+
+```ts
+const MODELO_ARTE_LABELS: Record<string, string> = {
+  // Adicionar conforme variants de divulgacao-nps. Por enquanto, vazio.
+  // Quando configurado no form-schemas.ts, espelhar aqui.
+};
+
+const MODELO_CARTAO_LABELS: Record<string, string> = {
+  // Adicionar conforme variants de cartao-comemorativo. Por enquanto, vazio.
+};
+
+function enrichDataWithLabels(data: Record<string, any>): Record<string, any> {
+  const enriched = { ...data };
+  
+  if (typeof data.contrato_social === 'string' && data.contrato_social) {
+    enriched.contrato_label = CONTRATO_LABELS[data.contrato_social] ?? data.contrato_social;
+  }
+  
+  if (typeof data.marca === 'string' && data.marca && !data.marca_label) {
+    enriched.marca_label = MARCA_LABELS[data.marca] ?? data.marca;
+  }
+  
+  if (typeof data.modelo_arte === 'string' && data.modelo_arte && !data.modelo_arte_label) {
+    enriched.modelo_arte_label = MODELO_ARTE_LABELS[data.modelo_arte] ?? data.modelo_arte;
+  }
+  
+  if (typeof data.modelo_cartao === 'string' && data.modelo_cartao && !data.modelo_cartao_label) {
+    enriched.modelo_cartao_label = MODELO_CARTAO_LABELS[data.modelo_cartao] ?? data.modelo_cartao;
+  }
+  
+  return enriched;
+}
+```
+
+(Os 2 maps começam vazios — fallback sempre retorna o próprio slug. 
+Quando o user precisar usar `{{modelo_cartao_label}}` em algum template, 
+preencher as entradas correspondentes.)
+
+---
+
+## Critério de validação geral
+
+1. `pnpm run build` → compila sem erros
+2. Submeter solicitação de assinatura-email:
+   - Logo correto aparece
+   - DB: status passa de `recebido` → `gerando` → `concluido`
+   - Em caso de erro forçado (ex: template inválido), status vira `erro` + `erro_geracao` populado
+   - Thankyou mostra mensagem de erro se status='erro'
+3. Submeter solicitação cartao-boas-vindas:
+   - Mesmo comportamento de status flow
+4. Acessar /solicitacao.html?id=X de uma solicitação com status='erro' 
+   (forçar via SQL `UPDATE solicitacoes SET status='erro' WHERE id=X`):
+   - Bloco de entrega mostra mensagem de erro com texto de erro_geracao
+5. Em produção (NODE_ENV=production), tentar forçar erro em /admin/users:
+   - Response JSON NÃO contém `details` (stack trace)
+   - Em dev (NODE_ENV != production), `details` ainda aparece
+6. Solicitação criada com nome "Maria" no form de assinatura → título 
+   no DB e ClickUp é `[Assinatura de E-mail] Maria` (não nome do user logado)
+7. Apenas 1 query de `sharp.metadata()` por composite — verificar logs 
+   em produção (sem DEBUG_RENDER), não devem aparecer logs `[render] composite[X]:`
+
+## Não faça
+
+- Não toque em REQUIRED_FIELDS, CONTRATO_LABELS dedup, TIPOS_AUTOMACAO dedup — 
+  ficam pra refactor separado
+- Não delete templates ou solicitações
+- Não mude a lógica de upload, KEY_MAP, ou variant_value resolution
+- Não mude assinaturas de funções públicas exportadas
+- Se algum nome de função/variável aqui não bater com o arquivo real, 
+  ADAPTAR pro nome real (não criar nomes novos)
+- Se algum elemento DOM (artefatoPolling, artefatoReady, aprovacaoCard) 
+  não existir nos HTMLs reais com esses IDs, ADAPTAR (provavelmente os 
+  IDs mudaram em prompts anteriores)

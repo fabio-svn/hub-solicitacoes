@@ -39,6 +39,10 @@ export async function gerarAssinaturaEmail(
 ): Promise<void> {
   logger.info({ solicitacaoId }, "Iniciando geração de assinatura PNG (template-driven)");
 
+  await db.update(solicitacoesTable)
+    .set({ status: "gerando", updated_at: new Date() })
+    .where(eq(solicitacoesTable.id, solicitacaoId));
+
   const nome       = String(dados.nomeCompleto || dados.nome || "").trim();
   const telefone   = String(dados.telefone || "").trim();
   const email      = String(dados.emailCorporativo || dados.email || "").trim();
@@ -84,6 +88,7 @@ export async function gerarAssinaturaEmail(
       .set({
         entrega_links: [{ label: "Assinatura de E-mail", url }],
         status: "concluido",
+        erro_geracao: null,
         updated_at: new Date(),
       })
       .where(eq(solicitacoesTable.id, solicitacaoId));
@@ -92,6 +97,13 @@ export async function gerarAssinaturaEmail(
 
   } catch (err) {
     logger.error({ err, solicitacaoId }, "Erro ao gerar assinatura PNG");
+    await db.update(solicitacoesTable)
+      .set({
+        status: "erro",
+        erro_geracao: err instanceof Error ? err.message : String(err),
+        updated_at: new Date(),
+      })
+      .where(eq(solicitacoesTable.id, solicitacaoId));
     throw err;
   }
 }

@@ -20,6 +20,10 @@ export async function gerarCartaoBoasVindasHandler(
 ): Promise<void> {
   logger.info({ solicitacaoId, dadosKeys: Object.keys(dados) }, "Iniciando geração de Cartão de Boas-vindas (template-driven)");
 
+  await db.update(solicitacoesTable)
+    .set({ status: "gerando", updated_at: new Date() })
+    .where(eq(solicitacoesTable.id, solicitacaoId));
+
   // Form envia snake_case; normalizeFormDados pode ter adicionado aliases,
   // mas priorizamos snake_case (origem real do formulário).
   const nomeCliente    = String(dados.nome_cliente    ?? dados.nomeCliente    ?? "").trim();
@@ -90,6 +94,7 @@ export async function gerarCartaoBoasVindasHandler(
       .set({
         entrega_links: [{ label: "Cartão de Boas-vindas", url }],
         status: "concluido",
+        erro_geracao: null,
         updated_at: new Date(),
       })
       .where(eq(solicitacoesTable.id, solicitacaoId));
@@ -98,6 +103,13 @@ export async function gerarCartaoBoasVindasHandler(
 
   } catch (err) {
     logger.error({ err, solicitacaoId }, "Erro ao gerar Cartão de Boas-vindas PNG");
+    await db.update(solicitacoesTable)
+      .set({
+        status: "erro",
+        erro_geracao: err instanceof Error ? err.message : String(err),
+        updated_at: new Date(),
+      })
+      .where(eq(solicitacoesTable.id, solicitacaoId));
     throw err;
   }
 }

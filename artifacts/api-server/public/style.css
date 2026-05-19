@@ -153,7 +153,7 @@ img { max-width: 100%; height: auto; }
   font-size: 0.88rem;
   font-weight: 500;
 }
-.form-status-loading { background: #f5f3f0; color: #221b19; }
+.form-status-loading { background: #f5f3f0; color: var(--carbon-black); }
 .form-status-error {
   background: #fef2f2;
   color: #991b1b;
@@ -167,7 +167,7 @@ img { max-width: 100%; height: auto; }
   flex-shrink: 0;
   width: 16px; height: 16px;
   border: 2px solid rgba(34,27,25,0.15);
-  border-top-color: #AC3631;
+  border-top-color: var(--ruby-red);
   border-radius: 50%;
   animation: formSpin 0.7s linear infinite;
 }
@@ -1008,7 +1008,7 @@ input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
 .btn-submit-gold {
   background: linear-gradient(135deg, #c9a84c 0%, #f0d080 40%, #c9a84c 60%, #a07830 100%);
   background-size: 200% 200%;
-  color: #221B19;
+  color: var(--carbon-black);
   font-weight: 700;
   border: none;
   animation: goldShimmer 2.5s ease infinite;

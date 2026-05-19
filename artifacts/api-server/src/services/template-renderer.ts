@@ -415,12 +415,13 @@ export async function renderFromTemplate(
     }
   }
 
-  // Log de diagnóstico de cada composite antes de montar
-  for (let i = 0; i < composites.length; i++) {
-    const c = composites[i];
-    if (Buffer.isBuffer(c.input)) {
-      const m = await sharp(c.input).metadata();
-      logger.info(`[render] composite[${i}]: ${m.width}x${m.height} @ (left=${c.left}, top=${c.top})`);
+  if (DEBUG_RENDER) {
+    for (let i = 0; i < composites.length; i++) {
+      const c = composites[i];
+      if (Buffer.isBuffer(c.input)) {
+        const m = await sharp(c.input).metadata();
+        logger.info(`[render] composite[${i}]: ${m.width}x${m.height} @ (left=${c.left}, top=${c.top})`);
+      }
     }
   }
 

@@ -3,7 +3,7 @@ import * as path from "path";
 import * as os from "os";
 import { db } from "@workspace/db";
 import { solicitacoesTable, artTemplatesTable } from "@workspace/db";
-import { eq, and, isNull } from "drizzle-orm";
+import { eq, and, isNull, desc } from "drizzle-orm";
 import { uploadToR2 } from "../routes/r2";
 import { logger } from "../lib/logger";
 import { renderFromTemplate } from "./template-renderer";
@@ -93,7 +93,9 @@ export async function gerarArteParaSolicitacao(
   const [templateRow] = await db
     .select()
     .from(artTemplatesTable)
-    .where(templateWhere);
+    .where(templateWhere)
+    .orderBy(desc(artTemplatesTable.id))
+    .limit(1);
 
   if (!templateRow) {
     logger.info({ solicitacaoId, tipo }, "[render] sem template ativo, pulando geração");

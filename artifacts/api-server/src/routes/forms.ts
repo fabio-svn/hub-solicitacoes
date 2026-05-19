@@ -188,9 +188,9 @@ function extractUrl(text: string): string | null {
 function gerarTituloSolicitacao(tipo: string, dados: Record<string, unknown>, userName: string): string {
   const s = (v: unknown) => String(v || "").trim();
   switch (tipo) {
-    case "assinatura-email":     return `[Assinatura de E-mail] ${s(dados.nomeCompleto) || userName}`;
+    case "assinatura-email":     return `[Assinatura de E-mail] ${s(dados.nome) || userName}`;
     case "cartao-visita-fisico": return `[Cartão de Visita] ${s(dados.nomeCartao) || userName}`;
-    case "cartao-visita-digital":return `[Cartão Digital] ${s(dados.nomeCompleto) || userName}`;
+    case "cartao-visita-digital":return `[Cartão Digital] ${s(dados.nome) || userName}`;
     case "cartao-boas-vindas":   return `[Cartão de Boas-vindas] ${s(dados.nomeCliente) || userName}`;
     case "cartao-comemorativo":  return `[Cartão Comemorativo] ${s(dados.nomeAniversariante) || userName}`;
     case "divulgacao-nps":       return `[Arte NPS] ${s(dados.nomeAssinatura) || userName}`;

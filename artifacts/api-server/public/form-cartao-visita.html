@@ -302,24 +302,28 @@
       formData.append('tipo_solicitacao', 'cartao-visita-fisico');
       formData.append('dados', JSON.stringify(dados));
 
-      const res = await fetch('/api/solicitacoes', { method: 'POST', body: formData });
-      const d = await res.json().catch(() => ({}));
-      if (res.ok) {
-        try {
-          sessionStorage.setItem('svn_ultimo_resumo', JSON.stringify({
-            tipo_id: 'cartao-visita-fisico',
-            tipo: 'Cartão de Visita — Físico',
-            solicitante: Auth.getUserName(),
-            data: new Date().toLocaleDateString('pt-BR'),
-            hora: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
-            id: d.id,
-          }));
-        } catch {}
-        window.location.href = '/thankyou.html';
-      } else {
+      try {
+        const res = await fetch('/api/solicitacoes', { method: 'POST', body: formData });
+        const d = await res.json().catch(() => ({}));
+        if (res.ok) {
+          try {
+            sessionStorage.setItem('svn_ultimo_resumo', JSON.stringify({
+              tipo_id: 'cartao-visita-fisico',
+              tipo: 'Cartão de Visita — Físico',
+              solicitante: Auth.getUserName(),
+              data: new Date().toLocaleDateString('pt-BR'),
+              hora: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+              id: d.id,
+            }));
+          } catch {}
+          window.location.href = '/thankyou.html';
+        } else {
+          throw new Error(d.error || 'submit_failed');
+        }
+      } catch (e) {
         const errEl = document.getElementById('submitErrorFisico');
-        if (errEl) { errEl.style.display = 'block'; errEl.textContent = d.error || 'Erro ao enviar. Tente novamente.'; }
-        if(window.formUnlockUI)window.formUnlockUI(btn); else { btn.disabled = false; btn.textContent = 'Enviar'; }
+        if (errEl) { errEl.style.display = 'block'; errEl.textContent = 'Erro ao enviar. Tente novamente ou verifique sua conexão.'; }
+        if (window.formUnlockUI) window.formUnlockUI(btn); else { btn.disabled = false; btn.textContent = 'Enviar'; }
       }
     }
 

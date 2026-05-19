@@ -1,0 +1,156 @@
+## Contexto
+
+Consolidar fonte-de-verdade da lista de marcas SVN.
+Hoje está em 4 lugares (form-schemas.ts, config.js, form-assinatura, utils.js).
+Centralizar via window.MARCAS_OPTS_FORM global do config.js.
+
+Arquivos:
+- artifacts/api-server/public/config.js
+- artifacts/api-server/public/form-assinatura-email.html
+- artifacts/api-server/public/utils.js
+
+---
+
+## Fix A — Exportar MARCAS_OPTS_FORM global do config.js
+
+Em public/config.js, ADICIONAR ANTES do bloco `_configReady` (~linha 17):
+
+```js
+// Fallback inicial — sobrescrito pelo fetch quando /api/form-schemas disponível
+window.MARCAS_OPTS_FORM = [
+  { value: 'svn-investimentos',           label: 'SVN Investimentos' },
+  { value: 'svn-capital',                 label: 'SVN Capital' },
+  { value: 'svn-connect',                 label: 'SVN Connect' },
+  { value: 'svn-gestao',                  label: 'SVN Gestão' },
+  { value: 'svn-global',                  label: 'SVN Global' },
+  { value: 'svn-imb',                     label: 'SVN Investment & Merchant Banking' },
+  { value: 'svn-agro-cambio-commodities', label: 'SVN Agro, Câmbio & Commodities' },
+  { value: 'svn-protecao-patrimonial',    label: 'SVN Proteção Patrimonial' },
+  { value: 'svn-wealth-planning',         label: 'SVN Wealth Planning' },
+];
+```
+
+Dentro do `.then(([cfg, schemas]) => { ... })` do _configReady, 
+LOCALIZAR a linha:
+
+```js
+if (schemas.marcas && schemas.marcas.length) MARCAS_SVN = schemas.marcas.map(m => m.label);
+```
+
+SUBSTITUIR por:
+```js
+if (schemas.marcas && schemas.marcas.length) {
+  MARCAS_SVN = schemas.marcas.map(m => m.label);
+  window.MARCAS_OPTS_FORM = schemas.marcas;
+}
+```
+
+Isso mantém MARCAS_SVN funcionando (legacy code que usa só labels) 
+e adiciona MARCAS_OPTS_FORM com value+label pra forms que precisam slug.
+
+---
+
+## Fix B — Remover MARCAS_OPTS_FORM local do form-assinatura
+
+Em public/form-assinatura-email.html (~linhas 116-126).
+
+LOCALIZAR e REMOVER COMPLETAMENTE:
+```js
+const MARCAS_OPTS_FORM = [
+  { value: 'svn-investimentos',           label: 'SVN Investimentos' },
+  { value: 'svn-capital',                 label: 'SVN Capital' },
+  ...
+  { value: 'svn-wealth-planning',         label: 'SVN Wealth Planning' },
+];
+```
+
+NÃO REMOVER `const MARCAS_CONTRATO` — esse é específico do form 
+(controla lógica de CFP).
+
+GARANTIR que init() faz `await _configReady` ANTES de tentar popular 
+o select de marca (~linha 135-136). Se não fizer, ADICIONAR:
+
+```js
+async function init() {
+  await _configReady;  // ← garantir que está aqui
+  // ... resto
+}
+```
+
+(Provavelmente já está. Apenas confirmar.)
+
+A linha que popula o select deve continuar usando `MARCAS_OPTS_FORM`:
+```js
+if (marcaSel) { 
+  MARCAS_OPTS_FORM.forEach(m => { 
+    const o = document.createElement('option'); 
+    o.value = m.value; o.textContent = m.label; 
+    marcaSel.appendChild(o); 
+  }); 
+}
+```
+
+Como ela agora é window.MARCAS_OPTS_FORM global, a referência sem
+`window.` ainda funciona em browser scope. Manter como está.
+
+---
+
+## Fix C — Consolidar marcasMap no humanizeValue
+
+Em public/utils.js, função `humanizeValue` (~linhas 173-193).
+
+LOCALIZAR o bloco que define `marcasMap`:
+```js
+const marcasMap = {
+  'svn-investimentos':                 'SVN Investimentos',
+  'svn-capital':                       'SVN Capital',
+  ...
+  'SVN Investimentos':                 'SVN Investimentos',
+  ...
+};
+if (typeof value === 'string' && marcasMap[value]) return marcasMap[value];
+```
+
+REMOVER COMPLETAMENTE o `marcasMap` e o `if` que usa ele.
+
+SUBSTITUIR por:
+```js
+// Marcas — consultar fonte global do config.js
+if (typeof value === 'string' && typeof window.MARCAS_OPTS_FORM !== 'undefined') {
+  const found = window.MARCAS_OPTS_FORM.find(m => m.value === value || m.label === value);
+  if (found) return found.label;
+}
+```
+
+ATENÇÃO: manter o restante da função intacto. Logo após este bloco
+deve continuar:
+```js
+if (typeof value === 'string' && (value.includes('-') || value.includes('_'))) {
+  return humanizeSlug(value);
+}
+return value;
+```
+
+---
+
+## Critério de validação
+
+1. `pnpm run build` (se aplicável) — ou só verificar que browser não 
+   gera erros no console
+2. Abrir /form-assinatura-email.html:
+   - Dropdown de marca renderiza com 9 marcas
+   - Console SEM erro "MARCAS_OPTS_FORM is not defined"
+   - Selecionar "SVN Capital" → submit envia `marca: 'svn-capital'`
+3. Em qualquer página com listagem de solicitações:
+   - Solicitação de assinatura com marca='svn-capital' mostra "SVN Capital" no UI
+4. Cortar rede (devtools offline) e recarregar form-assinatura:
+   - Dropdown ainda renderiza com 9 marcas (usa fallback do config.js)
+   - Submit funciona quando rede volta
+
+## Não faça
+
+- Não tocar em MARCAS_OPTS no backend (form-schemas.ts) — manter intacto
+- Não tocar em MARCAS_CONTRATO no form-assinatura — lógica de CFP
+- Não tocar em outros forms (boas-vindas, nps, etc) — já usam pattern correto
+- Não tocar em MARCAS_SVN no config.js — manter pra retrocompatibilidade
+  (algum código antigo pode usar; deletar virou backlog futuro)

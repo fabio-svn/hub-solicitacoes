@@ -102,6 +102,16 @@ const DB_STATEMENTS = [
   `ALTER TABLE "art_templates" ADD COLUMN IF NOT EXISTS "name"       VARCHAR(200) NOT NULL DEFAULT ''`,
   `ALTER TABLE "art_templates" ADD COLUMN IF NOT EXISTS "is_active"  BOOLEAN      NOT NULL DEFAULT false`,
   `ALTER TABLE "art_templates" ADD COLUMN IF NOT EXISTS "created_at" TIMESTAMP    NOT NULL DEFAULT NOW()`,
+  `ALTER TABLE "art_templates" ADD COLUMN IF NOT EXISTS "variant_value" VARCHAR(100)`,
+
+  // User-Tipo assignments
+  `CREATE TABLE IF NOT EXISTS "user_tipo_assignments" (
+    "id"      SERIAL       PRIMARY KEY,
+    "user_id" INTEGER      NOT NULL REFERENCES "users" ("id") ON DELETE CASCADE,
+    "tipo"    VARCHAR(50)  NOT NULL,
+    UNIQUE ("user_id", "tipo")
+  )`,
+  `CREATE INDEX IF NOT EXISTS "IDX_user_tipo_assignments_user_id" ON "user_tipo_assignments" ("user_id")`,
 
   // Art assets (imagens da biblioteca de templates)
   `CREATE TABLE IF NOT EXISTS "art_assets" (

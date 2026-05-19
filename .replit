@@ -50,3 +50,4 @@ INTERNAL_API_SECRET = "svn_internal_lgouzenzfb_2026"
 
 [nix]
 channel = "stable-25_05"
+packages = ["zip"]

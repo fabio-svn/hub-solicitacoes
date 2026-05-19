@@ -146,7 +146,7 @@
             <button onclick="abrirEditRole('${esc(u.id)}', '${esc(u.name || u.email)}', '${esc(u.role)}')" style="padding:3px 9px;border-radius:6px;background:${roleStyle};border:none;font-family:'Nunito Sans',sans-serif;font-size:0.78rem;font-weight:700;cursor:pointer">${roleLabel}</button>
           </td>
           <td style="padding:10px 14px">
-            <span style="font-size:0.8rem;font-family:monospace;opacity:0.6">${esc(u.clickup_id || '—')}</span>
+            <span style="font-size:0.8rem;font-family:monospace;opacity:0.6">${esc(u.clickup_user_id || '—')}</span>
           </td>
           <td style="padding:10px 14px">
             <span style="font-size:0.8rem;opacity:0.6">${dt}</span>

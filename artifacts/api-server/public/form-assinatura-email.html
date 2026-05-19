@@ -240,9 +240,7 @@
           } catch {}
           window.location.href = '/thankyou.html';
         } else {
-          const errEl = document.getElementById('submitError');
-          if (errEl) { errEl.style.display = 'block'; errEl.textContent = d.error || 'Erro ao enviar. Tente novamente.'; }
-          if(window.formUnlockUI)window.formUnlockUI(btn); else { btn.disabled = false; btn.textContent = 'Enviar'; }
+          throw new Error(d.error || 'submit_failed');
         }
       } catch {
         const errEl = document.getElementById('submitError');

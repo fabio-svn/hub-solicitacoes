@@ -92,6 +92,23 @@
         fetch('/api/solicitacoes/' + solicitacaoId + '/artefato', { credentials: 'include' })
           .then(r => r.json())
           .then(data => {
+            if (data.status === 'erro') {
+              if (_artefatoPollingTimer) clearTimeout(_artefatoPollingTimer);
+              const pollingEl = document.getElementById('artefatoPolling');
+              if (pollingEl) pollingEl.style.display = 'none';
+              const readyEl = document.getElementById('artefatoReady');
+              if (readyEl) {
+                readyEl.innerHTML = `
+                  <div style="color:#dc2626;padding:16px;background:rgba(220,38,38,0.08);border-radius:8px;text-align:center">
+                    <strong>Erro na geração</strong>
+                    <p style="margin-top:8px;font-size:0.85rem;opacity:0.8">
+                      Houve um problema ao gerar seu material. Entre em contato com o time de Marketing.
+                    </p>
+                  </div>`;
+                readyEl.style.display = 'block';
+              }
+              return;
+            }
             if (data.ready && data.links && data.links.length > 0) {
               document.getElementById('artefatoPolling').style.display = 'none';
               const readyEl = document.getElementById('artefatoReady');

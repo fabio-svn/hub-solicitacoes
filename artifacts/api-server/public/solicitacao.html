@@ -612,6 +612,12 @@
 
     /* ── renderPage ───────────────────────────── */
     function renderPage(item) {
+      const isAutomation = isTipoAutomacao(item.tipo_solicitacao);
+      if (isAutomation) {
+        document.getElementById('solMeta').style.display = 'none';
+        document.getElementById('solResponsavel').style.display = 'none';
+        document.getElementById('dadosCard').style.display = 'none';
+      }
       document.getElementById('skeletonLoader').style.display = 'none';
       document.getElementById('pageContent').style.display = 'block';
 
