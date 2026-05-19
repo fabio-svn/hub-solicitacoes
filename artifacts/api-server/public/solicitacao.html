@@ -539,8 +539,18 @@
       <path fill="url(#cu2b)" d="M27.5,16.9l-18,15.5l-8.3-9.7L27.6,0l26.2,22.7l-8.4,9.6L27.5,16.9z"/>
     </svg>`;
 
+    const TIPOS_AUTOMACAO = [
+      'assinatura-email',
+      'cartao-visita-digital',
+      'cartao-boas-vindas',
+      'divulgacao-nps',
+      'convite-fp',
+      'certificado-eventos',
+      'cartao-comemorativo',
+    ];
+
     function isTipoAutomacao(tipo) {
-      return (window._svnFormSchemas?.tipos || []).some(t => t.id === tipo && t.is_automation);
+      return TIPOS_AUTOMACAO.includes(tipo);
     }
 
     const params = new URLSearchParams(window.location.search);

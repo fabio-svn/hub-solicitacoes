@@ -1,0 +1,112 @@
+## Contexto
+
+Bug crítico em solicitacao.html: ao abrir solicitações de automação, 
+mostra layout padrão brevemente e redireciona ao dashboard. Causa: 2 bugs 
+JS encadeados que impedem o caminho de renderização de automação.
+
+Adicionalmente, o anti-flash do Fix 10 do Prompt 1 anterior aparentemente 
+não foi aplicado — reaplicar.
+
+Arquivo: artifacts/api-server/public/solicitacao.html
+
+---
+
+## Fix 1 — Adicionar constante TIPOS_AUTOMACAO
+
+LOCALIZAR (~linha 555):
+```js
+const solicitacaoId = params.get('id');
+```
+
+ADICIONAR LOGO ABAIXO:
+```js
+// Tipos de solicitação que geram material automaticamente (sem aprovação manual)
+const TIPOS_AUTOMACAO = [
+  'assinatura-email',
+  'cartao-visita-digital',
+  'cartao-boas-vindas',
+  'divulgacao-nps',
+  'convite-fp',
+  'certificado-eventos',
+  'cartao-comemorativo',
+];
+```
+
+(Mesma lista usada em thankyou.html linha 66-74, copiada literal.)
+
+---
+
+## Fix 2 — Corrigir isTipoAutomacao()
+
+LOCALIZAR (~linha 550-552):
+```js
+function isTipoAutomacao(tipo) {
+  return (window._svnFormSchemas?.tipos || []).some(t => t.id === tipo && t.is_automation);
+}
+```
+
+SUBSTITUIR por:
+```js
+function isTipoAutomacao(tipo) {
+  return TIPOS_AUTOMACAO.includes(tipo);
+}
+```
+
+Razão: `window._svnFormSchemas` nunca é atribuído. A função sempre retornava 
+false, fazendo o caminho de layout de automação ser pulado.
+
+---
+
+## Fix 3 — Reaplicar anti-flash em renderPage
+
+LOCALIZAR (~linha 614-616):
+```js
+function renderPage(item) {
+  document.getElementById('skeletonLoader').style.display = 'none';
+  document.getElementById('pageContent').style.display = 'block';
+```
+
+SUBSTITUIR por:
+```js
+function renderPage(item) {
+  // Decidir layout ANTES de tornar pageContent visível, pra evitar flash
+  const isAutomation = isTipoAutomacao(item.tipo_solicitacao);
+  if (isAutomation) {
+    document.getElementById('solMeta').style.display = 'none';
+    document.getElementById('solResponsavel').style.display = 'none';
+    const dadosCard = document.getElementById('dadosCard');
+    if (dadosCard) dadosCard.style.display = 'none';
+  }
+  
+  document.getElementById('skeletonLoader').style.display = 'none';
+  document.getElementById('pageContent').style.display = 'block';
+```
+
+(O resto da função continua igual.)
+
+---
+
+## Critério de validação
+
+1. Abrir uma solicitação de automação existente (ex: assinatura-email 
+   ou cartao-boas-vindas) via URL `/solicitacao.html?id=X`
+2. Validar:
+   - Página abre direto no layout limpo de automação (SEM flash do 
+     layout padrão antes)
+   - NÃO redireciona pro dashboard
+   - Mostra card com material gerado (se status='concluido') OU 
+     mensagem "Em processamento" (se ainda processando)
+   - Botão de download funciona pra abrir o arquivo
+3. Console do browser sem `ReferenceError: TIPOS_AUTOMACAO is not defined`
+4. Abrir uma solicitação NÃO-automation (ex: eventos):
+   - Continua mostrando layout padrão completo (solMeta, solResponsavel, 
+     dadosCard, aprovação)
+   - Sem regressão
+
+## Não faça
+
+- Não alterar a função renderEntregaAutomacao (já funciona corretamente)
+- Não tocar em thankyou.html (constante já está lá)
+- Não alterar a lista TIPOS_AUTOMACAO em forms.ts no backend
+- Se algum nome de elemento DOM não bater (ex: 'dadosCard' não existir), 
+  reportar — não criar nomes novos
