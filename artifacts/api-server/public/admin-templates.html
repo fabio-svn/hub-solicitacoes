@@ -1162,12 +1162,15 @@
     }
 
     async function openDuplicateVariantModal(sourceId) {
+      console.log('[dup] openDuplicateVariantModal', sourceId);
+      try {
       const source = allTemplates.find(t => t.id === sourceId);
-      if (!source) return;
+      if (!source) { console.warn('[dup] source not found', sourceId); return; }
       if (createFormSchemas.length === 0) {
         try { const r = await fetch('/api/admin/form-schemas'); if (r.ok) createFormSchemas = await r.json(); } catch {}
       }
       const schemaInfo = createFormSchemas.find(s => s.tipo === source.tipo);
+      console.log('[dup] schemaInfo', source.tipo, schemaInfo?.template_variant_field, schemaInfo?.template_variant_options?.length);
       if (!schemaInfo?.template_variant_field || !schemaInfo.template_variant_options?.length) {
         duplicateTemplateFromList(sourceId, source.name);
         return;
@@ -1196,6 +1199,7 @@
         };
       }
       modal.classList.add('open');
+      } catch (err) { console.error('[dup] openDuplicateVariantModal error', err); alert('Erro ao abrir modal: ' + (err instanceof Error ? err.message : String(err))); }
     }
 
     function suggestDupName(sourceName, sourceLabel, newLabel) {
@@ -1219,15 +1223,26 @@
       const btn = document.getElementById('dupConfirmBtn');
       btn.disabled = true; btn.textContent = 'Duplicando…';
       try {
+        console.log('[dup] confirmDuplicateVariant start', { sourceId, newVariantValue, newName });
         const res = await fetch(`/api/admin/art-templates/${sourceId}/duplicate`, {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ name: newName, variant_value: newVariantValue }),
         });
-        if (!res.ok) { const d = await res.json().catch(()=>({})); alert(d.error || 'Erro ao duplicar.'); return; }
+        console.log('[dup] response', res.status);
+        if (!res.ok) {
+          const d = await res.json().catch(() => ({}));
+          console.error('[dup] error response', d);
+          alert(d.error || 'Erro ao duplicar.');
+          return;
+        }
         const data = await res.json();
+        console.log('[dup] success', data);
         modal.classList.remove('open');
         await loadAllTemplates();
         await openEditor(data.id);
+      } catch (err) {
+        console.error('[dup] exception', err);
+        alert('Erro ao duplicar: ' + (err instanceof Error ? err.message : String(err)));
       } finally {
         btn.disabled = false; btn.textContent = 'Duplicar';
       }
@@ -1435,8 +1450,11 @@
     async function loadSampleData() {
       const tipo = currentTemplateMeta?.tipo;
       if (!tipo) return;
-      const res = await fetch(`/api/admin/art-templates/sample-data/${tipo}`);
-      testData = await res.json();
+      try {
+        const res = await fetch(`/api/admin/art-templates/sample-data/${tipo}`);
+        if (!res.ok) { console.warn('[loadSampleData] endpoint retornou', res.status, tipo); return; }
+        testData = await res.json();
+      } catch (err) { console.warn('[loadSampleData] erro ao carregar sample data', err); return; }
 
       // Seed variant fields into testData from active field options
       if (currentTemplate) {
