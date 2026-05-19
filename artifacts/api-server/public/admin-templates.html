@@ -171,6 +171,12 @@
     .layer-box.selected { border: 2px solid #3b82f6; box-shadow: 0 0 0 2px rgba(59,130,246,0.25); }
     .layer-box .layer-label { display: none; position: absolute; top: -18px; left: 0; font-size: 9px; background: #3b82f6; color: #fff; padding: 1px 5px; border-radius: 3px 3px 3px 0; white-space: nowrap; line-height: 16px; cursor: move; user-select: none; }
     .layer-box:hover .layer-label, .layer-box.selected .layer-label { display: block; }
+    .resize-handle { position: absolute; width: 9px; height: 9px; background: #fff; border: 2px solid #3b82f6; border-radius: 2px; z-index: 10; box-sizing: border-box; pointer-events: all; }
+    .resize-handle.nw { top: -5px; left: -5px; cursor: nw-resize; }
+    .resize-handle.ne { top: -5px; right: -5px; cursor: ne-resize; }
+    .resize-handle.sw { bottom: -5px; left: -5px; cursor: sw-resize; }
+    .resize-handle.se { bottom: -5px; right: -5px; cursor: se-resize; }
+    .layer-box:not(.selected):not(:hover) .resize-handle { display: none; }
     .canvas-preview-img { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: fill; z-index: 1; display: none; }
     .no-template { display: flex; align-items: center; justify-content: flex: 1; color: rgba(255,255,255,0.3); font-size: 0.9rem; }
 
@@ -187,6 +193,8 @@
     .props-empty { padding: 40px 14px; text-align: center; color: rgba(34,27,25,0.35); font-size: 0.82rem; }
     .btn-delete-layer { width: 100%; padding: 7px; border: 1px solid #fecaca; background: #fff5f5; color: #ef4444; border-radius: 6px; cursor: pointer; font-size: 0.78rem; font-family: 'Nunito Sans', sans-serif; font-weight: 600; transition: background 0.15s; }
     .btn-delete-layer:hover { background: #fef2f2; }
+    .btn-duplicate-layer { width: 100%; padding: 7px; border: 1px solid #bfdbfe; background: #eff6ff; color: #2563eb; border-radius: 6px; cursor: pointer; font-size: 0.78rem; font-family: 'Nunito Sans', sans-serif; font-weight: 600; transition: background 0.15s; margin-bottom: 6px; }
+    .btn-duplicate-layer:hover { background: #dbeafe; }
     /* ── Test data strip ── */
     .test-data-strip { background: #1a1a1a; border-bottom: 1px solid rgba(255,255,255,0.07); flex-shrink: 0; display: none; }
     .test-data-strip.open { display: block; }
@@ -1573,6 +1581,11 @@
         lbl.className = 'layer-label';
         lbl.textContent = layer.name || layer.id;
         div.appendChild(lbl);
+        ['nw','ne','sw','se'].forEach(pos => {
+          const h = document.createElement('div');
+          h.className = 'resize-handle ' + pos;
+          div.appendChild(h);
+        });
         div.addEventListener('click', (e) => { e.stopPropagation(); selectLayer(layer.id); });
         wrap.appendChild(div);
         setupInteract(div);
@@ -1582,6 +1595,7 @@
       interact(el)
         .draggable({
           allowFrom: '.layer-label, .layer-box',
+          ignoreFrom: '.resize-handle',
           listeners: {
             move(event) {
               const cur = parseFloat(el.style.left) || 0;
@@ -1603,6 +1617,7 @@
         })
         .resizable({
           edges: { left: true, right: true, bottom: true, top: true },
+          allowFrom: '.resize-handle',
           listeners: {
             move(event) {
               let { x, y } = event.target.dataset;
@@ -1654,6 +1669,7 @@
           ${layerTypeIcon(layer.type)}
           <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(layer.name || layer.id)}</span>
           <div class="layer-reorder">
+            <button class="layer-order-btn" onclick="event.stopPropagation();duplicateLayer('${layer.id}')" title="Duplicar layer" style="width:auto;padding:0 5px">⧉</button>
             <button class="layer-order-btn" onclick="event.stopPropagation();moveLayerUp('${layer.id}')" title="Trazer para frente" ${idx === 0 ? 'disabled' : ''}>↑</button>
             <button class="layer-order-btn" onclick="event.stopPropagation();moveLayerDown('${layer.id}')" title="Enviar para trás" ${idx === total - 1 ? 'disabled' : ''}>↓</button>
           </div>
@@ -1695,6 +1711,23 @@
       renderCanvas();
       renderLayersList();
       showProps(null);
+      scheduleLivePreview(NORMAL_DEBOUNCE);
+    }
+    function duplicateLayer(id) {
+      const layer = getLayer(id);
+      if (!layer || !currentTemplate) return;
+      const clone = JSON.parse(JSON.stringify(layer));
+      clone.id = layer.type + '_' + Date.now();
+      clone.name = (clone.name || layer.id) + ' (cópia)';
+      clone.x = (clone.x || 0) + 20;
+      clone.y = (clone.y || 0) + 20;
+      const idx = currentTemplate.layers.findIndex(l => l.id === id);
+      currentTemplate.layers.splice(idx + 1, 0, clone);
+      markDirty();
+      pushHistory();
+      renderCanvas();
+      renderLayersList();
+      selectLayer(clone.id);
       scheduleLivePreview(NORMAL_DEBOUNCE);
     }
 
@@ -1955,7 +1988,10 @@
         </select>
         `:''}
       </div>`;
-      html += `<div class="props-section"><button class="btn-delete-layer" onclick="deleteLayer('${id}')">Deletar layer</button></div>`;
+      html += `<div class="props-section">
+        <button class="btn-duplicate-layer" onclick="duplicateLayer('${id}')">⧉ Duplicar layer</button>
+        <button class="btn-delete-layer" onclick="deleteLayer('${id}')">Deletar layer</button>
+      </div>`;
       content.innerHTML = html;
     }
 
