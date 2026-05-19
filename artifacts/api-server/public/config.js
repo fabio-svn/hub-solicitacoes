@@ -14,6 +14,19 @@ let PACOTE_PADRAO_IMAGENS = [
 
 let EMAIL_UPLOAD = "gabriela.franca@svninvest.com.br";
 
+// Fallback inicial — sobrescrito pelo fetch quando /api/form-schemas disponível
+window.MARCAS_OPTS_FORM = [
+  { value: 'svn-investimentos',           label: 'SVN Investimentos' },
+  { value: 'svn-capital',                 label: 'SVN Capital' },
+  { value: 'svn-connect',                 label: 'SVN Connect' },
+  { value: 'svn-gestao',                  label: 'SVN Gestão' },
+  { value: 'svn-global',                  label: 'SVN Global' },
+  { value: 'svn-imb',                     label: 'SVN Investment & Merchant Banking' },
+  { value: 'svn-agro-cambio-commodities', label: 'SVN Agro, Câmbio & Commodities' },
+  { value: 'svn-protecao-patrimonial',    label: 'SVN Proteção Patrimonial' },
+  { value: 'svn-wealth-planning',         label: 'SVN Wealth Planning' },
+];
+
 const _configReady = Promise.all([
   fetch('/api/config').then(r => r.json()).catch(() => ({})),
   fetch('/api/form-schemas').then(r => r.json()).catch(() => ({})),
@@ -30,7 +43,10 @@ const _configReady = Promise.all([
       cfg.r2PublicUrl + '/tela1.png'
     ];
   }
-  if (schemas.marcas && schemas.marcas.length) MARCAS_SVN = schemas.marcas.map(m => m.label);
+  if (schemas.marcas && schemas.marcas.length) {
+    MARCAS_SVN = schemas.marcas.map(m => m.label);
+    window.MARCAS_OPTS_FORM = schemas.marcas;
+  }
   if (schemas.contratos && schemas.contratos.length) CONTRATOS_SOCIAIS = schemas.contratos.map(c => c.label);
   if (schemas.cargos && schemas.cargos.length) CARGOS_ASSESSOR = schemas.cargos.map(c => c.label);
   if (schemas.setores && schemas.setores.length) SETORES = ['Selecione seu setor', ...schemas.setores];

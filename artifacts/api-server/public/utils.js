@@ -170,28 +170,10 @@ function humanizeValue(key, value) {
     }
   }
 
-  const marcasMap = {
-    'svn-investimentos':                 'SVN Investimentos',
-    'svn-capital':                       'SVN Capital',
-    'svn-connect':                       'SVN Connect',
-    'svn-gestao':                        'SVN Gestão',
-    'svn-global':                        'SVN Global',
-    'svn-imb':                           'SVN IMB',
-    'svn-agro-cambio-commodities':       'SVN Agro, Câmbio & Commodities',
-    'svn-protecao-patrimonial':          'SVN Proteção Patrimonial',
-    'svn-wealth-planning':               'SVN Wealth Planning',
-    'SVN':                               'SVN Investimentos',
-    'SVN Investimentos':                 'SVN Investimentos',
-    'SVN Capital':                       'SVN Capital',
-    'SVN Connect':                       'SVN Connect',
-    'SVN Gestão':                        'SVN Gestão',
-    'SVN Global':                        'SVN Global',
-    'SVN Investment & Merchant Banking': 'SVN Investment & Merchant Banking',
-    'SVN Agro, Câmbio & Commodities':    'SVN Agro, Câmbio & Commodities',
-    'SVN Proteção Patrimonial':          'SVN Proteção Patrimonial',
-    'SVN Wealth Planning':               'SVN Wealth Planning',
-  };
-  if (typeof value === 'string' && marcasMap[value]) return marcasMap[value];
+  if (typeof value === 'string' && typeof window.MARCAS_OPTS_FORM !== 'undefined') {
+    const found = window.MARCAS_OPTS_FORM.find(m => m.value === value || m.label === value);
+    if (found) return found.label;
+  }
   if (typeof value === 'string' && (value.includes('-') || value.includes('_'))) return humanizeSlug(value);
   return value;
 }
