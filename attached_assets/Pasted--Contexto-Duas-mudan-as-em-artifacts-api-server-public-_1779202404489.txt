@@ -1,0 +1,84 @@
+## Contexto
+
+Duas mudanças em artifacts/api-server/public/thankyou.html:
+1. Subtitle errado pros tipos de automação (diz que envia por e-mail, 
+   mas na verdade gera pra download direto)
+2. Card de "Gerando material" / botão de download está no final, 
+   deveria aparecer acima dos botões de navegação
+
+---
+
+## Mudança 1 — Subtitle correto pra automação
+
+Linha ~135, dentro do bloco try que processa o resumo:
+
+ANTES:
+  if (resumo.tipo_id && TIPOS_AUTOMACAO.includes(resumo.tipo_id)) {
+    titulo = 'Solicitação enviada com sucesso!';
+    subtitulo = 'Seu material será gerado automaticamente e enviado para o e-mail informado em breve.';
+  }
+
+DEPOIS:
+  if (resumo.tipo_id && TIPOS_AUTOMACAO.includes(resumo.tipo_id)) {
+    titulo = 'Solicitação enviada com sucesso!';
+    subtitulo = 'Seu material está sendo gerado e ficará disponível para download em instantes.';
+  }
+
+---
+
+## Mudança 2 — Reordenar DOM: artefatoCard acima dos ctaBtns
+
+No HTML do thankyou-card, REORGANIZAR a ordem dos divs.
+
+Localizar o trecho (linhas ~30-45) que contém, nessa ordem:
+  <h1 id="title">...</h1>
+  <p id="subtitle">...</p>
+  <div id="ctaBtns">...</div>
+  <div id="resumoCard">...</div>
+  <div id="artefatoCard">...</div>
+
+Reordenar para:
+  <h1 id="title">...</h1>
+  <p id="subtitle">...</p>
+  <div id="artefatoCard">...</div>  <!-- movido pra cá -->
+  <div id="ctaBtns">...</div>
+  <div id="resumoCard">...</div>
+
+IMPORTANTE: 
+- Mover o BLOCO INTEIRO do artefatoCard (com seus filhos artefatoPolling 
+  e artefatoReady). Não copiar e colar — usar str_replace ou recortar.
+- Manter todos os IDs, classes, estilos e atributos como estão.
+- Ajustar o margin-top do artefatoCard se ele tem `margin-top:28px` —  
+  pode precisar de ajuste agora que vem logo após o subtitle. Se ficar 
+  muito apertado visualmente, mantém os 28px.
+- O <div id="logoWrap"> continua sendo o último.
+
+---
+
+## Critério de validação
+
+1. Submeter um form de automação (ex: form-cartao-boas-vindas).
+2. Página /thankyou.html abre com:
+   - Título "Solicitação enviada com sucesso!"
+   - Subtitle: "Seu material está sendo gerado e ficará disponível 
+     para download em instantes." (sem mencionar e-mail)
+   - Card "Gerando seu material…" aparece IMEDIATAMENTE ABAIXO do subtitle
+   - Botões "Ver solicitação" + "Nova solicitação" vêm ABAIXO do card
+   - Resumo da solicitação vem por último (antes do logo)
+
+3. Quando o material fica pronto:
+   - O spinner some
+   - Aparece "Material disponível" + botão de download
+   - O botão de download está acima dos botões de navegação ✓
+
+4. Submeter um form NÃO-automação (ex: form-eventos). O subtitle deve 
+   continuar com a mensagem original (não-automação): "Nossa equipe 
+   de marketing irá analisar..." Esse fluxo não tem o artefatoCard 
+   visível (display:none por default).
+
+## Não faça
+
+- Não toque na lógica de polling (iniciarPollingArtefato)
+- Não toque em TIPOS_AUTOMACAO ou TIPOS_ARTEFATO_GERADO arrays
+- Não mude o CSS do artefatoCard além de talvez ajustar margin
+- Não toque nos outros blocos do arquivo

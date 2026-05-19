@@ -58,7 +58,6 @@ const CATEGORIAS_SOLICITACAO = [
     categoria: "Eventos e relacionamento",
     itens: [
       { id: "eventos", label: "Eventos", icon: "icon-calendar", ativo: true },
-      { id: "certificado-eventos", label: "Certificado para Eventos", icon: "icon-award", ativo: true },
       { id: "patrocinio", label: "Patrocínio", icon: "icon-flag", ativo: true },
       { id: "brindes", label: "Brindes", icon: "icon-gift", ativo: true },
       { id: "pagina-online", label: "Página Online", icon: "icon-globe", ativo: true },
@@ -112,7 +111,6 @@ const TIPO_SOLICITACAO_LABELS = {
   "divulgacao-nps":                 "Arte NPS",
   "convite-fp":                     "Convite Financial Planning",
   "email-marketing":                "E-mail Marketing",
-  "certificado-eventos":            "Certificado para Eventos",
   "patrocinio":                     "Patrocínio",
   "brindes":                        "Brindes",
   "pagina-online":                  "Página Online",
@@ -466,7 +464,6 @@ const FORM_ROUTES = {
   "cartao-comemorativo":   "form-cartao-comemorativo.html",
   "divulgacao-nps":        "form-divulgacao-nps.html",
   "convite-fp":            "form-convite-fp.html",
-  "certificado-eventos":   "form-certificado-eventos.html",
   "pagina-online":         "form-pagina-online.html",
   "outro":                 "form-outro.html",
   "brindes":               "form-brindes.html",

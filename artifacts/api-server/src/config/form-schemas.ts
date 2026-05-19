@@ -210,22 +210,6 @@ export const FORM_SCHEMAS: Record<string, FormSchema> = {
     ],
   },
 
-  'certificado-eventos': {
-    tipo: 'certificado-eventos',
-    label: 'Certificado para Eventos',
-    is_automation: true,
-    has_clickup: false,
-    has_approval_flow: false,
-    has_downloadable_artifact: true,
-    fields: [
-      { name: 'telefone',       label: 'Telefone',          type: 'tel',   required: true },
-      { name: 'nome_completo',  label: 'Nome completo',      type: 'text',  required: true },
-      { name: 'email',          label: 'E-mail',             type: 'email', required: true },
-      { name: 'nome_evento',    label: 'Nome do evento',     type: 'text',  required: true },
-      { name: 'id_evento',      label: 'ID do evento',       type: 'text',  required: true },
-      { name: 'carga_horaria',  label: 'Carga horária',      type: 'text',  required: true },
-    ],
-  },
 
   'cartao-comemorativo': {
     tipo: 'cartao-comemorativo',

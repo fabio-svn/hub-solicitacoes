@@ -92,6 +92,5 @@ export const PLACEHOLDERS_BY_TIPO: Record<string, string[]> = {
   'cartao-visita-digital': ['nome', 'telefone', 'email', 'contrato_social', 'foto_perfil', 'contrato_label', 'telefone_digits', 'site_url'],
   'divulgacao-nps':        ['telefone', 'nome_assinatura', 'cargo', 'agradecimento', 'modelo_arte', 'foto_perfil'],
   'convite-fp':            ['telefone', 'codigo_assessor', 'nome_assinatura', 'cargo', 'contrato_social', 'contrato_label'],
-  'certificado-eventos':   ['telefone', 'nome_completo', 'email', 'nome_evento', 'id_evento', 'carga_horaria'],
   'cartao-comemorativo':   ['telefone', 'nome_aniversariante', 'modelo_cartao', 'mensagem', 'assinatura', 'email_destinatario'],
 };

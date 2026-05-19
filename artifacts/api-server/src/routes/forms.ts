@@ -63,7 +63,6 @@ const VALID_TIPOS = [
   "cartao-boas-vindas",
   "divulgacao-nps",
   "convite-fp",
-  "certificado-eventos",
   "pagina-online",
   "outro",
   "cartao-comemorativo",
@@ -99,7 +98,6 @@ const REQUIRED_FIELDS: Record<string, string[]> = {
   "cartao-boas-vindas":    ["nome", "nomeCliente", "nomeAssinatura", "contratoSocial", "unidade"],
   "divulgacao-nps":        ["nome", "nomeAssinatura", "cargo", "agradecimento", "modeloArte"],
   "convite-fp":            ["nome", "codigoAssessor", "nomeAssinatura", "cargo", "contratoSocial"],
-  "certificado-eventos":   ["nome", "nomeCompleto", "whatsapp", "emailCertificado", "idEvento", "cargaHoraria"],
   "pagina-online":         ["nome", "titulo", "finalidade"],
   "outro":                 ["nome", "titulo", "finalidade", "descricao"],
   "cartao-comemorativo":   ["nome", "nome_aniversariante", "modelo_cartao", "mensagem", "assinatura", "email_destinatario"],
@@ -196,7 +194,6 @@ function gerarTituloSolicitacao(tipo: string, dados: Record<string, unknown>, us
     case "cartao-comemorativo":  return `[Cartão Comemorativo] ${s(dados.nomeAniversariante) || userName}`;
     case "divulgacao-nps":       return `[Arte NPS] ${s(dados.nomeAssinatura) || userName}`;
     case "convite-fp":           return `[Convite FP] ${s(dados.nomeAssinatura) || userName}`;
-    case "certificado-eventos":  return `[Certificado] ${s(dados.nomeCompleto) || userName}`;
     case "pagina-online":        return `[Página Online] ${s(dados.titulo)}`;
     case "outro":                return `[Outro] ${s(dados.titulo)}`;
     case "brindes":              return `[Brinde] ${s(dados.titulo) || userName}`;
@@ -641,7 +638,6 @@ router.post("/solicitacoes/:id/entrega", requireAuth, async (req, res): Promise<
       "cartao-boas-vindas",
       "divulgacao-nps",
       "convite-fp",
-      "certificado-eventos",
       "cartao-comemorativo",
     ];
     const novoStatus = TIPOS_AUTOMACAO.includes(solicitacao.tipo_solicitacao)

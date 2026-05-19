@@ -59,7 +59,6 @@ const TIPO_LABELS: Record<string, string> = {
   "cartao-visita-digital": "Cartão Digital",
   "divulgacao-nps":        "Arte NPS",
   "convite-fp":            "Convite FP",
-  "certificado-eventos":   "Certificado",
   "cartao-boas-vindas":    "Cartão de Boas-vindas",
   "assinatura-email":      "Assinatura de E-mail",
 };
