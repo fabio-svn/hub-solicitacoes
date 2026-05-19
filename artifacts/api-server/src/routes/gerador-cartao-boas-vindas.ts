@@ -18,35 +18,57 @@ export async function gerarCartaoBoasVindasHandler(
   solicitacaoId: number,
   dados: Record<string, unknown>
 ): Promise<void> {
-  logger.info({ solicitacaoId }, "Iniciando geração de Cartão de Boas-vindas (template-driven)");
+  logger.info({ solicitacaoId, dadosKeys: Object.keys(dados) }, "Iniciando geração de Cartão de Boas-vindas (template-driven)");
 
-  const nomeCliente    = String(dados.nomeCliente    || "").trim();
-  const nomeAssinatura = String(dados.nomeAssinatura || "").trim();
-  const unidade        = String(dados.unidade        || "").trim();
-  const contratoSocial = String(dados.contratoSocial || "svn-investimentos").trim();
-  const isPrivate =
-    dados.isPrivate === true ||
-    String(dados.isPrivate || "").toLowerCase() === "sim";
+  // Form envia snake_case; normalizeFormDados pode ter adicionado aliases,
+  // mas priorizamos snake_case (origem real do formulário).
+  const nomeCliente    = String(dados.nome_cliente    ?? dados.nomeCliente    ?? "").trim();
+  const nomeAssinatura = String(dados.nome_assinatura ?? dados.nomeAssinatura ?? "").trim();
+  const unidade        = String(dados.unidade         ?? "").trim();
+  const contratoSocial = String(dados.contrato_social ?? dados.contratoSocial ?? "svn-investimentos").trim();
+
+  // is_private_key é o campo do rádio: 'padrao' | 'private'
+  const isPrivateKey = String(dados.is_private_key ?? dados.isPrivateKey ?? "padrao").trim() as "padrao" | "private";
+
+  logger.info({ solicitacaoId, nomeCliente, nomeAssinatura, unidade, contratoSocial, isPrivateKey }, "[boas-vindas] campos extraídos");
+
+  const renderData: Record<string, string> = {
+    nome_cliente:    nomeCliente,
+    nome_assinatura: nomeAssinatura,
+    unidade,
+    contrato_social: contratoSocial,
+    contrato_label:  CONTRATO_LABELS[contratoSocial] || contratoSocial,
+    is_private_key:  isPrivateKey,
+  };
 
   try {
-    const [templateRow] = await db
+    // Busca template ativo com a variante correta
+    let [templateRow] = await db
       .select()
       .from(artTemplatesTable)
       .where(and(
         eq(artTemplatesTable.tipo, 'cartao-boas-vindas'),
-        eq(artTemplatesTable.is_active, true)
+        eq(artTemplatesTable.is_active, true),
+        eq(artTemplatesTable.variant_value, isPrivateKey)
       ));
+
+    // Fallback: template ativo sem variant_value (setup single-template)
+    if (!templateRow) {
+      logger.warn({ solicitacaoId, isPrivateKey }, "[boas-vindas] nenhum template com variant, buscando sem filtro de variant");
+      [templateRow] = await db
+        .select()
+        .from(artTemplatesTable)
+        .where(and(
+          eq(artTemplatesTable.tipo, 'cartao-boas-vindas'),
+          eq(artTemplatesTable.is_active, true)
+        ));
+    }
 
     if (!templateRow) throw new Error('Nenhum template ativo para cartao-boas-vindas. Ative um template no painel admin.');
 
-    const pngBuffer = await renderFromTemplate(templateRow.config as any, {
-      nome_cliente:    nomeCliente,
-      nome_assinatura: nomeAssinatura,
-      unidade,
-      contrato_social: contratoSocial,
-      contrato_label:  CONTRATO_LABELS[contratoSocial] || contratoSocial,
-      is_private_key:  isPrivate ? 'private' : 'padrao',
-    });
+    logger.info({ solicitacaoId, templateId: templateRow.id, variant: templateRow.variant_value }, "[boas-vindas] template selecionado");
+
+    const pngBuffer = await renderFromTemplate(templateRow.config as any, renderData);
 
     const tmpPath = path.join(os.tmpdir(), `cartao-boas-vindas-${solicitacaoId}-${Date.now()}.png`);
     await fs.promises.writeFile(tmpPath, pngBuffer);
