@@ -45,8 +45,12 @@
     .landing-card-desc { font-size: 0.84rem; opacity: 0.55; line-height: 1.5; }
 
     /* ── List view ── */
-    .list-group-title { font-size: 0.7rem; font-weight: 800; letter-spacing: 0.09em; text-transform: uppercase; color: rgba(34,27,25,0.4); margin: 24px 0 8px; }
+    .list-group-title { cursor: pointer; user-select: none; display: flex; align-items: center; gap: 8px; padding: 12px 0 8px; margin: 24px 0 0; font-size: 0.7rem; font-weight: 800; letter-spacing: 0.09em; text-transform: uppercase; color: rgba(34,27,25,0.55); border-bottom: 1px solid rgba(34,27,25,0.08); }
     .list-group-title:first-child { margin-top: 0; }
+    .list-group-title .chevron { display: inline-block; width: 12px; height: 12px; transition: transform 0.2s ease; font-size: 0.9rem; line-height: 1; flex-shrink: 0; }
+    .list-group-title.expanded .chevron { transform: rotate(90deg); }
+    .list-group-body { overflow: hidden; max-height: 0; transition: max-height 0.25s ease; }
+    .list-group-body.expanded { max-height: 9999px; }
     .template-row {
       background: #fff; border: 1.5px solid #e8e2dc; border-radius: 12px;
       padding: 14px 16px; margin-bottom: 8px; display: flex; align-items: center; gap: 12px;
@@ -537,25 +541,6 @@
         <button class="modal-btn ghost" onclick="closeUnsavedModal()">Cancelar</button>
         <button class="modal-btn" onclick="exitWithoutSave()">Sair sem salvar</button>
         <button class="modal-btn primary" onclick="saveAndExit()">Salvar e sair</button>
-      </div>
-    </div>
-  </div>
-
-  <div class="modal-overlay" id="duplicateVariantModal">
-    <div class="modal-box" style="max-width:460px">
-      <div class="modal-title">Duplicar pra outra variante</div>
-      <div class="modal-desc">Duplicando: <strong id="dupSourceName"></strong></div>
-      <div style="margin-bottom:16px">
-        <label style="font-size:0.8rem;font-weight:600;display:block;margin-bottom:4px">Para qual variante? <span style="color:#AC3631">*</span></label>
-        <select id="dupVariantSelect" style="width:100%;padding:8px 10px;border:1.5px solid #e8e2dc;border-radius:8px;font-family:inherit;font-size:0.85rem;background:#fff"></select>
-      </div>
-      <div style="margin-bottom:20px">
-        <label style="font-size:0.8rem;font-weight:600;display:block;margin-bottom:4px">Nome do novo template <span style="color:#AC3631">*</span></label>
-        <input type="text" id="dupNameInput" style="width:100%;padding:8px 10px;border:1.5px solid #e8e2dc;border-radius:8px;font-family:inherit;font-size:0.85rem;box-sizing:border-box">
-      </div>
-      <div class="modal-actions">
-        <button class="modal-btn ghost" onclick="closeDuplicateVariantModal()">Cancelar</button>
-        <button class="modal-btn primary" id="dupConfirmBtn" onclick="confirmDuplicateVariant()">Duplicar</button>
       </div>
     </div>
   </div>
@@ -1086,10 +1071,17 @@
       }
       let html = '';
       for (const [tipo, items] of Object.entries(grouped)) {
-        html += `<div class="list-group-title">${esc(humanizeTipo(tipo))}</div>`;
+        const groupKey = 'grp_' + tipo.replace(/[^a-z0-9]/g, '_');
+        html += `
+          <div class="list-group-title" onclick="toggleGroup('${groupKey}', this)">
+            <span class="chevron">▶</span>
+            <span>${esc(humanizeTipo(tipo))}</span>
+            <span style="margin-left:auto;font-weight:400;opacity:0.6">${items.length}</span>
+          </div>
+          <div class="list-group-body" id="${groupKey}">
+        `;
         for (const t of items) {
           const schemaInfo = createFormSchemas.find(s => s.tipo === t.tipo);
-          const hasVariants = !!schemaInfo?.template_variant_field;
           const variantLabel = t.variant_value
             ? (schemaInfo?.template_variant_options?.find(o => o.value === t.variant_value)?.label || t.variant_value)
             : '';
@@ -1097,9 +1089,7 @@
           const displayName = variantLabel ? esc(variantLabel) : esc(t.name);
           const activateBtn = t.is_active ? '' : `<button class="row-btn primary" onclick="activateTemplateFromList(${t.id})">Ativar</button>`;
           const deleteBtn = `<button class="row-btn danger" onclick="deleteTemplateConfirm(${t.id},'${esc(t.name)}',${t.is_active})">Excluir</button>`;
-          const dupBtn = hasVariants
-            ? `<button class="row-btn" onclick="openDuplicateVariantModal(${t.id})">Duplicar pra variante</button>`
-            : `<button class="row-btn" onclick="duplicateTemplateFromList(${t.id},'${esc(t.name)}')">Duplicar</button>`;
+          const dupBtn = `<button class="row-btn" onclick="duplicateTemplateFromList(${t.id},'${esc(t.name)}')">Duplicar</button>`;
           html += `<div class="template-row">
             <div class="template-row-indicator ${t.is_active ? 'active' : 'inactive'}"></div>
             <div class="template-row-body">
@@ -1113,8 +1103,10 @@
             </div>
           </div>`;
         }
+        html += `</div>`;
       }
       el.innerHTML = html;
+      restoreGroupStates();
     }
 
     async function activateTemplateFromList(id) {
@@ -1147,95 +1139,38 @@
       await loadAllTemplates(); renderListView();
     }
 
-    async function openDuplicateVariantModal(sourceId) {
-      console.log('[dup] openDuplicateVariantModal', sourceId);
-      try {
-      const source = allTemplates.find(t => t.id === sourceId);
-      if (!source) { console.warn('[dup] source not found', sourceId); return; }
-      if (createFormSchemas.length === 0) {
-        try { const r = await fetch('/api/admin/form-schemas'); if (r.ok) createFormSchemas = await r.json(); } catch {}
-      }
-      const schemaInfo = createFormSchemas.find(s => s.tipo === source.tipo);
-      console.log('[dup] schemaInfo', source.tipo, schemaInfo?.template_variant_field, schemaInfo?.template_variant_options?.length);
-      if (!schemaInfo?.template_variant_field || !schemaInfo.template_variant_options?.length) {
-        duplicateTemplateFromList(sourceId, source.name);
-        return;
-      }
-      const allOpts = schemaInfo.template_variant_options;
-      const existingVariants = new Set(allTemplates.filter(t => t.tipo === source.tipo).map(t => t.variant_value).filter(Boolean));
-      const available = allOpts.filter(o => o.value !== source.variant_value && !existingVariants.has(o.value));
-      const sel = document.getElementById('dupVariantSelect');
-      const confirmBtn = document.getElementById('dupConfirmBtn');
-      if (available.length === 0) {
-        sel.innerHTML = '<option value="">Todas as variantes já têm template</option>';
-        confirmBtn.disabled = true;
+    function toggleGroup(key, titleEl) {
+      const body = document.getElementById(key);
+      if (!body) return;
+      const isExpanded = body.classList.contains('expanded');
+      if (isExpanded) {
+        body.classList.remove('expanded');
+        titleEl.classList.remove('expanded');
       } else {
-        sel.innerHTML = available.map(o => `<option value="${esc(o.value)}" data-label="${esc(o.label)}">${esc(o.label)}</option>`).join('');
-        confirmBtn.disabled = false;
+        body.classList.add('expanded');
+        titleEl.classList.add('expanded');
       }
-      const sourceLabel = allOpts.find(o => o.value === source.variant_value)?.label || source.variant_value || '';
-      document.getElementById('dupSourceName').textContent = source.name;
-      const modal = document.getElementById('duplicateVariantModal');
-      modal.dataset.sourceId = sourceId;
-      modal.dataset.sourceLabel = sourceLabel;
-      if (available.length > 0) {
-        suggestDupName(source.name, sourceLabel, available[0].label);
-        sel.onchange = function() {
-          suggestDupName(source.name, sourceLabel, sel.selectedOptions[0]?.dataset?.label || sel.value);
-        };
-      }
-      modal.classList.add('open');
-      } catch (err) { console.error('[dup] openDuplicateVariantModal error', err); alert('Erro ao abrir modal: ' + (err instanceof Error ? err.message : String(err))); }
+      try {
+        const states = JSON.parse(sessionStorage.getItem('templateGroupStates') || '{}');
+        states[key] = !isExpanded;
+        sessionStorage.setItem('templateGroupStates', JSON.stringify(states));
+      } catch {}
     }
 
-    function suggestDupName(sourceName, sourceLabel, newLabel) {
-      const inp = document.getElementById('dupNameInput');
-      if (!inp) return;
-      if (sourceLabel && sourceName.includes(sourceLabel)) {
-        inp.value = sourceName.replace(sourceLabel, newLabel);
-      } else {
-        inp.value = newLabel ? `${sourceName} (${newLabel})` : `${sourceName} (cópia)`;
-      }
-    }
-
-    async function confirmDuplicateVariant() {
-      const modal = document.getElementById('duplicateVariantModal');
-      const sourceId = parseInt(modal.dataset.sourceId);
-      const sel = document.getElementById('dupVariantSelect');
-      const newVariantValue = sel.value;
-      const newName = document.getElementById('dupNameInput').value.trim();
-      if (!newVariantValue) { alert('Selecione uma variante de destino.'); return; }
-      if (!newName) { alert('Digite um nome para o template.'); return; }
-      const btn = document.getElementById('dupConfirmBtn');
-      btn.disabled = true; btn.textContent = 'Duplicando…';
+    function restoreGroupStates() {
       try {
-        console.log('[dup] confirmDuplicateVariant start', { sourceId, newVariantValue, newName });
-        const res = await fetch(`/api/admin/art-templates/${sourceId}/duplicate`, {
-          method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name: newName, variant_value: newVariantValue }),
+        const states = JSON.parse(sessionStorage.getItem('templateGroupStates') || '{}');
+        Object.entries(states).forEach(([key, expanded]) => {
+          if (expanded) {
+            const body = document.getElementById(key);
+            const title = body?.previousElementSibling;
+            if (body && title) {
+              body.classList.add('expanded');
+              title.classList.add('expanded');
+            }
+          }
         });
-        console.log('[dup] response', res.status);
-        if (!res.ok) {
-          const d = await res.json().catch(() => ({}));
-          console.error('[dup] error response', d);
-          alert(d.error || 'Erro ao duplicar.');
-          return;
-        }
-        const data = await res.json();
-        console.log('[dup] success', data);
-        modal.classList.remove('open');
-        await loadAllTemplates();
-        await openEditor(data.id);
-      } catch (err) {
-        console.error('[dup] exception', err);
-        alert('Erro ao duplicar: ' + (err instanceof Error ? err.message : String(err)));
-      } finally {
-        btn.disabled = false; btn.textContent = 'Duplicar';
-      }
-    }
-
-    function closeDuplicateVariantModal() {
-      document.getElementById('duplicateVariantModal').classList.remove('open');
+      } catch {}
     }
 
     // ── Create view ──────────────────────────────────────────────
