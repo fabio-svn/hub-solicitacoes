@@ -283,6 +283,9 @@ router.post("/solicitacoes", requireAuth, upload.any(), async (req, res): Promis
     // Merge uploaded file URLs into dados so art-generator can access them by field name
     if (Object.keys(arquivosMap).length > 0) {
       parsedDados = { ...parsedDados, ...arquivosMap };
+      // Re-normaliza após merge: campos como fotoPerfilDigital agora estão em parsedDados
+      // e precisam receber seus aliases snake_case (ex: foto_perfil) antes do generator rodar.
+      parsedDados = normalizeFormDados(tipo_solicitacao, parsedDados);
       await db.update(solicitacoesTable)
         .set({ dados: parsedDados })
         .where(eq(solicitacoesTable.id, solicitacao.id));
