@@ -9,6 +9,41 @@ const fontkit = fontkitLib as any;
 
 const ASSETS_DIR = path.resolve(__dirname, 'assets');
 
+// Mapeamentos slug → label, espelhando form-schemas.ts
+// IMPORTANTE: se essas listas mudarem em form-schemas.ts, atualizar aqui.
+// TODO P1.1: unificar via API /form-schemas
+const CONTRATO_LABELS: Record<string, string> = {
+  'svn-investimentos': 'SVN Investimentos',
+  'svn-capital':       'SVN Capital',
+  'svn-connect':       'SVN Connect',
+};
+
+const MARCA_LABELS: Record<string, string> = {
+  'svn-investimentos':           'SVN Investimentos',
+  'svn-capital':                 'SVN Capital',
+  'svn-connect':                 'SVN Connect',
+  'svn-gestao':                  'SVN Gestão',
+  'svn-global':                  'SVN Global',
+  'svn-imb':                     'SVN Investment & Merchant Banking',
+  'svn-agro-cambio-commodities': 'SVN Agro, Câmbio & Commodities',
+  'svn-protecao-patrimonial':    'SVN Proteção Patrimonial',
+  'svn-wealth-planning':         'SVN Wealth Planning',
+};
+
+function enrichDataWithLabels(data: Record<string, any>): Record<string, any> {
+  const enriched = { ...data };
+
+  if (typeof data.contrato_social === 'string' && data.contrato_social) {
+    enriched.contrato_label = CONTRATO_LABELS[data.contrato_social] ?? data.contrato_social;
+  }
+
+  if (typeof data.marca === 'string' && data.marca && !data.marca_label) {
+    enriched.marca_label = MARCA_LABELS[data.marca] ?? data.marca;
+  }
+
+  return enriched;
+}
+
 const fontCache = new Map<string, any>();
 function loadFont(file: string): any {
   if (fontCache.has(file)) return fontCache.get(file)!;
@@ -315,8 +350,9 @@ async function renderImage(
 
 export async function renderFromTemplate(
   template: ArtTemplate,
-  data: Record<string, any>
+  dataRaw: Record<string, any>
 ): Promise<Buffer> {
+  const data = enrichDataWithLabels(dataRaw);
   const dataStr: Record<string, string> = {};
   for (const [k, v] of Object.entries(data)) {
     dataStr[k] = String(v ?? '');

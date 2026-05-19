@@ -1,0 +1,92 @@
+## Contexto
+
+O editor de templates (public/admin-templates.html) lista 
+'contrato_label' como placeholder disponível pra cartao-boas-vindas e 
+cartao-visita-digital, mas o backend nunca deriva esse campo a partir 
+de 'contrato_social'. Resultado: placeholders viram "undefined", e 
+variant lookups falham.
+
+Existe paralelo em 'marca_label' que é derivado em gerador-assinatura.ts 
+(legacy). Precisamos centralizar a derivação no template-renderer 
+pra funcionar pra todos os tipos.
+
+## Tarefa — Derivar labels antes do render
+
+Em artifacts/api-server/src/services/template-renderer.ts, criar uma 
+função helper que enriquece o `data` com campos `*_label` derivados, 
+e chamá-la no início da função principal de render (provavelmente 
+`renderTemplate` ou similar — confirma o nome real).
+
+### Implementação
+
+1. No topo do arquivo, adicionar imports e o mapeamento:
+
+```ts
+// Mapeamentos slug → label, espelhando form-schemas.ts
+// IMPORTANTE: se essas listas mudarem em form-schemas.ts, atualizar aqui.
+// TODO P1.1: unificar via API /form-schemas
+const CONTRATO_LABELS: Record<string, string> = {
+  'svn-investimentos': 'SVN Investimentos',
+  'svn-capital':       'SVN Capital',
+  'svn-connect':       'SVN Connect',
+};
+
+const MARCA_LABELS: Record<string, string> = {
+  'svn-investimentos':           'SVN Investimentos',
+  'svn-capital':                 'SVN Capital',
+  'svn-connect':                 'SVN Connect',
+  'svn-gestao':                  'SVN Gestão',
+  'svn-global':                  'SVN Global',
+  'svn-imb':                     'SVN Investment & Merchant Banking',
+  'svn-agro-cambio-commodities': 'SVN Agro, Câmbio & Commodities',
+  'svn-protecao-patrimonial':    'SVN Proteção Patrimonial',
+  'svn-wealth-planning':         'SVN Wealth Planning',
+};
+
+function enrichDataWithLabels(data: Record<string, any>): Record<string, any> {
+  const enriched = { ...data };
+  
+  if (typeof data.contrato_social === 'string') {
+    enriched.contrato_label = CONTRATO_LABELS[data.contrato_social] ?? data.contrato_social;
+  }
+  
+  if (typeof data.marca === 'string' && !data.marca_label) {
+    enriched.marca_label = MARCA_LABELS[data.marca] ?? data.marca;
+  }
+  
+  return enriched;
+}
+```
+
+2. Na função principal de render (logo no início), substituir `data` por 
+   `enrichDataWithLabels(data)`. Exemplo:
+
+```ts
+export async function renderTemplate(template, dataRaw) {
+  const data = enrichDataWithLabels(dataRaw);
+  // ... resto da função usa data
+}
+```
+
+(Adapta o nome da função e parâmetros conforme o que existe.)
+
+### Validação
+
+1. Gerar um cartão de boas-vindas com contrato_social='svn-capital'.
+   - Texto com {{contrato_label}} → renderiza "SVN Capital"
+   - Imagem com variant_source='contrato_social' → logo correto aparece
+
+2. Gerar uma assinatura de email (que já usava marca_label) — não pode 
+   ter regredido. `marca_label` continua funcionando.
+
+3. Submeter um caso onde contrato_social é null/vazio → 
+   contrato_label simplesmente não existe no data, sem erro.
+
+### Não faça
+
+- Não toque em gerador-assinatura.ts (vai ser removido em P1.6)
+- Não delete os labels de CONTRATO_LABELS / MARCA_LABELS sem motivo
+- Não unifique com form-schemas.ts agora — isso é P1.1, fora de escopo. 
+  O TODO no comentário sinaliza o débito futuro.
+- Não toque no admin-templates.html (o `contrato_label` já está listado 
+  lá, só faltava o backend cumprir)
