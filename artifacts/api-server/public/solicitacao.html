@@ -1777,7 +1777,7 @@
 
     /* ── renderDados ──────────────────────────── */
     function renderDados(dados, item) {
-      if (item.tipo_solicitacao === 'assinatura-email') {
+        if (TIPOS_AUTOMACAO.includes(item.tipo_solicitacao)) {
         const dadosCard = document.getElementById('dadosCard');
         if (dadosCard) dadosCard.style.display = 'none';
         return;

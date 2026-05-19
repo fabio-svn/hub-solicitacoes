@@ -126,10 +126,10 @@
       const contratoSel = document.getElementById('contratoSocial');
       if (contratoSel) {
         (window._svnFormSchemas?.contratos || [
-          { id: 'svn-investimentos', label: 'SVN Investimentos' },
-          { id: 'svn-capital',       label: 'SVN Capital' },
-          { id: 'svn-connect',       label: 'SVN Connect' },
-        ]).forEach(c => { const o = document.createElement('option'); o.value = c.id; o.textContent = c.label; contratoSel.appendChild(o); });
+          { value: 'svn-investimentos', label: 'SVN Investimentos' },
+          { value: 'svn-capital',       label: 'SVN Capital' },
+          { value: 'svn-connect',       label: 'SVN Connect' },
+        ]).forEach(c => { const o = document.createElement('option'); o.value = c.value || c.id || ''; o.textContent = c.label; contratoSel.appendChild(o); });
       }
 
       const unidadeSel = document.getElementById('unidade');

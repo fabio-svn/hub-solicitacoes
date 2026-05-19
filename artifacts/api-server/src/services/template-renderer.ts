@@ -270,8 +270,21 @@ async function renderImage(
   } else {
     const src = layer.source as { type: 'variant'; variants: Record<string, string>; variant_source: string };
     const variantKey = data[src.variant_source];
+    if (!variantKey) {
+      logger.warn(
+        `[render] image layer "${layer.id}": variant_source="${src.variant_source}" não encontrado nos dados` +
+        ` (chaves disponíveis: ${Object.keys(data).join(', ')})`
+      );
+      return;
+    }
     url = src.variants[variantKey] ?? '';
-    if (!url) return;
+    if (!url) {
+      logger.warn(
+        `[render] image layer "${layer.id}": nenhuma URL para variant_key="${variantKey}"` +
+        ` (variants disponíveis: ${Object.keys(src.variants).join(', ')})`
+      );
+      return;
+    }
   }
   if (!url) return;
 

@@ -28,7 +28,12 @@ export async function gerarCartaoBoasVindasHandler(
   const contratoSocial = String(dados.contrato_social ?? dados.contratoSocial ?? "svn-investimentos").trim();
 
   // is_private_key é o campo do rádio: 'padrao' | 'private'
-  const isPrivateKey = String(dados.is_private_key ?? dados.isPrivateKey ?? "padrao").trim() as "padrao" | "private";
+  // O form envia isPrivate ('sim'/'nao'); normalizeFormDados converte para is_private_key ('private'/'padrao').
+  // Para registros mais antigos sem normalização, fazemos o mapeamento manual aqui como fallback.
+  const isPrivateRaw = String(dados.is_private_key ?? dados.isPrivateKey ?? dados.isPrivate ?? "").trim();
+  const isPrivateKey: "padrao" | "private" =
+    isPrivateRaw === "sim" || isPrivateRaw === "private" ? "private" :
+    isPrivateRaw === "nao" || isPrivateRaw === "padrao"  ? "padrao"  : "padrao";
 
   logger.info({ solicitacaoId, nomeCliente, nomeAssinatura, unidade, contratoSocial, isPrivateKey }, "[boas-vindas] campos extraídos");
 
