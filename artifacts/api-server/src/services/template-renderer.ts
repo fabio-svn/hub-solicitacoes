@@ -259,7 +259,7 @@ async function renderImage(
     }
     const fitMode = isCircle ? 'cover' : (layer.resize_mode ?? 'contain');
     input = await sharp(raw)
-      .resize(safeW, safeH, { fit: fitMode })
+      .resize(safeW, safeH, { fit: fitMode, background: { r: 0, g: 0, b: 0, alpha: 0 } })
       .toBuffer();
   } else {
     const meta = await sharp(raw).metadata();
