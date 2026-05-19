@@ -958,11 +958,39 @@
 
       if (links.length === 1) {
         const l = links[0];
+        const url = l.url || '';
+        const lower = url.toLowerCase().split('?')[0];
+        const isPdf = lower.endsWith('.pdf');
+        const isImage = /\.(png|jpe?g|webp|gif|svg)$/.test(lower);
+        const ext = isPdf ? 'pdf' : (lower.match(/\.([a-z0-9]{2,5})$/)?.[1] || 'png');
+
+        let previewHtml;
+        if (isPdf) {
+          previewHtml = `
+            <div class="assinatura-preview-card" style="background:#f5f3f0;padding:0;overflow:hidden">
+              <iframe src="${esc(url)}#toolbar=0&navpanes=0"
+                      style="width:100%;height:600px;border:none;display:block;background:white"
+                      title="${_altText}"></iframe>
+            </div>`;
+        } else if (isImage) {
+          previewHtml = `
+            <div class="assinatura-preview-card">
+              <img src="${esc(url)}" alt="${_altText}" />
+            </div>`;
+        } else {
+          previewHtml = `
+            <div class="assinatura-preview-card" style="background:#f5f3f0;padding:40px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px">
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="rgba(34,27,25,0.4)" stroke-width="1.5">
+                <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+                <polyline points="14 2 14 8 20 8"/>
+              </svg>
+              <span style="font-size:0.85rem;color:rgba(34,27,25,0.5)">Pré-visualização indisponível</span>
+            </div>`;
+        }
+
         card.innerHTML = `
-          <div class="assinatura-preview-card">
-            <img src="${esc(l.url)}" alt="${_altText}" />
-          </div>
-          <a href="${esc(l.url)}" download="${esc(item.tipo_solicitacao)}-${item.id}.png"
+          ${previewHtml}
+          <a href="${esc(url)}" download="${esc(item.tipo_solicitacao)}-${item.id}.${ext}"
              class="btn btn-submit-gold btn-download-page">
             ${_dlIco}
             Fazer download
