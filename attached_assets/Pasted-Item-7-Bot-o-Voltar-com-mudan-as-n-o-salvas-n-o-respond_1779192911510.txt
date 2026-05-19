@@ -1,0 +1,350 @@
+Item 7 — Botão Voltar com mudanças não salvas não responde
+O fluxo no código (linhas ~1034-1052) parece correto: requestBack()
+checa isDirty, abre unsavedModal se true. Mas algo está impedindo
+o funcionamento.
+Ações:
+
+Adicionar console.log em requestBack():
+
+jsfunction requestBack() {
+  console.log('[back] requestBack, isDirty=', isDirty);
+  if (!isDirty) { goToList(); return; }
+  pendingNavAction = goToList;
+  const modal = document.getElementById('unsavedModal');
+  console.log('[back] modal element=', modal, 'classes=', modal?.className);
+  modal.classList.add('open');
+  console.log('[back] after add open, classes=', modal.className);
+}
+
+Adicionar fallback via window.addEventListener('beforeunload', ...)
+no init() quando há mudanças não salvas:
+
+jswindow.addEventListener('beforeunload', (e) => {
+  if (isDirty) {
+    e.preventDefault();
+    e.returnValue = '';
+  }
+});
+
+Verificar se unsavedModal tem CSS conflitante. Buscar referencias
+a unsavedModal ou regras de modal-overlay que possam impedir o
+display: flex.
+Se o modal abre mas botões não respondem, verificar se as funções
+exitWithoutSave, saveAndExit, closeUnsavedModal estão no
+escopo global (não dentro de outra função/IIFE).
+
+Validação:
+
+Abre um template no editor, faz qualquer alteração (mover layer,
+editar texto)
+Clica Voltar
+Modal deve aparecer com: "Cancelar", "Sair sem salvar", "Salvar e sair"
+Cada botão funciona como esperado
+Console mostra logs do fluxo
+
+
+Critério de validação geral
+
+/admin-templates abre direto na lista (sem landing view)
+Templates com variants mostram só o nome da variant
+Botão "Duplicar pra variante" abre modal e cria novo template
+Botão Voltar com edits abre modal de confirmação
+
+Não faça
+
+Não toque em itens 4, 5, 6 (drag, guides, alignment) — esses são
+próximo prompt
+Não toque na lógica de save automático
+Não refatore showView() ou navegação além do necessário pro item 2
+Não delete o duplicateVariantModal — só conserta o fluxo
+
+
+**Modo recomendado:** Economy
+**Custo estimado:** ~$1.50-2.50
+
+---
+
+## Prompt B — Canvas interaction (Itens 4, 5, 6)
+Contexto
+3 mudanças relacionadas à interação com elementos no canvas do editor
+de templates (public/admin-templates.html):
+
+Bug: drag de elementos só funciona em pequena área, edges fazem
+resize por engano
+Feature: guias visuais de alinhamento durante drag
+Feature: botões pra alinhar elemento selecionado ao canvas
+
+Mudanças ficam concentradas na função setupInteract (~ linha 1551)
+e área do canvas/properties panel.
+
+Item 4 — Drag funciona no corpo, resize só em handles visíveis
+Problema atual: A função setupInteract (linha 1551) define:
+
+Drag com allowFrom: '.layer-label, .layer-box' (só essas áreas pequenas)
+Resize com edges: { left: true, right: true, bottom: true, top: true }
+(todo o elemento, default 10px margin nas bordas)
+
+Resultado: clicar no corpo do elemento ativa resize em vez de drag.
+Fix:
+
+Drag livre no corpo do elemento:
+
+js   .draggable({
+     allowFrom: '*',  // ou remover allowFrom
+     ignoreFrom: '.resize-handle, input, textarea, select',
+     // ... resto igual
+   })
+
+Resize só em handles explícitos:
+
+js   .resizable({
+     edges: {
+       top:    '.resize-handle-t',
+       right:  '.resize-handle-r',
+       bottom: '.resize-handle-b',
+       left:   '.resize-handle-l',
+     },
+     // ... resto igual
+   })
+
+Adicionar handles DOM nos elementos selecionados:
+Modificar a função que cria o div da layer no canvas (procurar onde
+está setupInteract(div) sendo chamado, deve ser próximo de onde
+se cria os elementos do canvas).
+Quando uma layer está selecionada (selectedLayerId === layer.id),
+adicionar handles dentro do div:
+
+html   <div class="resize-handle resize-handle-tl"></div>
+   <div class="resize-handle resize-handle-tr"></div>
+   <div class="resize-handle resize-handle-bl"></div>
+   <div class="resize-handle resize-handle-br"></div>
+   <div class="resize-handle resize-handle-t"></div>
+   <div class="resize-handle resize-handle-b"></div>
+   <div class="resize-handle resize-handle-l"></div>
+   <div class="resize-handle resize-handle-r"></div>
+8 handles total: 4 corners + 4 midpoints.
+
+CSS pros handles:
+
+css   .resize-handle { 
+     position: absolute; 
+     width: 8px; height: 8px; 
+     background: #fff; 
+     border: 1.5px solid #1e1e1e; 
+     border-radius: 50%; 
+     z-index: 10;
+     pointer-events: all;
+   }
+   .resize-handle-tl { top: -5px; left: -5px; cursor: nw-resize; }
+   .resize-handle-tr { top: -5px; right: -5px; cursor: ne-resize; }
+   .resize-handle-bl { bottom: -5px; left: -5px; cursor: sw-resize; }
+   .resize-handle-br { bottom: -5px; right: -5px; cursor: se-resize; }
+   .resize-handle-t  { top: -5px; left: 50%; transform: translateX(-50%); cursor: n-resize; }
+   .resize-handle-b  { bottom: -5px; left: 50%; transform: translateX(-50%); cursor: s-resize; }
+   .resize-handle-l  { left: -5px; top: 50%; transform: translateY(-50%); cursor: w-resize; }
+   .resize-handle-r  { right: -5px; top: 50%; transform: translateY(-50%); cursor: e-resize; }
+
+Mostrar handles só na layer selecionada:
+
+css   .layer-element:not(.selected) .resize-handle { display: none; }
+Ou se a classe atual é diferente, adaptar.
+
+Cursor no corpo do elemento:
+
+css   .layer-element { cursor: move; }
+Validação:
+
+Clicar no corpo do elemento e arrastar → move o elemento
+Clicar num handle dos cantos/lados e arrastar → redimensiona
+Sem handle visível em layers não selecionadas
+
+
+Item 5 — Guias de alinhamento durante drag
+Feature nova. Quando arrastar um elemento, mostrar linhas/guias
+visuais quando ele se aproximar de pontos de alinhamento.
+Pontos de alinhamento (relativos ao canvas):
+
+Centro horizontal (vertical line no x=canvas_width/2)
+Centro vertical (horizontal line no y=canvas_height/2)
+Borda esquerda (x=0), direita (x=canvas_width)
+Borda topo (y=0), base (y=canvas_height)
+
+Implementação:
+
+Adicionar 2 elementos guide no DOM dentro do .canvas-wrap ou
+#canvasContainer:
+
+html   <div class="align-guide align-guide-h" id="alignGuideH"></div>
+   <div class="align-guide align-guide-v" id="alignGuideV"></div>
+
+CSS:
+
+css   .align-guide { 
+     position: absolute; 
+     background: #ff0066; 
+     display: none; 
+     pointer-events: none; 
+     z-index: 100;
+   }
+   .align-guide-h { width: 100%; height: 1px; left: 0; }  /* horizontal line */
+   .align-guide-v { height: 100%; width: 1px; top: 0; }   /* vertical line */
+
+No listener move do draggable em setupInteract, depois de
+atualizar a posição, calcular alinhamentos:
+
+js   move(event) {
+     const cur = parseFloat(el.style.left) || 0;
+     const curt = parseFloat(el.style.top) || 0;
+     el.style.left = (cur + event.dx) + 'px';
+     el.style.top  = (curt + event.dy) + 'px';
+     
+     // Verificar alinhamentos
+     checkAlignmentGuides(el);
+   }
+
+Função checkAlignmentGuides:
+
+js   const ALIGN_THRESHOLD = 5; // px
+   
+   function checkAlignmentGuides(el) {
+     const canvas = document.getElementById('canvasContainer'); // ou equivalente
+     const canvasRect = canvas.getBoundingClientRect();
+     const elRect = el.getBoundingClientRect();
+     
+     const elCenterX = elRect.left + elRect.width / 2 - canvasRect.left;
+     const elCenterY = elRect.top + elRect.height / 2 - canvasRect.top;
+     const canvasCenterX = canvasRect.width / 2;
+     const canvasCenterY = canvasRect.height / 2;
+     
+     const guideV = document.getElementById('alignGuideV');
+     const guideH = document.getElementById('alignGuideH');
+     
+     // Centro horizontal (vertical line)
+     if (Math.abs(elCenterX - canvasCenterX) < ALIGN_THRESHOLD) {
+       guideV.style.left = canvasCenterX + 'px';
+       guideV.style.display = 'block';
+     } else {
+       guideV.style.display = 'none';
+     }
+     
+     // Centro vertical (horizontal line)
+     if (Math.abs(elCenterY - canvasCenterY) < ALIGN_THRESHOLD) {
+       guideH.style.top = canvasCenterY + 'px';
+       guideH.style.display = 'block';
+     } else {
+       guideH.style.display = 'none';
+     }
+   }
+   
+   function hideAlignmentGuides() {
+     document.getElementById('alignGuideH').style.display = 'none';
+     document.getElementById('alignGuideV').style.display = 'none';
+   }
+
+No listener end do draggable, esconder guias:
+
+js   end() {
+     // ... código existente ...
+     hideAlignmentGuides();
+   }
+
+(Opcional bonus) Snap: se o elemento está dentro do threshold,
+força o centro a coincidir com canvas center. Pular se for muito
+complexo.
+
+Validação:
+
+Arrastar elemento horizontalmente: quando passa pelo centro
+horizontal, aparece linha vertical rosa no centro
+Mesma coisa pro centro vertical
+Soltar elemento: guias somem
+
+
+Item 6 — Botões de alinhar elemento ao canvas
+Feature nova. Adicionar botões no painel de propriedades (lado
+direito) ou na toolbar do canvas pra alinhar o elemento selecionado
+ao canvas.
+6 botões:
+
+⬅ Alinhar à esquerda
+↔ Centralizar horizontal
+➡ Alinhar à direita
+⬆ Alinhar ao topo
+⇕ Centralizar vertical
+⬇ Alinhar à base
+
+Implementação:
+
+Adicionar no painel de properties (procurar onde estão as
+propriedades da layer, ~linhas 1700-1900):
+
+html<div class="prop-section">
+  <label class="prop-label">Alinhar no canvas</label>
+  <div class="canvas-align-grid">
+    <button class="canvas-align-btn" onclick="alignSelectedTo('left')" title="Esquerda">⬅</button>
+    <button class="canvas-align-btn" onclick="alignSelectedTo('center-h')" title="Centro H">↔</button>
+    <button class="canvas-align-btn" onclick="alignSelectedTo('right')" title="Direita">➡</button>
+    <button class="canvas-align-btn" onclick="alignSelectedTo('top')" title="Topo">⬆</button>
+    <button class="canvas-align-btn" onclick="alignSelectedTo('center-v')" title="Centro V">⇕</button>
+    <button class="canvas-align-btn" onclick="alignSelectedTo('bottom')" title="Base">⬇</button>
+  </div>
+</div>
+
+CSS:
+
+css.canvas-align-grid { 
+  display: grid; 
+  grid-template-columns: repeat(3, 1fr); 
+  gap: 4px; 
+}
+.canvas-align-btn {
+  padding: 6px;
+  border: 1px solid #e8e2dc;
+  background: #fff;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: background 0.15s;
+}
+.canvas-align-btn:hover { background: #f5f3f0; }
+
+Função alignSelectedTo:
+
+jsfunction alignSelectedTo(direction) {
+  if (!selectedLayerId || !currentTemplate) return;
+  const layer = getLayer(selectedLayerId);
+  if (!layer) return;
+  
+  const canvasW = currentTemplate.canvas?.width || 1080;
+  const canvasH = currentTemplate.canvas?.height || 1080;
+  const layerW = layer.w || 100;
+  const layerH = layer.h || (layer.type === 'text-line' ? 60 : 100);
+  
+  switch(direction) {
+    case 'left':     layer.x = 0; break;
+    case 'center-h': layer.x = Math.round((canvasW - layerW) / 2); break;
+    case 'right':    layer.x = canvasW - layerW; break;
+    case 'top':      layer.y = 0; break;
+    case 'center-v': layer.y = Math.round((canvasH - layerH) / 2); break;
+    case 'bottom':   layer.y = canvasH - layerH; break;
+  }
+  
+  markDirty();
+  pushHistory();
+  renderCanvas();      // re-render do canvas — adaptar nome se for outro
+  showProps(selectedLayerId);  // atualiza UI
+  scheduleLivePreview(500);
+}
+(Os nomes renderCanvas, showProps, getLayer, markDirty,
+pushHistory, scheduleLivePreview já existem no arquivo — usar
+os nomes reais.)
+
+Posicionar a seção de alinhamento no painel de properties,
+provavelmente perto das propriedades de posição (x, y, w, h).
+
+Validação:
+
+Selecionar uma layer
+Clicar "Centro H" → layer vai pro centro horizontal do canvas
+Clicar "Topo" → layer vai pro y=0
+Etc.

@@ -330,32 +330,11 @@
   <div class="toast-container" id="toastContainer"></div>
 
   <!-- VIEW: Landing -->
-  <div class="full-view" id="view-landing">
-    <div class="full-view-inner">
-      <div class="landing-header">Templates de Arte</div>
-      <div class="landing-sub">Crie e gerencie os templates usados para gerar artes automaticamente.</div>
-      <div class="landing-cards">
-        <div class="landing-card" onclick="showView('create')">
-          <div class="landing-card-icon">✚</div>
-          <div class="landing-card-title">Criar nova arte</div>
-          <div class="landing-card-desc">Comece um template do zero ou clone um existente para uma nova variação.</div>
-        </div>
-        <div class="landing-card" onclick="goToList()">
-          <div class="landing-card-icon">✎</div>
-          <div class="landing-card-title">Editar arte existente</div>
-          <div class="landing-card-desc">Veja, edite, ative ou duplique templates já criados.</div>
-        </div>
-      </div>
-    </div>
-  </div>
-
   <!-- VIEW: List -->
   <div class="full-view" id="view-list" style="display:none">
     <div class="full-view-inner">
       <div class="breadcrumb">
-        <a onclick="showView('landing')">Templates de Arte</a>
-        <span class="sep">/</span>
-        <span class="current">Lista</span>
+        <span class="current">Templates de Arte</span>
         <div style="margin-left:auto">
           <button class="btn primary" onclick="showView('create')" style="padding:6px 14px;font-size:0.8rem">+ Novo template</button>
         </div>
@@ -370,7 +349,7 @@
   <div class="full-view" id="view-create" style="display:none">
     <div class="full-view-inner">
       <div class="breadcrumb">
-        <a onclick="showView('landing')">Templates de Arte</a>
+        <a onclick="showView('list')">Templates de Arte</a>
         <span class="sep">/</span>
         <span class="current">Criar novo</span>
       </div>
@@ -416,7 +395,7 @@
         </div>
         <div id="createError" style="display:none;color:#dc2626;font-size:0.82rem;margin-bottom:12px;padding:8px 12px;background:#fef2f2;border-radius:8px;border:1px solid #fecaca"></div>
         <div class="form-actions">
-          <button class="btn" onclick="showView('landing')">Cancelar</button>
+          <button class="btn" onclick="showView('list')">Cancelar</button>
           <button class="btn primary" id="createBtn" onclick="submitCreate()" disabled>Criar e abrir</button>
         </div>
       </div>
@@ -696,7 +675,7 @@
     }
 
     // ── State ────────────────────────────────────────────────────
-    let currentView = 'landing';
+    let currentView = 'list';
     let allTemplates = [];
     let currentTemplateMeta = null;
     let currentTemplate = null;
@@ -1005,7 +984,6 @@
       if (shellHeader) shellHeader.style.display = view === 'editor' ? 'none' : '';
       const shellSidebar = document.getElementById('appSidebar');
       if (shellSidebar) shellSidebar.style.display = view === 'editor' ? 'none' : '';
-      document.getElementById('view-landing').style.display = view === 'landing' ? 'flex' : 'none';
       document.getElementById('view-list').style.display    = view === 'list'    ? 'flex' : 'none';
       document.getElementById('view-create').style.display  = view === 'create'  ? 'flex' : 'none';
       document.getElementById('view-editor').style.display  = view === 'editor'  ? 'flex' : 'none';
@@ -1044,9 +1022,13 @@
 
     // ── Unsaved guard ────────────────────────────────────────────
     function requestBack() {
+      console.log('[back] requestBack, isDirty=', isDirty);
       if (!isDirty) { goToList(); return; }
       pendingNavAction = goToList;
-      document.getElementById('unsavedModal').classList.add('open');
+      const modal = document.getElementById('unsavedModal');
+      console.log('[back] modal element=', modal, 'classes=', modal?.className);
+      modal.classList.add('open');
+      console.log('[back] after add open, classes=', modal.className);
     }
     function closeUnsavedModal() {
       document.getElementById('unsavedModal').classList.remove('open');
@@ -1076,8 +1058,7 @@
       if (!Auth.isAuthenticated()) { window.location.href = '/auth/login?redirect=/admin-templates.html'; return; }
       if (!Auth.isAdmin()) { window.location.href = '/dashboard.html'; return; }
       Shell.render({ activeRoute: 'admin-templates', contentEl: document.getElementById('pageContent') });
-      await loadAllTemplates();
-      showView('landing');
+      await goToList();
     }
 
     async function loadAllTemplates() {
@@ -1108,7 +1089,7 @@
             ? (schemaInfo?.template_variant_options?.find(o => o.value === t.variant_value)?.label || t.variant_value)
             : '';
           const badge = t.is_active ? `<span class="badge-active">Ativo</span>` : '';
-          const variantBadge = variantLabel ? `<span style="font-size:0.68rem;font-weight:700;padding:2px 7px;border-radius:5px;background:rgba(34,27,25,0.07);color:rgba(34,27,25,0.55);letter-spacing:0.04em">${esc(variantLabel)}</span>` : '';
+          const displayName = variantLabel ? esc(variantLabel) : esc(t.name);
           const activateBtn = t.is_active ? '' : `<button class="row-btn primary" onclick="activateTemplateFromList(${t.id})">Ativar</button>`;
           const deleteBtn = `<button class="row-btn danger" onclick="deleteTemplateConfirm(${t.id},'${esc(t.name)}',${t.is_active})">Excluir</button>`;
           const dupBtn = hasVariants
@@ -1117,7 +1098,7 @@
           html += `<div class="template-row">
             <div class="template-row-indicator ${t.is_active ? 'active' : 'inactive'}"></div>
             <div class="template-row-body">
-              <div class="template-row-name">${esc(t.name)} ${variantBadge} ${badge}</div>
+              <div class="template-row-name">${displayName} ${badge}</div>
               <div class="template-row-meta">Atualizado ${timeAgo(t.updated_at)}</div>
             </div>
             <div class="template-row-actions">
