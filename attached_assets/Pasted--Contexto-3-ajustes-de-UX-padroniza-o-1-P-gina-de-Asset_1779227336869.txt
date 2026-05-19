@@ -1,0 +1,394 @@
+## Contexto
+
+3 ajustes de UX/padronização:
+1. Página de Assets: alinhar visual com padrão das outras admin pages 
+   + remover botão Upload duplicado
+2. Painel admin (admin.html): Solicitações gerais como primeira aba + 
+   filtros mais compactos
+3. Dropdown do usuário no header: adicionar "Home" e "Fazer solicitações" 
+   + remover botões flutuantes do sistema (manter apenas WhatsApp)
+
+Arquivos:
+- artifacts/api-server/public/admin-assets.html
+- artifacts/api-server/public/admin.html
+- artifacts/api-server/public/shell.js
+- 24 HTMLs com .float-home (remoção em massa)
+
+---
+
+## Fix 1 — admin-assets.html: alinhar padrão
+
+### 1.1 — Título usar h1 e remover override local
+LOCALIZAR no `<style>` (~linha 38-39):
+```css
+.page-title { font-size: 1.3rem; font-weight: 900; }
+.page-title span { font-size: 0.82rem; font-weight: 600; color: rgba(34,27,25,0.4); margin-left: 8px; }
+```
+
+REMOVER essas duas regras COMPLETAMENTE. O `.page-title` global do 
+style.css já cuida disso.
+
+### 1.2 — Reestruturar HTML do topo
+LOCALIZAR (~linhas 100-120):
+```html
+<div id="pageContent"><div class="page-wrap">
+  <div class="page-header">
+    <div>
+      <div class="page-title">Assets de Templates <span id="totalCount"></span></div>
+    </div>
+    <div class="toolbar">
+      <input type="text" class="search-input" id="searchInput" placeholder="Buscar por nome…" oninput="debounceSearch()">
+      <select class="filter-select" id="filterTipo" onchange="loadAssets()">
+        <option value="">Todos os formulários</option>
+      </select>
+      <select class="filter-select" id="filterUsage" onchange="loadAssets()">
+        <option value="">Todos os status</option>
+        <option value="orphan">Não utilizados</option>
+        <option value="used">Em uso</option>
+      </select>
+      <label class="btn primary" style="cursor:pointer">
+        ⬆ Upload
+        <input type="file" id="uploadInput" accept="image/png,image/jpeg,image/webp,image/svg+xml" multiple style="display:none" onchange="uploadFiles(this.files)">
+      </label>
+    </div>
+  </div>
+```
+
+SUBSTITUIR por:
+```html
+<div id="pageContent">
+  <div class="container" style="padding-top:28px;padding-bottom:60px">
+    
+    <div class="title-row" style="margin-bottom:8px">
+      <h1 class="page-title">Assets de Templates <span id="totalCount"></span></h1>
+    </div>
+    <p style="font-size:0.82rem;opacity:0.5;margin:0 0 16px">Imagens e recursos visuais usados nos templates de geração automática de materiais.</p>
+    
+    <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;align-items:center">
+      <div class="search-bar" style="flex:1;max-width:300px;margin-bottom:0;height:34px;padding:0 14px;border-radius:8px">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" opacity="0.4"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" id="searchInput" placeholder="Buscar por nome..." oninput="debounceSearch()">
+      </div>
+      <select id="filterTipo" onchange="loadAssets()" style="height:34px;border:1px solid var(--border-light);border-radius:8px;padding:0 10px;font-family:'Nunito Sans',sans-serif;font-size:0.82rem;background:var(--card-white)">
+        <option value="">Todos os formulários</option>
+      </select>
+      <div class="filter-chips-inline" style="display:inline-flex;gap:4px">
+        <button class="filter-chip-mini active" data-value="" onclick="setUsageFilter(this,'')">Todos</button>
+        <button class="filter-chip-mini" data-value="used" onclick="setUsageFilter(this,'used')">Em uso</button>
+        <button class="filter-chip-mini" data-value="orphan" onclick="setUsageFilter(this,'orphan')">Não utilizados</button>
+      </div>
+    </div>
+```
+
+NÃO ESQUECER de fechar o `</div>` extra de `<div class="container">` no 
+final da página (antes de `</body>`). Verificar que o div fechado bate.
+
+### 1.3 — Adicionar CSS para filter-chip-mini
+ADICIONAR no `<style>`:
+```css
+.filter-chip-mini { padding: 5px 12px; border-radius: 7px; border: 1px solid var(--border-light); background: var(--card-white); font-family: 'Nunito Sans',sans-serif; font-size: 0.78rem; font-weight: 600; cursor: pointer; color: rgba(34,27,25,0.65); transition: all 0.12s; }
+.filter-chip-mini:hover { background: var(--icon-bg); }
+.filter-chip-mini.active { background: var(--carbon-black); color: var(--paper-white); border-color: var(--carbon-black); }
+```
+
+### 1.4 — Função setUsageFilter
+ADICIONAR no `<script>`:
+```js
+function setUsageFilter(el, value) {
+  el.parentElement.querySelectorAll('.filter-chip-mini').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('filterUsage').value = value;  // mantém compatibilidade
+  loadAssets();
+}
+```
+
+E ADICIONAR um input hidden pra manter `filterUsage` (loadAssets lê esse 
+elemento). Adicionar logo após o filter-chips-inline:
+```html
+<input type="hidden" id="filterUsage" value="">
+```
+
+### 1.5 — Remover botão Upload do topo (manter apenas drop zone)
+A drop zone na linha ~123-130 já é clicável. NÃO precisa do botão 
+duplicado. Já foi removida na etapa 1.2.
+
+---
+
+## Fix 2 — admin.html: Solicitações gerais como primeira aba + filtros compactos
+
+### 2.1 — Inverter ordem das tabs
+LOCALIZAR (~linhas 107-110):
+```html
+<div class="tabs">
+  <button class="tab active" data-tab="eventos" onclick="switchTab('eventos')">Eventos</button>
+  <button class="tab" data-tab="geral" onclick="switchTab('geral')">Solicitações gerais</button>
+</div>
+```
+
+SUBSTITUIR por:
+```html
+<div class="tabs">
+  <button class="tab active" data-tab="geral" onclick="switchTab('geral')">Solicitações gerais</button>
+  <button class="tab" data-tab="eventos" onclick="switchTab('eventos')">Eventos</button>
+</div>
+```
+
+### 2.2 — Inverter ordem dos tab-content
+LOCALIZAR `<div class="tab-content active" id="tab-eventos">` (~linha 112).
+
+REMOVER a classe `active` desse div (vira `<div class="tab-content" id="tab-eventos">`).
+
+LOCALIZAR `<div class="tab-content" id="tab-geral">` (~linha 135).
+
+ADICIONAR a classe `active` (vira `<div class="tab-content active" id="tab-geral">`).
+
+Manter a ORDEM HTML do tab-content do jeito que está (tab-eventos antes 
+do tab-geral). Não precisa mover blocos — só inverter qual tem `active`.
+
+### 2.3 — Atualizar estado inicial JS
+LOCALIZAR (~linha 182):
+```js
+let currentTab = 'eventos';
+```
+
+SUBSTITUIR por:
+```js
+let currentTab = 'geral';
+```
+
+LOCALIZAR (~linhas 215-216):
+```js
+loadTable('eventos');
+loadTable('geral');
+```
+
+SUBSTITUIR por:
+```js
+loadTable('geral');
+loadTable('eventos');
+```
+
+### 2.4 — Filtros mais compactos (status como select)
+Tanto pro tab `tab-eventos` quanto `tab-geral`, LOCALIZAR a row de chips 
+de status:
+
+```html
+<div class="filters">
+  <span style="font-size:0.8rem;opacity:0.5;margin-right:4px">Status:</span>
+  <button class="filter-chip active" data-value="" onclick="setFilter(this,'eventos','status')">Todos</button>
+  <button class="filter-chip" data-value="recebido" onclick="setFilter(this,'eventos','status')">Recebido</button>
+  <button class="filter-chip" data-value="em-producao" onclick="setFilter(this,'eventos','status')">Em produção</button>
+  ...
+</div>
+```
+
+SUBSTITUIR (em AMBOS os tabs) pela versão com select:
+```html
+<div class="filters" style="align-items:center">
+  <select class="filter-select-compact" data-tab="eventos" onchange="setFilterFromSelect(this,'eventos','status')">
+    <option value="">Todos os status</option>
+    <option value="recebido">Recebido</option>
+    <option value="em-analise">Em análise</option>
+    <option value="aguardando">Aguardando</option>
+    <option value="em-producao">Em produção</option>
+    <option value="em-revisao">Em revisão</option>
+    <option value="em-aprovacao">Em aprovação</option>
+    <option value="concluido">Concluído</option>
+  </select>
+</div>
+```
+
+(repetir pro `tab-geral` com `data-tab="geral"`.)
+
+Confirmar quais são os valores reais dos chips de status atuais 
+(`data-value`) e usar no select. Olhar o original antes de simplificar.
+
+### 2.5 — Função setFilterFromSelect
+ADICIONAR no `<script>` (perto de setFilter, ~linha 297):
+```js
+function setFilterFromSelect(el, tab, key) {
+  adminFilters[tab][key] = el.value;
+  adminPages[tab] = 1;
+  loadTable(tab);
+}
+```
+
+### 2.6 — CSS filter-select-compact
+ADICIONAR no `<style>` (perto de `.filter-chip` ou `.filters`):
+```css
+.filter-select-compact { 
+  height: 32px; 
+  border: 1px solid var(--border-light); 
+  border-radius: 8px; 
+  padding: 0 10px; 
+  font-family: 'Nunito Sans',sans-serif; 
+  font-size: 0.8rem; 
+  background: var(--card-white); 
+  color: var(--carbon-black);
+  cursor: pointer;
+}
+```
+
+---
+
+## Fix 3 — Dropdown user + remover floating buttons
+
+### 3.1 — Adicionar 2 itens novos no dropdown
+Em shell.js, função `_buildHeader`, LOCALIZAR (~linhas 65-75):
+```js
+<div class="app-user-dropdown" id="appUserDropdown" style="display:none">
+  <a href="/dashboard.html" class="app-dropdown-item">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/></svg>
+    Minhas solicitações
+    <span id="shellNotifBadgeMenu" class="notif-badge-menu" style="display:none"></span>
+  </a>
+  <a href="/auth/logout" class="app-dropdown-item" style="border-top:1px solid var(--border-light)">
+    ...
+  </a>
+</div>
+```
+
+ADICIONAR 2 novos `<a>` ANTES do "Minhas solicitações":
+```js
+<div class="app-user-dropdown" id="appUserDropdown" style="display:none">
+  <a href="/index.html" class="app-dropdown-item">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+    Home
+  </a>
+  <a href="/solicitacoes.html" class="app-dropdown-item">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+    Fazer solicitações
+  </a>
+  <a href="/dashboard.html" class="app-dropdown-item">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/></svg>
+    Minhas solicitações
+    <span id="shellNotifBadgeMenu" class="notif-badge-menu" style="display:none"></span>
+  </a>
+  <a href="/auth/logout" class="app-dropdown-item" style="border-top:1px solid var(--border-light)">
+    ...mantém igual...
+  </a>
+</div>
+```
+
+### 3.2 — Remover .float-home de TODOS os HTMLs
+
+Lista completa dos arquivos (24 total):
+- dashboard.html
+- solicitacao.html
+- solicitacoes.html
+- thankyou.html
+- form-apresentacoes.html
+- form-artes-divulgacao.html
+- form-assinatura-email.html
+- form-atualizacao-material.html
+- form-brindes.html
+- form-cartao-boas-vindas.html
+- form-cartao-comemorativo.html
+- form-cartao-visita.html
+- form-certificado-eventos.html
+- form-convite-fp.html
+- form-criacao-pdf.html
+- form-divulgacao-nps.html
+- form-email-marketing.html
+- form-eventos.html
+- form-materiais-impressos.html
+- form-outro.html
+- form-pagina-assessores.html
+- form-pagina-online.html
+- form-patrocinio.html
+- form-producao-audiovisual.html
+
+Em cada um, REMOVER os 2 blocos `<a ... class="float-home">...</a>` 
+(geralmente perto do final, antes do float-whatsapp).
+
+Pattern a remover (com pequenas variações):
+```html
+<a href="/solicitacoes.html" class="float-home" style="bottom:78px">
+  <svg ...>...</svg>
+  <span>Menu</span>
+</a>
+<a href="/" class="float-home">
+  <svg ...>...</svg>
+  <span>Início</span>
+</a>
+```
+
+DEIXAR INTACTO o `<a ... class="float-whatsapp">` (logo abaixo).
+
+### 3.3 — Simplificar o script posicionarWhatsApp
+Em cada um dos 24 HTMLs, LOCALIZAR o script (geralmente perto da linha 
+1337+):
+```js
+function posicionarWhatsApp() {
+  const wa = document.querySelector('.float-whatsapp');
+  if (!wa) return;
+  const outros = [...document.querySelectorAll('.float-home')]
+    .filter(el => el !== wa && getComputedStyle(el).display !== 'none');
+  if (outros.length === 0) {
+    wa.style.bottom = '78px';
+  } else {
+    const alturas = outros.map(el => parseInt(el.style.bottom || getComputedStyle(el).bottom) || 20);
+    const maiorAltura = Math.max(...alturas);
+    wa.style.bottom = (maiorAltura + 58) + 'px';
+  }
+}
+```
+
+SUBSTITUIR por versão simplificada (sem dependência de float-home):
+```js
+function posicionarWhatsApp() {
+  const wa = document.querySelector('.float-whatsapp');
+  if (wa) wa.style.bottom = '20px';
+}
+```
+
+Ou se preferir, deletar a função inteira E o script IIFE inteiro que 
+chama ela — o WhatsApp já tem `bottom: 20px` definido no CSS via 
+`.float-whatsapp` (verificar no style.css).
+
+VERIFICAR em style.css se `.float-whatsapp` tem `bottom` definido. Se 
+tiver `bottom: 20px` ou similar, pode DELETAR o script todo (e o IIFE 
+que chama posicionarWhatsApp).
+
+---
+
+## Critério de validação
+
+### Fix 1 — admin-assets
+1. /admin-assets.html: título "Assets de Templates" no MESMO peso/tamanho 
+   que /admin-log.html "Log de atividade"
+2. Apenas UMA forma de fazer upload (drop zone com texto "clique para 
+   selecionar")
+3. Filtros em row única no topo: busca + dropdown de tipo + chips de status
+4. Chips funcionais: clicar "Em uso" filtra apenas usados
+5. Upload arrastando OU clicando na drop zone funciona
+
+### Fix 2 — admin.html
+6. /admin.html: aba "Solicitações gerais" aparece PRIMEIRO e está ativa 
+   por padrão
+7. "Eventos" como segunda aba
+8. Status como dropdown único (em vez de 8 chips)
+9. Filtro de período continua como chips (4 opções)
+10. Search funciona em ambos tabs
+
+### Fix 3 — dropdown + floating
+11. Header dropdown do usuário tem 4 itens: Home / Fazer solicitações / 
+    Minhas solicitações / Sair
+12. Click em "Home" vai pra /index.html
+13. Click em "Fazer solicitações" vai pra /solicitacoes.html
+14. Botão flutuante de WhatsApp continua visível (canto inferior direito)
+15. Botões "Menu" e "Início" (laranja/verde) SUMIRAM de TODAS as páginas
+16. WhatsApp posicionado em bottom:20px (sem empilhamento)
+
+## Não faça
+
+- Não remover o botão flutuante de WhatsApp em nenhum arquivo
+- Não tocar em outros admin-* além do admin-assets e admin.html
+- Não tocar nos forms exceto remover float-home (não alterar lógica dos forms)
+- Não criar classes CSS novas além das listadas
+- Se em algum HTML não houver os 2 .float-home (só 1, ou outras variações), 
+  remover o que houver e seguir. Não falhar a operação por inconsistência.
+- Se posicionarWhatsApp não existir em algum arquivo, ignorar.
+- Não alterar lógica de filtros do admin.html (loadTable, adminFilters, 
+  setFilter) — só a UI dos filtros.
+- Não tocar no fluxo de submit/upload em admin-assets — apenas UI/layout.

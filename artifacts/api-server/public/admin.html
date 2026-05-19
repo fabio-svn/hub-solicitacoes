@@ -106,24 +106,25 @@
     </div>
 
     <div class="tabs">
-      <button class="tab active" data-tab="eventos" onclick="switchTab('eventos')">Eventos</button>
-      <button class="tab" data-tab="geral" onclick="switchTab('geral')">Solicitações gerais</button>
+      <button class="tab active" data-tab="geral" onclick="switchTab('geral')">Solicitações gerais</button>
+      <button class="tab" data-tab="eventos" onclick="switchTab('eventos')">Eventos</button>
     </div>
 
-    <div class="tab-content active" id="tab-eventos">
+    <div class="tab-content" id="tab-eventos">
       <div class="filters">
         <button class="filter-chip active" data-value="" onclick="setFilter(this,'eventos','periodo')">Todos</button>
         <button class="filter-chip" data-value="hoje" onclick="setFilter(this,'eventos','periodo')">Hoje</button>
         <button class="filter-chip" data-value="7dias" onclick="setFilter(this,'eventos','periodo')">7 dias</button>
         <button class="filter-chip" data-value="30dias" onclick="setFilter(this,'eventos','periodo')">30 dias</button>
       </div>
-      <div class="filters">
-        <span style="font-size:0.8rem;opacity:0.5;margin-right:4px">Status:</span>
-        <button class="filter-chip active" data-value="" onclick="setFilter(this,'eventos','status')">Todos</button>
-        <button class="filter-chip" data-value="recebido" onclick="setFilter(this,'eventos','status')">Recebido</button>
-        <button class="filter-chip" data-value="em-producao" onclick="setFilter(this,'eventos','status')">Em produção</button>
-        <button class="filter-chip" data-value="aguardando" onclick="setFilter(this,'eventos','status')">Aguardando</button>
-        <button class="filter-chip" data-value="concluido" onclick="setFilter(this,'eventos','status')">Concluído</button>
+      <div class="filters" style="align-items:center">
+        <select class="filter-select-compact" data-tab="eventos" onchange="setFilterFromSelect(this,'eventos','status')">
+          <option value="">Todos os status</option>
+          <option value="recebido">Recebido</option>
+          <option value="em-producao">Em produção</option>
+          <option value="aguardando">Aguardando</option>
+          <option value="concluido">Concluído</option>
+        </select>
       </div>
       <div class="search-bar">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" opacity="0.4"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
@@ -133,23 +134,24 @@
       <div class="pagination" id="paginationEventos"></div>
     </div>
 
-    <div class="tab-content" id="tab-geral">
+    <div class="tab-content active" id="tab-geral">
       <div class="filters">
         <button class="filter-chip active" data-value="" onclick="setFilter(this,'geral','periodo')">Todos</button>
         <button class="filter-chip" data-value="hoje" onclick="setFilter(this,'geral','periodo')">Hoje</button>
         <button class="filter-chip" data-value="7dias" onclick="setFilter(this,'geral','periodo')">7 dias</button>
         <button class="filter-chip" data-value="30dias" onclick="setFilter(this,'geral','periodo')">30 dias</button>
       </div>
-      <div class="filters">
-        <span style="font-size:0.8rem;opacity:0.5;margin-right:4px">Status:</span>
-        <button class="filter-chip active" data-value="" onclick="setFilter(this,'geral','status')">Todos</button>
-        <button class="filter-chip" data-value="recebido" onclick="setFilter(this,'geral','status')">Recebido</button>
-        <button class="filter-chip" data-value="em-analise" onclick="setFilter(this,'geral','status')">Em análise</button>
-        <button class="filter-chip" data-value="aguardando" onclick="setFilter(this,'geral','status')">Aguardando</button>
-        <button class="filter-chip" data-value="em-producao" onclick="setFilter(this,'geral','status')">Em produção</button>
-        <button class="filter-chip" data-value="em-revisao" onclick="setFilter(this,'geral','status')">Em revisão</button>
-        <button class="filter-chip" data-value="em-aprovacao" onclick="setFilter(this,'geral','status')">Em aprovação</button>
-        <button class="filter-chip" data-value="concluido" onclick="setFilter(this,'geral','status')">Concluído</button>
+      <div class="filters" style="align-items:center">
+        <select class="filter-select-compact" data-tab="geral" onchange="setFilterFromSelect(this,'geral','status')">
+          <option value="">Todos os status</option>
+          <option value="recebido">Recebido</option>
+          <option value="em-analise">Em análise</option>
+          <option value="aguardando">Aguardando</option>
+          <option value="em-producao">Em produção</option>
+          <option value="em-revisao">Em revisão</option>
+          <option value="em-aprovacao">Em aprovação</option>
+          <option value="concluido">Concluído</option>
+        </select>
       </div>
       <div class="search-bar">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" opacity="0.4"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
@@ -180,7 +182,7 @@
   <script src="auth.js"></script>
   <script src="shell.js"></script>
   <script>
-    let currentTab = 'eventos';
+    let currentTab = 'geral';
     let adminFilters = { eventos: { periodo: '', status: '' }, geral: { periodo: '', status: '' } };
     let adminPages = { eventos: 1, geral: 1 };
     let searchTimeout;
@@ -213,8 +215,8 @@
       Shell.render({ activeRoute: 'admin-painel', contentEl: document.getElementById('pageContent') });
       loadStats();
       loadAdminStats();
-      loadTable('eventos');
       loadTable('geral');
+      loadTable('eventos');
     }
 
     async function loadStats() {
@@ -293,6 +295,12 @@
       currentTab = tab;
       document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
       document.querySelectorAll('.tab-content').forEach(c => c.classList.toggle('active', c.id === 'tab-' + tab));
+    }
+
+    function setFilterFromSelect(el, tab, key) {
+      adminFilters[tab][key] = el.value;
+      adminPages[tab] = 1;
+      loadTable(tab);
     }
 
     function setFilter(el, tab, key) {
