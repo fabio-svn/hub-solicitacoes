@@ -1,0 +1,285 @@
+## Contexto
+
+Performance percebida ruim: cada navegação entre páginas exibe o conteúdo
+primeiro, e segundos depois o sidebar admin aparece e empurra o conteúdo
+pra direita. Causa cumulative layout shift (CLS) e impressão de site
+lento.
+
+Causa: shell é renderizado via JS DEPOIS de Auth.init() resolver 3 fetches
+sequenciais (/auth/me, /auth/me-profile, /api/solicitacoes/pendentes-aprovacao).
+PageContent já está visível antes disso. Quando shell entra, move o
+content e o layout muda.
+
+Solução: cache local de estado (isAdmin, userName, initials) + reservar 
+espaço do sidebar via CSS antes do JS rodar + cache do Auth.user em
+sessionStorage com revalidação background.
+
+Arquivos:
+- artifacts/api-server/public/auth.js
+- artifacts/api-server/public/shell.js
+- artifacts/api-server/public/style.css
+
+---
+
+## Fix 1 — Cache de auth state em localStorage + sessionStorage
+
+Em public/auth.js, modificar `Auth.init()` (~linha 91):
+
+ANTES do código existente de Auth.init, ADICIONAR no início da função:
+
+```js
+async init() {
+  if (this.initialized) return this.user;
+  
+  // Tentar cache de sessionStorage primeiro (revalidação background)
+  try {
+    const cached = sessionStorage.getItem('svn_auth_cache');
+    if (cached) {
+      const c = JSON.parse(cached);
+      if (c.user && c.timestamp && (Date.now() - c.timestamp) < 5 * 60 * 1000) {
+        this.user = c.user;
+        this.profile = c.profile;
+        this._pendenteIds = new Set(c.pendenteIds || []);
+        this.initialized = true;
+        // Revalidar em background, sem bloquear
+        this._revalidate();
+        return this.user;
+      }
+    }
+  } catch {}
+  
+  // Sem cache válido — fluxo normal
+  return this._initFresh();
+}
+```
+
+MOVER todo o código atual do init() PRA UMA NOVA FUNÇÃO `_initFresh()`:
+
+```js
+async _initFresh() {
+  // ... TODO O CÓDIGO ATUAL DE init() vai aqui ...
+  
+  // ANTES do `return this.user` final, ADICIONAR salvamento do cache:
+  this._saveCache();
+  return this.user;
+}
+```
+
+ADICIONAR novas funções:
+
+```js
+_saveCache() {
+  try {
+    sessionStorage.setItem('svn_auth_cache', JSON.stringify({
+      user: this.user,
+      profile: this.profile,
+      pendenteIds: [...this._pendenteIds],
+      timestamp: Date.now(),
+    }));
+    // localStorage só pra layout (persiste entre sessões)
+    if (this.user) {
+      localStorage.setItem('svn_layout_state', JSON.stringify({
+        isAdmin: this.isAdmin(),
+        userName: this.getUserName(),
+        initials: this.getInitials(),
+      }));
+    }
+  } catch {}
+},
+
+async _revalidate() {
+  // Refetch em background sem bloquear UI
+  try {
+    const res = await fetch('/auth/me');
+    if (res.status === 401) {
+      sessionStorage.removeItem('svn_auth_cache');
+      this.user = null;
+      return;
+    }
+    if (res.ok) {
+      const data = await res.json();
+      if (data.authenticated && data.user) {
+        const userChanged = JSON.stringify(this.user) !== JSON.stringify(data.user);
+        this.user = data.user;
+        if (data.profile) this.profile = data.profile;
+        // Refetch pendentes
+        try {
+          const pr = await fetch('/api/solicitacoes/pendentes-aprovacao');
+          if (pr.ok) {
+            const pd = await pr.json();
+            this._pendenteIds = new Set(pd.ids || []);
+          }
+        } catch {}
+        this._saveCache();
+        // Se mudou algo relevante (role), sinalizar pra Shell atualizar
+        if (userChanged && window.Shell && Shell._activeRoute) {
+          Shell._syncNotifBadge?.();
+        }
+      }
+    }
+  } catch {}
+},
+```
+
+ATENÇÃO: o `logout()` (~linha 171) também deve limpar o cache. 
+LOCALIZAR:
+```js
+logout() {
+  window.location.href = "/auth/logout";
+},
+```
+
+SUBSTITUIR por:
+```js
+logout() {
+  try {
+    sessionStorage.removeItem('svn_auth_cache');
+    localStorage.removeItem('svn_layout_state');
+  } catch {}
+  window.location.href = "/auth/logout";
+},
+```
+
+E o `_impersonar` / `_sairImpersonar` também devem invalidar:
+LOCALIZAR `window._impersonar` (~linha 241) e `window._sairImpersonar` (~linha 265).
+
+Em AMBAS, ANTES do `window.location.reload()`, ADICIONAR:
+```js
+try { sessionStorage.removeItem('svn_auth_cache'); localStorage.removeItem('svn_layout_state'); } catch {}
+```
+
+---
+
+## Fix 2 — Reservar espaço do sidebar via CSS (anti-CLS)
+
+Em public/style.css, ADICIONAR no topo do arquivo (após :root):
+
+```css
+/* Reserva visual do sidebar admin — evita layout shift */
+body.shell-pending-admin {
+  --reserved-sidebar: 240px;
+}
+body.shell-pending-admin #pageContent,
+body.shell-pending-admin #shellPageContent {
+  margin-left: var(--reserved-sidebar);
+  transition: none;
+}
+
+@media (max-width: 768px) {
+  body.shell-pending-admin {
+    --reserved-sidebar: 0;
+  }
+}
+```
+
+(O valor 240px deve bater com a largura real do sidebar. Se for outro,
+ajustar. Olhar a regra `.app-sidebar` em style.css pra confirmar — 
+provavelmente está com `width: 240px` ou `220px`.)
+
+---
+
+## Fix 3 — Pre-shell layout hint inline (HEAD inline script)
+
+Adicionar um script INLINE no `<head>` das páginas principais para 
+aplicar a classe shell-pending-admin ANTES de qualquer fetch.
+
+ATENÇÃO: alterar AS PÁGINAS uma a uma. Quais alterar:
+
+Páginas que TÊM sidebar admin (todas que chamam Shell.render):
+- public/dashboard.html
+- public/solicitacoes.html
+- public/solicitacao.html
+- public/admin.html
+- public/admin-log.html
+- public/admin-usuarios.html
+- public/admin-templates.html
+- public/admin-assets.html
+
+Em CADA UMA dessas páginas, ADICIONAR no `<head>` (logo após `<meta>` 
+tags e ANTES de qualquer `<link>` ou `<script>`):
+
+```html
+<script>
+  // Pre-shell layout hint — aplica reserva visual antes do JS rolar
+  (function() {
+    try {
+      const cached = localStorage.getItem('svn_layout_state');
+      if (cached) {
+        const s = JSON.parse(cached);
+        if (s.isAdmin) document.documentElement.dataset.preShell = 'admin';
+      }
+    } catch {}
+  })();
+</script>
+<style>
+  html[data-pre-shell="admin"] body { 
+    padding-left: 240px; 
+    transition: padding-left 0.15s ease;
+  }
+  @media (max-width: 768px) {
+    html[data-pre-shell="admin"] body { padding-left: 0; }
+  }
+</style>
+```
+
+Quando Shell.render() rodar e injetar o sidebar real, deve REMOVER esse
+padding (substituído pelo layout grid real).
+
+NÃO ADICIONAR em páginas que não usam Shell (form-*.html podem não usar,
+verificar antes de adicionar):
+- index.html (landing)
+- thankyou.html
+- form-*.html (todos os forms — usam Shell? verificar antes)
+
+Pra confirmar: se a página chama `Shell.render(...)` em algum lugar, 
+adicionar o snippet. Se não chama, NÃO adicionar.
+
+---
+
+## Fix 4 — Shell.render limpa o pre-hint
+
+Em public/shell.js, função `render()` (~linha 5).
+
+DENTRO de render(), ANTES do `document.body.prepend(shellEl)` (~linha 32),
+ADICIONAR:
+
+```js
+// Remover hint pré-shell (CSS de reserva)
+document.documentElement.removeAttribute('data-pre-shell');
+```
+
+Isso garante que quando o shell real entra, o padding-left fake some 
+e dá lugar ao grid real do shell.
+
+---
+
+## Critério de validação
+
+1. Abrir DevTools → Network tab → "Disable cache" → reload
+2. Primeira navegação: shell aparece quando JS rodar (comportamento atual). 
+   Salva localStorage `svn_layout_state` com `isAdmin: true`.
+3. Navegar pra OUTRA página (ex: dashboard → admin-templates):
+   - **SEM padding inicial errado** — espaço do sidebar já reservado via CSS
+   - **SEM flash** — content já começa na posição certa
+   - Shell aparece (real) em ~100ms em vez de 1-2s
+   - SEM "empurrar conteúdo pra direita"
+4. Logout → recarregar:
+   - Cache limpo
+   - Comportamento volta ao fluxo normal (primeira visita)
+5. Em mobile (< 768px):
+   - SEM padding-left aplicado (sidebar fica oculto)
+   - Layout responsivo continua funcionando
+6. Sessão expira (cache de 5 min):
+   - Próximo navegação refaz /auth/me automaticamente
+   - Cache atualizado
+
+## Não faça
+
+- Não tocar em `_pendenteIds` na inicialização base (apenas via cache)
+- Não cachear `clickup_task_id` ou dados privados de outras solicitações
+- Não usar `localStorage` pra `user.email` cru — só estado de layout 
+  (isAdmin, initials)
+- Não remover o fluxo de fetch original — apenas adicionar cache POR CIMA
+- Não tocar em `requireAuth()`, `isAuthenticated()`, `getUserEmail()`, etc
+- Se o sidebar tiver largura diferente de 240px, ADAPTAR (confirmar em
+  style.css antes)

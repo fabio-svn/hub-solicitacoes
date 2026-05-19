@@ -9,6 +9,7 @@
   <link rel="manifest" href="/site.webmanifest" />
   <meta name="theme-color" content="#AC3631" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script>(function(){try{const s=JSON.parse(localStorage.getItem('svn_layout_state')||'{}');if(s.isAdmin)document.documentElement.dataset.preShell='admin';}catch(e){}})()</script>
   <title>Assets de Templates — SVN</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@300;400;600;700;900&display=swap" rel="stylesheet">
@@ -157,6 +158,11 @@
   const PAGE_SIZE = 40;
   let searchTimer = null;
 
+  window.handleAssetImgError = function(img) {
+    const parent = img.parentElement;
+    if (parent) parent.innerHTML = '<div class="no-thumb">🖼</div>';
+  };
+
   function esc(s) {
     return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
   }
@@ -254,7 +260,7 @@
       const sizeStr = sizeKb >= 1024 ? (sizeKb/1024).toFixed(1) + 'MB' : sizeKb + 'KB';
       return `<div class="asset-card" id="ac-${a.id}">
         <div class="asset-thumb" onclick="previewAsset('${esc(a.url)}')">
-          <img src="${esc(a.url)}" alt="${esc(a.filename)}" loading="lazy" onerror="this.parentElement.innerHTML='<div class=\\"no-thumb\\">🖼</div>'">
+          <img src="${esc(a.url)}" alt="${esc(a.filename)}" loading="lazy" onerror="window.handleAssetImgError(this)">
           <div class="overlay">
             <button class="overlay-btn" onclick="event.stopPropagation();copyUrl('${esc(a.url)}')">Copiar URL</button>
             <button class="overlay-btn" onclick="event.stopPropagation();deleteAsset(${a.id})">Deletar</button>

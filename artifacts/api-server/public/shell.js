@@ -29,6 +29,8 @@ window.Shell = {
       contentEl.parentNode.removeChild(contentEl);
     }
 
+    // Remover hint pré-shell (CSS de reserva)
+    document.documentElement.removeAttribute('data-pre-shell');
     document.body.prepend(shellEl);
 
     const main = shellEl.querySelector('#appMain');
@@ -48,7 +50,7 @@ window.Shell = {
         ${isAdmin ? `<button class="sidebar-toggle-btn" onclick="Shell.toggleSidebar()" title="Recolher menu" aria-label="Recolher menu">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
         </button>` : ''}
-        <a href="/dashboard.html" class="app-header-logo">
+        <a href="/index.html" class="app-header-logo">
           ${logoUrl ? `<img src="${logoUrl}" alt="SVN" height="22">` : `<span style="font-weight:800;font-size:1rem;letter-spacing:0.02em">SVN</span>`}
         </a>
       </div>

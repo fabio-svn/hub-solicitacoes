@@ -14,6 +14,15 @@
   --dark-bg-to: #0d0a09;
 }
 
+/* Reserva visual do sidebar admin — evita layout shift antes do Shell renderizar */
+html[data-pre-shell="admin"] body {
+  padding-left: 232px;
+  transition: padding-left 0.15s ease;
+}
+@media (max-width: 768px) {
+  html[data-pre-shell="admin"] body { padding-left: 0; }
+}
+
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 html { scroll-behavior: smooth; }

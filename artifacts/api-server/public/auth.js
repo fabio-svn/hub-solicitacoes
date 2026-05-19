@@ -90,6 +90,27 @@ const Auth = {
 
   async init() {
     if (this.initialized) return this.user;
+
+    // Tentar cache de sessionStorage primeiro (revalidação background)
+    try {
+      const cached = sessionStorage.getItem('svn_auth_cache');
+      if (cached) {
+        const c = JSON.parse(cached);
+        if (c.user && c.timestamp && (Date.now() - c.timestamp) < 5 * 60 * 1000) {
+          this.user = c.user;
+          this.profile = c.profile;
+          this._pendenteIds = new Set(c.pendenteIds || []);
+          this.initialized = true;
+          this._revalidate();
+          return this.user;
+        }
+      }
+    } catch {}
+
+    return this._initFresh();
+  },
+
+  async _initFresh() {
     try {
       const res = await fetch("/auth/me");
       if (res.status === 401) {
@@ -133,7 +154,6 @@ const Auth = {
     // Verificar e exibir banner de impersonação
     const impEmail = sessionStorage.getItem('svn_impersonate');
     if (impEmail) {
-      // Ocultar elementos admin antes de qualquer render
       const adminStyle = document.createElement('style');
       adminStyle.textContent = '#tabAdmin, [data-admin-only], .admin-only { display: none !important; }';
       document.head.appendChild(adminStyle);
@@ -153,7 +173,56 @@ const Auth = {
       }
     }
 
+    this._saveCache();
     return this.user;
+  },
+
+  _saveCache() {
+    try {
+      sessionStorage.setItem('svn_auth_cache', JSON.stringify({
+        user: this.user,
+        profile: this.profile,
+        pendenteIds: [...this._pendenteIds],
+        timestamp: Date.now(),
+      }));
+      if (this.user) {
+        localStorage.setItem('svn_layout_state', JSON.stringify({
+          isAdmin: this.isAdmin(),
+          userName: this.getUserName(),
+          initials: this.getInitials(),
+        }));
+      }
+    } catch {}
+  },
+
+  async _revalidate() {
+    try {
+      const res = await fetch('/auth/me');
+      if (res.status === 401) {
+        sessionStorage.removeItem('svn_auth_cache');
+        this.user = null;
+        return;
+      }
+      if (res.ok) {
+        const data = await res.json();
+        if (data.authenticated && data.user) {
+          const userChanged = JSON.stringify(this.user) !== JSON.stringify(data.user);
+          this.user = data.user;
+          if (data.profile) this.profile = data.profile;
+          try {
+            const pr = await fetch('/api/solicitacoes/pendentes-aprovacao');
+            if (pr.ok) {
+              const pd = await pr.json();
+              this._pendenteIds = new Set(pd.ids || []);
+            }
+          } catch {}
+          this._saveCache();
+          if (userChanged && window.Shell && Shell._activeRoute) {
+            Shell._syncNotifBadge?.();
+          }
+        }
+      }
+    } catch {}
   },
 
   isAuthenticated() {
@@ -169,6 +238,10 @@ const Auth = {
   },
 
   logout() {
+    try {
+      sessionStorage.removeItem('svn_auth_cache');
+      localStorage.removeItem('svn_layout_state');
+    } catch {}
     window.location.href = "/auth/logout";
   },
 
@@ -255,6 +328,7 @@ window._impersonar = async function() {
       sessionStorage.setItem('svn_impersonate', email);
       const dropdown = document.getElementById('userDropdown');
       if (dropdown) dropdown.style.display = 'none';
+      try { sessionStorage.removeItem('svn_auth_cache'); localStorage.removeItem('svn_layout_state'); } catch {}
       window.location.reload();
     } else {
       alert('Não foi possível entrar como esse usuário.');
@@ -267,5 +341,6 @@ window._sairImpersonar = async function() {
   try {
     await fetch('/api/admin/impersonate/stop', { method: 'POST' });
   } catch {}
+  try { sessionStorage.removeItem('svn_auth_cache'); localStorage.removeItem('svn_layout_state'); } catch {}
   window.location.reload();
 };
