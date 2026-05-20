@@ -574,7 +574,10 @@
   </div>
 
 
-  <!-- Modal: Unsaved changes -->
+
+  </div>
+
+  <!-- Modal: Unsaved changes — fora do #view-editor para evitar overflow:hidden/stacking context do pai -->
   <div class="modal-overlay" id="unsavedModal">
     <div class="modal-box">
       <div class="modal-title">Alterações não salvas</div>
@@ -585,8 +588,6 @@
         <button class="modal-btn primary" onclick="saveAndExit()">Salvar e sair</button>
       </div>
     </div>
-  </div>
-
   </div>
   <script src="config.js"></script>
   <script src="auth.js"></script>
