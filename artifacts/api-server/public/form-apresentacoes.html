@@ -187,6 +187,12 @@
     let subtipo = params.get('subtipo') || '';
     let isAtualizar = subtipo === 'atualizar';
     const TIPOS = { nova: 'apresentacao-nova', atualizar: 'apresentacao-atualizar' };
+    window.addEventListener('pageshow', function(e) {
+      if (e.persisted) {
+        try { sessionStorage.removeItem('form-apresentacoes'); } catch {}
+        window.location.reload();
+      }
+    });
     const SLA = { menos30: 'até 5 dias úteis', menos100: 'até 10 dias úteis', mais100: 'até 15 dias úteis' };
 
     function selectSubtipo(tipo) {
@@ -404,7 +410,7 @@
           };
           sessionStorage.setItem('svn_ultimo_resumo', JSON.stringify(resumo));
         } catch {}
-        window.location.href = '/thankyou.html';
+        window.location.replace('/thankyou.html');
       }
       else { 
         const errEl = document.getElementById('submitError');

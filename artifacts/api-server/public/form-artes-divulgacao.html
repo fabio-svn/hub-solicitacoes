@@ -134,6 +134,12 @@
   <script src="auth.js"></script>
   <script src="shell.js"></script>
   <script>
+    window.addEventListener('pageshow', function(e) {
+      if (e.persisted) {
+        try { sessionStorage.removeItem('form-artes'); } catch {}
+        window.location.reload();
+      }
+    });
     async function init() {
       await _configReady;
       await Auth.init();
@@ -281,7 +287,7 @@
             };
             sessionStorage.setItem('svn_ultimo_resumo', JSON.stringify(resumo));
           } catch {}
-          window.location.href = '/thankyou.html';
+          window.location.replace('/thankyou.html');
         }
         else {
           const errEl = document.getElementById('submitError');

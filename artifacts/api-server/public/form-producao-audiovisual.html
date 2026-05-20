@@ -162,6 +162,12 @@
   <script src="auth.js"></script>
   <script src="shell.js"></script>
   <script>
+    window.addEventListener('pageshow', function(e) {
+      if (e.persisted) {
+        try { sessionStorage.removeItem('svn_ultimo_resumo'); } catch {}
+        window.location.reload();
+      }
+    });
     let _modalidade = null;
 
     async function init() {
@@ -313,7 +319,7 @@
             id: d.id,
           }));
         } catch {}
-        window.location.href = '/thankyou.html';
+        window.location.replace('/thankyou.html');
       } else {
         const errEl = document.getElementById('submitError');
         if (errEl) { errEl.style.display = 'block'; errEl.textContent = d.error || 'Erro ao enviar. Tente novamente.'; }

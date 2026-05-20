@@ -146,6 +146,12 @@
     const params = new URLSearchParams(window.location.search);
     let subtipo = params.get('subtipo') || '';
     const TIPOS = { informativo: 'conteudo-pdf-informativo', ebook: 'conteudo-pdf-ebook' };
+    window.addEventListener('pageshow', function(e) {
+      if (e.persisted) {
+        try { sessionStorage.removeItem('form-pdf'); } catch {}
+        window.location.reload();
+      }
+    });
 
     function selectSubtipo(tipo) {
       subtipo = tipo;
@@ -286,7 +292,7 @@
           };
           sessionStorage.setItem('svn_ultimo_resumo', JSON.stringify(resumo));
         } catch {}
-        window.location.href = '/thankyou.html';
+        window.location.replace('/thankyou.html');
       }
       else { 
         const errEl = document.getElementById('submitError');

@@ -284,6 +284,12 @@
   <script src="ibge-loader.js"></script>
   <script>
     const STORAGE_KEY = 'hub_form_eventos';
+    window.addEventListener('pageshow', function(e) {
+      if (e.persisted) {
+        try { sessionStorage.removeItem(STORAGE_KEY); } catch {}
+        window.location.reload();
+      }
+    });
     const formState = { natureza: null, maturidade: null, materiais: new Set(), palestrantes: [] };
     let estados = [];
 
@@ -1556,7 +1562,7 @@
             sessionStorage.setItem('svn_ultimo_resumo', JSON.stringify(resumo));
           } catch {}
           clearInterval(msgInterval);
-          window.location.href = '/thankyou.html';
+          window.location.replace('/thankyou.html');
         }
         else {
           clearInterval(msgInterval);

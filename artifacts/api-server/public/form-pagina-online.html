@@ -77,6 +77,12 @@
   <script src="shell.js"></script>
   <script>
     const TIPO = 'pagina-online';
+    window.addEventListener('pageshow', function(e) {
+      if (e.persisted) {
+        try { sessionStorage.removeItem('form-' + TIPO); } catch {}
+        window.location.reload();
+      }
+    });
 
     async function init() {
       await _configReady;
@@ -165,7 +171,7 @@
             id: d.id,
           }));
         } catch {}
-        window.location.href = '/thankyou.html';
+        window.location.replace('/thankyou.html');
       } else {
         const errEl = document.getElementById('submitError');
         if (errEl) { errEl.style.display = 'block'; errEl.textContent = d.error || 'Erro ao enviar. Tente novamente.'; }
