@@ -20,7 +20,7 @@ export type LayerLink =
   | { type: 'template';    template: string }
   | { type: 'placeholder'; placeholder: string };
 
-export type Layer = TextLineLayer | TextBlockLayer | ImageLayer;
+export type Layer = TextLineLayer | TextBlockLayer | ImageLayer | ShapeLayer;
 
 export type LayerBase = {
   id: string;
@@ -77,6 +77,17 @@ export type ImageLayer = LayerBase & {
     width: number;
     color: string;
   };
+};
+
+export type ShapeLayer = LayerBase & {
+  type: 'shape';
+  shape: 'rectangle' | 'ellipse';
+  w: number;
+  h: number;
+  fill?: string;
+  stroke?: string;
+  stroke_width?: number;
+  border_radius?: number;
 };
 
 export const AVAILABLE_FONTS = [

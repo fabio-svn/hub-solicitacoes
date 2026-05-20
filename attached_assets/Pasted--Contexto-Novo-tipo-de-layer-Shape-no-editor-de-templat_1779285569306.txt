@@ -1,0 +1,350 @@
+## Contexto
+
+Novo tipo de layer "Shape" no editor de templates, suportando retângulos 
+e elipses. Renderiza no canvas, props panel pra editar cor de preenchimento, 
+borda, e (para retângulos) border-radius.
+
+Arquivos:
+- artifacts/api-server/src/types/art-template.ts
+- artifacts/api-server/src/services/template-renderer.ts
+- artifacts/api-server/public/admin-templates.html
+
+---
+
+## Fix 1 — Backend: tipo ShapeLayer
+
+Em src/types/art-template.ts:
+
+LOCALIZAR:
+```ts
+export type Layer = TextLineLayer | TextBlockLayer | ImageLayer;
+```
+
+SUBSTITUIR por:
+```ts
+export type Layer = TextLineLayer | TextBlockLayer | ImageLayer | ShapeLayer;
+```
+
+ADICIONAR no final do arquivo (antes de AVAILABLE_FONTS):
+```ts
+export type ShapeLayer = LayerBase & {
+  type: 'shape';
+  shape: 'rectangle' | 'ellipse';
+  w: number;
+  h: number;
+  fill?: string;            // cor hex; null/vazio = transparente
+  stroke?: string;          // cor hex da borda
+  stroke_width?: number;    // em px; 0 = sem borda
+  border_radius?: number;   // só usado quando shape='rectangle'
+};
+```
+
+---
+
+## Fix 2 — Backend: render de shape no template-renderer.ts
+
+Em src/services/template-renderer.ts:
+
+LOCALIZAR a função `renderImage` (~linha 257). Após ela, ADICIONAR uma 
+nova função:
+
+```ts
+async function renderShape(
+  layer: ShapeLayer,
+  composites: sharp.OverlayOptions[],
+  bgWidth: number,
+  bgHeight: number,
+) {
+  if (layer.w <= 0 || layer.h <= 0) {
+    logger.warn(`[render] shape ${layer.id} skipped: zero/negative dimensions`);
+    return;
+  }
+
+  const safeW = Math.min(layer.w, bgWidth - layer.x);
+  const safeH = Math.min(layer.h, bgHeight - layer.y);
+  if (safeW <= 0 || safeH <= 0) return;
+
+  const fill = layer.fill || 'none';
+  const stroke = layer.stroke || 'none';
+  const strokeWidth = layer.stroke_width || 0;
+
+  // Em SVG, stroke é centrado na borda. Ajustar inset pra ficar todo dentro.
+  const inset = strokeWidth / 2;
+
+  let shapeEl: string;
+  if (layer.shape === 'ellipse') {
+    const cx = safeW / 2;
+    const cy = safeH / 2;
+    const rx = Math.max(0, (safeW / 2) - inset);
+    const ry = Math.max(0, (safeH / 2) - inset);
+    shapeEl = `<ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}" fill="${fill}" stroke="${stroke}" stroke-width="${strokeWidth}"/>`;
+  } else {
+    // rectangle
+    const x = inset;
+    const y = inset;
+    const w = Math.max(0, safeW - strokeWidth);
+    const h = Math.max(0, safeH - strokeWidth);
+    const rx = Math.min(layer.border_radius || 0, w / 2, h / 2);
+    shapeEl = `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${rx}" ry="${rx}" fill="${fill}" stroke="${stroke}" stroke-width="${strokeWidth}"/>`;
+  }
+
+  const svg = `<svg width="${safeW}" height="${safeH}" xmlns="http://www.w3.org/2000/svg">${shapeEl}</svg>`;
+  const buffer = await sharp(Buffer.from(svg)).png().toBuffer();
+
+  composites.push({
+    input: buffer,
+    left: Math.round(layer.x),
+    top: Math.round(layer.y),
+  });
+}
+```
+
+GARANTIR que `ShapeLayer` está importado no topo do arquivo:
+```ts
+import { ArtTemplate, /* ... outros tipos ... */ ShapeLayer } from '../types/art-template';
+```
+
+LOCALIZAR o loop que processa layers (~linha 410):
+```ts
+if (layer.type === 'text-line')  await renderTextLine(layer, dataStr, composites, renderCtx);
+if (layer.type === 'text-block') await renderTextBlock(layer, dataStr, composites, renderCtx);
+if (layer.type === 'image')      await renderImage(layer, dataStr, composites, canvasW, canvasH);
+```
+
+ADICIONAR nova linha:
+```ts
+if (layer.type === 'shape')      await renderShape(layer, composites, canvasW, canvasH);
+```
+
+---
+
+## Fix 3 — Frontend: botão "+ Forma" no painel
+
+Em public/admin-templates.html.
+
+LOCALIZAR a seção add-layer-section (~linha 462-463):
+```html
+<button class="add-layer-btn" onclick="addLayer('text-block')"><span class="layer-icon-t">T</span> Texto</button>
+<button class="add-layer-btn" onclick="addLayer('image')"><svg ...></svg> Imagem</button>
+```
+
+ADICIONAR após o botão de imagem:
+```html
+<button class="add-layer-btn" onclick="addLayer('shape')">
+  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+    <rect x="3" y="3" width="18" height="18" rx="2"/>
+  </svg> 
+  Forma
+</button>
+```
+
+---
+
+## Fix 4 — Frontend: addLayer suporta 'shape'
+
+LOCALIZAR a função `addLayer(type)`. Provavelmente tem um switch ou 
+sequência de if. ADICIONAR caso pra shape:
+
+```js
+function addLayer(type) {
+  const id = generateLayerId();
+  let newLayer;
+  
+  // ... casos existentes pra text-line, text-block, image ...
+  
+  if (type === 'shape') {
+    newLayer = {
+      id,
+      type: 'shape',
+      name: 'Forma',
+      shape: 'rectangle',
+      x: 50, y: 50, w: 200, h: 150,
+      fill: '#AC3631',
+      stroke: '',
+      stroke_width: 0,
+      border_radius: 0,
+    };
+  }
+  
+  if (!newLayer) return;
+  currentConfig.layers.push(newLayer);
+  // ... resto da função: markDirty, renderLayers, renderCanvas, selectLayer ...
+}
+```
+
+(Adaptar pro padrão real do código — pode ser switch, pode ser objects 
+template, etc.)
+
+---
+
+## Fix 5 — Frontend: render do shape no canvas (preview ao vivo)
+
+LOCALIZAR onde as layers são renderizadas no canvas DOM (provavelmente 
+função `renderLayerBox(layer)` ou similar — procurar por `.layer-box`).
+
+ADICIONAR caso pra shape:
+```js
+// Dentro da função que renderiza layer no canvas:
+if (layer.type === 'shape') {
+  // Render via SVG inline pro preview ficar fiel ao backend
+  const fill = layer.fill || 'transparent';
+  const stroke = layer.stroke || 'none';
+  const sw = layer.stroke_width || 0;
+  
+  let shapeHtml;
+  if (layer.shape === 'ellipse') {
+    shapeHtml = `<svg width="100%" height="100%" viewBox="0 0 ${layer.w} ${layer.h}" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+      <ellipse cx="${layer.w/2}" cy="${layer.h/2}" 
+               rx="${layer.w/2 - sw/2}" ry="${layer.h/2 - sw/2}"
+               fill="${fill}" stroke="${stroke}" stroke-width="${sw}"/>
+    </svg>`;
+  } else {
+    const rx = Math.min(layer.border_radius || 0, layer.w/2, layer.h/2);
+    shapeHtml = `<svg width="100%" height="100%" viewBox="0 0 ${layer.w} ${layer.h}" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+      <rect x="${sw/2}" y="${sw/2}" 
+            width="${layer.w - sw}" height="${layer.h - sw}" 
+            rx="${rx}" ry="${rx}"
+            fill="${fill}" stroke="${stroke}" stroke-width="${sw}"/>
+    </svg>`;
+  }
+  
+  return shapeHtml;
+}
+```
+
+NOTA: usar o pattern exato do código existente pra renderizar layers no 
+canvas. Se for via innerHTML, retornar string. Se for via createElement, 
+criar elements.
+
+---
+
+## Fix 6 — Frontend: props panel do shape
+
+LOCALIZAR onde props da layer selecionada são renderizadas (provavelmente 
+`renderLayerProps(layer)` ou similar).
+
+ADICIONAR caso pra shape (assumindo que retorna HTML string):
+
+```js
+if (layer.type === 'shape') {
+  return `
+    <div class="props-group">
+      <div class="props-label">Tipo de forma</div>
+      <select class="props-input" onchange="updLayer('${id}','shape',this.value)">
+        <option value="rectangle" ${layer.shape === 'rectangle' ? 'selected' : ''}>Retângulo</option>
+        <option value="ellipse" ${layer.shape === 'ellipse' ? 'selected' : ''}>Elipse</option>
+      </select>
+    </div>
+    
+    <div class="props-row">
+      <div><div class="props-label">X</div><input class="props-input" type="number" value="${layer.x||0}" onchange="updLayer('${id}','x',parseInt(this.value)||0)"></div>
+      <div><div class="props-label">Y</div><input class="props-input" type="number" value="${layer.y||0}" onchange="updLayer('${id}','y',parseInt(this.value)||0)"></div>
+    </div>
+    
+    <div class="props-row">
+      <div><div class="props-label">Largura</div><input class="props-input" type="number" value="${layer.w||0}" onchange="updLayer('${id}','w',parseInt(this.value)||0)"></div>
+      <div><div class="props-label">Altura</div><input class="props-input" type="number" value="${layer.h||0}" onchange="updLayer('${id}','h',parseInt(this.value)||0)"></div>
+    </div>
+    
+    <div class="props-group">
+      <div class="props-label">Preenchimento</div>
+      ${renderColorPickerWithSwatches(`fill-${id}`, layer.fill, `updLayer('${id}','fill',this.value)`)}
+    </div>
+    
+    <div class="props-group">
+      <div class="props-label">Cor da borda</div>
+      ${renderColorPickerWithSwatches(`stroke-${id}`, layer.stroke, `updLayer('${id}','stroke',this.value)`)}
+    </div>
+    
+    <div class="props-group">
+      <div class="props-label">Espessura da borda (px)</div>
+      <input class="props-input" type="number" min="0" value="${layer.stroke_width||0}" onchange="updLayer('${id}','stroke_width',parseInt(this.value)||0)">
+    </div>
+    
+    ${layer.shape === 'rectangle' ? `
+      <div class="props-group">
+        <div class="props-label">Arredondamento dos cantos (px)</div>
+        <input class="props-input" type="number" min="0" value="${layer.border_radius||0}" onchange="updLayer('${id}','border_radius',parseInt(this.value)||0)">
+      </div>
+    ` : ''}
+    
+    ${layer.type !== 'shape' ? '' : `
+      <button class="btn-delete-layer" onclick="deleteLayer('${id}')">Deletar layer</button>
+    `}
+  `;
+}
+```
+
+(Esse `renderColorPickerWithSwatches` vem do Prompt 10 Fix 7. Se Prompt 10 
+ainda não foi aplicado, usar `<input type="color">` simples até lá.)
+
+---
+
+## Fix 7 — Sample data e endpoint preview pra shapes
+
+LOCALIZAR o endpoint `/api/admin/art-templates/sample-data/:tipo` (provavelmente 
+em admin.ts). Esse endpoint retorna dados mock pra preview no editor.
+
+NÃO precisa mudar — shape não tem dados dinâmicos (sem placeholders).
+
+LOCALIZAR o endpoint `/api/admin/art-templates/preview` (POST). Verificar 
+que ele passa o config completo (incluindo shapes) para `renderFromTemplate`. 
+Como mexemos no template-renderer adicionando case pra `shape`, deve 
+funcionar sem mudanças no endpoint.
+
+---
+
+## Fix 8 — Icone de shape no layer panel
+
+LOCALIZAR onde `typeBadge` é definido (renderiza ícone T pra texto e img 
+pra imagem na lista de layers).
+
+ADICIONAR caso pra shape:
+```js
+let typeBadge;
+if (layer.type === 'shape') {
+  typeBadge = `<svg class="layer-icon-shape" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>`;
+}
+// ... os outros casos existentes
+```
+
+E ADICIONAR no `<style>`:
+```css
+.layer-icon-shape { color: rgba(34,27,25,0.7); flex-shrink: 0; }
+```
+
+---
+
+## Critério de validação
+
+1. `pnpm run build` compila sem erros (TypeScript)
+2. Abrir editor de qualquer template → painel "+ Adicionar" mostra 
+   3 botões: Texto, Imagem, Forma
+3. Clicar "+ Forma": nova layer aparece no canvas (retângulo ruby red 
+   200x150 em x=50, y=50)
+4. Selecionar a layer → painel direito mostra props:
+   - Tipo (retângulo/elipse)
+   - X, Y, W, H
+   - Preenchimento (com swatches)
+   - Cor borda (com swatches)
+   - Espessura borda
+   - Arredondamento (só se retângulo)
+5. Mudar tipo pra "Elipse": canvas atualiza, props "Arredondamento" some
+6. Arrastar a shape no canvas: move como qualquer layer
+7. Salvar template → recarregar editor → shape persiste
+8. Gerar uma solicitação real do tipo que usa esse template: a shape 
+   aparece na arte renderizada (PNG/PDF final)
+9. Borda com espessura > 0 + cor: visível no canvas e na arte
+10. Retângulo com border_radius > 0: cantos arredondados visíveis
+
+## Não faça
+
+- Não tocar nos types existentes (TextLine, TextBlock, Image) — só adicionar 
+  ShapeLayer ao union
+- Não criar arquivo novo de service — usar template-renderer.ts existente
+- Não tocar no pdf-renderer.ts — ele só faz overlay PNG no PDF, vai pegar 
+  o shape automaticamente do PNG gerado
+- Não adicionar suporte a outros shapes (triangle, polygon) — escopo é 
+  apenas rectangle e ellipse
+- Se renderColorPickerWithSwatches não existir (Prompt 10 não aplicado), 
+  usar `<input type="color">` simples — não falhar

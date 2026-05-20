@@ -2,7 +2,7 @@ import sharp from 'sharp';
 import * as fontkitLib from 'fontkit';
 import * as fs from 'fs';
 import * as path from 'path';
-import { ArtTemplate, TextLineLayer, TextBlockLayer, ImageLayer } from '../types/art-template';
+import { ArtTemplate, TextLineLayer, TextBlockLayer, ImageLayer, ShapeLayer } from '../types/art-template';
 import { logger } from '../lib/logger';
 
 const fontkit = fontkitLib as any;
@@ -361,6 +361,52 @@ async function renderImage(
   }
 }
 
+async function renderShape(
+  layer: ShapeLayer,
+  composites: sharp.OverlayOptions[],
+  bgWidth: number,
+  bgHeight: number,
+) {
+  if (layer.w <= 0 || layer.h <= 0) {
+    logger.warn(`[render] shape ${layer.id} skipped: zero/negative dimensions`);
+    return;
+  }
+
+  const safeW = Math.min(layer.w, bgWidth - layer.x);
+  const safeH = Math.min(layer.h, bgHeight - layer.y);
+  if (safeW <= 0 || safeH <= 0) return;
+
+  const fill = layer.fill || 'none';
+  const stroke = layer.stroke || 'none';
+  const strokeWidth = layer.stroke_width || 0;
+  const inset = strokeWidth / 2;
+
+  let shapeEl: string;
+  if (layer.shape === 'ellipse') {
+    const cx = safeW / 2;
+    const cy = safeH / 2;
+    const rx = Math.max(0, (safeW / 2) - inset);
+    const ry = Math.max(0, (safeH / 2) - inset);
+    shapeEl = `<ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}" fill="${fill}" stroke="${stroke}" stroke-width="${strokeWidth}"/>`;
+  } else {
+    const x = inset;
+    const y = inset;
+    const w = Math.max(0, safeW - strokeWidth);
+    const h = Math.max(0, safeH - strokeWidth);
+    const rx = Math.min(layer.border_radius || 0, w / 2, h / 2);
+    shapeEl = `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${rx}" ry="${rx}" fill="${fill}" stroke="${stroke}" stroke-width="${strokeWidth}"/>`;
+  }
+
+  const svg = `<svg width="${safeW}" height="${safeH}" xmlns="http://www.w3.org/2000/svg">${shapeEl}</svg>`;
+  const buffer = await sharp(Buffer.from(svg)).png().toBuffer();
+
+  composites.push({
+    input: buffer,
+    left: Math.round(layer.x),
+    top: Math.round(layer.y),
+  });
+}
+
 export async function renderFromTemplate(
   template: ArtTemplate,
   dataRaw: Record<string, any>
@@ -410,6 +456,7 @@ export async function renderFromTemplate(
       if (layer.type === 'text-line')  await renderTextLine(layer, dataStr, composites, renderCtx);
       if (layer.type === 'text-block') await renderTextBlock(layer, dataStr, composites, renderCtx);
       if (layer.type === 'image')      await renderImage(layer, dataStr, composites, canvasW, canvasH);
+      if (layer.type === 'shape')      await renderShape(layer as ShapeLayer, composites, canvasW, canvasH);
     } catch (err: any) {
       logger.warn(`[render] layer "${layer.id}" ignorada (${err.message})`);
     }

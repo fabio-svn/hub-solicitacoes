@@ -1,0 +1,214 @@
+## Contexto
+
+Substituir os botões ↑↓⧉ de reordenar layers por drag & drop. Mantém o 
+botão ⧉ (duplicar) mas remove as setas.
+
+Arquivo: artifacts/api-server/public/admin-templates.html
+
+---
+
+## Fix 1 — Estrutura HTML da layer-item
+
+LOCALIZAR a renderização do layer-item (~linhas 1600-1615):
+```js
+<div class="layer-item ..." onclick="...">
+  <span class="layer-drag-handle" title="Arrastar para reordenar">⋮⋮</span>
+  ${typeBadge}
+  <span class="layer-name">${esc(layer.name)}</span>
+  <div class="layer-reorder">
+    <button class="layer-order-btn" onclick="event.stopPropagation();duplicateLayer('${layer.id}')" title="Duplicar layer" style="width:auto;padding:0 5px">⧉</button>
+    <button class="layer-order-btn" onclick="event.stopPropagation();moveLayer('${layer.id}','up')" title="Mover para cima" ${isFirst ? 'disabled' : ''}>↑</button>
+    <button class="layer-order-btn" onclick="event.stopPropagation();moveLayer('${layer.id}','down')" title="Mover para baixo" ${isLast ? 'disabled' : ''}>↓</button>
+  </div>
+</div>
+```
+
+SUBSTITUIR por:
+```js
+<div class="layer-item ..." 
+     draggable="true"
+     data-layer-id="${layer.id}"
+     ondragstart="onLayerDragStart(event,'${layer.id}')"
+     ondragover="onLayerDragOver(event)"
+     ondragleave="onLayerDragLeave(event)"
+     ondrop="onLayerDrop(event,'${layer.id}')"
+     ondragend="onLayerDragEnd(event)"
+     onclick="...">
+  <span class="layer-drag-handle" title="Arraste para reordenar">⋮⋮</span>
+  ${typeBadge}
+  <span class="layer-name">${esc(layer.name)}</span>
+  <button class="layer-duplicate-btn" onclick="event.stopPropagation();duplicateLayer('${layer.id}')" title="Duplicar layer">⧉</button>
+</div>
+```
+
+Mudanças:
+- Adicionado `draggable="true"` e handlers de drag
+- Removidos botões ↑ e ↓
+- Botão ⧉ separado da `.layer-reorder` (renomeado pra `.layer-duplicate-btn`)
+- Removida a div wrapper `.layer-reorder`
+
+---
+
+## Fix 2 — CSS dos novos states de drag
+
+ADICIONAR no `<style>` (perto das outras regras .layer-*):
+
+```css
+.layer-item { position: relative; }
+.layer-item[draggable="true"]:hover .layer-drag-handle { color: rgba(34,27,25,0.55); }
+.layer-item.dragging { opacity: 0.4; cursor: grabbing; }
+.layer-item.drag-over-top { box-shadow: inset 0 2px 0 0 var(--ruby-red); }
+.layer-item.drag-over-bottom { box-shadow: inset 0 -2px 0 0 var(--ruby-red); }
+.layer-duplicate-btn { 
+  background: rgba(34,27,25,0.08); 
+  border: none; 
+  cursor: pointer; 
+  width: 24px; 
+  height: 22px; 
+  padding: 0; 
+  font-size: 0.78rem; 
+  color: rgba(34,27,25,0.65); 
+  border-radius: 4px; 
+  display: flex; 
+  align-items: center; 
+  justify-content: center; 
+  flex-shrink: 0;
+  transition: background 0.12s;
+}
+.layer-duplicate-btn:hover { background: rgba(34,27,25,0.18); color: var(--carbon-black); }
+```
+
+REMOVER (ou pode manter, fica sem uso) as regras `.layer-reorder` e 
+`.layer-order-btn` — não são mais usadas.
+
+---
+
+## Fix 3 — Handlers de drag & drop
+
+ADICIONAR no `<script>` (perto das funções de layer, ex: depois de moveLayer):
+
+```js
+// Drag & drop state
+let _draggedLayerId = null;
+
+function onLayerDragStart(ev, layerId) {
+  _draggedLayerId = layerId;
+  ev.currentTarget.classList.add('dragging');
+  ev.dataTransfer.effectAllowed = 'move';
+  // Necessário pra Firefox aceitar o drag
+  try { ev.dataTransfer.setData('text/plain', layerId); } catch {}
+}
+
+function onLayerDragOver(ev) {
+  if (!_draggedLayerId) return;
+  ev.preventDefault();
+  ev.dataTransfer.dropEffect = 'move';
+  
+  const target = ev.currentTarget;
+  if (target.dataset.layerId === _draggedLayerId) return;
+  
+  // Decidir se hover é "antes" ou "depois" baseado em posição Y do mouse
+  const rect = target.getBoundingClientRect();
+  const isAbove = (ev.clientY - rect.top) < (rect.height / 2);
+  
+  // Limpar classes de outros itens
+  document.querySelectorAll('.layer-item.drag-over-top, .layer-item.drag-over-bottom')
+    .forEach(el => el.classList.remove('drag-over-top', 'drag-over-bottom'));
+  
+  target.classList.add(isAbove ? 'drag-over-top' : 'drag-over-bottom');
+}
+
+function onLayerDragLeave(ev) {
+  ev.currentTarget.classList.remove('drag-over-top', 'drag-over-bottom');
+}
+
+function onLayerDrop(ev, targetLayerId) {
+  ev.preventDefault();
+  ev.stopPropagation();
+  
+  if (!_draggedLayerId || _draggedLayerId === targetLayerId) {
+    onLayerDragEnd(ev);
+    return;
+  }
+  
+  const target = ev.currentTarget;
+  const rect = target.getBoundingClientRect();
+  const isAbove = (ev.clientY - rect.top) < (rect.height / 2);
+  
+  reorderLayers(_draggedLayerId, targetLayerId, isAbove ? 'before' : 'after');
+  onLayerDragEnd(ev);
+}
+
+function onLayerDragEnd(ev) {
+  document.querySelectorAll('.layer-item.dragging')
+    .forEach(el => el.classList.remove('dragging'));
+  document.querySelectorAll('.layer-item.drag-over-top, .layer-item.drag-over-bottom')
+    .forEach(el => el.classList.remove('drag-over-top', 'drag-over-bottom'));
+  _draggedLayerId = null;
+}
+
+function reorderLayers(draggedId, targetId, position) {
+  if (!currentConfig?.layers) return;
+  const layers = currentConfig.layers;
+  
+  const draggedIdx = layers.findIndex(l => l.id === draggedId);
+  const targetIdx = layers.findIndex(l => l.id === targetId);
+  if (draggedIdx < 0 || targetIdx < 0) return;
+  
+  // Remover o dragged
+  const [moved] = layers.splice(draggedIdx, 1);
+  
+  // Reinserir na nova posição
+  let insertIdx = layers.findIndex(l => l.id === targetId);
+  if (position === 'after') insertIdx += 1;
+  layers.splice(insertIdx, 0, moved);
+  
+  markDirty();
+  renderLayers();
+  renderCanvas();
+}
+```
+
+CUIDADO: usar o nome real da variável global do config — provavelmente 
+`currentConfig` ou `templateConfig`. Verificar antes (`grep -n "currentConfig\|templateConfig" admin-templates.html`).
+
+E usar o nome real da função de renderizar layers e canvas. Se forem 
+`renderLayerPanel()` e `renderCanvasPreview()`, ajustar.
+
+---
+
+## Fix 4 — Remover função moveLayer obsoleta
+
+LOCALIZAR a função `moveLayer` (~linha onde ela é definida). Como os 
+botões ↑↓ foram removidos, ela não é mais chamada. PODE deletar pra 
+limpar código, ou deixar como dead code.
+
+RECOMENDADO: deletar pra evitar confusão futura.
+
+---
+
+## Critério de validação
+
+1. Painel de layers: cada layer aparece sem botões ↑↓, apenas ícone ⋮⋮ 
+   (drag) à esquerda e ⧉ (duplicar) à direita
+2. Hover na layer: handle ⋮⋮ fica mais visível
+3. Arrastar uma layer pra cima de outra:
+   - Layer arrastada fica com opacity 0.4
+   - Layer alvo mostra linha ruby red no topo (se vai pra cima) ou base 
+     (se vai pra baixo)
+4. Soltar:
+   - Layer move pra nova posição
+   - Linhas de drop indicator somem
+   - Canvas re-renderiza com nova ordem (z-index correto)
+   - Botão Salvar mostra "não salvo" (markDirty)
+5. Cancelar drag (ESC ou soltar fora):
+   - Layer volta pra posição original
+   - Sem estado visual residual
+6. Click no ⧉ continua duplicando como antes
+
+## Não faça
+
+- Não tocar nas outras funções de layer (deleteLayer, duplicateLayer)
+- Não alterar markDirty ou save behavior
+- Não tocar no canvas-side drag (de mover layers visualmente no canvas — 
+  isso é outro mecanismo)

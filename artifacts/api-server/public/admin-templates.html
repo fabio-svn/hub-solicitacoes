@@ -124,6 +124,8 @@
     .layer-order-btn { background: rgba(34,27,25,0.15); border: none; cursor: pointer; width: 24px; height: 18px; padding: 0; font-size: 0.82rem; font-weight: 700; color: rgba(34,27,25,0.85); border-radius: 4px; display: flex; align-items: center; justify-content: center; transition: background 0.12s; }
     .layer-order-btn:hover:not(:disabled) { background: rgba(34,27,25,0.28); color: var(--carbon-black); }
     .layer-order-btn:disabled { opacity: 0.22; cursor: default; }
+    .layer-duplicate-btn { background: rgba(34,27,25,0.08); border: none; cursor: pointer; width: 24px; height: 22px; padding: 0; font-size: 0.78rem; color: rgba(34,27,25,0.65); border-radius: 4px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: background 0.12s; }
+    .layer-duplicate-btn:hover { background: rgba(34,27,25,0.18); color: var(--carbon-black); }
     .layer-type-badge { font-size: 0.65rem; padding: 1px 5px; border-radius: 4px; background: #e8e2dc; color: #6b5e58; white-space: nowrap; }
     .canvas-panel { background: #ede8e4; display: flex; flex-direction: column; overflow: hidden; position: relative; }
     .canvas-toolbar {
@@ -227,6 +229,7 @@
     /* ── Layer type icons ── */
     .layer-icon-t  { font-size: 0.78rem; font-weight: 900; color: #AC3631; min-width: 18px; text-align: center; flex-shrink: 0; letter-spacing: -0.04em; }
     .layer-icon-img { flex-shrink: 0; color: #AC3631; }
+    .layer-icon-shape { flex-shrink: 0; color: rgba(34,27,25,0.7); }
     .add-layer-btn { display: flex; align-items: center; gap: 6px; }
 
     /* ── Editor page header ── */
@@ -478,6 +481,7 @@
         <div class="add-layer-section" id="addLayerSection">
           <button class="add-layer-btn" onclick="addLayer('text-block')"><span class="layer-icon-t">T</span> Texto</button>
           <button class="add-layer-btn" onclick="addLayer('image')"><svg class="layer-icon-img" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg> Imagem</button>
+          <button class="add-layer-btn" onclick="addLayer('shape')"><svg class="layer-icon-shape" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="18" height="18" rx="2"/></svg> Forma</button>
         </div>
       </div>
 
@@ -1595,6 +1599,22 @@
         lbl.className = 'layer-label';
         lbl.textContent = layer.name || layer.id;
         div.appendChild(lbl);
+        if (layer.type === 'shape') {
+          const fill = layer.fill || 'transparent';
+          const stroke = layer.stroke || 'none';
+          const sw = layer.stroke_width || 0;
+          let shapeHtml;
+          if (layer.shape === 'ellipse') {
+            shapeHtml = `<svg width="100%" height="100%" viewBox="0 0 ${layer.w} ${layer.h}" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg"><ellipse cx="${layer.w/2}" cy="${layer.h/2}" rx="${Math.max(0,layer.w/2-sw/2)}" ry="${Math.max(0,layer.h/2-sw/2)}" fill="${fill}" stroke="${stroke}" stroke-width="${sw}"/></svg>`;
+          } else {
+            const rx = Math.min(layer.border_radius||0, layer.w/2, layer.h/2);
+            shapeHtml = `<svg width="100%" height="100%" viewBox="0 0 ${layer.w} ${layer.h}" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg"><rect x="${sw/2}" y="${sw/2}" width="${Math.max(0,layer.w-sw)}" height="${Math.max(0,layer.h-sw)}" rx="${rx}" ry="${rx}" fill="${fill}" stroke="${stroke}" stroke-width="${sw}"/></svg>`;
+          }
+          const svgWrap = document.createElement('div');
+          svgWrap.style.cssText = 'position:absolute;inset:0;pointer-events:none';
+          svgWrap.innerHTML = shapeHtml;
+          div.appendChild(svgWrap);
+        }
         ['nw','ne','sw','se'].forEach(pos => {
           const h = document.createElement('div');
           h.className = 'resize-handle ' + pos;
@@ -1666,6 +1686,7 @@
     // ── Layers ───────────────────────────────────────────────────
     function layerTypeIcon(type) {
       if (type === 'text-line' || type === 'text-block') return `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" title="Texto" style="flex-shrink:0"><line x1="17" y1="10" x2="3" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="17" y1="18" x2="3" y2="18"/></svg>`;
+      if (type === 'shape') return `<svg class="layer-icon-shape" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" title="Forma" style="flex-shrink:0"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>`;
       return `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" title="Imagem" style="flex-shrink:0"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>`;
     }
     // Convenção Figma: índice 0 = frente do canvas (topo da lista), último = fundo
@@ -1678,15 +1699,19 @@
       }
       const total = currentTemplate.layers.length;
       el.innerHTML = currentTemplate.layers.map((layer, idx) => `
-        <div class="layer-item${layer.id === selectedLayerId ? ' active' : ''}" id="litem-${layer.id}" data-layer-id="${layer.id}" onclick="selectLayer('${layer.id}')">
-          <span class="layer-drag-handle" title="Arrastar para reordenar">⋮⋮</span>
+        <div class="layer-item${layer.id === selectedLayerId ? ' active' : ''}" id="litem-${layer.id}"
+             draggable="true"
+             data-layer-id="${layer.id}"
+             ondragstart="onLayerDragStart(event,'${layer.id}')"
+             ondragover="onLayerDragOver(event)"
+             ondragleave="onLayerDragLeave(event)"
+             ondrop="onLayerDrop(event,'${layer.id}')"
+             ondragend="onLayerDragEnd(event)"
+             onclick="selectLayer('${layer.id}')">
+          <span class="layer-drag-handle" title="Arraste para reordenar">⋮⋮</span>
           ${layerTypeIcon(layer.type)}
           <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(layer.name || layer.id)}</span>
-          <div class="layer-reorder">
-            <button class="layer-order-btn" onclick="event.stopPropagation();duplicateLayer('${layer.id}')" title="Duplicar layer" style="width:auto;padding:0 5px">⧉</button>
-            <button class="layer-order-btn" onclick="event.stopPropagation();moveLayerUp('${layer.id}')" title="Trazer para frente" ${idx === 0 ? 'disabled' : ''}>↑</button>
-            <button class="layer-order-btn" onclick="event.stopPropagation();moveLayerDown('${layer.id}')" title="Enviar para trás" ${idx === total - 1 ? 'disabled' : ''}>↓</button>
-          </div>
+          <button class="layer-duplicate-btn" onclick="event.stopPropagation();duplicateLayer('${layer.id}')" title="Duplicar layer">⧉</button>
         </div>
       `).join('');
     }
@@ -1707,7 +1732,9 @@
       let layer;
       if (type === 'text-line') layer = { ...base, type, font_family: 'Nunito Sans Light', font_size: 48, color: '#ffffff', align: 'left', content: 'Texto', w: 400 };
       else if (type === 'text-block') layer = { ...base, type, font_family: 'Nunito Sans Light', font_size: 32, color: '#ffffff', align: 'left', vertical_align: 'top', content: 'Bloco de texto', w: 400, h: 200, line_height: 1.4, paragraph_spacing: 0 };
-      else layer = { ...base, type, w: 200, h: 200, source: { type: 'static', url: '' }, blend_mode: 'normal', resize_mode: 'contain' };
+      else if (type === 'image') layer = { ...base, type, w: 200, h: 200, source: { type: 'static', url: '' }, blend_mode: 'normal', resize_mode: 'contain' };
+      else if (type === 'shape') layer = { ...base, name: 'Forma', type, shape: 'rectangle', x: 50, y: 50, w: 200, h: 150, fill: '#AC3631', stroke: '', stroke_width: 0, border_radius: 0 };
+      else return;
       currentTemplate.layers.push(layer);
       markDirty();
       pushHistory();
@@ -1747,31 +1774,6 @@
 
     // ── Layer reordering ─────────────────────────────────────────
     // Convenção Figma: índice 0 = frente (topo da lista), último = fundo
-    // ↑ = trazer para frente (índice menor) | ↓ = enviar para trás (índice maior)
-    function moveLayerUp(id) {
-      if (!currentTemplate) return;
-      const idx = currentTemplate.layers.findIndex(l => l.id === id);
-      if (idx <= 0) return;
-      const [layer] = currentTemplate.layers.splice(idx, 1);
-      currentTemplate.layers.splice(idx - 1, 0, layer);
-      markDirty();
-      pushHistory();
-      renderLayersList();
-      renderCanvas();
-      scheduleLivePreview(NORMAL_DEBOUNCE);
-    }
-    function moveLayerDown(id) {
-      if (!currentTemplate) return;
-      const idx = currentTemplate.layers.findIndex(l => l.id === id);
-      if (idx === -1 || idx >= currentTemplate.layers.length - 1) return;
-      const [layer] = currentTemplate.layers.splice(idx, 1);
-      currentTemplate.layers.splice(idx + 1, 0, layer);
-      markDirty();
-      pushHistory();
-      renderLayersList();
-      renderCanvas();
-      scheduleLivePreview(NORMAL_DEBOUNCE);
-    }
     function reorderLayer(id, newIdx) {
       if (!currentTemplate) return;
       const oldIdx = currentTemplate.layers.findIndex(l => l.id === id);
@@ -1786,48 +1788,57 @@
       renderCanvas();
       scheduleLivePreview(NORMAL_DEBOUNCE);
     }
-    function setupLayerListDrag() {
-      interact('.layer-drag-handle').draggable({
-        inertia: false,
-        listeners: {
-          start(event) {
-            const item = event.target.closest('.layer-item');
-            _draggedLayerId = item?.dataset.layerId || null;
-            if (_draggedLayerId) {
-              document.getElementById('litem-' + _draggedLayerId)?.classList.add('dragging');
-            }
-          },
-          move(event) {
-            const dropY = event.clientY;
-            document.querySelectorAll('.layer-item').forEach(i => i.classList.remove('drag-over-top', 'drag-over-bottom'));
-            const items = Array.from(document.querySelectorAll('.layer-item:not(.dragging)'));
-            for (const item of items) {
-              const rect = item.getBoundingClientRect();
-              if (dropY < rect.top + rect.height / 2) {
-                item.classList.add('drag-over-top');
-                break;
-              }
-            }
-          },
-          end(event) {
-            document.querySelectorAll('.layer-item').forEach(i =>
-              i.classList.remove('dragging', 'drag-over-top', 'drag-over-bottom')
-            );
-            if (!_draggedLayerId || !currentTemplate) { _draggedLayerId = null; return; }
-            const dropY = event.clientY;
-            const items = Array.from(document.querySelectorAll('.layer-item'));
-            let newIdx = currentTemplate.layers.length - 1;
-            for (let i = 0; i < items.length; i++) {
-              const rect = items[i].getBoundingClientRect();
-              if (dropY < rect.top + rect.height / 2) { newIdx = i; break; }
-            }
-            const id = _draggedLayerId;
-            _draggedLayerId = null;
-            reorderLayer(id, newIdx);
-          }
-        }
-      });
+    function onLayerDragStart(ev, layerId) {
+      _draggedLayerId = layerId;
+      ev.currentTarget.classList.add('dragging');
+      ev.dataTransfer.effectAllowed = 'move';
+      try { ev.dataTransfer.setData('text/plain', layerId); } catch {}
     }
+    function onLayerDragOver(ev) {
+      if (!_draggedLayerId) return;
+      ev.preventDefault();
+      ev.dataTransfer.dropEffect = 'move';
+      const target = ev.currentTarget;
+      if (target.dataset.layerId === _draggedLayerId) return;
+      const rect = target.getBoundingClientRect();
+      const isAbove = (ev.clientY - rect.top) < (rect.height / 2);
+      document.querySelectorAll('.layer-item.drag-over-top, .layer-item.drag-over-bottom')
+        .forEach(el => el.classList.remove('drag-over-top', 'drag-over-bottom'));
+      target.classList.add(isAbove ? 'drag-over-top' : 'drag-over-bottom');
+    }
+    function onLayerDragLeave(ev) {
+      ev.currentTarget.classList.remove('drag-over-top', 'drag-over-bottom');
+    }
+    function onLayerDrop(ev, targetLayerId) {
+      ev.preventDefault();
+      ev.stopPropagation();
+      if (!_draggedLayerId || _draggedLayerId === targetLayerId) { onLayerDragEnd(ev); return; }
+      const target = ev.currentTarget;
+      const rect = target.getBoundingClientRect();
+      const isAbove = (ev.clientY - rect.top) < (rect.height / 2);
+      if (!currentTemplate?.layers) { onLayerDragEnd(ev); return; }
+      const layers = currentTemplate.layers;
+      const draggedIdx = layers.findIndex(l => l.id === _draggedLayerId);
+      if (draggedIdx < 0) { onLayerDragEnd(ev); return; }
+      const [moved] = layers.splice(draggedIdx, 1);
+      let insertIdx = layers.findIndex(l => l.id === targetLayerId);
+      if (!isAbove) insertIdx += 1;
+      layers.splice(insertIdx, 0, moved);
+      markDirty();
+      pushHistory();
+      renderLayersList();
+      renderCanvas();
+      scheduleLivePreview(NORMAL_DEBOUNCE);
+      onLayerDragEnd(ev);
+    }
+    function onLayerDragEnd(ev) {
+      document.querySelectorAll('.layer-item.dragging')
+        .forEach(el => el.classList.remove('dragging'));
+      document.querySelectorAll('.layer-item.drag-over-top, .layer-item.drag-over-bottom')
+        .forEach(el => el.classList.remove('drag-over-top', 'drag-over-bottom'));
+      _draggedLayerId = null;
+    }
+    function setupLayerListDrag() {}
 
     // ── Props panel ──────────────────────────────────────────────
     function showProps(id) {
@@ -1978,6 +1989,29 @@
             <div><div class="props-label">Espessura</div><input class="props-input" type="number" value="${layer.border?.width||0}" onchange="updLayerBorderWidth('${id}',+this.value)"></div>
             <div><div class="props-label">Cor</div><input class="props-input" type="color" value="${layer.border?.color||'#ffffff'}" onchange="updLayerBorderColor('${id}',this.value)"></div>
           </div>
+        </div>`;
+      }
+
+      if (layer.type === 'shape') {
+        html += `
+        <div class="props-section">
+          <div class="props-label">Tipo de forma</div>
+          <select class="props-input" onchange="updLayer('${id}','shape',this.value);renderCanvas();showProps('${id}')">
+            <option value="rectangle"${layer.shape==='rectangle'?' selected':''}>Retângulo</option>
+            <option value="ellipse"${layer.shape==='ellipse'?' selected':''}>Elipse</option>
+          </select>
+        </div>
+        <div class="props-section">
+          <div class="props-label">Preenchimento</div>
+          <input class="props-input" type="color" value="${layer.fill||'#AC3631'}" onchange="updLayer('${id}','fill',this.value)">
+          <div class="props-label" style="margin-top:8px">Cor da borda</div>
+          <input class="props-input" type="color" value="${layer.stroke||'#000000'}" onchange="updLayer('${id}','stroke',this.value)">
+          <div class="props-label" style="margin-top:8px">Espessura da borda (px)</div>
+          <input class="props-input" type="number" min="0" value="${layer.stroke_width||0}" onchange="updLayerN('${id}','stroke_width',this.value)">
+          ${layer.shape==='rectangle'?`
+          <div class="props-label" style="margin-top:8px">Arredondamento dos cantos (px)</div>
+          <input class="props-input" type="number" min="0" value="${layer.border_radius||0}" onchange="updLayerN('${id}','border_radius',this.value)">
+          `:''}
         </div>`;
       }
 
