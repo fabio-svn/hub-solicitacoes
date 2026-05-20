@@ -346,7 +346,7 @@
 
     /* ── Unsaved changes modal ── */
     .modal-overlay { display: none; position: fixed; inset: 0; z-index: 500; background: rgba(34,27,25,0.5); backdrop-filter: blur(4px); align-items: center; justify-content: center; }
-    .modal-overlay.open { display: flex; }
+    .modal-overlay.open { display: flex; opacity: 1 !important; pointer-events: auto !important; }
     .modal-box { background: #fff; border-radius: 16px; padding: 28px; max-width: 400px; width: 100%; margin: 16px; }
     .modal-title { font-size: 1rem; font-weight: 700; margin-bottom: 8px; }
     .modal-desc { font-size: 0.84rem; opacity: 0.6; margin-bottom: 24px; line-height: 1.5; }
@@ -1703,6 +1703,50 @@
           svgWrap.style.cssText = 'position:absolute;inset:0;pointer-events:none';
           svgWrap.innerHTML = shapeHtml;
           div.appendChild(svgWrap);
+        } else if (layer.type === 'text-line' || layer.type === 'text-block') {
+          const txtPreview = document.createElement('div');
+          const scaledSize = Math.max(8, Math.min((layer.font_size || 24) * SCALE, h * 0.85));
+          const align = layer.align || layer.text_align || 'left';
+          const valign = layer.vertical_align || 'top';
+          const vAlignMap = { top: 'flex-start', middle: 'center', bottom: 'flex-end' };
+          txtPreview.style.cssText = [
+            'position:absolute;inset:0;pointer-events:none;overflow:hidden;',
+            `font-family:${layer.font_family ? `'${layer.font_family}',` : ''}sans-serif;`,
+            `font-size:${scaledSize}px;`,
+            `color:${layer.color || '#000'};`,
+            `font-weight:${layer.font_weight || layer.bold ? '700' : '400'};`,
+            layer.italic ? 'font-style:italic;' : '',
+            `text-align:${align};`,
+            `display:flex;flex-direction:column;`,
+            `justify-content:${vAlignMap[valign] || 'flex-start'};`,
+            `padding:2px 4px;`,
+            layer.type === 'text-block' ? 'white-space:pre-wrap;word-break:break-word;' : 'white-space:nowrap;',
+            `line-height:${layer.line_height || 1.2};`,
+            `letter-spacing:${layer.letter_spacing ? layer.letter_spacing * SCALE + 'px' : 'normal'};`,
+            `text-transform:${layer.text_transform || 'none'};`,
+          ].join('');
+          const content = layer.content || layer.text || '';
+          const preview = content.replace(/\{\{[^}]+\}\}/g, m => {
+            const key = m.slice(2,-2).trim();
+            const td = typeof testData !== 'undefined' ? testData : {};
+            return td[key] !== undefined ? td[key] : m;
+          });
+          txtPreview.textContent = preview || '(texto vazio)';
+          div.appendChild(txtPreview);
+        } else if (layer.type === 'image') {
+          const imgWrap = document.createElement('div');
+          imgWrap.style.cssText = 'position:absolute;inset:0;pointer-events:none;overflow:hidden;display:flex;align-items:center;justify-content:center;';
+          const src = (layer.source && (layer.source.url || layer.source.static_url)) || layer.url || '';
+          if (src) {
+            const im = document.createElement('img');
+            im.src = src;
+            im.style.cssText = `width:100%;height:100%;object-fit:${layer.object_fit || 'cover'};pointer-events:none;`;
+            imgWrap.appendChild(im);
+          } else {
+            imgWrap.style.background = 'rgba(100,100,100,0.15)';
+            imgWrap.innerHTML = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#888" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>`;
+          }
+          div.appendChild(imgWrap);
         }
         ['nw','ne','sw','se'].forEach(pos => {
           const h = document.createElement('div');
