@@ -451,7 +451,9 @@ export async function renderFromTemplate(
   const composites: sharp.OverlayOptions[] = [];
   const t0 = DEBUG_RENDER ? Date.now() : 0;
   const renderCtx = { tipo: template.tipo, layoutId: template.id };
-  for (const layer of template.layers) {
+  // Ordem do composite: último do array = fundo, primeiro = frente.
+  // Convenção: índice 0 = layer mais à frente (alinhado com z-index do frontend).
+  for (const layer of [...template.layers].reverse()) {
     try {
       if (layer.type === 'text-line')  await renderTextLine(layer, dataStr, composites, renderCtx);
       if (layer.type === 'text-block') await renderTextBlock(layer, dataStr, composites, renderCtx);
