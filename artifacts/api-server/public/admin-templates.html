@@ -172,7 +172,7 @@
 
     .canvas-scroll { flex: 1; overflow: auto; display: flex; align-items: flex-start; justify-content: center; padding: 24px; }
     .canvas-wrap { position: relative; display: inline-block; box-shadow: 0 2px 12px rgba(0,0,0,0.12); flex-shrink: 0; }
-    .canvas-wrap img.bg-img { display: block; width: 100%; height: auto; }
+    .canvas-wrap img.bg-img { display: block; width: 100%; height: 100%; object-fit: fill; }
     .layer-box { position: absolute; cursor: move; border: 1px dashed rgba(172,54,49,0.25); background: transparent; box-sizing: border-box; z-index: 2; transition: border 0.1s; }
     .layer-box:hover { border: 1.5px dashed rgba(172,54,49,0.6); }
     .layer-box.selected { border: 2px solid #AC3631; box-shadow: 0 0 0 2px rgba(172,54,49,0.25); }
@@ -805,7 +805,8 @@
     function reRender() {
       const wrap = document.getElementById('canvasWrap');
       if (wrap && currentTemplate) {
-        wrap.style.width = (currentTemplate.canvas.width * canvasScale) + 'px';
+        wrap.style.width  = (currentTemplate.canvas.width  * canvasScale) + 'px';
+        wrap.style.height = (currentTemplate.canvas.height * canvasScale) + 'px';
       }
       renderCanvas();
       renderLayersList();
@@ -1542,7 +1543,8 @@
     function applyCanvasScale() {
       if (!currentTemplate) return;
       const wrap = document.getElementById('canvasWrap');
-      wrap.style.width = (currentTemplate.canvas.width * canvasScale) + 'px';
+      wrap.style.width  = (currentTemplate.canvas.width  * canvasScale) + 'px';
+      wrap.style.height = (currentTemplate.canvas.height * canvasScale) + 'px';
       updateZoomLabel();
       if (currentTemplateMeta) saveCanvasScale(currentTemplateMeta.id, canvasScale);
       renderCanvas();
@@ -1649,7 +1651,6 @@
     function setupInteract(el) {
       interact(el)
         .draggable({
-          allowFrom: '.layer-label, .layer-box',
           ignoreFrom: '.resize-handle',
           listeners: {
             move(event) {
