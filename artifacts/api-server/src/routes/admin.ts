@@ -6,30 +6,9 @@ import { requireAuth, requireRole } from "../middleware/auth.middleware";
 import { logger } from "../lib/logger";
 import { renderFromTemplate } from "../services/template-renderer";
 import { gerarArteParaSolicitacao } from "../services/art-generator";
-import { gerarCartaoBoasVindasHandler } from "./gerador-cartao-boas-vindas";
 import { AVAILABLE_FONTS } from "../types/art-template";
-import { FORM_SCHEMAS, getFormSchemaList } from "../config/form-schemas";
+import { FORM_SCHEMAS, getFormSchemaList, TIPOS_COM_CLICKUP } from "../config/form-schemas";
 
-const TIPOS_COM_CLICKUP: Array<{ tipo: string; label: string }> = [
-  { tipo: "eventos",                       label: "Eventos" },
-  { tipo: "artes-divulgacao",              label: "Artes de Divulgação" },
-  { tipo: "atualizacao-material",          label: "Atualização de Material" },
-  { tipo: "conteudo-pdf-informativo",      label: "PDF — Informativo" },
-  { tipo: "conteudo-pdf-ebook",            label: "PDF — Ebook" },
-  { tipo: "apresentacao-nova",             label: "Apresentação — Nova" },
-  { tipo: "apresentacao-atualizar",        label: "Apresentação — Atualização" },
-  { tipo: "pagina-assessores-dados",       label: "Página de Assessores — Dados" },
-  { tipo: "pagina-assessores-atualizacao", label: "Página de Assessores — Atualização" },
-  { tipo: "cartao-visita-fisico",          label: "Cartão de Visita — Físico" },
-  { tipo: "pagina-online",                 label: "Página Online" },
-  { tipo: "outro",                         label: "Outro" },
-  { tipo: "brindes",                       label: "Brindes" },
-  { tipo: "patrocinio",                    label: "Patrocínio" },
-  { tipo: "email-marketing",               label: "E-mail Marketing" },
-  { tipo: "producao-video",                label: "Produção de Vídeo" },
-  { tipo: "sessao-fotos",                  label: "Sessão de Fotos" },
-  { tipo: "materiais-impressos",           label: "Materiais Impressos" },
-];
 const TIPOS_COM_CLICKUP_SET = new Set(TIPOS_COM_CLICKUP.map(t => t.tipo));
 
 const router = Router();
@@ -411,11 +390,7 @@ router.post("/solicitacoes/:id/regerar", requireAuth, requireRole("admin", "gest
     req.log.info({ solicitacaoId: id, tipo }, "Regenerando arte por solicitação do admin");
 
     try {
-      if (tipo === "cartao-boas-vindas") {
-        await gerarCartaoBoasVindasHandler(id, dados);
-      } else {
-        await gerarArteParaSolicitacao(id, tipo, dados);
-      }
+      await gerarArteParaSolicitacao(id, tipo, dados);
       res.json({ ok: true, message: "Arte regenerada com sucesso" });
     } catch (genErr: any) {
       req.log.error({ err: genErr, solicitacaoId: id, tipo }, "Falha ao regenerar arte");

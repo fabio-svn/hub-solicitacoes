@@ -266,6 +266,54 @@ export const FORM_SCHEMAS: Record<string, FormSchema> = {
   },
 };
 
+export const VALID_TIPOS: string[] = [
+  "eventos",
+  "artes-divulgacao",
+  "atualizacao-material",
+  "conteudo-pdf-informativo",
+  "conteudo-pdf-ebook",
+  "apresentacao-nova",
+  "apresentacao-atualizar",
+  "pagina-assessores-dados",
+  "pagina-assessores-atualizacao",
+  "assinatura-email",
+  "cartao-visita-fisico",
+  "cartao-visita-digital",
+  "cartao-boas-vindas",
+  "divulgacao-nps",
+  "convite-fp",
+  "pagina-online",
+  "outro",
+  "cartao-comemorativo",
+  "brindes",
+  "patrocinio",
+  "email-marketing",
+  "producao-video",
+  "sessao-fotos",
+  "materiais-impressos",
+];
+
+export const TIPOS_COM_CLICKUP: Array<{ tipo: string; label: string }> = [
+  { tipo: "eventos",                       label: "Eventos" },
+  { tipo: "artes-divulgacao",              label: "Artes de Divulgação" },
+  { tipo: "atualizacao-material",          label: "Atualização de Material" },
+  { tipo: "conteudo-pdf-informativo",      label: "PDF — Informativo" },
+  { tipo: "conteudo-pdf-ebook",            label: "PDF — Ebook" },
+  { tipo: "apresentacao-nova",             label: "Apresentação — Nova" },
+  { tipo: "apresentacao-atualizar",        label: "Apresentação — Atualização" },
+  { tipo: "pagina-assessores-dados",       label: "Página de Assessores — Dados" },
+  { tipo: "pagina-assessores-atualizacao", label: "Página de Assessores — Atualização" },
+  { tipo: "cartao-visita-fisico",          label: "Cartão de Visita — Físico" },
+  { tipo: "pagina-online",                 label: "Página Online" },
+  { tipo: "outro",                         label: "Outro" },
+  { tipo: "brindes",                       label: "Brindes" },
+  { tipo: "patrocinio",                    label: "Patrocínio" },
+  { tipo: "email-marketing",               label: "E-mail Marketing" },
+  { tipo: "producao-video",                label: "Produção de Vídeo" },
+  { tipo: "sessao-fotos",                  label: "Sessão de Fotos" },
+  { tipo: "materiais-impressos",           label: "Materiais Impressos" },
+];
+
 export function getFormSchemaList() {
   return Object.values(FORM_SCHEMAS).map(s => {
     const variantField = s.template_variant_field;

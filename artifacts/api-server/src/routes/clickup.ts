@@ -984,6 +984,123 @@ async function setGeneralCustomFields(
 }
 
 // ─────────────────────────────────────────────
+// Custom-field payload builders (used in initial task creation POST)
+// ─────────────────────────────────────────────
+
+function buildEventosCustomFieldsArray(
+  dados: FormDados,
+  arquivos: ArquivosMap,
+  user: UserData,
+): Array<{ id: string; value: unknown }> {
+  const fields: Array<{ id: string; value: unknown }> = [];
+  const dadosLocal: Record<string, unknown> = { ...dados };
+
+  const localHuman = humanizeLocal(dados);
+
+  const cidadeRaw = str(dados.cidade as string);
+  const estadoRaw = str(dados.estado as string);
+  if (cidadeRaw) {
+    const sigla = IBGE_SIGLA_MAP[estadoRaw] || estadoRaw;
+    dadosLocal._cidadeFormatada = sigla ? `${cidadeRaw} - ${sigla}` : cidadeRaw;
+  }
+
+  const localEvento = str(dados.localEvento as string);
+  if (localEvento === "unidade") {
+    const UNIDADES_ENDERECOS: Record<string, string> = {
+      "SVN Aracaju":              "R. Francisco Duarte Ramos, 34 - Jardins, Aracaju - SE",
+      "SVN Campo Grande":         "Edifício Atrium - R. Euclides da Cunha, 1039 - Loja 3 - Jardim dos Estados",
+      "SVN Cascavel":             "Av. Piquiri, 17 - Salas 01 e 02 - Centro",
+      "SVN Cuiabá":               "R. Pres. Castelo Branco, 277 - Quilombo",
+      "SVN Curitiba":             "Praça São Paulo da Cruz, 50 - Sala 1605 - Juveve, Curitiba - PR",
+      "SVN Foz do Iguaçu":        "R. Alm. Barroso, 1139 - Centro",
+      "SVN Londrina":             "Av. Higienópolis, 602 - Sala 2 - Centro, Londrina - PR",
+      "SVN Maringá":              "Av. Cerro Azul, 123 - Zona 2, Maringá - PR",
+      "SVN Salvador":             "Torre Nova York, Av. Tancredo Neves, 2539 - Sala 2104, Salvador - BA",
+      "SVN São Paulo":            "Av. Dr. Cardoso de Melo, 1855 - Conjunto 51 - Vila Olímpia, São Paulo - SP",
+      "SVN Toledo":               "Rua Nossa Senhora do Rocio, 2279 - Sala 02 - Jardim La Salle, Toledo - PR",
+      "SVN Vitória da Conquista":  "Av. Jorge Teixeira, 29 - Salas 16 e 17",
+    };
+    const unidade = str(dados.unidadeSVN as string);
+    const enderecoUnidade = UNIDADES_ENDERECOS[unidade];
+    if (enderecoUnidade) dadosLocal.localEndereco = enderecoUnidade;
+  }
+
+  const materiaisArr = dados.materiais as string[] | undefined;
+  const materiaisText = (Array.isArray(materiaisArr) && materiaisArr.length > 0)
+    ? materiaisArr.map(id => `• ${MATERIAL_LABELS[id] || id}`).join("\n")
+    : null;
+
+  if (user.email) fields.push({ id: "ae56f16a-8d97-40e0-9032-c357eb0793ca", value: user.email });
+  if (localHuman) fields.push({ id: "38ac133a-13b0-4428-98eb-adb5f8cdc23a", value: localHuman });
+  if (materiaisText) fields.push({ id: "3266524c-febc-47ac-a76d-0d9c4256d9dc", value: materiaisText });
+
+  for (const field of EVENTOS_CUSTOM_FIELDS) {
+    let value: string | null;
+    if (field.isArquivo) {
+      const url = arquivos[field.dadosKey] || null;
+      if (!url) continue;
+      value = url;
+    } else {
+      const raw = field.dadosKey in dadosLocal ? dadosLocal[field.dadosKey] : dados[field.dadosKey];
+      if (raw === undefined || raw === null || str(raw as string) === "") continue;
+      if (field.dadosKey === "dataEvento") {
+        value = formatDate(String(raw)) ?? String(raw);
+      } else if (field.dadosKey === "natureza") {
+        const n = str(raw as string).toLowerCase();
+        value = n === "presencial" ? "Presencial" : n === "online" ? "Online" : str(raw as string);
+      } else {
+        value = str(raw as string);
+      }
+    }
+    if (value !== null) fields.push({ id: field.id, value });
+  }
+
+  return fields;
+}
+
+function buildGeneralCustomFieldsArray(
+  tipo: string,
+  dados: FormDados,
+  arquivos: ArquivosMap,
+): Array<{ id: string; value: unknown }> {
+  const fields: Array<{ id: string; value: unknown }> = [];
+
+  const titulo = str(dados.titulo) || str(dados.nomeCompleto) || null;
+  const publicoAlvo = str(dados.publico as string) || str(dados.publicoAlvo as string) || null;
+  const arquivoPrincipal = arquivos.materialAtual || arquivos.arquivoBase || null;
+  const arquivoApoio = arquivos.arquivoApoio || arquivos.fotoPerfil || null;
+
+  const textPairs: Array<[string, unknown, string]> = [
+    ["6e36326f-2501-4ce2-9894-13d4ddf222d4", str(dados.nome) || null,        "Nome do solicitante"],
+    ["b727b647-0da1-43a5-a82d-70c33dedf0fd", titulo,                         "Título"],
+    ["5d7ae6e5-8528-4df3-bf0c-ed3bb05ebee1", str(dados.finalidade) || null,  "Finalidade"],
+    ["c7585104-7f53-4dcb-95d6-c75d55c4c57b", publicoAlvo,                    "Público-alvo"],
+    ["ea38779d-385c-410b-972e-ba97499e9252", str(dados.canais) || null,       "Canais"],
+    ["f80ba423-ccae-464c-9d20-6665c7f1da00", str(dados.observacoes) || null, "Observações"],
+  ];
+
+  for (const [id, value, label] of textPairs) {
+    if (!value) { logger.warn({ label }, "ClickUp: campo geral sem valor, pulando"); continue; }
+    fields.push({ id, value });
+  }
+
+  fields.push({ id: "ea901547-2f65-42ee-ab6c-5fbf0ceaa79b", value: TIPO_DEMANDA_ORDERINDEX[tipo] ?? 3 });
+
+  const prazoRaw = str(dados.prazoEntrega as string);
+  if (prazoRaw) {
+    const prazoDate = new Date(prazoRaw + "T12:00:00");
+    if (!isNaN(prazoDate.getTime())) {
+      fields.push({ id: "33c5d4c5-1e0d-48ba-b0a5-6decdea6e138", value: prazoDate.getTime() });
+    }
+  }
+
+  if (arquivoPrincipal) fields.push({ id: "294f47eb-82a7-416e-998e-ea79b77d296b", value: arquivoPrincipal });
+  if (arquivoApoio) fields.push({ id: "67d565fd-ca4f-472b-969b-4b5228459e0f", value: arquivoApoio });
+
+  return fields;
+}
+
+// ─────────────────────────────────────────────
 // Core public functions
 // ─────────────────────────────────────────────
 
@@ -1162,9 +1279,19 @@ export async function createClickUpTask(
     logger.warn({ tipo }, "ClickUp: nenhum assignee encontrado no DB para este tipo");
   }
 
-  let taskId: string | null = null;
+  // Agrupa todos os custom_fields no payload inicial (evita N PATCH requests pós-criação)
+  const idSolicitacao = gerarIdSolicitacao(dados, tipo);
+  const customFieldsBase: Array<{ id: string; value: unknown }> = [
+    { id: "4a8493f1-dfc8-49b4-9372-f6df80d62816", value: idSolicitacao },
+  ];
+  const customFieldsSpecific = tipo === "eventos"
+    ? buildEventosCustomFieldsArray(dados, safeArquivos, user)
+    : buildGeneralCustomFieldsArray(tipo, dados, safeArquivos);
+  taskPayload.custom_fields = [...customFieldsSpecific, ...customFieldsBase];
 
-  logger.info({ tipo, listId, taskName, payload: taskPayload }, "ClickUp: payload final antes do POST");
+  logger.info({ tipo, listId, taskName, customFieldCount: (taskPayload.custom_fields as unknown[]).length }, "ClickUp: payload final antes do POST");
+
+  let taskId: string | null = null;
 
   try {
     const response = await fetch(`https://api.clickup.com/api/v2/list/${listId}/task`, {
@@ -1185,23 +1312,7 @@ export async function createClickUpTask(
   }
 
   if (!taskId) return { taskId: null, taskName, responsavel: "" };
-  logger.info({ taskId, tipo, listId, taskName }, "ClickUp: task criada com sucesso");
-
-  if (tipo === "eventos") {
-    await setEventosCustomFields(taskId, dados, safeArquivos, user);
-  } else {
-    await setGeneralCustomFields(taskId, tipo, subtipo, dados, safeArquivos);
-  }
-
-  const idSolicitacao = gerarIdSolicitacao(dados, tipo);
-  logger.info({ taskId, idSolicitacao, tipo }, "ClickUp: ID da solicitação gerada");
-  await setClickUpCustomField(
-    taskId,
-    "4a8493f1-dfc8-49b4-9372-f6df80d62816",
-    idSolicitacao,
-    "ID da Solicitação",
-    { clickupType: "short_text", raw: idSolicitacao }
-  );
+  logger.info({ taskId, tipo, listId, taskName, idSolicitacao }, "ClickUp: task criada com sucesso");
 
   const responsavel = assignees.length > 0 ? assignees[0].name : "";
 

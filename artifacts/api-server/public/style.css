@@ -318,7 +318,7 @@ input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
   font-size: 0.9rem;
 }
 .radio-option input[type="radio"],
-.checkbox-option input[type="checkbox"] { display: none; }
+.checkbox-option input[type="checkbox"] { opacity: 0; position: absolute; width: 0; height: 0; }
 .radio-custom {
   width: 18px;
   height: 18px;

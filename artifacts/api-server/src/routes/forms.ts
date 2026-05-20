@@ -6,11 +6,10 @@ import { solicitacoesTable, arquivosTable, activityLogTable } from "@workspace/d
 import { eq, desc, and, ne, sql, inArray } from "drizzle-orm";
 import { requireAuth } from "../middleware/auth.middleware";
 import { createClickUpTask, getClickUpTaskStatus, type ArquivosMap } from "./clickup";
-import { uploadToR2 } from "./r2";
-import { gerarCartaoBoasVindasHandler } from "./gerador-cartao-boas-vindas";
+import { uploadToR2, deleteFromR2 } from "./r2";
 import { gerarArteParaSolicitacao } from "../services/art-generator";
 import { logger } from "../lib/logger";
-import { CONTRATOS_OPTS, MARCAS_OPTS, CARGOS_OPTS, SETORES_LIST, getFormSchemaList } from "../config/form-schemas";
+import { CONTRATOS_OPTS, MARCAS_OPTS, CARGOS_OPTS, SETORES_LIST, getFormSchemaList, VALID_TIPOS } from "../config/form-schemas";
 
 const router = Router();
 const upload = multer({ dest: os.tmpdir(), limits: { fileSize: 250 * 1024 * 1024, files: 10, fields: 20 } });
@@ -46,32 +45,6 @@ async function logAtividade(params: {
   } catch { /* não bloquear fluxo */ }
 }
 
-const VALID_TIPOS = [
-  "eventos",
-  "artes-divulgacao",
-  "atualizacao-material",
-  "conteudo-pdf-informativo",
-  "conteudo-pdf-ebook",
-  "apresentacao-nova",
-  "apresentacao-atualizar",
-  "pagina-assessores-dados",
-  "pagina-assessores-atualizacao",
-  "assinatura-email",
-  "cartao-visita-fisico",
-  "cartao-visita-digital",
-  "cartao-boas-vindas",
-  "divulgacao-nps",
-  "convite-fp",
-  "pagina-online",
-  "outro",
-  "cartao-comemorativo",
-  "brindes",
-  "patrocinio",
-  "email-marketing",
-  "producao-video",
-  "sessao-fotos",
-  "materiais-impressos",
-];
 
 const VALID_STATUSES = [
   "recebido", "em-analise", "em-producao", "aguardando",
@@ -176,6 +149,13 @@ function checkRateLimit(email: string, isAdmin: boolean): boolean {
   entry.count++;
   return true;
 }
+
+setInterval(() => {
+  const now = Date.now();
+  for (const [key, entry] of submissionCounts.entries()) {
+    if (now > entry.resetAt) submissionCounts.delete(key);
+  }
+}, RATE_LIMIT_WINDOW_MS);
 
 function parseQueryArray(val: unknown): string[] {
   if (!val) return [];
@@ -325,15 +305,9 @@ router.post("/solicitacoes", requireAuth, upload.any(), async (req, res): Promis
       });
     }
 
-    if (tipo_solicitacao === "cartao-boas-vindas") {
-      gerarCartaoBoasVindasHandler(solicitacao.id, parsedDados).catch(err => {
-        logger.error({ err }, "Erro ao gerar Cartão de Boas-vindas");
-      });
-    } else {
-      gerarArteParaSolicitacao(solicitacao.id, tipo_solicitacao, parsedDados).catch(err => {
-        req.log.error({ err, tipo: tipo_solicitacao }, "Erro ao gerar arte");
-      });
-    }
+    gerarArteParaSolicitacao(solicitacao.id, tipo_solicitacao, parsedDados).catch(err => {
+      req.log.error({ err, tipo: tipo_solicitacao }, "Erro ao gerar arte");
+    });
 
     await logAtividade({
       userEmail: user.email, userName: user.name,
@@ -1116,6 +1090,8 @@ router.delete("/solicitacoes/:id", requireAuth, async (req, res): Promise<void> 
 
     if (!solicitacao) { res.status(404).json({ error: "Solicitação não encontrada" }); return; }
 
+    const arquivosParaDeletar = await db.select().from(arquivosTable).where(eq(arquivosTable.solicitacao_id, id));
+    await Promise.all(arquivosParaDeletar.map(a => deleteFromR2(a.url_r2)));
     await db.delete(arquivosTable).where(eq(arquivosTable.solicitacao_id, id));
     await db.delete(solicitacoesTable).where(eq(solicitacoesTable.id, id));
 
@@ -1196,6 +1172,8 @@ router.post("/solicitacoes/massa-delete", requireAuth, async (req, res): Promise
     const validIds = ids.map(Number).filter(n => !isNaN(n) && n > 0);
     if (validIds.length === 0) { res.status(400).json({ error: "IDs inválidos" }); return; }
 
+    const arquivosParaDeletar = await db.select().from(arquivosTable).where(inArray(arquivosTable.solicitacao_id, validIds));
+    await Promise.all(arquivosParaDeletar.map(a => deleteFromR2(a.url_r2)));
     await db.delete(arquivosTable).where(inArray(arquivosTable.solicitacao_id, validIds));
     await db.delete(solicitacoesTable).where(inArray(solicitacoesTable.id, validIds));
 

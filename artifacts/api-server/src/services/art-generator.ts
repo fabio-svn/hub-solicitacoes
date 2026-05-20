@@ -137,8 +137,6 @@ export async function gerarArteParaSolicitacao(
       tipo,
     );
 
-    await fs.promises.unlink(tmpPath).catch(() => {});
-
     logger.info({ solicitacaoId, tipo, url }, "[r2] upload OK");
 
     const label = TIPO_LABELS[tipo] || tipo;

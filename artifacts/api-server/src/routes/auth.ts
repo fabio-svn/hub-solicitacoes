@@ -21,6 +21,9 @@ let cca: ConfidentialClientApplication | null = null;
 
 function getMsalClient() {
   if (!cca) {
+    // TODO: implementar ICachePlugin para persistir o token cache do MSAL no PostgreSQL,
+    // evitando re-autenticação desnecessária após reinicializações do servidor.
+    // Ver: https://github.com/AzureAD/microsoft-authentication-library-for-js/blob/dev/lib/msal-node/docs/caching.md
     cca = new ConfidentialClientApplication(msalConfig);
   }
   return cca;

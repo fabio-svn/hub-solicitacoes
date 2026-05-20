@@ -34,8 +34,8 @@ function getPool(): mysql.Pool | null {
 }
 
 function juntarTelefone(ddd: unknown, telefone: unknown): string | null {
-  const d = ddd == null ? "" : String(ddd).trim();
-  let t = telefone == null ? "" : String(telefone).trim();
+  const d = (ddd == null ? "" : String(ddd).trim()).replace(/\D/g, "");
+  let t = (telefone == null ? "" : String(telefone).trim()).replace(/\D/g, "");
   if (!d && !t) return null;
   if (t.length === 9) t = `${t.slice(0, 5)}-${t.slice(5)}`;
   else if (t.length === 8) t = `${t.slice(0, 4)}-${t.slice(4)}`;
@@ -58,8 +58,8 @@ export async function buscarContato(email: string): Promise<PerfilContato> {
 
   try {
     const [rows] = await p.query(
-      "SELECT DDD, Telefone, DS_unidade, Escritorio, DS_cargo, CD_ancord FROM contatos WHERE LOWER(Email_interno) = LOWER(?) LIMIT 1",
-      [email]
+      "SELECT DDD, Telefone, DS_unidade, Escritorio, DS_cargo, CD_ancord FROM contatos WHERE Email_interno = ? LIMIT 1",
+      [email.toLowerCase()]
     );
     const arr = rows as Array<Record<string, unknown>>;
     if (!arr || arr.length === 0) return vazio;

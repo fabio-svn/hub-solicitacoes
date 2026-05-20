@@ -1,4 +1,4 @@
-import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
+import { S3Client, PutObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
 import { v4 as uuidv4 } from "uuid";
 import fs from "fs";
 import { logger } from "../lib/logger";
@@ -41,7 +41,8 @@ export async function uploadToR2(
     );
   }
 
-  const ext = file.originalname.split(".").pop() || "";
+  const lastDot = file.originalname.lastIndexOf(".");
+  const ext = lastDot !== -1 ? file.originalname.slice(lastDot + 1) : "";
   const key = `solicitacoes/${solicitacaoId}/${campo}/${uuidv4()}.${ext}`;
 
   try {
@@ -56,4 +57,21 @@ export async function uploadToR2(
   }
 
   return `${R2_PUBLIC_URL}${key}`;
+}
+
+export async function deleteFromR2(urlOrKey: string): Promise<void> {
+  const client = getS3Client();
+  if (!client || !R2_BUCKET) {
+    logger.warn("[r2] deleteFromR2: cliente não configurado, pulando exclusão");
+    return;
+  }
+  const key = R2_PUBLIC_URL && urlOrKey.startsWith(R2_PUBLIC_URL)
+    ? urlOrKey.slice(R2_PUBLIC_URL.length)
+    : urlOrKey;
+  try {
+    await client.send(new DeleteObjectCommand({ Bucket: R2_BUCKET, Key: key }));
+    logger.info({ key }, "[r2] arquivo excluído com sucesso");
+  } catch (err) {
+    logger.error({ err, key }, "[r2] falha ao excluir arquivo do R2");
+  }
 }

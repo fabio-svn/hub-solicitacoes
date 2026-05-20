@@ -1,0 +1,32 @@
+Você é um Engenheiro de Software Sênior especializado em Node.js, Express, Vanilla JS e alta performance. Preciso que você realize uma refatoração profunda neste projeto para corrigir vazamentos de memória, gargalos de banco de dados, falhas de segurança (XSS) e dívida técnica.
+
+Por favor, execute as correções abaixo, agrupadas por arquivo/domínio. Se o volume de alterações for muito grande para um único commit, pergunte-me se deve pausar e continuar na próxima mensagem.
+
+### 1. Refatoração de Arquivos Core e Serviços (Backend)
+- **`artifacts/api-server/src/services/art-generator.ts`:** Mova a linha `fs.promises.unlink(tmpPath)` para dentro de um bloco `finally` (junto com a inicialização da variável `tmpPath` fora do try) para evitar vazamento de disco caso o upload do R2 falhe.
+- **`artifacts/api-server/src/routes/r2.ts`:**
+  - Na função `uploadToR2`, corrija a extração de extensão (`split(".").pop()`) verificando se o arquivo realmente possui um ponto, para evitar salvar arquivos com extensão inválida no R2.
+- **`artifacts/api-server/src/services/template-renderer.ts`:** - Na função `getRemoteAsset`, implemente um `AbortController` com timeout de 5 segundos no `fetch()` para evitar que a API trave (Promises Zumbis) se o servidor remoto não responder.
+  - Crie uma função de inicialização que faça o *preload* (usando `fontkit.openSync`) de todas as fontes do `FONT_FILES` e as coloque no `fontCache`, chamando isso na inicialização para não congelar o Event Loop (`I/O Block`) lendo o disco durante as requisições.
+- **`artifacts/api-server/src/lib/mysqlContatos.ts`:** Na função `buscarContato`, remova o uso da função `LOWER()` na query SQL ao redor da coluna de email para evitar *Full Table Scan* e destravar o uso de índices. Na função `juntarTelefone`, limpe as strings usando `.replace(/\D/g, "")` antes de aplicar a máscara de tamanho.
+
+### 2. Refatoração de Rotas e APIs (Backend)
+- **`artifacts/api-server/src/routes/clickup.ts`:** Na função `setEventosCustomFields`, pare de disparar requisições HTTP individuais via `Promise.all` para cada *custom field*. Em vez disso, agrupe-os em um array `custom_fields` e envie-os diretamente no Payload de criação da tarefa (`POST /task`) na função `createClickUpTask` para evitar o esgotamento do *Rate Limit* (Erro 429).
+- **`artifacts/api-server/src/routes/forms.ts`:** - Adicione um `setInterval` que roda a cada 1 hora para iterar e deletar (limpar) as chaves antigas do Map `submissionCounts` (Rate Limiter), evitando vazamento de memória.
+  - Nas rotas de DELETE (tanto individual quanto em massa), antes de rodar o `db.delete`, faça uma busca das URLs salvas em `arquivosTable` e chame a API do S3/R2 (`DeleteObjectCommand`) para deletar os arquivos físicos, evitando vazamento de armazenamento pago.
+- **`artifacts/api-server/src/app.ts`:** Altere a rota de fallback do SPA de `app.get("/{*catchAll}")` para `app.get("*")`.
+- **`artifacts/api-server/src/routes/auth.ts`:** O MSAL Node está guardando cache de sessão em memória RAM (o que não é escalável). Prepare a configuração do `ConfidentialClientApplication` implementando um *Cache Plugin* ou adicione um comentário TODO detalhado na inicialização do MSAL para migrarmos o `ICachePlugin` para o PostgreSQL depois.
+
+### 3. Eliminação de Dívida Técnica e Código Obsoleto
+- **`artifacts/api-server/src/routes/gerador-cartao-boas-vindas.ts`:** Delete este arquivo completamente.
+- **`artifacts/api-server/src/routes/forms.ts` & `admin.ts`:** Remova qualquer chamada para `gerarCartaoBoasVindasHandler` e substitua pela função principal e unificada `gerarArteParaSolicitacao` (passando os parâmetros adequados).
+- **`artifacts/api-server/src/config/form-schemas.ts`:** Centralize todas as listas de "Tipos Validos" (como `VALID_TIPOS` do forms.ts e `TIPOS_COM_CLICKUP` do admin.ts) consumindo as chaves (`Object.keys`) ou mapeamentos diretos do objeto `FORM_SCHEMAS`. Remova as listas duplicadas de `forms.ts` e `admin.ts`.
+
+### 4. Segurança e Performance do Frontend
+- **Funções Globais (XSS):** Em `dashboard.html` (e onde mais houver), atualize a função `esc(str)` para usar Regex rigorosa encadeada (`replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;')`) em vez de manipular o DOM via `innerHTML` e `textContent`.
+- **`utils.js` (`humanizeSlug`):** Garanta que funções de utilidade de renderização chamem o `esc()` antes de devolverem a string.
+- **Frontend Fetch:** No carregamento de listas (`loadList` ou funções de paginação/busca), instancie um `AbortController`. Se uma nova requisição for disparada, faça o `.abort()` da requisição anterior para evitar *Race Conditions* de rede.
+- **Isolamento Admin:** Separe tudo que é de administrador (Gráfico Canvas de pizza, modal de exclusão em massa, tabelas e lógicas de stats admin) que estão em `dashboard.html` e nos scripts atuais, movendo-os para um arquivo dedicado `admin-dashboard.html` (e um `admin.js`), que só será carregado para usuários com a *role* correta.
+- **`style.css` (Acessibilidade):** Modifique `.radio-option input[type="radio"]` e `.checkbox-option input[type="checkbox"]`. Em vez de `display: none;`, use `opacity: 0; position: absolute; width: 0; height: 0;` para que não quebrem o uso do *Tab* e de leitores de tela.
+
+Por favor, forneça o código alterado ou avise se preferir executar os passos de 1 a 4 separadamente.
