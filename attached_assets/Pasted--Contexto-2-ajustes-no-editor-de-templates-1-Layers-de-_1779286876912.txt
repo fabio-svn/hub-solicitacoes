@@ -1,0 +1,67 @@
+## Contexto
+
+2 ajustes no editor de templates:
+
+1. Layers de tipo "shape" não conseguem ser arrastadas no artboard. O SVG 
+   inline intercepta os eventos de mouse antes de chegarem no .layer-box 
+   pai (que tem o handler do interact.js).
+2. Remover botão "Duplicar" dos cards de variantes na listagem de 
+   templates. MANTER a função duplicateTemplateFromList intacta (pode 
+   ser usada futuramente).
+
+Arquivo: artifacts/api-server/public/admin-templates.html
+
+---
+
+## Fix 1 — Shape arrastável no artboard
+
+ADICIONAR no `<style>`, perto das outras regras `.layer-box`:
+
+```css
+/* SVGs e imgs dentro de layer-box não devem interceptar eventos de 
+   mouse — o div pai precisa receber drag/click */
+.layer-box svg,
+.layer-box img { pointer-events: none; }
+```
+
+---
+
+## Fix 2 — Remover botão Duplicar (manter função)
+
+LOCALIZAR (~linha 1092):
+```js
+const dupBtn = `<button class="row-btn" onclick="duplicateTemplateFromList(${t.id},'${esc(t.name)}')">Duplicar</button>`;
+```
+
+DELETAR essa linha completamente.
+
+LOCALIZAR (~linha 1101) na renderização do template-row:
+```js
+${dupBtn}
+```
+
+DELETAR essa interpolação.
+
+NÃO TOCAR na função `duplicateTemplateFromList` (~linha 1131). Ela 
+permanece definida mas sem chamadas — fica disponível pra uso futuro. 
+(Não é dead code crítico — é uma função utilitária guardada.)
+
+---
+
+## Critério de validação
+
+1. Editor → criar uma shape (retângulo ou elipse)
+2. Clicar na shape no canvas: seleciona (mostra resize handles)
+3. Arrastar a shape: move livremente no artboard
+4. Listagem de templates: cards de variantes SEM botão "Duplicar"
+5. Outros botões dos cards (Editar, Ativar, Deletar) continuam aparecendo
+6. Menu "Criar novo template" → opção "Clonar de um existente" continua 
+   funcionando normalmente (clona configs e layers)
+7. Texto e imagem continuam arrastáveis (sem regressão)
+
+## Não faça
+
+- Não tocar na função duplicateTemplateFromList
+- Não tocar no fluxo de "Clonar de um existente" do menu Criar
+- Não tocar em outros types de layer além de adicionar a regra CSS
+- Não tocar em outras partes do template-row (Editar, Ativar, Deletar)

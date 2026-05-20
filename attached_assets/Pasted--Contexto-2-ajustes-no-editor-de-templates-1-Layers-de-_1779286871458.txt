@@ -1,0 +1,85 @@
+## Contexto
+
+2 ajustes no editor de templates:
+
+1. Layers de tipo "shape" não conseguem ser arrastadas no artboard. 
+   O SVG inline intercepta os eventos de mouse antes de chegarem no 
+   .layer-box pai (que tem o handler do interact.js).
+2. Remover botão "Duplicar" dos cards de variantes na lista de templates.
+
+Arquivo: artifacts/api-server/public/admin-templates.html
+
+---
+
+## Fix 1 — Shape arrastável no artboard
+
+ADICIONAR no `<style>`, perto das outras regras `.layer-box`:
+
+```css
+/* SVGs dentro de layer-box (usados em shapes) não devem interceptar 
+   eventos de mouse — o div pai precisa receber drag/click */
+.layer-box svg { pointer-events: none; }
+.layer-box img { pointer-events: none; }
+```
+
+Adiciono também `img` por preventivo — se layers de imagem também usam 
+`<img>` dentro do `.layer-box`, o mesmo problema pode acontecer (não tá 
+acontecendo hoje provavelmente porque o div tem background-image em vez 
+de `<img>`, mas é bom blindar).
+
+ATENÇÃO: se o shape foi implementado renderizando o SVG COM dimensões 
+fixas (não 100% do parent), pode acontecer do clique fora do SVG mas 
+dentro do `.layer-box` cair em área "vazia". Verificar visualmente após 
+aplicar — o ideal é o SVG ocupar 100% width/height do parent:
+
+```html
+<svg width="100%" height="100%" viewBox="0 0 W H" preserveAspectRatio="none">
+```
+
+Se já estiver assim no código do shape, OK. Caso contrário, fica como 
+nota pra ajustar.
+
+---
+
+## Fix 2 — Remover botão Duplicar das variantes
+
+LOCALIZAR (~linha 1092):
+```js
+const dupBtn = `<button class="row-btn" onclick="duplicateTemplateFromList(${t.id},'${esc(t.name)}')">Duplicar</button>`;
+```
+
+DELETAR essa linha completa.
+
+LOCALIZAR (~linha 1101) na renderização do template-row:
+```js
+${dupBtn}
+```
+
+DELETAR esse `${dupBtn}` (deixando o template-row sem ele entre os 
+outros botões).
+
+A função `duplicateTemplateFromList` (~linha 1131) PODE permanecer no 
+código sem uso (dead code) ou ser deletada. Recomendado: deletar 
+completamente pra não confundir code-readers no futuro. Verificar antes 
+se ela é chamada de algum outro lugar via `grep "duplicateTemplateFromList"` 
+no arquivo — se só existir a definição, pode deletar.
+
+---
+
+## Critério de validação
+
+1. Abrir editor → criar uma shape (retângulo ou elipse)
+2. Clicar na shape no canvas: seleciona (mostra resize handles)
+3. Arrastar a shape: move livremente no artboard
+4. Botão Duplicar SUMIU dos cards de variantes na listagem
+5. Outros botões (Editar, Ativar, Deletar) continuam aparecendo
+6. Layers de texto e imagem continuam arrastáveis (sem regressão)
+
+## Não faça
+
+- Não tocar em outros types de layer (text-line, text-block, image) — 
+  só adicionar CSS rule de pointer-events
+- Não tocar em outras partes do template-row (Editar, Ativar, Deletar)
+- Não tocar em fluxos de save/load/preview
+- Se algum CSS já tiver `pointer-events: none` em SVGs específicos, 
+  pode deixar — a regra geral é idempotente

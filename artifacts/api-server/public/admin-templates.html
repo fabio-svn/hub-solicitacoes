@@ -176,6 +176,8 @@
     .layer-box { position: absolute; cursor: move; border: 1px dashed rgba(172,54,49,0.25); background: transparent; box-sizing: border-box; z-index: 2; transition: border 0.1s; }
     .layer-box:hover { border: 1.5px dashed rgba(172,54,49,0.6); }
     .layer-box.selected { border: 2px solid #AC3631; box-shadow: 0 0 0 2px rgba(172,54,49,0.25); }
+    .layer-box svg,
+    .layer-box img { pointer-events: none; }
     .layer-box .layer-label { display: none; position: absolute; top: -18px; left: 0; font-size: 9px; background: #AC3631; color: #fff; padding: 1px 5px; border-radius: 3px 3px 3px 0; white-space: nowrap; line-height: 16px; cursor: move; user-select: none; }
     .layer-box:hover .layer-label, .layer-box.selected .layer-label { display: block; }
     .resize-handle { position: absolute; width: 9px; height: 9px; background: #fff; border: 2px solid #AC3631; border-radius: 2px; z-index: 10; box-sizing: border-box; pointer-events: all; }
@@ -1164,7 +1166,6 @@
           const displayName = variantLabel ? esc(variantLabel) : esc(t.name);
           const activateBtn = t.is_active ? '' : `<button class="row-btn primary" onclick="activateTemplateFromList(${t.id})">Ativar</button>`;
           const deleteBtn = `<button class="row-btn danger" onclick="deleteTemplateConfirm(${t.id},'${esc(t.name)}',${t.is_active})">Excluir</button>`;
-          const dupBtn = `<button class="row-btn" onclick="duplicateTemplateFromList(${t.id},'${esc(t.name)}')">Duplicar</button>`;
           html += `<div class="template-row">
             <div class="template-row-indicator ${t.is_active ? 'active' : 'inactive'}"></div>
             <div class="template-row-body">
@@ -1176,7 +1177,6 @@
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;display:block"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
               </button>
               <button class="row-btn" onclick="openEditor(${t.id})">Editar</button>
-              ${dupBtn}
               ${activateBtn}${deleteBtn}
             </div>
           </div>`;
