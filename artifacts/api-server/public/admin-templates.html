@@ -174,9 +174,10 @@
     .canvas-scroll { flex: 1; overflow: auto; display: flex; align-items: flex-start; justify-content: center; padding: 24px; }
     .canvas-wrap { position: relative; display: inline-block; box-shadow: 0 2px 12px rgba(0,0,0,0.12); flex-shrink: 0; }
     .canvas-wrap img.bg-img { display: block; width: 100%; height: 100%; object-fit: fill; }
-    .layer-box { position: absolute; cursor: move; border: 1px dashed rgba(172,54,49,0.25); background: transparent; box-sizing: border-box; z-index: 2; transition: border 0.1s; }
+    .layer-box { position: absolute; cursor: move; border: 1px dashed rgba(172,54,49,0.25); background: rgba(255,255,255,0.001); box-sizing: border-box; z-index: 2; transition: border 0.1s; pointer-events: auto; }
     .layer-box:hover { border: 1.5px dashed rgba(172,54,49,0.6); }
     .layer-box.selected { border: 2px solid #AC3631; box-shadow: 0 0 0 2px rgba(172,54,49,0.25); }
+    .layer-box * { pointer-events: auto; }
     .layer-box svg,
     .layer-box img { pointer-events: none; }
     .layer-box .layer-label { display: none; position: absolute; top: -18px; left: 0; font-size: 9px; background: #AC3631; color: #fff; padding: 1px 5px; border-radius: 3px 3px 3px 0; white-space: nowrap; line-height: 16px; cursor: move; user-select: none; }
@@ -230,9 +231,15 @@
     .align-btn.active { background: rgba(172,54,49,0.07); color: #8f2c28; font-weight: 600; }
 
     /* ── Layer type icons ── */
+    .layer-align-section { margin: 8px 0; padding: 8px 0; border-top: 1px solid rgba(34,27,25,0.08); border-bottom: 1px solid rgba(34,27,25,0.08); }
+    .layer-align-row { display: flex; gap: 4px; margin-bottom: 4px; }
+    .layer-align-row:last-child { margin-bottom: 0; }
+    .layer-align-btn { flex: 1; padding: 6px 0; background: rgba(34,27,25,0.05); border: 1px solid rgba(34,27,25,0.1); border-radius: 5px; cursor: pointer; font-size: 0.85rem; color: rgba(34,27,25,0.7); display: flex; align-items: center; justify-content: center; transition: background 0.12s; font-family: 'Nunito Sans', sans-serif; }
+    .layer-align-btn:hover { background: rgba(172,54,49,0.12); color: var(--ruby-red); }
+    .layer-align-btn svg { display: block; }
     .layer-icon-t  { font-size: 0.78rem; font-weight: 900; color: #AC3631; min-width: 18px; text-align: center; flex-shrink: 0; letter-spacing: -0.04em; }
     .layer-icon-img { flex-shrink: 0; color: #AC3631; }
-    .layer-icon-shape { flex-shrink: 0; color: rgba(34,27,25,0.7); }
+    .layer-icon-shape { flex-shrink: 0; color: #AC3631; }
     .add-layer-btn { display: flex; align-items: center; gap: 6px; }
     .brand-swatch { transition: transform 0.12s, border-color 0.12s; }
     .brand-swatch:hover { transform: scale(1.15); border-color: var(--carbon-black) !important; }
@@ -1040,11 +1047,19 @@
       }
     }
     async function goToList() {
-      await loadAllTemplates();
+      try {
+        await loadAllTemplates();
+      } catch (err) {
+        console.error('[goToList] loadAllTemplates falhou:', err);
+      }
       if (createFormSchemas.length === 0) {
         try { const r = await fetch('/api/admin/form-schemas'); if (r.ok) createFormSchemas = await r.json(); } catch {}
       }
-      renderListView();
+      try {
+        renderListView();
+      } catch (err) {
+        console.error('[goToList] renderListView falhou:', err);
+      }
       showView('list');
     }
 
@@ -1091,13 +1106,40 @@
 
     // ── Unsaved guard ────────────────────────────────────────────
     function requestBack() {
-      console.log('[back] requestBack, isDirty=', isDirty);
-      if (!isDirty) { goToList(); return; }
+      console.log('[back] click detected, isDirty=', isDirty);
+      if (!isDirty) {
+        goToList()
+          .then(() => console.log('[back] goToList ok'))
+          .catch(err => {
+            console.error('[back] goToList falhou — usando fallback:', err);
+            try {
+              const ed = document.getElementById('view-editor');
+              const ls = document.getElementById('view-list');
+              if (ed) ed.style.display = 'none';
+              if (ls) ls.style.display = 'flex';
+            } catch (e2) {
+              console.error('[back] fallback também falhou:', e2);
+            }
+          });
+        return;
+      }
       pendingNavAction = goToList;
       const modal = document.getElementById('unsavedModal');
-      console.log('[back] modal element=', modal, 'classes=', modal?.className);
-      modal.classList.add('open');
-      console.log('[back] after add open, classes=', modal.className);
+      if (modal) {
+        modal.classList.add('open');
+      } else {
+        console.warn('[back] modal não existe — usando confirm nativo');
+        if (confirm('Você tem alterações não salvas. Sair sem salvar?')) {
+          isDirty = false;
+          goToList().catch(err => {
+            console.error('[back] goToList falhou:', err);
+            try {
+              document.getElementById('view-editor').style.display = 'none';
+              document.getElementById('view-list').style.display = 'flex';
+            } catch {}
+          });
+        }
+      }
     }
     function closeUnsavedModal() {
       document.getElementById('unsavedModal').classList.remove('open');
@@ -1106,7 +1148,14 @@
     function exitWithoutSave() {
       isDirty = false;
       closeUnsavedModal();
-      if (pendingNavAction) pendingNavAction();
+      if (pendingNavAction) {
+        const action = pendingNavAction;
+        pendingNavAction = null;
+        const result = action();
+        if (result && typeof result.catch === 'function') {
+          result.catch(err => console.error('[exitWithoutSave] action falhou:', err));
+        }
+      }
     }
     async function saveAndExit() {
       await saveTemplate();
@@ -1617,7 +1666,15 @@
         div.dataset.id = layer.id;
         const x = layer.x * SCALE, y = layer.y * SCALE;
         const w = (layer.w || 80) * SCALE;
-        const h = (layer.h || (layer.type === 'text-line' ? 40 : 80)) * SCALE;
+        let h;
+        if (layer.h) {
+          h = layer.h * SCALE;
+        } else if (layer.type === 'text-line') {
+          const fontSize = layer.font_size || 40;
+          h = Math.max(fontSize * 1.3, 40) * SCALE;
+        } else {
+          h = 80 * SCALE;
+        }
         div.style.cssText = `left:${x}px;top:${y}px;width:${w}px;height:${h < 18 ? 18 : h}px;z-index:${total - idx};`;
         const lbl = document.createElement('div');
         lbl.className = 'layer-label';
@@ -1895,6 +1952,36 @@
             <div><div class="props-label">W</div><input class="props-input" type="number" value="${layer.w||0}" onchange="updLayerN('${id}','w',this.value)"></div>
             <div><div class="props-label">H</div><input class="props-input" type="number" value="${layer.h||0}" onchange="updLayerN('${id}','h',this.value)"></div>
           </div>
+        </div>
+        <div class="layer-align-section">
+          <div class="props-label" style="margin-bottom:6px">Alinhar no canvas</div>
+          <div class="layer-align-row">
+            <button class="layer-align-btn" onclick="alignLayer('${id}','left')" title="Alinhar à esquerda">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="3" x2="3" y2="21"/><rect x="7" y="6" width="11" height="5"/><rect x="7" y="13" width="7" height="5"/></svg>
+            </button>
+            <button class="layer-align-btn" onclick="alignLayer('${id}','center-h')" title="Centralizar horizontalmente">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="3" x2="12" y2="21"/><rect x="6" y="6" width="12" height="5"/><rect x="8" y="13" width="8" height="5"/></svg>
+            </button>
+            <button class="layer-align-btn" onclick="alignLayer('${id}','right')" title="Alinhar à direita">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="21" y1="3" x2="21" y2="21"/><rect x="6" y="6" width="11" height="5"/><rect x="10" y="13" width="7" height="5"/></svg>
+            </button>
+          </div>
+          <div class="layer-align-row">
+            <button class="layer-align-btn" onclick="alignLayer('${id}','top')" title="Alinhar ao topo">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="3" x2="21" y2="3"/><rect x="6" y="7" width="5" height="11"/><rect x="13" y="7" width="5" height="7"/></svg>
+            </button>
+            <button class="layer-align-btn" onclick="alignLayer('${id}','center-v')" title="Centralizar verticalmente">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><rect x="6" y="6" width="5" height="12"/><rect x="13" y="8" width="5" height="8"/></svg>
+            </button>
+            <button class="layer-align-btn" onclick="alignLayer('${id}','bottom')" title="Alinhar ao fundo">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="21" x2="21" y2="21"/><rect x="6" y="6" width="5" height="11"/><rect x="13" y="10" width="5" height="7"/></svg>
+            </button>
+          </div>
+          <div class="layer-align-row">
+            <button class="layer-align-btn" onclick="alignLayer('${id}','center-both')" title="Centralizar no canvas" style="font-size:0.72rem;font-weight:600">
+              Centralizar tudo
+            </button>
+          </div>
         </div>`;
 
       if (layer.type === 'text-line' || layer.type === 'text-block') {
@@ -2093,6 +2180,31 @@
       scheduleLivePreview(NORMAL_DEBOUNCE);
     }
     function updLayerN(id, key, value) { updLayer(id, key, parseFloat(value) || 0); }
+    function alignLayer(layerId, direction) {
+      const layer = getLayer(layerId);
+      if (!layer || !currentTemplate) return;
+      const canvasW = currentTemplate.canvas?.width  || 1080;
+      const canvasH = currentTemplate.canvas?.height || 1080;
+      const layerW  = layer.w || 0;
+      const layerH  = layer.h || (layer.type === 'text-line' ? (layer.font_size || 40) * 1.3 : 80);
+      switch (direction) {
+        case 'left':       layer.x = 0; break;
+        case 'center-h':   layer.x = Math.round((canvasW - layerW) / 2); break;
+        case 'right':      layer.x = canvasW - layerW; break;
+        case 'top':        layer.y = 0; break;
+        case 'center-v':   layer.y = Math.round((canvasH - layerH) / 2); break;
+        case 'bottom':     layer.y = canvasH - layerH; break;
+        case 'center-both':
+          layer.x = Math.round((canvasW - layerW) / 2);
+          layer.y = Math.round((canvasH - layerH) / 2);
+          break;
+      }
+      markDirty();
+      renderCanvas();
+      renderLayersList();
+      showProps(layerId);
+      scheduleLivePreview(800);
+    }
 
     function updDocOutputFormat(fmt) {
       if (!currentTemplate) return;

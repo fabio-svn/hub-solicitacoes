@@ -1,0 +1,238 @@
+## Contexto
+
+2 fixes no editor de templates:
+
+1. Layers de texto difíceis ou impossíveis de clicar/arrastar no canvas. 
+   Causa provável: o .layer-box tem altura fixa que não acompanha o tamanho 
+   real do texto renderizado, criando descompasso entre área visual e área 
+   clicável.
+
+2. Adicionar funcionalidade de alinhamento de layer no canvas: botões 
+   pra centralizar horizontalmente, verticalmente, e alinhar às bordas.
+
+Arquivo: artifacts/api-server/public/admin-templates.html
+
+---
+
+## Fix 1 — Hit area do .layer-box (resolve drag de texto)
+
+### 1.1 — Background transparente mas clicável
+
+LOCALIZAR (~linha 173):
+```css
+.layer-box { position: absolute; cursor: move; border: 1px dashed rgba(59,130,246,0.25); background: transparent; box-sizing: border-box; z-index: 2; transition: border 0.1s; }
+```
+
+SUBSTITUIR `background: transparent` por `background: rgba(255,255,255,0.001)`.
+
+Razão: `background: transparent` pode (em alguns browsers/edge cases) 
+não receber eventos. Um background 99.9% transparente garante hit area 
+sólida. Visualmente idêntico ao olho humano.
+
+### 1.2 — Altura do layer-box reflete tamanho real para text-line
+
+LOCALIZAR (~linha 1513):
+```js
+const h = (layer.h || (layer.type === 'text-line' ? 40 : 80)) * SCALE;
+```
+
+SUBSTITUIR por:
+```js
+let h;
+if (layer.h) {
+  h = layer.h * SCALE;
+} else if (layer.type === 'text-line') {
+  // Pra text-line sem h explícito: estimar baseado no font-size
+  // (line-height ~1.2x do font-size)
+  const fontSize = layer.font_size || 40;
+  h = Math.max(fontSize * 1.3, 40) * SCALE;
+} else {
+  h = 80 * SCALE;
+}
+```
+
+Garante que text-line tem altura proporcional ao tamanho visual do texto. 
+Layer com font_size=48 vai ter box de ~62px de altura (em vez de 40), 
+batendo com o texto renderizado.
+
+### 1.3 — Forçar pointer-events nos divs do layer-box
+
+ADICIONAR no `<style>`, perto das outras regras .layer-box:
+```css
+.layer-box { pointer-events: auto; }
+.layer-box * { pointer-events: auto; }  /* exceto svg/img que já têm none do prompt 14 */
+.layer-box svg,
+.layer-box img { pointer-events: none; }  /* re-confirma a regra do prompt 14 */
+```
+
+Idempotente — se já tiver a regra do shape, sobrescreve mas mantém o 
+comportamento desejado.
+
+---
+
+## Fix 2 — Botões de alinhamento de layer no canvas
+
+### 2.1 — Função alignLayer
+
+ADICIONAR no `<script>`, perto das outras funções de layer 
+(ex: depois de `updLayer`):
+
+```js
+function alignLayer(layerId, direction) {
+  const layer = getLayer(layerId);
+  if (!layer || !currentTemplate) return;
+  
+  const canvasW = currentTemplate.canvas?.width  || 1080;
+  const canvasH = currentTemplate.canvas?.height || 1080;
+  const layerW  = layer.w || 0;
+  const layerH  = layer.h || (layer.type === 'text-line' ? (layer.font_size || 40) * 1.3 : 80);
+  
+  switch (direction) {
+    case 'left':           layer.x = 0; break;
+    case 'center-h':       layer.x = Math.round((canvasW - layerW) / 2); break;
+    case 'right':          layer.x = canvasW - layerW; break;
+    case 'top':            layer.y = 0; break;
+    case 'center-v':       layer.y = Math.round((canvasH - layerH) / 2); break;
+    case 'bottom':         layer.y = canvasH - layerH; break;
+    case 'center-both':
+      layer.x = Math.round((canvasW - layerW) / 2);
+      layer.y = Math.round((canvasH - layerH) / 2);
+      break;
+  }
+  
+  markDirty();
+  renderLayers();
+  renderCanvas();
+  scheduleLivePreview(800);
+}
+```
+
+ATENÇÃO: usar os nomes REAIS das funções do código (`markDirty`, 
+`renderLayers`, `renderCanvas`, `scheduleLivePreview`) — adaptar se 
+forem diferentes. Verificar antes via grep.
+
+### 2.2 — CSS dos botões de alinhamento
+
+ADICIONAR no `<style>`:
+```css
+.layer-align-section {
+  margin: 8px 0;
+  padding: 8px 0;
+  border-top: 1px solid rgba(34,27,25,0.08);
+  border-bottom: 1px solid rgba(34,27,25,0.08);
+}
+.layer-align-row {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 4px;
+}
+.layer-align-row:last-child { margin-bottom: 0; }
+.layer-align-btn {
+  flex: 1;
+  padding: 6px 0;
+  background: rgba(34,27,25,0.05);
+  border: 1px solid rgba(34,27,25,0.1);
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  color: rgba(34,27,25,0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.12s;
+  font-family: 'Nunito Sans', sans-serif;
+}
+.layer-align-btn:hover { background: rgba(172,54,49,0.12); color: var(--ruby-red); }
+.layer-align-btn svg { display: block; }
+```
+
+### 2.3 — Renderizar botões na props panel
+
+LOCALIZAR a função que renderiza props da layer selecionada (provavelmente 
+`renderLayerProps(layer)` ou similar). PROCURAR onde X/Y inputs são 
+renderizados.
+
+ADICIONAR a seção de alinhamento LOGO APÓS o bloco de X/Y inputs (e antes 
+das props específicas do tipo):
+
+```js
+const alignSection = `
+  <div class="layer-align-section">
+    <div class="props-label" style="margin-bottom:6px">Alinhar no canvas</div>
+    <div class="layer-align-row">
+      <button class="layer-align-btn" onclick="alignLayer('${id}','left')" title="Alinhar à esquerda">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="3" x2="3" y2="21"/><rect x="7" y="6" width="11" height="5"/><rect x="7" y="13" width="7" height="5"/></svg>
+      </button>
+      <button class="layer-align-btn" onclick="alignLayer('${id}','center-h')" title="Centralizar horizontalmente">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="3" x2="12" y2="21"/><rect x="6" y="6" width="12" height="5"/><rect x="8" y="13" width="8" height="5"/></svg>
+      </button>
+      <button class="layer-align-btn" onclick="alignLayer('${id}','right')" title="Alinhar à direita">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="21" y1="3" x2="21" y2="21"/><rect x="6" y="6" width="11" height="5"/><rect x="10" y="13" width="7" height="5"/></svg>
+      </button>
+    </div>
+    <div class="layer-align-row">
+      <button class="layer-align-btn" onclick="alignLayer('${id}','top')" title="Alinhar ao topo">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="3" x2="21" y2="3"/><rect x="6" y="7" width="5" height="11"/><rect x="13" y="7" width="5" height="7"/></svg>
+      </button>
+      <button class="layer-align-btn" onclick="alignLayer('${id}','center-v')" title="Centralizar verticalmente">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><rect x="6" y="6" width="5" height="12"/><rect x="13" y="8" width="5" height="8"/></svg>
+      </button>
+      <button class="layer-align-btn" onclick="alignLayer('${id}','bottom')" title="Alinhar ao fundo">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="21" x2="21" y2="21"/><rect x="6" y="6" width="5" height="11"/><rect x="13" y="10" width="5" height="7"/></svg>
+      </button>
+    </div>
+    <div class="layer-align-row">
+      <button class="layer-align-btn" onclick="alignLayer('${id}','center-both')" title="Centralizar no canvas (horizontal e vertical)" style="font-size:0.72rem;font-weight:600">
+        Centralizar tudo
+      </button>
+    </div>
+  </div>
+`;
+```
+
+INCORPORAR essa string no template HTML da props panel (concatenar antes 
+das props específicas de cada tipo).
+
+---
+
+## Critério de validação
+
+### Fix 1 — texto arrastável
+1. Editor → criar uma layer de texto (text-block ou text-line)
+2. Clicar na layer no canvas: seleciona (resize handles aparecem)
+3. Arrastar a layer: move como esperado
+4. Texto com font-size 48+: layer-box tem altura proporcional (verificável 
+   no DevTools — `.layer-box` height ≈ font_size * 1.3)
+
+### Fix 2 — alinhamento
+5. Selecionar qualquer layer (texto, imagem, shape)
+6. Painel direito mostra seção "Alinhar no canvas" com 6 botões + 1 centralizar tudo
+7. Click em "Centralizar horizontalmente": layer move pro centro horizontal
+8. Click em "Centralizar verticalmente": move pro centro vertical
+9. Click em "Centralizar tudo": move pro centro absoluto do canvas
+10. Click em "Alinhar à esquerda": layer.x = 0
+11. Live preview atualiza após cada click (canvas mostra nova posição)
+12. Botão Salvar mostra estado "não salvo" (markDirty disparou)
+
+## Não faça
+
+- Não tocar nos botões de align-btn EXISTENTES (eles alinham TEXTO 
+  dentro da layer — text-align: left/center/right + vertical_align).
+  São outra coisa.
+- Não remover a regra `.layer-box svg, .layer-box img { pointer-events: none }` 
+  do Prompt 14 — manter
+- Não alterar a função moveLayer (se ainda existir)
+- Não criar arquivos novos
+- Não tocar no backend — alinhamento é puramente client-side, só muda 
+  layer.x e layer.y que já são salvos normalmente
+
+## Confirmação extra após aplicar
+
+Se o Fix 1 NÃO resolver completamente o problema do texto não arrastar, 
+REPORTAR com:
+- Que tipo de texto (text-line ou text-block) tem problema
+- Se consegue clicar (selecionar) ou nem isso
+- Screenshot do DevTools mostrando o .layer-box da text layer 
+  (especialmente computed height/width)
+
+Isso permite diagnóstico mais preciso.
