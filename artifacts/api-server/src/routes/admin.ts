@@ -6,7 +6,6 @@ import { requireAuth, requireRole } from "../middleware/auth.middleware";
 import { logger } from "../lib/logger";
 import { renderFromTemplate } from "../services/template-renderer";
 import { gerarArteParaSolicitacao } from "../services/art-generator";
-import { gerarAssinaturaEmail } from "./gerador-assinatura";
 import { gerarCartaoBoasVindasHandler } from "./gerador-cartao-boas-vindas";
 import { AVAILABLE_FONTS } from "../types/art-template";
 import { FORM_SCHEMAS, getFormSchemaList } from "../config/form-schemas";
@@ -412,9 +411,7 @@ router.post("/solicitacoes/:id/regerar", requireAuth, requireRole("admin", "gest
     req.log.info({ solicitacaoId: id, tipo }, "Regenerando arte por solicitação do admin");
 
     try {
-      if (tipo === "assinatura-email") {
-        await gerarAssinaturaEmail(id, dados);
-      } else if (tipo === "cartao-boas-vindas") {
+      if (tipo === "cartao-boas-vindas") {
         await gerarCartaoBoasVindasHandler(id, dados);
       } else {
         await gerarArteParaSolicitacao(id, tipo, dados);

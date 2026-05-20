@@ -7,7 +7,6 @@ import { eq, desc, and, ne, sql, inArray } from "drizzle-orm";
 import { requireAuth } from "../middleware/auth.middleware";
 import { createClickUpTask, getClickUpTaskStatus, type ArquivosMap } from "./clickup";
 import { uploadToR2 } from "./r2";
-import { gerarAssinaturaEmail } from "./gerador-assinatura";
 import { gerarCartaoBoasVindasHandler } from "./gerador-cartao-boas-vindas";
 import { gerarArteParaSolicitacao } from "../services/art-generator";
 import { logger } from "../lib/logger";
@@ -162,14 +161,18 @@ function validateFormDados(tipo: string, dados: Record<string, unknown>): string
 
 const submissionCounts = new Map<string, { count: number; resetAt: number }>();
 
-function checkRateLimit(email: string): boolean {
+const RATE_LIMIT_MAX = parseInt(process.env.RATE_LIMIT_MAX || "30", 10);
+const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000;
+
+function checkRateLimit(email: string, isAdmin: boolean): boolean {
+  if (isAdmin) return true;
   const now = Date.now();
   const entry = submissionCounts.get(email);
   if (!entry || now > entry.resetAt) {
-    submissionCounts.set(email, { count: 1, resetAt: now + 60 * 60 * 1000 });
+    submissionCounts.set(email, { count: 1, resetAt: now + RATE_LIMIT_WINDOW_MS });
     return true;
   }
-  if (entry.count >= 10) return false;
+  if (entry.count >= RATE_LIMIT_MAX) return false;
   entry.count++;
   return true;
 }
@@ -215,7 +218,7 @@ router.post("/solicitacoes", requireAuth, upload.any(), async (req, res): Promis
   try {
     const user = req.session.user!;
 
-    if (!checkRateLimit(user.email)) {
+    if (!checkRateLimit(user.email, user.role === 'admin')) {
       res.status(429).json({ error: "Muitas solicitações. Tente novamente em 1 hora." });
       return;
     }
@@ -322,11 +325,7 @@ router.post("/solicitacoes", requireAuth, upload.any(), async (req, res): Promis
       });
     }
 
-    if (tipo_solicitacao === "assinatura-email") {
-      gerarAssinaturaEmail(solicitacao.id, parsedDados).catch(err => {
-        logger.error({ err }, "Erro ao gerar assinatura de e-mail");
-      });
-    } else if (tipo_solicitacao === "cartao-boas-vindas") {
+    if (tipo_solicitacao === "cartao-boas-vindas") {
       gerarCartaoBoasVindasHandler(solicitacao.id, parsedDados).catch(err => {
         logger.error({ err }, "Erro ao gerar Cartão de Boas-vindas");
       });

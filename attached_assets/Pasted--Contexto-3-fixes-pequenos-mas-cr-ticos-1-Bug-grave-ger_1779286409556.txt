@@ -1,0 +1,187 @@
+# Contexto
+
+3 fixes pequenos mas críticos:
+
+1. Bug grave: gerador-assinatura.ts não filtra template por variant_value, 
+   resultando em logo errado em todas solicitações de assinatura-email
+2. Rate limit em testes (10/hora é baixo demais durante desenvolvimento)
+3. Texto ambíguo no form do cartão comemorativo sobre destinatário
+
+Arquivos:
+- artifacts/api-server/src/routes/forms.ts
+- artifacts/api-server/src/routes/gerador-assinatura.ts (deletar)
+- artifacts/api-server/public/form-cartao-comemorativo.html
+
+---
+
+## Fix 1 — Deletar gerador-assinatura.ts e usar art-generator genérico
+
+O wrapper legacy gerador-assinatura.ts:
+- Não filtra por variant_value (busca qualquer template ativo)
+- Reimplementa lógica que o art-generator.ts já faz certo
+- Não passa pelo art-generator.ts (que tem variant resolution correto)
+
+### 1.1 — Remover import e chamada em forms.ts
+
+LOCALIZAR (~linha 10):
+```ts
+import { gerarAssinaturaEmail } from "./gerador-assinatura";
+```
+DELETAR essa linha completamente.
+
+LOCALIZAR (~linha 326):
+```ts
+gerarAssinaturaEmail(solicitacao.id, parsedDados).catch(err => {
+  ...
+});
+```
+
+Esse bloco está dentro de um if/else que decide qual gerador chamar. 
+LOCALIZAR o contexto (deve ser algo como `if (tipo_solicitacao === 'assinatura-email')`).
+
+REMOVER o branch `if` específico de assinatura-email. Deixar `assinatura-email` 
+cair no branch genérico que chama `gerarArteParaSolicitacao`.
+
+Exemplo da estrutura esperada após o fix:
+```ts
+if (tipo_solicitacao === 'cartao-boas-vindas') {
+  gerarCartaoBoasVindasHandler(solicitacao.id, parsedDados).catch(err => {
+    logger.error({ err, solicitacaoId: solicitacao.id }, "Erro ao gerar cartão de boas-vindas");
+  });
+} else if (TIPOS_AUTOMACAO.includes(tipo_solicitacao)) {
+  // assinatura-email + cartao-visita-digital + divulgacao-nps + 
+  // convite-fp + cartao-comemorativo + certificado-eventos
+  gerarArteParaSolicitacao(solicitacao.id, tipo_solicitacao, parsedDados).catch(err => {
+    logger.error({ err, solicitacaoId: solicitacao.id, tipo: tipo_solicitacao }, "Erro ao gerar arte");
+  });
+}
+```
+
+Adaptar pro padrão real do código. O essencial: a chamada pra 
+`gerarAssinaturaEmail` sai, e `assinatura-email` cai no branch que 
+chama `gerarArteParaSolicitacao`.
+
+### 1.2 — Deletar o arquivo
+DELETAR completamente:
+- artifacts/api-server/src/routes/gerador-assinatura.ts
+
+Validar:
+- `pnpm run build` compila sem erros (vai falhar se houver outro import 
+  do arquivo deletado em algum lugar — investigar)
+
+---
+
+## Fix 2 — Rate limit configurável + bypass pra admin
+
+Em src/routes/forms.ts (~linhas 165-175).
+
+LOCALIZAR:
+```ts
+function checkRateLimit(email: string): boolean {
+  const now = Date.now();
+  const entry = submissionCounts.get(email);
+  if (!entry || now > entry.resetAt) {
+    submissionCounts.set(email, { count: 1, resetAt: now + 60 * 60 * 1000 });
+    return true;
+  }
+  if (entry.count >= 10) return false;
+  entry.count++;
+  return true;
+}
+```
+
+SUBSTITUIR por:
+```ts
+const RATE_LIMIT_MAX = parseInt(process.env.RATE_LIMIT_MAX || "30", 10);
+const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000;
+
+function checkRateLimit(email: string, isAdmin: boolean): boolean {
+  // Admins não têm rate limit (pra facilitar testes e operação)
+  if (isAdmin) return true;
+  
+  const now = Date.now();
+  const entry = submissionCounts.get(email);
+  if (!entry || now > entry.resetAt) {
+    submissionCounts.set(email, { count: 1, resetAt: now + RATE_LIMIT_WINDOW_MS });
+    return true;
+  }
+  if (entry.count >= RATE_LIMIT_MAX) return false;
+  entry.count++;
+  return true;
+}
+```
+
+Mudanças:
+- Limite padrão sobe de 10 → 30
+- Configurável via env `RATE_LIMIT_MAX`
+- Admins não são limitados
+
+E LOCALIZAR onde checkRateLimit é chamado (~linha 218):
+```ts
+if (!checkRateLimit(user.email)) {
+```
+
+SUBSTITUIR por:
+```ts
+if (!checkRateLimit(user.email, user.role === 'admin')) {
+```
+
+---
+
+## Fix 3 — Tooltip do cartão comemorativo (esclarecimento de destinatário)
+
+Em public/form-cartao-comemorativo.html.
+
+LOCALIZAR (~linha 36):
+Assim que estiver pronto, o cartão chegará no e-mail informado.
+
+SUBSTITUIR por:
+Assim que estiver pronto, o cartão será enviado automaticamente para o e-mail do destinatário informado abaixo.
+
+LOCALIZAR (~linha 69) o field-hint do emailDestinatario:
+```html
+<div class="field-hint">O cartão será enviado para este e-mail.</div>
+```
+
+SUBSTITUIR por:
+```html
+<div class="field-hint">E-mail de quem vai receber o cartão (não o seu).</div>
+```
+
+---
+
+## Critério de validação
+
+### Fix 1 — Assinatura
+1. `pnpm run build` compila sem erros
+2. Server log NÃO mostra mais `[assinatura] Iniciando geração de assinatura PNG (template-driven)` (esse log era do wrapper deletado)
+3. Server log mostra `[render] iniciando geração de arte (template-driven)` 
+   com `tipo: 'assinatura-email'` quando alguém submete
+4. Submeter uma assinatura-email com marca = "SVN Capital":
+   - Gera arte com o template ativo da variante "svn-capital"
+   - Logo correto na arte (não mais o da SVN Gestão por padrão)
+5. Submeter outra com marca = "SVN Investimentos":
+   - Usa o template da variante "svn-investimentos" (diferente)
+6. Configurações de alinhamento e layout do template DA MARCA CORRETA 
+   são respeitadas
+
+### Fix 2 — Rate limit
+7. Reiniciar servidor (limpa map em RAM)
+8. Admin pode submeter sem limite
+9. Colaborador pode submeter até 30 vezes/hora (vs 10 antes)
+10. Após 30, recebe 429 com mensagem clara
+
+### Fix 3 — Cartão comemorativo
+11. Tooltip diz claramente que email é do destinatário (não do solicitante)
+12. Field hint do emailDestinatario diz "não o seu"
+
+## Não faça
+
+- Não tocar em gerador-cartao-boas-vindas.ts (esse está correto)
+- Não tocar em art-generator.ts (já tem a lógica certa)
+- Não tocar em template-renderer.ts
+- Não tocar em outros forms além do cartao-comemorativo
+- Não remover o campo emailDestinatario (continua sendo usado pelo N8N 
+  pra envio automático)
+- Se algum import de gerador-assinatura aparecer em outro lugar além 
+  de forms.ts, REPORTAR (não esperado)

@@ -1,0 +1,278 @@
+## Contexto
+
+6 ajustes de UI:
+1. Tooltips de 2 forms mencionam envio por e-mail (que não existe mais)
+2. Padronizar h1.page-title em admin-templates e admin-assets
+3. Reduzir sombra do canvas-wrap (muito forte, "brilhando")
+4. Header do canvas (toolbar) com baixo contraste em alguns elementos
+5. Título do template no painel do editor: peso light
+7. Color picker: adicionar swatches das cores da marca
+
+Arquivos:
+- artifacts/api-server/public/form-cartao-boas-vindas.html
+- artifacts/api-server/public/form-convite-fp.html
+- artifacts/api-server/public/admin-assets.html
+- artifacts/api-server/public/admin-templates.html
+
+---
+
+## Fix 1 — Tooltips dos forms
+
+### form-cartao-boas-vindas.html linha 32:
+SUBSTITUIR:
+Preencha os dados do novo cliente para geração do cartão personalizado de boas-vindas. O cartão será enviado automaticamente para o seu e-mail após a solicitação.
+POR:
+Preencha os dados do novo cliente para gerar o cartão personalizado de boas-vindas. O material gerado ficará disponível ao final da solicitação.
+
+### form-convite-fp.html linha 32:
+SUBSTITUIR:
+Preencha os dados para geração do convite de Financial Planning personalizado. O convite será enviado automaticamente para o seu e-mail.
+POR:
+Preencha os dados para gerar o convite de Financial Planning personalizado. O material gerado ficará disponível ao final da solicitação.
+
+---
+
+## Fix 2 — Padronizar h1 page-title
+
+### admin-assets.html linha 103:
+LOCALIZAR:
+```html
+<div class="page-title">Assets de Templates <span id="totalCount"></span></div>
+```
+SUBSTITUIR por:
+```html
+<h1 class="page-title">Assets de Templates <span id="totalCount"></span></h1>
+```
+
+### admin-templates.html — adicionar h1 antes do breadcrumb da view-list
+
+LOCALIZAR (~linha 346-353):
+```html
+<div class="full-view" id="view-list" style="display:none">
+  <div class="full-view-inner">
+    <div class="breadcrumb">
+      <span class="current">Templates de Arte</span>
+      <div style="margin-left:auto">
+        <button class="btn primary" onclick="showView('create')" style="padding:6px 14px;font-size:0.8rem">+ Novo template</button>
+      </div>
+    </div>
+    <div id="listContent">
+```
+
+SUBSTITUIR por:
+```html
+<div class="full-view" id="view-list" style="display:none">
+  <div class="full-view-inner">
+    <div class="title-row" style="margin-bottom:8px;display:flex;align-items:center;gap:12px">
+      <h1 class="page-title" style="margin:0">Templates de Arte</h1>
+      <button class="btn primary" onclick="showView('create')" style="margin-left:auto;padding:7px 14px;font-size:0.82rem">+ Novo template</button>
+    </div>
+    <p style="font-size:0.82rem;opacity:0.5;margin:0 0 20px">Templates visuais usados para gerar artes automaticamente nas solicitações de automação.</p>
+    <div id="listContent">
+```
+
+NÃO remover o breadcrumb da view-create — ele faz sentido pra navegação naquela view.
+
+---
+
+## Fix 3 — Reduzir sombra do canvas-wrap
+
+LOCALIZAR (~linha 171):
+```css
+.canvas-wrap { position: relative; display: inline-block; box-shadow: 0 4px 40px rgba(0,0,0,0.6); flex-shrink: 0; }
+```
+
+SUBSTITUIR por:
+```css
+.canvas-wrap { position: relative; display: inline-block; box-shadow: 0 2px 12px rgba(0,0,0,0.12); flex-shrink: 0; }
+```
+
+(reduz de 0.6 → 0.12 alpha, de 40px → 12px blur, mais natural)
+
+---
+
+## Fix 4 — Header do canvas (toolbar) contraste correto
+
+O canvas-panel pode estar com fundo claro mas a toolbar continua dark. 
+Aplicar TUDO da toolbar pra light (idempotente — se já estiver, pula):
+
+### 4.1 — Canvas toolbar background
+LOCALIZAR:
+```css
+.canvas-toolbar {
+  background: #1e1e1e; padding: 8px 12px; display: flex; align-items: center; gap: 8px;
+  border-bottom: 1px solid #333; flex-shrink: 0; flex-wrap: wrap;
+}
+```
+
+SUBSTITUIR `background: #1e1e1e` por `background: #f5f3f0` e `border-bottom: 1px solid #333` por `border-bottom: 1px solid rgba(34,27,25,0.1)`.
+
+(Se já estiver assim, pular.)
+
+### 4.2 — Canvas toolbar buttons
+LOCALIZAR o bloco:
+```css
+.canvas-toolbar button { ...border: 1px solid rgba(255,255,255,0.15); background: rgba(255,255,255,0.08); color: #fff; ...}
+.canvas-toolbar button:hover { background: rgba(255,255,255,0.15); }
+...
+.canvas-toolbar button.active { background: rgba(255,255,255,0.2); }
+...
+.canvas-toolbar button:disabled:hover { background: rgba(255,255,255,0.08); }
+```
+
+SUBSTITUIR todas as cores brancas semi-transparentes por tons escuros 
+semi-transparentes:
+- `rgba(255,255,255,0.15)` → `rgba(34,27,25,0.15)`
+- `rgba(255,255,255,0.08)` → `rgba(34,27,25,0.05)`
+- `color: #fff` → `color: var(--carbon-black)`
+- `rgba(255,255,255,0.2)` (button.active) → `rgba(34,27,25,0.18)`
+- `rgba(255,255,255,0.15)` (button:hover) → `rgba(34,27,25,0.12)`
+
+A regra `.canvas-toolbar button.primary { background: #AC3631; ... }` mantém 
+e adiciona `color: #fff` (texto branco sobre ruby red).
+
+### 4.3 — toolbar-sep e toolbar-tmpl-name
+LOCALIZAR:
+```css
+.toolbar-sep { width: 1px; height: 18px; background: rgba(255,255,255,0.1); flex-shrink: 0; }
+.toolbar-tmpl-name { font-size: 0.8rem; color: #ddd; ...; }
+```
+
+SUBSTITUIR por:
+```css
+.toolbar-sep { width: 1px; height: 18px; background: rgba(34,27,25,0.12); flex-shrink: 0; }
+.toolbar-tmpl-name { font-size: 0.8rem; color: var(--carbon-black); font-weight: 600; max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; cursor: pointer; }
+```
+
+### 4.4 — name-edit-input
+LOCALIZAR (~linha 309):
+```css
+.name-edit-input { background: transparent; border: none; border-bottom: 1px solid rgba(255,255,255,0.3); color: #ddd; ...; }
+.name-edit-input:focus { border-bottom-color: #c8a96e; color: #fff; }
+```
+
+SUBSTITUIR por:
+```css
+.name-edit-input { background: transparent; border: none; border-bottom: 1px solid rgba(34,27,25,0.25); color: var(--carbon-black); font-size: 0.8rem; font-weight: 600; font-family: 'Nunito Sans',sans-serif; padding: 2px 4px; max-width: 160px; outline: none; }
+.name-edit-input:focus { border-bottom-color: var(--ruby-red); }
+```
+
+### 4.5 — Verificar badges (Ativo/Inativo) e unsaved-badge
+Confirmar que `.badge-editor-active`, `.badge-editor-inactive`, e 
+`.canvas-toolbar .unsaved-badge` têm cores que contrastam com fundo claro.
+
+Se algum tiver `color: #fff` ou `color: rgba(255,255,255,...)`, AJUSTAR pra 
+escuro adequado:
+- `.badge-editor-active` → background verde claro, texto verde escuro
+- `.badge-editor-inactive` → background neutro, texto carbon-black
+
+---
+
+## Fix 5 — Título do template (peso light)
+
+LOCALIZAR (~linha 111):
+```css
+.panel-tmpl-name { font-size: 0.82rem; font-weight: 700; color: #221b19; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+```
+
+SUBSTITUIR por:
+```css
+.panel-tmpl-name { font-size: 1.05rem; font-weight: 300; color: var(--carbon-black); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-family: 'Taviraj', serif; }
+```
+
+(font-weight 300 = light. Aumentado pra 1.05rem e trocado pra serif Taviraj 
+pra ficar mais elegante — peso light combina com font serif.)
+
+---
+
+## Fix 7 — Color picker com swatches da marca
+
+### 7.1 — Função util (adicionar no <script>, perto das outras funções globais)
+ADICIONAR:
+```js
+const SVN_BRAND_SWATCHES = [
+  { color: '#221B19', label: 'Carbon Black' },
+  { color: '#FFF8F3', label: 'Paper White' },
+  { color: '#AC3631', label: 'Ruby Red' },
+  { color: '#381811', label: 'Leather Brown' },
+  { color: '#6f877b', label: 'Sage Green' },
+];
+
+function applySwatch(colorInputId, color) {
+  const input = document.getElementById(colorInputId);
+  if (!input) return;
+  input.value = color;
+  // Disparar onchange pra atualizar o layer
+  input.dispatchEvent(new Event('change', { bubbles: true }));
+}
+
+function renderColorPickerWithSwatches(id, currentValue, onChangeStr) {
+  return `
+    <div class="color-picker-wrap" style="display:flex;flex-direction:column;gap:4px">
+      <input class="props-input" type="color" id="${id}" value="${currentValue||'#ffffff'}" onchange="${onChangeStr}">
+      <div class="brand-swatches" style="display:flex;gap:4px;flex-wrap:wrap">
+        ${SVN_BRAND_SWATCHES.map(s => `
+          <button type="button" 
+                  class="brand-swatch" 
+                  data-color="${s.color}"
+                  title="${s.label}"
+                  onclick="applySwatch('${id}','${s.color}')"
+                  style="width:18px;height:18px;border-radius:50%;border:1px solid rgba(34,27,25,0.15);background:${s.color};cursor:pointer;padding:0;flex-shrink:0"></button>
+        `).join('')}
+      </div>
+    </div>
+  `;
+}
+```
+
+### 7.2 — Usar em todas as linhas que renderizam color input
+
+LOCALIZAR no arquivo TODAS as ocorrências de `<input class="props-input" type="color"`. 
+São pelo menos 1 em ~linha 1796, mas pode haver mais.
+
+Pattern atual:
+```js
+<div><div class="props-label">Cor</div><input class="props-input" type="color" value="${layer.color||'#ffffff'}" onchange="updLayer('${id}','color',this.value)"></div>
+```
+
+SUBSTITUIR cada ocorrência por:
+```js
+<div><div class="props-label">Cor</div>${renderColorPickerWithSwatches(`color-${id}`, layer.color, `updLayer('${id}','color',this.value)`)}</div>
+```
+
+Ajustar IDs unicos por contexto (se houver dois color pickers na mesma layer, 
+usar IDs diferentes tipo `fill-color-${id}` e `stroke-color-${id}`).
+
+### 7.3 — Hover dos swatches
+ADICIONAR no `<style>`:
+```css
+.brand-swatch { transition: transform 0.12s, border-color 0.12s; }
+.brand-swatch:hover { transform: scale(1.15); border-color: var(--carbon-black); }
+```
+
+---
+
+## Critério de validação
+
+1. /form-cartao-boas-vindas.html e /form-convite-fp.html: tooltips sem 
+   menção a e-mail
+2. /admin-assets.html e /admin-templates.html: título "Assets de Templates" 
+   e "Templates de Arte" no MESMO estilo que /admin-log.html "Log de atividade"
+3. /admin-templates.html → editor: sombra do canvas sutil (não mais 
+   "brilhando")
+4. Editor toolbar: botões "↶ ↷ Live Dados de teste Salvar" todos legíveis, 
+   bom contraste, mesma estética light
+5. Painel esquerdo do editor: nome do template em fonte serif elegante 
+   peso light
+6. Painel direito do editor → propriedade Cor: input color nativo + 5 
+   swatches circulares (preto, branco, ruby, marrom, verde) abaixo
+7. Clicar em swatch → input color reflete a cor + layer atualiza
+
+## Não faça
+
+- Não tocar em outros forms além dos 2 listados
+- Não tocar nas cores da marca (#221B19, #AC3631, etc.)
+- Não criar arquivos novos
+- Se algum input color tiver onchange diferente, manter a lógica original 
+  (passar como string pro renderColorPickerWithSwatches)
+- Se .badge-editor-active/inactive não existirem, ignorar

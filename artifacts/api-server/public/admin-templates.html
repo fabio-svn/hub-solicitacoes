@@ -109,7 +109,7 @@
     .panel { background: #fff; border-right: 1px solid #e8e2dc; overflow-y: auto; }
     .panel-title { font-size: 0.7rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(34,27,25,0.45); padding: 14px 14px 6px; }
     .panel-tmpl-header { padding: 8px 14px 12px; border-bottom: 1px solid rgba(34,27,25,0.08); margin-bottom: 8px; }
-    .panel-tmpl-name { font-family: 'Taviraj', serif; font-size: 1rem; font-weight: 600; color: var(--carbon-black); line-height: 1.2; margin-bottom: 2px; }
+    .panel-tmpl-name { font-family: 'Taviraj', serif; font-size: 1.05rem; font-weight: 300; color: var(--carbon-black); line-height: 1.2; margin-bottom: 2px; }
     .panel-tmpl-tipo { font-size: 0.74rem; color: rgba(34,27,25,0.55); font-weight: 500; }
     .layer-item { padding: 6px 10px 6px 14px; cursor: pointer; border-left: 3px solid transparent; border-bottom: 1px solid rgba(34,27,25,0.06); font-size: 0.8rem; display: flex; align-items: center; gap: 6px; color: rgba(34,27,25,0.7); }
     .layer-item:hover { background: #f5f3f0; }
@@ -142,8 +142,8 @@
     .canvas-toolbar .unsaved-badge { font-size: 0.72rem; color: #c8a96e; display: none; }
     .canvas-toolbar .unsaved-badge.visible { display: block; }
     .toolbar-sep { width: 1px; height: 18px; background: rgba(34,27,25,0.12); flex-shrink: 0; }
-    .toolbar-tmpl-name { font-size: 0.8rem; color: #ddd; font-weight: 600; max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; cursor: pointer; }
-    .toolbar-tmpl-name:hover { color: #fff; }
+    .toolbar-tmpl-name { font-size: 0.8rem; color: var(--carbon-black); font-weight: 600; max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; cursor: pointer; }
+    .toolbar-tmpl-name:hover { color: var(--ruby-red); }
     .badge-editor-active { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 0.65rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; background: rgba(10,144,96,0.12); color: #0A7040; border: 1px solid rgba(10,144,96,0.25); }
     .badge-editor-inactive { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 0.65rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; background: rgba(34,27,25,0.06); color: rgba(34,27,25,0.5); border: 1px solid rgba(34,27,25,0.12); cursor: pointer; }
     .badge-editor-inactive:hover { background: rgba(34,27,25,0.1); color: rgba(34,27,25,0.75); }
@@ -171,7 +171,7 @@
     .vsw-btn.active { background: #AC3631; border-color: #AC3631; color: #fff; font-weight: 700; }
 
     .canvas-scroll { flex: 1; overflow: auto; display: flex; align-items: flex-start; justify-content: center; padding: 24px; }
-    .canvas-wrap { position: relative; display: inline-block; box-shadow: 0 4px 40px rgba(0,0,0,0.6); flex-shrink: 0; }
+    .canvas-wrap { position: relative; display: inline-block; box-shadow: 0 2px 12px rgba(0,0,0,0.12); flex-shrink: 0; }
     .canvas-wrap img.bg-img { display: block; width: 100%; height: auto; }
     .layer-box { position: absolute; cursor: move; border: 1px dashed rgba(172,54,49,0.25); background: transparent; box-sizing: border-box; z-index: 2; transition: border 0.1s; }
     .layer-box:hover { border: 1.5px dashed rgba(172,54,49,0.6); }
@@ -231,6 +231,8 @@
     .layer-icon-img { flex-shrink: 0; color: #AC3631; }
     .layer-icon-shape { flex-shrink: 0; color: rgba(34,27,25,0.7); }
     .add-layer-btn { display: flex; align-items: center; gap: 6px; }
+    .brand-swatch { transition: transform 0.12s, border-color 0.12s; }
+    .brand-swatch:hover { transform: scale(1.15); border-color: var(--carbon-black) !important; }
 
     /* ── Editor page header ── */
     .editor-page-header { display: flex; align-items: center; gap: 12px; padding: 9px 14px; background: #fff; border-bottom: 1px solid #e8e2dc; flex-shrink: 0; }
@@ -365,12 +367,11 @@
   <!-- VIEW: List -->
   <div class="full-view" id="view-list" style="display:none">
     <div class="full-view-inner">
-      <div class="breadcrumb">
-        <span class="current">Templates de Arte</span>
-        <div style="margin-left:auto">
-          <button class="btn primary" onclick="showView('create')" style="padding:6px 14px;font-size:0.8rem">+ Novo template</button>
-        </div>
+      <div class="title-row" style="margin-bottom:8px;display:flex;align-items:center;gap:12px">
+        <h1 class="page-title" style="margin:0">Templates de Arte</h1>
+        <button class="btn primary" onclick="showView('create')" style="margin-left:auto;padding:7px 14px;font-size:0.82rem">+ Novo template</button>
       </div>
+      <p style="font-size:0.82rem;opacity:0.5;margin:0 0 20px">Templates visuais usados para gerar artes automaticamente nas solicitações de automação.</p>
       <div id="listContent">
         <div class="empty-state">Carregando...</div>
       </div>
@@ -696,6 +697,26 @@
     let selectedLayerId = null;
     let isDirty = false;
     let _draggedLayerId = null;
+
+    const SVN_BRAND_SWATCHES = [
+      { color: '#221B19', label: 'Carbon Black' },
+      { color: '#FFF8F3', label: 'Paper White' },
+      { color: '#AC3631', label: 'Ruby Red' },
+      { color: '#381811', label: 'Leather Brown' },
+      { color: '#6f877b', label: 'Sage Green' },
+    ];
+    function applySwatch(colorInputId, color) {
+      const input = document.getElementById(colorInputId);
+      if (!input) return;
+      input.value = color;
+      input.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+    function renderColorPickerWithSwatches(id, currentValue, onChangeStr) {
+      const swatches = SVN_BRAND_SWATCHES.map(s =>
+        `<button type="button" class="brand-swatch" title="${s.label}" onclick="applySwatch('${id}','${s.color}')" style="width:18px;height:18px;border-radius:50%;border:1px solid rgba(34,27,25,0.15);background:${s.color};cursor:pointer;padding:0;flex-shrink:0"></button>`
+      ).join('');
+      return `<div style="display:flex;flex-direction:column;gap:4px"><input class="props-input" type="color" id="${id}" value="${currentValue||'#ffffff'}" onchange="${onChangeStr}"><div style="display:flex;gap:4px;flex-wrap:wrap">${swatches}</div></div>`;
+    }
     let bgVariantKey = null;
     let testData = {};
     let canvasScale = 1;
@@ -1883,7 +1904,7 @@
           <div class="props-row single"><select class="props-input" onchange="updLayer('${id}','font_family',this.value)">${fontOptions}</select></div>
           <div class="props-row">
             <div><div class="props-label">Tamanho</div><input class="props-input" type="number" value="${layer.font_size}" onchange="updLayerN('${id}','font_size',this.value)"></div>
-            <div><div class="props-label">Cor</div><input class="props-input" type="color" value="${layer.color||'#ffffff'}" onchange="updLayer('${id}','color',this.value)"></div>
+            <div><div class="props-label">Cor</div>${renderColorPickerWithSwatches(`color-${id}`, layer.color||'#ffffff', `updLayer('${id}','color',this.value)`)}</div>
           </div>
           <div class="props-label">Alinhamento horiz.</div>
           <div class="align-btns" id="alignBtns-${id}">${alignBtns}</div>
@@ -1987,7 +2008,7 @@
           <div class="props-label" style="margin-top:8px">Borda</div>
           <div class="props-row">
             <div><div class="props-label">Espessura</div><input class="props-input" type="number" value="${layer.border?.width||0}" onchange="updLayerBorderWidth('${id}',+this.value)"></div>
-            <div><div class="props-label">Cor</div><input class="props-input" type="color" value="${layer.border?.color||'#ffffff'}" onchange="updLayerBorderColor('${id}',this.value)"></div>
+            <div><div class="props-label">Cor</div>${renderColorPickerWithSwatches(`border-color-${id}`, layer.border?.color||'#ffffff', `updLayerBorderColor('${id}',this.value)`)}</div>
           </div>
         </div>`;
       }
@@ -2003,9 +2024,9 @@
         </div>
         <div class="props-section">
           <div class="props-label">Preenchimento</div>
-          <input class="props-input" type="color" value="${layer.fill||'#AC3631'}" onchange="updLayer('${id}','fill',this.value)">
+          ${renderColorPickerWithSwatches(`fill-${id}`, layer.fill||'#AC3631', `updLayer('${id}','fill',this.value)`)}
           <div class="props-label" style="margin-top:8px">Cor da borda</div>
-          <input class="props-input" type="color" value="${layer.stroke||'#000000'}" onchange="updLayer('${id}','stroke',this.value)">
+          ${renderColorPickerWithSwatches(`stroke-${id}`, layer.stroke||'#000000', `updLayer('${id}','stroke',this.value)`)}
           <div class="props-label" style="margin-top:8px">Espessura da borda (px)</div>
           <input class="props-input" type="number" min="0" value="${layer.stroke_width||0}" onchange="updLayerN('${id}','stroke_width',this.value)">
           ${layer.shape==='rectangle'?`
