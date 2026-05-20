@@ -1,3 +1,4 @@
+import compression from "compression";
 import express, { type Express, type Request, type Response, type NextFunction } from "express";
 import cors from "cors";
 import session from "express-session";
@@ -16,6 +17,8 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app: Express = express();
+
+app.use(compression());
 
 app.use(
   pinoHttp({
@@ -98,7 +101,15 @@ app.use("/api", router);
 app.use("/auth", authRouter);
 
 const publicDir = path.resolve(__dirname, "../public");
-app.use(express.static(publicDir));
+app.use(express.static(publicDir, {
+  setHeaders: (res, filePath) => {
+    if (filePath.endsWith('.html')) {
+      res.setHeader('Cache-Control', 'no-cache');
+    } else if (/\.(js|css|woff2?|ttf|otf|png|jpg|jpeg|webp|svg|ico)$/i.test(filePath)) {
+      res.setHeader('Cache-Control', 'public, max-age=3600, must-revalidate');
+    }
+  },
+}));
 
 app.get("/{*catchAll}", (_req, res) => {
   res.sendFile(path.join(publicDir, "index.html"));

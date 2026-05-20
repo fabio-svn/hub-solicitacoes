@@ -1,0 +1,167 @@
+## Contexto
+
+3 otimizações de performance:
+
+1. compression() middleware no Express — reduz bytes na rede em 60-70%
+2. HTTP cache headers nos static assets — revisits ficam instantâneos
+3. Otimização adicional do carregamento de fontes (Google Fonts já tem 
+   display=swap e preconnect; falta preload do CSS pra acelerar ainda mais)
+
+Arquivos prováveis:
+- artifacts/api-server/src/app.ts (onde o Express é configurado)
+- artifacts/api-server/package.json (instalar compression)
+- artifacts/api-server/public/*.html (preload do Google Fonts em todos)
+
+---
+
+## Fix 1 — compression() middleware
+
+### 1.1 — Instalar a dependência
+No diretório `artifacts/api-server`, rodar:
+```bash
+pnpm add compression
+pnpm add -D @types/compression
+```
+
+(Ou yarn/npm equivalente — usar o package manager do projeto.)
+
+### 1.2 — Adicionar ao Express app
+
+LOCALIZAR o arquivo que configura o Express. NÃO é o `index.ts` (que tem 
+DB_STATEMENTS e listen) — é o arquivo importado por `import app from "./app"`. 
+Geralmente é `src/app.ts` ou `src/server.ts`.
+
+No topo do arquivo, ADICIONAR import:
+```ts
+import compression from "compression";
+```
+
+LOGO APÓS a criação do `app = express()` (e antes de outros `app.use`), 
+ADICIONAR:
+```ts
+app.use(compression());
+```
+
+ORDEM IMPORTA: compression() deve vir ANTES de qualquer middleware que 
+envie response (express.static, rotas, etc.) e ANTES de express.json() 
+não tem requisito — pode vir antes ou depois. Recomendado: logo após 
+criar o app, antes de tudo mais.
+
+---
+
+## Fix 2 — HTTP cache headers em static assets
+
+LOCALIZAR a chamada de `app.use(express.static(...))` no mesmo arquivo.
+
+Provavelmente está algo como:
+```ts
+app.use(express.static("public"));
+```
+
+ou similar (com path absoluto).
+
+SUBSTITUIR por:
+```ts
+app.use(express.static(staticPath, {
+  setHeaders: (res, filePath) => {
+    if (filePath.endsWith('.html')) {
+      // HTML sempre revalidar (deploys podem mudar conteúdo)
+      res.setHeader('Cache-Control', 'no-cache');
+    } else if (/\.(js|css|woff2?|ttf|otf|png|jpg|jpeg|webp|svg|ico)$/i.test(filePath)) {
+      // Static assets: cache 1 hora (curto pra não criar problema em mudanças)
+      res.setHeader('Cache-Control', 'public, max-age=3600, must-revalidate');
+    }
+  },
+}));
+```
+
+ATENÇÃO: manter o `staticPath` ou whatever variável é usada no código real. 
+Apenas adicionar o objeto `setHeaders` como segundo argumento.
+
+NOTA sobre cache aggressiveness: usar 1 hora (3600s) por enquanto, 
+conservador. Quando o app tiver build pipeline com hashed filenames, 
+aumenta pra 1 ano (`max-age=31536000, immutable`).
+
+---
+
+## Fix 3 — Preload do Google Fonts CSS
+
+Os HTMLs já carregam Google Fonts com preconnect + display=swap (bom). 
+Adicionar `<link rel="preload" as="style">` antes do `<link rel="stylesheet">` 
+acelera o início do download.
+
+Em CADA HTML do diretório public/ que use Google Fonts (procurar por 
+"fonts.googleapis.com"), LOCALIZAR o bloco:
+
+```html
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap" media="print" onload="this.media='all'">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap"></noscript>
+```
+
+ADICIONAR um `<link rel="preload">` ENTRE o último preconnect e o 
+`<link rel="stylesheet">`:
+
+```html
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap" media="print" onload="this.media='all'">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap"></noscript>
+```
+
+A linha NOVA é apenas o `<link rel="preload" as="style" href="...">` — 
+mesma URL do stylesheet, mas com rel="preload" e as="style". Isso 
+inicia o download paralelo ao parse do HTML, em vez de esperar o stylesheet 
+ser descoberto.
+
+Aplicar em TODOS os HTMLs do diretório `public/` que tenham o pattern 
+de Google Fonts. Provavelmente são ~27 arquivos (todos os forms + 
+admin pages + index.html + dashboard etc).
+
+Se algum HTML não tiver Google Fonts (ex: thankyou.html pode ser 
+minimal), pular esse arquivo.
+
+---
+
+## Critério de validação
+
+### Fix 1 — compression()
+1. `pnpm run build` compila sem erros
+2. Abrir Chrome DevTools → Network → recarregar página
+3. Olhar coluna "Size" de um HTML grande (ex: solicitacao.html):
+   - ANTES: tamanho real (~50-100KB)
+   - DEPOIS: tamanho transferido (~10-20KB)
+4. Response Headers contém `Content-Encoding: gzip` ou `br`
+
+### Fix 2 — Cache headers
+5. Recarregar página normalmente
+6. Network tab, clicar em qualquer .css, .js, ou imagem:
+   - Response Headers contém `Cache-Control: public, max-age=3600, must-revalidate`
+7. Recarregar novamente (sem Ctrl+Shift+R):
+   - Status do asset: 304 Not Modified (em vez de 200) ou "from disk cache"
+   - Tamanho transferido: ~0 ou poucos bytes
+8. Recarregar HTML:
+   - Response Headers do .html contém `Cache-Control: no-cache`
+   - Status: 200 (revalidando, como esperado pra HTML)
+
+### Fix 3 — Fonts preload
+9. Network tab → filter por "font" ou pelo URL `fonts.googleapis.com`
+10. O CSS do Google Fonts começa a baixar mais cedo no waterfall (antes 
+    de outros assets que dependem dele)
+11. Sem layout shift visível ao carregar (FOIT eliminado)
+
+## Não faça
+
+- Não instalar `compression` na raiz do monorepo — apenas no api-server
+- Não tocar em rotas, lógica, ou outros middlewares — apenas adicionar 
+  compression() no topo da chain
+- Não mudar max-age pra 1 ano — fica conservador em 1 hora até ter 
+  build pipeline com hashed filenames
+- Não tocar em headers de API responses (rotas /api/*) — só nos static
+- Não trocar Google Fonts por @font-face local — fora de escopo
+- Se compression() ou seus types não instalarem, REPORTAR antes de 
+  prosseguir (pode haver lock de pnpm/yarn)
+- Se o arquivo do Express config não for `src/app.ts`, identificar e 
+  usar o correto (procurar por `express()` no projeto)
