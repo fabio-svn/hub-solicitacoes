@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { db } from "@workspace/db";
-import { usersTable, activityLogTable, artTemplatesTable, solicitacoesTable, userTipoAssignmentsTable, tipoClickupListTable } from "@workspace/db";
-import { eq, desc, sql, and, count, isNull } from "drizzle-orm";
+import { usersTable, activityLogTable, artTemplatesTable, solicitacoesTable, userTipoAssignmentsTable, tipoClickupListTable, clickupListsTable } from "@workspace/db";
+import { eq, desc, sql, and, count, isNull, notInArray } from "drizzle-orm";
 import { requireAuth, requireRole } from "../middleware/auth.middleware";
 import { logger } from "../lib/logger";
 import { renderFromTemplate } from "../services/template-renderer";
@@ -512,59 +512,94 @@ router.put("/users/:id/assignments", requireAuth, requireRole("admin"), async (r
 
 // ── ClickUp list config ───────────────────────────────────────────────────────
 
-// Lista todos os forms + a lista do ClickUp configurada para cada um
-router.get("/clickup-lists", requireAuth, requireRole("admin"), async (_req, res) => {
+// Lista as listas registradas (com os forms atribuídos) + os forms disponíveis
+router.get("/clickup-lists", requireRole("admin"), async (_req, res) => {
   try {
-    const configs = await db.select().from(tipoClickupListTable);
-    const byTipo = new Map(configs.map(c => [c.tipo, c]));
-    const forms = getFormSchemaList();
-    const items = forms.map((f: any) => {
-      const tipo = f.tipo ?? f.id;
-      const cfg = byTipo.get(tipo);
-      return { tipo, label: f.label ?? tipo, list_id: cfg?.list_id ?? "", list_name: cfg?.list_name ?? null };
-    });
-    const def = byTipo.get("_default");
+    const lists = await db.select().from(clickupListsTable);
+    const assignments = await db.select().from(tipoClickupListTable);
+    const forms = getFormSchemaList()
+      .filter((f: any) => !f.is_automation)
+      .map((f: any) => ({ tipo: f.tipo ?? f.id, label: f.label ?? (f.tipo ?? f.id) }));
+    const tiposByList: Record<string, string[]> = {};
+    const assignedTipos: Record<string, string> = {};
+    for (const a of assignments) {
+      (tiposByList[a.list_id] ||= []).push(a.tipo);
+      assignedTipos[a.tipo] = a.list_id;
+    }
     res.json({
-      default: { list_id: def?.list_id ?? "", list_name: def?.list_name ?? null },
-      items,
+      lists: lists.map(l => ({ id: l.id, list_id: l.list_id, list_name: l.list_name, tipos: tiposByList[l.list_id] || [] })),
+      forms,
+      assignedTipos,
     });
   } catch (err) {
     logger.error({ err }, "clickup-lists GET falhou");
-    res.status(500).json({ error: "Erro ao carregar configuração de listas." });
+    res.status(500).json({ error: "Erro ao carregar listas." });
   }
 });
 
-// Testa um list_id no ClickUp (botão "Validar")
-router.post("/clickup-lists/validate", requireAuth, requireRole("admin"), async (req, res) => {
+// Testa um list_id no ClickUp (botão Validar)
+router.post("/clickup-lists/validate", requireRole("admin"), async (req, res) => {
   const listId = String(req.body?.list_id ?? "").trim();
   if (!listId) return res.status(400).json({ ok: false, error: "Informe o ID da lista." });
   const result = await validateClickUpList(listId);
   res.json(result);
 });
 
-// Salva (upsert) a lista de um tipo — valida no ClickUp antes de gravar.
-// list_id vazio = remove a config (o tipo volta a usar o default).
-router.put("/clickup-lists", requireAuth, requireRole("admin"), async (req, res) => {
-  const tipo = String(req.body?.tipo ?? "").trim();
+// Adiciona uma lista ao registro. Valida no ClickUp antes.
+router.post("/clickup-lists", requireRole("admin"), async (req, res) => {
   const listId = String(req.body?.list_id ?? "").trim();
-  if (!tipo) return res.status(400).json({ error: "tipo é obrigatório." });
+  if (!listId) return res.status(400).json({ error: "Informe o ID da lista." });
+  const v = await validateClickUpList(listId);
+  if (!v.ok) return res.status(400).json({ error: v.error || "Lista inválida no ClickUp." });
   try {
-    if (!listId) {
-      await db.delete(tipoClickupListTable).where(eq(tipoClickupListTable.tipo, tipo));
-      return res.json({ ok: true, removed: true });
-    }
-    const v = await validateClickUpList(listId);
-    if (!v.ok) return res.status(400).json({ error: v.error || "Lista inválida no ClickUp." });
-    await db.insert(tipoClickupListTable)
-      .values({ tipo, list_id: listId, list_name: v.name ?? null, updated_at: new Date() })
-      .onConflictDoUpdate({
-        target: tipoClickupListTable.tipo,
-        set: { list_id: listId, list_name: v.name ?? null, updated_at: new Date() },
-      });
-    res.json({ ok: true, list_name: v.name });
+    const [row] = await db.insert(clickupListsTable)
+      .values({ list_id: listId, list_name: v.name ?? null })
+      .onConflictDoUpdate({ target: clickupListsTable.list_id, set: { list_name: v.name ?? null } })
+      .returning();
+    res.json({ ok: true, list: { id: row.id, list_id: row.list_id, list_name: row.list_name, tipos: [] } });
   } catch (err) {
-    logger.error({ err, tipo }, "clickup-lists PUT falhou");
-    res.status(500).json({ error: "Erro ao salvar." });
+    logger.error({ err }, "clickup-lists POST falhou");
+    res.status(500).json({ error: "Erro ao adicionar lista." });
+  }
+});
+
+// Define os forms atribuídos a uma lista. Move o form de qualquer outra lista.
+router.put("/clickup-lists/:id/forms", requireRole("admin"), async (req, res) => {
+  const id = parseInt(req.params.id, 10);
+  const tipos: string[] = Array.isArray(req.body?.tipos) ? req.body.tipos.map((t: any) => String(t)) : [];
+  try {
+    const [list] = await db.select().from(clickupListsTable).where(eq(clickupListsTable.id, id));
+    if (!list) return res.status(404).json({ error: "Lista não encontrada." });
+    if (tipos.length) {
+      await db.delete(tipoClickupListTable)
+        .where(and(eq(tipoClickupListTable.list_id, list.list_id), notInArray(tipoClickupListTable.tipo, tipos)));
+    } else {
+      await db.delete(tipoClickupListTable).where(eq(tipoClickupListTable.list_id, list.list_id));
+    }
+    for (const tipo of tipos) {
+      await db.insert(tipoClickupListTable)
+        .values({ tipo, list_id: list.list_id, list_name: list.list_name, updated_at: new Date() })
+        .onConflictDoUpdate({ target: tipoClickupListTable.tipo, set: { list_id: list.list_id, list_name: list.list_name, updated_at: new Date() } });
+    }
+    res.json({ ok: true });
+  } catch (err) {
+    logger.error({ err, id }, "clickup-lists PUT forms falhou");
+    res.status(500).json({ error: "Erro ao salvar formulários." });
+  }
+});
+
+// Exclui a lista do registro e suas atribuições
+router.delete("/clickup-lists/:id", requireRole("admin"), async (req, res) => {
+  const id = parseInt(req.params.id, 10);
+  try {
+    const [list] = await db.select().from(clickupListsTable).where(eq(clickupListsTable.id, id));
+    if (!list) return res.status(404).json({ error: "Lista não encontrada." });
+    await db.delete(tipoClickupListTable).where(eq(tipoClickupListTable.list_id, list.list_id));
+    await db.delete(clickupListsTable).where(eq(clickupListsTable.id, id));
+    res.json({ ok: true });
+  } catch (err) {
+    logger.error({ err, id }, "clickup-lists DELETE falhou");
+    res.status(500).json({ error: "Erro ao excluir lista." });
   }
 });
 

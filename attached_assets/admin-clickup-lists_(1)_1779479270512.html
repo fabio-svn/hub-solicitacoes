@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+  <meta name="theme-color" content="#AC3631" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script>(function(){try{const s=JSON.parse(localStorage.getItem('svn_layout_state')||'{}');if(s.isAdmin)document.documentElement.dataset.preShell='admin';}catch(e){}})()</script>
+  <title>Listas do ClickUp — Hub SVN</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap">
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .ccu-wrap { max-width: 920px; margin: 0 auto; padding: 32px 24px; }
+    .ccu-head { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+    .ccu-title { font-family: 'Taviraj', serif; font-weight: 300; margin: 0; font-size: 1.7rem; color: var(--carbon-black, #221b19); }
+    .ccu-sub { font-size: 0.85rem; color: rgba(34,27,25,0.5); margin: 0 0 28px; }
+    .ccu-section-title { font-size: 0.72rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(34,27,25,0.5); margin: 28px 0 12px; }
+    .ccu-card { background: #fff; border: 1.5px solid #e8e2dc; border-radius: 14px; padding: 18px; margin-bottom: 12px; }
+    .ccu-add-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .ccu-input { padding: 8px 12px; border: 1.5px solid #e8e2dc; border-radius: 8px; font-size: 0.88rem; font-family: 'Nunito Sans', sans-serif; color: #221b19; }
+    .ccu-input:focus { outline: none; border-color: #AC3631; }
+    .ccu-btn { padding: 8px 15px; border-radius: 8px; border: 1.5px solid #e8e2dc; background: #fff; font-size: 0.82rem; font-weight: 600; cursor: pointer; font-family: 'Nunito Sans', sans-serif; color: rgba(34,27,25,0.7); transition: background 0.15s; }
+    .ccu-btn:hover { background: #f5f3f0; }
+    .ccu-btn.primary { background: #AC3631; color: #fff; border-color: #AC3631; }
+    .ccu-btn.primary:hover { background: #b44b42; }
+    .ccu-btn.danger { color: #b91c1c; border-color: #fecaca; }
+    .ccu-btn.danger:hover { background: #fef2f2; }
+    .ccu-status { font-size: 0.78rem; margin-top: 8px; min-height: 1em; }
+    .ccu-status.ok { color: #0A7040; }
+    .ccu-status.err { color: #b91c1c; }
+    .ccu-hint { font-size: 0.78rem; color: rgba(34,27,25,0.5); margin-top: 8px; line-height: 1.45; }
+    .ccu-hint code { background: rgba(34,27,25,0.06); padding: 1px 5px; border-radius: 4px; }
+    .ccu-list-head { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+    .ccu-list-name { font-size: 1rem; font-weight: 700; color: var(--carbon-black, #221b19); }
+    .ccu-list-id { font-size: 0.74rem; color: rgba(34,27,25,0.45); font-weight: 500; }
+    .ccu-forms-label { font-size: 0.74rem; font-weight: 700; color: rgba(34,27,25,0.55); margin-bottom: 8px; }
+    .ccu-forms-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+    .ccu-chip { display: inline-flex; align-items: center; gap: 6px; font-size: 0.8rem; padding: 6px 11px; border: 1.5px solid #e8e2dc; border-radius: 999px; cursor: pointer; user-select: none; transition: background 0.12s, border-color 0.12s; color: rgba(34,27,25,0.75); }
+    .ccu-chip input { accent-color: #AC3631; cursor: pointer; margin: 0; }
+    .ccu-chip.checked { background: rgba(172,54,49,0.08); border-color: #AC3631; color: #8f2c28; font-weight: 600; }
+    .ccu-chip.locked { opacity: 0.5; cursor: not-allowed; background: #f5f3f0; }
+    .ccu-chip.locked .ccu-lockinfo { font-size: 0.68rem; color: rgba(34,27,25,0.4); }
+    .ccu-row-actions { display: flex; gap: 8px; margin-top: 14px; align-items: center; }
+    .ccu-loading, .ccu-error, .ccu-empty { text-align: center; padding: 32px 20px; font-size: 0.88rem; }
+    .ccu-loading { opacity: 0.5; }
+    .ccu-error { color: #b91c1c; }
+    .ccu-empty { opacity: 0.45; }
+  </style>
+</head>
+<body class="page-light">
+  <div id="pageContent">
+    <div class="ccu-wrap">
+      <div class="ccu-head">
+        <h1 class="ccu-title">Listas do ClickUp</h1>
+        <a href="/admin.html" class="ccu-btn" style="margin-left:auto">&larr; Admin</a>
+      </div>
+      <p class="ccu-sub">Cadastre listas do ClickUp e atribua quais formulários criam tarefas em cada uma. Cada formulário só pode estar em uma lista.</p>
+
+      <div class="ccu-section-title">Adicionar lista</div>
+      <div class="ccu-card">
+        <div class="ccu-add-row">
+          <input class="ccu-input" id="addInput" type="text" inputmode="numeric" placeholder="ID da lista do ClickUp…" style="flex:1;min-width:200px">
+          <button class="ccu-btn" onclick="validarNova()">Validar</button>
+          <button class="ccu-btn primary" onclick="adicionarLista()">Salvar</button>
+        </div>
+        <div class="ccu-status" id="addStatus"></div>
+        <div class="ccu-hint">O ID está na URL do ClickUp: <code>app.clickup.com/…/v/l/<strong>LISTA_ID</strong></code> (o número longo). <strong>Validar</strong> confirma o acesso; <strong>Salvar</strong> adiciona a lista na tabela abaixo.</div>
+      </div>
+
+      <div class="ccu-section-title">Listas cadastradas</div>
+      <div id="listArea">
+        <div class="ccu-loading">Carregando…</div>
+      </div>
+    </div>
+  </div>
+
+  <script src="config.js"></script>
+  <script src="auth.js"></script>
+  <script src="shell.js"></script>
+  <script>
+    let STATE = { lists: [], forms: [], assignedTipos: {} };
+
+    function esc(str) {
+      const d = document.createElement('div');
+      d.textContent = String(str == null ? '' : str);
+      return d.innerHTML;
+    }
+
+    async function init() {
+      try { if (typeof _configReady !== 'undefined') await _configReady; } catch (e) {}
+      await Auth.init();
+      if (!Auth.isAuthenticated()) { window.location.href = '/auth/login?redirect=/admin-clickup-lists.html'; return; }
+      if (!Auth.isAdmin()) { window.location.href = '/dashboard.html'; return; }
+      if (typeof Shell !== 'undefined' && Shell.render) {
+        Shell.render({ activeRoute: 'admin-clickup-lists', contentEl: document.getElementById('pageContent') });
+      }
+      loadConfig();
+    }
+
+    function setStatus(el, msg, kind) {
+      if (!el) return;
+      el.className = 'ccu-status' + (kind ? ' ' + kind : '');
+      el.innerHTML = msg;
+    }
+
+    async function loadConfig() {
+      const area = document.getElementById('listArea');
+      area.innerHTML = '<div class="ccu-loading">Carregando…</div>';
+      try {
+        const res = await fetch('/api/admin/clickup-lists', { credentials: 'include' });
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        STATE = await res.json();
+        if (!Array.isArray(STATE.lists)) STATE.lists = [];
+        if (!Array.isArray(STATE.forms)) STATE.forms = [];
+        if (!STATE.assignedTipos) STATE.assignedTipos = {};
+        renderLists();
+      } catch (err) {
+        area.innerHTML = '<div class="ccu-error">Erro ao carregar.<br>' + esc(err.message || err) + '</div>';
+      }
+    }
+
+    function listNameById(listId) {
+      const l = STATE.lists.find(function (x) { return x.list_id === listId; });
+      return l ? (l.list_name || l.list_id) : listId;
+    }
+
+    function renderLists() {
+      const area = document.getElementById('listArea');
+      if (!STATE.lists.length) {
+        area.innerHTML = '<div class="ccu-empty">Nenhuma lista cadastrada ainda. Adicione uma acima.</div>';
+        return;
+      }
+      area.innerHTML = STATE.lists.map(function (list) {
+        const chips = STATE.forms.map(function (f) {
+          const assignedTo = STATE.assignedTipos[f.tipo];
+          const here = assignedTo === list.list_id;
+          const lockedElsewhere = !!assignedTo && assignedTo !== list.list_id;
+          const cls = 'ccu-chip' + (here ? ' checked' : '') + (lockedElsewhere ? ' locked' : '');
+          const lockInfo = lockedElsewhere ? ' <span class="ccu-lockinfo">(em: ' + esc(listNameById(assignedTo)) + ')</span>' : '';
+          return '<label class="' + cls + '">' +
+            '<input type="checkbox" value="' + esc(f.tipo) + '"' + (here ? ' checked' : '') + (lockedElsewhere ? ' disabled' : '') + '>' +
+            esc(f.label) + lockInfo +
+          '</label>';
+        }).join('');
+        const delName = esc(list.list_name || list.list_id).replace(/'/g, "&#39;");
+        return '<div class="ccu-card" data-list-id="' + list.id + '">' +
+          '<div class="ccu-list-head">' +
+            '<span class="ccu-list-name">' + esc(list.list_name || 'Lista') + '</span>' +
+            '<span class="ccu-list-id">ID ' + esc(list.list_id) + '</span>' +
+            '<button class="ccu-btn danger" style="margin-left:auto" onclick="excluirLista(' + list.id + ', \'' + delName + '\')">Excluir</button>' +
+          '</div>' +
+          '<div class="ccu-forms-label">Formulários que usam esta lista</div>' +
+          '<div class="ccu-forms-grid">' + (chips || '<span class="ccu-empty" style="padding:0">Nenhum formulário disponível.</span>') + '</div>' +
+          '<div class="ccu-row-actions">' +
+            '<button class="ccu-btn primary" onclick="salvarForms(' + list.id + ')">Salvar formulários</button>' +
+            '<span class="ccu-status" id="status-' + list.id + '"></span>' +
+          '</div>' +
+        '</div>';
+      }).join('');
+    }
+
+    async function validarNova() {
+      const input = document.getElementById('addInput');
+      const status = document.getElementById('addStatus');
+      const listId = input.value.trim();
+      if (!listId) { setStatus(status, 'Informe um ID para validar.', 'err'); return; }
+      setStatus(status, 'Validando…', '');
+      try {
+        const res = await fetch('/api/admin/clickup-lists/validate', {
+          method: 'POST', credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ list_id: listId }),
+        });
+        const d = await res.json();
+        if (d.ok) setStatus(status, '✓ ' + esc(d.name || 'Lista válida'), 'ok');
+        else setStatus(status, '⚠ ' + esc(d.error || 'Lista inválida'), 'err');
+      } catch (err) { setStatus(status, 'Erro de rede ao validar.', 'err'); }
+    }
+
+    async function adicionarLista() {
+      const input = document.getElementById('addInput');
+      const status = document.getElementById('addStatus');
+      const listId = input.value.trim();
+      if (!listId) { setStatus(status, 'Informe um ID.', 'err'); return; }
+      setStatus(status, 'Salvando…', '');
+      try {
+        const res = await fetch('/api/admin/clickup-lists', {
+          method: 'POST', credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ list_id: listId }),
+        });
+        const d = await res.json().catch(function () { return {}; });
+        if (!res.ok || !d.ok) { setStatus(status, '⚠ ' + esc(d.error || ('Erro ' + res.status)), 'err'); return; }
+        setStatus(status, '✓ Lista adicionada' + (d.list && d.list.list_name ? ' — ' + esc(d.list.list_name) : ''), 'ok');
+        input.value = '';
+        loadConfig();
+      } catch (err) { setStatus(status, 'Erro de rede ao salvar.', 'err'); }
+    }
+
+    async function salvarForms(listId) {
+      const card = document.querySelector('.ccu-card[data-list-id="' + listId + '"]');
+      const status = document.getElementById('status-' + listId);
+      const tipos = Array.prototype.slice.call(card.querySelectorAll('input[type=checkbox]:checked')).map(function (c) { return c.value; });
+      setStatus(status, 'Salvando…', '');
+      try {
+        const res = await fetch('/api/admin/clickup-lists/' + listId + '/forms', {
+          method: 'PUT', credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ tipos: tipos }),
+        });
+        const d = await res.json().catch(function () { return {}; });
+        if (!res.ok || !d.ok) { setStatus(status, '⚠ ' + esc(d.error || ('Erro ' + res.status)), 'err'); return; }
+        setStatus(status, '✓ Salvo', 'ok');
+        loadConfig();
+      } catch (err) { setStatus(status, 'Erro de rede ao salvar.', 'err'); }
+    }
+
+    async function excluirLista(listId, nome) {
+      if (!confirm('Excluir a lista "' + nome + '"? Os formulários atribuídos a ela voltam a usar a lista padrão.')) return;
+      try {
+        const res = await fetch('/api/admin/clickup-lists/' + listId, { method: 'DELETE', credentials: 'include' });
+        const d = await res.json().catch(function () { return {}; });
+        if (!res.ok || !d.ok) { alert(d.error || 'Erro ao excluir.'); return; }
+        loadConfig();
+      } catch (err) { alert('Erro de rede ao excluir.'); }
+    }
+
+    init();
+  </script>
+</body>
+</html>

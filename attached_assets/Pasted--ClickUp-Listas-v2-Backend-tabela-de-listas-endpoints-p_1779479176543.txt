@@ -1,0 +1,150 @@
+# ClickUp Listas v2 — Backend (tabela de listas + endpoints por lista)
+
+Build: `cd artifacts/api-server && pnpm run build` + restart.
+
+Modelo: a tabela `tipo_clickup_list` (tipo único → list_id) CONTINUA sendo a
+atribuição (o `unique` no tipo já garante "um form = uma lista"). Adicionamos
+`clickup_lists` como REGISTRO das listas (pra existir lista sem form ainda).
+O `getListId` NÃO muda — ele já lê `tipo_clickup_list` por tipo.
+
+═══════════════════════════════════════════════════════════════
+## 1. Schema — nova tabela `clickup_lists`
+═══════════════════════════════════════════════════════════════
+No arquivo de schema (onde está `tipoClickupListTable`), ADICIONAR após ela:
+```ts
+export const clickupListsTable = pgTable("clickup_lists", {
+  id: serial("id").primaryKey(),
+  list_id: varchar("list_id", { length: 50 }).notNull().unique(),
+  list_name: varchar("list_name", { length: 255 }),
+  created_at: timestamp("created_at").defaultNow().notNull(),
+});
+export type ClickupList = typeof clickupListsTable.$inferSelect;
+```
+
+## 2. DB_STATEMENTS (index.ts) — criar a tabela na subida
+Adicionar no array, junto das outras:
+```ts
+  `CREATE TABLE IF NOT EXISTS "clickup_lists" (
+    "id" SERIAL PRIMARY KEY,
+    "list_id" VARCHAR(50) NOT NULL UNIQUE,
+    "list_name" VARCHAR(255),
+    "created_at" TIMESTAMP NOT NULL DEFAULT now()
+  )`,
+```
+
+## 3. admin.ts — imports
+- Adicionar `clickupListsTable` no import de `@workspace/db`.
+- Adicionar `notInArray` no import de `drizzle-orm` (já tem `eq, and`).
+
+## 4. admin.ts — SUBSTITUIR as rotas de clickup-lists pelas abaixo
+LOCALIZAR as rotas `clickup-lists` adicionadas antes (o GET e o PUT antigos) e
+SUBSTITUIR todo esse conjunto por estas (a rota `/validate` pode manter como já
+está; as demais ficam assim):
+
+```ts
+// Lista as listas registradas (com os forms atribuídos) + os forms disponíveis
+router.get("/clickup-lists", requireRole("admin"), async (_req, res) => {
+  try {
+    const lists = await db.select().from(clickupListsTable);
+    const assignments = await db.select().from(tipoClickupListTable); // tipo, list_id
+    // Forms NÃO-automação (automações não vão pro ClickUp)
+    const forms = getFormSchemaList()
+      .filter((f: any) => !f.is_automation)
+      .map((f: any) => ({ tipo: f.tipo ?? f.id, label: f.label ?? (f.tipo ?? f.id) }));
+    const tiposByList: Record<string, string[]> = {};
+    const assignedTipos: Record<string, string> = {};
+    for (const a of assignments) {
+      (tiposByList[a.list_id] ||= []).push(a.tipo);
+      assignedTipos[a.tipo] = a.list_id;
+    }
+    res.json({
+      lists: lists.map(l => ({ id: l.id, list_id: l.list_id, list_name: l.list_name, tipos: tiposByList[l.list_id] || [] })),
+      forms,
+      assignedTipos,
+    });
+  } catch (err) {
+    logger.error({ err }, "clickup-lists GET falhou");
+    res.status(500).json({ error: "Erro ao carregar listas." });
+  }
+});
+
+// Testa um list_id no ClickUp (botão Validar) — manter se já existir igual
+router.post("/clickup-lists/validate", requireRole("admin"), async (req, res) => {
+  const listId = String(req.body?.list_id ?? "").trim();
+  if (!listId) return res.status(400).json({ ok: false, error: "Informe o ID da lista." });
+  const result = await validateClickUpList(listId);
+  res.json(result);
+});
+
+// Adiciona uma lista ao registro (Seção 1). Valida no ClickUp antes.
+router.post("/clickup-lists", requireRole("admin"), async (req, res) => {
+  const listId = String(req.body?.list_id ?? "").trim();
+  if (!listId) return res.status(400).json({ error: "Informe o ID da lista." });
+  const v = await validateClickUpList(listId);
+  if (!v.ok) return res.status(400).json({ error: v.error || "Lista inválida no ClickUp." });
+  try {
+    const [row] = await db.insert(clickupListsTable)
+      .values({ list_id: listId, list_name: v.name ?? null })
+      .onConflictDoUpdate({ target: clickupListsTable.list_id, set: { list_name: v.name ?? null } })
+      .returning();
+    res.json({ ok: true, list: { id: row.id, list_id: row.list_id, list_name: row.list_name, tipos: [] } });
+  } catch (err) {
+    logger.error({ err }, "clickup-lists POST falhou");
+    res.status(500).json({ error: "Erro ao adicionar lista." });
+  }
+});
+
+// Define os forms atribuídos a uma lista (Seção 2). Move o form de qualquer
+// outra lista (o unique em tipo garante 1 form = 1 lista).
+router.put("/clickup-lists/:id/forms", requireRole("admin"), async (req, res) => {
+  const id = parseInt(req.params.id, 10);
+  const tipos: string[] = Array.isArray(req.body?.tipos) ? req.body.tipos.map((t: any) => String(t)) : [];
+  try {
+    const [list] = await db.select().from(clickupListsTable).where(eq(clickupListsTable.id, id));
+    if (!list) return res.status(404).json({ error: "Lista não encontrada." });
+    // Remove desta lista os tipos que saíram da seleção
+    if (tipos.length) {
+      await db.delete(tipoClickupListTable)
+        .where(and(eq(tipoClickupListTable.list_id, list.list_id), notInArray(tipoClickupListTable.tipo, tipos)));
+    } else {
+      await db.delete(tipoClickupListTable).where(eq(tipoClickupListTable.list_id, list.list_id));
+    }
+    // Atribui (upsert) cada tipo a esta lista — move de outra lista se preciso
+    for (const tipo of tipos) {
+      await db.insert(tipoClickupListTable)
+        .values({ tipo, list_id: list.list_id, list_name: list.list_name, updated_at: new Date() })
+        .onConflictDoUpdate({ target: tipoClickupListTable.tipo, set: { list_id: list.list_id, list_name: list.list_name, updated_at: new Date() } });
+    }
+    res.json({ ok: true });
+  } catch (err) {
+    logger.error({ err, id }, "clickup-lists PUT forms falhou");
+    res.status(500).json({ error: "Erro ao salvar formulários." });
+  }
+});
+
+// Exclui a lista do registro e suas atribuições
+router.delete("/clickup-lists/:id", requireRole("admin"), async (req, res) => {
+  const id = parseInt(req.params.id, 10);
+  try {
+    const [list] = await db.select().from(clickupListsTable).where(eq(clickupListsTable.id, id));
+    if (!list) return res.status(404).json({ error: "Lista não encontrada." });
+    await db.delete(tipoClickupListTable).where(eq(tipoClickupListTable.list_id, list.list_id));
+    await db.delete(clickupListsTable).where(eq(clickupListsTable.id, id));
+    res.json({ ok: true });
+  } catch (err) {
+    logger.error({ err, id }, "clickup-lists DELETE falhou");
+    res.status(500).json({ error: "Erro ao excluir lista." });
+  }
+});
+```
+
+## Validação
+1. `pnpm run build` ok (atenção ao import de `notInArray`).
+2. Subir: tabela `clickup_lists` criada.
+3. `GET /api/admin/clickup-lists` retorna `{ lists, forms, assignedTipos }`,
+   com `forms` contendo SÓ os não-automação.
+
+## Não faça
+- Não alterar `getListId` (ele já lê `tipo_clickup_list` por tipo).
+- Não mexer em `getAssigneesForTipo`.
+- A página `admin-clickup-lists.html` será substituída pelo arquivo novo (à parte).

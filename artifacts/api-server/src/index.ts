@@ -124,6 +124,13 @@ const DB_STATEMENTS = [
   )`,
   `CREATE INDEX IF NOT EXISTS "IDX_tipo_clickup_list_tipo" ON "tipo_clickup_list" ("tipo")`,
 
+  `CREATE TABLE IF NOT EXISTS "clickup_lists" (
+    "id"         SERIAL       PRIMARY KEY,
+    "list_id"    VARCHAR(50)  NOT NULL UNIQUE,
+    "list_name"  VARCHAR(255),
+    "created_at" TIMESTAMP    NOT NULL DEFAULT now()
+  )`,
+
   // Art assets (imagens da biblioteca de templates)
   `CREATE TABLE IF NOT EXISTS "art_assets" (
     "id"                    SERIAL        PRIMARY KEY,
