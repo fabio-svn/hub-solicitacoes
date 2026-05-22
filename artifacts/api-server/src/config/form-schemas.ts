@@ -52,17 +52,58 @@ export const CARGOS_OPTS = [
   { value: 'socia-assessora', label: 'Sócia e Assessora de Investimentos' },
 ];
 
-export const SETORES_LIST = [
-  "Administração", "Alocação", "Aracaju", "Câmbio", "Campo Grande",
-  "Capital Humano", "Cascavel", "Commodities", "Connect", "Corporate",
-  "Cuiabá", "Curitiba", "Curitiba Digital", "Digital", "Financeiro",
-  "Foz do Iguaçu", "Institucional", "Jurídico", "Londrina", "Marketing",
-  "Marketing Digital", "Maringá", "Maringá Digital", "Middle", "Performance",
-  "Produto", "Proteção Patrimonial", "Renda Fixa", "Renda Variável", "Salvador",
-  "São Paulo", "São Paulo Digital", "SVN Gestão", "SVN Global",
-  "SVN Investment & Merchant Banking (M&A)", "Toledo", "Universidade SVN",
-  "Vitória da Conquista", "Wealth Planning",
-];
+// Fonte única de setores: nome (exibição/dropdown) + code (geração de ID no ClickUp).
+// Adicione um setor novo APENAS aqui — a lista de nomes e o mapa de códigos
+// são derivados automaticamente, então não há mais risco de desync.
+export const SETORES = [
+  { name: "Administração",                           code: "ADM" },
+  { name: "Alocação",                                code: "ALO" },
+  { name: "Aracaju",                                 code: "AJU" },
+  { name: "Câmbio",                                  code: "CAM" },
+  { name: "Campo Grande",                            code: "CGR" },
+  { name: "Capital Humano",                          code: "RH" },
+  { name: "Cascavel",                                code: "CVV" },
+  { name: "Commodities",                             code: "CMO" },
+  { name: "Connect",                                 code: "CONN" },
+  { name: "Corporate",                               code: "COR" },
+  { name: "Cuiabá",                                  code: "CBA" },
+  { name: "Curitiba",                                code: "CTB" },
+  { name: "Curitiba Digital",                        code: "CTBDGT" },
+  { name: "Digital",                                 code: "DIG" },
+  { name: "Financeiro",                              code: "FIN" },
+  { name: "Foz do Iguaçu",                           code: "FOZ" },
+  { name: "Institucional",                           code: "INST" },
+  { name: "Jurídico",                                code: "JUR" },
+  { name: "Londrina",                                code: "LDN" },
+  { name: "Marketing",                               code: "MKT" },
+  { name: "Marketing Digital",                       code: "MKTDGT" },
+  { name: "Maringá",                                 code: "MGF" },
+  { name: "Maringá Digital",                         code: "MGFDGT" },
+  { name: "Middle",                                  code: "MID" },
+  { name: "Performance",                             code: "PER" },
+  { name: "Produto",                                 code: "PRO" },
+  { name: "Proteção Patrimonial",                    code: "PPA" },
+  { name: "Renda Fixa",                              code: "RF" },
+  { name: "Renda Variável",                          code: "RV" },
+  { name: "Salvador",                                code: "SSA" },
+  { name: "São Paulo",                               code: "SAO" },
+  { name: "São Paulo Digital",                       code: "SAODGT" },
+  { name: "SVN Gestão",                              code: "GEST" },
+  { name: "SVN Global",                              code: "GLO" },
+  { name: "SVN Investment & Merchant Banking (M&A)", code: "IMB" },
+  { name: "Toledo",                                  code: "TLD" },
+  { name: "Universidade SVN",                        code: "USVN" },
+  { name: "Vitória da Conquista",                    code: "VDC" },
+  { name: "Wealth Planning",                         code: "WEAL" },
+] as const;
+
+// Lista de nomes — mantém compatibilidade com quem já consome SETORES_LIST
+// (rota /form-schemas → dropdown do frontend).
+export const SETORES_LIST: string[] = SETORES.map(s => s.name);
+
+// Mapa nome → código, consumido pelo clickup.ts na geração do ID.
+export const SETOR_CODIGO_MAP: Record<string, string> =
+  Object.fromEntries(SETORES.map(s => [s.name, s.code]));
 
 export const FORM_SCHEMAS: Record<string, FormSchema> = {
   'cartao-boas-vindas': {

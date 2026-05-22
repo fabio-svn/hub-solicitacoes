@@ -117,6 +117,17 @@ function normalizeFormDados(
     }
   }
 
+  // Alias snake_case automático: pra QUALQUER campo camelCase que ainda não
+  // tenha um equivalente snake_case, cria o alias derivado (ex.: nomeAssinatura
+  // → nome_assinatura). Os casos irregulares continuam cobertos pelo KEY_MAP
+  // acima (que já rodou). Apenas ADICIONA chaves — nunca sobrescreve nem remove
+  // valores existentes, então é seguro pra quem lê em camelCase.
+  for (const key of Object.keys(out)) {
+    if (!/[a-z][A-Z]/.test(key)) continue;
+    const snake = key.replace(/([a-z])([A-Z])/g, "$1_$2").toLowerCase();
+    if (!(snake in out)) out[snake] = out[key];
+  }
+
   return out;
 }
 
@@ -248,17 +259,25 @@ router.post("/solicitacoes", requireAuth, upload.any(), async (req, res): Promis
     const arquivosMap: ArquivosMap = {};
     if (files && files.length > 0) {
       for (const file of files) {
+        let uploadedUrl: string | null = null;
         try {
-          const url = await uploadToR2(file, solicitacao.id, file.fieldname);
+          uploadedUrl = await uploadToR2(file, solicitacao.id, file.fieldname);
           await db.insert(arquivosTable).values({
             solicitacao_id: solicitacao.id,
             campo: file.fieldname,
-            url_r2: url,
+            url_r2: uploadedUrl,
             nome_original: file.originalname,
           });
-          arquivosMap[file.fieldname] = url;
+          arquivosMap[file.fieldname] = uploadedUrl;
         } catch (uploadErr) {
           logger.error({ err: uploadErr }, "R2 upload failed, continuing");
+          // Se o upload subiu mas o registro no banco falhou, o arquivo ficaria
+          // órfão no R2 — limpa pra não gerar lixo/custo. deleteFromR2 já engole
+          // o próprio erro, então não precisa de try/catch aqui.
+          if (uploadedUrl) {
+            await deleteFromR2(uploadedUrl);
+            logger.warn({ url: uploadedUrl }, "Arquivo órfão removido do R2 após falha no insert");
+          }
         }
       }
     }

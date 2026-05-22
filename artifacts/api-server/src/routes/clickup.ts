@@ -3,7 +3,7 @@ import { randomInt } from "crypto";
 import { db, usersTable, userTipoAssignmentsTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
 import { mapClickUpStatus } from "../config/clickup-status";
-import { FORM_SCHEMAS } from "../config/form-schemas";
+import { FORM_SCHEMAS, SETOR_CODIGO_MAP } from "../config/form-schemas";
 
 const CLICKUP_API_TOKEN = process.env.CLICKUP_API_TOKEN || "";
 
@@ -35,47 +35,6 @@ const NATUREZA_CODIGO: Record<string, string> = {
   "online":     "L",
 };
 
-const SETOR_CODIGO_MAP: Record<string, string> = {
-  "Administração":                           "ADM",
-  "Alocação":                                "ALO",
-  "Aracaju":                                 "AJU",
-  "Câmbio":                                  "CAM",
-  "Campo Grande":                            "CGR",
-  "Capital Humano":                          "RH",
-  "Cascavel":                                "CVV",
-  "Commodities":                             "CMO",
-  "Connect":                                 "CONN",
-  "Corporate":                               "COR",
-  "Cuiabá":                                  "CBA",
-  "Curitiba":                                "CTB",
-  "Curitiba Digital":                        "CTBDGT",
-  "Digital":                                 "DIG",
-  "Financeiro":                              "FIN",
-  "Foz do Iguaçu":                           "FOZ",
-  "Institucional":                           "INST",
-  "Jurídico":                                "JUR",
-  "Londrina":                                "LDN",
-  "Marketing":                               "MKT",
-  "Marketing Digital":                       "MKTDGT",
-  "Maringá":                                 "MGF",
-  "Maringá Digital":                         "MGFDGT",
-  "Middle":                                  "MID",
-  "Performance":                             "PER",
-  "Produto":                                 "PRO",
-  "Proteção Patrimonial":                    "PPA",
-  "Renda Fixa":                              "RF",
-  "Renda Variável":                          "RV",
-  "Salvador":                                "SSA",
-  "São Paulo":                               "SAO",
-  "São Paulo Digital":                       "SAODGT",
-  "SVN Gestão":                              "GEST",
-  "SVN Global":                              "GLO",
-  "SVN Investment & Merchant Banking (M&A)": "IMB",
-  "Toledo":                                  "TLD",
-  "Universidade SVN":                        "USVN",
-  "Vitória da Conquista":                    "VDC",
-  "Wealth Planning":                         "WEAL",
-};
 
 function gerarIdSolicitacao(dados: FormDados, tipo: string): string {
   const naturezaRaw = str(dados.natureza as string).toLowerCase();
