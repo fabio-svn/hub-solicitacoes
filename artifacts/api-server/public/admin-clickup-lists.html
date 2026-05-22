@@ -80,12 +80,10 @@
     }
 
     async function init() {
-      const me = await Auth.getUser();
-      if (!me) { Auth.redirectToLogin(); return; }
-      if (me.role !== 'admin') {
-        document.getElementById('tableWrap').innerHTML = '<div style="padding:32px;text-align:center;color:var(--ruby-red)">Acesso restrito a administradores.</div>';
-        return;
-      }
+      await Auth.init();
+      if (!Auth.isAuthenticated()) { window.location.href = '/auth/login?redirect=/admin-clickup-lists.html'; return; }
+      if (!Auth.isAdmin()) { window.location.href = '/dashboard.html'; return; }
+      Shell.render({ activeRoute: 'admin-clickup-lists', contentEl: document.getElementById('pageContent') });
       load();
     }
 
