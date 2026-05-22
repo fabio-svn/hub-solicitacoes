@@ -517,9 +517,7 @@ router.get("/clickup-lists", requireRole("admin"), async (_req, res) => {
   try {
     const lists = await db.select().from(clickupListsTable);
     const assignments = await db.select().from(tipoClickupListTable);
-    const forms = getFormSchemaList()
-      .filter((f: any) => !f.is_automation)
-      .map((f: any) => ({ tipo: f.tipo ?? f.id, label: f.label ?? (f.tipo ?? f.id) }));
+    const forms = TIPOS_COM_CLICKUP.map(t => ({ tipo: t.tipo, label: t.label }));
     const tiposByList: Record<string, string[]> = {};
     const assignedTipos: Record<string, string> = {};
     for (const a of assignments) {
