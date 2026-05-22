@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+  <link rel="manifest" href="/site.webmanifest" />
+  <meta name="theme-color" content="#AC3631" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Listas do ClickUp - Hub SVN</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap" media="print" onload="this.media='all'">
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap"></noscript>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .cl-table { width: 100%; border-collapse: collapse; margin-top: 8px; }
+    .cl-table th { text-align: left; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; opacity: .5; padding: 8px 12px; border-bottom: 2px solid var(--border-light); }
+    .cl-table td { padding: 12px 12px; border-bottom: 1px solid var(--border-light); vertical-align: middle; }
+    .cl-table tr:last-child td { border-bottom: none; }
+    .cl-label { font-size: 0.9rem; font-weight: 600; }
+    .cl-tipo-tag { font-size: 0.72rem; color: var(--muted-text); font-family: monospace; margin-top: 2px; }
+    .cl-input { width: 180px; font-family: monospace; font-size: 0.85rem; padding: 6px 10px; border: 1px solid var(--border-light); border-radius: 8px; background: var(--card-white); color: var(--carbon-black); outline: none; transition: border-color .2s; }
+    .cl-input:focus { border-color: var(--ruby-red); }
+    .cl-name { font-size: 0.8rem; color: var(--sage-green); font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 180px; }
+    .cl-err  { font-size: 0.8rem; color: var(--ruby-red); font-weight: 600; }
+    .cl-actions { display: flex; gap: 6px; }
+    .cl-btn { font-size: 0.78rem; padding: 5px 12px; border-radius: 8px; border: 1px solid var(--border-light); background: var(--card-white); color: var(--carbon-black); cursor: pointer; font-family: 'Nunito Sans', sans-serif; font-weight: 600; transition: background .15s, border-color .15s; white-space: nowrap; }
+    .cl-btn:hover { background: rgba(34,27,25,.05); }
+    .cl-btn-save { background: var(--ruby-red); color: #fff; border-color: var(--ruby-red); }
+    .cl-btn-save:hover { background: #8f2c28; border-color: #8f2c28; }
+    .cl-btn:disabled { opacity: .45; cursor: not-allowed; }
+    .cl-default-row td { background: rgba(159,63,55,0.04); }
+    .hint-box { background: rgba(34,27,25,.04); border: 1px solid var(--border-light); border-radius: 10px; padding: 14px 18px; font-size: 0.82rem; line-height: 1.5; color: var(--muted-text); margin-bottom: 24px; }
+    .hint-box strong { color: var(--carbon-black); }
+    .spinner-sm { display: inline-block; width: 12px; height: 12px; border: 2px solid rgba(255,255,255,.4); border-top-color: #fff; border-radius: 50%; animation: spin .6s linear infinite; vertical-align: middle; margin-right: 4px; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body class="page-light">
+  <div id="pageContent">
+  <div class="container">
+    <div class="title-row">
+      <h1 class="page-title">Listas do ClickUp</h1>
+      <div style="display:flex;gap:8px">
+        <a href="/admin.html" class="btn btn-secondary">← Admin</a>
+        <a href="/solicitacoes.html" class="btn btn-primary">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Nova solicitação
+        </a>
+      </div>
+    </div>
+
+    <div class="hint-box">
+      <strong>Como usar:</strong> cole o ID numérico da lista do ClickUp (encontrado na URL:
+      <code style="font-size:.8em">app.clickup.com/…/v/l/<strong>LISTA_ID</strong></code>).
+      Clique em <strong>Validar</strong> para confirmar que o ID existe e o token tem acesso.
+      Clique em <strong>Salvar</strong> para gravar. O servidor revalida antes de salvar.
+      Vários formulários podem usar a mesma lista. Campo vazio + Salvar remove a configuração
+      e faz o tipo voltar a usar a lista padrão.
+    </div>
+
+    <div class="card" style="padding:0;overflow:hidden">
+      <div id="tableWrap" style="min-height:100px">
+        <div style="padding:32px;text-align:center;opacity:.4;font-size:.9rem">Carregando…</div>
+      </div>
+    </div>
+
+    <div id="globalErr" style="display:none;margin-top:14px" class="form-error"></div>
+  </div>
+  </div>
+
+  <script src="auth.js"></script>
+  <script>
+    function esc(s) {
+      return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+    }
+
+    async function init() {
+      const me = await Auth.getUser();
+      if (!me) { Auth.redirectToLogin(); return; }
+      if (me.role !== 'admin') {
+        document.getElementById('tableWrap').innerHTML = '<div style="padding:32px;text-align:center;color:var(--ruby-red)">Acesso restrito a administradores.</div>';
+        return;
+      }
+      load();
+    }
+
+    async function load() {
+      try {
+        const r = await fetch('/api/admin/clickup-lists', { credentials: 'include' });
+        if (!r.ok) throw new Error(await r.text());
+        const data = await r.json();
+        render(data);
+      } catch (e) {
+        document.getElementById('tableWrap').innerHTML = '<div style="padding:32px;text-align:center;color:var(--ruby-red)">Erro ao carregar: ' + esc(e.message) + '</div>';
+      }
+    }
+
+    function render(data) {
+      const rows = [
+        { tipo: '_default', label: 'Lista padrão (Geral)', list_id: data.default.list_id, list_name: data.default.list_name, isDefault: true },
+        ...data.items,
+      ];
+
+      const tbody = rows.map((row, i) => {
+        const trClass = row.isDefault ? 'cl-default-row' : '';
+        const savedId  = esc(row.list_id || '');
+        const savedName = row.list_name ? esc(row.list_name) : '';
+        return `<tr class="${trClass}" id="row-${i}">
+          <td>
+            <div class="cl-label">${esc(row.label)}</div>
+            <div class="cl-tipo-tag">${esc(row.tipo)}</div>
+          </td>
+          <td>
+            <input class="cl-input" id="input-${i}" value="${savedId}" placeholder="ID numérico" data-tipo="${esc(row.tipo)}" data-idx="${i}" autocomplete="off" spellcheck="false">
+          </td>
+          <td id="name-${i}">
+            ${savedName ? `<span class="cl-name">✓ ${savedName}</span>` : '<span style="opacity:.35;font-size:.8rem">—</span>'}
+          </td>
+          <td>
+            <div class="cl-actions">
+              <button class="cl-btn" onclick="validate(${i})" id="vbtn-${i}">Validar</button>
+              <button class="cl-btn cl-btn-save" onclick="save(${i})" id="sbtn-${i}">Salvar</button>
+            </div>
+            <div id="msg-${i}" style="font-size:.78rem;margin-top:5px"></div>
+          </td>
+        </tr>`;
+      }).join('');
+
+      document.getElementById('tableWrap').innerHTML = `
+        <table class="cl-table">
+          <thead><tr>
+            <th>Formulário</th>
+            <th>ID da Lista</th>
+            <th>Nome (confirmação)</th>
+            <th>Ações</th>
+          </tr></thead>
+          <tbody>${tbody}</tbody>
+        </table>`;
+    }
+
+    function setMsg(i, html) {
+      const el = document.getElementById('msg-' + i);
+      if (el) el.innerHTML = html;
+    }
+    function setName(i, html) {
+      const el = document.getElementById('name-' + i);
+      if (el) el.innerHTML = html;
+    }
+    function setBtnsDisabled(i, disabled) {
+      const v = document.getElementById('vbtn-' + i);
+      const s = document.getElementById('sbtn-' + i);
+      if (v) v.disabled = disabled;
+      if (s) s.disabled = disabled;
+    }
+
+    async function validate(i) {
+      const input = document.getElementById('input-' + i);
+      const listId = (input?.value || '').trim();
+      if (!listId) { setMsg(i, '<span class="cl-err">Informe um ID.</span>'); return; }
+      setBtnsDisabled(i, true);
+      setMsg(i, '<span class="spinner-sm"></span> Validando…');
+      try {
+        const r = await fetch('/api/admin/clickup-lists/validate', {
+          method: 'POST', credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ list_id: listId }),
+        });
+        const data = await r.json();
+        if (data.ok) {
+          setMsg(i, `<span style="color:var(--sage-green);font-weight:700">✓ ${esc(data.name || 'Lista encontrada')}</span>`);
+        } else {
+          setMsg(i, `<span class="cl-err">✗ ${esc(data.error)}</span>`);
+        }
+      } catch (e) {
+        setMsg(i, `<span class="cl-err">Erro de rede.</span>`);
+      } finally {
+        setBtnsDisabled(i, false);
+      }
+    }
+
+    async function save(i) {
+      const input = document.getElementById('input-' + i);
+      const tipo   = input?.dataset.tipo || '';
+      const listId = (input?.value || '').trim();
+      setBtnsDisabled(i, true);
+      setMsg(i, '<span class="spinner-sm" style="border-top-color:var(--ruby-red);border-color:rgba(159,63,55,.3)"></span> Salvando…');
+      try {
+        const r = await fetch('/api/admin/clickup-lists', {
+          method: 'PUT', credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ tipo, list_id: listId }),
+        });
+        const data = await r.json();
+        if (r.ok && data.ok) {
+          if (data.removed) {
+            setMsg(i, '<span style="color:var(--muted-text)">Configuração removida.</span>');
+            setName(i, '<span style="opacity:.35;font-size:.8rem">—</span>');
+          } else {
+            setMsg(i, `<span style="color:var(--sage-green);font-weight:700">✓ Salvo</span>`);
+            setName(i, `<span class="cl-name">✓ ${esc(data.list_name || listId)}</span>`);
+          }
+        } else {
+          setMsg(i, `<span class="cl-err">✗ ${esc(data.error || 'Erro ao salvar.')}</span>`);
+        }
+      } catch (e) {
+        setMsg(i, `<span class="cl-err">Erro de rede.</span>`);
+      } finally {
+        setBtnsDisabled(i, false);
+      }
+    }
+
+    init();
+  </script>
+</body>
+</html>

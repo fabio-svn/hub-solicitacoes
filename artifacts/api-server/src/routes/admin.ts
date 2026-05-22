@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { db } from "@workspace/db";
-import { usersTable, activityLogTable, artTemplatesTable, solicitacoesTable, userTipoAssignmentsTable } from "@workspace/db";
+import { usersTable, activityLogTable, artTemplatesTable, solicitacoesTable, userTipoAssignmentsTable, tipoClickupListTable } from "@workspace/db";
 import { eq, desc, sql, and, count, isNull } from "drizzle-orm";
 import { requireAuth, requireRole } from "../middleware/auth.middleware";
 import { logger } from "../lib/logger";
@@ -8,6 +8,7 @@ import { renderFromTemplate } from "../services/template-renderer";
 import { gerarArteParaSolicitacao } from "../services/art-generator";
 import { AVAILABLE_FONTS } from "../types/art-template";
 import { FORM_SCHEMAS, getFormSchemaList, TIPOS_COM_CLICKUP } from "../config/form-schemas";
+import { validateClickUpList } from "./clickup";
 
 const TIPOS_COM_CLICKUP_SET = new Set(TIPOS_COM_CLICKUP.map(t => t.tipo));
 
@@ -506,6 +507,64 @@ router.put("/users/:id/assignments", requireAuth, requireRole("admin"), async (r
   } catch (err: any) {
     req.log.error({ err, body: req.body }, "Erro ao atualizar assignments");
     res.status(500).json({ error: err.message || "Erro ao atualizar atribuições", code: err.code });
+  }
+});
+
+// ── ClickUp list config ───────────────────────────────────────────────────────
+
+// Lista todos os forms + a lista do ClickUp configurada para cada um
+router.get("/clickup-lists", requireAuth, requireRole("admin"), async (_req, res) => {
+  try {
+    const configs = await db.select().from(tipoClickupListTable);
+    const byTipo = new Map(configs.map(c => [c.tipo, c]));
+    const forms = getFormSchemaList();
+    const items = forms.map((f: any) => {
+      const tipo = f.tipo ?? f.id;
+      const cfg = byTipo.get(tipo);
+      return { tipo, label: f.label ?? tipo, list_id: cfg?.list_id ?? "", list_name: cfg?.list_name ?? null };
+    });
+    const def = byTipo.get("_default");
+    res.json({
+      default: { list_id: def?.list_id ?? "", list_name: def?.list_name ?? null },
+      items,
+    });
+  } catch (err) {
+    logger.error({ err }, "clickup-lists GET falhou");
+    res.status(500).json({ error: "Erro ao carregar configuração de listas." });
+  }
+});
+
+// Testa um list_id no ClickUp (botão "Validar")
+router.post("/clickup-lists/validate", requireAuth, requireRole("admin"), async (req, res) => {
+  const listId = String(req.body?.list_id ?? "").trim();
+  if (!listId) return res.status(400).json({ ok: false, error: "Informe o ID da lista." });
+  const result = await validateClickUpList(listId);
+  res.json(result);
+});
+
+// Salva (upsert) a lista de um tipo — valida no ClickUp antes de gravar.
+// list_id vazio = remove a config (o tipo volta a usar o default).
+router.put("/clickup-lists", requireAuth, requireRole("admin"), async (req, res) => {
+  const tipo = String(req.body?.tipo ?? "").trim();
+  const listId = String(req.body?.list_id ?? "").trim();
+  if (!tipo) return res.status(400).json({ error: "tipo é obrigatório." });
+  try {
+    if (!listId) {
+      await db.delete(tipoClickupListTable).where(eq(tipoClickupListTable.tipo, tipo));
+      return res.json({ ok: true, removed: true });
+    }
+    const v = await validateClickUpList(listId);
+    if (!v.ok) return res.status(400).json({ error: v.error || "Lista inválida no ClickUp." });
+    await db.insert(tipoClickupListTable)
+      .values({ tipo, list_id: listId, list_name: v.name ?? null, updated_at: new Date() })
+      .onConflictDoUpdate({
+        target: tipoClickupListTable.tipo,
+        set: { list_id: listId, list_name: v.name ?? null, updated_at: new Date() },
+      });
+    res.json({ ok: true, list_name: v.name });
+  } catch (err) {
+    logger.error({ err, tipo }, "clickup-lists PUT falhou");
+    res.status(500).json({ error: "Erro ao salvar." });
   }
 });
 

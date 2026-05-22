@@ -1830,7 +1830,8 @@
         if (/^palFoto\d$/.test(key)) continue;
         if (typeof DRAWER_FIELD_LABELS !== 'undefined' && DRAWER_FIELD_LABELS[key]?.skip) continue;
 
-        const label = (typeof DRAWER_FIELD_LABELS_FLAT !== 'undefined' && DRAWER_FIELD_LABELS_FLAT[key]) || key;
+        const label = (typeof DRAWER_FIELD_LABELS_FLAT !== 'undefined' && DRAWER_FIELD_LABELS_FLAT[key])
+          || String(key).replace(/([a-z])([A-Z])/g, '$1 $2').replace(/[_-]+/g, ' ').replace(/^./, c => c.toUpperCase());
         const isWide = typeof DRAWER_FIELD_LABELS !== 'undefined' && !!(DRAWER_FIELD_LABELS[key]?.wide);
         const wideClass = isWide ? ' dados-grid-wide' : '';
 

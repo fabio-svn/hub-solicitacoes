@@ -25,6 +25,7 @@
       <h1 class="page-title">Painel Administrativo</h1>
       <div style="display:flex;gap:8px">
         <a href="/dashboard.html" class="btn btn-secondary">Meu painel</a>
+        <a href="/admin-clickup-lists.html" class="btn btn-secondary" id="clickupListsLink" style="display:none">Listas ClickUp</a>
         <a href="/solicitacoes.html" class="btn btn-primary">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           Nova solicitação
@@ -214,6 +215,10 @@
         return;
       }
       Shell.render({ activeRoute: 'admin-painel', contentEl: document.getElementById('pageContent') });
+      if (Auth.getUserRole() === 'admin') {
+        const lnk = document.getElementById('clickupListsLink');
+        if (lnk) lnk.style.display = '';
+      }
       loadStats();
       loadAdminStats();
       loadTable('geral');

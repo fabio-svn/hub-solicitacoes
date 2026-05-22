@@ -114,6 +114,16 @@ const DB_STATEMENTS = [
   `CREATE INDEX IF NOT EXISTS "IDX_user_tipo_assignments_user_id" ON "user_tipo_assignments" ("user_id")`,
   `CREATE INDEX IF NOT EXISTS "IDX_user_tipo_assignments_tipo"    ON "user_tipo_assignments" ("tipo")`,
 
+  // ClickUp list config por tipo de formulário
+  `CREATE TABLE IF NOT EXISTS "tipo_clickup_list" (
+    "id"         SERIAL       PRIMARY KEY,
+    "tipo"       VARCHAR(100) NOT NULL UNIQUE,
+    "list_id"    VARCHAR(50)  NOT NULL,
+    "list_name"  VARCHAR(255),
+    "updated_at" TIMESTAMP    NOT NULL DEFAULT now()
+  )`,
+  `CREATE INDEX IF NOT EXISTS "IDX_tipo_clickup_list_tipo" ON "tipo_clickup_list" ("tipo")`,
+
   // Art assets (imagens da biblioteca de templates)
   `CREATE TABLE IF NOT EXISTS "art_assets" (
     "id"                    SERIAL        PRIMARY KEY,

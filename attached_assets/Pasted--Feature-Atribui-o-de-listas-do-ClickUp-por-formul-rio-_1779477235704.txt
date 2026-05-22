@@ -1,0 +1,287 @@
+# Feature — Atribuição de listas do ClickUp por formulário (configurável na interface)
+
+Objetivo: cada form (tipo de demanda) aponta para uma lista do ClickUp, editável
+no admin — vários forms podem usar a mesma lista. Substitui a config via env
+(`CLICKUP_LIST_*`) por config no banco. Inclui validação contra o ClickUp no save
+(testa o ID antes de gravar). Espelha o modelo que já existe para assignees.
+
+Build necessário: `cd artifacts/api-server && pnpm run build` + restart
+(as partes 1–3 são backend). A parte 4 é frontend estático.
+
+═══════════════════════════════════════════════════════════════════════════
+## PARTE 1 — Banco: nova tabela `tipo_clickup_list`
+═══════════════════════════════════════════════════════════════════════════
+
+### 1a. Schema Drizzle
+Arquivo: o schema onde estão `usersTable`/`userTipoAssignmentsTable`
+(lib/db .../schema). LOCALIZAR a definição de `userTipoAssignmentsTable` e
+ADICIONAR logo após o `export type UserTipoAssignment = ...`:
+
+```ts
+export const tipoClickupListTable = pgTable("tipo_clickup_list", {
+  id: serial("id").primaryKey(),
+  tipo: varchar("tipo", { length: 100 }).notNull().unique(),
+  list_id: varchar("list_id", { length: 50 }).notNull(),
+  list_name: varchar("list_name", { length: 255 }),
+  updated_at: timestamp("updated_at").defaultNow().notNull(),
+});
+export type TipoClickupList = typeof tipoClickupListTable.$inferSelect;
+```
+(Os imports `pgTable, serial, varchar, timestamp` já são usados nesse arquivo.
+O barrel `@workspace/db` faz `export * from "./schema"`, então a tabela já fica
+disponível para importar — não precisa editar mais nada de export.)
+
+### 1b. DB_STATEMENTS (criação na subida — mesmo padrão das outras tabelas)
+Arquivo: `artifacts/api-server/src/index.ts`
+LOCALIZAR o bloco `CREATE TABLE IF NOT EXISTS "user_tipo_assignments"` e seus
+índices, e ADICIONAR logo depois deles, no mesmo array:
+
+```ts
+  `CREATE TABLE IF NOT EXISTS "tipo_clickup_list" (
+    "id" SERIAL PRIMARY KEY,
+    "tipo" VARCHAR(100) NOT NULL UNIQUE,
+    "list_id" VARCHAR(50) NOT NULL,
+    "list_name" VARCHAR(255),
+    "updated_at" TIMESTAMP NOT NULL DEFAULT now()
+  )`,
+  `CREATE INDEX IF NOT EXISTS "IDX_tipo_clickup_list_tipo" ON "tipo_clickup_list" ("tipo")`,
+```
+
+═══════════════════════════════════════════════════════════════════════════
+## PARTE 2 — clickup.ts: validação + getListId lendo do banco
+═══════════════════════════════════════════════════════════════════════════
+
+Arquivo: `artifacts/api-server/src/routes/clickup.ts`
+
+### 2a. Import — LOCALIZAR:
+```ts
+import { db, usersTable, userTipoAssignmentsTable } from "@workspace/db";
+```
+SUBSTITUIR por:
+```ts
+import { db, usersTable, userTipoAssignmentsTable, tipoClickupListTable } from "@workspace/db";
+```
+
+### 2b. Helper de validação — ADICIONAR (exportado, logo após a linha
+`const CLICKUP_API_TOKEN = process.env.CLICKUP_API_TOKEN || "";`):
+```ts
+// Valida um list_id contra o ClickUp usando o token atual.
+// Usado pela tela de admin (botão Validar) e pelo save (PUT).
+export async function validateClickUpList(
+  listId: string
+): Promise<{ ok: boolean; name?: string; error?: string }> {
+  if (!CLICKUP_API_TOKEN) return { ok: false, error: "Token do ClickUp não configurado no servidor." };
+  if (!/^\d+$/.test(listId)) return { ok: false, error: "O ID da lista deve conter apenas números." };
+  try {
+    const r = await fetch(`https://api.clickup.com/api/v2/list/${listId}`, {
+      headers: { Authorization: CLICKUP_API_TOKEN },
+    });
+    if (!r.ok) {
+      const body = await r.text().catch(() => "");
+      let msg = `ClickUp respondeu ${r.status}`;
+      if (body.includes("OAUTH_027") || body.includes("not authorized"))
+        msg = "Essa lista não existe ou o token não tem acesso a ela (verifique se é um ID de LISTA, não de usuário).";
+      else if (r.status === 404) msg = "Lista não encontrada no ClickUp.";
+      return { ok: false, error: msg };
+    }
+    const data = await r.json().catch(() => ({} as any));
+    return { ok: true, name: data?.name };
+  } catch (err) {
+    return { ok: false, error: "Falha de rede ao consultar o ClickUp." };
+  }
+}
+```
+
+### 2c. Reescrever getListId (agora assíncrono, lê do banco)
+LOCALIZAR a função inteira:
+```ts
+function getListId(tipoSolicitacao: string): string {
+  if (tipoSolicitacao === "eventos") {
+    logger.info({ tipo: tipoSolicitacao, listId: CLICKUP_LIST_EVENTOS }, "ClickUp: roteando para Lista Eventos");
+    return CLICKUP_LIST_EVENTOS;
+  }
+  if (tipoSolicitacao === "brindes") {
+    logger.info({ tipo: tipoSolicitacao, listId: CLICKUP_LIST_BRINDES }, "ClickUp: roteando para Lista Brindes");
+    return CLICKUP_LIST_BRINDES;
+  }
+  if (tipoSolicitacao === "patrocinio") {
+    logger.info({ tipo: tipoSolicitacao, listId: CLICKUP_LIST_PATROCINIO }, "ClickUp: roteando para Lista Patrocínios");
+    return CLICKUP_LIST_PATROCINIO;
+  }
+  logger.info({ tipo: tipoSolicitacao, listId: CLICKUP_LIST_GERAL }, "ClickUp: roteando para Lista Geral");
+  return CLICKUP_LIST_GERAL;
+}
+```
+SUBSTITUIR por:
+```ts
+async function getListId(tipoSolicitacao: string): Promise<string> {
+  try {
+    // 1) lista específica configurada para este tipo
+    const [row] = await db
+      .select({ list_id: tipoClickupListTable.list_id })
+      .from(tipoClickupListTable)
+      .where(eq(tipoClickupListTable.tipo, tipoSolicitacao));
+    if (row?.list_id) {
+      logger.info({ tipo: tipoSolicitacao, listId: row.list_id }, "ClickUp: lista por tipo (banco)");
+      return row.list_id;
+    }
+    // 2) fallback configurável: linha "_default" (Geral), também editável na interface
+    const [def] = await db
+      .select({ list_id: tipoClickupListTable.list_id })
+      .from(tipoClickupListTable)
+      .where(eq(tipoClickupListTable.tipo, "_default"));
+    if (def?.list_id) {
+      logger.info({ tipo: tipoSolicitacao, listId: def.list_id }, "ClickUp: lista default (banco)");
+      return def.list_id;
+    }
+  } catch (err) {
+    logger.error({ err, tipo: tipoSolicitacao }, "getListId: erro ao ler config do banco");
+  }
+  // 3) fallback final hardcoded — segurança pra nunca enviar lista vazia
+  logger.warn({ tipo: tipoSolicitacao, listId: CLICKUP_LIST_GERAL }, "ClickUp: usando lista default hardcoded (sem config no banco)");
+  return CLICKUP_LIST_GERAL;
+}
+```
+(Mantenha as constantes `CLICKUP_LIST_*` no topo — viram só o fallback final.
+Elas só poderão ser apagadas do Railway depois que a tabela estiver populada.)
+
+### 2d. Call site — LOCALIZAR:
+```ts
+  const listId = getListId(tipo);
+```
+SUBSTITUIR por:
+```ts
+  const listId = await getListId(tipo);
+```
+(Conferir se não há outro chamador de `getListId`; se houver, também usar `await`.)
+
+═══════════════════════════════════════════════════════════════════════════
+## PARTE 3 — admin.ts: endpoints da config
+═══════════════════════════════════════════════════════════════════════════
+
+Arquivo: `artifacts/api-server/src/routes/admin.ts`
+
+### 3a. Imports — LOCALIZAR:
+```ts
+import { usersTable, activityLogTable, artTemplatesTable, solicitacoesTable, userTipoAssignmentsTable } from "@workspace/db";
+```
+SUBSTITUIR por:
+```ts
+import { usersTable, activityLogTable, artTemplatesTable, solicitacoesTable, userTipoAssignmentsTable, tipoClickupListTable } from "@workspace/db";
+```
+E ADICIONAR um import do helper de validação:
+```ts
+import { validateClickUpList } from "./clickup";
+```
+
+### 3b. Rotas — ADICIONAR (junto das outras rotas admin):
+```ts
+// Lista todos os forms + a lista do ClickUp configurada para cada um
+router.get("/clickup-lists", requireRole("admin"), async (_req, res) => {
+  try {
+    const configs = await db.select().from(tipoClickupListTable);
+    const byTipo = new Map(configs.map(c => [c.tipo, c]));
+    // getFormSchemaList() já é importado neste arquivo; ajuste os nomes de campo
+    // (tipo/id, label) conforme o shape real retornado por ele.
+    const forms = getFormSchemaList();
+    const items = forms.map((f: any) => {
+      const tipo = f.tipo ?? f.id;
+      const cfg = byTipo.get(tipo);
+      return { tipo, label: f.label ?? tipo, list_id: cfg?.list_id ?? "", list_name: cfg?.list_name ?? null };
+    });
+    const def = byTipo.get("_default");
+    res.json({
+      default: { list_id: def?.list_id ?? "", list_name: def?.list_name ?? null },
+      items,
+    });
+  } catch (err) {
+    logger.error({ err }, "clickup-lists GET falhou");
+    res.status(500).json({ error: "Erro ao carregar configuração de listas." });
+  }
+});
+
+// Testa um list_id no ClickUp (botão "Validar")
+router.post("/clickup-lists/validate", requireRole("admin"), async (req, res) => {
+  const listId = String(req.body?.list_id ?? "").trim();
+  if (!listId) return res.status(400).json({ ok: false, error: "Informe o ID da lista." });
+  const result = await validateClickUpList(listId);
+  res.json(result);
+});
+
+// Salva (upsert) a lista de um tipo — valida no ClickUp antes de gravar.
+// list_id vazio = remove a config (o tipo volta a usar o default).
+router.put("/clickup-lists", requireRole("admin"), async (req, res) => {
+  const tipo = String(req.body?.tipo ?? "").trim();
+  const listId = String(req.body?.list_id ?? "").trim();
+  if (!tipo) return res.status(400).json({ error: "tipo é obrigatório." });
+  try {
+    if (!listId) {
+      await db.delete(tipoClickupListTable).where(eq(tipoClickupListTable.tipo, tipo));
+      return res.json({ ok: true, removed: true });
+    }
+    const v = await validateClickUpList(listId);
+    if (!v.ok) return res.status(400).json({ error: v.error || "Lista inválida no ClickUp." });
+    await db.insert(tipoClickupListTable)
+      .values({ tipo, list_id: listId, list_name: v.name ?? null, updated_at: new Date() })
+      .onConflictDoUpdate({
+        target: tipoClickupListTable.tipo,
+        set: { list_id: listId, list_name: v.name ?? null, updated_at: new Date() },
+      });
+    res.json({ ok: true, list_name: v.name });
+  } catch (err) {
+    logger.error({ err, tipo }, "clickup-lists PUT falhou");
+    res.status(500).json({ error: "Erro ao salvar." });
+  }
+});
+```
+(`eq` e `logger` já são importados em admin.ts.)
+
+═══════════════════════════════════════════════════════════════════════════
+## PARTE 4 — Frontend: tela de admin (seguir o estilo das páginas existentes)
+═══════════════════════════════════════════════════════════════════════════
+
+Criar `artifacts/api-server/public/admin-clickup-lists.html`, espelhando a
+estrutura/visual de `admin.html` (mesmo shell, auth, requireAdmin no topo via
+Auth.isAdmin(), brand tokens). Adicionar um item no menu lateral (em `shell.js`)
+apontando para essa página — algo como "Listas do ClickUp", visível só para admin.
+
+Comportamento da tela:
+- Ao abrir, faz `GET /api/admin/clickup-lists`.
+- Mostra primeiro uma linha de destaque "Lista padrão (Geral)" que mapeia o
+  pseudo-tipo `_default`. Depois, uma linha por form (item de `items`), com o
+  label do form, um input de texto para o `list_id`, e (se já configurado) o
+  `list_name` ao lado como confirmação.
+- Cada linha tem dois botões:
+  - "Validar": faz `POST /api/admin/clickup-lists/validate` com `{ list_id }`.
+    Em sucesso, mostra ✓ + o `name` retornado. Em erro, mostra o `error` em
+    vermelho. (Não grava nada — só testa.)
+  - "Salvar": faz `PUT /api/admin/clickup-lists` com `{ tipo, list_id }`
+    (para a linha padrão, `tipo = "_default"`). O backend revalida antes de
+    gravar; se vier erro, mostra a mensagem e NÃO marca como salvo.
+- Dica de UX: um texto curto explicando que o ID da lista está na URL do ClickUp
+  (`app.clickup.com/TEAM_ID/v/l/`**`LIST_ID`**) e que vários forms podem usar a
+  mesma lista (basta colar o mesmo ID).
+- Campo vazio + Salvar = remove a config daquele tipo (volta a usar a padrão).
+
+═══════════════════════════════════════════════════════════════════════════
+## VALIDAÇÃO
+═══════════════════════════════════════════════════════════════════════════
+1. `pnpm run build` compila sem erro (atenção ao getListId virar async + await).
+2. Subir: a tabela `tipo_clickup_list` é criada (log de init sem erro).
+3. Abrir a tela: lista todos os forms + a linha "Lista padrão (Geral)".
+4. Colar o ID real da lista Geral na linha padrão → "Validar" mostra o nome da
+   lista → "Salvar" grava.
+5. Enviar uma solicitação de "Arte de Divulgação" (sem lista própria) → cai na
+   default → task criada no ClickUp (conferir no log "ClickUp: lista default
+   (banco)" e a task aparecendo na lista certa).
+6. Configurar uma lista própria para um tipo → nova solicitação desse tipo vai
+   pra lista configurada ("ClickUp: lista por tipo (banco)").
+7. Tentar salvar um ID inválido (ex.: um ID de usuário) → recusado com mensagem
+   clara, sem gravar.
+
+## NÃO FAÇA
+- Não apagar as constantes/variáveis `CLICKUP_LIST_*` ainda — são o fallback
+  final. Só remover do Railway DEPOIS que a tabela estiver populada e testada.
+- Não tornar a validação bloqueante na criação da task (a task usa o que está no
+  banco; a validação é só no momento de salvar a config na tela).
+- Não mexer em `getAssigneesForTipo` nem na config de assignees (já está pronta).

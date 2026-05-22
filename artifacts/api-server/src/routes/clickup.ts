@@ -1,11 +1,37 @@
 import { logger } from "../lib/logger";
 import { randomInt } from "crypto";
-import { db, usersTable, userTipoAssignmentsTable } from "@workspace/db";
+import { db, usersTable, userTipoAssignmentsTable, tipoClickupListTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
 import { mapClickUpStatus } from "../config/clickup-status";
 import { FORM_SCHEMAS, SETOR_CODIGO_MAP } from "../config/form-schemas";
 
 const CLICKUP_API_TOKEN = process.env.CLICKUP_API_TOKEN || "";
+
+// Valida um list_id contra o ClickUp usando o token atual.
+// Usado pela tela de admin (botão Validar) e pelo save (PUT).
+export async function validateClickUpList(
+  listId: string
+): Promise<{ ok: boolean; name?: string; error?: string }> {
+  if (!CLICKUP_API_TOKEN) return { ok: false, error: "Token do ClickUp não configurado no servidor." };
+  if (!/^\d+$/.test(listId)) return { ok: false, error: "O ID da lista deve conter apenas números." };
+  try {
+    const r = await fetch(`https://api.clickup.com/api/v2/list/${listId}`, {
+      headers: { Authorization: CLICKUP_API_TOKEN },
+    });
+    if (!r.ok) {
+      const body = await r.text().catch(() => "");
+      let msg = `ClickUp respondeu ${r.status}`;
+      if (body.includes("OAUTH_027") || body.includes("not authorized"))
+        msg = "Essa lista não existe ou o token não tem acesso a ela (verifique se é um ID de LISTA, não de usuário).";
+      else if (r.status === 404) msg = "Lista não encontrada no ClickUp.";
+      return { ok: false, error: msg };
+    }
+    const data = await r.json().catch(() => ({} as any));
+    return { ok: true, name: data?.name };
+  } catch (err) {
+    return { ok: false, error: "Falha de rede ao consultar o ClickUp." };
+  }
+}
 
 const CLICKUP_LIST_EVENTOS   = process.env.CLICKUP_LIST_EVENTOS   || "901303299333";
 const CLICKUP_LIST_GERAL     = process.env.CLICKUP_LIST_GERAL     || "901300673533";
@@ -1063,20 +1089,31 @@ function buildGeneralCustomFieldsArray(
 // Core public functions
 // ─────────────────────────────────────────────
 
-function getListId(tipoSolicitacao: string): string {
-  if (tipoSolicitacao === "eventos") {
-    logger.info({ tipo: tipoSolicitacao, listId: CLICKUP_LIST_EVENTOS }, "ClickUp: roteando para Lista Eventos");
-    return CLICKUP_LIST_EVENTOS;
+async function getListId(tipoSolicitacao: string): Promise<string> {
+  try {
+    // 1) lista específica configurada para este tipo
+    const [row] = await db
+      .select({ list_id: tipoClickupListTable.list_id })
+      .from(tipoClickupListTable)
+      .where(eq(tipoClickupListTable.tipo, tipoSolicitacao));
+    if (row?.list_id) {
+      logger.info({ tipo: tipoSolicitacao, listId: row.list_id }, "ClickUp: lista por tipo (banco)");
+      return row.list_id;
+    }
+    // 2) fallback configurável: linha "_default" (Geral), também editável na interface
+    const [def] = await db
+      .select({ list_id: tipoClickupListTable.list_id })
+      .from(tipoClickupListTable)
+      .where(eq(tipoClickupListTable.tipo, "_default"));
+    if (def?.list_id) {
+      logger.info({ tipo: tipoSolicitacao, listId: def.list_id }, "ClickUp: lista default (banco)");
+      return def.list_id;
+    }
+  } catch (err) {
+    logger.error({ err, tipo: tipoSolicitacao }, "getListId: erro ao ler config do banco");
   }
-  if (tipoSolicitacao === "brindes") {
-    logger.info({ tipo: tipoSolicitacao, listId: CLICKUP_LIST_BRINDES }, "ClickUp: roteando para Lista Brindes");
-    return CLICKUP_LIST_BRINDES;
-  }
-  if (tipoSolicitacao === "patrocinio") {
-    logger.info({ tipo: tipoSolicitacao, listId: CLICKUP_LIST_PATROCINIO }, "ClickUp: roteando para Lista Patrocínios");
-    return CLICKUP_LIST_PATROCINIO;
-  }
-  logger.info({ tipo: tipoSolicitacao, listId: CLICKUP_LIST_GERAL }, "ClickUp: roteando para Lista Geral");
+  // 3) fallback final hardcoded — segurança pra nunca enviar lista vazia
+  logger.warn({ tipo: tipoSolicitacao, listId: CLICKUP_LIST_GERAL }, "ClickUp: usando lista default hardcoded (sem config no banco)");
   return CLICKUP_LIST_GERAL;
 }
 
@@ -1158,7 +1195,7 @@ export async function createClickUpTask(
   }
   const subtipo = solicitacao.subtipo || "";
   const safeArquivos = arquivos || {};
-  const listId = getListId(tipo);
+  const listId = await getListId(tipo);
 
   let taskName: string;
   let description: string;

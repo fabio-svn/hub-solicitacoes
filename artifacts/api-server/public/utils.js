@@ -26,7 +26,7 @@ window.formLockUI = function(btn) {
   if (form) form.querySelectorAll('input, select, textarea').forEach(function(el) { el.disabled = true; });
   const sa = document.getElementById('formStatusArea');
   if (sa) {
-    sa.innerHTML = '<div class="form-status form-status-loading"><span class="spinner"></span><span>Gerando sua arte... aguarde</span></div>';
+    sa.innerHTML = '<div class="form-status form-status-loading"><span class="spinner"></span><span>Enviando sua solicitação... aguarde</span></div>';
     sa.style.display = 'block';
   }
   const errEl = document.getElementById('submitError');

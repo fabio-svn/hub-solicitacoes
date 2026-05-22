@@ -117,17 +117,6 @@ function normalizeFormDados(
     }
   }
 
-  // Alias snake_case automático: pra QUALQUER campo camelCase que ainda não
-  // tenha um equivalente snake_case, cria o alias derivado (ex.: nomeAssinatura
-  // → nome_assinatura). Os casos irregulares continuam cobertos pelo KEY_MAP
-  // acima (que já rodou). Apenas ADICIONA chaves — nunca sobrescreve nem remove
-  // valores existentes, então é seguro pra quem lê em camelCase.
-  for (const key of Object.keys(out)) {
-    if (!/[a-z][A-Z]/.test(key)) continue;
-    const snake = key.replace(/([a-z])([A-Z])/g, "$1_$2").toLowerCase();
-    if (!(snake in out)) out[snake] = out[key];
-  }
-
   return out;
 }
 

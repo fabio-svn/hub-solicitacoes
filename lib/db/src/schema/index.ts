@@ -60,6 +60,15 @@ export const userTipoAssignmentsTable = pgTable("user_tipo_assignments", {
 
 export type UserTipoAssignment = typeof userTipoAssignmentsTable.$inferSelect;
 
+export const tipoClickupListTable = pgTable("tipo_clickup_list", {
+  id: serial("id").primaryKey(),
+  tipo: varchar("tipo", { length: 100 }).notNull().unique(),
+  list_id: varchar("list_id", { length: 50 }).notNull(),
+  list_name: varchar("list_name", { length: 255 }),
+  updated_at: timestamp("updated_at").defaultNow().notNull(),
+});
+export type TipoClickupList = typeof tipoClickupListTable.$inferSelect;
+
 export const artTemplatesTable = pgTable("art_templates", {
   id: serial("id").primaryKey(),
   tipo: varchar("tipo", { length: 100 }).notNull(),
