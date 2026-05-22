@@ -195,7 +195,8 @@
     .resize-handle.sw { bottom: -5px; left: -5px; cursor: sw-resize; }
     .resize-handle.se { bottom: -5px; right: -5px; cursor: se-resize; }
     .layer-box:not(.selected):not(:hover) .resize-handle { display: none; }
-    .canvas-preview-img { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: fill; z-index: 1; display: none; }
+    .canvas-preview-img { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: fill; z-index: 1; display: none; pointer-events: none; }
+    #canvasWrap.live-preview-active .layer-content-preview { opacity: 0; }
     .no-template { display: flex; align-items: center; justify-content: flex: 1; color: rgba(255,255,255,0.3); font-size: 0.9rem; }
 
     /* ── Props panel ── */
@@ -1683,7 +1684,7 @@
         } else {
           h = 80 * SCALE;
         }
-        div.style.cssText = `left:${x}px;top:${y}px;width:${w}px;height:${h < 18 ? 18 : h}px;z-index:${total - idx};`;
+        div.style.cssText = `left:${x}px;top:${y}px;width:${w}px;height:${h < 18 ? 18 : h}px;z-index:${total - idx + 10};`;
         const lbl = document.createElement('div');
         lbl.className = 'layer-label';
         lbl.textContent = layer.name || layer.id;
@@ -1700,11 +1701,13 @@
             shapeHtml = `<svg width="100%" height="100%" viewBox="0 0 ${layer.w} ${layer.h}" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg"><rect x="${sw/2}" y="${sw/2}" width="${Math.max(0,layer.w-sw)}" height="${Math.max(0,layer.h-sw)}" rx="${rx}" ry="${rx}" fill="${fill}" stroke="${stroke}" stroke-width="${sw}"/></svg>`;
           }
           const svgWrap = document.createElement('div');
+          svgWrap.className = 'layer-content-preview';
           svgWrap.style.cssText = 'position:absolute;inset:0;pointer-events:none';
           svgWrap.innerHTML = shapeHtml;
           div.appendChild(svgWrap);
         } else if (layer.type === 'text-line' || layer.type === 'text-block') {
           const txtPreview = document.createElement('div');
+          txtPreview.className = 'layer-content-preview';
           const scaledSize = Math.max(8, Math.min((layer.font_size || 24) * SCALE, h * 0.85));
           const align = layer.align || layer.text_align || 'left';
           const valign = layer.vertical_align || 'top';
@@ -1735,6 +1738,7 @@
           div.appendChild(txtPreview);
         } else if (layer.type === 'image') {
           const imgWrap = document.createElement('div');
+          imgWrap.className = 'layer-content-preview';
           imgWrap.style.cssText = 'position:absolute;inset:0;pointer-events:none;overflow:hidden;display:flex;align-items:center;justify-content:center;';
           const src = (layer.source && (layer.source.url || layer.source.static_url)) || layer.url || '';
           if (src) {
@@ -2368,7 +2372,13 @@
       btn.textContent = liveEnabled ? '● Live' : '○ Live';
       const manualBtn = document.getElementById('manualPreviewBtn');
       if (manualBtn) manualBtn.style.display = liveEnabled ? 'none' : '';
-      if (liveEnabled) scheduleLivePreview(0);
+
+      if (liveEnabled) {
+        scheduleLivePreview(0);
+      } else {
+        document.getElementById('previewImg').style.display = 'none';
+        document.getElementById('canvasWrap').classList.remove('live-preview-active');
+      }
     }
     function scheduleLivePreview(delay = 700) {
       if (!liveEnabled) return;
@@ -2394,6 +2404,9 @@
         const oldUrl = img.src;
         img.src = URL.createObjectURL(blob);
         img.style.display = 'block';
+
+        document.getElementById('canvasWrap').classList.add('live-preview-active');
+
         if (oldUrl && oldUrl.startsWith('blob:')) URL.revokeObjectURL(oldUrl);
       } catch (e) {
         if (e.name !== 'AbortError') console.error('[live preview]', e);
