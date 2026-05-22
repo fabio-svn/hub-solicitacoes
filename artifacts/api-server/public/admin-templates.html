@@ -197,7 +197,7 @@
     .layer-box:not(.selected):not(:hover) .resize-handle { display: none; }
     .canvas-preview-img { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: fill; z-index: 1; display: none; pointer-events: none; }
     #canvasWrap.live-preview-active .layer-content-preview { opacity: 0; }
-    .no-template { display: flex; align-items: center; justify-content: flex: 1; color: rgba(255,255,255,0.3); font-size: 0.9rem; }
+    .no-template { display: flex; align-items: center; justify-content: center; flex: 1; color: rgba(255,255,255,0.3); font-size: 0.9rem; }
 
     /* ── Props panel ── */
     .props-panel { border-right: none; border-left: 1px solid #e8e2dc; display: flex; flex-direction: column; overflow: hidden; }
@@ -1712,12 +1712,21 @@
           const align = layer.align || layer.text_align || 'left';
           const valign = layer.vertical_align || 'top';
           const vAlignMap = { top: 'flex-start', middle: 'center', bottom: 'flex-end' };
+          // Mapeia nomes "Light" (que existem como arquivo no servidor, mas não
+          // como fonte carregada no navegador) → família carregada + peso, APENAS
+          // para o preview do overlay. NÃO altera o layer.font_family salvo.
+          const _fontMap = {
+            'Taviraj Light':     { fam: "'Taviraj'",     w: 300 },
+            'Nunito Sans Light': { fam: "'Nunito Sans'", w: 300 },
+          };
+          const _pf = _fontMap[layer.font_family] || { fam: layer.font_family ? `'${layer.font_family}'` : '', w: 400 };
+          const _weight = layer.font_weight || (layer.bold ? 700 : _pf.w);
           txtPreview.style.cssText = [
             'position:absolute;inset:0;pointer-events:none;overflow:hidden;',
-            `font-family:${layer.font_family ? `'${layer.font_family}',` : ''}sans-serif;`,
+            `font-family:${_pf.fam ? _pf.fam + ',' : ''}sans-serif;`,
             `font-size:${scaledSize}px;`,
             `color:${layer.color || '#000'};`,
-            `font-weight:${layer.font_weight || layer.bold ? '700' : '400'};`,
+            `font-weight:${_weight};`,
             layer.italic ? 'font-style:italic;' : '',
             `text-align:${align};`,
             `display:flex;flex-direction:column;`,
@@ -1978,7 +1987,6 @@
         .forEach(el => el.classList.remove('drag-over-top', 'drag-over-bottom'));
       _draggedLayerId = null;
     }
-    function setupLayerListDrag() {}
 
     // ── Props panel ──────────────────────────────────────────────
     function showProps(id) {
@@ -2466,7 +2474,6 @@
     });
 
     init();
-    setupLayerListDrag();
 
     // ── Asset Library ─────────────────────────────────────────────
     let _assetLibraryCallback = null;
