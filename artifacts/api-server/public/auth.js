@@ -151,28 +151,6 @@ const Auth = {
       } catch {}
     }
 
-    // Verificar e exibir banner de impersonação
-    const impEmail = sessionStorage.getItem('svn_impersonate');
-    if (impEmail) {
-      const adminStyle = document.createElement('style');
-      adminStyle.textContent = '#tabAdmin, [data-admin-only], .admin-only { display: none !important; }';
-      document.head.appendChild(adminStyle);
-
-      if (!document.getElementById('impersonarBanner')) {
-        const banner = document.createElement('div');
-        banner.id = 'impersonarBanner';
-        banner.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:9999;background:#7c3aed;color:white;padding:8px 20px;display:flex;align-items:center;justify-content:center;gap:10px;font-size:0.82rem;font-weight:600;font-family:"Nunito Sans",sans-serif';
-        banner.innerHTML = `
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
-          Visualizando como: <strong>${impEmail}</strong>
-          <button onclick="window._sairImpersonar()" style="background:rgba(255,255,255,0.2);border:none;color:white;padding:3px 10px;border-radius:6px;cursor:pointer;font-family:'Nunito Sans',sans-serif;font-weight:600;font-size:0.78rem;margin-left:6px">
-            Sair ✕
-          </button>`;
-        document.body.prepend(banner);
-        document.body.style.paddingTop = (parseInt(document.body.style.paddingTop || '0') + 40) + 'px';
-      }
-    }
-
     this._saveCache();
     return this.user;
   },
