@@ -236,7 +236,8 @@ const Auth = {
   },
 
   isAdmin() {
-    return this.user?.role === 'admin' || this.user?.role === 'gestor';
+    if (this.user) return this.user.role === 'admin' || this.user.role === 'gestor';
+    try { return JSON.parse(localStorage.getItem('svn_layout_state') || '{}').isAdmin === true; } catch { return false; }
   },
 
   getInitials() {

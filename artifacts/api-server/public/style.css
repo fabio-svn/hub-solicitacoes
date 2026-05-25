@@ -14,10 +14,12 @@
   --dark-bg-to: #0d0a09;
 }
 
-/* Reserva visual do sidebar admin — evita layout shift antes do Shell renderizar */
+/* Reserva visual do sidebar admin — evita layout shift antes do Shell renderizar.
+   opacity:0 oculta o flash de reflow; volta a 1 quando data-pre-shell é removido. */
 html[data-pre-shell="admin"] body {
   padding-left: 232px;
-  transition: padding-left 0.15s ease;
+  opacity: 0;
+  transition: padding-left 0.15s ease, opacity 0.15s ease;
 }
 @media (max-width: 768px) {
   html[data-pre-shell="admin"] body { padding-left: 0; }

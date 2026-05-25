@@ -6,6 +6,15 @@ window.Shell = {
     this._activeRoute = activeRoute;
     this._onBeforeNavigate = onBeforeNavigate || null;
 
+    // Reserva imediata: se localStorage indica admin e o atributo ainda não foi
+    // setado pelo script inline do <head>, garantir agora antes de qualquer layout.
+    try {
+      const cached = JSON.parse(localStorage.getItem('svn_layout_state') || '{}');
+      if (cached.isAdmin && !document.documentElement.hasAttribute('data-pre-shell')) {
+        document.documentElement.setAttribute('data-pre-shell', 'admin');
+      }
+    } catch {}
+
     const isAdmin = typeof Auth !== 'undefined' && Auth.isAdmin();
     const isImpersonating = !!sessionStorage.getItem('svn_impersonate');
     const collapsed = localStorage.getItem('svn_sidebar_collapsed') === 'true';
@@ -29,12 +38,14 @@ window.Shell = {
       contentEl.parentNode.removeChild(contentEl);
     }
 
-    // Remover hint pré-shell (CSS de reserva)
-    document.documentElement.removeAttribute('data-pre-shell');
     document.body.prepend(shellEl);
 
     const main = shellEl.querySelector('#appMain');
     if (contentEl) main.appendChild(contentEl);
+
+    // Remover atributo pré-shell APÓS o shell e o conteúdo já estarem no DOM,
+    // assim o CSS de reserva (padding-left + opacity) dissolve suavemente.
+    document.documentElement.removeAttribute('data-pre-shell');
 
     this._renderImpersonationBanner(isImpersonating);
     this._bindEvents();
