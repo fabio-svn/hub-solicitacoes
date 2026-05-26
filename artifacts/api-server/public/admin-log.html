@@ -213,7 +213,7 @@
         window.location.href = '/auth/login?redirect=/admin-log.html';
         return;
       }
-      if (!Auth.isAdmin()) {
+      if (!Auth.isStaff()) {
         window.location.href = '/dashboard.html';
         return;
       }

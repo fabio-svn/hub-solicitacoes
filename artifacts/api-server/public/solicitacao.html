@@ -636,6 +636,7 @@
       // ── Layout clean para todos os tipos de automação ──────────────
       if (isTipoAutomacao(item.tipo_solicitacao)) {
         const isAdm = typeof Auth !== 'undefined' && Auth.isAdmin && Auth.isAdmin();
+        const isStaff = typeof Auth !== 'undefined' && Auth.isStaff && Auth.isStaff();
 
         const tEl = document.getElementById('solTitulo');
         tEl.textContent = tipoLabel;
@@ -720,15 +721,16 @@
       renderDados(dados, item);
 
       const isAdm = typeof Auth !== 'undefined' && Auth.isAdmin && Auth.isAdmin();
+      const isStaff = typeof Auth !== 'undefined' && Auth.isStaff && Auth.isStaff();
       document.getElementById('solRodape').innerHTML =
         `<span>ID interno: ${item.id}</span>` +
         (dados.idSolicitacao ? `<span>Código: ${esc(dados.idSolicitacao)}</span>` : '') +
-        (!isAdm && item.clickup_task_id ? `<span>ClickUp: ${esc(item.clickup_task_id)}</span>` : '');
+        (!isStaff && item.clickup_task_id ? `<span>ClickUp: ${esc(item.clickup_task_id)}</span>` : '');
 
       const headerRight = document.getElementById('solHeaderRight');
       headerRight.innerHTML =
         '<span class="sol-status-badge" id="solStatus" style="background:' + (statusObj.bg||'#f1f5f9') + ';color:' + (statusObj.text||'#475569') + '">' + esc(statusObj.label) + '</span>' +
-        (isAdm && item.clickup_url ? `
+        (isStaff && item.clickup_url ? `
           <a href="${esc(item.clickup_url)}" target="_blank" rel="noopener"
              title="Abrir no ClickUp"
              style="display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:8px;background:rgba(137,48,253,0.08);text-decoration:none;transition:background 0.15s"

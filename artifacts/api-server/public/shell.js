@@ -15,7 +15,8 @@ window.Shell = {
       }
     } catch {}
 
-    const isAdmin = typeof Auth !== 'undefined' && Auth.isAdmin();
+    const hasSidebar = typeof Auth !== 'undefined' && Auth.hasSidebar();
+    const role = typeof Auth !== 'undefined' ? Auth.getUserRole() : 'colaborador';
     const isImpersonating = !!sessionStorage.getItem('svn_impersonate');
     const collapsed = localStorage.getItem('svn_sidebar_collapsed') === 'true';
 
@@ -24,14 +25,14 @@ window.Shell = {
 
     const shellEl = document.createElement('div');
     shellEl.className = 'app-shell'
-      + (isAdmin ? '' : ' no-sidebar')
+      + (hasSidebar ? '' : ' no-sidebar')
       + (collapsed ? ' sidebar-collapsed' : '')
       + (isImpersonating ? ' is-impersonating' : '');
-    if (isAdmin) shellEl.setAttribute('data-is-admin', 'true');
+    if (hasSidebar) shellEl.setAttribute('data-is-admin', 'true');
 
     shellEl.innerHTML =
-      this._buildHeader(isAdmin) +
-      (isAdmin ? this._buildSidebar(activeRoute) : '') +
+      this._buildHeader(hasSidebar) +
+      (hasSidebar ? this._buildSidebar(activeRoute, role) : '') +
       '<main class="app-main" id="appMain"></main>';
 
     if (contentEl && contentEl.parentNode) {
@@ -126,13 +127,21 @@ window.Shell = {
     </header>`;
   },
 
-  _buildSidebar(activeRoute) {
+  _buildSidebar(activeRoute, role) {
     const nav = [
       {
         route: 'dashboard',
         href: '/dashboard.html',
         icon: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="13" y2="16"/></svg>',
         label: 'Minhas solicitações',
+        roles: ['admin', 'gestor', 'capital_humano'],
+      },
+      {
+        route: 'capital-humano',
+        href: '/capital-humano.html',
+        icon: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>',
+        label: 'Capital Humano',
+        roles: ['admin', 'capital_humano'],
       },
     ];
 
@@ -142,38 +151,47 @@ window.Shell = {
         href: '/admin.html',
         icon: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>',
         label: 'Painel Admin',
+        roles: ['admin', 'gestor'],
       },
       {
         route: 'admin-log',
         href: '/admin-log.html',
         icon: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>',
         label: 'Log de atividade',
+        roles: ['admin', 'gestor'],
       },
       {
         route: 'admin-templates',
         href: '/admin-templates.html',
         icon: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>',
         label: 'Templates de arte',
+        roles: ['admin'],
       },
       {
         route: 'admin-assets',
         href: '/admin-assets.html',
         icon: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>',
         label: 'Assets',
+        roles: ['admin'],
       },
       {
         route: 'admin-usuarios',
         href: '/admin-usuarios.html',
         icon: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>',
         label: 'Usuários',
+        roles: ['admin'],
       },
       {
         route: 'admin-clickup-lists',
         href: '/admin-clickup-lists.html',
         icon: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>',
         label: 'Listas do ClickUp',
+        roles: ['admin'],
       },
     ];
+
+    const visibleNav = nav.filter(it => !it.roles || it.roles.includes(role));
+    const visibleAdminItems = adminItems.filter(it => !it.roles || it.roles.includes(role));
 
     const buildLink = (item) => {
       const isActive = item.route === activeRoute;
@@ -185,11 +203,11 @@ window.Shell = {
 
     return `<aside class="app-sidebar" id="appSidebar">
       <nav class="sidebar-nav">
-        ${nav.map(buildLink).join('')}
-        <div class="sidebar-section">
+        ${visibleNav.map(buildLink).join('')}
+        ${visibleAdminItems.length ? `<div class="sidebar-section">
           <div class="sidebar-section-title">Administração</div>
-          ${adminItems.map(buildLink).join('')}
-        </div>
+          ${visibleAdminItems.map(buildLink).join('')}
+        </div>` : ''}
       </nav>
     </aside>`;
   },

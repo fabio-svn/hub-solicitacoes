@@ -4,7 +4,7 @@ import os from "os";
 import { db } from "@workspace/db";
 import { solicitacoesTable, arquivosTable, activityLogTable } from "@workspace/db";
 import { eq, desc, and, ne, sql, inArray } from "drizzle-orm";
-import { requireAuth } from "../middleware/auth.middleware";
+import { requireAuth, requireRole } from "../middleware/auth.middleware";
 import { createClickUpTask, getClickUpTaskStatus, type ArquivosMap } from "./clickup";
 import { uploadToR2, deleteFromR2 } from "./r2";
 import { gerarArteParaSolicitacao } from "../services/art-generator";
@@ -1082,7 +1082,7 @@ router.get("/admin/historico", requireAuth, async (req, res): Promise<void> => {
   }
 });
 
-router.delete("/solicitacoes/:id", requireAuth, async (req, res): Promise<void> => {
+router.delete("/solicitacoes/:id", requireAuth, requireRole("admin"), async (req, res): Promise<void> => {
   try {
     const user = req.session.user!;
     if (user.role !== "admin" && user.role !== "gestor") {
@@ -1167,7 +1167,7 @@ router.get("/solicitacoes/:id/avaliacao", requireAuth, async (req, res): Promise
   }
 });
 
-router.post("/solicitacoes/massa-delete", requireAuth, async (req, res): Promise<void> => {
+router.post("/solicitacoes/massa-delete", requireAuth, requireRole("admin"), async (req, res): Promise<void> => {
   try {
     const user = req.session.user!;
     if (user.role !== "admin" && user.role !== "gestor") {

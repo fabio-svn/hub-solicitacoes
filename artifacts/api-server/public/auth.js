@@ -165,7 +165,7 @@ const Auth = {
       }));
       if (this.user) {
         localStorage.setItem('svn_layout_state', JSON.stringify({
-          isAdmin: this.isAdmin(),
+          isAdmin: this.hasSidebar(),
           userName: this.getUserName(),
           initials: this.getInitials(),
         }));
@@ -236,8 +236,14 @@ const Auth = {
   },
 
   isAdmin() {
-    if (this.user) return this.user.role === 'admin' || this.user.role === 'gestor';
-    try { return JSON.parse(localStorage.getItem('svn_layout_state') || '{}').isAdmin === true; } catch { return false; }
+    return this.user?.role === 'admin';
+  },
+  isStaff() {
+    return this.user?.role === 'admin' || this.user?.role === 'gestor';
+  },
+  hasSidebar() {
+    const r = this.user?.role;
+    return r === 'admin' || r === 'gestor' || r === 'capital_humano';
   },
 
   getInitials() {
