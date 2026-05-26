@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+  <meta name="theme-color" content="#AC3631" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script>(function(){try{const s=JSON.parse(localStorage.getItem('svn_layout_state')||'{}');if(s.isAdmin)document.documentElement.dataset.preShell='admin';}catch(e){}})()</script>
+  <title>Atualização de Books — Hub SVN</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap">
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .chf-wrap { max-width: 640px; margin: 0 auto; padding: 32px 24px; }
+    .chf-title { font-family: 'Taviraj', serif; font-weight: 300; font-size: 1.7rem; margin: 0 0 4px; color: var(--carbon-black,#221b19); }
+    .chf-sub { font-size: 0.88rem; color: rgba(34,27,25,0.55); margin: 0 0 26px; }
+    .chf-field { margin-bottom: 20px; }
+    .chf-label { display: block; font-size: 0.88rem; font-weight: 600; color: var(--carbon-black,#221b19); margin-bottom: 7px; }
+    .chf-input { width: 100%; box-sizing: border-box; padding: 11px 13px; border: 1.5px solid #e8e2dc; border-radius: 10px; font-size: 0.92rem; font-family: 'Nunito Sans', sans-serif; color: #221b19; background: #fff; }
+    .chf-input:focus { outline: none; border-color: #AC3631; }
+    .chf-input.field-invalid { border-color: #b91c1c; }
+    textarea.chf-input { min-height: 90px; resize: vertical; }
+    .chf-error { color: #b91c1c; font-size: 0.78rem; margin-top: 5px; }
+    .chf-checks { display: flex; flex-direction: column; gap: 9px; }
+    .chf-check { display: flex; align-items: center; gap: 9px; padding: 11px 13px; border: 1.5px solid #e8e2dc; border-radius: 10px; cursor: pointer; font-size: 0.9rem; color: #221b19; transition: border-color .12s; }
+    .chf-check:hover { border-color: #cfc6bd; }
+    .chf-check input { width: 17px; height: 17px; accent-color: #AC3631; cursor: pointer; }
+    .chf-checks.field-invalid .chf-check { border-color: #b91c1c; }
+    .chf-submit { background: #AC3631; color: #fff; border: none; padding: 12px 26px; border-radius: 10px; font-size: 0.95rem; font-weight: 700; cursor: pointer; font-family: 'Nunito Sans', sans-serif; margin-top: 6px; }
+    .chf-submit:hover { background: #b44b42; }
+    .chf-submit:disabled { opacity: 0.6; cursor: default; }
+    #submitError { display: none; background: #fef2f2; color: #b91c1c; border: 1px solid #fecaca; border-radius: 10px; padding: 11px 14px; font-size: 0.85rem; margin-bottom: 16px; }
+  </style>
+</head>
+<body class="page-light">
+  <div id="pageContent">
+    <div class="chf-wrap">
+      <h1 class="chf-title">Atualização de Books</h1>
+      <p class="chf-sub">Solicite a atualização de um ou mais books.</p>
+      <div id="submitError"></div>
+
+      <div class="chf-field">
+        <label class="chf-label">Quais books você quer atualizar? *</label>
+        <div class="chf-checks" id="booksGroup">
+          <label class="chf-check"><input type="checkbox" name="book" value="Book SVN"> Book SVN</label>
+          <label class="chf-check"><input type="checkbox" name="book" value="Book Academia de Assessores"> Book Academia de Assessores</label>
+          <label class="chf-check"><input type="checkbox" name="book" value="Book Contrato Social"> Book Contrato Social</label>
+          <label class="chf-check"><input type="checkbox" name="book" value="Book T.I."> Book T.I.</label>
+        </div>
+        <div class="chf-error" id="booksError" style="display:none"></div>
+      </div>
+
+      <div class="chf-field">
+        <label class="chf-label" for="oQueAtualizar">O que precisa ser atualizado? *</label>
+        <textarea class="chf-input" id="oQueAtualizar" required placeholder="Descreva o que deve ser alterado em cada book…"></textarea>
+        <div class="chf-error" style="display:none"></div>
+      </div>
+
+      <div class="chf-field">
+        <label class="chf-label" for="arquivo">Faça o upload dos arquivos de apoio. *</label>
+        <input class="chf-input" type="file" id="arquivo" multiple required>
+        <div class="chf-error" style="display:none"></div>
+      </div>
+
+      <div class="chf-field">
+        <label class="chf-label" for="dataPronto">Em qual data o book precisa estar pronto para ser divulgado? *</label>
+        <input class="chf-input" type="date" id="dataPronto" required>
+        <div class="chf-error" style="display:none"></div>
+      </div>
+
+      <div class="chf-field">
+        <label class="chf-label" for="observacoes">Deixe aqui suas observações finais (opcional)</label>
+        <textarea class="chf-input" id="observacoes" placeholder="Observações…"></textarea>
+      </div>
+
+      <button class="chf-submit" id="btnSubmit" onclick="submitForm()">Enviar</button>
+    </div>
+  </div>
+
+  <script src="config.js"></script>
+  <script src="auth.js"></script>
+  <script src="shell.js"></script>
+  <script>
+    const TIPO = 'ch-atualizacao-books';
+
+    async function init() {
+      try { if (typeof _configReady !== 'undefined') await _configReady; } catch (e) {}
+      await Auth.init();
+      if (!Auth.isAuthenticated()) { window.location.href = '/auth/login?redirect=/form-ch-atualizacao-books.html'; return; }
+      const role = Auth.getUserRole();
+      if (role !== 'capital_humano' && role !== 'admin') { window.location.href = '/dashboard.html'; return; }
+      if (typeof Shell !== 'undefined' && Shell.render) {
+        Shell.render({ activeRoute: 'capital-humano', contentEl: document.getElementById('pageContent') });
+      }
+    }
+
+    function getSelectedBooks() {
+      return Array.prototype.slice.call(document.querySelectorAll('input[name="book"]:checked')).map(function (c) { return c.value; });
+    }
+
+    function validateRequiredFields() {
+      let ok = true;
+      document.querySelectorAll('.chf-input.field-invalid').forEach(function (el) { el.classList.remove('field-invalid'); });
+      const grp = document.getElementById('booksGroup');
+      const bErr = document.getElementById('booksError');
+      grp.classList.remove('field-invalid');
+      if (getSelectedBooks().length === 0) {
+        ok = false; grp.classList.add('field-invalid');
+        bErr.textContent = 'Selecione ao menos um book.'; bErr.style.display = 'block';
+      } else { bErr.style.display = 'none'; }
+      document.querySelectorAll('[required]').forEach(function (input) {
+        const err = input.parentElement.querySelector('.chf-error');
+        const empty = input.type === 'file' ? !input.files.length : !input.value.trim();
+        if (empty) {
+          ok = false; input.classList.add('field-invalid');
+          if (err) { err.textContent = 'Campo obrigatório.'; err.style.display = 'block'; }
+        } else if (err) { err.style.display = 'none'; }
+      });
+      return ok;
+    }
+
+    async function submitForm() {
+      if (!validateRequiredFields()) return;
+      const btn = document.getElementById('btnSubmit');
+      btn.disabled = true; btn.textContent = 'Enviando...'; if (window.formLockUI) window.formLockUI(btn);
+
+      const dados = {
+        nome: Auth.getUserName(),
+        books: getSelectedBooks(),
+        oQueAtualizar: document.getElementById('oQueAtualizar').value,
+        dataPronto: document.getElementById('dataPronto').value,
+        observacoes: document.getElementById('observacoes').value,
+      };
+
+      const formData = new FormData();
+      formData.append('tipo_solicitacao', TIPO);
+      formData.append('dados', JSON.stringify(dados));
+      const arquivos = document.getElementById('arquivo').files;
+      for (let i = 0; i < arquivos.length; i++) { formData.append('arquivoApoio', arquivos[i]); }
+
+      try {
+        const res = await fetch('/api/solicitacoes', { method: 'POST', body: formData });
+        const d = await res.json().catch(function () { return {}; });
+        if (res.ok) {
+          try {
+            sessionStorage.setItem('svn_ultimo_resumo', JSON.stringify({
+              tipo: 'Atualização de Books', solicitante: Auth.getUserName(),
+              data: new Date().toLocaleDateString('pt-BR'),
+              hora: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+              id: d.id,
+            }));
+          } catch (e) {}
+          window.location.replace('/thankyou.html');
+        } else {
+          const errEl = document.getElementById('submitError');
+          errEl.style.display = 'block'; errEl.textContent = d.error || 'Erro ao enviar. Tente novamente.';
+          if (window.formUnlockUI) window.formUnlockUI(btn); else { btn.disabled = false; btn.textContent = 'Enviar'; }
+        }
+      } catch (err) {
+        const errEl = document.getElementById('submitError');
+        errEl.style.display = 'block'; errEl.textContent = 'Erro de rede. Tente novamente.';
+        if (window.formUnlockUI) window.formUnlockUI(btn); else { btn.disabled = false; btn.textContent = 'Enviar'; }
+      }
+    }
+
+    init();
+  </script>
+</body>
+</html>
