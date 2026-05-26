@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+  <meta name="theme-color" content="#AC3631" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script>(function(){try{const s=JSON.parse(localStorage.getItem('svn_layout_state')||'{}');if(s.isAdmin)document.documentElement.dataset.preShell='admin';}catch(e){}})()</script>
+  <title>Capital Humano — Hub SVN</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap">
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .ch-wrap { max-width: 920px; margin: 0 auto; padding: 32px 24px; }
+    .ch-title { font-family: 'Taviraj', serif; font-weight: 300; margin: 0 0 6px; font-size: 1.8rem; color: var(--carbon-black, #221b19); }
+    .ch-sub { font-size: 0.9rem; color: rgba(34,27,25,0.5); margin: 0 0 28px; }
+    .ch-section { background: #fff; border: 1.5px solid #e8e2dc; border-radius: 16px; padding: 26px; margin-bottom: 16px; }
+    .ch-section h2 { font-family: 'Taviraj', serif; font-weight: 400; font-size: 1.15rem; margin: 0 0 6px; color: var(--carbon-black, #221b19); }
+    .ch-section p { font-size: 0.88rem; color: rgba(34,27,25,0.6); line-height: 1.5; margin: 0; }
+    .ch-soon { display: inline-block; margin-top: 14px; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: #AC3631; background: rgba(172,54,49,0.08); padding: 5px 11px; border-radius: 999px; }
+  </style>
+</head>
+<body class="page-light">
+  <div id="pageContent">
+    <div class="ch-wrap">
+      <h1 class="ch-title">Capital Humano</h1>
+      <p class="ch-sub">Espaço do time de Capital Humano para solicitações exclusivas e validação de cartões de visita.</p>
+
+      <div class="ch-section">
+        <h2>Solicitações exclusivas</h2>
+        <p>Aqui ficarão os formulários exclusivos do time de Capital Humano.</p>
+        <span class="ch-soon">Em breve</span>
+      </div>
+
+      <div class="ch-section">
+        <h2>Aprovação de cartões de visita</h2>
+        <p>Ambiente para validar, aprovar, reprovar ou colocar em standby as solicitações de cartões de visita — substituindo a planilha.</p>
+        <span class="ch-soon">Em breve</span>
+      </div>
+    </div>
+  </div>
+
+  <script src="config.js"></script>
+  <script src="auth.js"></script>
+  <script src="shell.js"></script>
+  <script>
+    async function init() {
+      try { if (typeof _configReady !== 'undefined') await _configReady; } catch (e) {}
+      await Auth.init();
+      if (!Auth.isAuthenticated()) { window.location.href = '/auth/login?redirect=/capital-humano.html'; return; }
+      const role = Auth.getUserRole();
+      if (role !== 'capital_humano' && role !== 'admin') { window.location.href = '/dashboard.html'; return; }
+      if (typeof Shell !== 'undefined' && Shell.render) {
+        Shell.render({ activeRoute: 'capital-humano', contentEl: document.getElementById('pageContent') });
+      }
+    }
+    init();
+  </script>
+</body>
+</html>

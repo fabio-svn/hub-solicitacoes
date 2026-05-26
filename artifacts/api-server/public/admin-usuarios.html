@@ -75,6 +75,7 @@
             <select id="novoUsuarioRole">
               <option value="colaborador">Colaborador</option>
               <option value="gestor">Gestor</option>
+              <option value="capital_humano">Capital Humano</option>
               <option value="admin">Admin</option>
             </select>
           </div>
@@ -129,6 +130,7 @@
             <select id="editRoleSelect" style="width:100%">
               <option value="colaborador">Colaborador</option>
               <option value="gestor">Gestor</option>
+              <option value="capital_humano">Capital Humano</option>
               <option value="admin">Admin</option>
             </select>
           </div>
@@ -161,11 +163,13 @@
     }
 
     const ROLE_LABELS = {
+      capital_humano: 'Capital Humano',
       admin: 'Admin',
       gestor: 'Gestor',
       colaborador: 'Colaborador',
     };
     const ROLE_COLORS = {
+      capital_humano: 'rgba(99,102,241,0.1);color:#4f46e5',
       admin: 'rgba(159,63,55,0.1);color:var(--ruby-red)',
       gestor: 'rgba(111,135,123,0.1);color:var(--sage-green)',
       colaborador: 'rgba(34,27,25,0.07);color:rgba(34,27,25,0.5)',
