@@ -95,6 +95,13 @@ const REQUEST_TYPE_LABELS: Record<string, string> = {
   "materiais-impressos":           "Materiais Impressos",
   "brindes":                       "Brindes",
   "patrocinio":                    "Patrocínio",
+  "ch-kit-onboarding":      "Kit Onboarding",
+  "ch-atualizacao-pessoas": "Atualização de Pessoas nos Sites",
+  "ch-conteudo-pdf":        "Conteúdo em PDF",
+  "ch-arte-divulgacao":     "Arte de Divulgação",
+  "ch-atualizacao-books":   "Atualização de Books",
+  "ch-linha-do-tempo":      "Linha do Tempo",
+  "ch-aniversariantes":     "Aniversariantes do Mês",
 };
 
 const ARQUIVO_LABELS: Record<string, string> = {
@@ -333,6 +340,20 @@ function buildGeneralTaskName(tipo: string, _subtipo: string, dados: FormDados, 
       const tipoMat = str(dados.tipoMaterial) || str(dados.tipoImpresso) || "Material";
       const tipoMatLabel = tipoMat.charAt(0).toUpperCase() + tipoMat.slice(1);
       return `[Material Impresso] ${tipoMatLabel} - ${setor}`;
+    }
+
+    case "ch-kit-onboarding":      return "[Capital Humano] Kit Onboarding";
+    case "ch-atualizacao-pessoas": return "[Capital Humano] Atualização de Pessoas";
+    case "ch-conteudo-pdf":        return "[Capital Humano] Conteúdo em PDF";
+    case "ch-arte-divulgacao":     return "[Capital Humano] Arte de Divulgação";
+    case "ch-atualizacao-books":   return "[Capital Humano] Atualização de Books";
+    case "ch-linha-do-tempo": {
+      const mes = str(dados.mes);
+      return mes ? `[Capital Humano] Linha do Tempo - ${mes}` : "[Capital Humano] Linha do Tempo";
+    }
+    case "ch-aniversariantes": {
+      const mes = str(dados.mes);
+      return mes ? `[Capital Humano] Aniversariantes do Mês - ${mes}` : "[Capital Humano] Aniversariantes do Mês";
     }
 
     default: {
