@@ -108,6 +108,23 @@ export const artAssetsTable = pgTable("art_assets", {
 
 export type ArtAssetRow = typeof artAssetsTable.$inferSelect;
 
+export const cartaoAprovacoesTable = pgTable("cartao_aprovacoes", {
+  id: serial("id").primaryKey(),
+  solicitacao_id: integer("solicitacao_id").notNull().unique(),
+  data_pedido: varchar("data_pedido", { length: 20 }),
+  nome: varchar("nome", { length: 255 }),
+  whatsapp: varchar("whatsapp", { length: 50 }),
+  email: varchar("email", { length: 255 }),
+  unidade: varchar("unidade", { length: 120 }),
+  contrato_social: varchar("contrato_social", { length: 60 }),
+  envio_para: varchar("envio_para", { length: 255 }),
+  custo: varchar("custo", { length: 20 }),
+  status: varchar("status", { length: 40 }).notNull().default("aguardando-validacao"),
+  updated_at: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export type CartaoAprovacao = typeof cartaoAprovacoesTable.$inferSelect;
+
 export const activityLogTable = pgTable("activity_log", {
   id: serial("id").primaryKey(),
   created_at: timestamp("created_at").defaultNow().notNull(),

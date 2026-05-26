@@ -2,7 +2,7 @@ import { Router } from "express";
 import multer from "multer";
 import os from "os";
 import { db } from "@workspace/db";
-import { solicitacoesTable, arquivosTable, activityLogTable } from "@workspace/db";
+import { solicitacoesTable, arquivosTable, activityLogTable, cartaoAprovacoesTable } from "@workspace/db";
 import { eq, desc, and, ne, sql, inArray } from "drizzle-orm";
 import { requireAuth, requireRole } from "../middleware/auth.middleware";
 import { createClickUpTask, getClickUpTaskStatus, type ArquivosMap } from "./clickup";
@@ -53,6 +53,20 @@ const VALID_STATUSES = [
   "aguardando-rh", "aguardando-pagamento", "aguardando-finalizacao",
   "em-espera", "reprovado",
 ];
+
+const STATUS_APROVACAO_DEFAULT = "aguardando-validacao";
+
+async function aplicarStatusAprovacao<T extends { id: number; tipo_solicitacao: string; status: string }>(rows: T[]): Promise<T[]> {
+  const fisicos = rows.filter(r => r.tipo_solicitacao === "cartao-visita-fisico");
+  if (fisicos.length === 0) return rows;
+  const ids = fisicos.map(r => r.id);
+  const aprovacoes = await db.select().from(cartaoAprovacoesTable).where(inArray(cartaoAprovacoesTable.solicitacao_id, ids));
+  const mapa = new Map(aprovacoes.map(a => [a.solicitacao_id, a.status]));
+  for (const r of fisicos) {
+    r.status = mapa.get(r.id) || STATUS_APROVACAO_DEFAULT;
+  }
+  return rows;
+}
 
 const REQUIRED_FIELDS: Record<string, string[]> = {
   "eventos": ["nome"],
@@ -436,6 +450,7 @@ router.get("/solicitacoes", requireAuth, async (req, res) => {
       .from(solicitacoesTable)
       .where(whereClause);
 
+    await aplicarStatusAprovacao(results);
     res.json({
       data: results,
       total: Number(countResult.count),
@@ -543,7 +558,8 @@ router.get("/solicitacoes/:id", requireAuth, async (req, res): Promise<void> => 
 
     const arquivos = await db.select().from(arquivosTable).where(eq(arquivosTable.solicitacao_id, id));
 
-    res.json({ ...solicitacao, arquivos });
+    const [solComStatus] = await aplicarStatusAprovacao([{ ...solicitacao }]);
+    res.json({ ...solComStatus, arquivos });
   } catch (err) {
     logger.error({ err }, "Error getting solicitacao");
     res.status(500).json({ error: "Erro ao buscar solicitação" });
@@ -570,6 +586,13 @@ router.get("/solicitacoes/:id/status", requireAuth, async (req, res): Promise<vo
 
     if (!solicitacao) {
       res.status(404).json({ error: "Solicitação não encontrada" });
+      return;
+    }
+
+    if (solicitacao.tipo_solicitacao === "cartao-visita-fisico") {
+      const [apr] = await db.select().from(cartaoAprovacoesTable)
+        .where(eq(cartaoAprovacoesTable.solicitacao_id, solicitacao.id));
+      res.json({ status: apr?.status || STATUS_APROVACAO_DEFAULT, updated: false });
       return;
     }
 
@@ -1196,6 +1219,70 @@ router.post("/solicitacoes/massa-delete", requireAuth, requireRole("admin"), asy
   } catch (err) {
     logger.error({ err }, "Erro ao excluir em massa");
     res.status(500).json({ error: "Erro ao excluir em massa" });
+  }
+});
+
+router.get("/cartao-aprovacoes", requireAuth, async (req, res): Promise<void> => {
+  try {
+    const role = req.session.user!.role;
+    if (role !== "capital_humano" && role !== "admin") { res.status(403).json({ error: "Sem permissão" }); return; }
+    const sols = await db.select().from(solicitacoesTable)
+      .where(eq(solicitacoesTable.tipo_solicitacao, "cartao-visita-fisico"))
+      .orderBy(desc(solicitacoesTable.created_at));
+    const ids = sols.map(s => s.id);
+    const aprovacoes = ids.length
+      ? await db.select().from(cartaoAprovacoesTable).where(inArray(cartaoAprovacoesTable.solicitacao_id, ids))
+      : [];
+    const mapa = new Map(aprovacoes.map(a => [a.solicitacao_id, a]));
+    const linhas = sols.map(s => {
+      const a = mapa.get(s.id);
+      const dados: any = s.dados || {};
+      return {
+        solicitacao_id: s.id,
+        data_pedido: a?.data_pedido ?? new Date(s.created_at).toLocaleDateString("pt-BR"),
+        nome: a?.nome ?? (dados.nomeCartao || ""),
+        whatsapp: a?.whatsapp ?? (dados.whatsapp || ""),
+        email: a?.email ?? (dados.emailCorporativo || ""),
+        unidade: a?.unidade ?? (dados.unidade || ""),
+        contrato_social: a?.contrato_social ?? (dados.contratoSocial || ""),
+        envio_para: a?.envio_para ?? "",
+        custo: a?.custo ?? "",
+        status: a?.status ?? "aguardando-validacao",
+      };
+    });
+    res.json({ linhas });
+  } catch (err) {
+    logger.error({ err }, "Erro listando cartao-aprovacoes");
+    res.status(500).json({ error: "Erro ao listar" });
+  }
+});
+
+router.put("/cartao-aprovacoes/:solicitacaoId", requireAuth, async (req, res): Promise<void> => {
+  try {
+    const role = req.session.user!.role;
+    if (role !== "capital_humano" && role !== "admin") { res.status(403).json({ error: "Sem permissão" }); return; }
+    const solicitacaoId = parseInt(req.params.solicitacaoId, 10);
+    if (Number.isNaN(solicitacaoId)) { res.status(400).json({ error: "ID inválido" }); return; }
+    const b = req.body || {};
+    const valores = {
+      data_pedido: b.data_pedido ?? null,
+      nome: b.nome ?? null,
+      whatsapp: b.whatsapp ?? null,
+      email: b.email ?? null,
+      unidade: b.unidade ?? null,
+      contrato_social: b.contrato_social ?? null,
+      envio_para: b.envio_para ?? null,
+      custo: b.custo ?? null,
+      status: b.status || "aguardando-validacao",
+      updated_at: new Date(),
+    };
+    await db.insert(cartaoAprovacoesTable)
+      .values({ solicitacao_id: solicitacaoId, ...valores })
+      .onConflictDoUpdate({ target: cartaoAprovacoesTable.solicitacao_id, set: valores });
+    res.json({ ok: true });
+  } catch (err) {
+    logger.error({ err }, "Erro salvando cartao-aprovacao");
+    res.status(500).json({ error: "Erro ao salvar" });
   }
 });
 

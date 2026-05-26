@@ -91,6 +91,7 @@
       { v: 'interno', label: 'Interno' },
       { v: 'colaborador', label: 'Colaborador' },
     ];
+    // Conforme o texto: Interno = amarelo, Colaborador = teal. (Print mostra invertido.)
     const CUSTO_COLORS = {
       interno: { bg: '#fef9c3', text: '#a16207' },
       colaborador: { bg: '#ccfbf1', text: '#0f766e' },
@@ -170,6 +171,7 @@
       document.getElementById('apvContent').innerHTML =
         '<div class="apv-scroll"><table class="apv"><thead>' + head + '</thead><tbody>' + rows + '</tbody></table></div>';
 
+      // colorir selects de custo/status e ligar auto-save
       document.querySelectorAll('table.apv tbody tr').forEach(function (tr) {
         const custoSel = tr.querySelector('select[data-f="custo"]');
         const statusSel = tr.querySelector('select[data-f="status"]');
@@ -178,7 +180,8 @@
         custoSel.addEventListener('change', function () { colorSelect(custoSel, CUSTO_COLORS); });
         statusSel.addEventListener('change', function () { colorSelect(statusSel, STATUS_COLORS); });
         tr.querySelectorAll('[data-f]').forEach(function (el) {
-          el.addEventListener('change', function () { salvarLinha(tr); });
+          const evt = el.tagName === 'SELECT' ? 'change' : 'change';
+          el.addEventListener(evt, function () { salvarLinha(tr); });
         });
       });
     }

@@ -270,6 +270,12 @@ const STATUS_SOLICITACAO = [
   { id: "em-espera",              label: "Em espera",                  bg: "#4D545F", text: "#FFFFFF",  cor: "--carbon-black"  },
   { id: "gerando",                label: "Gerando arte",               bg: "#dbeafe", text: "#1e40af" },
   { id: "erro",                   label: "Erro",                       bg: "#fee2e2", text: "#991b1b" },
+  { id: "aguardando-validacao",   label: "Aguardando validação",       bg: "#fee2e2", text: "#b91c1c" },
+  { id: "aguardando-contrato",    label: "Aguardando contrato",        bg: "#f1f5f9", text: "#475569" },
+  { id: "liberado-design",        label: "Liberado para Design",       bg: "#ede9fe", text: "#6d28d9" },
+  { id: "arte-finalizada",        label: "Arte finalizada",            bg: "#fef9c3", text: "#a16207" },
+  { id: "envio-grafica",          label: "Envio gráfica",              bg: "#dbeafe", text: "#1d4ed8" },
+  { id: "envio-assessor",         label: "Envio assessor",             bg: "#dcfce7", text: "#15803d" },
 ];
 
 let SETORES = [

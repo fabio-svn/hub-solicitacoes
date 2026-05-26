@@ -149,6 +149,23 @@ const DB_STATEMENTS = [
   `CREATE INDEX IF NOT EXISTS "IDX_art_assets_uploaded_at"    ON "art_assets" ("uploaded_at" DESC)`,
   `CREATE INDEX IF NOT EXISTS "IDX_art_assets_used_template"  ON "art_assets" USING GIN ("used_in_template_ids")`,
   `ALTER TABLE "solicitacoes" ADD COLUMN IF NOT EXISTS "erro_geracao" text`,
+
+  // Aprovação de cartões físicos
+  `CREATE TABLE IF NOT EXISTS "cartao_aprovacoes" (
+    "id"              SERIAL PRIMARY KEY,
+    "solicitacao_id"  INTEGER NOT NULL UNIQUE REFERENCES "solicitacoes" ("id") ON DELETE CASCADE,
+    "data_pedido"     VARCHAR(20),
+    "nome"            VARCHAR(255),
+    "whatsapp"        VARCHAR(50),
+    "email"           VARCHAR(255),
+    "unidade"         VARCHAR(120),
+    "contrato_social" VARCHAR(60),
+    "envio_para"      VARCHAR(255),
+    "custo"           VARCHAR(20),
+    "status"          VARCHAR(40) NOT NULL DEFAULT 'aguardando-validacao',
+    "updated_at"      TIMESTAMP   NOT NULL DEFAULT NOW()
+  )`,
+  `CREATE INDEX IF NOT EXISTS "IDX_cartao_aprovacoes_solic" ON "cartao_aprovacoes" ("solicitacao_id")`,
 ];
 
 async function start() {
