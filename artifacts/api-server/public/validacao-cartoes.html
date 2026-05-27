@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+  <meta name="theme-color" content="#AC3631" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script>(function(){try{const s=JSON.parse(localStorage.getItem('svn_layout_state')||'{}');if(s.isAdmin)document.documentElement.dataset.preShell='admin';}catch(e){}})()</script>
+  <title>Validação de Cartões — Hub SVN</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap">
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .vc-wrap { max-width: 1280px; margin: 0 auto; padding: 32px 24px; }
+    .vc-title { font-family: 'Taviraj', serif; font-weight: 300; margin: 0 0 6px; font-size: 1.8rem; color: var(--carbon-black, #221b19); }
+    .vc-sub { font-size: 0.9rem; color: rgba(34,27,25,0.5); margin: 0 0 28px; }
+    .vc-section { background: #fff; border: 1.5px solid #e8e2dc; border-radius: 16px; padding: 26px; }
+
+    .apv-toolbar { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:14px; flex-wrap:wrap; }
+    .apv-toolbar-left h2 { font-family: 'Taviraj', serif; font-weight: 400; font-size: 1.15rem; margin: 0 0 2px; color: var(--carbon-black, #221b19); }
+    .apv-toolbar-left p { font-size: 0.85rem; color: rgba(34,27,25,0.55); margin: 0; }
+    .apv-saved { font-size:.78rem; color:#15803d; opacity:0; transition:opacity .2s; }
+    .apv-saved.show { opacity:1; }
+
+    .apv-scroll { overflow-x: auto; border:1px solid #e2e8f0; border-radius:10px; }
+    table.apv { border-collapse: collapse; width:100%; min-width: 1160px; font-size:.82rem; }
+    table.apv th { color:#fff; font-weight:700; padding:9px 10px; text-align:center; white-space:nowrap; }
+    table.apv th.green { background:#43a047; }
+    table.apv th.orange { background:#ed7d31; }
+    table.apv th .caret { display:inline-flex; align-items:center; justify-content:center; width:16px; height:16px; margin-left:7px; background:#fff; border-radius:3px; color:#475569; font-size:9px; vertical-align:middle; }
+    table.apv td { border:1px solid #e8edf2; padding:3px 4px; text-align:center; }
+    table.apv tr:nth-child(even) td { background:#fcfcfb; }
+    table.apv input, table.apv select, table.apv textarea { width:100%; box-sizing:border-box; border:1px solid transparent; background:transparent; font:inherit; font-size:.82rem; text-align:center; padding:6px; border-radius:6px; color:#221b19; cursor:text; }
+    table.apv textarea { resize:none; overflow:hidden; min-height:34px; line-height:1.35; text-align:left; }
+    table.apv select { cursor:pointer; -webkit-appearance:none; appearance:none; font-weight:600; }
+    table.apv input:focus, table.apv select:focus, table.apv textarea:focus { outline:none; border-color:#AC3631; background:#fff; }
+    table.apv input:hover, table.apv select:hover, table.apv textarea:hover { border-color:#e2e8f0; }
+    .apv-empty { padding:40px; text-align:center; color:rgba(34,27,25,.5); font-size:.88rem; }
+    .apv-id { color:rgba(34,27,25,.4); font-size:.75rem; }
+  </style>
+</head>
+<body class="page-light">
+  <div id="pageContent">
+    <div class="vc-wrap">
+      <h1 class="vc-title">Validação de Cartões</h1>
+      <p class="vc-sub">Acompanhe e edite o andamento dos pedidos de cartão de visita físico. Alterações salvas automaticamente.</p>
+
+      <div class="vc-section">
+        <div class="apv-toolbar">
+          <div class="apv-toolbar-left">
+            <h2>Cartões de visita físicos</h2>
+            <p>Preencha e atualize os campos conforme o andamento de cada pedido.</p>
+          </div>
+          <span class="apv-saved" id="apvSaved">✓ Salvo</span>
+        </div>
+        <div id="apvContent"><div class="apv-empty">Carregando…</div></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="config.js"></script>
+  <script src="auth.js"></script>
+  <script src="shell.js"></script>
+  <script>
+    const CONTRATO_OPTS = [
+      { v: '', label: 'Selecione…' },
+      { v: 'svn-capital', label: 'SVN Capital' },
+      { v: 'svn-connect', label: 'SVN Connect' },
+      { v: 'svn-investimentos', label: 'SVN Investimentos' },
+    ];
+    const CUSTO_OPTS = [
+      { v: '', label: 'Selecione…' },
+      { v: 'interno', label: 'Interno' },
+      { v: 'colaborador', label: 'Colaborador' },
+    ];
+    const CUSTO_COLORS = {
+      interno: { bg: '#fef9c3', text: '#a16207' },
+      colaborador: { bg: '#ccfbf1', text: '#0f766e' },
+    };
+    const STATUS_OPTS = [
+      { v: 'aguardando-validacao', label: 'Aguardando validação' },
+      { v: 'aguardando-contrato', label: 'Aguardando contrato' },
+      { v: 'liberado-design', label: 'Liberado para Design' },
+      { v: 'arte-finalizada', label: 'Arte finalizada' },
+      { v: 'envio-grafica', label: 'Envio gráfica' },
+      { v: 'envio-assessor', label: 'Envio assessor' },
+    ];
+    const STATUS_COLORS = {
+      'aguardando-validacao': { bg: '#fee2e2', text: '#b91c1c' },
+      'aguardando-contrato': { bg: '#f1f5f9', text: '#475569' },
+      'liberado-design': { bg: '#ede9fe', text: '#6d28d9' },
+      'arte-finalizada': { bg: '#fef9c3', text: '#a16207' },
+      'envio-grafica': { bg: '#dbeafe', text: '#1d4ed8' },
+      'envio-assessor': { bg: '#dcfce7', text: '#15803d' },
+    };
+
+    function esc(s) {
+      return String(s == null ? '' : s).replace(/[&<>"']/g, function(c) {
+        return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c];
+      });
+    }
+    function optionsHtml(opts, sel) {
+      return opts.map(function(o) {
+        return '<option value="' + esc(o.v) + '"' + (o.v === sel ? ' selected' : '') + '>' + esc(o.label) + '</option>';
+      }).join('');
+    }
+    function colorSelect(el, map) {
+      const c = map[el.value];
+      if (c) { el.style.background = c.bg; el.style.color = c.text; }
+      else { el.style.background = 'transparent'; el.style.color = '#221b19'; }
+    }
+    function autoResize(ta) {
+      ta.style.height = 'auto';
+      ta.style.height = ta.scrollHeight + 'px';
+    }
+
+    async function init() {
+      try { if (typeof _configReady !== 'undefined') await _configReady; } catch(e) {}
+      await Auth.init();
+      if (!Auth.isAuthenticated()) { window.location.href = '/auth/login?redirect=/validacao-cartoes.html'; return; }
+      const role = Auth.getUserRole();
+      if (role !== 'capital_humano' && role !== 'gestor' && role !== 'admin') {
+        window.location.href = '/dashboard.html'; return;
+      }
+      if (typeof Shell !== 'undefined' && Shell.render) {
+        Shell.render({ activeRoute: 'validacao-cartoes', contentEl: document.getElementById('pageContent') });
+      }
+      carregarAprovacoes();
+    }
+
+    async function carregarAprovacoes() {
+      const cont = document.getElementById('apvContent');
+      try {
+        const res = await fetch('/api/cartao-aprovacoes');
+        const d = await res.json();
+        const linhas = (d && d.linhas) || [];
+        if (!linhas.length) {
+          cont.innerHTML = '<div class="apv-empty">Nenhuma solicitação de cartão físico ainda.</div>';
+          return;
+        }
+        renderTabela(linhas);
+      } catch(e) {
+        cont.innerHTML = '<div class="apv-empty">Erro ao carregar. Recarregue a página.</div>';
+      }
+    }
+
+    function renderTabela(linhas) {
+      const head =
+        '<tr>' +
+        '<th class="green" style="min-width:50px">#</th>' +
+        '<th class="green" style="min-width:100px">Data do pedido<span class="caret">▾</span></th>' +
+        '<th class="green" style="min-width:150px">Nome<span class="caret">▾</span></th>' +
+        '<th class="green" style="min-width:120px">WhatsApp<span class="caret">▾</span></th>' +
+        '<th class="green" style="min-width:160px">E-Mail<span class="caret">▾</span></th>' +
+        '<th class="green" style="min-width:100px">Unidade<span class="caret">▾</span></th>' +
+        '<th class="orange" style="min-width:140px">Contrato Social - RH<span class="caret">▾</span></th>' +
+        '<th class="orange" style="min-width:140px">Envio para - RH<span class="caret">▾</span></th>' +
+        '<th class="orange" style="min-width:100px">Custo<span class="caret">▾</span></th>' +
+        '<th class="orange" style="min-width:150px">Andamento<span class="caret">▾</span></th>' +
+        '<th class="orange" style="min-width:160px">Observação<span class="caret">▾</span></th>' +
+        '</tr>';
+
+      const rows = linhas.map(function(l, i) {
+        return '<tr data-id="' + l.solicitacao_id + '">' +
+          '<td><span class="apv-id">' + l.solicitacao_id + '</span></td>' +
+          '<td><input data-f="data_pedido" value="' + esc(l.data_pedido) + '"></td>' +
+          '<td><input data-f="nome" value="' + esc(l.nome) + '"></td>' +
+          '<td><input data-f="whatsapp" value="' + esc(l.whatsapp) + '"></td>' +
+          '<td><input data-f="email" value="' + esc(l.email) + '"></td>' +
+          '<td><input data-f="unidade" value="' + esc(l.unidade) + '"></td>' +
+          '<td><select data-f="contrato_social">' + optionsHtml(CONTRATO_OPTS, l.contrato_social) + '</select></td>' +
+          '<td><input data-f="envio_para" value="' + esc(l.envio_para) + '" placeholder="—"></td>' +
+          '<td><select data-f="custo">' + optionsHtml(CUSTO_OPTS, l.custo) + '</select></td>' +
+          '<td><select data-f="status">' + optionsHtml(STATUS_OPTS, l.status) + '</select></td>' +
+          '<td><textarea data-f="observacao" rows="1" placeholder="—">' + esc(l.observacao) + '</textarea></td>' +
+          '</tr>';
+      }).join('');
+
+      document.getElementById('apvContent').innerHTML =
+        '<div class="apv-scroll"><table class="apv"><thead>' + head + '</thead><tbody>' + rows + '</tbody></table></div>';
+
+      document.querySelectorAll('table.apv tbody tr').forEach(function(tr) {
+        const custoSel = tr.querySelector('select[data-f="custo"]');
+        const statusSel = tr.querySelector('select[data-f="status"]');
+        colorSelect(custoSel, CUSTO_COLORS);
+        colorSelect(statusSel, STATUS_COLORS);
+        custoSel.addEventListener('change', function() { colorSelect(custoSel, CUSTO_COLORS); });
+        statusSel.addEventListener('change', function() { colorSelect(statusSel, STATUS_COLORS); });
+
+        tr.querySelectorAll('textarea[data-f]').forEach(function(ta) {
+          autoResize(ta);
+          ta.addEventListener('input', function() { autoResize(ta); });
+        });
+
+        tr.querySelectorAll('[data-f]').forEach(function(el) {
+          el.addEventListener('change', function() { salvarLinha(tr); });
+        });
+      });
+    }
+
+    let saveTimer = null;
+    async function salvarLinha(tr) {
+      const id = tr.getAttribute('data-id');
+      const payload = {};
+      tr.querySelectorAll('[data-f]').forEach(function(el) {
+        payload[el.getAttribute('data-f')] = el.value;
+      });
+      try {
+        const res = await fetch('/api/cartao-aprovacoes/' + id, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        if (res.ok) {
+          const tag = document.getElementById('apvSaved');
+          tag.classList.add('show');
+          clearTimeout(saveTimer);
+          saveTimer = setTimeout(function() { tag.classList.remove('show'); }, 1500);
+        }
+      } catch(e) {}
+    }
+
+    init();
+  </script>
+</body>
+</html>

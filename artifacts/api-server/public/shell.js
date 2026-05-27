@@ -143,6 +143,13 @@ window.Shell = {
         label: 'Capital Humano',
         roles: ['admin', 'capital_humano'],
       },
+      {
+        route: 'validacao-cartoes',
+        href: '/validacao-cartoes.html',
+        icon: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/><line x1="6" y1="15" x2="12" y2="15"/></svg>',
+        label: 'Validação de Cartões',
+        roles: ['admin', 'capital_humano', 'gestor'],
+      },
     ];
 
     const adminItems = [

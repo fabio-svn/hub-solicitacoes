@@ -120,6 +120,7 @@ export const cartaoAprovacoesTable = pgTable("cartao_aprovacoes", {
   envio_para: varchar("envio_para", { length: 255 }),
   custo: varchar("custo", { length: 20 }),
   status: varchar("status", { length: 40 }).notNull().default("aguardando-validacao"),
+  observacao: text("observacao"),
   updated_at: timestamp("updated_at").notNull().defaultNow(),
 });
 

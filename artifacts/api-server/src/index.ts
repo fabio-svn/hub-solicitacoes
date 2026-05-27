@@ -166,6 +166,7 @@ const DB_STATEMENTS = [
     "updated_at"      TIMESTAMP   NOT NULL DEFAULT NOW()
   )`,
   `CREATE INDEX IF NOT EXISTS "IDX_cartao_aprovacoes_solic" ON "cartao_aprovacoes" ("solicitacao_id")`,
+  `ALTER TABLE "cartao_aprovacoes" ADD COLUMN IF NOT EXISTS "observacao" TEXT`,
 ];
 
 async function start() {

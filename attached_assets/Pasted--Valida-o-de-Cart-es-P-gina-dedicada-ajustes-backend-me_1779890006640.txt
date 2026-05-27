@@ -1,0 +1,83 @@
+# Validação de Cartões — Página dedicada (ajustes backend + menu)
+
+Move a validação de cartões para uma página própria, acessível a
+**capital_humano + gestor + admin**, e adiciona a coluna de **observação**.
+A tabela em si é a página `validacao-cartoes.html` (arquivo à parte).
+
+Build necessário p/ a parte de backend: `cd artifacts/api-server && pnpm run build` + restart.
+
+═══════════════════════════════════════════════════════════════
+## 1. Coluna observacao em cartao_aprovacoes
+═══════════════════════════════════════════════════════════════
+### Migration (a tabela já existe — só adicionar a coluna):
+```sql
+ALTER TABLE "cartao_aprovacoes" ADD COLUMN IF NOT EXISTS "observacao" TEXT;
+```
+
+### Schema Drizzle — em `cartaoAprovacoesTable`, adicionar o campo:
+```ts
+  observacao: text("observacao"),
+```
+(garantir o import de `text` do drizzle-orm/pg-core.)
+
+═══════════════════════════════════════════════════════════════
+## 2. Endpoints — incluir observacao + liberar gestor
+═══════════════════════════════════════════════════════════════
+### GET /cartao-aprovacoes
+- Trocar a checagem de papel para incluir gestor. LOCALIZAR:
+```ts
+    if (role !== "capital_humano" && role !== "admin") { res.status(403).json({ error: "Sem permissão" }); return; }
+```
+SUBSTITUIR por:
+```ts
+    if (role !== "capital_humano" && role !== "gestor" && role !== "admin") { res.status(403).json({ error: "Sem permissão" }); return; }
+```
+- No objeto de cada linha retornada (o `return { solicitacao_id: ..., status: ... }`),
+  ADICIONAR o campo observacao:
+```ts
+        observacao: a?.observacao ?? "",
+```
+
+### PUT /cartao-aprovacoes/:solicitacaoId
+- Mesma troca da checagem de papel (incluir `gestor`), idêntica à do GET.
+- No objeto `valores`, ADICIONAR:
+```ts
+      observacao: b.observacao ?? null,
+```
+
+═══════════════════════════════════════════════════════════════
+## 3. Menu lateral — item "Validação de Cartões"
+═══════════════════════════════════════════════════════════════
+Em `public/shell.js`, na função `_buildSidebar`, dentro do array `nav`,
+ADICIONAR este item (sugiro logo após o item `capital-humano`):
+```js
+      {
+        route: 'validacao-cartoes',
+        href: '/validacao-cartoes.html',
+        icon: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/><line x1="6" y1="15" x2="12" y2="15"/></svg>',
+        label: 'Validação de Cartões',
+        roles: ['admin', 'capital_humano', 'gestor'],
+      },
+```
+(O filtro por papel já existente — `nav.filter(it => !it.roles || it.roles.includes(role))` —
+cuida da visibilidade. O item "Capital Humano" continua só com `['admin','capital_humano']`.)
+
+═══════════════════════════════════════════════════════════════
+## 4. Arquivos estáticos (sem build)
+═══════════════════════════════════════════════════════════════
+- Criar `public/validacao-cartoes.html` (arquivo entregue à parte) — a tabela completa.
+- Substituir `public/capital-humano.html` (arquivo entregue à parte) — agora só com os
+  formulários (a seção de aprovação saiu daqui).
+
+═══════════════════════════════════════════════════════════════
+## Validação
+═══════════════════════════════════════════════════════════════
+1. Build + restart + migration (coluna observacao criada).
+2. Logar como **gestor**: o menu mostra "Validação de Cartões"; abrir a página lista os
+   cartões físicos e permite editar (inclusive Andamento) e salvar.
+3. Logar como **capital_humano**: vê "Capital Humano" (só forms) E "Validação de Cartões".
+4. A página Capital Humano não tem mais a tabela de aprovação.
+5. Editar uma observação na tabela → recarregar → a observação persiste.
+
+## Não faça
+- Não remover os endpoints nem mudar o override de status (continua valendo).

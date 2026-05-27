@@ -1225,7 +1225,7 @@ router.post("/solicitacoes/massa-delete", requireAuth, requireRole("admin"), asy
 router.get("/cartao-aprovacoes", requireAuth, async (req, res): Promise<void> => {
   try {
     const role = req.session.user!.role;
-    if (role !== "capital_humano" && role !== "admin") { res.status(403).json({ error: "Sem permissão" }); return; }
+    if (role !== "capital_humano" && role !== "gestor" && role !== "admin") { res.status(403).json({ error: "Sem permissão" }); return; }
     const sols = await db.select().from(solicitacoesTable)
       .where(eq(solicitacoesTable.tipo_solicitacao, "cartao-visita-fisico"))
       .orderBy(desc(solicitacoesTable.created_at));
@@ -1248,6 +1248,7 @@ router.get("/cartao-aprovacoes", requireAuth, async (req, res): Promise<void> =>
         envio_para: a?.envio_para ?? "",
         custo: a?.custo ?? "",
         status: a?.status ?? "aguardando-validacao",
+        observacao: a?.observacao ?? "",
       };
     });
     res.json({ linhas });
@@ -1260,7 +1261,7 @@ router.get("/cartao-aprovacoes", requireAuth, async (req, res): Promise<void> =>
 router.put("/cartao-aprovacoes/:solicitacaoId", requireAuth, async (req, res): Promise<void> => {
   try {
     const role = req.session.user!.role;
-    if (role !== "capital_humano" && role !== "admin") { res.status(403).json({ error: "Sem permissão" }); return; }
+    if (role !== "capital_humano" && role !== "gestor" && role !== "admin") { res.status(403).json({ error: "Sem permissão" }); return; }
     const solicitacaoId = parseInt(req.params.solicitacaoId, 10);
     if (Number.isNaN(solicitacaoId)) { res.status(400).json({ error: "ID inválido" }); return; }
     const b = req.body || {};
@@ -1274,6 +1275,7 @@ router.put("/cartao-aprovacoes/:solicitacaoId", requireAuth, async (req, res): P
       envio_para: b.envio_para ?? null,
       custo: b.custo ?? null,
       status: b.status || "aguardando-validacao",
+      observacao: b.observacao ?? null,
       updated_at: new Date(),
     };
     await db.insert(cartaoAprovacoesTable)
