@@ -1,0 +1,58 @@
+# Cartão Físico — Timeline de Andamento + status Reprovado
+
+Faz a timeline "Andamento" do resumo refletir o fluxo de validação (em vez do fluxo
+padrão do ClickUp) para `cartao-visita-fisico`, e adiciona o status **Reprovado**.
+
+Tudo em `public/config.js` (arquivo estático, sem build). O override de status no
+backend já existe — a timeline lê `item.status` (já sobrescrito), então só falta
+existir um fluxo próprio pro tipo do cartão físico.
+
+═══════════════════════════════════════════════════════════════
+## 1. STATUS_SOLICITACAO — adicionar "Reprovado" (vermelho forte)
+═══════════════════════════════════════════════════════════════
+No array `STATUS_SOLICITACAO` (onde já estão os status de aprovação), ADICIONAR:
+```js
+  { id: 'reprovado', label: 'Reprovado', bg: '#fecaca', text: '#dc2626' },
+```
+
+═══════════════════════════════════════════════════════════════
+## 2. FLUXOS_ETAPAS — fluxo próprio do cartão físico
+═══════════════════════════════════════════════════════════════
+No objeto `FLUXOS_ETAPAS`, ADICIONAR uma nova chave `"cartao-visita-fisico"` (pode ser
+logo após a chave `"eventos"` ou antes de `"_default"`):
+```js
+  "cartao-visita-fisico": [
+    { id: "aguardando-validacao", label: "Aguardando validação", visivel: true  },
+    { id: "aguardando-contrato",  label: "Aguardando contrato",  visivel: true  },
+    { id: "liberado-design",      label: "Liberado para Design", visivel: true  },
+    { id: "arte-finalizada",      label: "Arte finalizada",      visivel: true  },
+    { id: "envio-grafica",        label: "Envio gráfica",        visivel: true  },
+    { id: "envio-assessor",       label: "Envio assessor",       visivel: true  },
+    { id: "reprovado",            label: "Reprovado",            visivel: false },
+  ],
+```
+
+Observações:
+- Os `id` batem exatamente com os status da tabela de validação. Como o backend já
+  sobrescreve `item.status` pelo status de aprovação nesse tipo, a timeline vai
+  destacar a etapa certa automaticamente (a função `renderFluxo` faz
+  `findIndex(e => e.id === item.status)`).
+- `reprovado` entra como `visivel: false` de propósito: a `renderFluxo` já trata
+  status assim como "excepcional", exibindo um estado único com a cor do
+  STATUS_SOLICITACAO — ou seja, vai aparecer como um marcador **vermelho forte**
+  "Reprovado" no lugar da régua de etapas, sem quebrar o fluxo linear.
+
+═══════════════════════════════════════════════════════════════
+## Validação
+═══════════════════════════════════════════════════════════════
+1. Trocar o config.js (refresh forte Ctrl+Shift+R).
+2. Abrir o resumo de um cartão físico em "Aguardando validação": a timeline mostra a
+   régua **Aguardando validação → … → Envio assessor**, com a primeira etapa como atual.
+3. Mudar o Andamento na tabela de validação para "Liberado para Design" → recarregar o
+   resumo → a régua avança até essa etapa.
+4. Marcar como "Reprovado" na tabela → no resumo, a área de Andamento mostra o marcador
+   vermelho "Reprovado".
+
+## Não faça
+- Não mexer no fluxo `_default` nem no de `eventos` (afeta os outros tipos).
+- Não alterar o override de status no backend (já está correto).

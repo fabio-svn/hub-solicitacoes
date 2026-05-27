@@ -276,6 +276,7 @@ const STATUS_SOLICITACAO = [
   { id: "arte-finalizada",        label: "Arte finalizada",            bg: "#fef9c3", text: "#a16207" },
   { id: "envio-grafica",          label: "Envio gráfica",              bg: "#dbeafe", text: "#1d4ed8" },
   { id: "envio-assessor",         label: "Envio assessor",             bg: "#dcfce7", text: "#15803d" },
+  { id: "reprovado",              label: "Reprovado",                  bg: "#fecaca", text: "#dc2626" },
 ];
 
 let SETORES = [
@@ -507,6 +508,15 @@ const FLUXOS_ETAPAS = {
     { id: "reprovado",              label: "Reprovado / Cancelado",     visivel: false },
     { id: "em-espera",              label: "Em espera",                 visivel: false },
     { id: "cancelado",              label: "Cancelado",                 visivel: false },
+  ],
+  "cartao-visita-fisico": [
+    { id: "aguardando-validacao", label: "Aguardando validação", visivel: true  },
+    { id: "aguardando-contrato",  label: "Aguardando contrato",  visivel: true  },
+    { id: "liberado-design",      label: "Liberado para Design", visivel: true  },
+    { id: "arte-finalizada",      label: "Arte finalizada",      visivel: true  },
+    { id: "envio-grafica",        label: "Envio gráfica",        visivel: true  },
+    { id: "envio-assessor",       label: "Envio assessor",       visivel: true  },
+    { id: "reprovado",            label: "Reprovado",            visivel: false },
   ],
   "_default": [
     { id: "recebido",     label: "Recebido",              visivel: true  },
