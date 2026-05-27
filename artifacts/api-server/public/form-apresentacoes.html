@@ -219,12 +219,8 @@
       document.getElementById('progressBar').style.width = '66%';
       document.getElementById('stepLabel').textContent = 'Etapa 2 de 3';
       document.getElementById('formTitle').textContent = isAtualizar ? 'Atualizar Apresentação' : 'Nova Apresentação';
-      if (isAtualizar) {
-        document.getElementById('uploadAtualizar').style.display = 'block';
-        document.getElementById('tipoCriacaoField').style.display = 'none';
-      } else {
-        document.getElementById('tipoCriacaoField').style.display = 'block';
-      }
+      document.getElementById('uploadAtualizar').style.display = isAtualizar ? 'block' : 'none';
+      document.getElementById('tipoCriacaoField').style.display = isAtualizar ? 'none' : 'block';
       window.scrollTo(0, 0);
     }
 

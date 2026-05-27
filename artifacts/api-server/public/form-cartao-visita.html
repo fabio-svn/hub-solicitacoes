@@ -230,6 +230,8 @@
     function irParaPasso2() {
       if (!tipoSelecionado) return;
       document.getElementById('step1').classList.remove('active');
+      document.getElementById('step2Fisico').classList.remove('active');
+      document.getElementById('step2Digital').classList.remove('active');
       document.getElementById('progressBar').style.width = '100%';
       document.getElementById('stepLabel').textContent = 'Passo 2 de 2';
       if (tipoSelecionado === 'fisico') {

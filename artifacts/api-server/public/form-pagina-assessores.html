@@ -275,6 +275,12 @@
       } else {
         document.getElementById('formTitle').textContent = 'Página de Assessores — Dados';
         document.getElementById('stepLabel').textContent = 'Etapa 2 de 2';
+        document.getElementById('updateCard').style.display = 'none';
+        document.getElementById('seletorInline').style.display = 'none';
+        ['nomeCompleto','codigoAssessor','unidade','contratoSocial','fotoPerfil','linkedin','instagram','miniBio','selos','depoimentos'].forEach(function (c) {
+          var el = document.getElementById('field_' + c);
+          if (el) { el.style.display = ''; el.style.maxHeight = ''; el.style.overflow = ''; }
+        });
       }
       window.scrollTo(0, 0);
     }

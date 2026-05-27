@@ -1,0 +1,80 @@
+# Fix — etapa 2 não-idempotente em forms multi-etapa
+
+Corrige o bug em que, ao voltar pra etapa 1, mudar a escolha e avançar de novo, a
+etapa 2 mantém a configuração da escolha anterior. Fix pontual por form (sem refatorar).
+Arquivos estáticos em `public/` (sem build).
+
+═══════════════════════════════════════════════════════════════
+## 1. form-apresentacoes.html — goToStep2 idempotente
+═══════════════════════════════════════════════════════════════
+LOCALIZAR:
+```js
+      if (isAtualizar) {
+        document.getElementById('uploadAtualizar').style.display = 'block';
+        document.getElementById('tipoCriacaoField').style.display = 'none';
+      } else {
+        document.getElementById('tipoCriacaoField').style.display = 'block';
+      }
+```
+SUBSTITUIR por (seta os dois lados sempre):
+```js
+      document.getElementById('uploadAtualizar').style.display = isAtualizar ? 'block' : 'none';
+      document.getElementById('tipoCriacaoField').style.display = isAtualizar ? 'none' : 'block';
+```
+
+═══════════════════════════════════════════════════════════════
+## 2. form-pagina-assessores.html — goToStep2: ramo "dados" reseta
+═══════════════════════════════════════════════════════════════
+LOCALIZAR o ramo else do goToStep2:
+```js
+      } else {
+        document.getElementById('formTitle').textContent = 'Página de Assessores — Dados';
+        document.getElementById('stepLabel').textContent = 'Etapa 2 de 2';
+      }
+```
+SUBSTITUIR por (esconde o card/seletor de atualização e RE-EXIBE os 10 campos,
+limpando os estilos inline que o ramo de atualização aplicou):
+```js
+      } else {
+        document.getElementById('formTitle').textContent = 'Página de Assessores — Dados';
+        document.getElementById('stepLabel').textContent = 'Etapa 2 de 2';
+        document.getElementById('updateCard').style.display = 'none';
+        document.getElementById('seletorInline').style.display = 'none';
+        ['nomeCompleto','codigoAssessor','unidade','contratoSocial','fotoPerfil','linkedin','instagram','miniBio','selos','depoimentos'].forEach(function (c) {
+          var el = document.getElementById('field_' + c);
+          if (el) { el.style.display = ''; el.style.maxHeight = ''; el.style.overflow = ''; }
+        });
+      }
+```
+
+═══════════════════════════════════════════════════════════════
+## 3. form-cartao-visita.html — trava de segurança no irParaPasso2
+═══════════════════════════════════════════════════════════════
+(Não é estritamente um bug hoje, mas garante que só uma etapa 2 fique ativa.)
+LOCALIZAR:
+```js
+    function irParaPasso2() {
+      if (!tipoSelecionado) return;
+      document.getElementById('step1').classList.remove('active');
+```
+SUBSTITUIR por:
+```js
+    function irParaPasso2() {
+      if (!tipoSelecionado) return;
+      document.getElementById('step1').classList.remove('active');
+      document.getElementById('step2Fisico').classList.remove('active');
+      document.getElementById('step2Digital').classList.remove('active');
+```
+
+═══════════════════════════════════════════════════════════════
+## Validação
+═══════════════════════════════════════════════════════════════
+1. Apresentações: escolher "Atualizar" → avançar → voltar → escolher "Nova" →
+   avançar: deve aparecer o seletor de tipo de criação e SUMIR o upload de atualização.
+2. Página de Assessores: escolher "Atualização" → avançar → voltar → escolher "Dados" →
+   avançar: devem reaparecer os 10 campos e sumir o card/seletor de atualização.
+3. Cartão de Visita: físico → avançar → voltar → digital → avançar: só a etapa digital.
+
+## Não faça
+- Não mexer em produção audiovisual, conteúdo PDF nem eventos sem confirmar um caso
+  de reprodução (eles aparentam estar idempotentes; alterar à toa pode regredir).
