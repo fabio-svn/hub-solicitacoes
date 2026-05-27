@@ -114,6 +114,7 @@
       { v: 'interno', label: 'Interno' },
       { v: 'colaborador', label: 'Colaborador' },
     ];
+    // Conforme o texto: Interno = amarelo, Colaborador = teal. (Print mostra invertido.)
     const CUSTO_COLORS = {
       interno: { bg: '#fef9c3', text: '#a16207' },
       colaborador: { bg: '#ccfbf1', text: '#0f766e' },
@@ -256,6 +257,7 @@
 
       document.getElementById('vcContent').innerHTML = '<div class="vc-scroll"><table class="vc"><thead>' + head + '</thead><tbody>' + rows + '</tbody></table></div>';
 
+      // ordenação
       document.querySelectorAll('table.vc th.sortable').forEach(function (th) {
         th.addEventListener('click', function () {
           const f = th.getAttribute('data-sort');
@@ -264,6 +266,7 @@
         });
       });
 
+      // edição + cor + auto-save
       document.querySelectorAll('table.vc tbody tr').forEach(function (tr) {
         tr.querySelectorAll('select[data-f]').forEach(function (sel) {
           const col = COLS.find(function (c) { return c.f === sel.getAttribute('data-f'); });
@@ -285,6 +288,7 @@
       const id = parseInt(tr.getAttribute('data-id'), 10);
       const payload = {};
       tr.querySelectorAll('[data-f]').forEach(function (el) { payload[el.getAttribute('data-f')] = el.value; });
+      // mantém RAW em sincronia (pra ordenação/filtro refletirem a edição)
       const rawItem = RAW.find(function (r) { return r.solicitacao_id === id; });
       if (rawItem) Object.keys(payload).forEach(function (k) { rawItem[k] = payload[k]; });
       try {
