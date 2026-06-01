@@ -29,7 +29,7 @@ function getS3(): S3Client | null {
   });
 }
 
-const ALLOWED_MIME = new Set(["image/png", "image/jpeg", "image/webp", "image/svg+xml"]);
+const ALLOWED_MIME = new Set(["image/png", "image/jpeg", "image/webp"]);
 const MAX_BYTES = 10 * 1024 * 1024; // 10 MB
 const MAX_DIM   = 8000;
 
@@ -65,22 +65,17 @@ router.post(
     try {
       if (!ALLOWED_MIME.has(file.mimetype)) {
         await cleanup();
-        res.status(400).json({ error: "Tipo inválido. Use PNG, JPG, WEBP ou SVG." });
+        res.status(400).json({ error: "Tipo inválido. Use PNG, JPG ou WEBP." });
         return;
       }
 
-      // Get dimensions (skip SVG — sharp can't reliably read SVG dimensions)
-      let width: number | undefined;
-      let height: number | undefined;
-      if (file.mimetype !== "image/svg+xml") {
-        const meta = await sharp(file.path).metadata();
-        width  = meta.width;
-        height = meta.height;
-        if ((width && width > MAX_DIM) || (height && height > MAX_DIM)) {
-          await cleanup();
-          res.status(400).json({ error: `Imagem muito grande (máx ${MAX_DIM}×${MAX_DIM}px)` });
-          return;
-        }
+      const meta   = await sharp(file.path).metadata();
+      const width  = meta.width;
+      const height = meta.height;
+      if ((width && width > MAX_DIM) || (height && height > MAX_DIM)) {
+        await cleanup();
+        res.status(400).json({ error: `Imagem muito grande (máx ${MAX_DIM}×${MAX_DIM}px)` });
+        return;
       }
 
       const now     = new Date();

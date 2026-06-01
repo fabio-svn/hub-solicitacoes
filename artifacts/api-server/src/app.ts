@@ -1,4 +1,6 @@
 import compression from "compression";
+import helmet from "helmet";
+import rateLimit from "express-rate-limit";
 import express, { type Express, type Request, type Response, type NextFunction } from "express";
 import cors from "cors";
 import session from "express-session";
@@ -17,6 +19,29 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app: Express = express();
+
+// Security headers
+app.use(helmet({
+  contentSecurityPolicy: false,
+  crossOriginEmbedderPolicy: false,
+}));
+
+// Rate limiting
+const authLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: "Muitas tentativas. Aguarde alguns segundos e tente novamente." },
+});
+
+const apiLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 300,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: "Limite de requests atingido. Aguarde um momento." },
+});
 
 app.use(compression());
 
@@ -97,6 +122,8 @@ app.get("/api/config", (_req, res) => {
   });
 });
 
+app.use("/auth", authLimiter);
+app.use("/api", apiLimiter);
 app.use("/api", router);
 app.use("/auth", authRouter);
 

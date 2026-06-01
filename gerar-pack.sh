@@ -1,64 +1,98 @@
-#!/usr/bin/env bash
-# gerar-pack.sh — monta um arquivo único com o código-fonte do projeto, p/ revisão.
-#
-# Uso: rodar na RAIZ do repositório (onde fica a pasta artifacts/):
-#     bash gerar-pack.sh
-# Saída: projeto-hub.md  (no mesmo formato do pack anterior)
-#
-# Segurança: NUNCA inclui .env nem arquivos de credenciais/chaves.
+#!/bin/bash
+# Gera um pack único do projeto Hub SVN em markdown.
+# Roda na raiz do projeto. Saída: projeto-hub.md no mesmo diretório.
 
-set -uo pipefail
+OUTPUT="projeto-hub.md"
+ROOT="artifacts/api-server"
 
-OUT="projeto-hub.md"
+# Pastas/padrões a EXCLUIR (cada um contém ruído ou binários grandes)
+EXCLUDES=(
+  -path "*/node_modules/*"
+  -o -path "*/.git/*"
+  -o -path "*/.local/*"
+  -o -path "*/.agents/*"
+  -o -path "*/attached_assets/*"
+  -o -path "*/dist/*"
+  -o -path "*/build/*"
+  -o -path "*/.next/*"
+  -o -path "*/.cache/*"
+  -o -path "*/.turbo/*"
+  -o -path "*/coverage/*"
+  -o -path "*/.replit_cache/*"
+  -o -path "*/uploads/*"
+  -o -path "*/tmp/*"
+  -o -name "package-lock.json"
+  -o -name "yarn.lock"
+  -o -name "pnpm-lock.yaml"
+  -o -name "*.log"
+  -o -name "*.lock"
+  -o -name ".DS_Store"
+)
 
-# Extensões que entram no pack (código e config legíveis)
-EXTS="ts tsx js jsx mjs cjs html css json toml yaml yml sql sh md webmanifest"
+# Extensões a INCLUIR
+INCLUDES=(
+  -name "*.ts" -o -name "*.tsx"
+  -o -name "*.js" -o -name "*.jsx" -o -name "*.mjs" -o -name "*.cjs"
+  -o -name "*.html" -o -name "*.css"
+  -o -name "*.json"
+  -o -name "*.md"
+  -o -name "*.sql"
+  -o -name "*.toml" -o -name "*.yaml" -o -name "*.yml"
+  -o -name ".env.example"
+  -o -name "Dockerfile" -o -name "*.dockerfile"
+  -o -name "*.sh"
+)
 
-: > "$OUT"
+# Limpa output anterior
+> "$OUTPUT"
 
-# Varre arquivos, podando pastas pesadas/irrelevantes, ordenado por caminho
-find . \
-  \( -path '*/node_modules/*' -o -path '*/.git/*' -o -path '*/dist/*' \
-     -o -path '*/build/*' -o -path '*/.next/*' -o -path '*/coverage/*' \
-     -o -path '*/.cache/*' -o -path '*/.turbo/*' -o -path '*/.vercel/*' \) -prune -o \
-  -type f -print0 \
-| sort -z \
-| while IFS= read -r -d '' f; do
-    rel="${f#./}"
-    base="$(basename "$f")"
-    ext="${f##*.}"
+# Cabeçalho do pack
+{
+  echo "# Pack do Projeto Hub SVN"
+  echo ""
+  echo "Gerado em: $(date '+%Y-%m-%d %H:%M:%S')"
+  echo ""
+  echo "Root: \`$ROOT\`"
+  echo ""
+  echo "---"
+  echo ""
+} >> "$OUTPUT"
 
-    # nunca incluir: o próprio output, segredos, locks, minificados, mapas
-    case "$base" in
-      "$OUT")                                   continue ;;
-      .env|.env.*)                              continue ;;   # segredos — NUNCA
-      *secret*|*credential*|*.pem|*.key|*.p12)  continue ;;
-      package-lock.json|pnpm-lock.yaml|yarn.lock) continue ;;
-      *.min.js|*.min.css|*.map)                 continue ;;
-    esac
+# Pega cada arquivo e concatena com header
+find "$ROOT" -type f \
+  ! \( "${EXCLUDES[@]}" \) \
+  \( "${INCLUDES[@]}" \) \
+  -print0 2>/dev/null | sort -z | while IFS= read -r -d '' file; do
 
-    # só as extensões da lista
-    keep=0
-    for e in $EXTS; do [ "$ext" = "$e" ] && { keep=1; break; }; done
-    [ "$keep" -eq 1 ] || continue
+  REL="${file#./}"
+  SIZE=$(wc -c < "$file" 2>/dev/null || echo 0)
 
-    # linguagem para o bloco de código
-    case "$ext" in
-      ts|tsx)         lang=ts ;;
-      js|jsx|mjs|cjs) lang=js ;;
-      yml)            lang=yaml ;;
-      *)              lang="$ext" ;;
-    esac
+  # Pula arquivos maiores que 500KB (provavelmente binário ou minificado)
+  if [ "$SIZE" -gt 512000 ]; then
+    echo "Pulando $REL (muito grande: $((SIZE/1024)) KB)" >&2
+    continue
+  fi
 
-    {
-      printf '## File: %s\n' "$rel"
-      printf '```%s\n' "$lang"
-      cat "$f"
-      printf '\n```\n\n'
-    } >> "$OUT"
-  done
+  # Pula arquivos vazios
+  if [ "$SIZE" -lt 1 ]; then
+    continue
+  fi
 
-linhas=$(wc -l < "$OUT" 2>/dev/null || echo "?")
-tam=$(du -h "$OUT" 2>/dev/null | cut -f1 || echo "?")
-arqs=$(grep -c '^## File:' "$OUT" 2>/dev/null || echo "?")
-echo "OK -> $OUT  ($arqs arquivos, $linhas linhas, $tam)"
+  {
+    echo ""
+    echo "## File: $REL"
+    echo ""
+    echo "\`\`\`"
+    cat "$file"
+    echo ""
+    echo "\`\`\`"
+    echo ""
+  } >> "$OUTPUT"
+done
+
+# Log de saída
+FINAL_SIZE=$(wc -c < "$OUTPUT")
+echo ""
+echo "Pack gerado: $OUTPUT"
+echo "Tamanho final: $((FINAL_SIZE / 1024)) KB"
+echo ""

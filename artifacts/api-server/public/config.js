@@ -265,7 +265,6 @@ const STATUS_SOLICITACAO = [
   { id: "aguardando-pagamento",   label: "Aguardando pagamento",       bg: "#8A6040", text: "#FFFFFF",  cor: "--leather-brown" },
   { id: "aguardando-finalizacao", label: "Aguardando finalização",     bg: "#7438B0", text: "#FFFFFF",  cor: "--leather-brown" },
   { id: "concluido",              label: "Concluído",                  bg: "#0A9060", text: "#FFFFFF",  cor: "--sage-green"    },
-  { id: "reprovado",              label: "Reprovado / Cancelado",      bg: "#C82828", text: "#FFFFFF",  cor: "--ruby-red"      },
   { id: "cancelado",              label: "Cancelado",                  bg: "#C82828", text: "#FFFFFF",  cor: "--carbon-black"  },
   { id: "em-espera",              label: "Em espera",                  bg: "#4D545F", text: "#FFFFFF",  cor: "--carbon-black"  },
   { id: "gerando",                label: "Gerando arte",               bg: "#dbeafe", text: "#1e40af" },
@@ -276,7 +275,7 @@ const STATUS_SOLICITACAO = [
   { id: "arte-finalizada",        label: "Arte finalizada",            bg: "#fef9c3", text: "#a16207" },
   { id: "envio-grafica",          label: "Envio gráfica",              bg: "#dbeafe", text: "#1d4ed8" },
   { id: "envio-assessor",         label: "Envio assessor",             bg: "#dcfce7", text: "#15803d" },
-  { id: "reprovado",              label: "Reprovado",                  bg: "#fecaca", text: "#dc2626" },
+  { id: "reprovado",              label: "Reprovado",                  bg: "#fecaca", text: "#dc2626", cor: "--ruby-red" },
 ];
 
 let SETORES = [
@@ -505,7 +504,6 @@ const FLUXOS_ETAPAS = {
     { id: "aguardando-pagamento",   label: "Aguardando pagamento",      visivel: true  },
     { id: "aguardando-finalizacao", label: "Aguardando finalização",    visivel: true  },
     { id: "concluido",              label: "Concluído",                 visivel: true  },
-    { id: "reprovado",              label: "Reprovado / Cancelado",     visivel: false },
     { id: "em-espera",              label: "Em espera",                 visivel: false },
     { id: "cancelado",              label: "Cancelado",                 visivel: false },
   ],

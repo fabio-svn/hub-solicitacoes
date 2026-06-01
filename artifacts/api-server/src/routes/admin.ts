@@ -34,7 +34,7 @@ router.get("/users", requireAuth, requireRole("admin"), async (req, res) => {
     res.json(enriched);
   } catch (err: any) {
     req.log.error({ err }, "Erro ao listar usuários");
-    res.status(500).json({ error: err.message || "Erro ao listar usuários", code: err.code });
+    res.status(500).json({ error: "Erro ao listar usuários", code: err.code });
   }
 });
 
@@ -69,7 +69,7 @@ router.put("/users/:id/role", requireAuth, requireRole("admin"), async (req, res
     res.json({ success: true });
   } catch (err: any) {
     req.log.error({ err, body: req.body }, "Erro ao alterar role");
-    res.status(500).json({ error: err.message || "Erro ao alterar role", code: err.code, details: err.stack?.split('\n').slice(0, 3).join('\n') });
+    res.status(500).json({ error: "Erro ao alterar role", code: err.code });
   }
 });
 
@@ -80,19 +80,29 @@ router.post("/impersonate", requireAuth, requireRole("admin", "gestor"), async (
       res.status(400).json({ error: "E-mail inválido" });
       return;
     }
+    const [targetUser] = await db.select().from(usersTable).where(eq(usersTable.email, email));
+    if (!targetUser) {
+      res.status(404).json({ error: "Usuário não encontrado" });
+      return;
+    }
+
     req.session.adminOriginal = req.session.user;
-    req.session.user = { email, name: email.split("@")[0], role: "user" };
+    req.session.user = {
+      email: targetUser.email,
+      name: targetUser.name || email.split("@")[0],
+      role: targetUser.role || "colaborador",
+    };
     req.session.save((err) => {
       if (err) {
         req.log.error({ err }, "Erro ao salvar sessão de impersonar");
-        res.status(500).json({ error: err.message || "Erro ao impersonar", code: (err as any).code });
+        res.status(500).json({ error: "Erro ao impersonar", code: (err as any).code });
         return;
       }
       res.json({ success: true, email });
     });
   } catch (err: any) {
     req.log.error({ err, body: req.body }, "Erro ao impersonar");
-    res.status(500).json({ error: err.message || "Erro ao impersonar", code: err.code, details: err.stack?.split('\n').slice(0, 3).join('\n') });
+    res.status(500).json({ error: "Erro ao impersonar", code: err.code });
   }
 });
 
@@ -105,14 +115,14 @@ router.post("/impersonate/stop", requireAuth, async (req, res): Promise<void> =>
     req.session.save((err) => {
       if (err) {
         req.log.error({ err }, "Erro ao salvar sessão ao sair impersonar");
-        res.status(500).json({ error: err.message || "Erro ao sair", code: (err as any).code });
+        res.status(500).json({ error: "Erro ao sair", code: (err as any).code });
         return;
       }
       res.json({ success: true });
     });
   } catch (err: any) {
     req.log.error({ err, body: req.body }, "Erro ao sair impersonar");
-    res.status(500).json({ error: err.message || "Erro ao sair", code: err.code, details: err.stack?.split('\n').slice(0, 3).join('\n') });
+    res.status(500).json({ error: "Erro ao sair", code: err.code });
   }
 });
 
@@ -133,7 +143,7 @@ router.put("/users/:id/clickup_user_id", requireAuth, requireRole("admin"), asyn
     res.json({ success: true });
   } catch (err: any) {
     req.log.error({ err, body: req.body }, "Erro ao atualizar clickup_user_id");
-    res.status(500).json({ error: err.message || "Erro ao atualizar ClickUp User ID", code: err.code, details: err.stack?.split('\n').slice(0, 3).join('\n') });
+    res.status(500).json({ error: "Erro ao atualizar ClickUp User ID", code: err.code });
   }
 });
 
@@ -172,7 +182,7 @@ router.get("/activity-log", requireAuth, async (req, res): Promise<void> => {
     res.json({ data: results, total, page, limit, totalPages: Math.ceil(total / limit) });
   } catch (err: any) {
     req.log.error({ err }, "Erro ao buscar activity log");
-    res.status(500).json({ error: err.message || "Erro ao buscar log", code: err.code, details: err.stack?.split('\n').slice(0, 3).join('\n') });
+    res.status(500).json({ error: "Erro ao buscar log", code: err.code });
   }
 });
 
@@ -236,7 +246,7 @@ router.get("/art-templates", requireAuth, requireRole("admin"), async (req, res)
     res.json(rows);
   } catch (err: any) {
     req.log.error({ err }, "Erro ao listar art-templates");
-    res.status(500).json({ error: err.message || "Erro ao listar templates", code: err.code, details: err.stack?.split('\n').slice(0, 3).join('\n') });
+    res.status(500).json({ error: "Erro ao listar templates", code: err.code });
   }
 });
 
@@ -254,7 +264,7 @@ router.post("/art-templates/preview", requireAuth, requireRole("admin"), async (
     res.set('Content-Type', 'image/png').send(pngBuffer);
   } catch (err: any) {
     req.log.error({ err, body: req.body }, "Erro ao renderizar preview");
-    res.status(500).json({ error: err.message || "Erro ao renderizar preview", code: err.code, details: err.stack?.split('\n').slice(0, 3).join('\n') });
+    res.status(500).json({ error: "Erro ao renderizar preview", code: err.code });
   }
 });
 
@@ -268,7 +278,7 @@ router.get("/art-templates/:id", requireAuth, requireRole("admin"), async (req, 
     res.json(row);
   } catch (err: any) {
     req.log.error({ err }, "Erro ao buscar art-template");
-    res.status(500).json({ error: err.message || "Erro ao buscar template", code: err.code, details: err.stack?.split('\n').slice(0, 3).join('\n') });
+    res.status(500).json({ error: "Erro ao buscar template", code: err.code });
   }
 });
 
@@ -289,7 +299,7 @@ router.post("/art-templates", requireAuth, requireRole("admin"), async (req, res
     res.json(inserted);
   } catch (err: any) {
     req.log.error({ err, body: req.body }, "Erro ao criar art-template");
-    res.status(500).json({ error: err.message || "Erro ao criar template", code: err.code, details: err.stack?.split('\n').slice(0, 3).join('\n') });
+    res.status(500).json({ error: "Erro ao criar template", code: err.code });
   }
 });
 
@@ -314,7 +324,7 @@ router.put("/art-templates/:id", requireAuth, requireRole("admin"), async (req, 
     res.json({ success: true, template: updated });
   } catch (err: any) {
     req.log.error({ err, body: req.body }, "Erro ao atualizar art-template");
-    res.status(500).json({ error: err.message || "Erro ao atualizar template", code: err.code, details: err.stack?.split('\n').slice(0, 3).join('\n') });
+    res.status(500).json({ error: "Erro ao atualizar template", code: err.code });
   }
 });
 
@@ -335,7 +345,7 @@ router.patch("/art-templates/:id/activate", requireAuth, requireRole("admin"), a
     res.json({ success: true });
   } catch (err: any) {
     req.log.error({ err, body: req.body }, "Erro ao ativar art-template");
-    res.status(err.status || 500).json({ error: err.message || "Erro ao ativar template", code: err.code, details: err.stack?.split('\n').slice(0, 3).join('\n') });
+    res.status(err.status || 500).json({ error: "Erro ao ativar template", code: err.code });
   }
 });
 
@@ -361,7 +371,7 @@ router.delete("/art-templates/:id", requireAuth, requireRole("admin"), async (re
     res.json({ success: true });
   } catch (err: any) {
     req.log.error({ err, body: req.body }, "Erro ao deletar art-template");
-    res.status(500).json({ error: err.message || "Erro ao deletar template", code: err.code, details: err.stack?.split('\n').slice(0, 3).join('\n') });
+    res.status(500).json({ error: "Erro ao deletar template", code: err.code });
   }
 });
 
@@ -427,7 +437,7 @@ router.post("/art-templates/:id/duplicate", requireAuth, requireRole("admin"), a
     res.json(inserted);
   } catch (err: any) {
     req.log.error({ err, body: req.body }, "Erro ao duplicar art-template");
-    res.status(500).json({ error: err.message || "Erro ao duplicar template", code: err.code, details: err.stack?.split('\n').slice(0, 3).join('\n') });
+    res.status(500).json({ error: "Erro ao duplicar template", code: err.code });
   }
 });
 
@@ -470,7 +480,7 @@ router.post("/users", requireAuth, requireRole("admin"), async (req, res): Promi
     res.json({ success: true, user: inserted });
   } catch (err: any) {
     req.log.error({ err, body: req.body }, "Erro ao criar usuário");
-    res.status(500).json({ error: err.message || "Erro ao criar usuário", code: err.code });
+    res.status(500).json({ error: "Erro ao criar usuário", code: err.code });
   }
 });
 
@@ -506,7 +516,7 @@ router.put("/users/:id/assignments", requireAuth, requireRole("admin"), async (r
     res.json({ success: true, tipos });
   } catch (err: any) {
     req.log.error({ err, body: req.body }, "Erro ao atualizar assignments");
-    res.status(500).json({ error: err.message || "Erro ao atualizar atribuições", code: err.code });
+    res.status(500).json({ error: "Erro ao atualizar atribuições", code: err.code });
   }
 });
 

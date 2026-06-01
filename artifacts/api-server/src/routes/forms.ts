@@ -15,7 +15,7 @@ import { logEventoBg } from "../services/activity-log";
 import { eventosSolicitacaoTable } from "@workspace/db";
 
 const router = Router();
-const upload = multer({ dest: os.tmpdir(), limits: { fileSize: 250 * 1024 * 1024, files: 10, fields: 20 } });
+const upload = multer({ dest: os.tmpdir(), limits: { fileSize: 50 * 1024 * 1024, files: 10, fields: 20 } });
 
 router.get("/form-schemas", (_req, res) => {
   res.json({
