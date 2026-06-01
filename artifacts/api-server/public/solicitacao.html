@@ -728,7 +728,6 @@
         const res = await fetch('/api/solicitacoes/' + solicitacaoId);
         if (!res.ok) { window.location.href = '/dashboard.html'; return; }
         const item = await res.json();
-        console.log('[Solicitação] status atual:', item.status, '| id:', item.id);
         if (item.status === 'em-aprovacao' && typeof Auth !== 'undefined' && Auth.marcarComoLido) {
           Auth.marcarComoLido(item.id);
         }
@@ -750,7 +749,6 @@
         if (!r.ok) return;
         const d = await r.json();
         if (d.updated && d.status !== item.status) {
-          console.log('[Solicitação] status atualizado:', item.status, '→', d.status);
           item.status = d.status;
           renderPage(item);
         }
