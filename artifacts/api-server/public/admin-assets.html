@@ -17,6 +17,8 @@
   <script src="/config.js"></script>
   <script src="/auth.js"></script>
   <script src="/shell.js"></script>
+  <script src="utils.js"></script>
+  <script src="toast.js"></script>
   <link rel="stylesheet" href="style.css">
   <style>
     :root {
@@ -166,17 +168,6 @@
     const parent = img.parentElement;
     if (parent) parent.innerHTML = '<div class="no-thumb">🖼</div>';
   };
-
-  function esc(s) {
-    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-  }
-  function showToast(msg, type = 'info', duration = 3000) {
-    const t = document.createElement('div');
-    t.className = `toast ${type}`;
-    t.textContent = msg;
-    document.body.appendChild(t);
-    setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.remove(), 300); }, duration);
-  }
 
   async function init() {
     if (typeof _configReady !== 'undefined') await _configReady;
@@ -329,7 +320,8 @@
   }
 
   async function deleteAsset(id) {
-    if (!confirm('Deletar este asset permanentemente? Esta ação não pode ser desfeita.')) return;
+    const ok = await showConfirm('Deletar este asset permanentemente? Esta ação não pode ser desfeita.', { danger: true, okLabel: 'Excluir' });
+    if (!ok) return;
     const r = await fetch(`/api/admin/assets/${id}`, { method: 'DELETE' });
     if (!r.ok) { const d = await r.json().catch(()=>({})); showToast(d.error || 'Erro ao deletar.', 'error'); return; }
     showToast('Asset deletado.', 'success');

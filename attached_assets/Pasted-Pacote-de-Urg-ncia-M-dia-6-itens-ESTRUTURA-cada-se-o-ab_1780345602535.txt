@@ -1,0 +1,335 @@
+Pacote de Urgência Média — 6 itens
+ESTRUTURA: cada seção abaixo é um mini-prompt independente. Pode aplicar tudo de uma vez (recomendado pelo agent maior) OU rodar uma por vez em sessões separadas se algo travar.
+ORDEM SUGERIDA (mais simples → mais complexo):
+
+Item 10 (timezone) — 5 min
+Item 12 (status webhook) — 10 min
+Item 9 (alert/confirm → toast/modal) — 30 min
+Item 7 (esc centralizado) — 30 min
+Item 8 (/api/constants) — 1h
+Item 11 (Zod nas rotas críticas) — 2h
+
+═══════════════════════════════════════════════════════════════
+🟢 Item 10 — Fix de timezone em new Date(s + "T...")
+═══════════════════════════════════════════════════════════════
+Arquivo: src/routes/clickup.ts
+3 ocorrências que precisam de ajuste (Brasil é UTC-3, Railway roda em UTC):
+Localizar:
+tsconst d = new Date(s + "T00:00:00");
+Substituir por:
+tsconst d = new Date(s + "T00:00:00-03:00");
+Localizar (2 ocorrências, ambas idênticas):
+tsconst prazoDate = new Date(prazoRaw + "T12:00:00");
+e
+tsconst prazoDate = prazoRaw ? new Date(prazoRaw + "T12:00:00") : null;
+Substituir respectivamente por:
+tsconst prazoDate = new Date(prazoRaw + "T12:00:00-03:00");
+e
+tsconst prazoDate = prazoRaw ? new Date(prazoRaw + "T12:00:00-03:00") : null;
+Verificação: rodar uma solicitação com prazo "2026-06-15", verificar no log que a data interpretada bate com 15/06/2026 (e não 14/06 ou 16/06).
+═══════════════════════════════════════════════════════════════
+🟢 Item 12 — Webhook ClickUp não sobrescreve status de cartão físico
+═══════════════════════════════════════════════════════════════
+Arquivo: src/routes/webhook.ts
+Hoje o webhook atualiza status de qualquer solicitação. Pra cartão físico, isso é problema: o RH controla manualmente via validacao-cartoes.html, e o ClickUp não conhece os status do fluxo manual (aguardando-validacao, aguardando-contrato, liberado-design, arte-finalizada, envio-grafica, envio-assessor).
+Mudança
+Localizar (perto da linha 100, dentro do handler do webhook):
+tsif (solicitacao.status === hubStatus) return;
+
+if (solicitacao.status === 'gerando' || solicitacao.status === 'erro') {
+  logger.info({ taskId, status: solicitacao.status }, "ClickUp webhook: status em render, ignorando");
+  return;
+}
+Adicionar IMEDIATAMENTE APÓS esse bloco (antes de seguir pra atualização):
+ts// Cartão físico tem fluxo manual gerenciado pelo RH em validacao-cartoes.html
+// Webhook do ClickUp não tem visibilidade dos status manuais — ignorar.
+if (solicitacao.tipo_solicitacao === 'cartao-visita-fisico') {
+  logger.info(
+    { taskId, status: solicitacao.status, rawStatus },
+    "ClickUp webhook: cartão físico tem fluxo manual, ignorando update de status"
+  );
+  return;
+}
+Verificação
+
+Subir um cartão físico, deixar com status aguardando-validacao
+No ClickUp, mudar manualmente a task pra "Concluído"
+Aguardar webhook chegar (~5s)
+Confirmar que o status NO HUB continua aguardando-validacao (não muda pra concluido)
+Conferir log do servidor: deve ter "cartão físico tem fluxo manual"
+
+═══════════════════════════════════════════════════════════════
+🟡 Item 9 — Migrar alert() e confirm() para toast/modal
+═══════════════════════════════════════════════════════════════
+Parte A — Adicionar showConfirm no toast.js
+Hoje só existe showToast. Precisamos de um showConfirm (modal de confirmação não bloqueante).
+Arquivo: public/js/toast.js
+Substituir o conteúdo inteiro do arquivo por:
+js// Toast — notificação não bloqueante
+window.showToast = function(message, type = 'success', duration = 3500) {
+  let container = document.getElementById('toastContainer');
+  if (!container) {
+    container = document.createElement('div');
+    container.id = 'toastContainer';
+    container.className = 'toast-container';
+    document.body.appendChild(container);
+  }
+  const toast = document.createElement('div');
+  toast.className = 'toast ' + type;
+  toast.textContent = message;
+  container.appendChild(toast);
+  setTimeout(() => toast.classList.add('fade-out'), duration - 500);
+  setTimeout(() => toast.remove(), duration);
+};
+
+// Confirm — modal de confirmação, retorna Promise<boolean>
+window.showConfirm = function(message, options = {}) {
+  return new Promise((resolve) => {
+    const overlay = document.createElement('div');
+    overlay.className = 'confirm-overlay';
+    overlay.innerHTML = `
+      <div class="confirm-modal" role="dialog" aria-modal="true">
+        <p class="confirm-message">${(message || '').replace(/</g, '&lt;')}</p>
+        <div class="confirm-actions">
+          <button class="btn btn-secondary confirm-cancel">${options.cancelLabel || 'Cancelar'}</button>
+          <button class="btn ${options.danger ? 'btn-danger' : 'btn-primary'} confirm-ok">${options.okLabel || 'Confirmar'}</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+
+    const cleanup = (result) => {
+      overlay.classList.add('fade-out');
+      setTimeout(() => overlay.remove(), 200);
+      document.removeEventListener('keydown', onKey);
+      resolve(result);
+    };
+    const onKey = (e) => {
+      if (e.key === 'Escape') cleanup(false);
+      if (e.key === 'Enter') cleanup(true);
+    };
+    overlay.querySelector('.confirm-cancel').addEventListener('click', () => cleanup(false));
+    overlay.querySelector('.confirm-ok').addEventListener('click', () => cleanup(true));
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) cleanup(false); });
+    document.addEventListener('keydown', onKey);
+
+    setTimeout(() => overlay.querySelector('.confirm-ok').focus(), 50);
+  });
+};
+Parte B — Adicionar CSS para o modal de confirm
+Arquivo: public/style.css (ou style-v2.css se já existir)
+Adicionar no fim:
+css/* Confirm modal */
+.confirm-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fadeIn 0.15s ease;
+}
+.confirm-overlay.fade-out { animation: fadeOut 0.15s ease forwards; }
+.confirm-modal {
+  background: var(--paper-white);
+  border-radius: 14px;
+  padding: 24px;
+  max-width: 420px;
+  width: calc(100% - 32px);
+  box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+}
+.confirm-message {
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: var(--carbon-black);
+  margin-bottom: 20px;
+}
+.confirm-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+.confirm-actions .btn { min-height: 40px; padding: 8px 18px; }
+.btn-danger {
+  background: var(--ruby-red);
+  color: var(--paper-white);
+  border: 1px solid var(--ruby-red);
+}
+.btn-danger:hover { background: #8e2f2a; border-color: #8e2f2a; }
+@keyframes fadeOut { from { opacity: 1 } to { opacity: 0 } }
+Parte C — Substituir alert() por showToast() em todos os HTMLs
+Padrão geral:
+
+alert('Erro: X') ou alert('Erro ao Y') → showToast('X', 'error') ou showToast('Erro ao Y', 'error')
+alert('Sucesso') ou alert('Item criado') → showToast('...', 'success')
+alert('Aviso') → showToast('...', 'warning')
+
+Casos específicos (encontrados via grep — aplicar em cada arquivo):
+admin.html (linhas próximas a 972, 1304, 1312, 1923):
+
+alert('Erro de rede ao excluir.') → showToast('Erro de rede ao excluir', 'error')
+alert('Erro ao excluir: ' + (err.error || res.statusText)) → showToast('Erro ao excluir: ' + (err.error || res.statusText), 'error')
+alert('Erro de rede ao excluir solicitação.') → showToast('Erro de rede ao excluir solicitação', 'error')
+alert('Erro ao exportar.') → showToast('Erro ao exportar', 'error')
+
+admin-templates.html (3212, 3400):
+
+alert('Não é possível deletar o template ativo. Ative outro primeiro.') → showToast('Não é possível deletar o template ativo. Ative outro primeiro', 'warning')
+alert('Erro ao carregar template.') → showToast('Erro ao carregar template', 'error')
+
+admin-usuarios.html (4800, 4802, 4834, 4914):
+
+Todos os alert('Erro de conexão.') → showToast('Erro de conexão', 'error')
+alert('Não foi possível logar como esse usuário.') → showToast('Não foi possível logar como esse usuário', 'error')
+
+Padrão geral para os outros: buscar alert( em todos os HTMLs e substituir conforme o contexto. Se a mensagem indica erro, usar 'error'. Se indica sucesso, 'success'. Se indica aviso, 'warning'.
+Parte D — Substituir confirm() por showConfirm()
+Padrão:
+js// ANTES
+if (!confirm('Deseja realmente excluir?')) return;
+// ... ação destrutiva
+
+// DEPOIS
+const ok = await showConfirm('Deseja realmente excluir?', { danger: true, okLabel: 'Excluir' });
+if (!ok) return;
+// ... ação destrutiva
+Importante: a função que chama precisa ser async. Se já é, ok. Se não é, transformar em async.
+Casos comuns no projeto:
+
+confirm('Tem certeza que deseja excluir...') → showConfirm('Tem certeza que deseja excluir...', { danger: true, okLabel: 'Excluir' })
+confirm('Deseja aprovar?') → showConfirm('Deseja aprovar?', { okLabel: 'Aprovar' })
+
+Verificação
+
+Excluir uma solicitação em admin → modal de confirmação aparece, fundo escuro, botões "Cancelar" e "Excluir"
+Erro de rede em qualquer ação → toast vermelho aparece no canto, some sozinho em 3s
+ESC fecha o modal de confirmação (cancela)
+Enter no modal confirma
+
+═══════════════════════════════════════════════════════════════
+🟡 Item 7 — Centralizar esc() no utils.js
+═══════════════════════════════════════════════════════════════
+Parte A — Adicionar esc() ao utils.js
+Arquivo: public/utils.js
+Adicionar no topo (antes das outras funções):
+js// Escape HTML para uso seguro em innerHTML/template strings
+window.esc = function(s) {
+  if (s === null || s === undefined) return '';
+  return String(s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+};
+Parte B — Remover function esc() local dos 9 HTMLs
+Arquivos afetados (procurar e remover a definição local em cada):
+
+admin.html
+admin-assets.html
+admin-clickup-lists.html
+admin-log.html
+admin-templates.html
+admin-usuarios.html
+dashboard.html
+solicitacao.html
+validacao-cartoes.html
+
+Em cada arquivo, procurar o padrão:
+jsfunction esc(str) {
+  // ... implementação local
+}
+ou
+jsfunction esc(s) {
+  // ...
+}
+E apagar inteiro. A função window.esc definida no utils.js (que é carregado por todas essas páginas) cobre os usos.
+ATENÇÃO: Verificar que cada um desses HTMLs tem <script src="utils.js"></script> carregando ANTES dos scripts que usam esc(). Se algum não tem, adicionar no <head> ou antes do <script> inline.
+Parte C — Auditar usos perigosos de innerHTML (manual, mas guiado)
+Padrão GOOD: ${esc(item.titulo)} — escapado
+Padrão BAD: ${item.titulo} — direto (XSS se titulo tem <script>)
+Auditar especificamente estes lugares conhecidos sem escape (do meu levantamento anterior):
+
+form-eventos.html:12966 — ${item.titulo} e ${item.url} no preview de speaker
+form-materiais-impressos.html:12443 — ${item.label} (verificar se label vem de user input)
+solicitacao.html:14504 — <img src="${url}"> (escapar URL)
+dashboard.html — vários ${item.titulo} e ${item.email} no render de cards/tabela
+admin.html — render da tabela tem alguns ${esc(...)} (bom) e outros sem
+
+Regra prática: em qualquer ${...} dentro de uma template string que vira innerHTML, se o valor vem do banco ou de input do usuário, envolver com esc(). Se é número, ID interno, ou constante hardcoded, deixar direto.
+═══════════════════════════════════════════════════════════════
+🟠 Item 8 — /api/constants (single source of truth)
+═══════════════════════════════════════════════════════════════
+Parte A — Criar src/config/constants.ts
+Arquivo: src/config/constants.ts (NOVO)
+ts// Constantes compartilhadas backend ↔ frontend
+// Frontend consome via GET /api/config (que inclui esses arrays)
+
+export const SETORES = [
+  "Administração",
+  "Alocação",
+  "Aracaju",
+  "Câmbio",
+  "Campo Grande",
+  "Capital Humano",
+  "Cascavel",
+  "Commodities",
+  // ... copiar a lista COMPLETA do public/config.js — array atual de SETORES
+];
+
+export const MARCAS = [
+  // ... copiar lista atual se existir no projeto
+];
+
+export const CONTRATOS = [
+  // ... copiar lista atual se existir
+];
+Importante: copiar literalmente as listas que estão hoje em public/config.js (let SETORES = [...] perto da linha 5691) e em src/config/form-schemas.ts (export const SETORES = [...] perto da linha 22137). Se houver divergência entre as duas, manter a versão do form-schemas.ts (assume-se que o backend é a verdade).
+Parte B — Estender /api/config no app.ts
+Arquivo: src/app.ts
+Adicionar import no topo:
+tsimport { SETORES, MARCAS, CONTRATOS } from "./config/constants";
+Localizar a rota /api/config (perto da linha 90):
+tsapp.get("/api/config", (_req, res) => {
+  res.set('Cache-Control', 'private, max-age=300');
+  res.json({
+    r2PublicUrl: process.env.R2_PUBLIC_URL || "...",
+    // ...
+  });
+});
+Adicionar dentro do res.json({...}) as novas chaves (mantendo as existentes):
+tsres.json({
+  r2PublicUrl: ...,
+  emailUpload: ...,
+  // ... (mantém o que já tem)
+  
+  // Constantes compartilhadas
+  setores: SETORES,
+  marcas: MARCAS,
+  contratos: CONTRATOS,
+});
+Parte C — Frontend consume do servidor (já tem código pronto!)
+Arquivo: public/config.js
+O código pra consumir já existe (linha 5461 aprox):
+jsif (schemas.setores && schemas.setores.length) SETORES = ['Selecione seu setor', ...schemas.setores];
+Verificar que a função onde isso está realmente é chamada no início do app (provavelmente via Auth.init ou Shell.init). Se não, garantir que loadConfig() (ou similar) rode antes do SETORES ser usado por qualquer form.
+Adicionar lógica análoga pra MARCAS e CONTRATOS logo após a linha 5461:
+jsif (schemas.marcas && schemas.marcas.length) MARCAS = schemas.marcas;
+if (schemas.contratos && schemas.contratos.length) CONTRATOS = schemas.contratos;
+Parte D — form-schemas.ts importa do constants.ts
+Arquivo: src/config/form-schemas.ts
+Localizar:
+tsexport const SETORES = [
+  // lista hardcoded
+];
+Substituir por:
+tsexport { SETORES, MARCAS, CONTRATOS } from "./constants";
+(Se houver outras propriedades exportadas no mesmo arquivo, manter — só substituir o array literal pela re-export.)
+Verificação
+
+Reiniciar o backend
+Carregar o hub no browser → DevTools → Network → ver request a /api/config
+Resposta deve incluir setores: [...], marcas: [...], contratos: [...]
+Abrir qualquer form que use setor (ex: form-pagina-assessores) → dropdown carrega corretamente
+Alterar um setor em src/config/constants.ts → após restart do backend, frontend reflete a mudança em todos os forms

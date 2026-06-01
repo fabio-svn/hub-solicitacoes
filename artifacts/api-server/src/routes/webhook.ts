@@ -102,6 +102,14 @@ router.post(
         return;
       }
 
+      if (solicitacao.tipo_solicitacao === 'cartao-visita-fisico') {
+        logger.info(
+          { taskId, status: solicitacao.status, rawStatus },
+          "ClickUp webhook: cartão físico tem fluxo manual, ignorando update de status"
+        );
+        return;
+      }
+
       const statusAnterior = solicitacao.status;
 
       logEventoBg(solicitacao.id, {

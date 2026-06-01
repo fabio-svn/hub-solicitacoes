@@ -644,6 +644,7 @@
   </style>
 
   <script src="utils.js"></script>
+  <script src="toast.js"></script>
   <script src="config.js"></script>
   <script src="auth.js"></script>
   <script src="shell.js"></script>
@@ -679,13 +680,6 @@
     const solicitacaoId = params.get('id');
 
     /* ── util ─────────────────────────────────── */
-    function esc(str) {
-      if (!str) return '';
-      const d = document.createElement('div');
-      d.textContent = String(str);
-      return d.innerHTML;
-    }
-
     function dataRelativa(dateStr) {
       if (!dateStr) return '—';
       const d = new Date(dateStr);
@@ -1768,12 +1762,12 @@
           const data = await res.json().catch(() => ({}));
           btn.disabled = false;
           btn.textContent = 'Excluir permanentemente';
-          alert(data.error || 'Erro ao excluir. Tente novamente.');
+          showToast(data.error || 'Erro ao excluir. Tente novamente.', 'error');
         }
       } catch {
         btn.disabled = false;
         btn.textContent = 'Excluir permanentemente';
-        alert('Erro de conexão.');
+        showToast('Erro de conexão', 'error');
       }
       _deleteTargetId = null;
     }

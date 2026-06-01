@@ -256,7 +256,7 @@ function addLine(items: string[], label: string, value: string | null | undefine
 function formatDate(raw: string | undefined): string | null {
   const s = str(raw);
   if (!s) return null;
-  const d = new Date(s + "T00:00:00");
+  const d = new Date(s + "T00:00:00-03:00");
   if (isNaN(d.getTime())) return s;
   return `${String(d.getDate()).padStart(2, "0")}/${String(d.getMonth() + 1).padStart(2, "0")}/${d.getFullYear()}`;
 }
@@ -967,7 +967,7 @@ async function setGeneralCustomFields(
   // ── Dropdown, prazo e arquivos — paralelo ──────────────────────────────────
   const tipoDemandaOrderindex = TIPO_DEMANDA_ORDERINDEX[tipo] ?? 3;
   const prazoRaw = str(dados.prazoEntrega as string);
-  const prazoDate = prazoRaw ? new Date(prazoRaw + "T12:00:00") : null;
+  const prazoDate = prazoRaw ? new Date(prazoRaw + "T12:00:00-03:00") : null;
   if (prazoRaw && prazoDate && isNaN(prazoDate.getTime())) {
     logger.warn({ taskId, prazoRaw }, "ClickUp: data de prazo inválida, pulando");
   }
@@ -1094,7 +1094,7 @@ function buildGeneralCustomFieldsArray(
 
   const prazoRaw = str(dados.prazoEntrega as string);
   if (prazoRaw) {
-    const prazoDate = new Date(prazoRaw + "T12:00:00");
+    const prazoDate = new Date(prazoRaw + "T12:00:00-03:00");
     if (!isNaN(prazoDate.getTime())) {
       fields.push({ id: "33c5d4c5-1e0d-48ba-b0a5-6decdea6e138", value: prazoDate.getTime() });
     }

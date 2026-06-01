@@ -147,6 +147,8 @@
   <script src="config.js"></script>
   <script src="auth.js"></script>
   <script src="shell.js"></script>
+  <script src="utils.js"></script>
+  <script src="toast.js"></script>
   <script>
     let _allUsers = [];
     let _editingUserId = null;
@@ -154,13 +156,6 @@
     let _tiposComClickup = [];
     let _editingClickupUserId = null;
     let _editingAssignmentsUserId = null;
-
-    function esc(str) {
-      if (!str) return '';
-      const d = document.createElement('div');
-      d.textContent = String(str);
-      return d.innerHTML;
-    }
 
     const ROLE_LABELS = {
       capital_humano: 'Capital Humano',
@@ -255,7 +250,8 @@
     }
 
     async function logarComo(email) {
-      if (!confirm(`Visualizar o sistema como ${email}?`)) return;
+      const ok = await showConfirm(`Visualizar o sistema como ${email}?`, { okLabel: 'Logar como' });
+      if (!ok) return;
       try {
         const res = await fetch('/api/admin/impersonate', {
           method: 'POST',
@@ -266,9 +262,9 @@
           sessionStorage.setItem('svn_impersonate', email);
           window.location.href = '/dashboard.html';
         } else {
-          alert('Não foi possível logar como esse usuário.');
+          showToast('Não foi possível logar como esse usuário', 'error');
         }
-      } catch { alert('Erro de conexão.'); }
+      } catch { showToast('Erro de conexão', 'error'); }
     }
 
     function abrirEditRole(userId, userName, currentRole) {
@@ -298,9 +294,9 @@
           await loadUsuarios();
         } else {
           const err = await res.json().catch(() => ({}));
-          alert(err.error || 'Erro ao alterar função.');
+          showToast(err.error || 'Erro ao alterar função', 'error');
         }
-      } catch { alert('Erro de conexão.'); }
+      } catch { showToast('Erro de conexão', 'error'); }
     }
 
     async function _ensureTipos() {
@@ -378,9 +374,9 @@
           await loadUsuarios();
         } else {
           const err = await res.json().catch(() => ({}));
-          alert(err.error || 'Erro ao atualizar ClickUp ID.');
+          showToast(err.error || 'Erro ao atualizar ClickUp ID', 'error');
         }
-      } catch { alert('Erro de conexão.'); }
+      } catch { showToast('Erro de conexão', 'error'); }
     }
 
     async function abrirEditAssignments(userId, userName) {
@@ -421,9 +417,9 @@
           await loadUsuarios();
         } else {
           const err = await res.json().catch(() => ({}));
-          alert(err.error || 'Erro ao atualizar atribuições.');
+          showToast(err.error || 'Erro ao atualizar atribuições', 'error');
         }
-      } catch { alert('Erro de conexão.'); }
+      } catch { showToast('Erro de conexão', 'error'); }
     }
 
     async function init() {

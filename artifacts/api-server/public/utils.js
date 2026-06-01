@@ -1,3 +1,14 @@
+// Escape HTML para uso seguro em innerHTML/template strings
+window.esc = function(s) {
+  if (s === null || s === undefined) return '';
+  return String(s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+};
+
 function mascaraTelefone(el) {
   let v = el.value.replace(/\D/g, '').substring(0, 11);
   if (v.length > 6) {

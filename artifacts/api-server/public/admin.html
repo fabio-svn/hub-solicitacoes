@@ -176,6 +176,7 @@
 
   </div>
   <script src="utils.js"></script>
+  <script src="toast.js"></script>
   <script src="config.js"></script>
   <script src="auth.js"></script>
   <script src="shell.js"></script>
@@ -191,13 +192,6 @@
     let adminGraficoModo = 'tipo';
     let adminGraficoData = null;
     let graficoFiltrosAtivos = null;
-
-    function esc(str) {
-      if (!str) return '';
-      const d = document.createElement('div');
-      d.textContent = String(str);
-      return d.innerHTML;
-    }
 
     async function init() {
       await _configReady;
@@ -311,12 +305,13 @@
 
     async function deleteSol(id, ev) {
       if (ev) ev.stopPropagation();
-      if (!confirm('Tem certeza que deseja excluir essa solicitação? Esta ação não pode ser desfeita.')) return;
+      const ok = await showConfirm('Tem certeza que deseja excluir essa solicitação? Esta ação não pode ser desfeita.', { danger: true, okLabel: 'Excluir' });
+      if (!ok) return;
       try {
         const res = await fetch(`/api/solicitacoes/${id}`, { method: 'DELETE' });
         if (!res.ok) {
           const err = await res.json().catch(() => ({}));
-          alert('Erro ao excluir: ' + (err.error || res.statusText));
+          showToast('Erro ao excluir: ' + (err.error || res.statusText), 'error');
           return;
         }
         loadTable(currentTab);
@@ -324,7 +319,7 @@
         loadAdminStats();
       } catch (e) {
         console.error(e);
-        alert('Erro de rede ao excluir solicitação.');
+        showToast('Erro de rede ao excluir solicitação', 'error');
       }
     }
 

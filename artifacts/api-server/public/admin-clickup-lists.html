@@ -78,14 +78,10 @@
   <script src="config.js"></script>
   <script src="auth.js"></script>
   <script src="shell.js"></script>
+  <script src="utils.js"></script>
+  <script src="toast.js"></script>
   <script>
     let STATE = { lists: [], forms: [], assignedTipos: {} };
-
-    function esc(str) {
-      const d = document.createElement('div');
-      d.textContent = String(str == null ? '' : str);
-      return d.innerHTML;
-    }
 
     async function init() {
       try { if (typeof _configReady !== 'undefined') await _configReady; } catch (e) {}
@@ -217,13 +213,14 @@
     }
 
     async function excluirLista(listId, nome) {
-      if (!confirm('Excluir a lista "' + nome + '"? Os formulários atribuídos a ela voltam a usar a lista padrão.')) return;
+      const ok = await showConfirm('Excluir a lista "' + nome + '"? Os formulários atribuídos a ela voltam a usar a lista padrão.', { danger: true, okLabel: 'Excluir' });
+      if (!ok) return;
       try {
         const res = await fetch('/api/admin/clickup-lists/' + listId, { method: 'DELETE', credentials: 'include' });
         const d = await res.json().catch(function () { return {}; });
-        if (!res.ok || !d.ok) { alert(d.error || 'Erro ao excluir.'); return; }
+        if (!res.ok || !d.ok) { showToast(d.error || 'Erro ao excluir', 'error'); return; }
         loadConfig();
-      } catch (err) { alert('Erro de rede ao excluir.'); }
+      } catch (err) { showToast('Erro de rede ao excluir', 'error'); }
     }
 
     init();

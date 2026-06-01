@@ -11,6 +11,7 @@ import { fileURLToPath } from "url";
 import { randomBytes } from "crypto";
 import router from "./routes";
 import authRouter from "./routes/auth";
+import { MARCAS_OPTS, CONTRATOS_OPTS, SETORES_LIST, CARGOS_OPTS } from "./config/form-schemas";
 import { logger } from "./lib/logger";
 import { pool } from "@workspace/db";
 import { ApiError } from "./utils/api-error";
@@ -119,6 +120,10 @@ app.get("/api/config", (_req, res) => {
     urlLogoPreta: process.env.URL_LOGO_PRETA || "https://pub-a2132f9b61f940659cc98265acfcf64c.r2.dev/SVN-1.svg",
     urlManual: process.env.URL_MANUAL || "https://pub-a2132f9b61f940659cc98265acfcf64c.r2.dev/Manual-de-Eventos-SVN.pdf",
     urlTutorialTransmissao: process.env.URL_TUTORIAL_TRANSMISSAO || "https://drive.google.com/file/d/1L36fFqFC-sEPWggNmlZOUNnY2DqxP8HK/view?usp=sharing",
+    marcas: MARCAS_OPTS,
+    contratos: CONTRATOS_OPTS,
+    setores: SETORES_LIST,
+    cargos: CARGOS_OPTS,
   });
 });
 

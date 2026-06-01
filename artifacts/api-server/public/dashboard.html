@@ -167,6 +167,7 @@
   </div>
 
   <script src="utils.js"></script>
+  <script src="toast.js"></script>
   <script src="config.js"></script>
   <script src="auth.js"></script>
   <script src="shell.js"></script>
@@ -185,15 +186,6 @@
     let pages = { eventos: 1, geral: 1 };
     let searchTimeout;
 
-    function esc(str) {
-      if (!str) return '';
-      return String(str)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#39;');
-    }
 
     async function init() {
       await _configReady;
@@ -1149,10 +1141,10 @@
           limparSelecao();
           await loadAdminHistorico();
         } else {
-          alert(d.error || 'Erro ao excluir.');
+          showToast(d.error || 'Erro ao excluir', 'error');
         }
       } catch {
-        alert('Erro de conexão.');
+        showToast('Erro de conexão', 'error');
       } finally {
         btn.disabled = false; btn.textContent = 'Excluir permanentemente';
       }
@@ -1209,12 +1201,12 @@
           const data = await res.json().catch(() => ({}));
           btn.disabled = false;
           btn.textContent = 'Excluir permanentemente';
-          alert(data.error || 'Erro ao excluir. Tente novamente.');
+          showToast(data.error || 'Erro ao excluir. Tente novamente.', 'error');
         }
       } catch {
         btn.disabled = false;
         btn.textContent = 'Excluir permanentemente';
-        alert('Erro de conexão.');
+        showToast('Erro de conexão', 'error');
       }
       _deleteTargetId = null;
       _deleteTargetRow = null;
@@ -1276,11 +1268,11 @@
         });
         if (!res.ok) {
           const d = await res.json().catch(() => ({}));
-          alert(d.error || 'Erro ao atualizar função.');
+          showToast(d.error || 'Erro ao atualizar função', 'error');
           loadUsuarios();
         }
       } catch {
-        alert('Erro de conexão.');
+        showToast('Erro de conexão', 'error');
         loadUsuarios();
       } finally {
         selectEl.disabled = false;
@@ -1303,11 +1295,11 @@
           btn.textContent = '✓';
           setTimeout(() => { if (btn) { btn.textContent = 'Salvar'; btn.disabled = false; } }, 1500);
         } else {
-          alert(d.error || 'Erro ao salvar.');
+          showToast(d.error || 'Erro ao salvar', 'error');
           btn.textContent = 'Salvar'; btn.disabled = false;
         }
       } catch {
-        alert('Erro de conexão.');
+        showToast('Erro de conexão', 'error');
         btn.textContent = 'Salvar'; btn.disabled = false;
       }
     }

@@ -151,6 +151,8 @@
   <script src="config.js"></script>
   <script src="auth.js"></script>
   <script src="shell.js"></script>
+  <script src="utils.js"></script>
+  <script src="toast.js"></script>
   <script>
     const CONTRATO_OPTS = [
       { v: '', label: 'Selecione…' },
@@ -202,8 +204,7 @@
     let sortState = { field: null, dir: 1 };
     let filters = { status: '', contrato: '', unidade: '' };
 
-    function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]; }); }
-    function optionsHtml(opts, sel) { return opts.map(function (o) { return '<option value="' + esc(o.v) + '"' + (o.v === sel ? ' selected' : '') + '>' + esc(o.label) + '</option>'; }).join(''); }
+      function optionsHtml(opts, sel) { return opts.map(function (o) { return '<option value="' + esc(o.v) + '"' + (o.v === sel ? ' selected' : '') + '>' + esc(o.label) + '</option>'; }).join(''); }
     function colorSelect(el, map) { const c = map && map[el.value]; if (c) { el.style.background = c.bg; el.style.color = c.text; } else { el.style.background = 'transparent'; el.style.color = '#221b19'; } }
 
     function toggleFilterPanel() { document.getElementById('vcFilterPanel').classList.toggle('open'); }

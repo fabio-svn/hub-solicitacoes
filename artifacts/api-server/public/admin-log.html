@@ -76,16 +76,11 @@
   <script src="config.js"></script>
   <script src="auth.js"></script>
   <script src="shell.js"></script>
+  <script src="utils.js"></script>
+  <script src="toast.js"></script>
   <script>
     let logPage = 1;
     let logSearchTimeout;
-
-    function esc(str) {
-      if (!str) return '';
-      const d = document.createElement('div');
-      d.textContent = String(str);
-      return d.innerHTML;
-    }
 
     const LOG_NIVEL_STYLE = {
       info:  { bg: 'rgba(37,99,235,0.1)',  text: '#2563eb', label: 'INFO'  },
@@ -203,7 +198,7 @@
           a.download = 'log-hub-svn-' + new Date().toISOString().split('T')[0] + '.csv';
           a.click();
         })
-        .catch(() => alert('Erro ao exportar.'));
+        .catch(() => showToast('Erro ao exportar', 'error'));
     }
 
     async function init() {

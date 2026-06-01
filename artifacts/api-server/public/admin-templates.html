@@ -593,6 +593,8 @@
   <script src="config.js"></script>
   <script src="auth.js"></script>
   <script src="shell.js"></script>
+  <script src="utils.js"></script>
+  <script src="toast.js"></script>
   <script>
     // ── Constants ────────────────────────────────────────────────
     const PLACEHOLDERS_BY_TIPO = {
@@ -749,12 +751,6 @@
     let historyDebounce = null;
 
     // ── Helpers ──────────────────────────────────────────────────
-    function esc(str) {
-      if (!str) return '';
-      const d = document.createElement('div');
-      d.textContent = String(str);
-      return d.innerHTML;
-    }
     function humanizeTipo(tipo) {
       return TIPO_LABELS[tipo] || tipo.replace(/-/g,' ').replace(/\b\w/g, c=>c.toUpperCase());
     }
@@ -940,12 +936,12 @@
       </div>`;
     }
 
-    function updDocTipo(val) {
+    async function updDocTipo(val) {
       if (!currentTemplateMeta) return;
       if (val === '_custom') return;
       const oldTipo = currentTemplateMeta.tipo;
       if (val !== oldTipo) {
-        const confirmed = confirm(`Mudar o tipo de "${oldTipo}" para "${val}" pode afetar a associação com o form atual. Confirma?`);
+        const confirmed = await showConfirm(`Mudar o tipo de "${oldTipo}" para "${val}" pode afetar a associação com o form atual. Confirma?`);
         if (!confirmed) { renderDocumentPanel(); return; }
         currentTemplateMeta.tipo = val;
         document.getElementById('panelTmplTipo').textContent = humanizeTipo(val);
@@ -1114,7 +1110,7 @@
     }
 
     // ── Unsaved guard ────────────────────────────────────────────
-    function requestBack() {
+    async function requestBack() {
       console.log('[back] click detected, isDirty=', isDirty);
       if (!isDirty) {
         goToList()
@@ -1138,7 +1134,7 @@
         modal.classList.add('open');
       } else {
         console.warn('[back] modal não existe — usando confirm nativo');
-        if (confirm('Você tem alterações não salvas. Sair sem salvar?')) {
+        if (await showConfirm('Você tem alterações não salvas. Sair sem salvar?')) {
           isDirty = false;
           goToList().catch(err => {
             console.error('[back] goToList falhou:', err);
@@ -1250,19 +1246,20 @@
     async function activateTemplateFromList(id) {
       const t = allTemplates.find(x => x.id === id); if (!t) return;
       const vInfo = t.variant_value ? ` [${t.variant_value}]` : '';
-      const confirmed = confirm(`Trocar para este template como ativo afeta as próximas solicitações de "${humanizeTipo(t.tipo)}"${vInfo}. Confirma?`);
+      const confirmed = await showConfirm(`Trocar para este template como ativo afeta as próximas solicitações de "${humanizeTipo(t.tipo)}"${vInfo}. Confirma?`);
       if (!confirmed) return;
       const res = await fetch(`/api/admin/art-templates/${id}/activate`, { method: 'PATCH' });
-      if (!res.ok) { const d = await res.json().catch(()=>({})); alert(d.error || 'Erro ao ativar template.'); return; }
+      if (!res.ok) { const d = await res.json().catch(()=>({})); showToast(d.error || 'Erro ao ativar template', 'error'); return; }
       await loadAllTemplates(); renderListView();
     }
 
     async function deleteTemplateConfirm(id, name, isActive) {
-      if (isActive) { alert('Não é possível deletar o template ativo. Ative outro primeiro.'); return; }
-      if (!confirm(`Deletar "${name}"? Esta ação não pode ser desfeita.`)) return;
+      if (isActive) { showToast('Não é possível deletar o template ativo. Ative outro primeiro.', 'warning'); return; }
+      const ok = await showConfirm(`Deletar "${name}"? Esta ação não pode ser desfeita.`, { danger: true, okLabel: 'Excluir' });
+      if (!ok) return;
       const res = await fetch(`/api/admin/art-templates/${id}`, { method: 'DELETE' });
       const d = await res.json().catch(()=>({}));
-      if (!res.ok) { alert(d.error || 'Erro ao deletar template.'); return; }
+      if (!res.ok) { showToast(d.error || 'Erro ao deletar template', 'error'); return; }
       await loadAllTemplates(); renderListView();
     }
 
@@ -1273,7 +1270,7 @@
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name: newName || `${sourceName} (cópia)` }),
       });
-      if (!res.ok) { const d = await res.json().catch(()=>({})); alert(d.error || 'Erro ao duplicar.'); return; }
+      if (!res.ok) { const d = await res.json().catch(()=>({})); showToast(d.error || 'Erro ao duplicar', 'error'); return; }
       await loadAllTemplates(); renderListView();
     }
 
@@ -1446,7 +1443,7 @@
     // ── Editor ───────────────────────────────────────────────────
     async function openEditor(id) {
       const res = await fetch(`/api/admin/art-templates/${id}`);
-      if (!res.ok) { alert('Erro ao carregar template.'); return; }
+      if (!res.ok) { showToast('Erro ao carregar template', 'error'); return; }
       const row = await res.json();
 
       currentTemplateMeta = { id: row.id, tipo: row.tipo, variant_value: row.variant_value || null, name: row.name, is_active: row.is_active };
@@ -1511,10 +1508,10 @@
     async function activateCurrentTemplate() {
       if (!currentTemplateMeta) return;
       const vInfo = currentTemplateMeta.variant_value ? ` [variante: ${currentTemplateMeta.variant_value}]` : '';
-      const confirmed = confirm(`Tornar "${currentTemplateMeta.name}" o template ativo para "${humanizeTipo(currentTemplateMeta.tipo)}"${vInfo}? Isso afeta as próximas geradoras desta arte.`);
+      const confirmed = await showConfirm(`Tornar "${currentTemplateMeta.name}" o template ativo para "${humanizeTipo(currentTemplateMeta.tipo)}"${vInfo}? Isso afeta as próximas geradoras desta arte.`);
       if (!confirmed) return;
       const res = await fetch(`/api/admin/art-templates/${currentTemplateMeta.id}/activate`, { method: 'PATCH' });
-      if (!res.ok) { const d = await res.json().catch(()=>({})); alert(d.error || 'Erro ao ativar.'); return; }
+      if (!res.ok) { const d = await res.json().catch(()=>({})); showToast(d.error || 'Erro ao ativar', 'error'); return; }
       currentTemplateMeta.is_active = true;
       renderActiveBadge();
       await loadAllTemplates();
@@ -1528,7 +1525,7 @@
         method: 'PUT', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name: newName.trim() }),
       });
-      if (!res.ok) { const d = await res.json().catch(()=>({})); alert(d.error || 'Erro ao renomear.'); }
+      if (!res.ok) { const d = await res.json().catch(()=>({})); showToast(d.error || 'Erro ao renomear', 'error'); }
       await loadAllTemplates();
     }
 
@@ -1892,8 +1889,9 @@
       selectLayer(id);
       scheduleLivePreview(NORMAL_DEBOUNCE);
     }
-    function deleteLayer(id) {
-      if (!confirm('Deletar esta layer?')) return;
+    async function deleteLayer(id) {
+      const ok = await showConfirm('Deletar esta layer?', { danger: true, okLabel: 'Excluir' });
+      if (!ok) return;
       currentTemplate.layers = currentTemplate.layers.filter(l => l.id !== id);
       if (selectedLayerId === id) selectedLayerId = null;
       markDirty();
@@ -2523,9 +2521,10 @@
     }
 
     async function deleteAsset(id) {
-      if (!confirm('Deletar este asset permanentemente?')) return;
+      const ok = await showConfirm('Deletar este asset permanentemente?', { danger: true, okLabel: 'Excluir' });
+      if (!ok) return;
       const r = await fetch(`/api/admin/assets/${id}`, { method: 'DELETE' });
-      if (!r.ok) { const d = await r.json().catch(()=>({})); alert(d.error || 'Erro ao deletar.'); return; }
+      if (!r.ok) { const d = await r.json().catch(()=>({})); showToast(d.error || 'Erro ao deletar', 'error'); return; }
       loadAssets();
     }
 

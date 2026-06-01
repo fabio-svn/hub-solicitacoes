@@ -2112,3 +2112,43 @@ input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
     white-space: normal;
   }
 }
+
+/* Confirm modal */
+.confirm-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fadeIn 0.15s ease;
+}
+.confirm-overlay.fade-out { animation: fadeOut 0.15s ease forwards; }
+.confirm-modal {
+  background: var(--paper-white);
+  border-radius: 14px;
+  padding: 24px;
+  max-width: 420px;
+  width: calc(100% - 32px);
+  box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+}
+.confirm-message {
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: var(--carbon-black);
+  margin-bottom: 20px;
+}
+.confirm-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+.confirm-actions .btn { min-height: 40px; padding: 8px 18px; }
+.btn-danger {
+  background: var(--ruby-red);
+  color: var(--paper-white);
+  border: 1px solid var(--ruby-red);
+}
+.btn-danger:hover { background: #8e2f2a; border-color: #8e2f2a; }
+@keyframes fadeOut { from { opacity: 1 } to { opacity: 0 } }
