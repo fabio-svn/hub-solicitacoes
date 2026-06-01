@@ -44,6 +44,54 @@
     .vc-filter-select { padding: 5px 10px; border-radius: 7px; border: 1px solid var(--border-light, #e8e2dc); background: #fff; font-family: inherit; font-size: 0.8rem; color: #221b19; cursor: pointer; }
     .vc-filter-select:focus { outline: none; border-color: #AC3631; }
     .vc-empty { padding: 30px; text-align: center; color: rgba(34,27,25,0.5); font-size: 0.88rem; }
+
+    /* Cards mobile (Grupo 5) */
+    .cartoes-cards-mobile { display: none; }
+    @media (max-width: 768px) {
+      .vc-scroll { display: none; }
+      .cartoes-cards-mobile {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        margin-top: 16px;
+      }
+    }
+    .cartao-card {
+      background: var(--paper-white, #fff);
+      border: 1px solid var(--border-light, #e8e2dc);
+      border-radius: 12px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      transition: background 0.15s;
+    }
+    .cartao-card.flash-saved { background: rgba(95,129,121,0.12); }
+    .cartao-card-header {
+      display: flex; justify-content: space-between; align-items: flex-start;
+      gap: 12px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--border-light, #e8e2dc);
+    }
+    .cartao-card-nome { font-weight: 700; font-size: 0.95rem; color: var(--carbon-black, #221b19); }
+    .cartao-card-data { font-size: 0.72rem; color: var(--carbon-black, #221b19); opacity: 0.5; margin-top: 2px; }
+    .cartao-card-field { display: flex; flex-direction: column; gap: 4px; }
+    .cartao-card-label {
+      font-size: 0.66rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.08em; color: var(--carbon-black, #221b19); opacity: 0.5;
+    }
+    .cartao-card-value { font-size: 0.85rem; color: var(--carbon-black, #221b19); word-break: break-word; }
+    .cartao-card-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .cartao-card select,
+    .cartao-card input,
+    .cartao-card textarea {
+      width: 100%; padding: 8px 10px;
+      border: 1px solid var(--border-light, #e8e2dc);
+      border-radius: 8px;
+      font-family: inherit; font-size: 0.85rem;
+      background: var(--paper-white, #fff);
+    }
+    .cartao-card textarea { min-height: 60px; resize: vertical; }
   </style>
 </head>
 <body class="page-light">
@@ -96,6 +144,7 @@
       </div>
 
       <div id="vcContent"><div class="vc-empty">Carregando…</div></div>
+      <div class="cartoes-cards-mobile"></div>
     </div>
   </div>
 
@@ -255,6 +304,7 @@
       }).join('');
 
       document.getElementById('vcContent').innerHTML = '<div class="vc-scroll"><table class="vc"><thead>' + head + '</thead><tbody>' + rows + '</tbody></table></div>';
+      renderCartoesCards(view);
 
       document.querySelectorAll('table.vc th.sortable').forEach(function (th) {
         th.addEventListener('click', function () {
@@ -280,7 +330,62 @@
 
     function autoGrow(ta) { ta.style.height = 'auto'; ta.style.height = Math.max(34, ta.scrollHeight) + 'px'; }
 
+    function renderCartoesCards(cartoes) {
+      var cont = document.querySelector('.cartoes-cards-mobile');
+      if (!cont) return;
+      if (!cartoes.length) { cont.innerHTML = ''; return; }
+      cont.innerHTML = cartoes.map(function(c) {
+        var statusColor = STATUS_COLORS[c.status] || { bg: '#f1f5f9', text: '#475569' };
+        var statusLabel = (STATUS_OPTS.find(function(s) { return s.v === c.status; }) || {}).label || c.status || '—';
+        var dataFmt = c.data_pedido ? new Date(c.data_pedido).toLocaleDateString('pt-BR', { day:'2-digit', month:'short', year:'numeric' }) : '—';
+        return '<article class="cartao-card" data-id="' + c.solicitacao_id + '">' +
+          '<div class="cartao-card-header">' +
+            '<div>' +
+              '<div class="cartao-card-nome">' + esc(c.nome || '—') + '</div>' +
+              '<div class="cartao-card-data">' + esc(dataFmt) + '</div>' +
+            '</div>' +
+            '<span style="display:inline-flex;align-items:center;padding:4px 10px;border-radius:6px;font-size:0.72rem;font-weight:700;background:' + statusColor.bg + ';color:' + statusColor.text + '">' + esc(statusLabel) + '</span>' +
+          '</div>' +
+          '<div class="cartao-card-row">' +
+            '<div class="cartao-card-field"><span class="cartao-card-label">WhatsApp</span><span class="cartao-card-value">' + esc(c.whatsapp || '—') + '</span></div>' +
+            '<div class="cartao-card-field"><span class="cartao-card-label">Unidade</span><span class="cartao-card-value">' + esc(c.unidade || '—') + '</span></div>' +
+          '</div>' +
+          '<div class="cartao-card-field"><span class="cartao-card-label">E-mail</span><span class="cartao-card-value">' + esc(c.email || '—') + '</span></div>' +
+          '<div class="cartao-card-row">' +
+            '<div class="cartao-card-field"><span class="cartao-card-label">Contrato Social</span><span class="cartao-card-value">' + esc(c.contrato_social || '—') + '</span></div>' +
+            '<div class="cartao-card-field"><span class="cartao-card-label">Envio para</span><span class="cartao-card-value">' + esc(c.envio_para || '—') + '</span></div>' +
+          '</div>' +
+          '<div class="cartao-card-field"><span class="cartao-card-label">Custo</span><span class="cartao-card-value">' + esc(c.custo || '—') + '</span></div>' +
+          '<div class="cartao-card-field"><span class="cartao-card-label">Andamento</span>' +
+            '<select onchange="salvarCampoCard(' + c.solicitacao_id + ',\'status\',this.value)">' +
+              STATUS_OPTS.map(function(s) { return '<option value="' + esc(s.v) + '"' + (s.v === c.status ? ' selected' : '') + '>' + esc(s.label) + '</option>'; }).join('') +
+            '</select>' +
+          '</div>' +
+          '<div class="cartao-card-field"><span class="cartao-card-label">Observação</span>' +
+            '<textarea onblur="salvarCampoCard(' + c.solicitacao_id + ',\'observacao\',this.value)">' + esc(c.observacao || '') + '</textarea>' +
+          '</div>' +
+        '</article>';
+      }).join('');
+    }
+
     let saveTimer = null;
+    function salvarCampoCard(id, field, value) {
+      var rawItem = RAW.find(function(r) { return r.solicitacao_id === id; });
+      if (rawItem) rawItem[field] = value;
+      var payload = {};
+      payload[field] = value;
+      fetch('/api/cartao-aprovacoes/' + id, {
+        method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload),
+      }).then(function(res) {
+        if (res.ok) {
+          var card = document.querySelector('.cartao-card[data-id="' + id + '"]');
+          if (card) { card.classList.add('flash-saved'); setTimeout(function() { card.classList.remove('flash-saved'); }, 600); }
+          var tag = document.getElementById('vcSaved');
+          if (tag) { tag.classList.add('show'); clearTimeout(saveTimer); saveTimer = setTimeout(function() { tag.classList.remove('show'); }, 1500); }
+        }
+      }).catch(function() {});
+    }
+
     async function salvarLinha(tr) {
       const id = parseInt(tr.getAttribute('data-id'), 10);
       const payload = {};

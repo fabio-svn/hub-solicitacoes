@@ -426,6 +426,99 @@
       .sol-header-right { align-self: flex-start; }
     }
 
+    /* 4a — Bandeja de detalhes (mobile recolhida, desktop sempre visível) */
+    .sol-detalhes { margin-top: 8px; }
+    .sol-detalhes > summary {
+      cursor: pointer;
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--carbon-black);
+      opacity: 0.55;
+      list-style: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 0;
+    }
+    .sol-detalhes > summary::after {
+      content: '▾';
+      font-size: 0.7rem;
+      transition: transform 0.2s;
+    }
+    .sol-detalhes[open] > summary::after { transform: rotate(180deg); }
+    .sol-detalhes > summary::-webkit-details-marker { display: none; }
+    .sol-detalhes-conteudo {
+      padding: 10px 0 4px;
+      font-size: 0.85rem;
+      color: var(--carbon-black);
+      opacity: 0.7;
+      line-height: 1.5;
+    }
+    @media (min-width: 769px) {
+      .sol-detalhes > summary { display: none; }
+      .sol-detalhes-conteudo { padding-top: 4px; }
+      .sol-detalhes { display: block; }
+    }
+
+    /* 4b — Preview de entrega compacto no mobile */
+    @media (max-width: 768px) {
+      .assinatura-preview-card {
+        background: var(--paper-white) !important;
+        border: 1px solid var(--border-light);
+        padding: 12px 14px !important;
+        flex-direction: row !important;
+        align-items: center;
+        gap: 12px;
+        min-height: auto !important;
+      }
+      .assinatura-preview-card iframe {
+        height: 300px !important;
+      }
+    }
+
+    /* 4c — Kebab menu */
+    .sol-actions-kebab { position: relative; }
+    .kebab-btn {
+      width: 36px; height: 36px;
+      border-radius: 8px;
+      border: 1px solid var(--border-light);
+      background: var(--paper-white);
+      cursor: pointer;
+      font-size: 1.2rem;
+      color: var(--carbon-black);
+      opacity: 0.6;
+      transition: 0.15s;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .kebab-btn:hover { opacity: 1; background: rgba(0,0,0,0.04); }
+    .kebab-menu {
+      position: absolute; right: 0; top: 100%;
+      margin-top: 4px;
+      background: var(--paper-white);
+      border: 1px solid var(--border-light);
+      border-radius: 10px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+      min-width: 180px;
+      padding: 6px;
+      z-index: 50;
+    }
+    .kebab-item {
+      width: 100%;
+      display: flex; align-items: center; gap: 8px;
+      padding: 9px 12px;
+      border: none; background: none;
+      font-size: 0.85rem; cursor: pointer;
+      border-radius: 6px;
+      text-align: left;
+      color: var(--carbon-black);
+      font-family: 'Nunito Sans', sans-serif;
+    }
+    .kebab-item:hover { background: rgba(0,0,0,0.05); }
+    .kebab-item.kebab-danger { color: var(--ruby-red, #9f3f37); }
+    .kebab-item.kebab-danger:hover { background: rgba(159,63,55,0.08); }
+
     /* ─── Dados da solicitação ─── */
     .dados-grid {
       display: grid;
@@ -483,14 +576,19 @@
       <div class="sol-header">
         <div class="sol-header-left">
           <h1 class="sol-titulo" id="solTitulo"></h1>
-          <div class="sol-meta" id="solMeta"></div>
-          <div id="solResponsavel" style="display:none;margin-top:8px">
-            <span style="display:inline-flex;align-items:center;gap:6px;padding:5px 12px 5px 10px;background:rgba(34,27,25,0.07);border:1px solid rgba(34,27,25,0.15);border-radius:999px;font-size:0.8rem;color:var(--carbon-black)">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="opacity:0.45;flex-shrink:0"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-              <span style="opacity:0.5;font-weight:500;font-size:0.78rem">Responsável:</span>
-              <span class="resp-nome" style="font-weight:700;font-size:0.82rem"></span>
-            </span>
-          </div>
+          <details class="sol-detalhes" id="solDetalhes">
+            <summary>Detalhes</summary>
+            <div class="sol-detalhes-conteudo">
+              <div class="sol-meta" id="solMeta"></div>
+              <div id="solResponsavel" style="display:none;margin-top:8px">
+                <span style="display:inline-flex;align-items:center;gap:6px;padding:5px 12px 5px 10px;background:rgba(34,27,25,0.07);border:1px solid rgba(34,27,25,0.15);border-radius:999px;font-size:0.8rem;color:var(--carbon-black)">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="opacity:0.45;flex-shrink:0"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                  <span style="opacity:0.5;font-weight:500;font-size:0.78rem">Responsável:</span>
+                  <span class="resp-nome" style="font-weight:700;font-size:0.82rem"></span>
+                </span>
+              </div>
+            </div>
+          </details>
         </div>
         <div class="sol-header-right" id="solHeaderRight">
           <span class="sol-status-badge" id="solStatus"></span>
@@ -588,6 +686,36 @@
       return d.innerHTML;
     }
 
+    function dataRelativa(dateStr) {
+      if (!dateStr) return '—';
+      const d = new Date(dateStr);
+      const agora = new Date();
+      const diff = agora - d;
+      const mins = Math.floor(diff / 60000);
+      const hrs = Math.floor(diff / 3600000);
+      const dias = Math.floor(diff / 86400000);
+      if (mins < 1) return 'agora mesmo';
+      if (mins < 60) return `há ${mins} min`;
+      if (hrs < 24) {
+        const h = d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+        return `hoje às ${h}`;
+      }
+      if (dias === 1) return 'ontem';
+      if (dias < 7) return `há ${dias} dias`;
+      return d.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' });
+    }
+
+    function toggleKebabMenu() {
+      const m = document.getElementById('solKebabMenu');
+      if (!m) return;
+      m.hidden = !m.hidden;
+    }
+    document.addEventListener('click', function(e) {
+      const m = document.getElementById('solKebabMenu');
+      if (!m || m.hidden) return;
+      if (!e.target.closest('.sol-actions-kebab')) m.hidden = true;
+    });
+
     /* ── init ─────────────────────────────────── */
     async function init() {
       await _configReady;
@@ -675,23 +803,21 @@
         }) + ' — ' + dtAut.toLocaleTimeString('pt-BR', {
           hour: '2-digit', minute: '2-digit'
         });
+        const dtAutRel = dataRelativa(item.updated_at || item.created_at);
         const headerRight = document.getElementById('solHeaderRight');
         headerRight.innerHTML = `
           <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;text-align:right">
             <span style="color:${isConcluido ? '#0A9060' : '#92400e'};font-weight:600;font-size:0.9rem;font-family:'Nunito Sans',sans-serif">${isConcluido ? 'Material disponível' : 'Em processamento'}</span>
-            <span style="font-size:0.75rem;opacity:0.45;font-family:'Nunito Sans',sans-serif">Atualizado: ${dtFormatted}</span>
-            ${isAdm ? `<button onclick="abrirModalExcluir(${item.id})" title="Excluir solicitação"
-              style="display:inline-flex;align-items:center;gap:5px;margin-top:6px;padding:5px 10px;border-radius:8px;background:rgba(220,38,38,0.08);color:#dc2626;border:none;cursor:pointer;font-family:'Nunito Sans',sans-serif;font-size:0.75rem;font-weight:600;transition:all 0.15s"
-              onmouseover="this.style.background='#dc2626';this.style.color='white'"
-              onmouseout="this.style.background='rgba(220,38,38,0.08)';this.style.color='#dc2626'">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <polyline points="3 6 5 6 21 6"/>
-                <path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/>
-                <path d="M10 11v6"/><path d="M14 11v6"/>
-                <path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/>
-              </svg>
-              Deletar
-            </button>` : ''}
+            <span style="font-size:0.75rem;opacity:0.45;font-family:'Nunito Sans',sans-serif" title="${dtFormatted}">Atualizado: ${dtAutRel}</span>
+            ${isAdm ? `<div class="sol-actions-kebab">
+              <button class="kebab-btn" onclick="toggleKebabMenu()" aria-label="Mais ações">⋯</button>
+              <div class="kebab-menu" id="solKebabMenu" hidden>
+                <button class="kebab-item kebab-danger" onclick="abrirModalExcluir(${item.id})">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>
+                  Deletar solicitação
+                </button>
+              </div>
+            </div>` : ''}
           </div>`;
 
         renderFluxo(item);
@@ -714,6 +840,7 @@
       const dt = new Date(item.created_at);
       const dtStr = dt.toLocaleDateString('pt-BR', { day:'2-digit', month:'short', year:'numeric' }) +
         ' às ' + dt.toLocaleTimeString('pt-BR', { hour:'2-digit', minute:'2-digit' });
+      const dtRel = dataRelativa(item.created_at);
 
       const metaParts = [];
       metaParts.push(`<span>${esc(tipoLabel)}</span>`);
@@ -723,7 +850,7 @@
       }
       if (dados.setor) metaParts.push(`<span class="sol-meta-sep"></span><span>${esc(dados.setor)}</span>`);
       if (dados.natureza) metaParts.push(`<span class="sol-meta-sep"></span><span>${dados.natureza === 'presencial' ? 'Presencial' : 'Online'}</span>`);
-      metaParts.push(`<span class="sol-meta-sep"></span><span>Solicitado em ${dtStr}</span>`);
+      metaParts.push(`<span class="sol-meta-sep"></span><span title="${dtStr}">Solicitado ${dtRel}</span>`);
       document.getElementById('solMeta').innerHTML = metaParts.join('');
       const respEl = document.getElementById('solResponsavel');
       if (respEl) {
@@ -778,18 +905,15 @@
             </svg>
           </button>`;
         })() + `
-          <button onclick="abrirModalExcluir(${item.id})"
-            title="Excluir solicitação"
-            style="display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:8px;background:rgba(220,38,38,0.08);color:#dc2626;border:none;cursor:pointer;transition:all 0.15s"
-            onmouseover="this.style.background='#dc2626';this.style.color='white';this.style.transform='scale(1.05)'"
-            onmouseout="this.style.background='rgba(220,38,38,0.08)';this.style.color='#dc2626';this.style.transform='scale(1)'">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <polyline points="3 6 5 6 21 6"/>
-              <path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/>
-              <path d="M10 11v6"/><path d="M14 11v6"/>
-              <path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/>
-            </svg>
-          </button>`) : '');
+          <div class="sol-actions-kebab">
+            <button class="kebab-btn" onclick="toggleKebabMenu()" aria-label="Mais ações">⋯</button>
+            <div class="kebab-menu" id="solKebabMenu" hidden>
+              <button class="kebab-item kebab-danger" onclick="abrirModalExcluir(${item.id})">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>
+                Deletar solicitação
+              </button>
+            </div>
+          </div>`) : '');
     }
 
     /* ── renderFluxo (horizontal rail) ─────────── */

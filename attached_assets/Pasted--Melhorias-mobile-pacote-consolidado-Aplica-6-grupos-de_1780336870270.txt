@@ -1,0 +1,550 @@
+# Melhorias mobile — pacote consolidado
+
+Aplica 6 grupos de ajustes responsivos no Hub. Pode aplicar tudo de uma vez,
+mas se algum bloco der trabalho, pular e aplicar separadamente é seguro —
+os blocos são independentes.
+
+Arquivos tocados: `style.css`, `shell.js`, `solicitacao.html`,
+`validacao-cartoes.html`, `admin-usuarios.html`.
+
+═══════════════════════════════════════════════════════════════
+## 1. Header — esconder nome no mobile, deixar só avatar
+═══════════════════════════════════════════════════════════════
+### `style.css`
+Adicionar regra mobile (em algum lugar perto das outras regras `.app-user-*`):
+```css
+@media (max-width: 600px) {
+  .app-user-name { display: none; }
+  /* mantém avatar + chevron clicáveis com tap target adequado */
+  .app-user-trigger { padding: 6px 8px; gap: 6px; }
+}
+```
+O badge de notificação no avatar (`#shellNotifBadge`) continua aparecendo
+sobre o avatar normalmente.
+
+═══════════════════════════════════════════════════════════════
+## 2. Dashboard / lista — corrigir overflow horizontal
+═══════════════════════════════════════════════════════════════
+### `style.css`
+O bug é que algum filho da `.container` está mais largo que o viewport
+e empurra TUDO pra fora (avatar some, botão corta, filtros viram pra fora).
+Defesa em camadas:
+
+```css
+@media (max-width: 768px) {
+  /* trava horizontal no container */
+  .container, .container-narrow { 
+    overflow-x: hidden; 
+    max-width: 100vw;
+  }
+  /* stats-row: empilhar/wrap em vez de transbordar */
+  .stats-row { 
+    flex-wrap: wrap; 
+    gap: 10px;
+  }
+  .stat-card { 
+    flex: 1 1 calc(50% - 5px); 
+    min-width: 0;
+    padding: 14px 16px;
+  }
+  .stat-number { font-size: 1.6rem; }
+  /* tabs: rolar horizontal se não couberem, em vez de transbordar */
+  .tabs { 
+    overflow-x: auto; 
+    flex-wrap: nowrap; 
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .tabs::-webkit-scrollbar { display: none; }
+  .tab { flex-shrink: 0; }
+  /* filter-bar: wrap + search-bar flexível */
+  .filter-bar { flex-wrap: wrap; }
+  .search-bar { min-width: 0; flex: 1; }
+}
+```
+
+═══════════════════════════════════════════════════════════════
+## 3. Sidebar admin no mobile — virar drawer com hamburger
+═══════════════════════════════════════════════════════════════
+### `style.css`
+Substituir o bloco atual de mobile da sidebar (linhas ~19643-19650, dentro
+do `@media (max-width: 768px)`) por:
+```css
+@media (max-width: 768px) {
+  .app-shell[data-is-admin] {
+    grid-template-columns: 1fr;
+    grid-template-areas: "header" "main";
+  }
+  /* Sidebar vira drawer fora da tela */
+  .app-shell[data-is-admin] .app-sidebar {
+    display: block;
+    position: fixed;
+    top: 60px;
+    left: 0;
+    bottom: 0;
+    width: 280px;
+    max-width: 85vw;
+    z-index: 100;
+    transform: translateX(-100%);
+    transition: transform 0.28s ease;
+    background: var(--paper-white);
+    border-right: 1px solid var(--border-light);
+    overflow-y: auto;
+    box-shadow: 4px 0 24px rgba(0,0,0,0.12);
+  }
+  .app-shell[data-is-admin].sidebar-open .app-sidebar {
+    transform: translateX(0);
+  }
+  /* Backdrop atrás do drawer */
+  .app-shell[data-is-admin].sidebar-open::before {
+    content: '';
+    position: fixed;
+    top: 60px; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.45);
+    z-index: 99;
+    animation: fadeIn 0.2s ease;
+  }
+  /* MOSTRA o botão hamburger no mobile (hoje fica display:none) */
+  .sidebar-toggle-btn { display: inline-flex !important; }
+}
+@keyframes fadeIn { from { opacity: 0 } to { opacity: 1 } }
+```
+
+### `shell.js` — atualizar `toggleSidebar()`
+A função atual só alterna `sidebar-collapsed` (desktop). Trocar por:
+```js
+toggleSidebar() {
+  const shell = document.querySelector('.app-shell');
+  if (!shell) return;
+  const isMobile = window.matchMedia('(max-width: 768px)').matches;
+  if (isMobile) {
+    const open = shell.classList.toggle('sidebar-open');
+    if (open) {
+      // fecha ao tocar fora ou em um link da sidebar
+      setTimeout(() => {
+        const close = (e) => {
+          const tappedLink = e.target.closest('.sidebar-link');
+          const tappedSidebar = e.target.closest('.app-sidebar');
+          const tappedToggle = e.target.closest('.sidebar-toggle-btn');
+          if (tappedLink || (!tappedSidebar && !tappedToggle)) {
+            shell.classList.remove('sidebar-open');
+            document.removeEventListener('click', close);
+          }
+        };
+        document.addEventListener('click', close);
+      }, 0);
+    }
+  } else {
+    const collapsed = shell.classList.toggle('sidebar-collapsed');
+    localStorage.setItem('svn_sidebar_collapsed', String(collapsed));
+  }
+}
+```
+
+═══════════════════════════════════════════════════════════════
+## 4. Resumo da solicitação — vários ajustes
+═══════════════════════════════════════════════════════════════
+### `solicitacao.html`
+
+**4a. Bandeja "Detalhes" recolhida no mobile**
+
+Localizar o bloco `.sol-header` (cabeçalho do resumo com título, subtítulo,
+"Solicitado em", "Responsável"). Reorganizar:
+
+- **Sempre visível**: título + badge de status.
+- **Em uma bandeja `<details>`**: subtítulo (tipo + user + email), "Solicitado em",
+  "Responsável", e qualquer outro metadado.
+
+Estrutura sugerida:
+```html
+<div class="sol-header">
+  <div class="sol-header-left">
+    <h1 class="sol-titulo">{{titulo}}</h1>
+    <details class="sol-detalhes" id="solDetalhes">
+      <summary>Detalhes</summary>
+      <div class="sol-detalhes-conteudo">
+        <!-- subtitulo, datas, responsavel -->
+      </div>
+    </details>
+  </div>
+  <div class="sol-header-right"><!-- badge status + kebab --></div>
+</div>
+```
+
+CSS (adicionar no `<style>` da página):
+```css
+.sol-detalhes { margin-top: 8px; }
+.sol-detalhes > summary {
+  cursor: pointer;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--carbon-black);
+  opacity: 0.55;
+  list-style: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 0;
+}
+.sol-detalhes > summary::after {
+  content: '▾';
+  font-size: 0.7rem;
+  transition: transform 0.2s;
+}
+.sol-detalhes[open] > summary::after { transform: rotate(180deg); }
+.sol-detalhes > summary::-webkit-details-marker { display: none; }
+.sol-detalhes-conteudo {
+  padding: 10px 0 4px;
+  font-size: 0.85rem;
+  color: var(--carbon-black);
+  opacity: 0.7;
+  line-height: 1.5;
+}
+
+/* Desktop: sem botão, sempre aberto */
+@media (min-width: 769px) {
+  .sol-detalhes > summary { display: none; }
+  .sol-detalhes-conteudo { padding-top: 4px; }
+}
+```
+
+E no JS: garantir que o `<details>` venha sem o atributo `open` por padrão
+(mobile recolhido). No desktop, o CSS força o conteúdo visível mesmo sem `open`.
+
+**4b. Preview do PDF/material compacto no mobile**
+
+Localizar o card de preview de entrega (`.entrega-preview-card`, ou similar —
+o card grande, escuro, com o nome do arquivo + botão "Baixar"). No mobile,
+transformar em linha compacta:
+```css
+@media (max-width: 768px) {
+  .entrega-preview-card {
+    background: var(--paper-white) !important;
+    border: 1px solid var(--border-light);
+    padding: 12px 14px !important;
+    flex-direction: row !important;
+    align-items: center;
+    gap: 12px;
+    min-height: auto !important;
+  }
+  .entrega-preview-card .preview-bg,
+  .entrega-preview-card svg { 
+    width: 32px !important; 
+    height: 32px !important; 
+    flex-shrink: 0;
+  }
+  .entrega-preview-card .filename {
+    font-size: 0.82rem !important;
+    color: var(--carbon-black) !important;
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .entrega-preview-card .btn-baixar {
+    padding: 8px 14px;
+    font-size: 0.82rem;
+    flex-shrink: 0;
+  }
+}
+```
+(Se os nomes de classe forem diferentes, ajustar — o conceito é deixar o card
+mais baixo, fundo claro em vez do escuro grande, e tudo em uma linha.)
+
+**4c. "Deletar" → menu kebab**
+
+Mover o botão "Deletar" pra dentro de um menu de 3 pontinhos (kebab) ao lado
+do badge de status. Estrutura:
+```html
+<div class="sol-actions-kebab">
+  <button class="kebab-btn" onclick="toggleKebabMenu()" aria-label="Mais ações">⋯</button>
+  <div class="kebab-menu" id="solKebabMenu" hidden>
+    <button class="kebab-item kebab-danger" onclick="deletarSolicitacao()">
+      <svg>...</svg> Deletar solicitação
+    </button>
+    <!-- e qualquer outra ação destrutiva ou secundária aqui -->
+  </div>
+</div>
+```
+CSS:
+```css
+.sol-actions-kebab { position: relative; }
+.kebab-btn {
+  width: 36px; height: 36px;
+  border-radius: 8px;
+  border: 1px solid var(--border-light);
+  background: var(--paper-white);
+  cursor: pointer;
+  font-size: 1.2rem;
+  color: var(--carbon-black);
+  opacity: 0.6;
+  transition: 0.15s;
+}
+.kebab-btn:hover { opacity: 1; background: rgba(0,0,0,0.04); }
+.kebab-menu {
+  position: absolute; right: 0; top: 100%;
+  margin-top: 4px;
+  background: var(--paper-white);
+  border: 1px solid var(--border-light);
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+  min-width: 180px;
+  padding: 6px;
+  z-index: 50;
+}
+.kebab-item {
+  width: 100%;
+  display: flex; align-items: center; gap: 8px;
+  padding: 9px 12px;
+  border: none; background: none;
+  font-size: 0.85rem; cursor: pointer;
+  border-radius: 6px;
+  text-align: left;
+  color: var(--carbon-black);
+}
+.kebab-item:hover { background: rgba(0,0,0,0.05); }
+.kebab-item.kebab-danger { color: var(--ruby-red); }
+.kebab-item.kebab-danger:hover { background: rgba(159,63,55,0.08); }
+```
+JS:
+```js
+function toggleKebabMenu() {
+  const m = document.getElementById('solKebabMenu');
+  m.hidden = !m.hidden;
+}
+document.addEventListener('click', (e) => {
+  const m = document.getElementById('solKebabMenu');
+  if (!m || m.hidden) return;
+  if (!e.target.closest('.sol-actions-kebab')) m.hidden = true;
+});
+```
+
+**4d. Tap target maior pros ícones de ação (Físico tem ClickUp/⭐/🗑)**
+
+Localizar os botões `.sol-action-icon` (ou similar) e garantir:
+```css
+@media (max-width: 768px) {
+  .sol-action-icon,
+  .sol-header-right button {
+    min-width: 44px;
+    min-height: 44px;
+    padding: 10px;
+  }
+}
+```
+
+**4e. Data relativa em vez de "Atualizado: 20 de maio de 2026 — 11:04"**
+
+Procurar pela função que formata a data ("Atualizado:" / "Solicitado em:"). Usar
+o mesmo helper de tempo relativo que já existe na dashboard ("Há 5 dias",
+"Hoje 11:04"). Manter a data completa como `title` no hover/tooltip pra quem quiser
+o detalhe.
+
+**4f. Padding-bottom pro WhatsApp não esconder conteúdo**
+
+Garantir que a página tenha espaço no fim:
+```css
+@media (max-width: 768px) {
+  #shellPageContent,
+  .container,
+  .container-narrow {
+    padding-bottom: 100px !important;
+  }
+}
+```
+
+═══════════════════════════════════════════════════════════════
+## 5. Validação de Cartões — card view no mobile
+═══════════════════════════════════════════════════════════════
+### `validacao-cartoes.html`
+
+A tabela tem 10 colunas e é inviável no mobile mesmo com scroll. Solução:
+**no mobile, esconder a tabela e renderizar a mesma data como cards empilhados**.
+
+**5a. CSS — esconder tabela, mostrar cards (e vice-versa)**
+
+Adicionar no `<style>` da página:
+```css
+.cartoes-cards-mobile { display: none; }
+
+@media (max-width: 768px) {
+  .cartoes-table-wrap { display: none; }
+  .cartoes-cards-mobile { 
+    display: flex; 
+    flex-direction: column; 
+    gap: 12px; 
+    margin-top: 16px;
+  }
+}
+
+.cartao-card {
+  background: var(--paper-white);
+  border: 1px solid var(--border-light);
+  border-radius: 12px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  transition: background 0.15s;
+}
+.cartao-card.flash-saved { background: rgba(95,129,121,0.12); }
+.cartao-card-header {
+  display: flex; justify-content: space-between; align-items: flex-start;
+  gap: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border-light);
+}
+.cartao-card-nome { font-weight: 700; font-size: 0.95rem; color: var(--carbon-black); }
+.cartao-card-data { font-size: 0.72rem; color: var(--carbon-black); opacity: 0.5; margin-top: 2px; }
+.cartao-card-field { display: flex; flex-direction: column; gap: 4px; }
+.cartao-card-label {
+  font-size: 0.66rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.08em; color: var(--carbon-black); opacity: 0.5;
+}
+.cartao-card-value { font-size: 0.85rem; color: var(--carbon-black); word-break: break-word; }
+.cartao-card-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.cartao-card select,
+.cartao-card input,
+.cartao-card textarea {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid var(--border-light);
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 0.85rem;
+  background: var(--paper-white);
+}
+.cartao-card textarea { min-height: 60px; resize: vertical; }
+```
+
+**5b. Renderização dos cards**
+
+Na função que hoje constrói as linhas da tabela (provavelmente `renderTabela()`
+ou algo do tipo), adicionar uma renderização paralela em `.cartoes-cards-mobile`.
+Cada cartão = um `.cartao-card`:
+```js
+function renderCartoesCards(cartoes) {
+  const cont = document.querySelector('.cartoes-cards-mobile');
+  if (!cont) return;
+  cont.innerHTML = cartoes.map(c => `
+    <article class="cartao-card" data-id="${c.solicitacao_id}">
+      <div class="cartao-card-header">
+        <div>
+          <div class="cartao-card-nome">${esc(c.nome || '—')}</div>
+          <div class="cartao-card-data">${formatDate(c.data)}</div>
+        </div>
+        <span class="status-badge status-${c.status}">${labelStatus(c.status)}</span>
+      </div>
+
+      <div class="cartao-card-row">
+        <div class="cartao-card-field">
+          <span class="cartao-card-label">WhatsApp</span>
+          <span class="cartao-card-value">${esc(c.whatsapp || '—')}</span>
+        </div>
+        <div class="cartao-card-field">
+          <span class="cartao-card-label">Unidade</span>
+          <span class="cartao-card-value">${esc(c.unidade || '—')}</span>
+        </div>
+      </div>
+
+      <div class="cartao-card-field">
+        <span class="cartao-card-label">E-mail</span>
+        <span class="cartao-card-value">${esc(c.email || '—')}</span>
+      </div>
+
+      <div class="cartao-card-row">
+        <div class="cartao-card-field">
+          <span class="cartao-card-label">Contrato Social</span>
+          <span class="cartao-card-value">${esc(c.contrato_social || '—')}</span>
+        </div>
+        <div class="cartao-card-field">
+          <span class="cartao-card-label">Envio</span>
+          <span class="cartao-card-value">${esc(c.envio || '—')}</span>
+        </div>
+      </div>
+
+      <div class="cartao-card-field">
+        <span class="cartao-card-label">Custo</span>
+        <span class="cartao-card-value">${esc(c.custo || '—')}</span>
+      </div>
+
+      <div class="cartao-card-field">
+        <span class="cartao-card-label">Status</span>
+        <select onchange="atualizarCampo(${c.solicitacao_id}, 'status', this.value)">
+          ${OPCOES_STATUS.map(s => `<option value="${s.id}" ${s.id===c.status?'selected':''}>${s.label}</option>`).join('')}
+        </select>
+      </div>
+
+      <div class="cartao-card-field">
+        <span class="cartao-card-label">Observação</span>
+        <textarea onblur="atualizarCampo(${c.solicitacao_id}, 'observacao', this.value)">${esc(c.observacao || '')}</textarea>
+      </div>
+    </article>
+  `).join('');
+}
+```
+(Adaptar conforme o shape real de `c` e o nome real da função de salvar.
+Reusar as MESMAS funções de auto-save que já existem na tabela.)
+
+E na função principal de render (`render()` ou `carregar()`), chamar
+`renderCartoesCards(cartoes)` junto com a renderização da tabela existente.
+
+**5c. Adicionar o container no HTML**
+
+No `validacao-cartoes.html`, logo depois do `<div class="cartoes-table-wrap">...</div>`
+da tabela, adicionar:
+```html
+<div class="cartoes-cards-mobile"></div>
+```
+
+═══════════════════════════════════════════════════════════════
+## 6. Admin Usuários — fix mínimo de overflow
+═══════════════════════════════════════════════════════════════
+### `admin-usuarios.html`
+
+Sem refazer pra card view (uso baixo no mobile). Só impedir o vazamento e
+deixar a tabela com scroll horizontal próprio:
+
+```css
+@media (max-width: 768px) {
+  .container, .container-narrow { overflow-x: hidden; max-width: 100vw; }
+  /* o `.usuarios-tabela` é o table — empacotar num wrapper de scroll */
+  .usuarios-tabela-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    margin: 0 -16px;
+    padding: 0 16px;
+  }
+  .usuarios-tabela { min-width: 600px; }
+  /* search bar + atualizar: empilhar */
+  .admin-usuarios-controls { flex-wrap: wrap; }
+  .admin-usuarios-controls > * { min-width: 0; flex: 1; }
+}
+```
+E no HTML, envolver a `<table>` num `<div class="usuarios-tabela-wrap">…</div>`
+se ainda não estiver.
+
+═══════════════════════════════════════════════════════════════
+## Validação após aplicar
+═══════════════════════════════════════════════════════════════
+1. Abrir o hub no celular (ou DevTools com viewport 390×844 — iPhone 14):
+   - Header: avatar e chevron visíveis, nome escondido. ✓
+   - Dashboard: nada cortado, "Nova solicitação" full-width, filtros wrap. ✓
+   - Como admin: tocar no ícone ≡ no header → drawer entra da esquerda. Toca fora ou em link → fecha. ✓
+2. Abrir um resumo:
+   - Bandeja "Detalhes" recolhida; expande ao tocar. ✓
+   - PDF preview compacto (linha clara, não card escuro grande). ✓
+   - "Deletar" agora dentro do kebab ⋯ ao lado do badge de status. ✓
+   - Data em formato relativo. ✓
+3. Validação de Cartões: tabela some, cards empilhados aparecem; status e observação editáveis no card, com auto-save igual à tabela.
+4. Admin Usuários: a página inteira respira (não vaza pra direita); tabela rola horizontalmente dentro do container.
+
+## Não fazer
+- Não esconder o avatar — só o nome. O avatar é a porta pro dropdown.
+- Não remover a tabela da Validação de Cartões — só esconder no mobile. No desktop ela continua sendo a forma principal de operar.
+- Não mudar o `padding-bottom` do desktop. Os 100px+ são só pro mobile (pra escapar do WhatsApp flutuante).

@@ -248,8 +248,27 @@ window.Shell = {
   toggleSidebar() {
     const shell = document.querySelector('.app-shell');
     if (!shell) return;
-    const collapsed = shell.classList.toggle('sidebar-collapsed');
-    localStorage.setItem('svn_sidebar_collapsed', String(collapsed));
+    const isMobile = window.matchMedia('(max-width: 768px)').matches;
+    if (isMobile) {
+      const open = shell.classList.toggle('sidebar-open');
+      if (open) {
+        setTimeout(() => {
+          const close = (e) => {
+            const tappedLink = e.target.closest('.sidebar-link');
+            const tappedSidebar = e.target.closest('.app-sidebar');
+            const tappedToggle = e.target.closest('.sidebar-toggle-btn');
+            if (tappedLink || (!tappedSidebar && !tappedToggle)) {
+              shell.classList.remove('sidebar-open');
+              document.removeEventListener('click', close);
+            }
+          };
+          document.addEventListener('click', close);
+        }, 0);
+      }
+    } else {
+      const collapsed = shell.classList.toggle('sidebar-collapsed');
+      localStorage.setItem('svn_sidebar_collapsed', String(collapsed));
+    }
   },
 
   toggleUserMenu() {

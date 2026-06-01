@@ -1271,11 +1271,18 @@ input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
   .title-row { flex-direction: column; align-items: stretch; }
   .title-row .btn { width: 100%; justify-content: center; }
   .float-home span { display: none; }
-  .tabs { overflow-x: auto; }
+  .tabs { overflow-x: auto; flex-wrap: nowrap; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+  .tabs::-webkit-scrollbar { display: none; }
+  .tab { flex-shrink: 0; }
   .trio-grid { grid-template-columns: 1fr !important; }
   .form-card,
   .container,
   .container-narrow { padding-bottom: 120px; }
+  .container, .container-narrow { overflow-x: hidden; max-width: 100vw; }
+  .stats-row { flex-wrap: wrap; gap: 10px; }
+  .stat-card { flex: 1 1 calc(50% - 5px); min-width: 0; padding: 14px 16px; }
+  .stat-number { font-size: 1.6rem; }
+  .search-bar { min-width: 0; flex: 1; }
 }
 
 .filter-bar { display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:16px; }
@@ -1563,12 +1570,73 @@ input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
   min-height: calc(100vh - 60px);
 }
 
-/* Mobile: hide sidebar, show only header + main */
+/* Mobile: sidebar vira drawer, hamburger aparece */
 @media (max-width: 768px) {
   .app-shell[data-is-admin] {
     grid-template-columns: 1fr;
     grid-template-areas: "header" "main";
   }
-  .app-shell[data-is-admin] .app-sidebar { display: none; }
-  .sidebar-toggle-btn { display: none; }
+  .app-shell[data-is-admin] .app-sidebar {
+    display: block;
+    position: fixed;
+    top: 60px;
+    left: 0;
+    bottom: 0;
+    width: 280px;
+    max-width: 85vw;
+    z-index: 100;
+    transform: translateX(-100%);
+    transition: transform 0.28s ease;
+    background: var(--paper-white);
+    border-right: 1px solid var(--border-light);
+    overflow-y: auto;
+    box-shadow: 4px 0 24px rgba(0,0,0,0.12);
+  }
+  .app-shell[data-is-admin].sidebar-open .app-sidebar {
+    transform: translateX(0);
+  }
+  .app-shell[data-is-admin].sidebar-open::before {
+    content: '';
+    position: fixed;
+    top: 60px; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.45);
+    z-index: 99;
+    animation: fadeIn 0.2s ease;
+  }
+  .sidebar-toggle-btn { display: inline-flex !important; }
+}
+@keyframes fadeIn { from { opacity: 0 } to { opacity: 1 } }
+
+/* Mobile: header — esconder nome, manter avatar */
+@media (max-width: 600px) {
+  .app-user-name { display: none; }
+  .app-user-trigger { padding: 6px 8px; gap: 6px; }
+}
+
+/* Mobile: tap targets maiores nos ícones de ação */
+@media (max-width: 768px) {
+  .sol-action-icon,
+  .sol-header-right button {
+    min-width: 44px;
+    min-height: 44px;
+    padding: 10px;
+  }
+  #shellPageContent,
+  .container,
+  .container-narrow {
+    padding-bottom: 100px !important;
+  }
+}
+
+/* Mobile: admin-usuarios overflow fix */
+@media (max-width: 768px) {
+  .usuarios-tabela-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    margin: 0 -16px;
+    padding: 0 16px;
+  }
+  .usuarios-tabela { min-width: 600px; }
+  .admin-usuarios-controls { flex-wrap: wrap; }
+  .admin-usuarios-controls > * { min-width: 0; flex: 1; }
 }
