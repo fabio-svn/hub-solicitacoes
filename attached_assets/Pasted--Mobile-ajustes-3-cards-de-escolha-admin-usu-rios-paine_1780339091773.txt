@@ -1,0 +1,246 @@
+# Mobile — ajustes 3 (cards de escolha, admin usuários, painel admin)
+
+Três blocos independentes. Pode aplicar tudo de uma vez. Lembrete: depois de aplicar, **hard refresh + purge no Cloudflare** dos arquivos `style.css`, `admin.html` e `admin-usuarios.html`, ou nada vai mudar (foi o que pegou da última vez).
+
+═══════════════════════════════════════════════════════════════
+## 1. Cards de escolha do step 1 — empilhar no mobile
+═══════════════════════════════════════════════════════════════
+
+Aplica aos forms onde a primeira etapa tem 2 (ou 3) cards de escolha grandes que afetam as próximas etapas. Ex:
+- `form-apresentacoes.html` — Nova / Atualizar
+- `form-cartao-visita.html` — Físico / Digital
+- `form-criacao-pdf.html` — Informativo / Ebook
+- `form-producao-audiovisual.html` — Vídeo / Fotos (se aplicável)
+
+**Localizar a classe do container** dos cards na etapa 1. Pode ser `.cards-escolha`, `.tipo-cards`, `.escolha-grid`, `.opcoes-tipo` — abrir os arquivos acima e identificar o nome real. Adicione TODAS as classes encontradas à lista abaixo.
+
+### `style.css`
+```css
+@media (max-width: 768px) {
+  /* Cards de escolha do primeiro step empilham vertical */
+  .cards-escolha,
+  .tipo-cards,
+  .escolha-grid,
+  .opcoes-tipo,
+  .escolha-tipo {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 12px !important;
+  }
+  .cards-escolha > *,
+  .tipo-cards > *,
+  .escolha-grid > *,
+  .opcoes-tipo > *,
+  .escolha-tipo > * {
+    width: 100% !important;
+    max-width: 100% !important;
+    flex: 1 1 100% !important;
+  }
+  /* Como cada card agora ocupa a linha inteira, a descrição não precisa quebrar
+     em 6 linhas — dá pra reduzir padding interno e ajustar text-align */
+  .cards-escolha .card-descricao,
+  .tipo-cards .card-descricao,
+  .escolha-grid .card-descricao,
+  .opcoes-tipo .card-descricao {
+    padding-left: 8px;
+    padding-right: 8px;
+  }
+}
+```
+
+═══════════════════════════════════════════════════════════════
+## 2. Admin Usuários — scroll horizontal + arranjo dos controles
+═══════════════════════════════════════════════════════════════
+
+### `admin-usuarios.html`
+
+**2a. Envolver a tabela num wrapper de scroll**
+
+Se ainda não tiver, localizar a `<table>` (provavelmente `.usuarios-tabela` ou `<table class="admin-table">`) e envolver num div:
+```html
+<div class="usuarios-tabela-wrap">
+  <table class="usuarios-tabela">
+    ...
+  </table>
+</div>
+```
+
+**2b. CSS — no `<style>` da página (ou em `style.css` se preferir centralizar)**
+```css
+@media (max-width: 768px) {
+  /* Trava overflow do container e dá scroll só na tabela */
+  .container, .container-narrow {
+    overflow-x: hidden;
+    max-width: 100vw;
+  }
+  .usuarios-tabela-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    margin: 0 -16px;
+    padding: 0 16px 8px;
+    /* Indicador visual sutil de que tem mais conteúdo à direita */
+    background:
+      linear-gradient(to right, var(--paper-white) 8px, transparent 12px),
+      linear-gradient(to left, var(--paper-white) 8px, transparent 12px),
+      radial-gradient(ellipse at left, rgba(0,0,0,0.08), transparent 40%),
+      radial-gradient(ellipse at right, rgba(0,0,0,0.08), transparent 40%);
+    background-position: left, right, left, right;
+    background-repeat: no-repeat;
+    background-attachment: local, local, scroll, scroll;
+    background-size: 20px 100%, 20px 100%, 14px 100%, 14px 100%;
+  }
+  .usuarios-tabela {
+    min-width: 720px;
+  }
+  /* Evita que nome quebre em 4 linhas — força largura razoável */
+  .usuarios-tabela td:first-child,
+  .usuarios-tabela th:first-child {
+    min-width: 160px;
+    white-space: nowrap;
+  }
+
+  /* Controles do topo (Buscar + Atualizar) — empilhar pra não sobrepor */
+  .admin-usuarios-controls,
+  .usuarios-controles {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 10px !important;
+    width: 100%;
+  }
+  .admin-usuarios-controls > *,
+  .usuarios-controles > * {
+    width: 100% !important;
+    flex: 1 1 100%;
+  }
+  /* Botão "Adicionar/Atualizar usuário" cabe inteiro */
+  .admin-usuarios-controls .btn,
+  .usuarios-controles .btn {
+    min-height: 44px;
+    padding: 0 18px;
+    white-space: normal;
+    word-break: keep-all;
+  }
+}
+```
+
+(Se as classes dos controles do topo forem outras, ajustar — o conceito é: container dos controles vira `flex-direction: column` no mobile, cada item ocupa linha inteira.)
+
+═══════════════════════════════════════════════════════════════
+## 3. Painel Administrativo — reorganizar pra mobile
+═══════════════════════════════════════════════════════════════
+
+### `admin.html`
+
+Dois problemas hoje no mobile: pills com texto quebrando ("+ Nova solicitação" em 2 linhas) e stats em fileira única com labels truncadas ("Em andamento", "Este mês").
+
+Solução: **botões empilham na vertical em ordem de hierarquia** (primário primeiro) e **stats viram grid 2×2**.
+
+### `style.css` (ou no `<style>` do `admin.html` se preferir local)
+```css
+@media (max-width: 768px) {
+  /* Linha de botões do topo (Meu painel / Listas ClickUp / Nova solicitação) */
+  .admin-actions,
+  .admin-top-buttons,
+  .painel-actions {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 10px !important;
+    margin-bottom: 24px;
+  }
+  .admin-actions > *,
+  .admin-top-buttons > *,
+  .painel-actions > * {
+    width: 100% !important;
+    min-height: 46px;
+    border-radius: 10px !important;
+    padding: 12px 18px !important;
+    font-size: 0.92rem !important;
+    font-weight: 600;
+    white-space: normal;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  /* Stats: grid 2x2 em vez de 4x1 */
+  .admin-stats,
+  .stats-row,
+  .painel-stats {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 10px !important;
+  }
+  .admin-stats > *,
+  .stats-row > *,
+  .painel-stats > * {
+    min-width: 0;
+    padding: 16px 14px !important;
+    text-align: left;
+  }
+  /* Número grande sobe pro topo, label embaixo sem truncar */
+  .stat-number,
+  .admin-stat-number,
+  .painel-stat-number {
+    font-size: 1.7rem !important;
+    line-height: 1.1;
+    margin-bottom: 4px;
+    display: block;
+  }
+  .stat-label,
+  .admin-stat-label,
+  .painel-stat-label {
+    font-size: 0.78rem !important;
+    line-height: 1.3;
+    white-space: normal;
+    word-break: keep-all;
+  }
+
+  /* Filtros de período (7/14/30/90 dias) — wrap se não couber */
+  .periodo-chips,
+  .admin-periodo {
+    flex-wrap: wrap !important;
+    gap: 8px;
+  }
+  .periodo-chips > *,
+  .admin-periodo > * {
+    flex: 0 0 auto;
+  }
+
+  /* Selects de data "até" — empilhar em coluna se estavam lado a lado */
+  .data-range,
+  .periodo-datas {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 8px;
+    align-items: stretch;
+  }
+  .data-range > *,
+  .periodo-datas > * {
+    width: 100% !important;
+  }
+  /* O separador "até" centralizado entre os dois inputs */
+  .data-range-sep {
+    text-align: center;
+    font-size: 0.85rem;
+    opacity: 0.6;
+    padding: 4px 0;
+  }
+}
+```
+
+═══════════════════════════════════════════════════════════════
+## Validação após aplicar
+═══════════════════════════════════════════════════════════════
+
+**Hard refresh + Cloudflare purge primeiro** (`style.css`, `admin.html`, `admin-usuarios.html`).
+
+1. Abrir `form-apresentacoes.html` no mobile → na etapa 1, os cards "Nova" e "Atualizar" empilhados, ocupando linha inteira cada. Descrição quebra em ~2 linhas em vez de 6.
+2. Repetir em `form-cartao-visita.html` → "Físico" e "Digital" empilhados.
+3. Abrir `admin-usuarios.html` no mobile via o drawer da sidebar → buscar + Atualizar empilhados (não sobrepostos); tabela com scroll horizontal interno (consegue ver as colunas mais à direita arrastando).
+4. Abrir `admin.html` no mobile → botões "Meu painel", "Listas ClickUp", "+ Nova solicitação" empilhados em coluna; stats em grid 2×2 com labels legíveis.
+
+## Não fazer
+- Não mudar o desktop. Os `!important` mobile são pra sobrescrever — no desktop, a regra original prevalece naturalmente porque o media query não dispara.
+- Se uma das classes listadas não existir no projeto, **não inventar**: o agent deve abrir o arquivo correspondente e identificar a classe real, depois adicionar no seletor.
