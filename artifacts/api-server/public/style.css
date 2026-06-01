@@ -441,6 +441,8 @@ input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.04em;
+  white-space: nowrap;
+  line-height: 1.3;
 }
 
 /* Category title */
@@ -1925,6 +1927,49 @@ input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
     word-break: keep-all;
   }
 }
+
+/* Toolbar horizontal compacta para listas (admin.html) */
+.admin-list-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+.admin-list-toolbar .filters { margin: 0; }
+.admin-list-toolbar .filter-select-compact { margin: 0; }
+.search-bar.compact {
+  height: 32px;
+  padding: 0 12px;
+  margin: 0;
+  max-width: 280px;
+  flex: 1 1 200px;
+  min-width: 180px;
+  border-radius: 8px;
+}
+.search-bar.compact input { font-size: 0.82rem; }
+
+@media (max-width: 768px) {
+  .admin-list-toolbar .search-bar.compact {
+    max-width: 100%;
+    flex: 1 1 100%;
+    height: auto;
+    padding: 8px 12px;
+  }
+}
+
+/* Container mais largo pra páginas admin com tabelas */
+.container.container-wide { max-width: 1280px; }
+
+/* Tabela de usuários — colunas com largura mínima razoável */
+#usuariosTabela { min-width: 1100px; }
+#usuariosTabela th:nth-child(1), #usuariosTabela td:nth-child(1) { min-width: 180px; white-space: nowrap; }
+#usuariosTabela th:nth-child(2), #usuariosTabela td:nth-child(2) { min-width: 220px; white-space: nowrap; }
+#usuariosTabela th:nth-child(3), #usuariosTabela td:nth-child(3) { min-width: 110px; }
+#usuariosTabela th:nth-child(4), #usuariosTabela td:nth-child(4) { min-width: 120px; }
+#usuariosTabela th:nth-child(5), #usuariosTabela td:nth-child(5) { min-width: 130px; }
+#usuariosTabela th:nth-child(6), #usuariosTabela td:nth-child(6) { min-width: 110px; }
+#usuariosTabela th:nth-child(7), #usuariosTabela td:nth-child(7) { min-width: 130px; text-align: center; }
 
 /* Mobile: ajustes 3 v2 — radio-cards coluna forçada */
 @media (max-width: 768px) {

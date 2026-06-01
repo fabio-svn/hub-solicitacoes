@@ -26,10 +26,6 @@
       <div class="admin-actions admin-top-actions" style="display:flex;gap:8px">
         <a href="/dashboard.html" class="btn btn-secondary">Meu painel</a>
         <a href="/admin-clickup-lists.html" class="btn btn-secondary" id="clickupListsLink" style="display:none">Listas ClickUp</a>
-        <a href="/solicitacoes.html" class="btn btn-primary">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          Nova solicitação
-        </a>
       </div>
     </div>
 
@@ -113,13 +109,13 @@
     </div>
 
     <div class="tab-content" id="tab-eventos">
-      <div class="filters">
-        <button class="filter-chip active" data-value="" onclick="setFilter(this,'eventos','periodo')">Todos</button>
-        <button class="filter-chip" data-value="hoje" onclick="setFilter(this,'eventos','periodo')">Hoje</button>
-        <button class="filter-chip" data-value="7dias" onclick="setFilter(this,'eventos','periodo')">7 dias</button>
-        <button class="filter-chip" data-value="30dias" onclick="setFilter(this,'eventos','periodo')">30 dias</button>
-      </div>
-      <div class="filters" style="align-items:center">
+      <div class="admin-list-toolbar">
+        <div class="filters">
+          <button class="filter-chip active" data-value="" onclick="setFilter(this,'eventos','periodo')">Todos</button>
+          <button class="filter-chip" data-value="hoje" onclick="setFilter(this,'eventos','periodo')">Hoje</button>
+          <button class="filter-chip" data-value="7dias" onclick="setFilter(this,'eventos','periodo')">7 dias</button>
+          <button class="filter-chip" data-value="30dias" onclick="setFilter(this,'eventos','periodo')">30 dias</button>
+        </div>
         <select class="filter-select-compact" data-tab="eventos" onchange="setFilterFromSelect(this,'eventos','status')">
           <option value="">Todos os status</option>
           <option value="recebido">Recebido</option>
@@ -127,23 +123,23 @@
           <option value="aguardando">Aguardando</option>
           <option value="concluido">Concluído</option>
         </select>
-      </div>
-      <div class="search-bar">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" opacity="0.4"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        <input type="text" placeholder="Buscar por nome, solicitante..." id="searchEventos" oninput="debounceLoad('eventos')">
+        <div class="search-bar compact">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" opacity="0.4"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" placeholder="Buscar..." id="searchEventos" oninput="debounceLoad('eventos')">
+        </div>
       </div>
       <div id="tableEventos"></div>
       <div class="pagination" id="paginationEventos"></div>
     </div>
 
     <div class="tab-content active" id="tab-geral">
-      <div class="filters">
-        <button class="filter-chip active" data-value="" onclick="setFilter(this,'geral','periodo')">Todos</button>
-        <button class="filter-chip" data-value="hoje" onclick="setFilter(this,'geral','periodo')">Hoje</button>
-        <button class="filter-chip" data-value="7dias" onclick="setFilter(this,'geral','periodo')">7 dias</button>
-        <button class="filter-chip" data-value="30dias" onclick="setFilter(this,'geral','periodo')">30 dias</button>
-      </div>
-      <div class="filters" style="align-items:center">
+      <div class="admin-list-toolbar">
+        <div class="filters">
+          <button class="filter-chip active" data-value="" onclick="setFilter(this,'geral','periodo')">Todos</button>
+          <button class="filter-chip" data-value="hoje" onclick="setFilter(this,'geral','periodo')">Hoje</button>
+          <button class="filter-chip" data-value="7dias" onclick="setFilter(this,'geral','periodo')">7 dias</button>
+          <button class="filter-chip" data-value="30dias" onclick="setFilter(this,'geral','periodo')">30 dias</button>
+        </div>
         <select class="filter-select-compact" data-tab="geral" onchange="setFilterFromSelect(this,'geral','status')">
           <option value="">Todos os status</option>
           <option value="recebido">Recebido</option>
@@ -154,10 +150,10 @@
           <option value="em-aprovacao">Em aprovação</option>
           <option value="concluido">Concluído</option>
         </select>
-      </div>
-      <div class="search-bar">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" opacity="0.4"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        <input type="text" placeholder="Buscar..." id="searchGeral" oninput="debounceLoad('geral')">
+        <div class="search-bar compact">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" opacity="0.4"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" placeholder="Buscar..." id="searchGeral" oninput="debounceLoad('geral')">
+        </div>
       </div>
       <div id="tableGeral"></div>
       <div class="pagination" id="paginationGeral"></div>

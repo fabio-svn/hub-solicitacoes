@@ -1,0 +1,239 @@
+# Desktop — ajustes admin (Painel + Usuários + status pills)
+
+4 ajustes pontuais. **Aplicar nessa ordem**: edições de HTML primeiro, depois CSS. Hard refresh + Cloudflare purge no fim.
+
+═══════════════════════════════════════════════════════════════
+## 1. Remover botão "Nova solicitação" do Painel Administrativo
+═══════════════════════════════════════════════════════════════
+
+### `admin.html` — apagar o `<a>` específico
+
+Localizar este bloco (dentro do `.title-row` no topo):
+```html
+<a href="/solicitacoes.html" class="btn btn-primary">
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+  Nova solicitação
+</a>
+```
+E **apagar inteiro**. Manter "Meu painel" e "Listas ClickUp" como estão.
+
+═══════════════════════════════════════════════════════════════
+## 2. Filtros + busca compactos na mesma linha (admin.html)
+═══════════════════════════════════════════════════════════════
+
+Hoje o `admin.html` tem 3 blocos separados pra cada aba (eventos/geral):
+- `<div class="filters">` com chips de período
+- `<div class="filters" style="align-items:center">` com select de status
+- `<div class="search-bar">` com input de busca
+
+Empilham vertical em 3 linhas. Solução: agrupar tudo em uma única toolbar horizontal.
+
+### `admin.html` — DUAS edições (aba eventos + aba geral)
+
+**Edição A (aba eventos):** Localizar este conjunto de 3 divs sequenciais (logo abaixo de `<div class="tab-content" id="tab-eventos">`):
+```html
+<div class="filters">
+  <button class="filter-chip active" data-value="" onclick="setFilter(this,'eventos','periodo')">Todos</button>
+  <button class="filter-chip" data-value="hoje" onclick="setFilter(this,'eventos','periodo')">Hoje</button>
+  <button class="filter-chip" data-value="7dias" onclick="setFilter(this,'eventos','periodo')">7 dias</button>
+  <button class="filter-chip" data-value="30dias" onclick="setFilter(this,'eventos','periodo')">30 dias</button>
+</div>
+<div class="filters" style="align-items:center">
+  <select class="filter-select-compact" data-tab="eventos" onchange="setFilterFromSelect(this,'eventos','status')">
+    <option value="">Todos os status</option>
+    <option value="recebido">Recebido</option>
+    <option value="em-producao">Em produção</option>
+    <option value="aguardando">Aguardando</option>
+    <option value="concluido">Concluído</option>
+  </select>
+</div>
+<div class="search-bar">
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" opacity="0.4"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+  <input type="text" placeholder="Buscar por nome, solicitante..." id="searchEventos" oninput="debounceLoad('eventos')">
+</div>
+```
+
+E SUBSTITUIR por (note o `<div class="admin-list-toolbar">` envolvendo tudo + `compact` na search-bar):
+```html
+<div class="admin-list-toolbar">
+  <div class="filters">
+    <button class="filter-chip active" data-value="" onclick="setFilter(this,'eventos','periodo')">Todos</button>
+    <button class="filter-chip" data-value="hoje" onclick="setFilter(this,'eventos','periodo')">Hoje</button>
+    <button class="filter-chip" data-value="7dias" onclick="setFilter(this,'eventos','periodo')">7 dias</button>
+    <button class="filter-chip" data-value="30dias" onclick="setFilter(this,'eventos','periodo')">30 dias</button>
+  </div>
+  <select class="filter-select-compact" data-tab="eventos" onchange="setFilterFromSelect(this,'eventos','status')">
+    <option value="">Todos os status</option>
+    <option value="recebido">Recebido</option>
+    <option value="em-producao">Em produção</option>
+    <option value="aguardando">Aguardando</option>
+    <option value="concluido">Concluído</option>
+  </select>
+  <div class="search-bar compact">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" opacity="0.4"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    <input type="text" placeholder="Buscar..." id="searchEventos" oninput="debounceLoad('eventos')">
+  </div>
+</div>
+```
+
+**Edição B (aba geral):** Mesma transformação no bloco análogo de `<div class="tab-content active" id="tab-geral">`. Mesma estrutura, só trocando os 3 divs por uma `<div class="admin-list-toolbar">` envolvente + `<div class="search-bar compact">`.
+
+### `style.css` — adicionar
+```css
+/* Toolbar horizontal compacta para listas (admin.html) */
+.admin-list-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+.admin-list-toolbar .filters {
+  margin: 0;
+}
+.admin-list-toolbar .filter-select-compact {
+  margin: 0;
+}
+/* Search bar versão compacta — menos padding vertical, sem margin-bottom, encolhe pra caber */
+.search-bar.compact {
+  height: 32px;
+  padding: 0 12px;
+  margin: 0;
+  max-width: 280px;
+  flex: 1 1 200px;
+  min-width: 180px;
+  border-radius: 8px;
+}
+.search-bar.compact input {
+  font-size: 0.82rem;
+}
+
+@media (max-width: 768px) {
+  /* Mobile: toolbar empilha em coluna naturalmente via flex-wrap */
+  .admin-list-toolbar .search-bar.compact {
+    max-width: 100%;
+    flex: 1 1 100%;
+    height: auto;
+    padding: 8px 12px;
+  }
+}
+```
+
+═══════════════════════════════════════════════════════════════
+## 3. Status pills — não quebrar texto, caber melhor
+═══════════════════════════════════════════════════════════════
+
+A classe `.badge` (usada na coluna STATUS das listas) não tem `white-space: nowrap` global. Vamos garantir.
+
+### `style.css` — adicionar (perto das outras regras de badge ou no fim)
+```css
+/* Status na lista de solicitações — sempre uma linha */
+.badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  line-height: 1.3;
+}
+```
+
+(Se `.badge` JÁ tiver uma definição no CSS, **adicionar somente `white-space: nowrap;`** na regra existente. Se não existir nenhuma, criar a regra completa acima.)
+
+### Tabela da lista — coluna STATUS mais larga
+
+Onde a tabela é renderizada (admin.html / dashboard.html), localizar o `<th>` ou estilos da coluna STATUS. Se for inline numa JS string, garantir que a coluna STATUS tenha `min-width: 150px` no `<th>` (cabe "LIBERADO PARA DESIGN" sem cortar):
+
+Em `admin.html` e `dashboard.html`, na renderização da tabela (procurar pela `<th>STATUS</th>` ou pela coluna correspondente — pode ser via JS), adicionar `style="min-width:150px"` (ou similar) ao `<th>` do status. Se for via JS, ajustar no template literal.
+
+═══════════════════════════════════════════════════════════════
+## 4. Tabela de Usuários — mais larga e respirável
+═══════════════════════════════════════════════════════════════
+
+Hoje o `.container` é `max-width: 960px` — fica apertado pra 7 colunas. Solução: aumentar o container só na página de usuários + impedir quebras horrendas de nome.
+
+### `admin-usuarios.html` — duas edições
+
+**Edição A:** No `<div class="container">` do topo, adicionar a classe `container-wide`:
+```html
+<div class="container container-wide" style="padding-top:28px;padding-bottom:60px">
+```
+
+**Edição B:** O wrapper da tabela tem `overflow:hidden` que está cortando o lado direito. Trocar `overflow:hidden` por `overflow-x:auto`:
+```html
+<div style="border-radius:12px;border:1px solid var(--border-light);overflow-x:auto">
+  <table style="width:100%;border-collapse:collapse;font-size:0.82rem" id="usuariosTabela">
+```
+
+### `style.css` — adicionar
+```css
+/* Container mais largo pra páginas admin com tabelas */
+.container.container-wide {
+  max-width: 1280px;
+}
+
+/* Tabela de usuários — colunas com largura mínima razoável */
+#usuariosTabela {
+  min-width: 1100px;
+}
+#usuariosTabela th:nth-child(1),  /* Nome */
+#usuariosTabela td:nth-child(1) {
+  min-width: 180px;
+  white-space: nowrap;
+}
+#usuariosTabela th:nth-child(2),  /* E-mail */
+#usuariosTabela td:nth-child(2) {
+  min-width: 220px;
+  white-space: nowrap;
+}
+#usuariosTabela th:nth-child(3),  /* Função */
+#usuariosTabela td:nth-child(3) {
+  min-width: 110px;
+}
+#usuariosTabela th:nth-child(4),  /* ClickUp ID */
+#usuariosTabela td:nth-child(4) {
+  min-width: 120px;
+}
+#usuariosTabela th:nth-child(5),  /* Formulários */
+#usuariosTabela td:nth-child(5) {
+  min-width: 130px;
+}
+#usuariosTabela th:nth-child(6),  /* Cadastro */
+#usuariosTabela td:nth-child(6) {
+  min-width: 110px;
+}
+#usuariosTabela th:nth-child(7),  /* Ações */
+#usuariosTabela td:nth-child(7) {
+  min-width: 130px;
+  text-align: center;
+}
+```
+
+═══════════════════════════════════════════════════════════════
+## Como verificar antes de testar no navegador
+═══════════════════════════════════════════════════════════════
+
+1. Em `admin.html`, buscar `Nova solicitação` — não deve mais aparecer no `.title-row` (só nos comentários ou em outros lugares irrelevantes).
+2. Em `admin.html`, buscar `admin-list-toolbar` — deve aparecer **2x** (uma pra cada aba).
+3. Em `admin-usuarios.html`, buscar `container-wide` — deve aparecer 1x.
+4. Em `admin-usuarios.html`, buscar `overflow-x:auto` — deve aparecer 1x (a tabela).
+5. Em `style.css`, buscar `admin-list-toolbar`, `container-wide`, `#usuariosTabela` — cada um deve aparecer 1x na seção nova.
+
+Se as 5 derem positivo e ainda não funcionar, é cache: **hard refresh + Cloudflare purge** dos arquivos `admin.html`, `admin-usuarios.html`, `style.css`.
+
+═══════════════════════════════════════════════════════════════
+## Validação no navegador
+═══════════════════════════════════════════════════════════════
+
+1. **Painel Administrativo**: só "Meu painel" e "Listas ClickUp" no topo (botão "Nova solicitação" sumiu).
+2. **Painel Administrativo → aba Solicitações gerais ou Eventos**: filtros (Todos/Hoje/7d/30d) + dropdown de status + busca **na mesma linha**, todos compactos.
+3. **Lista de solicitações** (em admin.html e dashboard.html): status "LIBERADO PARA DESIGN" cabe em uma linha só, sem quebrar. Coluna STATUS um pouco mais larga.
+4. **Página de Usuários**: container mais largo, nomes não quebram em 4 linhas, coluna "Ações" (Logar como) visível sem cortar. Se a tela for muito pequena, a tabela tem scroll horizontal interno.
+
+## Não fazer
+- Não tirar o "Meu painel" nem "Listas ClickUp" — só o "Nova solicitação".
+- Não aplicar a classe `container-wide` em outras páginas — é específica de admin com tabelas.
+- Não esquecer de envolver **as duas** abas (eventos e geral) na nova `admin-list-toolbar`.
