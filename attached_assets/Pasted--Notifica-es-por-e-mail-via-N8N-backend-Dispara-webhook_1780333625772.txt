@@ -1,0 +1,248 @@
+# Notificações por e-mail via N8N — backend
+
+Dispara webhook pro N8N (que envia o e-mail) em 3 momentos do ciclo de uma
+solicitação. Idempotente por marco — cada e-mail só sai uma vez por solicitação.
+
+**Marcos:**
+| Tipo                                                 | recebida | aprovacao | concluida |
+|------------------------------------------------------|:--------:|:---------:|:---------:|
+| Manuais (eventos, artes, apresentações, PDFs, etc.) |   ✓      |   ✓*      |   ✓       |
+| Cartão de Visita Físico                             |   ✓      |           |   ✓**     |
+| Automações (assinatura, NPS, cartão digital, etc.)  |          |           |   ✓***    |
+
+\* Só os tipos com fluxo de aprovação humana.
+\** Quando o status na tabela de validação vira `envio-assessor`.
+\*** O N8N usa template "material pronto" pra automações (download).
+
+O fluxo do N8N já está montado e ativo (Webhook → Switch → IF → 4 nós Send Email).
+O backend só precisa disparar o webhook com o payload — não conhece nem se importa
+com qual provedor de e-mail o N8N usa.
+
+Build necessário depois de aplicar: `cd artifacts/api-server && pnpm run build` + restart + migration.
+
+═══════════════════════════════════════════════════════════════
+## 1. Migration — idempotência por marco
+═══════════════════════════════════════════════════════════════
+```sql
+ALTER TABLE "solicitacoes"
+  ADD COLUMN IF NOT EXISTS "notifications_sent" JSONB NOT NULL DEFAULT '{}'::jsonb;
+```
+
+### Schema Drizzle (`lib/db/src/schema/index.ts`)
+Em `solicitacoesTable`, ADICIONAR o campo (garantir import de `jsonb`):
+```ts
+  notifications_sent: jsonb("notifications_sent").$type<Record<string, string>>().notNull().default({}),
+```
+
+═══════════════════════════════════════════════════════════════
+## 2. Variáveis de ambiente (já configuradas no Railway)
+═══════════════════════════════════════════════════════════════
+```
+N8N_NOTIFICATIONS_WEBHOOK_URL=https://auto.portalsvn.com.br/webhook/hub-notifications
+HUB_PUBLIC_URL=https://hub.portalsvn.com.br
+```
+
+═══════════════════════════════════════════════════════════════
+## 3. Helper — `src/services/notifications.ts` (CRIAR)
+═══════════════════════════════════════════════════════════════
+```ts
+import { db, solicitacoesTable } from "@workspace/db";
+import { eq, sql } from "drizzle-orm";
+import { logger } from "../lib/logger";
+import { REQUEST_TYPE_LABELS } from "../routes/clickup";
+
+const WEBHOOK_URL = process.env.N8N_NOTIFICATIONS_WEBHOOK_URL;
+const HUB_URL = process.env.HUB_PUBLIC_URL || "https://hub.portalsvn.com.br";
+
+export const TIPOS_AUTOMACAO = new Set([
+  "assinatura-email",
+  "cartao-visita-digital",
+  "cartao-boas-vindas",
+  "divulgacao-nps",
+  "convite-fp",
+  "certificado-eventos",
+  "cartao-comemorativo",
+]);
+
+export const TIPOS_COM_APROVACAO = new Set([
+  "eventos",
+  "artes-divulgacao",
+  "atualizacao-material",
+  "conteudo-pdf-informativo",
+  "conteudo-pdf-ebook",
+  "apresentacao-nova",
+  "apresentacao-atualizar",
+]);
+
+export type Marco = "recebida" | "aprovacao" | "concluida";
+
+export async function notificarMarco(solicitacaoId: number, marco: Marco): Promise<void> {
+  if (!WEBHOOK_URL) {
+    logger.warn({ solicitacaoId, marco }, "N8N_NOTIFICATIONS_WEBHOOK_URL ausente — pulando");
+    return;
+  }
+  try {
+    const [sol] = await db.select().from(solicitacoesTable).where(eq(solicitacoesTable.id, solicitacaoId));
+    if (!sol) return;
+
+    const tipo = sol.tipo_solicitacao;
+    const isAutomacao = TIPOS_AUTOMACAO.has(tipo);
+    const isFisico = tipo === "cartao-visita-fisico";
+
+    // elegibilidade
+    if (marco === "recebida"  && isAutomacao) return;
+    if (marco === "aprovacao" && !TIPOS_COM_APROVACAO.has(tipo)) return;
+    // concluida: todos
+
+    // idempotência
+    const sent = (sol.notifications_sent as Record<string, string>) || {};
+    if (sent[marco]) return;
+
+    const dados: any = sol.dados || {};
+    const userName = String(dados.nome || sol.user_email?.split("@")[0] || "").trim();
+    const tipoLabel = REQUEST_TYPE_LABELS[tipo] || tipo;
+
+    const payload = {
+      marco,
+      solicitacao_id: sol.id,
+      tipo,
+      tipo_label: tipoLabel,
+      is_automacao: isAutomacao,
+      is_cartao_fisico: isFisico,
+      user_email: sol.user_email,
+      user_name: userName,
+      first_name: userName.split(" ")[0] || userName,
+      status_atual: sol.status,
+      link: `${HUB_URL}/solicitacao.html?id=${sol.id}`,
+      created_at: sol.created_at,
+    };
+
+    const res = await fetch(WEBHOOK_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+
+    if (!res.ok) {
+      logger.error({ solicitacaoId, marco, status: res.status }, "Webhook N8N falhou");
+      return;
+    }
+
+    await db.update(solicitacoesTable)
+      .set({
+        notifications_sent: sql`COALESCE(${solicitacoesTable.notifications_sent}, '{}'::jsonb)
+          || ${JSON.stringify({ [marco]: new Date().toISOString() })}::jsonb`,
+      })
+      .where(eq(solicitacoesTable.id, solicitacaoId));
+
+    logger.info({ solicitacaoId, marco }, "Notificação enviada");
+  } catch (err) {
+    logger.error({ err, solicitacaoId, marco }, "Erro em notificarMarco");
+  }
+}
+
+// fire-and-forget — nunca derruba o request que chamou
+export function notificarMarcoBg(solicitacaoId: number, marco: Marco): void {
+  notificarMarco(solicitacaoId, marco).catch(err =>
+    logger.error({ err, solicitacaoId, marco }, "notificarMarcoBg engoliu erro")
+  );
+}
+```
+
+═══════════════════════════════════════════════════════════════
+## 4. Ganchos nos 4 pontos
+═══════════════════════════════════════════════════════════════
+
+### 4a. POST /solicitacoes — marco "recebida"
+No handler que insere a solicitação. LOGO APÓS o insert ser bem-sucedido
+(e antes/depois da criação da task do ClickUp — tanto faz):
+```ts
+import { notificarMarcoBg } from "../services/notifications";
+// ...
+notificarMarcoBg(novaSolicitacao.id, "recebida");
+```
+
+### 4b. Webhook ClickUp — marcos "aprovacao" e "concluida"
+Em `routes/webhook.ts`, no handler que recebe o webhook do ClickUp e atualiza o
+status local. **Antes** do `db.update(...).set({ status: novoStatus })`, capturar
+o status anterior. **Depois** do update, comparar:
+```ts
+import { notificarMarcoBg } from "../services/notifications";
+// ...
+const statusAnterior = solicitacao.status;
+// ... db.update({status: novoStatus}) ...
+if (statusAnterior !== novoStatus) {
+  if (novoStatus === "em-aprovacao") {
+    notificarMarcoBg(solicitacao.id, "aprovacao");
+  }
+  // cartao-visita-fisico tem fluxo próprio (4c) — pular aqui
+  if (novoStatus === "concluido" && solicitacao.tipo_solicitacao !== "cartao-visita-fisico") {
+    notificarMarcoBg(solicitacao.id, "concluida");
+  }
+}
+```
+
+### 4c. PUT /cartao-aprovacoes — marco "concluida" do físico
+No handler `router.put("/cartao-aprovacoes/:solicitacaoId", ...)`.
+**Antes** do upsert, capturar o status atual (se houver):
+```ts
+import { notificarMarcoBg } from "../services/notifications";
+// ...
+const [prev] = await db.select().from(cartaoAprovacoesTable)
+  .where(eq(cartaoAprovacoesTable.solicitacao_id, solicitacaoId));
+const statusAnterior = prev?.status;
+// ... await db.insert(...).onConflictDoUpdate(...) ...
+if (statusAnterior !== valores.status && valores.status === "envio-assessor") {
+  notificarMarcoBg(solicitacaoId, "concluida");
+}
+```
+
+### 4d. Automações — marco "concluida" ao gerar o material
+Em `src/services/art-generator.ts` (ou onde a automação marque a solicitação como
+`concluido` e grave os links de entrega), DEPOIS do `db.update(...).set({ status: "concluido", ... })`:
+```ts
+import { notificarMarcoBg } from "./notifications";
+// ...
+notificarMarcoBg(solicitacao.id, "concluida");
+```
+
+═══════════════════════════════════════════════════════════════
+## 5. Payload enviado ao N8N (referência)
+═══════════════════════════════════════════════════════════════
+```json
+{
+  "marco": "recebida" | "aprovacao" | "concluida",
+  "solicitacao_id": 123,
+  "tipo": "eventos",
+  "tipo_label": "Evento",
+  "is_automacao": false,
+  "is_cartao_fisico": false,
+  "user_email": "fulano@svninvest.com.br",
+  "user_name": "Fulano da Silva",
+  "first_name": "Fulano",
+  "status_atual": "recebido",
+  "link": "https://hub.portalsvn.com.br/solicitacao.html?id=123",
+  "created_at": "2026-05-27T14:32:00.000Z"
+}
+```
+
+O N8N já está configurado pra receber esse payload no webhook, rotear via
+Switch (`marco`) + IF (`is_automacao` no caso de `concluida`) e disparar o nó
+Send Email correspondente, com os templates v4/v5 (que tratam logo, mobile e
+dark mode).
+
+═══════════════════════════════════════════════════════════════
+## 6. Validação após o deploy
+═══════════════════════════════════════════════════════════════
+1. Criar uma solicitação de **evento** → e-mail "Solicitação recebida" chega.
+2. Mover a task pra "Em aprovação" no ClickUp → e-mail "Material pronto para sua aprovação" chega.
+3. Aprovar no hub e mover pra "Concluído" → e-mail "Solicitação concluída" chega.
+4. Re-disparar o webhook do ClickUp na mesma transição → **não** chega e-mail repetido (idempotência).
+5. Criar uma **assinatura de e-mail** (automação) → NÃO chega "recebida"; quando finaliza → chega "Material pronto para download".
+6. Criar um **cartão físico** → "recebida". Na tabela de validação, marcar `envio-assessor` → chega "Solicitação concluída".
+
+## Não faça
+- Não bloqueie o response da rota esperando o webhook — sempre `notificarMarcoBg`.
+- Não envie no caminho `cartao-visita-fisico` pelo webhook do ClickUp (a fonte de
+  verdade do status dele é a tabela de validação).
+- Não cubra os marcos intermediários (em-análise, em-produção, em-revisão, aguardando-informação) — é spam.

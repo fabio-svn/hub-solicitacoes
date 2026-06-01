@@ -31,6 +31,7 @@ export const solicitacoesTable = pgTable("solicitacoes", {
   status: varchar("status", { length: 30 }).default("recebido").notNull(),
   responsavel: text("responsavel"),
   erro_geracao: text("erro_geracao"),
+  notifications_sent: jsonb("notifications_sent").$type<Record<string, string>>().notNull().default({}),
   created_at: timestamp("created_at").defaultNow().notNull(),
   updated_at: timestamp("updated_at").defaultNow().notNull(),
 });

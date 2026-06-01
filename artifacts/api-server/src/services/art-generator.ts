@@ -9,6 +9,7 @@ import { logger } from "../lib/logger";
 import { renderFromTemplate } from "./template-renderer";
 import { renderTemplateToPdf } from "./pdf-renderer";
 import { FORM_SCHEMAS, FormSchema } from "../config/form-schemas";
+import { notificarMarcoBg } from "./notifications";
 
 function camelToSnake(str: string): string {
   return str.replace(/[A-Z]/g, c => "_" + c.toLowerCase());
@@ -148,6 +149,8 @@ export async function gerarArteParaSolicitacao(
         updated_at: new Date(),
       })
       .where(eq(solicitacoesTable.id, solicitacaoId));
+
+    notificarMarcoBg(solicitacaoId, "concluida");
 
     logger.info({ solicitacaoId, tipo, url }, "Arte gerada e salva");
   } catch (error) {

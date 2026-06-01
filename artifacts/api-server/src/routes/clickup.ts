@@ -77,7 +77,7 @@ function gerarIdSolicitacao(dados: FormDados, tipo: string): string {
   return `${tipoCode}-${setorCode}-${ano}-${mes}-${dia}-${rand}`;
 }
 
-const REQUEST_TYPE_LABELS: Record<string, string> = {
+export const REQUEST_TYPE_LABELS: Record<string, string> = {
   "artes-divulgacao":              "Arte de Divulgação",
   "atualizacao-material":          "Atualização de Material",
   "conteudo-pdf-informativo":      "PDF Informativo",

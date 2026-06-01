@@ -58,6 +58,7 @@ const DB_STATEMENTS = [
   `CREATE INDEX IF NOT EXISTS "IDX_solicitacoes_user_email"       ON "solicitacoes" ("user_email")`,
   `CREATE INDEX IF NOT EXISTS "IDX_solicitacoes_tipo_solicitacao" ON "solicitacoes" ("tipo_solicitacao")`,
   `CREATE INDEX IF NOT EXISTS "IDX_solicitacoes_status"           ON "solicitacoes" ("status")`,
+  `ALTER TABLE "solicitacoes" ADD COLUMN IF NOT EXISTS "notifications_sent" JSONB NOT NULL DEFAULT '{}'::jsonb`,
   `CREATE INDEX IF NOT EXISTS "IDX_solicitacoes_created_at"       ON "solicitacoes" ("created_at" DESC)`,
   `CREATE UNIQUE INDEX IF NOT EXISTS "idx_solicitacoes_clickup_task_id" ON "solicitacoes" ("clickup_task_id") WHERE "clickup_task_id" IS NOT NULL`,
 

@@ -10,6 +10,7 @@ import { uploadToR2, deleteFromR2 } from "./r2";
 import { gerarArteParaSolicitacao } from "../services/art-generator";
 import { logger } from "../lib/logger";
 import { CONTRATOS_OPTS, MARCAS_OPTS, CARGOS_OPTS, SETORES_LIST, getFormSchemaList, VALID_TIPOS } from "../config/form-schemas";
+import { notificarMarcoBg } from "../services/notifications";
 
 const router = Router();
 const upload = multer({ dest: os.tmpdir(), limits: { fileSize: 250 * 1024 * 1024, files: 10, fields: 20 } });
@@ -330,6 +331,8 @@ router.post("/solicitacoes", requireAuth, upload.any(), async (req, res): Promis
     gerarArteParaSolicitacao(solicitacao.id, tipo_solicitacao, parsedDados).catch(err => {
       req.log.error({ err, tipo: tipo_solicitacao }, "Erro ao gerar arte");
     });
+
+    notificarMarcoBg(solicitacao.id, "recebida");
 
     await logAtividade({
       userEmail: user.email, userName: user.name,
@@ -1278,9 +1281,15 @@ router.put("/cartao-aprovacoes/:solicitacaoId", requireAuth, async (req, res): P
       observacao: b.observacao ?? null,
       updated_at: new Date(),
     };
+    const [prev] = await db.select().from(cartaoAprovacoesTable)
+      .where(eq(cartaoAprovacoesTable.solicitacao_id, solicitacaoId));
+    const statusAnterior = prev?.status;
     await db.insert(cartaoAprovacoesTable)
       .values({ solicitacao_id: solicitacaoId, ...valores })
       .onConflictDoUpdate({ target: cartaoAprovacoesTable.solicitacao_id, set: valores });
+    if (statusAnterior !== valores.status && valores.status === "envio-assessor") {
+      notificarMarcoBg(solicitacaoId, "concluida");
+    }
     res.json({ ok: true });
   } catch (err) {
     logger.error({ err }, "Erro salvando cartao-aprovacao");

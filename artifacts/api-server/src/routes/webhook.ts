@@ -5,6 +5,7 @@ import { solicitacoesTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
 import { logger } from "../lib/logger";
 import { mapClickUpStatus } from "../config/clickup-status";
+import { notificarMarcoBg } from "../services/notifications";
 
 const router = Router();
 
@@ -100,6 +101,8 @@ router.post(
         return;
       }
 
+      const statusAnterior = solicitacao.status;
+
       await db
         .update(solicitacoesTable)
         .set({ status: hubStatus, updated_at: new Date() })
@@ -108,12 +111,21 @@ router.post(
       logger.info(
         {
           taskId,
-          statusAnterior: solicitacao.status,
+          statusAnterior,
           statusNovo: hubStatus,
           solicitacaoId: solicitacao.id,
         },
         "ClickUp webhook: status atualizado"
       );
+
+      if (statusAnterior !== hubStatus) {
+        if (hubStatus === "em-aprovacao") {
+          notificarMarcoBg(solicitacao.id, "aprovacao");
+        }
+        if (hubStatus === "concluido" && solicitacao.tipo_solicitacao !== "cartao-visita-fisico") {
+          notificarMarcoBg(solicitacao.id, "concluida");
+        }
+      }
     } catch (err) {
       logger.error({ err }, "ClickUp webhook: erro ao processar");
     }
