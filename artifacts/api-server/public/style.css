@@ -1929,32 +1929,62 @@ input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
 }
 
 /* Toolbar horizontal compacta para listas (admin.html) */
+/* === Toolbar horizontal compacta para listas (admin.html) === */
 .admin-list-toolbar {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
-  margin-bottom: 16px;
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  flex-wrap: nowrap !important;
+  margin-bottom: 16px !important;
+  width: 100%;
 }
-.admin-list-toolbar .filters { margin: 0; }
-.admin-list-toolbar .filter-select-compact { margin: 0; }
-.search-bar.compact {
-  height: 32px;
-  padding: 0 12px;
-  margin: 0;
-  max-width: 280px;
-  flex: 1 1 200px;
-  min-width: 180px;
-  border-radius: 8px;
+.admin-list-toolbar > .filters {
+  display: flex !important;
+  gap: 6px !important;
+  flex: 0 0 auto !important;
+  margin: 0 !important;
+  flex-wrap: nowrap;
 }
-.search-bar.compact input { font-size: 0.82rem; }
-
-@media (max-width: 768px) {
-  .admin-list-toolbar .search-bar.compact {
-    max-width: 100%;
-    flex: 1 1 100%;
-    height: auto;
-    padding: 8px 12px;
+.admin-list-toolbar > .filter-select-compact {
+  flex: 0 0 auto !important;
+  width: auto !important;
+  min-width: 140px !important;
+  max-width: 200px !important;
+  margin: 0 !important;
+  height: 36px !important;
+}
+.admin-list-toolbar > .search-bar.compact {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  background: var(--card-white) !important;
+  border: 1px solid var(--border-light) !important;
+  border-radius: 8px !important;
+  height: 36px !important;
+  padding: 0 12px !important;
+  margin: 0 !important;
+  flex: 1 1 auto !important;
+  min-width: 200px !important;
+  max-width: 360px !important;
+}
+.admin-list-toolbar > .search-bar.compact input {
+  font-size: 0.85rem !important;
+  border: none !important;
+  outline: none !important;
+  background: transparent !important;
+  width: 100% !important;
+}
+@media (max-width: 900px) {
+  .admin-list-toolbar {
+    flex-wrap: wrap !important;
+  }
+  .admin-list-toolbar > .search-bar.compact {
+    flex: 1 1 100% !important;
+    max-width: 100% !important;
+  }
+  .admin-list-toolbar > .filter-select-compact {
+    flex: 1 1 auto !important;
+    max-width: 100% !important;
   }
 }
 
@@ -1970,6 +2000,27 @@ input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
 #usuariosTabela th:nth-child(5), #usuariosTabela td:nth-child(5) { min-width: 130px; }
 #usuariosTabela th:nth-child(6), #usuariosTabela td:nth-child(6) { min-width: 110px; }
 #usuariosTabela th:nth-child(7), #usuariosTabela td:nth-child(7) { min-width: 130px; text-align: center; }
+
+/* Botões de ação na tabela admin */
+.action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 6px;
+  border: 1px solid var(--border-light);
+  background: var(--paper-white);
+  color: var(--carbon-black);
+  cursor: pointer;
+  margin: 0 2px;
+  transition: 0.15s;
+  text-decoration: none;
+  vertical-align: middle;
+}
+.action-btn:hover { border-color: var(--carbon-black); }
+.action-clickup:hover { border-color: #7B68EE; color: #7B68EE; }
+.action-delete:hover { border-color: var(--ruby-red); color: var(--ruby-red); background: rgba(172,54,49,0.05); }
 
 /* Mobile: ajustes 3 v2 — radio-cards coluna forçada */
 @media (max-width: 768px) {

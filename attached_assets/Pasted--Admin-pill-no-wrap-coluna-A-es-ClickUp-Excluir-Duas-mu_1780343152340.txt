@@ -1,0 +1,175 @@
+# Admin — pill no-wrap + coluna Ações (ClickUp + Excluir)
+
+Duas mudanças no `admin.html` + uma no `style.css`:
+1. Pill de status sem quebrar (`white-space: nowrap` inline no render + na regra base do `.badge`).
+2. Coluna "AÇÕES" na tabela com botões de ClickUp e Excluir, **só pra admin**.
+
+═══════════════════════════════════════════════════════════════
+## 1. `style.css` — patch da `.badge`
+═══════════════════════════════════════════════════════════════
+
+Localizar a regra existente:
+```css
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+```
+
+E **substituir por:**
+```css
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+```
+
+### Adicionar também (no fim do `style.css` ou perto das regras de admin)
+```css
+/* Botões de ação na tabela admin */
+.action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 6px;
+  border: 1px solid var(--border-light);
+  background: var(--paper-white);
+  color: var(--carbon-black);
+  cursor: pointer;
+  margin: 0 2px;
+  transition: 0.15s;
+  text-decoration: none;
+  vertical-align: middle;
+}
+.action-btn:hover {
+  border-color: var(--carbon-black);
+}
+.action-clickup:hover {
+  border-color: #7B68EE;
+  color: #7B68EE;
+}
+.action-delete:hover {
+  border-color: var(--ruby-red);
+  color: var(--ruby-red);
+  background: rgba(172, 54, 49, 0.05);
+}
+```
+
+═══════════════════════════════════════════════════════════════
+## 2. `admin.html` — função `renderTable` (coluna Ações + pill nowrap inline)
+═══════════════════════════════════════════════════════════════
+
+Localizar a função `renderTable(tab, data)` (perto da linha onde tem `<th>Tipo</th><th>Título</th>` etc).
+
+**SUBSTITUIR** o bloco atual de geração de HTML da tabela por esta versão:
+
+```js
+function renderTable(tab, data) {
+  const container = document.getElementById(tab === 'eventos' ? 'tableEventos' : 'tableGeral');
+  if (!data.data || data.data.length === 0) {
+    container.innerHTML = '<div class="empty-state"><p>Nenhuma solicitação encontrada.</p></div>';
+    return;
+  }
+  const isAdmin = Auth.getUserRole() === 'admin';
+  let html = '<table class="admin-table"><thead><tr>'
+    + '<th>Tipo</th><th>Título</th><th>Solicitante</th><th>Data</th>'
+    + '<th style="min-width:140px">Status</th>'
+    + (isAdmin ? '<th style="min-width:100px;text-align:center">Ações</th>' : '')
+    + '</tr></thead><tbody>';
+  data.data.forEach((item) => {
+    adminItemsCache['item_' + item.id] = item;
+    const dados = typeof item.dados === 'string' ? JSON.parse(item.dados) : (item.dados || {});
+    const titulo = item.titulo || dados.nomeEvento || dados.tituloEvento || dados.titulo || dados.nomeCompleto || '-';
+    const tipoLabel = TIPO_SOLICITACAO_LABELS[item.tipo_solicitacao] || item.tipo_solicitacao;
+    const statusObj = STATUS_SOLICITACAO.find(s => s.id === item.status) || { label: item.status, cor: '--carbon-black' };
+    const date = new Date(item.created_at).toLocaleDateString('pt-BR');
+    const acoesCell = isAdmin
+      ? `<td onclick="event.stopPropagation()" style="text-align:center;white-space:nowrap">
+          ${item.clickup_url ? `<a href="${esc(item.clickup_url)}" target="_blank" rel="noopener" title="Abrir no ClickUp" class="action-btn action-clickup">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/><path d="M21 14v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5"/></svg>
+          </a>` : ''}
+          <button onclick="deleteSol(${item.id}, event)" title="Excluir solicitação" class="action-btn action-delete">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+          </button>
+        </td>`
+      : '';
+    html += `<tr onclick="openDrawerByKey('item_${item.id}')">
+      <td>${esc(tipoLabel)}</td><td>${esc(titulo)}</td><td>${esc(item.user_email)}</td><td>${esc(date)}</td>
+      <td><span class="badge" style="background:${statusObj.bg || '#f1f5f9'};color:${statusObj.text || '#475569'};white-space:nowrap">${esc(statusObj.label)}</span></td>
+      ${acoesCell}
+    </tr>`;
+  });
+  html += '</tbody></table>';
+  container.innerHTML = html;
+
+  const pgContainer = document.getElementById(tab === 'eventos' ? 'paginationEventos' : 'paginationGeral');
+  if (data.totalPages > 1) {
+    let pg = `<button ${data.page<=1?'disabled':''} onclick="goPage('${tab}',${data.page-1})">&laquo;</button>`;
+    for (let i = 1; i <= data.totalPages; i++) pg += `<button class="${i===data.page?'active':''}" onclick="goPage('${tab}',${i})">${i}</button>`;
+    pg += `<button ${data.page>=data.totalPages?'disabled':''} onclick="goPage('${tab}',${data.page+1})">&raquo;</button>`;
+    pgContainer.innerHTML = pg;
+  } else pgContainer.innerHTML = '';
+}
+```
+
+### Adicionar a função `deleteSol` no mesmo `<script>`
+
+Logo após `goPage`:
+```js
+async function deleteSol(id, ev) {
+  if (ev) ev.stopPropagation();
+  if (!confirm('Tem certeza que deseja excluir essa solicitação? Esta ação não pode ser desfeita.')) return;
+  try {
+    const res = await fetch(`/api/solicitacoes/${id}`, { method: 'DELETE' });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      alert('Erro ao excluir: ' + (err.error || res.statusText));
+      return;
+    }
+    loadTable(currentTab);
+    loadStats();
+    loadAdminStats();
+  } catch (e) {
+    console.error(e);
+    alert('Erro de rede ao excluir solicitação.');
+  }
+}
+```
+
+═══════════════════════════════════════════════════════════════
+## Notas importantes
+═══════════════════════════════════════════════════════════════
+
+- O `onclick="event.stopPropagation()"` no `<td>` de ações é **crítico**: sem ele, clicar nos botões abriria o drawer junto com a ação. Já incluído.
+- O ícone de ClickUp só aparece se `item.clickup_url` existe. Itens sem URL (raros) só mostram o botão de delete.
+- O `white-space: nowrap` no `<span class="badge">` é INLINE no JS — funciona mesmo se o `.badge` do CSS estiver cacheado velho no Cloudflare. Garantia dupla.
+- `min-width: 140px` no `<th>Status</th>` garante que mesmo "LIBERADO PARA DESIGN" tenha espaço suficiente.
+- A função `deleteSol` recarrega a tabela e as stats após o delete bem-sucedido — UX consistente.
+
+═══════════════════════════════════════════════════════════════
+## Validação
+═══════════════════════════════════════════════════════════════
+
+1. No test/preview, abrir admin panel logado como admin.
+2. Coluna "Ações" aparece à direita do Status.
+3. Cada linha tem 2 botões: ícone de link externo (ClickUp) e lixeira.
+4. Clicar no ClickUp abre em nova aba. Clicar na lixeira pede confirmação e deleta.
+5. Status "LIBERADO PARA DESIGN" não quebra mais — ocupa uma linha inteira.
+6. Logado como não-admin, a coluna "Ações" e seu header somem (ver loga como em outro user).
