@@ -51,6 +51,7 @@ window.Shell = {
     this._renderImpersonationBanner(isImpersonating);
     this._bindEvents();
     this._syncNotifBadge();
+    this._initResumoDrawer();
   },
 
   _renderImpersonationBanner(isImpersonating) {
@@ -227,6 +228,12 @@ window.Shell = {
         dd.style.display = 'none';
       }
     });
+    if (window.matchMedia('(max-width: 768px)').matches) {
+      document.querySelectorAll('[autofocus]').forEach(el => {
+        el.removeAttribute('autofocus');
+        if (document.activeElement === el) el.blur();
+      });
+    }
   },
 
   _syncNotifBadge() {
@@ -243,6 +250,42 @@ window.Shell = {
     if (badgeMenu) {
       badgeMenu.style.display = count > 0 ? '' : 'none';
     }
+  },
+
+  _initResumoDrawer() {
+    const sidebar = document.querySelector('.form-sidebar');
+    if (!sidebar) return;
+    if (document.querySelector('.resumo-fab')) return;
+
+    const fab = document.createElement('button');
+    fab.className = 'resumo-fab';
+    fab.setAttribute('aria-label', 'Ver resumo do pedido');
+    fab.innerHTML = `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="8" y1="9" x2="16" y2="9"/><line x1="8" y1="13" x2="14" y2="13"/><line x1="8" y1="17" x2="12" y2="17"/></svg>`;
+    document.body.appendChild(fab);
+
+    const header = document.createElement('div');
+    header.className = 'form-sidebar-mobile-header';
+    header.innerHTML = `
+      <div class="form-sidebar-mobile-title">Resumo do pedido</div>
+      <button class="form-sidebar-mobile-close" aria-label="Fechar">&times;</button>
+    `;
+    sidebar.insertBefore(header, sidebar.firstChild);
+
+    const open = () => document.body.classList.add('resumo-drawer-open');
+    const close = () => document.body.classList.remove('resumo-drawer-open');
+
+    fab.addEventListener('click', open);
+    header.querySelector('.form-sidebar-mobile-close').addEventListener('click', close);
+
+    document.addEventListener('click', (e) => {
+      if (!document.body.classList.contains('resumo-drawer-open')) return;
+      if (e.target.closest('.form-sidebar') || e.target.closest('.resumo-fab')) return;
+      close();
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') close();
+    });
   },
 
   toggleSidebar() {
