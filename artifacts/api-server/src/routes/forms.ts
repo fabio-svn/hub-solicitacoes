@@ -11,6 +11,8 @@ import { gerarArteParaSolicitacao } from "../services/art-generator";
 import { logger } from "../lib/logger";
 import { CONTRATOS_OPTS, MARCAS_OPTS, CARGOS_OPTS, SETORES_LIST, getFormSchemaList, VALID_TIPOS } from "../config/form-schemas";
 import { notificarMarcoBg } from "../services/notifications";
+import { logEventoBg } from "../services/activity-log";
+import { eventosSolicitacaoTable } from "@workspace/db";
 
 const router = Router();
 const upload = multer({ dest: os.tmpdir(), limits: { fileSize: 250 * 1024 * 1024, files: 10, fields: 20 } });
@@ -317,8 +319,14 @@ router.post("/solicitacoes", requireAuth, upload.any(), async (req, res): Promis
           })
           .where(eq(solicitacoesTable.id, solicitacao.id));
       }
-    } catch (clickupErr) {
+    } catch (clickupErr: any) {
       logger.error({ err: clickupErr }, "ClickUp task creation failed, continuing");
+      logEventoBg(solicitacao.id, {
+        tipo: "error",
+        origem: "clickup",
+        mensagem: "Falha ao criar task no ClickUp",
+        detalhes: { message: clickupErr?.message, status: clickupErr?.status },
+      });
       await logAtividade({
         userEmail: user.email, userName: user.name,
         tipo: "clickup_erro", nivel: "warn",
@@ -333,6 +341,14 @@ router.post("/solicitacoes", requireAuth, upload.any(), async (req, res): Promis
     });
 
     notificarMarcoBg(solicitacao.id, "recebida");
+
+    logEventoBg(solicitacao.id, {
+      tipo: "info",
+      origem: "sistema",
+      mensagem: "Solicitação criada",
+      user_email: solicitacao.user_email,
+      detalhes: { tipo: solicitacao.tipo_solicitacao },
+    });
 
     await logAtividade({
       userEmail: user.email, userName: user.name,
@@ -454,8 +470,38 @@ router.get("/solicitacoes", requireAuth, async (req, res) => {
       .where(whereClause);
 
     await aplicarStatusAprovacao(results);
+
+    // erros_24h: contagem de eventos warning/error nas últimas 24h por solicitação
+    let erros24hMap: Record<number, number> = {};
+    if (results.length > 0) {
+      const ids = results.map(r => r.id);
+      const cutoff = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+      const errosRows = await db
+        .select({
+          solicitacao_id: eventosSolicitacaoTable.solicitacao_id,
+          count: sql<number>`count(*)`,
+        })
+        .from(eventosSolicitacaoTable)
+        .where(
+          and(
+            inArray(eventosSolicitacaoTable.solicitacao_id, ids),
+            sql`${eventosSolicitacaoTable.tipo} IN ('warning','error')`,
+            sql`${eventosSolicitacaoTable.created_at} >= ${cutoff}`,
+          )
+        )
+        .groupBy(eventosSolicitacaoTable.solicitacao_id);
+      for (const row of errosRows) {
+        erros24hMap[row.solicitacao_id] = Number(row.count);
+      }
+    }
+
+    const dataComErros = results.map(r => ({
+      ...r,
+      erros_24h: erros24hMap[r.id] ?? 0,
+    }));
+
     res.json({
-      data: results,
+      data: dataComErros,
       total: Number(countResult.count),
       page,
       limit,
@@ -534,6 +580,32 @@ router.get("/solicitacoes/pendentes-aprovacao", requireAuth, async (req, res): P
   } catch (err) {
     logger.error({ err }, "Erro ao buscar pendentes aprovação");
     res.status(500).json({ error: "Erro" });
+  }
+});
+
+router.get("/solicitacoes/:id/eventos", requireAuth, async (req, res): Promise<void> => {
+  try {
+    const user = req.session.user!;
+    const id = parseInt(String(req.params.id), 10);
+    if (isNaN(id)) { res.status(400).json({ error: "ID inválido" }); return; }
+
+    const isAdmin = user.role === "admin" || user.role === "gestor";
+    const conditions: ReturnType<typeof eq>[] = [eq(solicitacoesTable.id, id)];
+    if (!isAdmin) conditions.push(eq(solicitacoesTable.user_email, user.email));
+    const [sol] = await db.select({ id: solicitacoesTable.id }).from(solicitacoesTable).where(and(...conditions));
+    if (!sol) { res.status(404).json({ error: "Solicitação não encontrada" }); return; }
+
+    const eventos = await db
+      .select()
+      .from(eventosSolicitacaoTable)
+      .where(eq(eventosSolicitacaoTable.solicitacao_id, id))
+      .orderBy(desc(eventosSolicitacaoTable.created_at))
+      .limit(100);
+
+    res.json({ data: eventos });
+  } catch (err) {
+    logger.error({ err }, "Erro ao listar eventos da solicitação");
+    res.status(500).json({ error: "Erro ao listar eventos" });
   }
 });
 
@@ -905,6 +977,12 @@ router.post("/solicitacoes/:id/aprovacao", requireAuth, async (req, res): Promis
       body: JSON.stringify({ comment_text: comentario }),
     });
 
+    logEventoBg(id, {
+      tipo: "info",
+      origem: "usuario",
+      mensagem: "Material aprovado pelo solicitante",
+      user_email: user.email,
+    });
     await logAtividade({
       userEmail: user.email, userName: user.name,
       tipo: "aprovacao_registrada", nivel: "info",
@@ -1124,6 +1202,12 @@ router.delete("/solicitacoes/:id", requireAuth, requireRole("admin"), async (req
 
     if (!solicitacao) { res.status(404).json({ error: "Solicitação não encontrada" }); return; }
 
+    logEventoBg(id, {
+      tipo: "warning",
+      origem: "admin",
+      mensagem: "Solicitação deletada por admin",
+      user_email: user.email,
+    });
     const arquivosParaDeletar = await db.select().from(arquivosTable).where(eq(arquivosTable.solicitacao_id, id));
     await Promise.all(arquivosParaDeletar.map(a => deleteFromR2(a.url_r2)));
     await db.delete(arquivosTable).where(eq(arquivosTable.solicitacao_id, id));
@@ -1289,6 +1373,21 @@ router.put("/cartao-aprovacoes/:solicitacaoId", requireAuth, async (req, res): P
       .onConflictDoUpdate({ target: cartaoAprovacoesTable.solicitacao_id, set: valores });
     if (statusAnterior !== valores.status && valores.status === "envio-assessor") {
       notificarMarcoBg(solicitacaoId, "concluida");
+    }
+    const camposEditados: Record<string, { antes: any; depois: any }> = {};
+    for (const campo of ["status", "observacao", "nome", "whatsapp", "email", "unidade", "contrato_social", "envio_para", "custo"] as const) {
+      const antes = (prev as any)?.[campo] ?? null;
+      const depois = (valores as any)[campo] ?? null;
+      if (antes !== depois) camposEditados[campo] = { antes, depois };
+    }
+    if (Object.keys(camposEditados).length > 0) {
+      logEventoBg(solicitacaoId, {
+        tipo: "info",
+        origem: "capital-humano",
+        mensagem: "Validação de cartão editada",
+        user_email: req.session.user!.email,
+        detalhes: { campos: camposEditados },
+      });
     }
     res.json({ ok: true });
   } catch (err) {

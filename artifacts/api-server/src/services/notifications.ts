@@ -2,6 +2,7 @@ import { db, solicitacoesTable } from "@workspace/db";
 import { eq, sql } from "drizzle-orm";
 import { logger } from "../lib/logger";
 import { REQUEST_TYPE_LABELS } from "../routes/clickup";
+import { logEventoBg } from "./activity-log";
 
 const WEBHOOK_URL = process.env.N8N_NOTIFICATIONS_WEBHOOK_URL;
 const HUB_URL = process.env.HUB_PUBLIC_URL || "https://hub.portalsvn.com.br";
@@ -74,8 +75,21 @@ export async function notificarMarco(solicitacaoId: number, marco: Marco): Promi
 
     if (!res.ok) {
       logger.error({ solicitacaoId, marco, status: res.status }, "Webhook N8N falhou");
+      logEventoBg(solicitacaoId, {
+        tipo: "warning",
+        origem: "n8n",
+        mensagem: `Falha ao disparar e-mail "${marco}"`,
+        detalhes: { marco, status: res.status },
+      });
       return;
     }
+
+    logEventoBg(solicitacaoId, {
+      tipo: "info",
+      origem: "n8n",
+      mensagem: `E-mail "${marco}" disparado`,
+      detalhes: { marco, n8n_status: res.status, destinatario: sol.user_email },
+    });
 
     await db.update(solicitacoesTable)
       .set({
@@ -85,8 +99,14 @@ export async function notificarMarco(solicitacaoId: number, marco: Marco): Promi
       .where(eq(solicitacoesTable.id, solicitacaoId));
 
     logger.info({ solicitacaoId, marco }, "Notificação enviada");
-  } catch (err) {
+  } catch (err: any) {
     logger.error({ err, solicitacaoId, marco }, "Erro em notificarMarco");
+    logEventoBg(solicitacaoId, {
+      tipo: "warning",
+      origem: "n8n",
+      mensagem: `Falha ao disparar e-mail "${marco}"`,
+      detalhes: { marco, err: String(err) },
+    });
   }
 }
 

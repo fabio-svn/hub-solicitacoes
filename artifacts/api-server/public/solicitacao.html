@@ -509,6 +509,29 @@
         <div id="dadosContent"></div>
       </div>
 
+      <!-- Atividade -->
+      <div id="atividadeSection" style="display:none;margin-top:14px">
+        <div class="form-card" style="padding:0;overflow:hidden">
+          <div id="atividadeHeader" style="display:flex;align-items:center;gap:12px;padding:16px 20px;cursor:pointer;user-select:none" onclick="toggleAtividade()">
+            <div style="width:32px;height:32px;border-radius:8px;background:var(--icon-bg);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" opacity="0.55"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            </div>
+            <div style="flex:1;min-width:0">
+              <div style="font-weight:700;font-size:0.92rem;line-height:1.2">Atividade</div>
+              <div style="font-size:0.78rem;opacity:0.42;margin-top:2px">Log de eventos desta solicitação</div>
+            </div>
+            <svg id="atividadeChevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="opacity:0.3;transition:transform 0.28s cubic-bezier(.4,0,.2,1);flex-shrink:0"><polyline points="6 9 12 15 18 9"/></svg>
+          </div>
+          <div id="atividadeBody" style="max-height:0;overflow:hidden;transition:max-height 0.35s ease">
+            <div style="border-top:1px solid rgba(34,27,25,0.07);padding:16px 20px 20px">
+              <div id="atividadeContent">
+                <div style="text-align:center;padding:20px;opacity:0.35;font-size:0.85rem">Carregando…</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div style="margin-top:14px;font-size:0.72rem;opacity:0.3;display:flex;gap:14px;flex-wrap:wrap" id="solRodape"></div>
     </div>
   </div>
@@ -722,6 +745,7 @@
 
       const isAdm = typeof Auth !== 'undefined' && Auth.isAdmin && Auth.isAdmin();
       const isStaff = typeof Auth !== 'undefined' && Auth.isStaff && Auth.isStaff();
+      if (isAdm || isStaff) mostrarAtividade();
       document.getElementById('solRodape').innerHTML =
         `<span>ID interno: ${item.id}</span>` +
         (dados.idSolicitacao ? `<span>Código: ${esc(dados.idSolicitacao)}</span>` : '') +
@@ -1904,6 +1928,82 @@
       }
       html += '</div>';
       container.innerHTML = html;
+    }
+
+    /* ── Atividade (log de eventos) ── */
+    let _atividadeAberta = false;
+    let _atividadeCarregada = false;
+
+    function toggleAtividade() {
+      _atividadeAberta = !_atividadeAberta;
+      const body = document.getElementById('atividadeBody');
+      const chevron = document.getElementById('atividadeChevron');
+      chevron.style.transform = _atividadeAberta ? 'rotate(180deg)' : 'rotate(0deg)';
+      body.style.maxHeight = _atividadeAberta ? '800px' : '0';
+      if (_atividadeAberta && !_atividadeCarregada) {
+        _atividadeCarregada = true;
+        carregarAtividade();
+      }
+    }
+
+    async function carregarAtividade() {
+      try {
+        const res = await fetch('/api/solicitacoes/' + solicitacaoId + '/eventos');
+        if (!res.ok) throw new Error('status ' + res.status);
+        const data = await res.json();
+        renderAtividade(data.data || []);
+      } catch (e) {
+        document.getElementById('atividadeContent').innerHTML =
+          '<p style="color:var(--ruby-red);font-size:0.82rem;opacity:0.7">Erro ao carregar eventos.</p>';
+      }
+    }
+
+    const ATIVIDADE_ORIGEM_LABEL = {
+      clickup: 'ClickUp',
+      n8n: 'E-mail',
+      'art-generator': 'Geração',
+      r2: 'Arquivo',
+      usuario: 'Solicitante',
+      'capital-humano': 'Capital Humano',
+      admin: 'Admin',
+      sistema: 'Sistema',
+    };
+    const ATIVIDADE_TIPO_COLOR = {
+      info: { bg: 'rgba(34,197,94,0.1)', dot: '#16a34a' },
+      warning: { bg: 'rgba(251,191,36,0.12)', dot: '#d97706' },
+      error: { bg: 'rgba(220,38,38,0.1)', dot: '#dc2626' },
+    };
+
+    function renderAtividade(eventos) {
+      const el = document.getElementById('atividadeContent');
+      if (!eventos.length) {
+        el.innerHTML = '<p style="font-size:0.82rem;opacity:0.4;text-align:center;padding:12px 0">Nenhum evento registrado.</p>';
+        return;
+      }
+      el.innerHTML = eventos.map(ev => {
+        const cor = ATIVIDADE_TIPO_COLOR[ev.tipo] || ATIVIDADE_TIPO_COLOR.info;
+        const origemLabel = ATIVIDADE_ORIGEM_LABEL[ev.origem] || ev.origem;
+        const dataFmt = new Date(ev.created_at).toLocaleString('pt-BR', { day:'2-digit', month:'2-digit', year:'2-digit', hour:'2-digit', minute:'2-digit' });
+        const detalhesHtml = ev.detalhes && Object.keys(ev.detalhes).length
+          ? `<details style="margin-top:6px"><summary style="font-size:0.72rem;opacity:0.45;cursor:pointer;user-select:none">Detalhes</summary>
+              <pre style="font-size:0.7rem;opacity:0.55;white-space:pre-wrap;word-break:break-all;margin:6px 0 0;background:var(--icon-bg);padding:8px;border-radius:6px">${esc(JSON.stringify(ev.detalhes, null, 2))}</pre>
+             </details>` : '';
+        return `<div style="display:flex;gap:10px;margin-bottom:10px;padding:10px 12px;border-radius:8px;background:${cor.bg}">
+          <div style="width:8px;height:8px;border-radius:50%;background:${cor.dot};flex-shrink:0;margin-top:5px"></div>
+          <div style="flex:1;min-width:0">
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+              <span style="font-size:0.82rem;font-weight:600;line-height:1.4">${esc(ev.mensagem)}</span>
+              <span style="font-size:0.7rem;opacity:0.45;white-space:nowrap">${esc(origemLabel)}</span>
+            </div>
+            <div style="font-size:0.72rem;opacity:0.38;margin-top:2px">${dataFmt}${ev.user_email ? ' · ' + esc(ev.user_email) : ''}</div>
+            ${detalhesHtml}
+          </div>
+        </div>`;
+      }).join('');
+    }
+
+    function mostrarAtividade() {
+      document.getElementById('atividadeSection').style.display = 'block';
     }
 
     init();

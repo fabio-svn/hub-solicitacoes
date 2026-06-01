@@ -1,0 +1,360 @@
+# Log estruturado de eventos por solicitação
+
+Sistema de auditoria/observabilidade por solicitação. Registra três classes de evento:
+- **info**: ações normais que valem rastro (status mudou, e-mail disparado, edição salva)
+- **warning**: algo deu errado mas não bloqueou (retry, status desconhecido, webhook engoliu erro)
+- **error**: algo quebrou e ficou inconsistente (criar task no ClickUp falhou, upload no R2 falhou)
+
+Visibilidade:
+- Na página da solicitação (`solicitacao.html`), a seção "Atividade" passa a renderizar todos os eventos com cor por tipo e filtro.
+- Na dashboard (lista de solicitações), aparece um badge vermelho nas linhas com erro nas últimas 24h, e um filtro "Com erros" no topo.
+
+**Importante:** se já existir alguma tabela/mecanismo de histórico (ex: `solicitacao_eventos`, `status_history`, `transicoes`), **NÃO substituir**. Criar a nova tabela ao lado e na UI consumir as duas fontes (ou migrar a existente posteriormente, em outro PR).
+
+Build necessário depois: `cd artifacts/api-server && pnpm run build` + restart + migration.
+
+═══════════════════════════════════════════════════════════════
+## 1. Migration — tabela `eventos_solicitacao`
+═══════════════════════════════════════════════════════════════
+```sql
+CREATE TABLE IF NOT EXISTS "eventos_solicitacao" (
+  "id" SERIAL PRIMARY KEY,
+  "solicitacao_id" INTEGER NOT NULL REFERENCES "solicitacoes"("id") ON DELETE CASCADE,
+  "tipo" VARCHAR(16) NOT NULL CHECK ("tipo" IN ('info','warning','error')),
+  "origem" VARCHAR(32) NOT NULL,
+  "mensagem" TEXT NOT NULL,
+  "detalhes" JSONB,
+  "user_email" VARCHAR(255),
+  "created_at" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS "idx_eventos_sol" ON "eventos_solicitacao" ("solicitacao_id", "created_at" DESC);
+CREATE INDEX IF NOT EXISTS "idx_eventos_tipo_24h" ON "eventos_solicitacao" ("tipo", "created_at" DESC) WHERE "tipo" IN ('warning','error');
+```
+
+### Schema Drizzle (`lib/db/src/schema/index.ts`)
+```ts
+export const eventosSolicitacaoTable = pgTable("eventos_solicitacao", {
+  id: serial("id").primaryKey(),
+  solicitacao_id: integer("solicitacao_id").notNull().references(() => solicitacoesTable.id, { onDelete: "cascade" }),
+  tipo: varchar("tipo", { length: 16 }).notNull().$type<"info" | "warning" | "error">(),
+  origem: varchar("origem", { length: 32 }).notNull(),
+  mensagem: text("mensagem").notNull(),
+  detalhes: jsonb("detalhes").$type<Record<string, any> | null>(),
+  user_email: varchar("user_email", { length: 255 }),
+  created_at: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+}, (t) => ({
+  byBig: index("idx_eventos_sol").on(t.solicitacao_id, t.created_at),
+}));
+```
+
+═══════════════════════════════════════════════════════════════
+## 2. Helper — `src/services/activity-log.ts` (CRIAR)
+═══════════════════════════════════════════════════════════════
+```ts
+import { db, eventosSolicitacaoTable } from "@workspace/db";
+import { logger } from "../lib/logger";
+
+export type TipoEvento = "info" | "warning" | "error";
+export type OrigemEvento =
+  | "clickup"            // criação de task, recebimento de webhook
+  | "n8n"                // disparo de notificações por e-mail
+  | "art-generator"      // automações (assinatura, NPS, cartões digitais)
+  | "r2"                 // upload/delete de arquivo
+  | "usuario"            // ações do solicitante (aprovação, comentário, alterações)
+  | "capital-humano"     // edição na tabela de validação de cartões
+  | "admin"              // overrides (delete, edit manual)
+  | "sistema";           // criação de solicitação, transições internas
+
+export interface EventoInput {
+  tipo: TipoEvento;
+  origem: OrigemEvento;
+  mensagem: string;
+  detalhes?: Record<string, any>;
+  user_email?: string;
+}
+
+export async function logEvento(solicitacaoId: number, evento: EventoInput): Promise<void> {
+  try {
+    await db.insert(eventosSolicitacaoTable).values({
+      solicitacao_id: solicitacaoId,
+      tipo: evento.tipo,
+      origem: evento.origem,
+      mensagem: evento.mensagem.slice(0, 500),
+      detalhes: evento.detalhes ?? null,
+      user_email: evento.user_email ?? null,
+    });
+  } catch (err) {
+    // log na stream, mas NUNCA propagar — o registro de evento não pode quebrar a rota
+    logger.error({ err, solicitacaoId, evento }, "logEvento falhou ao gravar");
+  }
+}
+
+export function logEventoBg(solicitacaoId: number, evento: EventoInput): void {
+  logEvento(solicitacaoId, evento).catch(() => {});
+}
+```
+
+═══════════════════════════════════════════════════════════════
+## 3. Ganchos nos pontos críticos
+═══════════════════════════════════════════════════════════════
+
+Use `logEventoBg` (fire-and-forget) em **todos** os ganchos abaixo — registrar evento NUNCA pode bloquear ou derrubar a rota.
+
+### 3a. POST /solicitacoes — criação
+Logo após o insert da solicitação:
+```ts
+logEventoBg(novaSolicitacao.id, {
+  tipo: "info",
+  origem: "sistema",
+  mensagem: "Solicitação criada",
+  user_email: novaSolicitacao.user_email,
+  detalhes: { tipo: novaSolicitacao.tipo_solicitacao },
+});
+```
+
+E **se a criação da task no ClickUp falhar** (no catch ou no else de sucesso):
+```ts
+logEventoBg(novaSolicitacao.id, {
+  tipo: "error",
+  origem: "clickup",
+  mensagem: "Falha ao criar task no ClickUp",
+  detalhes: { status: err?.status, message: err?.message, lista_id: listaId },
+});
+```
+
+### 3b. Webhook ClickUp recebido (`routes/webhook.ts`)
+Em cada transição reconhecida, ANTES do db.update(status):
+```ts
+logEventoBg(solicitacao.id, {
+  tipo: "info",
+  origem: "clickup",
+  mensagem: `Status mudou para ${novoStatus}`,
+  detalhes: { de: statusAnterior, para: novoStatus, clickup_status: rawClickupStatus },
+});
+```
+
+Se o status do ClickUp não tem mapeamento (status desconhecido):
+```ts
+logEventoBg(solicitacao.id, {
+  tipo: "warning",
+  origem: "clickup",
+  mensagem: "Status do ClickUp sem mapeamento local",
+  detalhes: { clickup_status: rawClickupStatus, task_id: clickupTaskId },
+});
+```
+
+Se der erro de DB ao atualizar:
+```ts
+logEventoBg(solicitacao.id, {
+  tipo: "error",
+  origem: "clickup",
+  mensagem: "Falha ao atualizar status local após webhook",
+  detalhes: { err: String(err), novoStatus },
+});
+```
+
+### 3c. Notificações por e-mail (`src/services/notifications.ts`)
+Dentro do `notificarMarco`, ao retornar `res.ok`:
+```ts
+logEventoBg(sol.id, {
+  tipo: "info",
+  origem: "n8n",
+  mensagem: `E-mail "${marco}" disparado`,
+  detalhes: { marco, n8n_status: res.status, destinatario: sol.user_email },
+});
+```
+
+No bloco de erro do fetch e do !res.ok:
+```ts
+logEventoBg(sol.id, {
+  tipo: "warning",
+  origem: "n8n",
+  mensagem: `Falha ao disparar e-mail "${marco}"`,
+  detalhes: { marco, status: res?.status, err: String(err) },
+});
+```
+
+### 3d. art-generator (`src/services/art-generator.ts`)
+No início de cada job:
+```ts
+logEventoBg(sol.id, { tipo: "info", origem: "art-generator", mensagem: "Iniciando geração", detalhes: { tipo: sol.tipo_solicitacao } });
+```
+
+A cada etapa significativa (ex: "imagem gerada", "PDF montado"):
+```ts
+logEventoBg(sol.id, { tipo: "info", origem: "art-generator", mensagem: `Etapa concluída: ${etapa}` });
+```
+
+Ao finalizar com sucesso:
+```ts
+logEventoBg(sol.id, { tipo: "info", origem: "art-generator", mensagem: "Geração concluída" });
+```
+
+Ao falhar em qualquer etapa (capturar erro original, não comer):
+```ts
+logEventoBg(sol.id, {
+  tipo: "error",
+  origem: "art-generator",
+  mensagem: `Falha na etapa: ${etapa || "desconhecida"}`,
+  detalhes: { err: String(err), stack: err?.stack?.split("\n").slice(0,3).join("\n") },
+});
+```
+
+### 3e. R2 (uploads/deletes via service de storage)
+No helper que faz upload (geralmente um wrapper do client S3 do R2):
+```ts
+// sucesso
+logEventoBg(solicitacaoId, {
+  tipo: "info",
+  origem: "r2",
+  mensagem: "Arquivo subido para R2",
+  detalhes: { chave, tamanho_bytes, content_type },
+});
+
+// falha
+logEventoBg(solicitacaoId, {
+  tipo: "error",
+  origem: "r2",
+  mensagem: "Falha ao subir para R2",
+  detalhes: { chave, err: String(err) },
+});
+```
+
+Idem pra delete (importante quando uma re-geração apaga assets antigos).
+
+### 3f. Aprovação pelo solicitante (chat de aprovação no resumo)
+No endpoint que processa "Aprovado" / "Solicitar alterações" / "Comentário" (procurar onde isso é persistido — provavelmente um POST tipo `/solicitacoes/:id/aprovacao` ou similar):
+```ts
+// Aprovou
+logEventoBg(sol.id, {
+  tipo: "info",
+  origem: "usuario",
+  mensagem: "Material aprovado pelo solicitante",
+  user_email: req.user.email,
+  detalhes: { rodada },
+});
+
+// Solicitou alterações
+logEventoBg(sol.id, {
+  tipo: "info",
+  origem: "usuario",
+  mensagem: "Solicitou alterações",
+  user_email: req.user.email,
+  detalhes: { rodada, texto: pendencia.slice(0, 500) },
+});
+
+// Comentou (sem decisão)
+logEventoBg(sol.id, {
+  tipo: "info",
+  origem: "usuario",
+  mensagem: "Comentário adicionado",
+  user_email: req.user.email,
+  detalhes: { texto: comentario.slice(0, 500) },
+});
+```
+
+### 3g. Edição na Validação de Cartões (`PUT /cartao-aprovacoes/:solicitacaoId`)
+ANTES do upsert, capturar valores anteriores. DEPOIS do upsert, comparar campo a campo e logar só o que mudou:
+```ts
+const camposEditados: Record<string, { antes: any; depois: any }> = {};
+for (const campo of ["status", "observacao", "nome", "whatsapp", "email", "unidade", "contrato_social", "envio", "custo"]) {
+  if ((prev?.[campo] ?? null) !== (valores[campo] ?? null)) {
+    camposEditados[campo] = { antes: prev?.[campo] ?? null, depois: valores[campo] ?? null };
+  }
+}
+if (Object.keys(camposEditados).length > 0) {
+  logEventoBg(solicitacaoId, {
+    tipo: "info",
+    origem: "capital-humano",
+    mensagem: "Validação de cartão editada",
+    user_email: req.user.email,
+    detalhes: { campos: camposEditados },
+  });
+}
+```
+
+### 3h. Overrides administrativos
+**DELETE /solicitacoes/:id** (já requireRole admin):
+```ts
+logEventoBg(id, {
+  tipo: "warning",
+  origem: "admin",
+  mensagem: "Solicitação deletada por admin",
+  user_email: req.user.email,
+});
+```
+
+Qualquer outro endpoint admin que edite/sobrescreva status, dados ou entrega:
+```ts
+logEventoBg(id, {
+  tipo: "info",
+  origem: "admin",
+  mensagem: `Override admin: ${descricao_curta}`,
+  user_email: req.user.email,
+  detalhes: { campos_alterados, antes, depois },
+});
+```
+
+═══════════════════════════════════════════════════════════════
+## 4. Endpoint da API
+═══════════════════════════════════════════════════════════════
+**GET `/solicitacoes/:id/eventos`** (autenticado; mesma RBAC que o resumo — solicitante + admin/capital-humano/gestor):
+```ts
+const eventos = await db.select()
+  .from(eventosSolicitacaoTable)
+  .where(eq(eventosSolicitacaoTable.solicitacao_id, id))
+  .orderBy(desc(eventosSolicitacaoTable.created_at))
+  .limit(200);
+res.json({ eventos });
+```
+
+**Bonus** — incluir contagem de erros 24h no GET da lista de solicitações (pra dashboard):
+no SELECT principal de solicitações, adicionar uma subquery:
+```sql
+(SELECT COUNT(*) FROM eventos_solicitacao
+ WHERE solicitacao_id = solicitacoes.id
+   AND tipo = 'error'
+   AND created_at > NOW() - INTERVAL '24 hours') AS erros_24h
+```
+
+═══════════════════════════════════════════════════════════════
+## 5. UI — `public/solicitacao.html` (seção "Atividade")
+═══════════════════════════════════════════════════════════════
+Substituir/estender a seção atual de atividade:
+
+1. **Fetch** dos eventos via `GET /solicitacoes/:id/eventos`. Manter o que já tinha (status history existente) e MESCLAR com os novos eventos por timestamp.
+2. **Render** cada item:
+   - Ícone/cor por tipo: info=cinza neutro (●), warning=amarelo `#d4a574` (⚠), error=vermelho `#dc2626` (●).
+   - Linha: `[ícone] [mensagem] [badge origem] · [timestamp relativo]`
+   - Click expande pra mostrar `detalhes` em JSON formatado.
+3. **Filtro** no topo da seção: três chips — "Tudo" (default), "Avisos e erros", "Só erros". Filtragem client-side sobre a lista já carregada.
+4. **Carregamento incremental**: se houver mais de 50, mostrar "Carregar mais" no fim.
+
+Tom da UI: discreto. A maioria dos eventos será `info` e deve ficar quase invisível (cinza, fonte 13px). Warnings e errors precisam saltar (amarelo/vermelho, mais visíveis).
+
+═══════════════════════════════════════════════════════════════
+## 6. UI — Dashboard (lista de solicitações)
+═══════════════════════════════════════════════════════════════
+1. **Badge de erro**: em cada linha onde `erros_24h > 0`, mostrar um pequeno indicador vermelho à esquerda do título (●) com `title="X erros nas últimas 24h"`. Usar `#dc2626` matching o resumo.
+2. **Filtro novo** na barra de filtros do topo: chip "Com erros" — quando ativo, filtra `erros_24h > 0`. Funciona client-side igual aos outros chips.
+
+═══════════════════════════════════════════════════════════════
+## 7. Não fazer
+═══════════════════════════════════════════════════════════════
+- Não logar eventos sensíveis (senhas, tokens, secrets). Se `detalhes` precisar de um token, mascarar (`tok***`).
+- Não usar `logEvento` (await) em path crítico — sempre `logEventoBg`.
+- Não criar trigger no banco pra capturar eventos automaticamente — feio de debugar e bagunça migrations.
+- Não tentar deduplicar eventos no servidor por agora — alguns warnings podem se repetir, e isso é informativo (mostra padrão).
+- Não criar a tabela com cascade pra deletar eventos se a solicitação for deletada por admin? **Aqui sim cascade faz sentido** — não há valor em manter eventos órfãos depois que a solicitação some.
+
+═══════════════════════════════════════════════════════════════
+## 8. Validação
+═══════════════════════════════════════════════════════════════
+1. Criar uma solicitação → na aba Atividade, aparecer "Solicitação criada" (sistema).
+2. ClickUp webhook chega com status conhecido → aparece transição (info).
+3. Forçar status desconhecido (ex: alterar a task pra coluna sem mapeamento) → aparece warning na lista.
+4. Aprovar pelo chat → aparece "Material aprovado pelo solicitante" (usuario).
+5. Editar observação na tabela de validação de cartões → aparece "Validação editada" com diff.
+6. Deletar via admin → aparece o warning final antes da solicitação sumir (e os eventos junto, por cascade).
+7. Na lista da dashboard, uma solicitação com erro recente mostra o badge vermelho; filtro "Com erros" funciona.

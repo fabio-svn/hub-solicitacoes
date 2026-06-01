@@ -6,6 +6,7 @@ import { eq } from "drizzle-orm";
 import { logger } from "../lib/logger";
 import { mapClickUpStatus } from "../config/clickup-status";
 import { notificarMarcoBg } from "../services/notifications";
+import { logEventoBg } from "../services/activity-log";
 
 const router = Router();
 
@@ -102,6 +103,13 @@ router.post(
       }
 
       const statusAnterior = solicitacao.status;
+
+      logEventoBg(solicitacao.id, {
+        tipo: "info",
+        origem: "clickup",
+        mensagem: `Status mudou para ${hubStatus}`,
+        detalhes: { de: statusAnterior, para: hubStatus, clickup_status: rawStatus },
+      });
 
       await db
         .update(solicitacoesTable)

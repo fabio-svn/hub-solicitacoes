@@ -10,6 +10,7 @@ import { renderFromTemplate } from "./template-renderer";
 import { renderTemplateToPdf } from "./pdf-renderer";
 import { FORM_SCHEMAS, FormSchema } from "../config/form-schemas";
 import { notificarMarcoBg } from "./notifications";
+import { logEventoBg } from "./activity-log";
 
 function camelToSnake(str: string): string {
   return str.replace(/[A-Z]/g, c => "_" + c.toLowerCase());
@@ -70,6 +71,7 @@ export async function gerarArteParaSolicitacao(
   dados: Record<string, unknown>,
 ): Promise<void> {
   logger.info({ solicitacaoId, tipo }, "[render] iniciando geração de arte (template-driven)");
+  logEventoBg(solicitacaoId, { tipo: "info", origem: "art-generator", mensagem: "Iniciando geração", detalhes: { tipo } });
 
   const formSchema = FORM_SCHEMAS[tipo];
 
@@ -151,10 +153,17 @@ export async function gerarArteParaSolicitacao(
       .where(eq(solicitacoesTable.id, solicitacaoId));
 
     notificarMarcoBg(solicitacaoId, "concluida");
+    logEventoBg(solicitacaoId, { tipo: "info", origem: "art-generator", mensagem: "Geração concluída", detalhes: { url } });
 
     logger.info({ solicitacaoId, tipo, url }, "Arte gerada e salva");
-  } catch (error) {
+  } catch (error: any) {
     logger.error({ solicitacaoId, tipo, error }, "art generation failed");
+    logEventoBg(solicitacaoId, {
+      tipo: "error",
+      origem: "art-generator",
+      mensagem: "Falha na geração",
+      detalhes: { err: String(error), stack: error?.stack?.split("\n").slice(0, 3).join("\n") },
+    });
 
     await db.update(solicitacoesTable)
       .set({

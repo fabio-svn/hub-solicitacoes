@@ -2,6 +2,7 @@ import { S3Client, PutObjectCommand, DeleteObjectCommand } from "@aws-sdk/client
 import { v4 as uuidv4 } from "uuid";
 import fs from "fs";
 import { logger } from "../lib/logger";
+import { logEventoBg } from "../services/activity-log";
 
 const R2_ACCOUNT_ID = process.env.R2_ACCOUNT_ID || "";
 const R2_ACCESS_KEY = process.env.R2_ACCESS_KEY || "";
@@ -56,7 +57,14 @@ export async function uploadToR2(
     await fs.promises.unlink(file.path).catch(() => {});
   }
 
-  return `${R2_PUBLIC_URL}${key}`;
+  const url = `${R2_PUBLIC_URL}${key}`;
+  logEventoBg(solicitacaoId, {
+    tipo: "info",
+    origem: "r2",
+    mensagem: "Arquivo subido para R2",
+    detalhes: { chave: key, content_type: file.mimetype },
+  });
+  return url;
 }
 
 export async function deleteFromR2(urlOrKey: string): Promise<void> {

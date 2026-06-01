@@ -127,6 +127,19 @@ export const cartaoAprovacoesTable = pgTable("cartao_aprovacoes", {
 
 export type CartaoAprovacao = typeof cartaoAprovacoesTable.$inferSelect;
 
+export const eventosSolicitacaoTable = pgTable("eventos_solicitacao", {
+  id: serial("id").primaryKey(),
+  solicitacao_id: integer("solicitacao_id").notNull().references(() => solicitacoesTable.id, { onDelete: "cascade" }),
+  tipo: varchar("tipo", { length: 16 }).notNull().$type<"info" | "warning" | "error">(),
+  origem: varchar("origem", { length: 32 }).notNull(),
+  mensagem: text("mensagem").notNull(),
+  detalhes: jsonb("detalhes").$type<Record<string, any> | null>(),
+  user_email: varchar("user_email", { length: 255 }),
+  created_at: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+export type EventoSolicitacao = typeof eventosSolicitacaoTable.$inferSelect;
+
 export const activityLogTable = pgTable("activity_log", {
   id: serial("id").primaryKey(),
   created_at: timestamp("created_at").defaultNow().notNull(),

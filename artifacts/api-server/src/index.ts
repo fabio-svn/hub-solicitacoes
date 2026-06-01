@@ -168,6 +168,20 @@ const DB_STATEMENTS = [
   )`,
   `CREATE INDEX IF NOT EXISTS "IDX_cartao_aprovacoes_solic" ON "cartao_aprovacoes" ("solicitacao_id")`,
   `ALTER TABLE "cartao_aprovacoes" ADD COLUMN IF NOT EXISTS "observacao" TEXT`,
+
+  // Eventos estruturados por solicitação
+  `CREATE TABLE IF NOT EXISTS "eventos_solicitacao" (
+    "id"             SERIAL        PRIMARY KEY,
+    "solicitacao_id" INTEGER       NOT NULL REFERENCES "solicitacoes" ("id") ON DELETE CASCADE,
+    "tipo"           VARCHAR(16)   NOT NULL CHECK ("tipo" IN ('info','warning','error')),
+    "origem"         VARCHAR(32)   NOT NULL,
+    "mensagem"       TEXT          NOT NULL,
+    "detalhes"       JSONB,
+    "user_email"     VARCHAR(255),
+    "created_at"     TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+  )`,
+  `CREATE INDEX IF NOT EXISTS "idx_eventos_sol"     ON "eventos_solicitacao" ("solicitacao_id", "created_at" DESC)`,
+  `CREATE INDEX IF NOT EXISTS "idx_eventos_tipo_24h" ON "eventos_solicitacao" ("tipo", "created_at" DESC) WHERE "tipo" IN ('warning','error')`,
 ];
 
 async function start() {

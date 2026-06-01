@@ -99,6 +99,11 @@
           <button class="filter-chip" data-filter="status" data-value="aguardando" data-label="Aguardando" onclick="toggleFilter(this,'eventos','status')">Aguardando</button>
           <button class="filter-chip" data-filter="status" data-value="concluido" data-label="Concluído" onclick="toggleFilter(this,'eventos','status')">Concluído</button>
         </div>
+        <div class="filter-panel-row">
+          <span class="filter-panel-label">Alertas</span>
+          <button class="filter-chip active" data-filter="erros" data-value="" data-label="Todos" onclick="toggleFilter(this,'eventos','erros')">Todos</button>
+          <button class="filter-chip" data-filter="erros" data-value="com-erros" data-label="Com erros (24h)" onclick="toggleFilter(this,'eventos','erros')">Com erros (24h)</button>
+        </div>
       </div>
       <div id="listEventos"></div>
       <div class="pagination" id="paginationEventos"></div>
@@ -148,6 +153,11 @@
           <button class="filter-chip" data-filter="status" data-value="em-aprovacao" data-label="Em aprovação" onclick="toggleFilter(this,'geral','status')">Em aprovação</button>
           <button class="filter-chip" data-filter="status" data-value="concluido" data-label="Concluído" onclick="toggleFilter(this,'geral','status')">Concluído</button>
         </div>
+        <div class="filter-panel-row">
+          <span class="filter-panel-label">Alertas</span>
+          <button class="filter-chip active" data-filter="erros" data-value="" data-label="Todos" onclick="toggleFilter(this,'geral','erros')">Todos</button>
+          <button class="filter-chip" data-filter="erros" data-value="com-erros" data-label="Com erros (24h)" onclick="toggleFilter(this,'geral','erros')">Com erros (24h)</button>
+        </div>
       </div>
       <div id="listGeral"></div>
       <div class="pagination" id="paginationGeral"></div>
@@ -169,8 +179,8 @@
     let _svnTab = sessionStorage.getItem('svn_dashboard_tab') || 'geral';
     let currentTab = ['geral', 'eventos'].includes(_svnTab) ? _svnTab : 'geral';
     let filters = {
-      eventos: { periodo: '', status: '', natureza: '' },
-      geral: { periodo: '', status: '', tipo: '' }
+      eventos: { periodo: '', status: '', natureza: '', erros: '' },
+      geral: { periodo: '', status: '', tipo: '', erros: '' }
     };
     let pages = { eventos: 1, geral: 1 };
     let searchTimeout;
@@ -263,6 +273,10 @@
       try {
         const res = await fetch('/api/solicitacoes?' + params.toString());
         const data = await res.json();
+        // filtro client-side "Com erros (24h)"
+        if (f.erros === 'com-erros' && Array.isArray(data.data)) {
+          data.data = data.data.filter(item => (item.erros_24h || 0) > 0);
+        }
         renderList(tab, data);
       } catch (e) {
         console.error(e);
@@ -312,10 +326,18 @@
           groupHeader = `<div style="font-size:0.75rem;font-weight:600;opacity:0.4;text-transform:uppercase;letter-spacing:0.06em;margin:${idx === 0 ? '0' : '16px'} 0 8px;padding:0 2px">${periodo}</div>`;
         }
 
+        const temErros = (item.erros_24h || 0) > 0;
+        const isAdmin = typeof Auth !== 'undefined' && Auth.isAdmin && Auth.isAdmin();
+        const erroBadgeHtml = (temErros && isAdmin)
+          ? `<span title="${item.erros_24h} erro(s) nas últimas 24h" style="display:inline-flex;align-items:center;gap:3px;font-size:0.62rem;font-weight:800;background:#fee2e2;color:#b91c1c;padding:2px 7px;border-radius:999px;vertical-align:middle;margin-left:4px;flex-shrink:0">
+              <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+              ${item.erros_24h}
+             </span>` : '';
+
         return groupHeader + `<div class="request-card" onclick="window.location.href='/solicitacao.html?id=${item.id}'"
           style="${pendente ? 'border-left:3px solid var(--ruby-red);' : ''}">
           <div class="request-info">
-            <div class="request-title">${esc(titulo)}${pendente ? ' <span style="display:inline-block;font-size:0.62rem;font-weight:800;background:var(--ruby-red);color:white;padding:1px 6px;border-radius:999px;vertical-align:middle;margin-left:4px">APROVAÇÃO</span>' : ''}</div>
+            <div class="request-title">${esc(titulo)}${pendente ? ' <span style="display:inline-block;font-size:0.62rem;font-weight:800;background:var(--ruby-red);color:white;padding:1px 6px;border-radius:999px;vertical-align:middle;margin-left:4px">APROVAÇÃO</span>' : ''}${erroBadgeHtml}</div>
             <div class="request-meta">
               <span>${esc(tipoLabel)}</span>
               <span>${esc(dataRel)}</span>
@@ -450,8 +472,8 @@
 
     function clearAllFilters(tab) {
       filters[tab] = tab === 'eventos'
-        ? { periodo: '', status: '', natureza: '' }
-        : { periodo: '', status: '', tipo: '' };
+        ? { periodo: '', status: '', natureza: '', erros: '' }
+        : { periodo: '', status: '', tipo: '', erros: '' };
       pages[tab] = 1;
       const capTab = capitalize(tab);
       document.querySelectorAll(`#filterPanel${capTab} .filter-chip`).forEach(chip => {
