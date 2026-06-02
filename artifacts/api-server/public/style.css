@@ -1430,9 +1430,37 @@ input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
   margin-bottom: 0;
 }
-.filter-panel-row { display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:10px; }
-.filter-panel-row:last-child { margin-bottom:0; }
-.filter-panel-label { font-size:0.75rem; font-weight:600; color:var(--carbon-black); opacity:0.45; min-width:64px; }
+.filter-panel-row {
+  display: grid;
+  grid-template-columns: 90px 1fr;
+  column-gap: 16px;
+  align-items: start;
+  margin-bottom: 14px;
+}
+.filter-panel-row:last-child { margin-bottom: 0; }
+.filter-panel-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--carbon-black);
+  opacity: 0.55;
+  padding-top: 7px;
+  letter-spacing: 0.01em;
+}
+.filter-panel-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+@media (max-width: 620px) {
+  .filter-panel-row {
+    grid-template-columns: 1fr;
+    row-gap: 6px;
+  }
+  .filter-panel-label {
+    padding-top: 0;
+  }
+}
 
 /* ── Botão flutuante WhatsApp ─────────────────── */
 .float-whatsapp {

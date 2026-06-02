@@ -126,17 +126,21 @@
         <div class="filter-panel" id="filterPanelAssets">
       <div class="filter-panel-row">
         <span class="filter-panel-label">Tipo</span>
-        <button class="filter-chip active" data-filter="tipo" data-value="" data-label="Todos os tipos" onclick="toggleFilter(this, 'tipo')">Todos</button>
-        <button class="filter-chip" data-filter="tipo" data-value="bg-base" data-label="Background base" onclick="toggleFilter(this, 'tipo')">Background base</button>
-        <button class="filter-chip" data-filter="tipo" data-value="logo" data-label="Logo" onclick="toggleFilter(this, 'tipo')">Logo</button>
-        <button class="filter-chip" data-filter="tipo" data-value="elemento" data-label="Elemento" onclick="toggleFilter(this, 'tipo')">Elemento</button>
-        <button class="filter-chip" data-filter="tipo" data-value="outro" data-label="Outro" onclick="toggleFilter(this, 'tipo')">Outro</button>
+        <div class="filter-panel-chips">
+          <button class="filter-chip active" data-filter="tipo" data-value="" data-label="Todos os tipos" onclick="toggleFilter(this, 'tipo')">Todos</button>
+          <button class="filter-chip" data-filter="tipo" data-value="bg-base" data-label="Background base" onclick="toggleFilter(this, 'tipo')">Background base</button>
+          <button class="filter-chip" data-filter="tipo" data-value="logo" data-label="Logo" onclick="toggleFilter(this, 'tipo')">Logo</button>
+          <button class="filter-chip" data-filter="tipo" data-value="elemento" data-label="Elemento" onclick="toggleFilter(this, 'tipo')">Elemento</button>
+          <button class="filter-chip" data-filter="tipo" data-value="outro" data-label="Outro" onclick="toggleFilter(this, 'tipo')">Outro</button>
+        </div>
       </div>
       <div class="filter-panel-row">
         <span class="filter-panel-label">Uso</span>
-        <button class="filter-chip active" data-filter="uso" data-value="" data-label="Todos" onclick="toggleFilter(this, 'uso')">Todos</button>
-        <button class="filter-chip" data-filter="uso" data-value="em-uso" data-label="Em uso" onclick="toggleFilter(this, 'uso')">Em uso</button>
-        <button class="filter-chip" data-filter="uso" data-value="orfaos" data-label="Órfãos" onclick="toggleFilter(this, 'uso')">Órfãos</button>
+        <div class="filter-panel-chips">
+          <button class="filter-chip active" data-filter="uso" data-value="" data-label="Todos" onclick="toggleFilter(this, 'uso')">Todos</button>
+          <button class="filter-chip" data-filter="uso" data-value="em-uso" data-label="Em uso" onclick="toggleFilter(this, 'uso')">Em uso</button>
+          <button class="filter-chip" data-filter="uso" data-value="orfaos" data-label="Órfãos" onclick="toggleFilter(this, 'uso')">Órfãos</button>
+        </div>
       </div>
     </div>
     </div>
@@ -199,7 +203,6 @@
   }
 
   async function loadAssets() {
-    document.getElementById('loadingSkeleton').style.display = 'grid';
     document.getElementById('assetsContainer').innerHTML = '<div class="loading-grid" id="loadingSkeleton">' + Array(8).fill('<div class="skeleton"></div>').join('') + '</div>';
     try {
       const usage = filterState.uso;
@@ -212,7 +215,10 @@
       allAssets = (await r.json()).assets || [];
       if (usage === 'em-uso') allAssets = allAssets.filter(a => a.usage_count > 0);
       applySearch();
-    } catch(e) { document.getElementById('assetsContainer').innerHTML = '<div class="empty-state"><h3>Erro de rede.</h3></div>'; }
+    } catch(e) {
+      console.error('Erro em loadAssets():', e);
+      document.getElementById('assetsContainer').innerHTML = '<div class="empty-state"><h3>Erro de rede.</h3></div>';
+    }
   }
 
   function debounceSearch() {

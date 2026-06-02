@@ -137,18 +137,22 @@
         <div class="filter-panel" id="filterPanelEventos">
           <div class="filter-panel-row">
             <span class="filter-panel-label">Período</span>
-            <button class="filter-chip active" data-filter="periodo" data-value="" data-label="Todos os períodos" onclick="toggleFilter(this,'eventos','periodo')">Todos</button>
-            <button class="filter-chip" data-filter="periodo" data-value="hoje" data-label="Hoje" onclick="toggleFilter(this,'eventos','periodo')">Hoje</button>
-            <button class="filter-chip" data-filter="periodo" data-value="7dias" data-label="7 dias" onclick="toggleFilter(this,'eventos','periodo')">7 dias</button>
-            <button class="filter-chip" data-filter="periodo" data-value="30dias" data-label="30 dias" onclick="toggleFilter(this,'eventos','periodo')">30 dias</button>
+            <div class="filter-panel-chips">
+              <button class="filter-chip active" data-filter="periodo" data-value="" data-label="Todos os períodos" onclick="toggleFilter(this,'eventos','periodo')">Todos</button>
+              <button class="filter-chip" data-filter="periodo" data-value="hoje" data-label="Hoje" onclick="toggleFilter(this,'eventos','periodo')">Hoje</button>
+              <button class="filter-chip" data-filter="periodo" data-value="7dias" data-label="7 dias" onclick="toggleFilter(this,'eventos','periodo')">7 dias</button>
+              <button class="filter-chip" data-filter="periodo" data-value="30dias" data-label="30 dias" onclick="toggleFilter(this,'eventos','periodo')">30 dias</button>
+            </div>
           </div>
           <div class="filter-panel-row">
             <span class="filter-panel-label">Status</span>
-            <button class="filter-chip active" data-filter="status" data-value="" data-label="Todos os status" onclick="toggleFilter(this,'eventos','status')">Todos</button>
-            <button class="filter-chip" data-filter="status" data-value="recebido" data-label="Recebido" onclick="toggleFilter(this,'eventos','status')">Recebido</button>
-            <button class="filter-chip" data-filter="status" data-value="em-producao" data-label="Em produção" onclick="toggleFilter(this,'eventos','status')">Em produção</button>
-            <button class="filter-chip" data-filter="status" data-value="aguardando" data-label="Aguardando" onclick="toggleFilter(this,'eventos','status')">Aguardando</button>
-            <button class="filter-chip" data-filter="status" data-value="concluido" data-label="Concluído" onclick="toggleFilter(this,'eventos','status')">Concluído</button>
+            <div class="filter-panel-chips">
+              <button class="filter-chip active" data-filter="status" data-value="" data-label="Todos os status" onclick="toggleFilter(this,'eventos','status')">Todos</button>
+              <button class="filter-chip" data-filter="status" data-value="recebido" data-label="Recebido" onclick="toggleFilter(this,'eventos','status')">Recebido</button>
+              <button class="filter-chip" data-filter="status" data-value="em-producao" data-label="Em produção" onclick="toggleFilter(this,'eventos','status')">Em produção</button>
+              <button class="filter-chip" data-filter="status" data-value="aguardando" data-label="Aguardando" onclick="toggleFilter(this,'eventos','status')">Aguardando</button>
+              <button class="filter-chip" data-filter="status" data-value="concluido" data-label="Concluído" onclick="toggleFilter(this,'eventos','status')">Concluído</button>
+            </div>
           </div>
         </div>
         </div>
@@ -176,21 +180,25 @@
         <div class="filter-panel" id="filterPanelGeral">
           <div class="filter-panel-row">
             <span class="filter-panel-label">Período</span>
-            <button class="filter-chip active" data-filter="periodo" data-value="" data-label="Todos os períodos" onclick="toggleFilter(this,'geral','periodo')">Todos</button>
-            <button class="filter-chip" data-filter="periodo" data-value="hoje" data-label="Hoje" onclick="toggleFilter(this,'geral','periodo')">Hoje</button>
-            <button class="filter-chip" data-filter="periodo" data-value="7dias" data-label="7 dias" onclick="toggleFilter(this,'geral','periodo')">7 dias</button>
-            <button class="filter-chip" data-filter="periodo" data-value="30dias" data-label="30 dias" onclick="toggleFilter(this,'geral','periodo')">30 dias</button>
+            <div class="filter-panel-chips">
+              <button class="filter-chip active" data-filter="periodo" data-value="" data-label="Todos os períodos" onclick="toggleFilter(this,'geral','periodo')">Todos</button>
+              <button class="filter-chip" data-filter="periodo" data-value="hoje" data-label="Hoje" onclick="toggleFilter(this,'geral','periodo')">Hoje</button>
+              <button class="filter-chip" data-filter="periodo" data-value="7dias" data-label="7 dias" onclick="toggleFilter(this,'geral','periodo')">7 dias</button>
+              <button class="filter-chip" data-filter="periodo" data-value="30dias" data-label="30 dias" onclick="toggleFilter(this,'geral','periodo')">30 dias</button>
+            </div>
           </div>
           <div class="filter-panel-row">
             <span class="filter-panel-label">Status</span>
-            <button class="filter-chip active" data-filter="status" data-value="" data-label="Todos os status" onclick="toggleFilter(this,'geral','status')">Todos</button>
-            <button class="filter-chip" data-filter="status" data-value="recebido" data-label="Recebido" onclick="toggleFilter(this,'geral','status')">Recebido</button>
-            <button class="filter-chip" data-filter="status" data-value="em-analise" data-label="Em análise" onclick="toggleFilter(this,'geral','status')">Em análise</button>
-            <button class="filter-chip" data-filter="status" data-value="aguardando" data-label="Aguardando" onclick="toggleFilter(this,'geral','status')">Aguardando</button>
-            <button class="filter-chip" data-filter="status" data-value="em-producao" data-label="Em produção" onclick="toggleFilter(this,'geral','status')">Em produção</button>
-            <button class="filter-chip" data-filter="status" data-value="em-revisao" data-label="Em revisão" onclick="toggleFilter(this,'geral','status')">Em revisão</button>
-            <button class="filter-chip" data-filter="status" data-value="em-aprovacao" data-label="Em aprovação" onclick="toggleFilter(this,'geral','status')">Em aprovação</button>
-            <button class="filter-chip" data-filter="status" data-value="concluido" data-label="Concluído" onclick="toggleFilter(this,'geral','status')">Concluído</button>
+            <div class="filter-panel-chips">
+              <button class="filter-chip active" data-filter="status" data-value="" data-label="Todos os status" onclick="toggleFilter(this,'geral','status')">Todos</button>
+              <button class="filter-chip" data-filter="status" data-value="recebido" data-label="Recebido" onclick="toggleFilter(this,'geral','status')">Recebido</button>
+              <button class="filter-chip" data-filter="status" data-value="em-analise" data-label="Em análise" onclick="toggleFilter(this,'geral','status')">Em análise</button>
+              <button class="filter-chip" data-filter="status" data-value="aguardando" data-label="Aguardando" onclick="toggleFilter(this,'geral','status')">Aguardando</button>
+              <button class="filter-chip" data-filter="status" data-value="em-producao" data-label="Em produção" onclick="toggleFilter(this,'geral','status')">Em produção</button>
+              <button class="filter-chip" data-filter="status" data-value="em-revisao" data-label="Em revisão" onclick="toggleFilter(this,'geral','status')">Em revisão</button>
+              <button class="filter-chip" data-filter="status" data-value="em-aprovacao" data-label="Em aprovação" onclick="toggleFilter(this,'geral','status')">Em aprovação</button>
+              <button class="filter-chip" data-filter="status" data-value="concluido" data-label="Concluído" onclick="toggleFilter(this,'geral','status')">Concluído</button>
+            </div>
           </div>
         </div>
         </div>

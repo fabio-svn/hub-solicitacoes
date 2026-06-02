@@ -114,25 +114,31 @@
           <div class="filter-panel" id="vcFilterPanel">
         <div class="filter-panel-row">
           <span class="filter-panel-label">Andamento</span>
-          <button class="filter-chip active" data-value="" onclick="setChip(this,'status','')">Todos</button>
-          <button class="filter-chip" data-value="aguardando-validacao" onclick="setChip(this,'status','aguardando-validacao')">Aguardando validação</button>
-          <button class="filter-chip" data-value="aguardando-contrato" onclick="setChip(this,'status','aguardando-contrato')">Aguardando contrato</button>
-          <button class="filter-chip" data-value="liberado-design" onclick="setChip(this,'status','liberado-design')">Liberado para Design</button>
-          <button class="filter-chip" data-value="arte-finalizada" onclick="setChip(this,'status','arte-finalizada')">Arte finalizada</button>
-          <button class="filter-chip" data-value="envio-grafica" onclick="setChip(this,'status','envio-grafica')">Envio gráfica</button>
-          <button class="filter-chip" data-value="envio-assessor" onclick="setChip(this,'status','envio-assessor')">Envio assessor</button>
-          <button class="filter-chip" data-value="reprovado" onclick="setChip(this,'status','reprovado')">Reprovado</button>
+          <div class="filter-panel-chips">
+            <button class="filter-chip active" data-value="" onclick="setChip(this,'status','')">Todos</button>
+            <button class="filter-chip" data-value="aguardando-validacao" onclick="setChip(this,'status','aguardando-validacao')">Aguardando validação</button>
+            <button class="filter-chip" data-value="aguardando-contrato" onclick="setChip(this,'status','aguardando-contrato')">Aguardando contrato</button>
+            <button class="filter-chip" data-value="liberado-design" onclick="setChip(this,'status','liberado-design')">Liberado para Design</button>
+            <button class="filter-chip" data-value="arte-finalizada" onclick="setChip(this,'status','arte-finalizada')">Arte finalizada</button>
+            <button class="filter-chip" data-value="envio-grafica" onclick="setChip(this,'status','envio-grafica')">Envio gráfica</button>
+            <button class="filter-chip" data-value="envio-assessor" onclick="setChip(this,'status','envio-assessor')">Envio assessor</button>
+            <button class="filter-chip" data-value="reprovado" onclick="setChip(this,'status','reprovado')">Reprovado</button>
+          </div>
         </div>
         <div class="filter-panel-row">
           <span class="filter-panel-label">Contrato Social</span>
-          <button class="filter-chip active" data-value="" onclick="setChip(this,'contrato','')">Todos</button>
-          <button class="filter-chip" data-value="svn-capital" onclick="setChip(this,'contrato','svn-capital')">SVN Capital</button>
-          <button class="filter-chip" data-value="svn-connect" onclick="setChip(this,'contrato','svn-connect')">SVN Connect</button>
-          <button class="filter-chip" data-value="svn-investimentos" onclick="setChip(this,'contrato','svn-investimentos')">SVN Investimentos</button>
+          <div class="filter-panel-chips">
+            <button class="filter-chip active" data-value="" onclick="setChip(this,'contrato','')">Todos</button>
+            <button class="filter-chip" data-value="svn-capital" onclick="setChip(this,'contrato','svn-capital')">SVN Capital</button>
+            <button class="filter-chip" data-value="svn-connect" onclick="setChip(this,'contrato','svn-connect')">SVN Connect</button>
+            <button class="filter-chip" data-value="svn-investimentos" onclick="setChip(this,'contrato','svn-investimentos')">SVN Investimentos</button>
+          </div>
         </div>
         <div class="filter-panel-row">
           <span class="filter-panel-label">Unidade</span>
-          <select class="vc-filter-select" id="vcFilterUnidade" onchange="setUnidadeFilter(this)"><option value="">Todas</option></select>
+          <div class="filter-panel-chips">
+            <select class="vc-filter-select" id="vcFilterUnidade" onchange="setUnidadeFilter(this)"><option value="">Todas</option></select>
+          </div>
         </div>
       </div>
         </div>
@@ -263,6 +269,7 @@
         popularUnidades();
         render();
       } catch (e) {
+        console.error('Erro em carregar():', e);
         document.getElementById('vcContent').innerHTML = '<div class="vc-empty">Erro ao carregar. Recarregue a página.</div>';
       }
     }
@@ -275,7 +282,8 @@
     }
 
     function getView() {
-      const termo = (document.getElementById('vcSearch').value || '').trim().toLowerCase();
+      const searchEl = document.getElementById('vcSearch');
+      const termo = (searchEl?.value || '').trim().toLowerCase();
       let view = RAW.slice();
       if (filters.status) view = view.filter(function (l) { return l.status === filters.status; });
       if (filters.contrato) view = view.filter(function (l) { return l.contrato_social === filters.contrato; });
