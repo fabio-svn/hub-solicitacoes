@@ -14,7 +14,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap" media="print" onload="this.media='all'">
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css?v=20260602">
   <script src="/vendor/interact.min.js" data-cfasync="false"></script>
   <script data-cfasync="false">
     if (typeof interact === 'undefined') {
@@ -421,20 +421,20 @@
       </div>
       <div class="create-form">
         <div class="form-group">
-          <label class="form-label">Para qual formulário esta arte será usada? <span style="color:var(--ruby-red)">*</span></label>
+          <label class="form-label">Para qual formulário esta arte será usada? <span class="text-ruby">*</span></label>
           <select class="form-input" id="createTipo" onchange="onCreateTipoChange()">
             <option value="">Selecione um formulário…</option>
           </select>
           <div id="createTipoLoading" style="display:none;font-size:0.75rem;color:rgba(34,27,25,0.4);margin-top:4px">Carregando formulários…</div>
         </div>
         <div class="form-group" id="createVariantGroup" style="display:none">
-          <label class="form-label">Para qual modelo? <span style="color:var(--ruby-red)">*</span></label>
+          <label class="form-label">Para qual modelo? <span class="text-ruby">*</span></label>
           <select class="form-input" id="createVariant" onchange="onCreateVariantChange()">
             <option value="">Selecione…</option>
           </select>
         </div>
         <div class="form-group">
-          <label class="form-label">Nome do template <span style="color:var(--ruby-red)">*</span></label>
+          <label class="form-label">Nome do template <span class="text-ruby">*</span></label>
           <input class="form-input" id="createName" placeholder='Ex: "Cartão minimalista v2"'>
         </div>
         <div class="form-group">
@@ -613,11 +613,11 @@
       </div>
     </div>
   </div>
-  <script src="config.js"></script>
-  <script src="auth.js"></script>
-  <script src="shell.js"></script>
-  <script src="utils.js"></script>
-  <script src="toast.js"></script>
+  <script src="config.js?v=20260602"></script>
+  <script src="auth.js?v=20260602"></script>
+  <script src="shell.js?v=20260602"></script>
+  <script src="utils.js?v=20260602"></script>
+  <script src="toast.js?v=20260602"></script>
   <script>
     // ── Constants ────────────────────────────────────────────────
     const PLACEHOLDERS_BY_TIPO = {

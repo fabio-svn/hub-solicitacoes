@@ -1,0 +1,503 @@
+# Prompt 12 — Cleanup consolidado pós-auditoria v6
+
+Aplica 9 mudanças identificadas na auditoria das 3 análises (minha + Google AI + ChatGPT). Todas são de **risco baixo** e o efeito acumulado deixa o projeto bem mais saudável.
+
+**Estimativa total**: 1.5h. **Pré-requisito**: branch novo `git checkout -b cleanup/auditoria-v6` antes de começar.
+
+═══════════════════════════════════════════════════════════════
+## 📋 Índice
+═══════════════════════════════════════════════════════════════
+
+A. Re-aplicar Prompt 9 (utility CSS classes)  
+B. Labels CH + remover typo `producao-audiovisual`  
+C. Consolidar `.request-card` (2 defs CSS)  
+D. Remover `SETOR_CODIGOS` do frontend (código morto)  
+E. Unificar SVG ClickUp via função em utils.js  
+F. Remover `_esc` de shell.js (usar `window.esc`)  
+G. Remover log "Entrega field raw value"  
+H. Cache busting nos assets estáticos  
+I. Adicionar `console.error` em catches críticos  
+J. Verificação final
+
+═══════════════════════════════════════════════════════════════
+## A) Re-aplicar Prompt 9 (utility CSS classes)
+═══════════════════════════════════════════════════════════════
+
+⚠️ O `.section-divider` aplicado anteriormente regrediu — sumiu do CSS e os 25 inline styles voltaram. Re-aplicar **TODO o Prompt 9** (não apenas o P2).
+
+Seguir as instruções de `/agent-prompts/09-utility-css-classes.md` (já entregue). Resumo:
+
+### A.1 — Adicionar ao final de `public/style.css`:
+```css
+/* ─────────────────────────────────────────────────────
+   Utility classes — substituem inline styles repetidos
+   ───────────────────────────────────────────────────── */
+.text-ruby { color: var(--ruby-red); }
+.section-divider { border-top: 1px solid rgba(34, 27, 25, 0.08); margin: 28px 0 20px; padding-top: 22px; }
+.page-padding { padding-top: 32px; padding-bottom: 80px; }
+.sep { height: 1px; background: var(--border-light); margin-bottom: 24px; border: none; }
+.flex-between { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+.text-md-medium { font-weight: 500; font-size: 1.1rem; margin: 0; }
+```
+
+### A.2 — Rodar no terminal Replit (substitui ~246 inline styles):
+```bash
+cd artifacts/api-server/public
+
+find . -maxdepth 1 -name "*.html" -exec sed -i 's| style="color:var(--ruby-red)"| class="text-ruby"|g' {} +
+find . -maxdepth 1 -name "*.html" -exec sed -i 's| style="border-top:1px solid rgba(34,27,25,\.08);margin:28px 0 20px;padding-top:22px"| class="section-divider"|g' {} +
+find . -maxdepth 1 -name "*.html" -exec sed -i 's| style="padding-top:32px;padding-bottom:80px"| class="page-padding"|g' {} +
+find . -maxdepth 1 -name "*.html" -exec sed -i 's| style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px"| class="flex-between"|g' {} +
+find . -maxdepth 1 -name "*.html" -exec sed -i 's| style="font-weight:500;font-size:1.1rem;margin:0"| class="text-md-medium"|g' {} +
+find . -maxdepth 1 -name "*.html" -exec sed -i 's|<div style="height:1px;background:var(--border-light);margin-bottom:24px"></div>|<hr class="sep">|g' {} +
+```
+
+═══════════════════════════════════════════════════════════════
+## B) Labels CH + remover `producao-audiovisual`
+═══════════════════════════════════════════════════════════════
+
+No arquivo `public/config.js`, o objeto `TIPO_SOLICITACAO_LABELS` está faltando 3 labels de Capital Humano e tem um typo (`producao-audiovisual` que não existe no backend).
+
+**LOCALIZAR** (linha ~6125 de config.js):
+```js
+const TIPO_SOLICITACAO_LABELS = {
+  "eventos":                        "Evento",
+  "pagina-assessores-dados":        "Página de Assessores — Dados",
+  "pagina-assessores-atualizacao":  "Página de Assessores — Atualização",
+  "pagina-assessores":              "Página de Assessores",
+  "apresentacao-nova":              "Apresentação — Nova",
+  "apresentacao-atualizar":         "Apresentação — Atualização",
+  "apresentacao":                   "Apresentação",
+  "artes-divulgacao":               "Arte de Divulgação",
+  "conteudo-pdf-informativo":       "PDF — Informativo",
+  "conteudo-pdf-ebook":             "PDF — Ebook",
+  "conteudo-pdf":                   "Conteúdo em PDF",
+  "atualizacao-material":           "Atualização de Material",
+  "assinatura-email":               "Assinatura de E-mail",
+  "cartao-visita-fisico":           "Cartão de Visita — Físico",
+  "cartao-visita-digital":          "Cartão de Visita — Digital",
+  "cartao-visita":                  "Cartão de Visita",
+  "cartao-boas-vindas":             "Cartão de Boas-vindas",
+  "cartao-comemorativo":            "Cartão Comemorativo",
+  "divulgacao-nps":                 "Arte NPS",
+  "convite-fp":                     "Convite Financial Planning",
+  "email-marketing":                "E-mail Marketing",
+  "patrocinio":                     "Patrocínio",
+  "brindes":                        "Brindes",
+  "pagina-online":                  "Página Online",
+  "producao-video":                 "Produção de Vídeo",
+  "producao-audiovisual":           "Produção Audiovisual",
+  "sessao-fotos":                   "Sessão de Fotos",
+  "materiais-impressos":            "Materiais Impressos",
+  "outro":                          "Outro",
+};
+```
+
+**SUBSTITUIR POR**:
+```js
+const TIPO_SOLICITACAO_LABELS = {
+  "eventos":                        "Evento",
+  "pagina-assessores-dados":        "Página de Assessores — Dados",
+  "pagina-assessores-atualizacao":  "Página de Assessores — Atualização",
+  "pagina-assessores":              "Página de Assessores",
+  "apresentacao-nova":              "Apresentação — Nova",
+  "apresentacao-atualizar":         "Apresentação — Atualização",
+  "apresentacao":                   "Apresentação",
+  "artes-divulgacao":               "Arte de Divulgação",
+  "conteudo-pdf-informativo":       "PDF — Informativo",
+  "conteudo-pdf-ebook":             "PDF — Ebook",
+  "conteudo-pdf":                   "Conteúdo em PDF",
+  "atualizacao-material":           "Atualização de Material",
+  "assinatura-email":               "Assinatura de E-mail",
+  "cartao-visita-fisico":           "Cartão de Visita — Físico",
+  "cartao-visita-digital":          "Cartão de Visita — Digital",
+  "cartao-visita":                  "Cartão de Visita",
+  "cartao-boas-vindas":             "Cartão de Boas-vindas",
+  "cartao-comemorativo":            "Cartão Comemorativo",
+  "divulgacao-nps":                 "Arte NPS",
+  "convite-fp":                     "Convite Financial Planning",
+  "email-marketing":                "E-mail Marketing",
+  "patrocinio":                     "Patrocínio",
+  "brindes":                        "Brindes",
+  "pagina-online":                  "Página Online",
+  "producao-video":                 "Produção de Vídeo",
+  "sessao-fotos":                   "Sessão de Fotos",
+  "materiais-impressos":            "Materiais Impressos",
+  "outro":                          "Outro",
+  // Capital Humano
+  "ch-kit-onboarding":              "Kit Onboarding",
+  "ch-atualizacao-pessoas":         "Atualização de Pessoas nos Sites",
+  "ch-conteudo-pdf":                "Conteúdo em PDF (CH)",
+  "ch-arte-divulgacao":             "Arte de Divulgação (CH)",
+  "ch-atualizacao-books":           "Atualização de Books",
+  "ch-linha-do-tempo":              "Linha do Tempo",
+  "ch-aniversariantes":             "Aniversariantes do Mês",
+};
+```
+
+**Mudanças**: removida entrada `producao-audiovisual` (não existe no backend `VALID_TIPOS`); adicionadas 7 entradas `ch-*` que estavam definidas em `TIPOS_COM_CLICKUP` do backend mas não tinham label no frontend.
+
+═══════════════════════════════════════════════════════════════
+## C) Consolidar `.request-card` (2 defs CSS)
+═══════════════════════════════════════════════════════════════
+
+No arquivo `public/style.css`, o `.request-card` está dividido em 2 lugares.
+
+**LOCALIZAR** (linha ~19930):
+```css
+.request-card { opacity: 0; animation: cardEnter 0.25s ease forwards; }
+@keyframes cardEnter { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+```
+
+**SUBSTITUIR POR** (mantém só o keyframe, remove a regra duplicada):
+```css
+@keyframes cardEnter { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+```
+
+Em seguida, **LOCALIZAR** (linha ~20068):
+```css
+/* Request cards */
+.request-card {
+  background: var(--card-white);
+  border: 1px solid var(--border-light);
+  border-radius: 12px;
+  padding: 16px 20px;
+  margin-bottom: 12px;
+  cursor: pointer;
+  transition: 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+```
+
+**SUBSTITUIR POR** (adiciona opacity + animation):
+```css
+/* Request cards */
+.request-card {
+  background: var(--card-white);
+  border: 1px solid var(--border-light);
+  border-radius: 12px;
+  padding: 16px 20px;
+  margin-bottom: 12px;
+  cursor: pointer;
+  transition: 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  opacity: 0;
+  animation: cardEnter 0.25s ease forwards;
+}
+```
+
+═══════════════════════════════════════════════════════════════
+## D) Remover `SETOR_CODIGOS` do frontend (código morto)
+═══════════════════════════════════════════════════════════════
+
+⚠️ Investigação confirmou que `SETOR_CODIGOS` em `config.js` **não é usado em lugar nenhum do frontend**. É código morto desde algum refactor anterior. O comentário "duplicado de clickup.ts" sugere que ele foi pensado pra ser usado no client mas nunca chegou a ser referenciado.
+
+No arquivo `public/config.js`, **LOCALIZAR** (linha ~6365):
+```js
+// NOTA: Este mapa é intencionalmente duplicado de SETOR_CODIGO_MAP em clickup.ts.
+// config.js roda no browser, clickup.ts no Node.js — não há como compartilhar.
+// Ao adicionar ou alterar setores, atualizar AMBOS os arquivos.
+const SETOR_CODIGOS = {
+  "Administração":                           "ADM",
+  "Alocação":                                "ALO",
+  "Aracaju":                                 "AJU",
+  ...
+  (todo o objeto até o `};`)
+};
+```
+
+**REMOVER esse bloco inteiro** (comentário + const). 
+
+O backend (`form-schemas.ts` → `SETOR_CODIGO_MAP`) continua sendo a fonte da verdade, e como nenhum código frontend consulta o mapa, não há regressão.
+
+═══════════════════════════════════════════════════════════════
+## E) Unificar SVG ClickUp em utils.js
+═══════════════════════════════════════════════════════════════
+
+Hoje o `CLICKUP_ICON` está triplicado em admin.html (linha ~1574), dashboard.html (linha ~6763) e solicitacao.html (linha ~17605). Vamos centralizar em utils.js.
+
+### E.1 — Adicionar função em `public/utils.js`
+
+**LOCALIZAR** o final de `window.esc` em utils.js (linha ~21906):
+```js
+window.esc = function(s) {
+  if (s === null || s === undefined) return '';
+  return String(s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+};
+```
+
+**ADICIONAR LOGO ABAIXO**:
+```js
+// Ícone do ClickUp (SVG auto-contido com gradientes inline).
+// Usado em cards/tabelas pra abrir tasks no ClickUp.
+window.getClickupIcon = function() {
+  return '<svg width="14" height="14" viewBox="0 0 54.8 65.8" xmlns="http://www.w3.org/2000/svg">' +
+    '<defs>' +
+      '<linearGradient id="cu1" x1="0" y1="15.05" x2="54.84" y2="15.05" gradientUnits="userSpaceOnUse" gradientTransform="matrix(1 0 0 -1 0 69.36)">' +
+        '<stop offset="0" stop-color="#8930FD"/><stop offset="1" stop-color="#49CCF9"/>' +
+      '</linearGradient>' +
+      '<linearGradient id="cu2" x1="1.2" y1="53.17" x2="53.74" y2="53.17" gradientUnits="userSpaceOnUse" gradientTransform="matrix(1 0 0 -1 0 69.36)">' +
+        '<stop offset="0" stop-color="#FF02F0"/><stop offset="1" stop-color="#FFC800"/>' +
+      '</linearGradient>' +
+    '</defs>' +
+    '<path fill="url(#cu1)" d="M0,50.6l10.1-7.8c5.4,7,11.1,10.3,17.4,10.3c6.3,0,11.9-3.2,17-10.2l10.3,7.6c-7.4,10-16.6,15.3-27.3,15.3C16.9,65.8,7.6,60.5,0,50.6z"/>' +
+    '<path fill="url(#cu2)" d="M27.5,16.9l-18,15.5l-8.3-9.7L27.6,0l26.2,22.7l-8.4,9.6L27.5,16.9z"/>' +
+  '</svg>';
+};
+```
+
+### E.2 — Substituir o CLICKUP_ICON local nos 3 HTMLs
+
+Em `public/admin.html`, `public/dashboard.html` e `public/solicitacao.html`:
+
+**LOCALIZAR** (em cada arquivo, no início do `<script>` principal):
+```js
+const CLICKUP_ICON = `<svg width="14" height="14" viewBox="0 0 54.8 65.8" xmlns="http://www.w3.org/2000/svg">
+  ... (várias linhas com defs/linearGradient/path)
+</svg>`;
+```
+
+**SUBSTITUIR POR**:
+```js
+const CLICKUP_ICON = getClickupIcon();
+```
+
+### E.3 — Remover `<svg>` defs do body em admin.html e dashboard.html
+
+Em `public/admin.html` (linha ~1357) e `public/dashboard.html`:
+
+**LOCALIZAR**:
+```html
+<body class="page-light">
+<!-- ClickUp logo gradients (usados em CLICKUP_ICON) -->
+<svg xmlns="http://www.w3.org/2000/svg" width="0" height="0" style="position:absolute;overflow:hidden">
+  <defs>
+    <linearGradient id="cu1" ...>
+      <stop offset="0" stop-color="#8930FD"/><stop offset="1" stop-color="#49CCF9"/>
+    </linearGradient>
+    <linearGradient id="cu2" ...>
+      <stop offset="0" stop-color="#FF02F0"/><stop offset="1" stop-color="#FFC800"/>
+    </linearGradient>
+  </defs>
+</svg>
+```
+
+**REMOVER** esse `<svg>` inteiro (mantendo o `<body class="page-light">`). O ícone agora é auto-contido na função `getClickupIcon()`.
+
+═══════════════════════════════════════════════════════════════
+## F) Remover `_esc` de shell.js
+═══════════════════════════════════════════════════════════════
+
+O shell.js tem método interno `_esc(s)` que duplica `window.esc` (do utils.js). Como utils.js é incluído antes de shell.js em todos os HTMLs, podemos usar `window.esc` diretamente.
+
+No arquivo `public/shell.js`:
+
+### F.1 — Substituir todas as chamadas
+
+**LOCALIZAR** (cada ocorrência de `this._esc(`):
+```js
+this._esc(email)
+this._esc(Auth.getInitials())
+this._esc(Auth.getUserName())
+this._esc(item.label)
+... (todas as ~6 ocorrências)
+```
+
+**SUBSTITUIR POR** (manter o argumento, só trocar o prefix):
+```js
+window.esc(email)
+window.esc(Auth.getInitials())
+window.esc(Auth.getUserName())
+window.esc(item.label)
+```
+
+### F.2 — Remover o método `_esc` da definição do Shell
+
+**LOCALIZAR** (linha ~333 de shell.js):
+```js
+  _esc(s) {
+    if (s === null || s === undefined) return '';
+    return String(s)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  },
+```
+
+**REMOVER** esse bloco inteiro.
+
+═══════════════════════════════════════════════════════════════
+## G) Remover log "Entrega field raw value"
+═══════════════════════════════════════════════════════════════
+
+Log de debug deixado em produção em `src/routes/forms.ts` (linha ~27136).
+
+**LOCALIZAR**:
+```ts
+    const entregaField = data.custom_fields?.find(f => f.id === "4485ee1d-253f-4599-a66a-aa674deddf41");
+    const entregaRaw = entregaField?.value || "";
+
+    const links: Array<{ label: string; url: string }> = [];
+    logger.info({ entregaRaw, taskId: solicitacao.clickup_task_id }, "Entrega field raw value");
+
+    if (entregaRaw) {
+```
+
+**SUBSTITUIR POR** (remove a linha do logger.info):
+```ts
+    const entregaField = data.custom_fields?.find(f => f.id === "4485ee1d-253f-4599-a66a-aa674deddf41");
+    const entregaRaw = entregaField?.value || "";
+
+    const links: Array<{ label: string; url: string }> = [];
+
+    if (entregaRaw) {
+```
+
+═══════════════════════════════════════════════════════════════
+## H) Cache busting nos assets estáticos
+═══════════════════════════════════════════════════════════════
+
+Hoje os HTMLs referenciam `style.css`, `utils.js`, etc. sem versionamento. Quando você atualiza um deles, o browser pode servir versão em cache. Adicionar `?v=YYYYMMDD` força reload.
+
+Rodar no terminal Replit (substitui todos os refs):
+```bash
+cd artifacts/api-server/public
+DATE=$(date +%Y%m%d)
+echo "Versão de cache: $DATE"
+
+# CSS
+find . -maxdepth 1 -name "*.html" -exec sed -i "s|href=\"style\.css\"|href=\"style.css?v=${DATE}\"|g" {} +
+
+# JS módulos compartilhados
+for js in utils.js toast.js config.js auth.js shell.js; do
+  find . -maxdepth 1 -name "*.html" -exec sed -i "s|src=\"${js}\"|src=\"${js}?v=${DATE}\"|g" {} +
+done
+
+echo "✓ Cache busting aplicado em todos os HTMLs"
+```
+
+⚠️ A cada deploy importante que mude CSS/JS compartilhados, atualizar o `?v=` rodando o comando novamente (ou criar um script `update-cache.sh`).
+
+═══════════════════════════════════════════════════════════════
+## I) Adicionar `console.error` em catches críticos
+═══════════════════════════════════════════════════════════════
+
+Catches que silenciam erros e só mostram "Erro de rede" — quando isso aparecer, fica impossível debugar sem console.
+
+No arquivo `public/admin-clickup-lists.html`:
+
+**LOCALIZAR**:
+```js
+        } catch (err) { setStatus(status, 'Erro de rede ao validar.', 'err'); }
+```
+
+**SUBSTITUIR POR**:
+```js
+        } catch (err) { console.error('[clickup-lists/validate]', err); setStatus(status, 'Erro de rede ao validar.', 'err'); }
+```
+
+E **LOCALIZAR** (2 ocorrências similares com "salvar"):
+```js
+      } catch (err) { setStatus(status, 'Erro de rede ao salvar.', 'err'); }
+```
+
+**SUBSTITUIR POR**:
+```js
+      } catch (err) { console.error('[clickup-lists/save]', err); setStatus(status, 'Erro de rede ao salvar.', 'err'); }
+```
+
+E **LOCALIZAR**:
+```js
+      } catch (err) { showToast('Erro de rede ao excluir', 'error'); }
+```
+
+**SUBSTITUIR POR**:
+```js
+      } catch (err) { console.error('[clickup-lists/delete]', err); showToast('Erro de rede ao excluir', 'error'); }
+```
+
+═══════════════════════════════════════════════════════════════
+## J) Verificação final
+═══════════════════════════════════════════════════════════════
+
+Após aplicar TUDO, rodar no terminal:
+
+```bash
+cd artifacts/api-server/public
+
+# 1. div balanceado em todos os HTMLs
+echo "─── div balance ───"
+for f in *.html; do
+  open=$(grep -c '<div' "$f")
+  close=$(grep -c '</div>' "$f")
+  if [ "$open" != "$close" ]; then
+    echo "🚨 $f: open=$open close=$close diff=$((open - close))"
+  fi
+done
+echo "✓ (sem 🚨 = tudo balanceado)"
+
+# 2. Inline styles do Prompt 9 — devem estar todos zerados
+echo ""
+echo "─── Prompt 9 verificação ───"
+echo "P1 ruby: $(grep -rc 'style="color:var(--ruby-red)"' *.html | grep -v ':0$' | wc -l) arquivos com sobras"
+echo "P2 divider: $(grep -rc 'style="border-top:1px solid rgba(34,27,25,\.08);margin:28px 0 20px;padding-top:22px"' *.html | grep -v ':0$' | wc -l) arquivos com sobras"
+echo "P3 padding: $(grep -rc 'style="padding-top:32px;padding-bottom:80px"' *.html | grep -v ':0$' | wc -l) arquivos com sobras"
+echo "P5 flex-between: $(grep -rc 'style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px"' *.html | grep -v ':0$' | wc -l) arquivos com sobras"
+echo "P6 text-md: $(grep -rc 'style="font-weight:500;font-size:1.1rem;margin:0"' *.html | grep -v ':0$' | wc -l) arquivos com sobras"
+
+# 3. SVG ClickUp — só 1 definição (em utils.js)
+echo ""
+echo "─── SVG ClickUp ───"
+echo "linearGradient cu1/cu2 em HTMLs (deve ser 0): $(grep -c 'linearGradient id="cu' *.html | grep -v ':0$' | wc -l)"
+echo "getClickupIcon usado: $(grep -c 'getClickupIcon()' *.html *.js | grep -v ':0$' | wc -l) arquivos"
+
+# 4. Cache busting
+echo ""
+echo "─── Cache busting ───"
+echo "style.css com versionamento: $(grep -c 'style.css?v=' *.html | grep -v ':0$' | wc -l) arquivos"
+
+# 5. _esc em shell.js (deve ser 0)
+echo ""
+echo "─── shell.js ───"
+echo "this._esc restantes em shell.js: $(grep -c 'this\._esc' shell.js)"
+```
+
+Depois, **testar visualmente**:
+- Hard refresh nas páginas principais (Ctrl+Shift+R)
+- Dashboard: cards listados, asteriscos vermelhos visíveis
+- Admin: tabela + gráfico funcionais
+- Admin > Listas ClickUp: cards accordion + tags
+- Solicitação: ícone ClickUp no botão (do CLICKUP_ICON)
+- Sidebar (header): nome + iniciais do usuário aparecem normalmente
+
+═══════════════════════════════════════════════════════════════
+## 🚨 Ordem recomendada de aplicação
+═══════════════════════════════════════════════════════════════
+
+Fazer os itens em ordem alfabética (A → I) — A é a maior mudança, vem primeiro pra reduzir o blast radius. Commitar a cada 2-3 itens pra facilitar revert se algo quebrar:
+
+```bash
+# Após A+B+C
+git add -A && git commit -m "Cleanup A+B+C: P9 reaplicado, labels CH, request-card consolidado"
+
+# Após D+E+F+G
+git add -A && git commit -m "Cleanup D-G: remover SETOR_CODIGOS, unificar SVG, _esc, log debug"
+
+# Após H+I
+git add -A && git commit -m "Cleanup H+I: cache busting + console.error em catches críticos"
+```
+
+═══════════════════════════════════════════════════════════════
+
+Quando aplicar, manda screenshot do antes/depois (especialmente Painel Admin com gráfico e Dashboard listando solicitações) pra eu confirmar.

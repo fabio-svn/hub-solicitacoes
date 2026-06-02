@@ -9,36 +9,36 @@
   <title>Kit Onboarding — Hub SVN</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap">
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css?v=20260602">
 </head>
 <body class="page-light">
   <div id="pageContent">
-  <div class="container-narrow" style="padding-top:32px;padding-bottom:80px">
+  <div class="container-narrow" class="page-padding">
     <div class="form-card">
       <div class="form-progress"><div class="form-progress-bar" style="width:100%"></div></div>
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-        <h2 style="font-weight:500;font-size:1.1rem;margin:0">Kit Onboarding</h2>
+      <div class="flex-between">
+        <h2 class="text-md-medium">Kit Onboarding</h2>
       </div>
-      <div style="height:1px;background:var(--border-light);margin-bottom:24px"></div>
+      <hr class="sep">
 
       <div class="field">
-        <label>Qual unidade receberá o kit? <span style="color:var(--ruby-red)">*</span></label>
+        <label>Qual unidade receberá o kit? <span class="text-ruby">*</span></label>
         <select id="unidade" required>
           <option value="">Selecione a unidade…</option>
         </select>
       </div>
 
       <div class="field">
-        <label>Quantidade de kits que deverão ser enviados para a unidade <span style="color:var(--ruby-red)">*</span></label>
+        <label>Quantidade de kits que deverão ser enviados para a unidade <span class="text-ruby">*</span></label>
         <input type="number" id="quantidade" min="1" step="1" placeholder="Ex.: 5" required>
       </div>
 
       <div class="field">
-        <label>Qual a data prevista para a entrega desses kits? <span style="color:var(--ruby-red)">*</span></label>
+        <label>Qual a data prevista para a entrega desses kits? <span class="text-ruby">*</span></label>
         <input type="date" id="dataEntrega" required>
       </div>
 
-      <div style="border-top:1px solid rgba(34,27,25,.08);margin:28px 0 20px;padding-top:22px">
+      <div class="section-divider">
         <div id="submitError" class="alert-card alert-danger" style="display:none;margin-bottom:16px"></div>
         <div class="form-nav" style="justify-content:flex-end">
           <button class="btn btn-primary btn-submit-gold" id="btnSubmit" onclick="submitForm()">Enviar</button>
@@ -48,9 +48,9 @@
   </div>
   </div>
 
-  <script src="config.js"></script>
-  <script src="auth.js"></script>
-  <script src="shell.js"></script>
+  <script src="config.js?v=20260602"></script>
+  <script src="auth.js?v=20260602"></script>
+  <script src="shell.js?v=20260602"></script>
   <script>
     const TIPO = 'ch-kit-onboarding';
 

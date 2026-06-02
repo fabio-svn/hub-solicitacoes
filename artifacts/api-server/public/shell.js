@@ -74,15 +74,15 @@ window.Shell = {
       const el = document.createElement('div');
       el.id = 'impersonarBanner';
       el.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:9999;background:#7c3aed;color:#fff;padding:8px 20px;display:flex;align-items:center;justify-content:center;gap:10px;font-size:0.82rem;font-weight:600;font-family:"Nunito Sans",sans-serif';
-      el.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg> Visualizando como: <strong>' + this._esc(email) + '</strong> <button onclick="window._sairImpersonar()" style="background:rgba(255,255,255,0.2);border:none;color:#fff;padding:3px 10px;border-radius:6px;cursor:pointer;font-family:\'Nunito Sans\',sans-serif;font-weight:600;font-size:0.78rem;margin-left:6px">Sair ✕</button>';
+      el.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg> Visualizando como: <strong>' + window.esc(email) + '</strong> <button onclick="window._sairImpersonar()" style="background:rgba(255,255,255,0.2);border:none;color:#fff;padding:3px 10px;border-radius:6px;cursor:pointer;font-family:\'Nunito Sans\',sans-serif;font-weight:600;font-size:0.78rem;margin-left:6px">Sair ✕</button>';
       document.body.prepend(el);
     }
     document.body.style.paddingTop = '40px';
   },
 
   _buildHeader(isAdmin) {
-    const initials = typeof Auth !== 'undefined' ? this._esc(Auth.getInitials()) : '?';
-    const name = typeof Auth !== 'undefined' ? this._esc(Auth.getUserName()) : '';
+    const initials = typeof Auth !== 'undefined' ? window.esc(Auth.getInitials()) : '?';
+    const name = typeof Auth !== 'undefined' ? window.esc(Auth.getUserName()) : '';
     const logoUrl = typeof URL_LOGO_PRETA !== 'undefined' ? URL_LOGO_PRETA : '';
 
     return `<header class="app-header" id="appShellHeader">
@@ -205,7 +205,7 @@ window.Shell = {
       const isActive = item.route === activeRoute;
       return `<a href="${item.href}" class="sidebar-link${isActive ? ' active' : ''}" data-route="${item.route}">
         <span class="sidebar-icon">${item.icon}</span>
-        <span class="sidebar-label">${this._esc(item.label)}</span>
+        <span class="sidebar-label">${window.esc(item.label)}</span>
       </a>`;
     };
 
@@ -327,7 +327,4 @@ window.Shell = {
     window.location.href = url;
   },
 
-  _esc(s) {
-    return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-  },
 };

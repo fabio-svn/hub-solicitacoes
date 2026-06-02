@@ -16,7 +16,7 @@
     <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap" media="print" onload="this.media='all'">
   <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap"></noscript>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css?v=20260602">
   <style>
     .tipo-material-btn {
       display:flex;align-items:center;gap:10px;padding:10px 14px;
@@ -37,35 +37,35 @@
 </head>
 <body class="page-light">
   <div id="pageContent">
-  <div class="container" style="padding-top:32px;padding-bottom:80px">
+  <div class="container" class="page-padding">
     <div class="form-split">
       <div class="form-main">
         <div class="form-card">
           <div class="form-progress"><div class="form-progress-bar" id="progressBar" style="width:100%"></div></div>
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-            <h2 style="font-weight:500;font-size:1.1rem;margin:0">Materiais Impressos</h2>
+          <div class="flex-between">
+            <h2 class="text-md-medium">Materiais Impressos</h2>
           </div>
-          <div style="height:1px;background:var(--border-light);margin-bottom:24px"></div>
+          <hr class="sep">
 
           <div class="field">
-            <label>Telefone <span style="color:var(--ruby-red)">*</span></label>
+            <label>Telefone <span class="text-ruby">*</span></label>
             <input type="tel" id="telefone" placeholder="(00) 00000-0000" oninput="mascaraTelefone(this)" required>
           </div>
           <div class="field">
-            <label>Setor <span style="color:var(--ruby-red)">*</span></label>
+            <label>Setor <span class="text-ruby">*</span></label>
             <select id="setor" required>
               <option value="">Selecione seu setor</option>
             </select>
           </div>
 
           <div class="field">
-            <label style="margin-bottom:12px">Qual tipo de material você quer produzir? <span style="color:var(--ruby-red)">*</span></label>
+            <label style="margin-bottom:12px">Qual tipo de material você quer produzir? <span class="text-ruby">*</span></label>
             <div id="tipoMaterialContainer" style="display:grid;grid-template-columns:1fr 1fr;gap:8px"></div>
           </div>
 
           <div id="camposCondicionais" style="margin-top:20px"></div>
 
-          <div style="border-top:1px solid rgba(34,27,25,.08);margin:28px 0 20px;padding-top:22px">
+          <div class="section-divider">
             <div id="submitError" class="alert-card alert-danger" style="display:none;margin-bottom:16px"></div>
         <div id="formStatusArea" style="display:none;margin-top:16px"></div>
             <div class="form-nav" style="justify-content:flex-end">
@@ -94,11 +94,11 @@
   
 
   </div>
-  <script src="utils.js"></script>
+  <script src="utils.js?v=20260602"></script>
   <script src="upload-feedback.js"></script>
-  <script src="config.js"></script>
-  <script src="auth.js"></script>
-  <script src="shell.js"></script>
+  <script src="config.js?v=20260602"></script>
+  <script src="auth.js?v=20260602"></script>
+  <script src="shell.js?v=20260602"></script>
   <script>
     const TIPO = 'materiais-impressos';
     window.addEventListener('pageshow', function(e) {
@@ -219,11 +219,11 @@
               </div>
             </div>
             <div class="field">
-              <label>Descrição da solicitação <span style="color:var(--ruby-red)">*</span></label>
+              <label>Descrição da solicitação <span class="text-ruby">*</span></label>
               <input type="text" id="descricaoSolicitacao" placeholder="Descreva a solicitação" required>
             </div>
             <div class="field">
-              <label>Conteúdo ${tipo === 'carta' ? 'da carta' : 'do documento'} <span style="color:var(--ruby-red)">*</span></label>
+              <label>Conteúdo ${tipo === 'carta' ? 'da carta' : 'do documento'} <span class="text-ruby">*</span></label>
               <textarea id="conteudoMaterial" placeholder="Descreva o conteúdo..." required></textarea>
             </div>
             <div class="field">
@@ -239,7 +239,7 @@
               <button type="button" onclick="verModeloFlyer()" style="flex-shrink:0;background:none;border:1.5px solid var(--border-light);border-radius:8px;padding:5px 12px;font-size:0.78rem;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap">Ver modelo padrão</button>
             </div>
             <div class="field">
-              <label>Descrição da solicitação <span style="color:var(--ruby-red)">*</span></label>
+              <label>Descrição da solicitação <span class="text-ruby">*</span></label>
               <textarea id="conteudoMaterial" placeholder="Descreva o conteúdo..." required></textarea>
             </div>`;
           break;
@@ -283,7 +283,7 @@
               </div>
             </div>
             <div class="field">
-              <label>Descreva o conteúdo <span style="color:var(--ruby-red)">*</span></label>
+              <label>Descreva o conteúdo <span class="text-ruby">*</span></label>
               <textarea id="conteudoMaterial" placeholder="Descreva o conteúdo..." required></textarea>
             </div>`;
           break;
@@ -291,7 +291,7 @@
         case 'banner':
           container.innerHTML = `
             <div class="field">
-              <label>Tamanho <span style="color:var(--ruby-red)">*</span></label>
+              <label>Tamanho <span class="text-ruby">*</span></label>
               <input type="text" id="tamanhoBanner" placeholder="Ex.: 80x200cm, 100x200cm" required oninput="atualizarPreview()">
             </div>
             <div class="field">
@@ -302,7 +302,7 @@
               </div>
             </div>
             <div class="field">
-              <label>Descreva o conteúdo <span style="color:var(--ruby-red)">*</span></label>
+              <label>Descreva o conteúdo <span class="text-ruby">*</span></label>
               <textarea id="conteudoMaterial" placeholder="Descreva o conteúdo..." required></textarea>
             </div>`;
           break;
@@ -317,11 +317,11 @@
               </div>
             </div>
             <div class="field">
-              <label>Tamanho <span style="color:var(--ruby-red)">*</span></label>
+              <label>Tamanho <span class="text-ruby">*</span></label>
               <input type="text" id="tamanhoAdesivo" placeholder="Ex.: 5x5cm, 10cm diâmetro" required oninput="atualizarPreview()">
             </div>
             <div class="field">
-              <label>Descreva o conteúdo <span style="color:var(--ruby-red)">*</span></label>
+              <label>Descreva o conteúdo <span class="text-ruby">*</span></label>
               <textarea id="conteudoMaterial" placeholder="Descreva o conteúdo..." required></textarea>
             </div>`;
           break;
@@ -329,7 +329,7 @@
         case 'bloco-notas':
           container.innerHTML = `
             <div class="field">
-              <label>Descreva o conteúdo <span style="color:var(--ruby-red)">*</span></label>
+              <label>Descreva o conteúdo <span class="text-ruby">*</span></label>
               <textarea id="conteudoMaterial" placeholder="Descreva o que deve constar no bloco..." required></textarea>
             </div>
             <div class="field">
@@ -356,7 +356,7 @@
               </div>
             </div>
             <div class="field">
-              <label>Descreva o visual esperado da camiseta <span style="color:var(--ruby-red)">*</span></label>
+              <label>Descreva o visual esperado da camiseta <span class="text-ruby">*</span></label>
               <textarea id="conteudoMaterial" placeholder="Ex.: logo na frente, frase nas costas, etc." required></textarea>
             </div>
             <div class="field">
@@ -372,7 +372,7 @@
         case 'outro-impresso':
           container.innerHTML = `
             <div class="field">
-              <label>Descreva o material <span style="color:var(--ruby-red)">*</span></label>
+              <label>Descreva o material <span class="text-ruby">*</span></label>
               <textarea id="conteudoMaterial" placeholder="Descreva o material impresso que precisa..." required></textarea>
             </div>
             <div class="field">

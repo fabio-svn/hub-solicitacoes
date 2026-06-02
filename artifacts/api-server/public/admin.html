@@ -16,20 +16,9 @@
     <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap" media="print" onload="this.media='all'">
   <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap"></noscript>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css?v=20260602">
 </head>
 <body class="page-light">
-<!-- ClickUp logo gradients (usados em CLICKUP_ICON) -->
-<svg xmlns="http://www.w3.org/2000/svg" width="0" height="0" style="position:absolute;overflow:hidden">
-  <defs>
-    <linearGradient id="cu1" x1="0" y1="15.05" x2="54.84" y2="15.05" gradientUnits="userSpaceOnUse" gradientTransform="matrix(1 0 0 -1 0 69.36)">
-      <stop offset="0" stop-color="#8930FD"/><stop offset="1" stop-color="#49CCF9"/>
-    </linearGradient>
-    <linearGradient id="cu2" x1="1.2" y1="53.17" x2="53.74" y2="53.17" gradientUnits="userSpaceOnUse" gradientTransform="matrix(1 0 0 -1 0 69.36)">
-      <stop offset="0" stop-color="#FF02F0"/><stop offset="1" stop-color="#FFC800"/>
-    </linearGradient>
-  </defs>
-</svg>
   <div id="pageContent">
   <div class="container container-wide">
     <div class="title-row">
@@ -42,7 +31,7 @@
         <div class="stat-label">Total</div>
       </div>
       <div class="stat-card" style="background:rgba(159,63,55,0.06);border-color:rgba(159,63,55,0.15)">
-        <div class="stat-number" style="color:var(--ruby-red)" id="statActive">0</div>
+        <div class="stat-number" class="text-ruby" id="statActive">0</div>
         <div class="stat-label">Em andamento</div>
       </div>
       <div class="stat-card" style="background:rgba(111,135,123,0.06);border-color:rgba(111,135,123,0.15)">
@@ -227,20 +216,17 @@
   </div>
 
   </div>
-  <script src="utils.js"></script>
-  <script src="toast.js"></script>
-  <script src="config.js"></script>
-  <script src="auth.js"></script>
-  <script src="shell.js"></script>
+  <script src="utils.js?v=20260602"></script>
+  <script src="toast.js?v=20260602"></script>
+  <script src="config.js?v=20260602"></script>
+  <script src="auth.js?v=20260602"></script>
+  <script src="shell.js?v=20260602"></script>
   <script>
     let currentTab = 'geral';
     let adminFilters = { eventos: { periodo: '', status: '' }, geral: { periodo: '', status: '' } };
     let adminPages = { eventos: 1, geral: 1 };
     let searchTimeout;
-    const CLICKUP_ICON = `<svg width="14" height="14" viewBox="0 0 54.8 65.8" xmlns="http://www.w3.org/2000/svg">
-  <path fill="url(#cu1)" d="M0,50.6l10.1-7.8c5.4,7,11.1,10.3,17.4,10.3c6.3,0,11.9-3.2,17-10.2l10.3,7.6c-7.4,10-16.6,15.3-27.3,15.3C16.9,65.8,7.6,60.5,0,50.6z"/>
-  <path fill="url(#cu2)" d="M27.5,16.9l-18,15.5l-8.3-9.7L27.6,0l26.2,22.7l-8.4,9.6L27.5,16.9z"/>
-</svg>`;
+    const CLICKUP_ICON = getClickupIcon();
 
     let adminItemsCache = {};
 

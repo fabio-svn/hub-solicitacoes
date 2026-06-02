@@ -573,7 +573,6 @@ input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
 @keyframes fadeSlideOut { from { opacity: 1; transform: translateX(0); } to { opacity: 0; transform: translateX(-16px); } }
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 @keyframes scaleIn { from { opacity: 0; transform: scale(0.96); } to { opacity: 1; transform: scale(1); } }
-.request-card { opacity: 0; animation: cardEnter 0.25s ease forwards; }
 @keyframes cardEnter { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 
 /* Split layout for events form */
@@ -722,6 +721,8 @@ input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
   display: flex;
   align-items: center;
   gap: 16px;
+  opacity: 0;
+  animation: cardEnter 0.25s ease forwards;
 }
 .request-card:hover { border-color: var(--ruby-red); box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
 .request-info { flex: 1; min-width: 0; }
@@ -2156,3 +2157,13 @@ input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
 }
 .btn-danger:hover { background: #8e2f2a; border-color: #8e2f2a; }
 @keyframes fadeOut { from { opacity: 1 } to { opacity: 0 } }
+
+/* ─────────────────────────────────────────────────────
+   Utility classes — substituem inline styles repetidos
+   ───────────────────────────────────────────────────── */
+.text-ruby { color: var(--ruby-red); }
+.section-divider { border-top: 1px solid rgba(34, 27, 25, 0.08); margin: 28px 0 20px; padding-top: 22px; }
+.page-padding { padding-top: 32px; padding-bottom: 80px; }
+.sep { height: 1px; background: var(--border-light); margin-bottom: 24px; border: none; }
+.flex-between { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+.text-md-medium { font-weight: 500; font-size: 1.1rem; margin: 0; }

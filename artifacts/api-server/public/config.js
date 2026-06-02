@@ -122,10 +122,17 @@ const TIPO_SOLICITACAO_LABELS = {
   "brindes":                        "Brindes",
   "pagina-online":                  "Página Online",
   "producao-video":                 "Produção de Vídeo",
-  "producao-audiovisual":           "Produção Audiovisual",
   "sessao-fotos":                   "Sessão de Fotos",
   "materiais-impressos":            "Materiais Impressos",
   "outro":                          "Outro",
+  // Capital Humano
+  "ch-kit-onboarding":              "Kit Onboarding",
+  "ch-atualizacao-pessoas":         "Atualização de Pessoas nos Sites",
+  "ch-conteudo-pdf":                "Conteúdo em PDF (CH)",
+  "ch-arte-divulgacao":             "Arte de Divulgação (CH)",
+  "ch-atualizacao-books":           "Atualização de Books",
+  "ch-linha-do-tempo":              "Linha do Tempo",
+  "ch-aniversariantes":             "Aniversariantes do Mês",
 };
 
 // FALLBACK só pra evitar tela em branco se /api/form-schemas falhar.
@@ -336,50 +343,6 @@ const IBGE_ESTADOS = {
   "35":"São Paulo","28":"Sergipe","17":"Tocantins",
 };
 
-// NOTA: Este mapa é intencionalmente duplicado de SETOR_CODIGO_MAP em clickup.ts.
-// config.js roda no browser, clickup.ts no Node.js — não há como compartilhar.
-// Ao adicionar ou alterar setores, atualizar AMBOS os arquivos.
-const SETOR_CODIGOS = {
-  "Administração":                           "ADM",
-  "Alocação":                                "ALO",
-  "Aracaju":                                 "AJU",
-  "Câmbio":                                  "CAM",
-  "Campo Grande":                            "CGR",
-  "Capital Humano":                          "RH",
-  "Cascavel":                                "CVV",
-  "Commodities":                             "CMO",
-  "Connect":                                 "CONN",
-  "Corporate":                               "COR",
-  "Cuiabá":                                  "CBA",
-  "Curitiba":                                "CTB",
-  "Curitiba Digital":                        "CTBDGT",
-  "Digital":                                 "DIG",
-  "Financeiro":                              "FIN",
-  "Foz do Iguaçu":                           "FOZ",
-  "Institucional":                           "INST",
-  "Jurídico":                                "JUR",
-  "Londrina":                                "LDN",
-  "Marketing":                               "MKT",
-  "Marketing Digital":                       "MKTDGT",
-  "Maringá":                                 "MGF",
-  "Maringá Digital":                         "MGFDGT",
-  "Middle":                                  "MID",
-  "Performance":                             "PER",
-  "Produto":                                 "PRO",
-  "Proteção Patrimonial":                    "PPA",
-  "Renda Fixa":                              "RF",
-  "Renda Variável":                          "RV",
-  "Salvador":                                "SSA",
-  "São Paulo":                               "SAO",
-  "São Paulo Digital":                       "SAODGT",
-  "SVN Gestão":                              "GEST",
-  "SVN Global":                              "GLO",
-  "SVN Investment & Merchant Banking (M&A)": "IMB",
-  "Toledo":                                  "TLD",
-  "Universidade SVN":                        "USVN",
-  "Vitória da Conquista":                    "VDC",
-  "Wealth Planning":                         "WEAL",
-};
 
 const ORIGENS_EVENTO = [
   "Selecione a origem",

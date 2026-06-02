@@ -16,18 +16,18 @@
     <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap" media="print" onload="this.media='all'">
   <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap"></noscript>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css?v=20260602">
 </head>
 <body class="page-light">
   <div id="pageContent">
-  <div class="container-narrow" style="padding-top:32px;padding-bottom:80px">
+  <div class="container-narrow" class="page-padding">
 
     <div class="form-card">
       <div class="form-progress"><div class="form-progress-bar" id="progressBar" style="width:100%"></div></div>
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-        <h2 style="font-weight:500;font-size:1.1rem;margin:0">Assinatura de E-mail</h2>
+      <div class="flex-between">
+        <h2 class="text-md-medium">Assinatura de E-mail</h2>
       </div>
-      <div style="height:1px;background:var(--border-light);margin-bottom:24px"></div>
+      <hr class="sep">
 
       <div class="alert-card alert-info" style="margin-bottom:24px">
         <div class="alert-title">Como funciona</div>
@@ -35,26 +35,26 @@
       </div>
 
       <div class="field">
-        <label>Nome completo <span style="color:var(--ruby-red)">*</span></label>
+        <label>Nome completo <span class="text-ruby">*</span></label>
         <input type="text" id="nomeCompleto" placeholder="Seu nome completo" required>
       </div>
       <div class="field">
-        <label>Telefone / WhatsApp <span style="color:var(--ruby-red)">*</span></label>
+        <label>Telefone / WhatsApp <span class="text-ruby">*</span></label>
         <input type="tel" id="telefone" placeholder="(00) 00000-0000" oninput="mascaraTelefone(this)" required>
       </div>
       <div class="field">
-        <label>E-mail <span style="color:var(--ruby-red)">*</span></label>
+        <label>E-mail <span class="text-ruby">*</span></label>
         <div class="field-hint">Assessores: use seu e-mail de assessor. Time de Gestão: use seu e-mail corporativo.</div>
         <input type="email" id="emailCorporativo" placeholder="seu@svninvest.com.br" required>
       </div>
       <div class="field">
-        <label>Marca <span style="color:var(--ruby-red)">*</span></label>
+        <label>Marca <span class="text-ruby">*</span></label>
         <select id="marca" required onchange="handleMarcaChange()">
           <option value="">Selecione a marca</option>
         </select>
       </div>
       <div class="field" id="campoCargoWrap" style="display:none">
-        <label>Cargo <span style="color:var(--ruby-red)">*</span></label>
+        <label>Cargo <span class="text-ruby">*</span></label>
         <input type="text" id="cargo" placeholder="Seu cargo">
       </div>
       <div class="field" id="campoCfpWrap" style="display:none">
@@ -71,7 +71,7 @@
         </div>
       </div>
 
-      <div style="border-top:1px solid rgba(34,27,25,.08);margin:28px 0 20px;padding-top:22px">
+      <div class="section-divider">
         <div id="submitError" class="alert-card alert-danger" style="display:none;margin-bottom:16px"></div>
         <div id="formStatusArea" style="display:none;margin-top:16px"></div>
         <div class="form-nav" style="justify-content:flex-end">
@@ -86,11 +86,11 @@
   
 
   </div>
-  <script src="utils.js"></script>
+  <script src="utils.js?v=20260602"></script>
   <script src="upload-feedback.js"></script>
-  <script src="config.js"></script>
-  <script src="auth.js"></script>
-  <script src="shell.js"></script>
+  <script src="config.js?v=20260602"></script>
+  <script src="auth.js?v=20260602"></script>
+  <script src="shell.js?v=20260602"></script>
   <script>
     const TIPO = 'assinatura-email';
     window.addEventListener('pageshow', function(e) {

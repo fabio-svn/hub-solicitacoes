@@ -9,6 +9,23 @@ window.esc = function(s) {
     .replace(/'/g, '&#39;');
 };
 
+// Ícone do ClickUp (SVG auto-contido com gradientes inline).
+// Usado em cards/tabelas pra abrir tasks no ClickUp.
+window.getClickupIcon = function() {
+  return '<svg width="14" height="14" viewBox="0 0 54.8 65.8" xmlns="http://www.w3.org/2000/svg">' +
+    '<defs>' +
+      '<linearGradient id="cu1" x1="0" y1="15.05" x2="54.84" y2="15.05" gradientUnits="userSpaceOnUse" gradientTransform="matrix(1 0 0 -1 0 69.36)">' +
+        '<stop offset="0" stop-color="#8930FD"/><stop offset="1" stop-color="#49CCF9"/>' +
+      '</linearGradient>' +
+      '<linearGradient id="cu2" x1="1.2" y1="53.17" x2="53.74" y2="53.17" gradientUnits="userSpaceOnUse" gradientTransform="matrix(1 0 0 -1 0 69.36)">' +
+        '<stop offset="0" stop-color="#FF02F0"/><stop offset="1" stop-color="#FFC800"/>' +
+      '</linearGradient>' +
+    '</defs>' +
+    '<path fill="url(#cu1)" d="M0,50.6l10.1-7.8c5.4,7,11.1,10.3,17.4,10.3c6.3,0,11.9-3.2,17-10.2l10.3,7.6c-7.4,10-16.6,15.3-27.3,15.3C16.9,65.8,7.6,60.5,0,50.6z"/>' +
+    '<path fill="url(#cu2)" d="M27.5,16.9l-18,15.5l-8.3-9.7L27.6,0l26.2,22.7l-8.4,9.6L27.5,16.9z"/>' +
+  '</svg>';
+};
+
 function mascaraTelefone(el) {
   let v = el.value.replace(/\D/g, '').substring(0, 11);
   if (v.length > 6) {

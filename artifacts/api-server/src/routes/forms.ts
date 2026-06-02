@@ -807,7 +807,6 @@ router.get("/solicitacoes/:id/entrega", requireAuth, async (req, res): Promise<v
     const entregaRaw = entregaField?.value || "";
 
     const links: Array<{ label: string; url: string }> = [];
-    logger.info({ entregaRaw, taskId: solicitacao.clickup_task_id }, "Entrega field raw value");
 
     if (entregaRaw) {
       const lines = entregaRaw.split(/\n+/);

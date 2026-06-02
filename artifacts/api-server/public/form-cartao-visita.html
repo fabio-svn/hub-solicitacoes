@@ -16,7 +16,7 @@
     <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap" media="print" onload="this.media='all'">
   <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap"></noscript>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css?v=20260602">
   <style>
     .tipo-option {
       display: flex;
@@ -41,15 +41,15 @@
 </head>
 <body class="page-light">
   <div id="pageContent">
-  <div class="container-narrow" style="padding-top:32px;padding-bottom:80px">
+  <div class="container-narrow" class="page-padding">
 
     <div class="form-card">
       <div class="form-progress"><div class="form-progress-bar" id="progressBar" style="width:50%"></div></div>
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-        <h2 style="font-weight:500;font-size:1.1rem;margin:0">Cartão de Visita</h2>
+      <div class="flex-between">
+        <h2 class="text-md-medium">Cartão de Visita</h2>
         <span id="stepLabel" style="font-size:0.78rem;opacity:0.5">Passo 1 de 2</span>
       </div>
-      <div style="height:1px;background:var(--border-light);margin-bottom:24px"></div>
+      <hr class="sep">
 
       <!-- Passo 1: Escolha do tipo -->
       <div class="form-step active" id="step1">
@@ -95,31 +95,31 @@
         </div>
 
         <div class="field">
-          <label>Nome no cartão <span style="color:var(--ruby-red)">*</span></label>
+          <label>Nome no cartão <span class="text-ruby">*</span></label>
           <input type="text" id="nomeCartaoFisico" placeholder="Nome exatamente como deve aparecer" required>
         </div>
         <div class="field">
-          <label>WhatsApp <span style="color:var(--ruby-red)">*</span></label>
+          <label>WhatsApp <span class="text-ruby">*</span></label>
           <input type="tel" id="whatsappFisico" placeholder="(00) 00000-0000" oninput="mascaraTelefone(this)" required>
         </div>
         <div class="field">
-          <label>E-mail <span style="color:var(--ruby-red)">*</span></label>
+          <label>E-mail <span class="text-ruby">*</span></label>
           <p style="font-size:0.78rem;opacity:0.55;margin:-12px 0 8px">Use o e-mail de assessor (AAI) ou o corporativo (time interno)</p>
           <input type="email" id="emailCorporativoFisico" placeholder="seu@svninvest.com.br" required>
         </div>
         <div class="field">
-          <label>Unidade <span style="color:var(--ruby-red)">*</span></label>
+          <label>Unidade <span class="text-ruby">*</span></label>
           <select id="unidadeFisico" required>
             <option value="">Selecione a unidade</option>
           </select>
         </div>
         <div class="field">
-          <label>Contrato social <span style="color:var(--ruby-red)">*</span></label>
+          <label>Contrato social <span class="text-ruby">*</span></label>
           <select id="contratoSocialFisico" required>
             <option value="">Selecione</option>
           </select>
         </div>
-        <div style="border-top:1px solid rgba(34,27,25,.08);margin:28px 0 20px;padding-top:22px">
+        <div class="section-divider">
           <div id="submitErrorFisico" class="alert-card alert-danger" style="display:none;margin-bottom:16px"></div>
           <div class="form-nav" style="justify-content:flex-end">
             <button class="btn btn-primary btn-submit-gold" id="btnSubmitFisico" onclick="submitFormFisico()">Enviar</button>
@@ -140,26 +140,26 @@
         </div>
 
         <div class="field">
-          <label>Nome completo <span style="color:var(--ruby-red)">*</span></label>
+          <label>Nome completo <span class="text-ruby">*</span></label>
           <input type="text" id="nomeCompletoDigital" placeholder="Seu nome completo" required>
         </div>
         <div class="field">
-          <label>Telefone / WhatsApp <span style="color:var(--ruby-red)">*</span></label>
+          <label>Telefone / WhatsApp <span class="text-ruby">*</span></label>
           <input type="tel" id="telefoneDigital" placeholder="(00) 00000-0000" oninput="mascaraTelefone(this)" required>
         </div>
         <div class="field">
-          <label>E-mail <span style="color:var(--ruby-red)">*</span></label>
+          <label>E-mail <span class="text-ruby">*</span></label>
           <p style="font-size:0.78rem;opacity:0.55;margin:-12px 0 8px">Use o e-mail de assessor (AAI) ou o corporativo (time interno)</p>
           <input type="email" id="emailCorporativoDigital" placeholder="seu@svninvest.com.br" required>
         </div>
         <div class="field">
-          <label>Contrato social <span style="color:var(--ruby-red)">*</span></label>
+          <label>Contrato social <span class="text-ruby">*</span></label>
           <select id="contratoSocial" required>
             <option value="">Selecione</option>
           </select>
         </div>
         <div class="field">
-          <label>Foto de perfil <span style="color:var(--ruby-red)">*</span></label>
+          <label>Foto de perfil <span class="text-ruby">*</span></label>
           <div style="font-size:0.78rem;opacity:0.55;margin-bottom:8px">Usada na geração do cartão. JPG ou PNG, fundo neutro preferencialmente.</div>
           <div class="file-input-wrapper">
             <label class="file-input-btn" for="fotoPerfilDigital">Escolher foto</label>
@@ -167,7 +167,7 @@
             <div class="file-name" id="fotoPerfilDigitalName"></div>
           </div>
         </div>
-        <div style="border-top:1px solid rgba(34,27,25,.08);margin:28px 0 20px;padding-top:22px">
+        <div class="section-divider">
           <div id="submitErrorDigital" class="alert-card alert-danger" style="display:none;margin-bottom:16px"></div>
           <div class="form-nav" style="justify-content:flex-end">
             <button class="btn btn-primary btn-submit-gold" id="btnSubmitDigital" onclick="submitFormDigital()">Enviar</button>
@@ -182,11 +182,11 @@
   
 
   </div>
-  <script src="utils.js"></script>
+  <script src="utils.js?v=20260602"></script>
   <script src="upload-feedback.js"></script>
-  <script src="config.js"></script>
-  <script src="auth.js"></script>
-  <script src="shell.js"></script>
+  <script src="config.js?v=20260602"></script>
+  <script src="auth.js?v=20260602"></script>
+  <script src="shell.js?v=20260602"></script>
   <script>
     window.addEventListener('pageshow', function(e) {
       if (e.persisted) {

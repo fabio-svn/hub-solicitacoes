@@ -9,7 +9,7 @@
   <title>Listas do ClickUp — Hub SVN</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap">
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css?v=20260602">
   <style>
     .ccu-wrap { max-width: 920px; margin: 0 auto; padding: 32px 24px; }
     .ccu-head { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
@@ -186,11 +186,11 @@
     </div>
   </div>
 
-  <script src="config.js"></script>
-  <script src="auth.js"></script>
-  <script src="shell.js"></script>
-  <script src="utils.js"></script>
-  <script src="toast.js"></script>
+  <script src="config.js?v=20260602"></script>
+  <script src="auth.js?v=20260602"></script>
+  <script src="shell.js?v=20260602"></script>
+  <script src="utils.js?v=20260602"></script>
+  <script src="toast.js?v=20260602"></script>
   <script>
     let STATE = { lists: [], forms: [], assignedTipos: {} };
 
@@ -442,7 +442,7 @@
           } else {
             setStatus(status, '⚠ ' + esc(d.error || 'Lista inválida'), 'err');
           }
-        } catch (err) { setStatus(status, 'Erro de rede ao validar.', 'err'); }
+        } catch (err) { console.error('[clickup-lists/validate]', err); setStatus(status, 'Erro de rede ao validar.', 'err'); }
       }, 500);
     }
 
@@ -466,7 +466,7 @@
         setStatus(status, '✓ Lista adicionada' + (d.list && d.list.list_name ? ' — ' + esc(d.list.list_name) : ''), 'ok');
         input.value = '';
         loadConfig();
-      } catch (err) { setStatus(status, 'Erro de rede ao salvar.', 'err'); }
+      } catch (err) { console.error('[clickup-lists/save]', err); setStatus(status, 'Erro de rede ao salvar.', 'err'); }
     }
 
     async function salvarForms(listId) {
@@ -484,7 +484,7 @@
         if (!res.ok || !d.ok) { setStatus(status, '⚠ ' + esc(d.error || ('Erro ' + res.status)), 'err'); return; }
         setStatus(status, '✓ Salvo', 'ok');
         loadConfig();
-      } catch (err) { setStatus(status, 'Erro de rede ao salvar.', 'err'); }
+      } catch (err) { console.error('[clickup-lists/save]', err); setStatus(status, 'Erro de rede ao salvar.', 'err'); }
     }
 
     async function copiarListId(listId, btn) {
@@ -506,7 +506,7 @@
         const d = await res.json().catch(function () { return {}; });
         if (!res.ok || !d.ok) { showToast(d.error || 'Erro ao excluir', 'error'); return; }
         loadConfig();
-      } catch (err) { showToast('Erro de rede ao excluir', 'error'); }
+      } catch (err) { console.error('[clickup-lists/delete]', err); showToast('Erro de rede ao excluir', 'error'); }
     }
 
     init();
