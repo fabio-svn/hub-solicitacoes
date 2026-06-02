@@ -64,8 +64,8 @@ const CATEGORIAS_SOLICITACAO = [
       { id: "pagina-assessores", label: "Página de Assessores", icon: "icon-user", ativo: true },
       { id: "assinatura-email", label: "Assinatura de E-mail", icon: "icon-mail", ativo: true },
       { id: "cartao-visita", label: "Cartão de Visita", icon: "icon-credit-card", ativo: true },
-      { id: "cartao-boas-vindas", label: "Cartão de Boas-vindas", icon: "icon-handshake", ativo: true },
-      { id: "cartao-comemorativo", label: "Cartão Comemorativo", icon: "icon-heart", ativo: true },
+      { id: "cartao-boas-vindas", label: "Cartão de Boas-vindas", icon: "icon-user-plus", ativo: true },
+      { id: "cartao-comemorativo", label: "Cartão Comemorativo", icon: "icon-party-popper", ativo: true },
       { id: "divulgacao-nps", label: "Divulgação NPS", icon: "icon-star", ativo: true },
       { id: "convite-fp", label: "Convite Financial Planning", icon: "icon-envelope", ativo: true },
     ]
@@ -233,6 +233,8 @@ const DRAWER_FIELD_LABELS = {
   natureza:            { label: "Natureza",                   skip: true },
   nome:                { label: "Nome",                       skip: true },
   materiaisDetalhes:   { label: "Detalhes dos materiais",     skip: true },
+  contrato_label:      { label: "Contrato (label)",           skip: true },
+  contratoLabel:       { label: "Contrato (label)",           skip: true },
 };
 
 const DRAWER_FIELD_LABELS_FLAT = Object.fromEntries(
