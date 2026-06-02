@@ -405,7 +405,7 @@ router.post("/solicitacoes/:id/regerar", requireAuth, requireRole("admin", "gest
       res.json({ ok: true, message: "Arte regenerada com sucesso" });
     } catch (genErr: any) {
       req.log.error({ err: genErr, solicitacaoId: id, tipo }, "Falha ao regenerar arte");
-      res.status(500).json({ error: genErr.message || "Falha ao gerar arte", details: genErr.stack?.split('\n').slice(0, 3).join('\n') });
+      res.status(500).json({ error: "Falha ao gerar arte" });
     }
   } catch (err: any) {
     req.log.error({ err }, "Erro no endpoint de regeneração");

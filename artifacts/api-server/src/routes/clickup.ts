@@ -358,7 +358,7 @@ function buildGeneralTaskName(tipo: string, _subtipo: string, dados: FormDados, 
 
     default: {
       const tipoHuman = humanizeRequestType(tipo);
-      const titulo = str(dados.titulo) || str(dados.nomeCompleto) || "";
+      const titulo = str(dados.titulo) || str(dados.nome_completo) || "";
       let name = `[${tipoHuman}]`;
       if (setor && setor !== "Geral") name += ` ${setor}`;
       if (titulo) name += ` - ${titulo}`;
@@ -515,10 +515,10 @@ function buildDetailsSection(tipo: string, dados: FormDados): string | null {
     if (elementosDesc) items.push(`• Descrição dos elementos:\n${elementosDesc}`);
 
   } else if (["pagina-assessores-dados", "pagina-assessores-atualizacao"].includes(tipo)) {
-    addLine(items, "Nome completo", str(dados.nomeCompleto));
-    addLine(items, "Código do assessor", str(dados.codigoAssessor));
+    addLine(items, "Nome completo", str(dados.nome_completo));
+    addLine(items, "Código do assessor", str(dados.codigo_assessor));
     addLine(items, "Unidade", str(dados.unidade));
-    addLine(items, "Contrato social", str(dados.contratoSocial));
+    addLine(items, "Contrato social", str(dados.contrato_social));
     addLine(items, "LinkedIn", str(dados.linkedin));
     addLine(items, "Instagram", str(dados.instagram));
     const miniBio = str(dados.miniBio);
@@ -568,7 +568,7 @@ function buildGeneralDescription(
   addLine(resumoItems, "Tipo", tipoHuman);
   if (subtipo) addLine(resumoItems, "Subtipo", subtipo);
   if (setor) addLine(resumoItems, "Setor", setor);
-  addLine(resumoItems, "Título", str(dados.titulo) || str(dados.nomeCompleto));
+  addLine(resumoItems, "Título", str(dados.titulo) || str(dados.nome_completo));
   addLine(resumoItems, "Finalidade", str(dados.finalidade));
   addLine(resumoItems, "Prazo de entrega", str(dados.prazoEntrega));
   addLine(resumoItems, "Público-alvo", str(dados.publico as string) || str(dados.publicoAlvo));
@@ -599,7 +599,7 @@ function buildCartaoFisicoDescription(dados: FormDados, user: UserData): string 
   items.push(`• Nome: ${str(dados.nomeCartao)}`);
   items.push(`• WhatsApp: ${str(dados.whatsapp)}`);
   items.push(`• E-mail: ${str(dados.emailCorporativo)}`);
-  items.push(`• Contrato social: ${str(dados.contratoSocial)}`);
+  items.push(`• Contrato social: ${str(dados.contrato_social)}`);
   items.push(`• Unidade: ${str(dados.unidade)}`);
   items.push(`• Link para planilha: https://svninvest-my.sharepoint.com/:x:/r/personal/gabriela_franca_svninvest_com_br/_layouts/15/Doc.aspx?sourcedoc=%7B7D66B897-EA4E-4C43-AB8C-20DB6B8B745C%7D&file=Solicitac%25u0327o%25u0303es%20Marketing.xlsx&nav=MTVfezAwMDAwMDAwLTAwMDEtMDAwMC0wNjAwLTAwMDAwMDAwMDAwMH0&action=default&mobileredirect=true`);
   blocks.push(`📇 CARTÃO DE VISITA\n━━━━━━━━━━━━━━━━━━━━━━\n\n${items.join("\n")}`);
@@ -937,7 +937,7 @@ async function setGeneralCustomFields(
   dados: FormDados,
   arquivos: ArquivosMap
 ): Promise<void> {
-  const titulo = str(dados.titulo) || str(dados.nomeCompleto) || null;
+  const titulo = str(dados.titulo) || str(dados.nome_completo) || null;
   const publicoAlvo = str(dados.publico as string) || str(dados.publicoAlvo as string) || null;
   const arquivoPrincipal = arquivos.materialAtual || arquivos.arquivoBase || null;
   const arquivoApoio = arquivos.arquivoApoio || arquivos.fotoPerfil || null;
@@ -1071,7 +1071,7 @@ function buildGeneralCustomFieldsArray(
 ): Array<{ id: string; value: unknown }> {
   const fields: Array<{ id: string; value: unknown }> = [];
 
-  const titulo = str(dados.titulo) || str(dados.nomeCompleto) || null;
+  const titulo = str(dados.titulo) || str(dados.nome_completo) || null;
   const publicoAlvo = str(dados.publico as string) || str(dados.publicoAlvo as string) || null;
   const arquivoPrincipal = arquivos.materialAtual || arquivos.arquivoBase || null;
   const arquivoApoio = arquivos.arquivoApoio || arquivos.fotoPerfil || null;

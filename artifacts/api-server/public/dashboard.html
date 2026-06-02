@@ -304,7 +304,7 @@
       container.innerHTML = data.data.map((item, idx) => {
         let dados = {};
         try { dados = typeof item.dados === 'string' ? JSON.parse(item.dados) : (item.dados || {}); } catch { dados = {}; }
-        const titulo = item.titulo || dados.nomeEvento || dados.tituloEvento || dados.titulo || dados.nomeCompleto || item.tipo_solicitacao;
+        const titulo = item.titulo || dados.nomeEvento || dados.tituloEvento || dados.titulo || dados.nome_completo || dados.nomeCompleto || item.tipo_solicitacao;
         const isAdm = typeof Auth !== 'undefined' && Auth.isAdmin && Auth.isAdmin();
         const isStaff = typeof Auth !== 'undefined' && Auth.isStaff && Auth.isStaff();
         const tipoLabel = TIPO_SOLICITACAO_LABELS[item.tipo_solicitacao] || item.tipo_solicitacao;
@@ -1003,7 +1003,7 @@
       tbody.innerHTML = data.data.map(item => {
         let dados = {};
         try { dados = typeof item.dados === 'string' ? JSON.parse(item.dados) : (item.dados || {}); } catch {}
-        const tituloDisplay = item.titulo || dados.nomeEvento || dados.tituloEvento || dados.titulo || dados.nomeCompleto || '—';
+        const tituloDisplay = item.titulo || dados.nomeEvento || dados.tituloEvento || dados.titulo || dados.nome_completo || dados.nomeCompleto || '—';
         let tipoLabel = (typeof TIPO_SOLICITACAO_LABELS !== 'undefined' && TIPO_SOLICITACAO_LABELS[item.tipo_solicitacao]) || item.tipo_solicitacao;
         if (item.tipo_solicitacao === 'eventos') {
           if (dados.natureza) {

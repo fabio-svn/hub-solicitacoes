@@ -770,7 +770,7 @@
       let dados = {};
       try { dados = typeof item.dados === 'string' ? JSON.parse(item.dados) : (item.dados || {}); } catch {}
 
-      const titulo = dados.nomeEvento || dados.tituloEvento || dados.titulo || dados.nomeCompleto ||
+      const titulo = dados.nomeEvento || dados.tituloEvento || dados.titulo || dados.nome_completo || dados.nomeCompleto ||
         (TIPO_SOLICITACAO_LABELS[item.tipo_solicitacao] || item.tipo_solicitacao);
       const tipoLabel = TIPO_SOLICITACAO_LABELS[item.tipo_solicitacao] || item.tipo_solicitacao;
       const statusObj = STATUS_SOLICITACAO.find(s => s.id === item.status)

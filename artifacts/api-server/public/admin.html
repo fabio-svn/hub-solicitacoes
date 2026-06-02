@@ -311,7 +311,7 @@
       data.data.forEach((item) => {
         adminItemsCache['item_' + item.id] = item;
         const dados = typeof item.dados === 'string' ? JSON.parse(item.dados) : (item.dados || {});
-        const titulo = item.titulo || dados.nomeEvento || dados.tituloEvento || dados.titulo || dados.nomeCompleto || '-';
+        const titulo = item.titulo || dados.nomeEvento || dados.tituloEvento || dados.titulo || dados.nome_completo || dados.nomeCompleto || '-';
         const tipoLabel = TIPO_SOLICITACAO_LABELS[item.tipo_solicitacao] || item.tipo_solicitacao;
         const statusObj = STATUS_SOLICITACAO.find(s => s.id === item.status) || { label: item.status, cor: '--carbon-black' };
         const date = new Date(item.created_at).toLocaleDateString('pt-BR');
@@ -458,7 +458,7 @@
 
     function renderAdminDrawer(item) {
       const dados = typeof item.dados === 'string' ? JSON.parse(item.dados) : (item.dados || {});
-      const titulo = dados.nomeEvento || dados.tituloEvento || dados.titulo || dados.nomeCompleto || item.tipo_solicitacao;
+      const titulo = dados.nomeEvento || dados.tituloEvento || dados.titulo || dados.nome_completo || dados.nomeCompleto || item.tipo_solicitacao;
       const tipoLabel = TIPO_SOLICITACAO_LABELS[item.tipo_solicitacao] || item.tipo_solicitacao;
       const statusObj = STATUS_SOLICITACAO.find(s => s.id === item.status) || { label: item.status, bg: '#f1f5f9', text: '#475569' };
 

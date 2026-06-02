@@ -1,0 +1,214 @@
+# Prompt 2 — Camel/Snake Fase 1: Backend cleanup
+
+Esse prompt **resolve a causa raiz** do bug "CONTRATO SOCIAL duplicado" e padroniza todos os consumers backend pra usar snake_case (canonical do `form-schemas.ts`).
+
+**Estimativa**: 45 min agent. **Risco**: médio (mexe em consumers de notificação e ClickUp).
+
+═══════════════════════════════════════════════════════════════
+## 📋 Contexto
+═══════════════════════════════════════════════════════════════
+
+O backend tem `normalizeFormDados` que converte camelCase → snake_case ao receber forms, mas **mantém ambas as keys** no objeto `dados`. Isso causa:
+- Duplicate visível no drawer (CONTRATO SOCIAL aparecendo 2x)
+- Consumers inconsistentes (alguns leem camel, outros leem snake)
+
+Esse prompt faz a Fase 1 do plano:
+1. Normalizer DELETA versão camel após copiar pra snake
+2. Atualiza 10 consumers que leem `dados.<camelCase>` pra ler snake
+3. Frontend usa fallback chain (`snake ?? camel`) pra ler dados antigos do banco
+
+═══════════════════════════════════════════════════════════════
+## 🔧 Mudança 1: Atualizar `normalizeFormDados` pra deletar camel
+═══════════════════════════════════════════════════════════════
+
+### Arquivo: `src/routes/forms.ts` (ou onde estiver `normalizeFormDados`)
+
+**Localizar**:
+```ts
+  for (const [camel, snake] of Object.entries(KEY_MAP)) {
+    if (camel in out && !(snake in out)) {
+      out[snake] = out[camel];
+    }
+  }
+```
+
+**Substituir por**:
+```ts
+  for (const [camel, snake] of Object.entries(KEY_MAP)) {
+    if (camel in out) {
+      if (!(snake in out)) out[snake] = out[camel];
+      delete out[camel];  // garante que dados não tenha versão duplicada
+    }
+  }
+```
+
+═══════════════════════════════════════════════════════════════
+## 🔧 Mudança 2: Atualizar 10 consumers backend pra ler snake
+═══════════════════════════════════════════════════════════════
+
+Todos os usos de `dados.<camelCase>` no backend precisam virar `dados.<snake_case>`. Tem 10 ocorrências em `src/routes/forms.ts` e arquivos similares.
+
+### Arquivo: `src/routes/forms.ts` (ou wherever esses estiverem)
+
+**Localizar todas as ocorrências abaixo e substituir** (usar Find & Replace ou str_replace, cada uma uma por vez):
+
+| Localizar | Substituir por |
+|-----------|----------------|
+| `dados.contratoSocial` | `dados.contrato_social` |
+| `dados.nomeAssinatura` | `dados.nome_assinatura` |
+| `dados.nomeCompleto` | `dados.nome_completo` |
+| `dados.codigoAssessor` | `dados.codigo_assessor` |
+| `dados.nomeCliente` | `dados.nome_cliente` |
+| `dados.modeloCartao` | `dados.modelo_cartao` |
+| `dados.modeloArte` | `dados.modelo_arte` |
+| `dados.isPrivate` | `dados.is_private_key` |
+| `dados.fotoPerfilDigital` | `dados.foto_perfil` |
+
+**Ocorrências esperadas** (referência — pode haver mais):
+- `addLine(items, "Contrato social", str(dados.contratoSocial))` (na função `buildPaginaAssessoresDescription`)
+- `addLine(items, "Nome completo", str(dados.nomeCompleto))` (idem)
+- `addLine(items, "Código do assessor", str(dados.codigoAssessor))` (idem)
+- `items.push(\`• Contrato social: ${str(dados.contratoSocial)}\`)` (na função `buildCartaoFisicoDescription`)
+- `addLine(resumoItems, "Título", str(dados.titulo) || str(dados.nomeCompleto))` (em outro builder)
+- `case "cartao-boas-vindas": return ... s(dados.nomeCliente)` (na função de título)
+- `case "divulgacao-nps": return ... s(dados.nomeAssinatura)` (idem)
+- `case "convite-fp": return ... s(dados.nomeAssinatura)` (idem)
+- `const titulo = str(dados.titulo) || str(dados.nomeCompleto) || ""` (em outro local)
+- `contrato_social: a?.contrato_social ?? (dados.contratoSocial || "")` (em enrich ClickUp — simplificar pra `?? (dados.contrato_social || "")`)
+
+**Atenção**: NÃO substitua ocorrências dentro de **strings literais** ou **comentários**. Só onde for acesso de propriedade real.
+
+═══════════════════════════════════════════════════════════════
+## 🔧 Mudança 3: Atualizar frontend com fallback chain (compat com banco legacy)
+═══════════════════════════════════════════════════════════════
+
+O frontend lê `dados.<camel>` em vários lugares (dashboard, admin, solicitacao, solicitacoes, etc) pra construir títulos. Após a Fase 1, novos registros terão só snake. Mas **registros antigos no banco podem ter apenas camel** (sem snake). Pra ler ambos com segurança, usar fallback chain.
+
+### Arquivos: `public/admin.html`, `public/dashboard.html`, `public/solicitacoes.html`, `public/solicitacao.html`, e mais
+
+**Procurar todas as ocorrências de** `dados.nomeCompleto` **e substituir**:
+
+**Padrão típico atual** (em chain de fallback):
+```js
+const titulo = item.titulo || dados.nomeEvento || dados.tituloEvento || dados.titulo || dados.nomeCompleto || '-';
+```
+
+**Substituir por** (adiciona snake antes do camel pra preferir o novo):
+```js
+const titulo = item.titulo || dados.nomeEvento || dados.tituloEvento || dados.titulo || dados.nome_completo || dados.nomeCompleto || '-';
+```
+
+**Ocorrências esperadas** em `dados.nomeCompleto`:
+- `public/admin.html`: 2 ocorrências (linhas ~1394, ~1531)
+- `public/dashboard.html`: 2 ocorrências (linhas ~6524, ~7213)
+- `public/solicitacao.html`: 1 ocorrência (~17349)
+- Outros: ~3 ocorrências espalhadas
+
+**Procurar também** (mesma técnica) os outros camelCase do KEY_MAP usados no frontend (rebusca conforme aparecerem):
+
+| Padrão antigo | Padrão novo (com fallback) |
+|---------------|----------------------------|
+| `dados.contratoSocial` | `dados.contrato_social ?? dados.contratoSocial` |
+| `dados.nomeAssinatura` | `dados.nome_assinatura ?? dados.nomeAssinatura` |
+| `dados.nomeCliente` | `dados.nome_cliente ?? dados.nomeCliente` |
+| `dados.codigoAssessor` | `dados.codigo_assessor ?? dados.codigoAssessor` |
+
+**Importante**: alguns desses padrões talvez não apareçam no frontend (apenas no backend). Só atualizar se encontrar a ocorrência. Se a busca não retornar nada, pular.
+
+═══════════════════════════════════════════════════════════════
+## 🔧 Mudança 4: Limpar DRAWER_FIELD_LABELS (config.js)
+═══════════════════════════════════════════════════════════════
+
+Após a Fase 1, novos registros não terão mais as keys camelCase do KEY_MAP. A entrada `contratoSocial` no DRAWER vira ineficaz pra registros novos, mas pode ainda ser útil pra registros legacy do banco.
+
+**Estratégia**: manter as entradas camelCase no DRAWER (servem como fallback pra dados antigos), e adicionar as snake_case com label correto (substitui o fallback string que dá "Contrato social" automaticamente).
+
+### Arquivo: `public/config.js`
+
+**Localizar** (no `DRAWER_FIELD_LABELS`):
+```js
+  idSolicitacao:       { label: "ID",                         skip: true },
+  natureza:            { label: "Natureza",                   skip: true },
+  nome:                { label: "Nome",                       skip: true },
+  materiaisDetalhes:   { label: "Detalhes dos materiais",     skip: true },
+  contrato_label:      { label: "Contrato (label)",           skip: true },
+  contratoLabel:       { label: "Contrato (label)",           skip: true },
+};
+```
+
+**Substituir por** (adicionar entries snake_case com labels descritivos, antes da chave `};`):
+```js
+  idSolicitacao:       { label: "ID",                         skip: true },
+  natureza:            { label: "Natureza",                   skip: true },
+  nome:                { label: "Nome",                       skip: true },
+  materiaisDetalhes:   { label: "Detalhes dos materiais",     skip: true },
+  contrato_label:      { label: "Contrato (label)",           skip: true },
+  contratoLabel:       { label: "Contrato (label)",           skip: true },
+  // Versões snake_case canônicas (criadas pelo backend normalizeFormDados)
+  contrato_social:     { label: "Contrato social" },
+  is_private_key:      { label: "Cliente Private?" },
+  modelo_cartao:       { label: "Modelo do cartão" },
+  modelo_arte:         { label: "Modelo de arte" },
+  nome_cliente:        { label: "Nome do cliente" },
+  nome_assinatura:     { label: "Nome para assinatura" },
+  nome_completo:       { label: "Nome completo" },
+  codigo_assessor:     { label: "Código do assessor" },
+  foto_perfil:         { label: "Foto de perfil" },
+};
+```
+
+*(Não adicionar `skip: true` aqui — queremos que as versões snake_case sejam EXIBIDAS como o canonical. As versões camelCase continuam no DRAWER acima, sem skip; quando aparecerem em dados legacy, também exibem, mas com o mesmo label — sem duplicação porque só uma das versões existe em cada registro depois da Fase 1.)*
+
+═══════════════════════════════════════════════════════════════
+## ✅ Verificação
+═══════════════════════════════════════════════════════════════
+
+### 1. Typecheck
+```bash
+pnpm run typecheck
+```
+Deve passar sem erros.
+
+### 2. Criar uma solicitação NOVA de cada tipo
+- Cartão de Visita Físico
+- Cartão de Visita Digital
+- Cartão de Boas-vindas
+- Cartão Comemorativo
+- Convite FP
+- Página de Assessores
+- Assinatura de E-mail
+
+### 3. Verificar pra CADA solicitação:
+- **Drawer**: campo "Contrato social" aparece **uma vez** (não duplicado)
+- **Drawer**: todos os outros campos do KEY_MAP aparecem corretamente (Nome do cliente, Cargo, Modelo do cartão, etc)
+- **Email de notificação**: chega completo, com "Contrato social: SVN Capital" (não vazio nem `undefined`)
+- **ClickUp task**: criada com todos os custom fields preenchidos
+- **Título da solicitação**: aparece corretamente nas listas (dashboard, admin)
+
+### 4. Verificar solicitações ANTIGAS (já existentes no banco):
+- Abrir uma solicitação criada **antes** da aplicação desse prompt
+- Drawer deve continuar mostrando todos os campos corretamente (graças aos fallbacks que mantivemos)
+
+### 5. Conferir banco (opcional)
+Pode rodar uma query no Postgres:
+```sql
+SELECT id, dados FROM solicitacoes
+WHERE created_at > NOW() - INTERVAL '1 hour'
+ORDER BY id DESC LIMIT 5;
+```
+Os `dados` recentes NÃO devem ter chaves duplicadas (`contratoSocial` E `contrato_social`). Só `contrato_social`.
+
+═══════════════════════════════════════════════════════════════
+## 🚨 Se algo quebrar
+
+**Sintoma**: Email/ClickUp chega vazio em algum campo
+**Causa provável**: Esqueci de mapear um consumer que ainda lê camelCase
+**Fix**: rodar `grep -rn "dados\.\(contratoSocial\|nomeAssinatura\|nomeCompleto\|codigoAssessor\|nomeCliente\|modeloCartao\|modeloArte\|isPrivate\|fotoPerfilDigital\)" src/` e atualizar o que aparecer.
+
+**Sintoma**: Drawer mostra campo vazio em registros antigos
+**Causa provável**: Esqueci o fallback no frontend
+**Fix**: voltar nessa seção 3 e adicionar `?? dados.<camelCase>` ao chain.
+
+═══════════════════════════════════════════════════════════════
+
+**Quando terminar e validar**, me avise — vou enviar o Prompt 3 (padronizar os 24 forms HTML pra enviarem snake_case desde o frontend).

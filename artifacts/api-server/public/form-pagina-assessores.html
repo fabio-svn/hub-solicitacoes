@@ -577,7 +577,7 @@
           try {
             const resumo = {
               tipo: TIPO_SOLICITACAO_LABELS[formData.get('tipo_solicitacao')] || formData.get('tipo_solicitacao'),
-              subtipo: formData.get('subtipo') || '', titulo: dados.nomeCompleto || '',
+              subtipo: formData.get('subtipo') || '', titulo: dados.nome_completo || dados.nomeCompleto || '',
               solicitante: dados.nome || Auth.getUserName(),
               data: new Date().toLocaleDateString('pt-BR'),
               hora: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),

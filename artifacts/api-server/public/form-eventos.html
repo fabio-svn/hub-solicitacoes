@@ -1557,7 +1557,7 @@
           try {
             const resumo = {
               tipo: TIPO_SOLICITACAO_LABELS[formData.get('tipo_solicitacao')] || formData.get('tipo_solicitacao'),
-              subtipo: formData.get('subtipo') || '', titulo: dados.nomeEvento || dados.tituloEvento || dados.titulo || dados.nomeCompleto || '',
+              subtipo: formData.get('subtipo') || '', titulo: dados.nomeEvento || dados.tituloEvento || dados.titulo || dados.nome_completo || dados.nomeCompleto || '',
               solicitante: dados.nome || Auth.getUserName(),
               setor: dados.setor || '',
               data: new Date().toLocaleDateString('pt-BR'),

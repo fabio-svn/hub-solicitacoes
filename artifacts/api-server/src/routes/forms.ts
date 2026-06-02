@@ -116,8 +116,9 @@ function normalizeFormDados(
     fotoPerfilDigital: "foto_perfil",
   };
   for (const [camel, snake] of Object.entries(KEY_MAP)) {
-    if (camel in out && !(snake in out)) {
-      out[snake] = out[camel];
+    if (camel in out) {
+      if (!(snake in out)) out[snake] = out[camel];
+      delete out[camel];
     }
   }
 
@@ -191,10 +192,10 @@ function gerarTituloSolicitacao(tipo: string, dados: Record<string, unknown>, us
     case "assinatura-email":     return `[Assinatura de E-mail] ${s(dados.nome) || userName}`;
     case "cartao-visita-fisico": return `[Cartão de Visita] ${s(dados.nomeCartao) || userName}`;
     case "cartao-visita-digital":return `[Cartão Digital] ${s(dados.nome) || userName}`;
-    case "cartao-boas-vindas":   return `[Cartão de Boas-vindas] ${s(dados.nomeCliente) || userName}`;
+    case "cartao-boas-vindas":   return `[Cartão de Boas-vindas] ${s(dados.nome_cliente) || userName}`;
     case "cartao-comemorativo":  return `[Cartão Comemorativo] ${s(dados.nomeAniversariante) || userName}`;
-    case "divulgacao-nps":       return `[Arte NPS] ${s(dados.nomeAssinatura) || userName}`;
-    case "convite-fp":           return `[Convite FP] ${s(dados.nomeAssinatura) || userName}`;
+    case "divulgacao-nps":       return `[Arte NPS] ${s(dados.nome_assinatura) || userName}`;
+    case "convite-fp":           return `[Convite FP] ${s(dados.nome_assinatura) || userName}`;
     case "pagina-online":        return `[Página Online] ${s(dados.titulo)}`;
     case "outro":                return `[Outro] ${s(dados.titulo)}`;
     case "brindes":              return `[Brinde] ${s(dados.titulo) || userName}`;
@@ -361,16 +362,12 @@ router.post("/solicitacoes", requireAuth, upload.any(), async (req, res): Promis
     res.json({ success: true, id: solicitacao.id, clickup_task_id: clickupTaskId });
   } catch (err) {
     const user = req.session?.user;
-    const errMessage = err instanceof Error ? err.message : String(err);
-    const errStack   = err instanceof Error ? err.stack  : undefined;
     logger.error({
       err,
-      errMessage,
-      errStack,
       userEmail:        user?.email,
       tipo_solicitacao: req.body?.tipo_solicitacao,
       step:             "form_submission",
-    }, `Form submission error: ${errMessage}`);
+    }, "Form submission error");
     res.status(500).json({ error: "Erro ao processar solicitação" });
   }
 });
@@ -1331,7 +1328,7 @@ router.get("/cartao-aprovacoes", requireAuth, async (req, res): Promise<void> =>
         whatsapp: a?.whatsapp ?? (dados.whatsapp || ""),
         email: a?.email ?? (dados.emailCorporativo || ""),
         unidade: a?.unidade ?? (dados.unidade || ""),
-        contrato_social: a?.contrato_social ?? (dados.contratoSocial || ""),
+        contrato_social: a?.contrato_social ?? (dados.contrato_social || ""),
         envio_para: a?.envio_para ?? "",
         custo: a?.custo ?? "",
         status: a?.status ?? "aguardando-validacao",

@@ -162,7 +162,7 @@ export async function gerarArteParaSolicitacao(
       tipo: "error",
       origem: "art-generator",
       mensagem: "Falha na geração",
-      detalhes: { err: String(error), stack: error?.stack?.split("\n").slice(0, 3).join("\n") },
+      detalhes: { err: String(error) },
     });
 
     await db.update(solicitacoesTable)

@@ -235,15 +235,16 @@ const DRAWER_FIELD_LABELS = {
   materiaisDetalhes:   { label: "Detalhes dos materiais",     skip: true },
   contrato_label:      { label: "Contrato (label)",           skip: true },
   contratoLabel:       { label: "Contrato (label)",           skip: true },
-  contrato_social:     { label: "Contrato social",            skip: true },
-  is_private_key:      { label: "Cliente Private?",           skip: true },
-  modelo_cartao:       { label: "Modelo do cartão",           skip: true },
-  modelo_arte:         { label: "Modelo de arte",             skip: true },
-  nome_cliente:        { label: "Nome do cliente",            skip: true },
-  nome_assinatura:     { label: "Nome para assinatura",       skip: true },
-  nome_completo:       { label: "Nome completo",              skip: true },
-  codigo_assessor:     { label: "Código do assessor",         skip: true },
-  foto_perfil:         { label: "Foto de perfil",             skip: true },
+  // Versões snake_case canônicas (criadas pelo backend normalizeFormDados)
+  contrato_social:     { label: "Contrato social" },
+  is_private_key:      { label: "Cliente Private?" },
+  modelo_cartao:       { label: "Modelo do cartão" },
+  modelo_arte:         { label: "Modelo de arte" },
+  nome_cliente:        { label: "Nome do cliente" },
+  nome_assinatura:     { label: "Nome para assinatura" },
+  nome_completo:       { label: "Nome completo" },
+  codigo_assessor:     { label: "Código do assessor" },
+  foto_perfil:         { label: "Foto de perfil" },
 };
 
 const DRAWER_FIELD_LABELS_FLAT = Object.fromEntries(
