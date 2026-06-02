@@ -114,10 +114,10 @@
       try {
         sessionStorage.setItem('form-convite-fp', JSON.stringify({
           telefone: document.getElementById('telefone')?.value || '',
-          codigoAssessor: document.getElementById('codigoAssessor')?.value || '',
-          nomeAssinatura: document.getElementById('nomeAssinatura')?.value || '',
+          codigo_assessor: document.getElementById('codigoAssessor')?.value || '',
+          nome_assinatura: document.getElementById('nomeAssinatura')?.value || '',
           cargo: document.getElementById('cargo')?.value || '',
-          contratoSocial: document.getElementById('contratoSocial')?.value || '',
+          contrato_social: document.getElementById('contratoSocial')?.value || '',
         }));
       } catch {}
     }
@@ -162,10 +162,10 @@
       const dados = {
         nome: Auth.getUserName(),
         telefone: document.getElementById('telefone').value,
-        codigoAssessor: document.getElementById('codigoAssessor').value,
-        nomeAssinatura: document.getElementById('nomeAssinatura').value,
+        codigo_assessor: document.getElementById('codigoAssessor').value,
+        nome_assinatura: document.getElementById('nomeAssinatura').value,
         cargo: document.getElementById('cargo').value,
-        contratoSocial: document.getElementById('contratoSocial').value,
+        contrato_social: document.getElementById('contratoSocial').value,
       };
 
       const formData = new FormData();

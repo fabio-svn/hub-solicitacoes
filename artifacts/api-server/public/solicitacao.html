@@ -773,8 +773,7 @@
       const titulo = dados.nomeEvento || dados.tituloEvento || dados.titulo || dados.nome_completo || dados.nomeCompleto ||
         (TIPO_SOLICITACAO_LABELS[item.tipo_solicitacao] || item.tipo_solicitacao);
       const tipoLabel = TIPO_SOLICITACAO_LABELS[item.tipo_solicitacao] || item.tipo_solicitacao;
-      const statusObj = STATUS_SOLICITACAO.find(s => s.id === item.status)
-        || { label: item.status, bg: '#f1f5f9', text: '#475569' };
+      const statusObj = getStatus(item.status);
 
       // ── Layout clean para todos os tipos de automação ──────────────
       if (isTipoAutomacao(item.tipo_solicitacao)) {
@@ -923,7 +922,7 @@
       if (etapasVis.length === 0 && !excepcional) { card.style.display = 'none'; return; }
 
       if (excepcional) {
-        const sObj = STATUS_SOLICITACAO.find(s => s.id === item.status) || {};
+        const sObj = getStatus(item.status);
         card.innerHTML = `
           <div style="display:flex;align-items:center;gap:8px;padding:8px 0">
             <div style="width:10px;height:10px;border-radius:50%;background:${sObj.text || '#dc2626'};flex-shrink:0"></div>
@@ -936,7 +935,7 @@
         const isConcluida = idx < idxAtual || idxAtual < 0 && item.status === 'concluido';
         const isAtual = idx === idxAtual;
         const isFutura = !isConcluida && !isAtual;
-        const sObj = STATUS_SOLICITACAO.find(s => s.id === etapa.id) || {};
+        const sObj = getStatus(etapa.id);
         const isFirst = idx === 0;
         const isLast = idx === etapasVis.length - 1;
 

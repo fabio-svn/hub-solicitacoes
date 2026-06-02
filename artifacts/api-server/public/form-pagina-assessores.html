@@ -554,10 +554,10 @@
       const dados = {
         nome: Auth.getUserName(),
         telefone: document.getElementById('telefone').value,
-        nomeCompleto: document.getElementById('nomeCompleto').value,
-        codigoAssessor: document.getElementById('codigoAssessor').value,
+        nome_completo: document.getElementById('nomeCompleto').value,
+        codigo_assessor: document.getElementById('codigoAssessor').value,
         unidade: document.getElementById('unidade').value,
-        contratoSocial: document.getElementById('contratoSocial').value,
+        contrato_social: document.getElementById('contratoSocial').value,
         linkedin: document.getElementById('linkedin').value,
         instagram: document.getElementById('instagram').value,
         miniBio: document.getElementById('miniBio').value,
@@ -604,10 +604,10 @@
       try {
         sessionStorage.setItem('form-assessores', JSON.stringify({
           telefone:       document.getElementById('telefone')?.value       || '',
-          nomeCompleto:   document.getElementById('nomeCompleto')?.value   || '',
-          codigoAssessor: document.getElementById('codigoAssessor')?.value || '',
+          nome_completo:   document.getElementById('nomeCompleto')?.value   || '',
+          codigo_assessor: document.getElementById('codigoAssessor')?.value || '',
           unidade:        document.getElementById('unidade')?.value        || '',
-          contratoSocial: document.getElementById('contratoSocial')?.value || '',
+          contrato_social: document.getElementById('contratoSocial')?.value || '',
           linkedin:       document.getElementById('linkedin')?.value       || '',
           instagram:      document.getElementById('instagram')?.value      || '',
           miniBio:        document.getElementById('miniBio')?.value        || '',

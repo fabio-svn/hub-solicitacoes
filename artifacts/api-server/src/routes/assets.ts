@@ -1,5 +1,6 @@
 import { Router } from "express";
-import { S3Client, PutObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
+import { PutObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
+import { getR2Client, R2_BUCKET } from "../lib/r2-client";
 import multer from "multer";
 import sharp from "sharp";
 import os from "os";
@@ -14,20 +15,8 @@ import { logger } from "../lib/logger";
 
 const router = Router();
 
-const R2_ACCOUNT_ID = process.env.R2_ACCOUNT_ID || "";
-const R2_ACCESS_KEY  = process.env.R2_ACCESS_KEY  || "";
-const R2_SECRET_KEY  = process.env.R2_SECRET_KEY  || "";
-const R2_BUCKET      = process.env.R2_BUCKET      || "";
 const R2_PUBLIC_URL  = (process.env.R2_PUBLIC_URL || "").replace(/\/*$/, "/");
 
-function getS3(): S3Client | null {
-  if (!R2_ACCOUNT_ID || !R2_ACCESS_KEY || !R2_SECRET_KEY) return null;
-  return new S3Client({
-    region: "auto",
-    endpoint: `https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
-    credentials: { accessKeyId: R2_ACCESS_KEY, secretAccessKey: R2_SECRET_KEY },
-  });
-}
 
 const ALLOWED_MIME = new Set(["image/png", "image/jpeg", "image/webp"]);
 const MAX_BYTES = 10 * 1024 * 1024; // 10 MB
@@ -83,7 +72,7 @@ router.post(
       const safe    = sanitizeFilename(file.originalname);
       const key     = `assets/${yyyyMM}/${nanoid8()}-${safe}`;
 
-      const s3 = getS3();
+      const s3 = getR2Client();
       if (!s3 || !R2_BUCKET) {
         await cleanup();
         res.status(500).json({ error: "R2 não configurado no servidor" });
@@ -176,7 +165,7 @@ router.delete("/:id", requireAuth, requireRole("admin"), async (req, res): Promi
       return;
     }
 
-    const s3 = getS3();
+    const s3 = getR2Client();
     if (s3 && R2_BUCKET) {
       await s3.send(new DeleteObjectCommand({ Bucket: R2_BUCKET, Key: asset.storage_key }));
     }

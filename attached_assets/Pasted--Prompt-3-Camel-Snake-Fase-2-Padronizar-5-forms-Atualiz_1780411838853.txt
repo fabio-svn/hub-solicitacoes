@@ -1,0 +1,247 @@
+# Prompt 3 — Camel/Snake Fase 2: Padronizar 5 forms
+
+Atualizar os 5 forms que ainda enviam keys do KEY_MAP em camelCase. Após esse prompt, **todos os payloads pra `/api/solicitacoes` usam snake_case**.
+
+**Estimativa**: 45 min agent. **Risco**: baixo (mudança mecânica, fácil de testar).
+
+═══════════════════════════════════════════════════════════════
+## 📋 Contexto
+═══════════════════════════════════════════════════════════════
+
+Após Prompt 2, o normalizer ainda converte camelCase legado pra snake (e deleta o camel). Mas é mais limpo se os forms já enviarem snake direto. Isso elimina dependência do normalizer pra esses campos específicos e facilita debugar.
+
+**Forms a atualizar** (20 substituições no total):
+
+| Arquivo | Ocorrências | Campos afetados |
+|---------|-------------|-----------------|
+| `form-convite-fp.html` | 6 | `nomeAssinatura`, `codigoAssessor`, `nomeCliente` (×2 cada por causa do draft save + submit) |
+| `form-cartao-boas-vindas.html` | 6 | `nomeCliente`, `nomeAssinatura`, `contratoSocial` (×2 cada) |
+| `form-pagina-assessores.html` | 4 | `nomeCompleto`, `codigoAssessor` (×2 cada) |
+| `form-divulgacao-nps.html` | 3 | `nomeAssinatura`, `modeloArte` |
+| `form-cartao-visita.html` | 1 | `contratoSocial` |
+
+⚠️ **IMPORTANTE**: só substituir as **KEYS** do payload (lado esquerdo do `:`), NÃO os IDs do HTML (ex: `document.getElementById('contratoSocial')` continua igual — é só o nome do elemento). Os IDs do HTML podem permanecer em camelCase, são identificadores internos.
+
+═══════════════════════════════════════════════════════════════
+## 🔧 Mudanças por arquivo
+═══════════════════════════════════════════════════════════════
+
+### 1. `public/form-convite-fp.html`
+
+Procurar **6 ocorrências** e substituir:
+
+**Localizar #1** (em função de save draft):
+```js
+          nomeCliente: document.getElementById('nomeCliente')?.value || '',
+          nomeAssinatura: document.getElementById('nomeAssinatura')?.value || '',
+          codigoAssessor: document.getElementById('codigoAssessor')?.value || '',
+          contratoSocial: document.getElementById('contratoSocial')?.value || '',
+```
+
+**Substituir por**:
+```js
+          nome_cliente: document.getElementById('nomeCliente')?.value || '',
+          nome_assinatura: document.getElementById('nomeAssinatura')?.value || '',
+          codigo_assessor: document.getElementById('codigoAssessor')?.value || '',
+          contrato_social: document.getElementById('contratoSocial')?.value || '',
+```
+
+**Localizar #2** (em função de submit, mais abaixo no mesmo arquivo):
+```js
+        nomeCliente: document.getElementById('nomeCliente').value,
+        nomeAssinatura: document.getElementById('nomeAssinatura').value,
+        codigoAssessor: document.getElementById('codigoAssessor').value,
+        contratoSocial: document.getElementById('contratoSocial').value,
+```
+
+**Substituir por**:
+```js
+        nome_cliente: document.getElementById('nomeCliente').value,
+        nome_assinatura: document.getElementById('nomeAssinatura').value,
+        codigo_assessor: document.getElementById('codigoAssessor').value,
+        contrato_social: document.getElementById('contratoSocial').value,
+```
+
+### 2. `public/form-cartao-boas-vindas.html`
+
+**Localizar #1** (save draft):
+```js
+          nomeCliente: document.getElementById('nomeCliente')?.value || '',
+          nomeAssinatura: document.getElementById('nomeAssinatura')?.value || '',
+          contratoSocial: document.getElementById('contratoSocial')?.value || '',
+```
+
+**Substituir por**:
+```js
+          nome_cliente: document.getElementById('nomeCliente')?.value || '',
+          nome_assinatura: document.getElementById('nomeAssinatura')?.value || '',
+          contrato_social: document.getElementById('contratoSocial')?.value || '',
+```
+
+**Localizar #2** (submit):
+```js
+        nomeCliente: document.getElementById('nomeCliente').value,
+        nomeAssinatura: document.getElementById('nomeAssinatura').value,
+        contratoSocial: document.getElementById('contratoSocial').value,
+```
+
+**Substituir por**:
+```js
+        nome_cliente: document.getElementById('nomeCliente').value,
+        nome_assinatura: document.getElementById('nomeAssinatura').value,
+        contrato_social: document.getElementById('contratoSocial').value,
+```
+
+### 3. `public/form-pagina-assessores.html`
+
+**Localizar #1** (submit):
+```js
+        nomeCompleto: document.getElementById('nomeCompleto').value,
+        codigoAssessor: document.getElementById('codigoAssessor').value,
+```
+
+**Substituir por**:
+```js
+        nome_completo: document.getElementById('nomeCompleto').value,
+        codigo_assessor: document.getElementById('codigoAssessor').value,
+```
+
+**Localizar #2** (save draft):
+```js
+          nomeCompleto:   document.getElementById('nomeCompleto')?.value   || '',
+          codigoAssessor: document.getElementById('codigoAssessor')?.value || '',
+```
+
+**Substituir por**:
+```js
+          nome_completo:   document.getElementById('nomeCompleto')?.value   || '',
+          codigo_assessor: document.getElementById('codigoAssessor')?.value || '',
+```
+
+### 4. `public/form-divulgacao-nps.html`
+
+**Localizar #1** (save draft):
+```js
+          nomeAssinatura: document.getElementById('nomeAssinatura')?.value || '',
+          modeloArte: document.getElementById('modeloArte')?.value || '',
+```
+
+**Substituir por**:
+```js
+          nome_assinatura: document.getElementById('nomeAssinatura')?.value || '',
+          modelo_arte: document.getElementById('modeloArte')?.value || '',
+```
+
+**Localizar #2** (submit):
+```js
+        modeloArte: document.getElementById('modeloArte').value,
+```
+
+**Substituir por**:
+```js
+        modelo_arte: document.getElementById('modeloArte').value,
+```
+
+### 5. `public/form-cartao-visita.html`
+
+**Localizar**:
+```js
+        contratoSocial: document.getElementById('contratoSocialFisico').value,
+```
+
+**Substituir por**:
+```js
+        contrato_social: document.getElementById('contratoSocialFisico').value,
+```
+
+═══════════════════════════════════════════════════════════════
+## 🔧 Bônus: Limpar referências mortas no DRAWER_FIELD_LABELS
+═══════════════════════════════════════════════════════════════
+
+Após Prompts 2 e 3, **nenhum payload novo** vai ter as 9 chaves camelCase do KEY_MAP. As entradas do DRAWER pra elas servem só pra dados legacy do banco. Pode opcionalmente **adicionar comentário** indicando legacy:
+
+### Arquivo: `public/config.js`
+
+**Localizar** (no `DRAWER_FIELD_LABELS`):
+```js
+  isPrivate:           { label: "Cliente Private?" },
+  // ...
+  modeloArte:          { label: "Modelo de arte" },
+  // ...
+  nomeCliente:         { label: "Nome do cliente" },
+  // ...
+  modeloCartao:        { label: "Modelo do cartão" },
+  // ...
+  nomeCompleto:        { label: "Nome completo" },
+  // ...
+  nomeAssinatura:      { label: "Nome para assinatura" },
+  // ...
+  codigoAssessor:      { label: "Código do assessor" },
+  // ...
+  contratoSocial:      { label: "Contrato social" },
+```
+
+Não precisa mexer nessas. Mas pode adicionar um comentário no topo do objeto:
+```js
+// DRAWER_FIELD_LABELS — labels exibidos no detalhe da solicitação.
+// As 9 chaves camelCase do KEY_MAP (contratoSocial, nomeAssinatura, etc) servem só
+// pra retrocompatibilidade com dados legacy do banco. Forms novos enviam snake_case.
+const DRAWER_FIELD_LABELS = {
+  // ...
+};
+```
+
+═══════════════════════════════════════════════════════════════
+## ✅ Verificação
+═══════════════════════════════════════════════════════════════
+
+### 1. Buscar se sobrou alguma key camelCase do KEY_MAP em forms
+Rodar no terminal:
+```bash
+cd public
+grep -rn "contratoSocial:\|nomeAssinatura:\|nomeCompleto:\|codigoAssessor:\|nomeCliente:\|modeloCartao:\|modeloArte:\|isPrivate:\|fotoPerfilDigital:" form-*.html | grep -v "//"
+```
+
+⚠️ Deve retornar **vazio** (nenhuma key camelCase desses campos sobrou).
+
+(Os IDs do HTML `document.getElementById('contratoSocial')` NÃO aparecem no grep porque a key é `'contratoSocial'` dentro de aspas, não `contratoSocial:`.)
+
+### 2. Criar solicitação nova de cada um dos 5 forms
+- Convite FP
+- Cartão de Boas-vindas
+- Página de Assessores
+- Divulgação NPS
+- Cartão de Visita (físico)
+
+Para cada um:
+- **Drawer**: campos aparecem corretamente, **sem duplicação**
+- **Email**: chega completo
+- **ClickUp**: task criada com todos os campos custom preenchidos
+
+### 3. Verificar banco
+```sql
+SELECT id, dados FROM solicitacoes
+WHERE created_at > NOW() - INTERVAL '1 hour'
+  AND tipo_solicitacao IN ('convite-fp', 'cartao-boas-vindas', 'pagina-assessores-dados', 'pagina-assessores-atualizacao', 'divulgacao-nps', 'cartao-visita-fisico')
+ORDER BY id DESC;
+```
+
+Cada `dados` deve ter apenas snake_case (sem `contratoSocial`, `nomeAssinatura`, etc).
+
+### 4. Verificar typecheck (não muda código TS mas confere consistência)
+```bash
+pnpm run typecheck
+```
+
+═══════════════════════════════════════════════════════════════
+## 🚨 Casos especiais
+
+**E o `form-cartao-visita-digital`**?
+Ele JÁ envia `contrato_social` (snake) corretamente. Não precisa mudar.
+
+**E os outros forms (form-eventos, form-brindes, form-patrocinio, etc)?**
+Eles enviam outras keys (`tituloEvento`, `dataEvento`, `tituloFotos`, etc) que **não estão no KEY_MAP**. Esses ficam pra uma rodada futura — não geram bug agora.
+
+═══════════════════════════════════════════════════════════════
+
+**Quando terminar**, o problema camel/snake está RESOLVIDO. Avise — vou enviar o Prompt 4 (refatorações de baixo risco).

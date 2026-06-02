@@ -1,0 +1,251 @@
+# Prompt 4 — Refatorações de baixo risco
+
+3 melhorias técnicas pequenas e independentes. Cada uma tem ganho claro e risco mínimo.
+
+**Estimativa**: 1h agent. **Risco**: 🟢 Baixo.
+
+═══════════════════════════════════════════════════════════════
+## 🔧 M3 — Bulk insert no PUT /clickup-lists/:id/forms (eliminar N+1)
+═══════════════════════════════════════════════════════════════
+
+**Problema atual**: a rota faz `await db.insert(...)` dentro de um `for...of`, criando N round-trips ao banco. Para 30 tipos = 30 queries sequenciais.
+
+**Fix**: usar um único INSERT com VALUES múltiplos.
+
+### Arquivo: `src/routes/clickup.ts`
+
+**Localizar**:
+```ts
+    } else {
+      await db.delete(tipoClickupListTable).where(eq(tipoClickupListTable.list_id, list.list_id));
+    }
+    for (const tipo of tipos) {
+      await db.insert(tipoClickupListTable)
+        .values({ tipo, list_id: list.list_id, list_name: list.list_name, updated_at: new Date() })
+        .onConflictDoUpdate({ target: tipoClickupListTable.tipo, set: { list_id: list.list_id, list_name: list.list_name, updated_at: new Date() } });
+    }
+    res.json({ ok: true });
+```
+
+**Substituir por**:
+```ts
+    } else {
+      await db.delete(tipoClickupListTable).where(eq(tipoClickupListTable.list_id, list.list_id));
+    }
+    if (tipos.length > 0) {
+      const now = new Date();
+      await db.insert(tipoClickupListTable)
+        .values(tipos.map(tipo => ({ tipo, list_id: list.list_id, list_name: list.list_name, updated_at: now })))
+        .onConflictDoUpdate({
+          target: tipoClickupListTable.tipo,
+          set: { list_id: list.list_id, list_name: list.list_name, updated_at: now }
+        });
+    }
+    res.json({ ok: true });
+```
+
+**Verificação**: testar em admin Listas ClickUp. Atribuir 5+ tipos a uma lista, salvar. Deve funcionar normalmente.
+
+═══════════════════════════════════════════════════════════════
+## 🔧 M4 — Centralizar S3Client (2 implementações duplicadas)
+═══════════════════════════════════════════════════════════════
+
+**Problema atual**: `src/routes/assets.ts` e `src/routes/r2.ts` definem cada um o seu próprio S3Client + lêem as mesmas env vars + têm lógica quase idêntica.
+
+**Fix**: criar `src/lib/r2-client.ts` único e reutilizar.
+
+### Passo 1: Criar arquivo novo `src/lib/r2-client.ts`
+
+```ts
+import { S3Client } from "@aws-sdk/client-s3";
+
+const R2_ACCOUNT_ID = process.env.R2_ACCOUNT_ID || "";
+const R2_ACCESS_KEY = process.env.R2_ACCESS_KEY || "";
+const R2_SECRET_KEY = process.env.R2_SECRET_KEY || "";
+
+export const R2_BUCKET = process.env.R2_BUCKET || "";
+
+let _client: S3Client | null = null;
+
+export function getR2Client(): S3Client | null {
+  if (!R2_ACCOUNT_ID || !R2_ACCESS_KEY || !R2_SECRET_KEY) return null;
+  if (!_client) {
+    _client = new S3Client({
+      region: "auto",
+      endpoint: `https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
+      credentials: { accessKeyId: R2_ACCESS_KEY, secretAccessKey: R2_SECRET_KEY },
+    });
+  }
+  return _client;
+}
+```
+
+### Passo 2: Atualizar `src/routes/assets.ts`
+
+**Localizar e remover**:
+```ts
+const R2_ACCOUNT_ID = process.env.R2_ACCOUNT_ID || "";
+const R2_ACCESS_KEY  = process.env.R2_ACCESS_KEY  || "";
+const R2_SECRET_KEY  = process.env.R2_SECRET_KEY  || "";
+const R2_BUCKET      = process.env.R2_BUCKET      || "";
+```
+
+**Localizar e remover**:
+```ts
+function getS3(): S3Client | null {
+  if (!R2_ACCOUNT_ID || !R2_ACCESS_KEY || !R2_SECRET_KEY) return null;
+  return new S3Client({
+    region: "auto",
+    endpoint: `https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
+    credentials: { accessKeyId: R2_ACCESS_KEY, secretAccessKey: R2_SECRET_KEY },
+  });
+}
+```
+
+**Adicionar no topo (após imports existentes)**:
+```ts
+import { getR2Client, R2_BUCKET } from "../lib/r2-client";
+```
+
+**Substituir todas as chamadas** `getS3()` por `getR2Client()` no arquivo (são 2 callers nas linhas 24079 e 24172).
+
+### Passo 3: Atualizar `src/routes/r2.ts`
+
+**Localizar e remover**:
+```ts
+const R2_ACCOUNT_ID = process.env.R2_ACCOUNT_ID || "";
+const R2_ACCESS_KEY = process.env.R2_ACCESS_KEY || "";
+const R2_SECRET_KEY = process.env.R2_SECRET_KEY || "";
+const R2_BUCKET = process.env.R2_BUCKET || "";
+```
+
+**Localizar e remover toda a função** `getS3Client()`:
+```ts
+function getS3Client(): S3Client | null {
+  if (!R2_ACCOUNT_ID || !R2_ACCESS_KEY || !R2_SECRET_KEY) {
+    return null;
+  }
+  if (!s3Client) {
+    s3Client = new S3Client({
+      region: "auto",
+      endpoint: `https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
+      credentials: {
+        accessKeyId: R2_ACCESS_KEY,
+        secretAccessKey: R2_SECRET_KEY,
+      },
+    });
+  }
+  return s3Client;
+}
+```
+
+E também a variável de módulo `let s3Client: S3Client | null = null;` se existir.
+
+**Adicionar no topo (após imports existentes)**:
+```ts
+import { getR2Client, R2_BUCKET } from "../lib/r2-client";
+```
+
+**Substituir todas as chamadas** `getS3Client()` por `getR2Client()` no arquivo.
+
+**Atenção**: se o `S3Client` foi importado só pra usar nessa função (e não em outro lugar), pode remover o import `import { S3Client } from "@aws-sdk/client-s3"` se sobrou só `PutObjectCommand`/`DeleteObjectCommand` no uso.
+
+### Verificação
+- `pnpm run typecheck` deve passar
+- Testar upload de asset em admin-templates (usa assets.ts)
+- Testar upload genérico R2 (se houver UI)
+
+═══════════════════════════════════════════════════════════════
+## 🔧 M5 — STATUS_MAP lookup O(1) em vez de .find() O(n)
+═══════════════════════════════════════════════════════════════
+
+**Problema atual**: `STATUS_SOLICITACAO.find(s => s.id === item.status)` é chamado em **11 lugares**. Cada chamada é busca linear num array de ~24 itens. Não é lento na prática, mas é código repetitivo e ilegível.
+
+**Fix**: criar lookup map em `config.js` e helper global.
+
+### Arquivo: `public/config.js`
+
+**Localizar** (logo após a definição do array `STATUS_SOLICITACAO`):
+```js
+const STATUS_SOLICITACAO = [
+  // ... muitos itens ...
+];
+
+let SETORES = [
+```
+
+**Adicionar entre eles**:
+```js
+const STATUS_SOLICITACAO = [
+  // ... muitos itens ...
+];
+
+// Lookup map O(1) — usar em vez de STATUS_SOLICITACAO.find(...)
+const STATUS_MAP = Object.fromEntries(STATUS_SOLICITACAO.map(s => [s.id, s]));
+function getStatus(id) {
+  return STATUS_MAP[id] || { label: id, bg: '#f1f5f9', text: '#475569', cor: '--carbon-black' };
+}
+
+let SETORES = [
+```
+
+### Substituir os 11 callers no frontend
+
+Cada um desses padrões fica mais legível com `getStatus()`. As ocorrências estão em:
+- `public/admin.html` (~linhas 1396, 1533, 1741, 1781)
+- `public/dashboard.html` (~linhas 6528, 7001, 7067, 7224)
+- `public/solicitacao.html` (~linhas 17352, 17502, 17515)
+
+**Padrão #1** (com fallback inline):
+```js
+const statusObj = STATUS_SOLICITACAO.find(s => s.id === item.status) || { label: item.status, bg: '#f1f5f9', text: '#475569' };
+```
+
+**Substituir por**:
+```js
+const statusObj = getStatus(item.status);
+```
+
+**Padrão #2** (em map de gráfico):
+```js
+STATUS_SOLICITACAO?.find(s => s.id === i.status)?.label || i.status
+```
+
+**Substituir por**:
+```js
+getStatus(i.status).label
+```
+
+**Padrão #3** (com fallback `|| {}`):
+```js
+const sObj = STATUS_SOLICITACAO.find(s => s.id === item.status) || {};
+```
+
+**Substituir por**:
+```js
+const sObj = getStatus(item.status);
+```
+
+⚠️ **Atenção**: depois de substituir, conferir que código posterior ainda funciona. Por exemplo, se algum lugar faz `sObj.bg ?? '#fallback'` e o `STATUS_MAP[id]` retornar `undefined` (id desconhecido), o helper `getStatus` já tem fallback embutido — deve estar tudo bem.
+
+### Verificação
+- Dashboard, admin, drawer de solicitação: status badges aparecem com cores corretas
+- Gráficos de pizza/distribuição: labels e cores corretos
+- Nada quebra
+
+═══════════════════════════════════════════════════════════════
+## ✅ Verificação geral
+═══════════════════════════════════════════════════════════════
+
+1. `pnpm run typecheck` — sem erros
+2. Hard refresh no browser
+3. Testar:
+   - Admin Listas ClickUp: atribuir 5+ tipos a uma lista (M3)
+   - Upload de asset em admin-templates (M4)
+   - Visualização de status em dashboard/admin/drawer (M5)
+
+Tudo continua funcionando, código mais limpo, sem queries N+1.
+
+═══════════════════════════════════════════════════════════════
+
+**Quando terminar**, avise — vou enviar o Prompt 5 (unificar source of truth para marca/contrato_social/tipo). É o último prompt e o mais delicado.

@@ -584,10 +584,14 @@ router.put("/clickup-lists/:id/forms", requireRole("admin"), async (req, res) =>
     } else {
       await db.delete(tipoClickupListTable).where(eq(tipoClickupListTable.list_id, list.list_id));
     }
-    for (const tipo of tipos) {
+    if (tipos.length > 0) {
+      const now = new Date();
       await db.insert(tipoClickupListTable)
-        .values({ tipo, list_id: list.list_id, list_name: list.list_name, updated_at: new Date() })
-        .onConflictDoUpdate({ target: tipoClickupListTable.tipo, set: { list_id: list.list_id, list_name: list.list_name, updated_at: new Date() } });
+        .values(tipos.map(tipo => ({ tipo, list_id: list.list_id, list_name: list.list_name, updated_at: now })))
+        .onConflictDoUpdate({
+          target: tipoClickupListTable.tipo,
+          set: { list_id: list.list_id, list_name: list.list_name, updated_at: now }
+        });
     }
     res.json({ ok: true });
   } catch (err) {

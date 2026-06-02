@@ -137,11 +137,11 @@
       try {
         sessionStorage.setItem('form-cartao-boas-vindas', JSON.stringify({
           telefone: document.getElementById('telefone')?.value || '',
-          nomeCliente: document.getElementById('nomeCliente')?.value || '',
-          nomeAssinatura: document.getElementById('nomeAssinatura')?.value || '',
-          contratoSocial: document.getElementById('contratoSocial')?.value || '',
+          nome_cliente: document.getElementById('nomeCliente')?.value || '',
+          nome_assinatura: document.getElementById('nomeAssinatura')?.value || '',
+          contrato_social: document.getElementById('contratoSocial')?.value || '',
           unidade: document.getElementById('unidade')?.value || '',
-          isPrivate: document.querySelector('input[name="isPrivate"]:checked')?.value || '',
+          is_private_key: document.querySelector('input[name="isPrivate"]:checked')?.value || '',
         }));
       } catch {}
     }
@@ -199,11 +199,11 @@
       const dados = {
         nome: Auth.getUserName(),
         telefone: document.getElementById('telefone').value,
-        nomeCliente: document.getElementById('nomeCliente').value,
-        nomeAssinatura: document.getElementById('nomeAssinatura').value,
-        contratoSocial: document.getElementById('contratoSocial').value,
+        nome_cliente: document.getElementById('nomeCliente').value,
+        nome_assinatura: document.getElementById('nomeAssinatura').value,
+        contrato_social: document.getElementById('contratoSocial').value,
         unidade: document.getElementById('unidade').value,
-        isPrivate: isPrivateEl ? isPrivateEl.value : 'nao',
+        is_private_key: isPrivateEl ? isPrivateEl.value : 'nao',
       };
 
       const formData = new FormData();

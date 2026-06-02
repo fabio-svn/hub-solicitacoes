@@ -1,42 +1,21 @@
-import { S3Client, PutObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
+import { PutObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
+import { getR2Client, R2_BUCKET } from "../lib/r2-client";
 import { v4 as uuidv4 } from "uuid";
 import fs from "fs";
 import { logger } from "../lib/logger";
 import { logEventoBg } from "../services/activity-log";
 
-const R2_ACCOUNT_ID = process.env.R2_ACCOUNT_ID || "";
-const R2_ACCESS_KEY = process.env.R2_ACCESS_KEY || "";
-const R2_SECRET_KEY = process.env.R2_SECRET_KEY || "";
-const R2_BUCKET = process.env.R2_BUCKET || "";
 const R2_PUBLIC_URL = (process.env.R2_PUBLIC_URL || "").replace(/\/*$/, "/");
 
-let s3Client: S3Client | null = null;
-
-function getS3Client(): S3Client | null {
-  if (!R2_ACCOUNT_ID || !R2_ACCESS_KEY || !R2_SECRET_KEY) {
-    return null;
-  }
-  if (!s3Client) {
-    s3Client = new S3Client({
-      region: "auto",
-      endpoint: `https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
-      credentials: {
-        accessKeyId: R2_ACCESS_KEY,
-        secretAccessKey: R2_SECRET_KEY,
-      },
-    });
-  }
-  return s3Client;
-}
 
 export async function uploadToR2(
   file: { path: string; originalname: string; mimetype: string },
   solicitacaoId: number,
   campo: string
 ): Promise<string> {
-  const client = getS3Client();
+  const client = getR2Client();
 
-  if (!client || !R2_BUCKET || !R2_ACCOUNT_ID || !R2_ACCESS_KEY || !R2_SECRET_KEY) {
+  if (!client || !R2_BUCKET) {
     throw new Error(
       "R2 não configurado. Verifique R2_ACCOUNT_ID, R2_BUCKET, R2_ACCESS_KEY e R2_SECRET_KEY no ambiente."
     );
@@ -68,7 +47,7 @@ export async function uploadToR2(
 }
 
 export async function deleteFromR2(urlOrKey: string): Promise<void> {
-  const client = getS3Client();
+  const client = getR2Client();
   if (!client || !R2_BUCKET) {
     logger.warn("[r2] deleteFromR2: cliente não configurado, pulando exclusão");
     return;

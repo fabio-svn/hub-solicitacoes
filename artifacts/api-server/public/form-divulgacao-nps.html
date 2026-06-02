@@ -124,10 +124,10 @@ Muito obrigado(a), e conte sempre comigo!</textarea>
       try {
         sessionStorage.setItem('form-divulgacao-nps', JSON.stringify({
           telefone: document.getElementById('telefone')?.value || '',
-          nomeAssinatura: document.getElementById('nomeAssinatura')?.value || '',
+          nome_assinatura: document.getElementById('nomeAssinatura')?.value || '',
           cargo: document.getElementById('cargo')?.value || '',
           agradecimento: document.getElementById('agradecimento')?.value || '',
-          modeloArte: document.getElementById('modeloArte')?.value || '',
+          modelo_arte: document.getElementById('modeloArte')?.value || '',
         }));
       } catch {}
     }
@@ -177,10 +177,10 @@ Muito obrigado(a), e conte sempre comigo!</textarea>
       const dados = {
         nome: Auth.getUserName(),
         telefone: document.getElementById('telefone').value,
-        nomeAssinatura: document.getElementById('nomeAssinatura').value,
+        nome_assinatura: document.getElementById('nomeAssinatura').value,
         cargo: document.getElementById('cargo').value,
         agradecimento: document.getElementById('agradecimento').value,
-        modeloArte: document.getElementById('modeloArte').value,
+        modelo_arte: document.getElementById('modeloArte').value,
       };
 
       const formData = new FormData();

@@ -158,6 +158,9 @@ let CARGOS_ASSESSOR = [
   "Sócia e Assessora de Investimentos",
 ];
 
+// DRAWER_FIELD_LABELS — labels exibidos no detalhe da solicitação.
+// As 9 chaves camelCase do KEY_MAP (contratoSocial, nomeAssinatura, etc) servem só
+// pra retrocompatibilidade com dados legacy do banco. Forms novos enviam snake_case.
 const DRAWER_FIELD_LABELS = {
   nomeCartao:          { label: "Nome no cartão" },
   whatsapp:            { label: "WhatsApp" },
@@ -289,6 +292,11 @@ const STATUS_SOLICITACAO = [
   { id: "envio-assessor",         label: "Envio assessor",             bg: "#dcfce7", text: "#15803d" },
   { id: "reprovado",              label: "Reprovado",                  bg: "#fecaca", text: "#dc2626", cor: "--ruby-red" },
 ];
+
+const STATUS_MAP = Object.fromEntries(STATUS_SOLICITACAO.map(s => [s.id, s]));
+function getStatus(id) {
+  return STATUS_MAP[id] || { label: id, bg: '#f1f5f9', text: '#475569', cor: '--carbon-black' };
+}
 
 let SETORES = [
   "Selecione seu setor",

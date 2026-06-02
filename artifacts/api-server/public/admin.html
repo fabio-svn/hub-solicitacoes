@@ -313,7 +313,7 @@
         const dados = typeof item.dados === 'string' ? JSON.parse(item.dados) : (item.dados || {});
         const titulo = item.titulo || dados.nomeEvento || dados.tituloEvento || dados.titulo || dados.nome_completo || dados.nomeCompleto || '-';
         const tipoLabel = TIPO_SOLICITACAO_LABELS[item.tipo_solicitacao] || item.tipo_solicitacao;
-        const statusObj = STATUS_SOLICITACAO.find(s => s.id === item.status) || { label: item.status, cor: '--carbon-black' };
+        const statusObj = getStatus(item.status);
         const date = new Date(item.created_at).toLocaleDateString('pt-BR');
         const acoesCell = isAdmin
           ? `<td onclick="event.stopPropagation()" style="text-align:center;white-space:nowrap">
@@ -460,7 +460,7 @@
       const dados = typeof item.dados === 'string' ? JSON.parse(item.dados) : (item.dados || {});
       const titulo = dados.nomeEvento || dados.tituloEvento || dados.titulo || dados.nome_completo || dados.nomeCompleto || item.tipo_solicitacao;
       const tipoLabel = TIPO_SOLICITACAO_LABELS[item.tipo_solicitacao] || item.tipo_solicitacao;
-      const statusObj = STATUS_SOLICITACAO.find(s => s.id === item.status) || { label: item.status, bg: '#f1f5f9', text: '#475569' };
+      const statusObj = getStatus(item.status);
 
       document.getElementById('drawerTitle').textContent = titulo;
       document.getElementById('drawerBadges').innerHTML = `
@@ -668,7 +668,7 @@
       const CORES = ['#AC3631','#221B19','#4a7c2f','#1e40af','#9333ea','#ea580c','#0891b2','#be123c','#854d0e','#166534'];
       const todosItens = modo === 'tipo'
         ? adminGraficoData.porTipo.map(i => ({ id: i.tipo, label: (typeof TIPO_SOLICITACAO_LABELS !== 'undefined' && TIPO_SOLICITACAO_LABELS[i.tipo]) || i.tipo, value: i.count }))
-        : adminGraficoData.porStatus.map(i => ({ id: i.status, label: STATUS_SOLICITACAO?.find(s => s.id === i.status)?.label || i.status, value: i.count, cor: STATUS_SOLICITACAO?.find(s => s.id === i.status)?.bg || null }));
+        : adminGraficoData.porStatus.map(i => ({ id: i.status, label: getStatus(i.status).label, value: i.count, cor: getStatus(i.status).bg || null }));
 
       const header = document.createElement('div');
       header.style.cssText = 'display:flex;justify-content:space-between;align-items:center;padding:4px 6px 8px;border-bottom:1px solid var(--border-light);margin-bottom:4px';
@@ -708,9 +708,9 @@
             .sort((a, b) => b.count - a.count)
             .map(i => ({
               id: i.status,
-              label: (STATUS_SOLICITACAO?.find(s => s.id === i.status)?.label) || i.status,
+              label: getStatus(i.status).label,
               value: i.count,
-              cor: STATUS_SOLICITACAO?.find(s => s.id === i.status)?.bg || null,
+              cor: getStatus(i.status).bg || null,
             }));
 
       if (graficoFiltrosAtivos === null) {
