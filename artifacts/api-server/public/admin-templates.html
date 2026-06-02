@@ -115,7 +115,10 @@
       gap: 0;
     }
     .panel { background: #fff; border-right: 1px solid #e8e2dc; overflow-y: auto; }
-    .panel-title { font-size: 0.7rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(34,27,25,0.45); padding: 14px 14px 6px; }
+    .panel-title { font-size: 0.7rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(34,27,25,0.45); padding: 12px 14px 8px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(34,27,25,0.06); }
+    .add-layer-toolbar { display: flex; gap: 2px; }
+    .add-layer-icon-btn { width: 26px; height: 26px; border-radius: 6px; border: 1px solid transparent; background: transparent; color: rgba(34,27,25,0.45); cursor: pointer; display: inline-flex; align-items: center; justify-content: center; transition: background 0.15s, color 0.15s, border-color 0.15s; }
+    .add-layer-icon-btn:hover { background: rgba(34,27,25,0.04); color: var(--ruby-red); border-color: rgba(172,54,49,0.2); }
     .panel-tmpl-header { padding: 8px 14px 12px; border-bottom: 1px solid rgba(34,27,25,0.08); margin-bottom: 8px; }
     .panel-tmpl-name { font-family: 'Taviraj', serif; font-size: 1.05rem; font-weight: 300; color: var(--carbon-black); line-height: 1.2; margin-bottom: 2px; }
     .panel-tmpl-tipo { font-size: 0.74rem; color: rgba(34,27,25,0.55); font-weight: 500; }
@@ -128,12 +131,11 @@
     .layer-drag-handle { cursor: grab; color: rgba(34,27,25,0.2); font-size: 0.65rem; letter-spacing: 1px; flex-shrink: 0; user-select: none; padding: 2px 1px; }
     .layer-drag-handle:active { cursor: grabbing; }
     .layer-item:hover .layer-drag-handle { color: rgba(34,27,25,0.4); }
-    .layer-reorder { display: flex; flex-direction: column; gap: 1px; flex-shrink: 0; }
-    .layer-order-btn { background: rgba(34,27,25,0.15); border: none; cursor: pointer; width: 24px; height: 18px; padding: 0; font-size: 0.82rem; font-weight: 700; color: rgba(34,27,25,0.85); border-radius: 4px; display: flex; align-items: center; justify-content: center; transition: background 0.12s; }
-    .layer-order-btn:hover:not(:disabled) { background: rgba(34,27,25,0.28); color: var(--carbon-black); }
-    .layer-order-btn:disabled { opacity: 0.22; cursor: default; }
-    .layer-duplicate-btn { background: rgba(34,27,25,0.08); border: none; cursor: pointer; width: 24px; height: 22px; padding: 0; font-size: 0.78rem; color: rgba(34,27,25,0.65); border-radius: 4px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: background 0.12s; }
-    .layer-duplicate-btn:hover { background: rgba(34,27,25,0.18); color: var(--carbon-black); }
+    .layer-actions { display: none; gap: 1px; flex-shrink: 0; align-items: center; }
+    .layer-item:hover .layer-actions, .layer-item.active .layer-actions { display: flex; }
+    .layer-action-btn { width: 22px; height: 22px; border-radius: 4px; border: none; background: transparent; color: rgba(34,27,25,0.4); cursor: pointer; display: inline-flex; align-items: center; justify-content: center; transition: background 0.12s, color 0.12s; flex-shrink: 0; padding: 0; }
+    .layer-action-btn:hover:not(:disabled) { background: rgba(34,27,25,0.1); color: var(--carbon-black); }
+    .layer-action-btn:disabled { opacity: 0.2; cursor: default; }
     .layer-type-badge { font-size: 0.65rem; padding: 1px 5px; border-radius: 4px; background: #e8e2dc; color: #6b5e58; white-space: nowrap; }
     .canvas-panel { background: #ede8e4; display: flex; flex-direction: column; overflow: hidden; position: relative; }
     .canvas-toolbar {
@@ -152,9 +154,12 @@
     .toolbar-sep { width: 1px; height: 18px; background: rgba(34,27,25,0.12); flex-shrink: 0; }
     .toolbar-tmpl-name { font-size: 0.8rem; color: var(--carbon-black); font-weight: 600; max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; cursor: pointer; }
     .toolbar-tmpl-name:hover { color: var(--ruby-red); }
-    .badge-editor-active { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 0.65rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; background: rgba(10,144,96,0.12); color: #0A7040; border: 1px solid rgba(10,144,96,0.25); }
-    .badge-editor-inactive { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 0.65rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; background: rgba(34,27,25,0.06); color: rgba(34,27,25,0.5); border: 1px solid rgba(34,27,25,0.12); cursor: pointer; }
-    .badge-editor-inactive:hover { background: rgba(34,27,25,0.1); color: rgba(34,27,25,0.75); }
+    .badge-status { display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px; border-radius: 999px; font-size: 0.65rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; background: rgba(10,144,96,0.1); color: #0A7040; border: 1px solid rgba(10,144,96,0.2); }
+    .badge-status .status-dot { width: 6px; height: 6px; border-radius: 50%; background: #0A9060; animation: pulse-dot 2s infinite ease-in-out; flex-shrink: 0; }
+    @keyframes pulse-dot { 0%,100%{box-shadow:0 0 0 0 rgba(10,144,96,0.4)} 50%{box-shadow:0 0 0 5px rgba(10,144,96,0)} }
+    .badge-status.inactive { background: rgba(34,27,25,0.06); color: rgba(34,27,25,0.5); border-color: rgba(34,27,25,0.12); cursor: pointer; }
+    .badge-status.inactive .status-dot { background: rgba(34,27,25,0.3); animation: none; }
+    .badge-status.inactive:hover { background: rgba(34,27,25,0.1); color: rgba(34,27,25,0.7); }
     .rendering-indicator { display: none; align-items: center; gap: 5px; font-size: 0.72rem; color: #aaa; }
     .rendering-indicator.visible { display: flex; }
     .spinner { width: 12px; height: 12px; border: 2px solid rgba(255,255,255,0.2); border-top-color: #c8a96e; border-radius: 50%; animation: spin 0.7s linear infinite; }
@@ -202,6 +207,16 @@
     /* ── Props panel ── */
     .props-panel { border-right: none; border-left: 1px solid #e8e2dc; display: flex; flex-direction: column; overflow: hidden; }
     .props-section { padding: 12px 14px; border-bottom: 1px solid #f0ece8; }
+    .panel-accordion { border-bottom: 1px solid rgba(34,27,25,0.08); padding: 0; margin: 0; }
+    .panel-accordion:last-child { border-bottom: none; }
+    .panel-accordion-summary { list-style: none; display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; cursor: pointer; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: rgba(34,27,25,0.55); user-select: none; transition: color 0.12s; }
+    .panel-accordion-summary::-webkit-details-marker { display: none; }
+    .panel-accordion-summary:hover { color: var(--carbon-black); }
+    .panel-accordion[open] .panel-accordion-summary { color: var(--carbon-black); }
+    .panel-accordion .chevron { transition: transform 0.2s ease; opacity: 0.5; flex-shrink: 0; }
+    .panel-accordion[open] .chevron { transform: rotate(180deg); opacity: 0.8; }
+    .panel-accordion-body { padding: 0; }
+    .panel-accordion-body .props-section:last-child, .panel-accordion-body .layer-align-section { border-bottom: none; }
     .props-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
     .props-row.single { grid-template-columns: 1fr; }
     .props-label { font-size: 0.72rem; color: rgba(34,27,25,0.5); font-weight: 600; margin-bottom: 3px; letter-spacing: 0.03em; }
@@ -261,7 +276,7 @@
     #view-editor .editor-layout { flex: 1; overflow: hidden; min-height: 0; }
 
     /* ── Zoom floating pill ── */
-    .zoom-floating { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.75); backdrop-filter: blur(8px); color: #fff; padding: 5px 8px; border-radius: 24px; display: flex; align-items: center; gap: 4px; box-shadow: 0 4px 12px rgba(0,0,0,0.35); z-index: 20; pointer-events: all; }
+    .zoom-floating { position: absolute; bottom: 16px; right: 16px; background: rgba(0,0,0,0.75); backdrop-filter: blur(8px); color: #fff; padding: 5px 8px; border-radius: 24px; display: flex; align-items: center; gap: 4px; box-shadow: 0 4px 12px rgba(0,0,0,0.35); z-index: 20; pointer-events: all; }
     .zoom-floating button { background: transparent; border: none; color: #fff; cursor: pointer; padding: 3px 8px; border-radius: 4px; font-size: 0.88rem; line-height: 1; font-family: 'Nunito Sans', sans-serif; }
     .zoom-floating button:hover { background: rgba(255,255,255,0.18); }
     .zoom-floating .zoom-val { font-size: 0.75rem; min-width: 38px; text-align: center; color: rgba(255,255,255,0.85); }
@@ -495,13 +510,21 @@
           <div class="panel-tmpl-name" id="panelTmplName">—</div>
           <div class="panel-tmpl-tipo" id="panelTmplTipo">—</div>
         </div>
-        <div class="panel-title">Layers</div>
-        <div id="layersList"></div>
-        <div class="add-layer-section" id="addLayerSection">
-          <button class="add-layer-btn" onclick="addLayer('text-block')"><span class="layer-icon-t">T</span> Texto</button>
-          <button class="add-layer-btn" onclick="addLayer('image')"><svg class="layer-icon-img" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg> Imagem</button>
-          <button class="add-layer-btn" onclick="addLayer('shape')"><svg class="layer-icon-shape" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="18" height="18" rx="2"/></svg> Forma</button>
+        <div class="panel-title">
+          <span>Layers</span>
+          <div class="add-layer-toolbar" id="addLayerSection">
+            <button class="add-layer-icon-btn" onclick="addLayer('text-block')" title="Adicionar texto" aria-label="Adicionar texto">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>
+            </button>
+            <button class="add-layer-icon-btn" onclick="addLayer('image')" title="Adicionar imagem" aria-label="Adicionar imagem">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+            </button>
+            <button class="add-layer-icon-btn" onclick="addLayer('shape')" title="Adicionar forma" aria-label="Adicionar forma">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"/></svg>
+            </button>
+          </div>
         </div>
+        <div id="layersList"></div>
       </div>
 
       <!-- CENTER: Canvas -->
@@ -526,7 +549,7 @@
           <button id="btnRedo" onclick="redo()" disabled title="Refazer (Ctrl+Shift+Z)" style="padding:5px 10px">↷</button>
           <button onclick="openTestDataStrip()" title="Editar dados de teste para preview">Dados de teste</button>
           <div style="margin-left:auto;display:flex;flex-direction:column;align-items:flex-end;gap:2px">
-            <button class="primary" onclick="saveTemplate()">Salvar</button>
+            <button class="primary" id="btnSalvar" onclick="saveTemplate()">Salvar</button>
             <span id="savedFeedback" style="font-size:0.7rem;color:#0A9060;font-weight:600;opacity:0;transition:opacity 0.2s">✓ Salvo</span>
           </div>
         </div>
@@ -786,6 +809,7 @@
       selectedLayerId = snap.selectedLayerId;
       isDirty = true;
       document.getElementById('unsavedBadge').classList.add('visible');
+      updateSaveButton();
       reRender();
     }
     function redo() {
@@ -796,6 +820,7 @@
       selectedLayerId = snap.selectedLayerId;
       isDirty = true;
       document.getElementById('unsavedBadge').classList.add('visible');
+      updateSaveButton();
       reRender();
     }
     function updateUndoRedoBtns() {
@@ -1139,6 +1164,7 @@
     }
     function exitWithoutSave() {
       isDirty = false;
+      updateSaveButton();
       closeUnsavedModal();
       if (pendingNavAction) {
         const action = pendingNavAction;
@@ -1437,6 +1463,7 @@
       currentTemplate = JSON.parse(JSON.stringify(row.config));
       selectedLayerId = null;
       isDirty = false;
+      updateSaveButton();
       bgVariantKey = null;
       rightTab = 'layer';
 
@@ -1486,9 +1513,9 @@
       const el = document.getElementById('activeBadge');
       if (!currentTemplateMeta) { el.innerHTML = ''; return; }
       if (currentTemplateMeta.is_active) {
-        el.innerHTML = `<span class="badge-editor-active">Ativo</span>`;
+        el.innerHTML = `<span class="badge-status"><span class="status-dot"></span>Ativo · ao vivo</span>`;
       } else {
-        el.innerHTML = `<span class="badge-editor-inactive" onclick="activateCurrentTemplate()" title="Tornar este o template ativo">Inativo — Ativar</span>`;
+        el.innerHTML = `<span class="badge-status inactive" onclick="activateCurrentTemplate()" title="Tornar este o template ativo"><span class="status-dot"></span>Inativo — Ativar</span>`;
       }
     }
 
@@ -1840,11 +1867,17 @@
           <span class="layer-drag-handle" title="Arraste para reordenar">⋮⋮</span>
           ${layerTypeIcon(layer.type)}
           <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(layer.name || layer.id)}</span>
-          <div class="layer-reorder">
-            <button class="layer-order-btn" onclick="event.stopPropagation();reorderLayer('${layer.id}',${idx - 1})" title="Mover para frente" ${idx === 0 ? 'disabled' : ''}>▲</button>
-            <button class="layer-order-btn" onclick="event.stopPropagation();reorderLayer('${layer.id}',${idx + 1})" title="Mover para trás" ${idx === total - 1 ? 'disabled' : ''}>▼</button>
+          <div class="layer-actions">
+            <button class="layer-action-btn" onclick="event.stopPropagation();reorderLayer('${layer.id}',${idx - 1})" title="Mover para frente" ${idx === 0 ? 'disabled' : ''}>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="18 15 12 9 6 15"/></svg>
+            </button>
+            <button class="layer-action-btn" onclick="event.stopPropagation();reorderLayer('${layer.id}',${idx + 1})" title="Mover para trás" ${idx === total - 1 ? 'disabled' : ''}>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+            <button class="layer-action-btn" onclick="event.stopPropagation();duplicateLayer('${layer.id}')" title="Duplicar layer">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+            </button>
           </div>
-          <button class="layer-duplicate-btn" onclick="event.stopPropagation();duplicateLayer('${layer.id}')" title="Duplicar layer">⧉</button>
         </div>
       `).join('');
     }
@@ -1989,7 +2022,9 @@
       const alignBtns = ['left','center','right']
         .map(a => `<button class="align-btn${layer.align===a?' active':''}" onclick="updLayer('${id}','align','${a}');renderAlignBtns('${id}')" title="${a}">${a==='left'?'←':a==='center'?'↔':'→'}</button>`).join('');
 
-      let html = `
+      let html = `<details class="panel-accordion" open>
+    <summary class="panel-accordion-summary">Identificação &amp; Posição <svg class="chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></summary>
+    <div class="panel-accordion-body">
         <div class="props-section">
           <div class="props-label">ID / Nome</div>
           <div class="props-row">
@@ -2035,12 +2070,16 @@
               Centralizar tudo
             </button>
           </div>
-        </div>`;
+        </div>
+    </div>
+  </details>`;
 
       if (layer.type === 'text-line' || layer.type === 'text-block') {
         const va = layer.vertical_align || 'top';
         const valignBtns = ['top','middle','bottom'].map(a => `<button class="align-btn${va===a?' active':''}" onclick="updLayer('${id}','vertical_align','${a}');renderVAlignBtns('${id}')" title="${a}">${a==='top'?'↑':a==='middle'?'↕':'↓'}</button>`).join('');
-        html += `
+        html += `<details class="panel-accordion" open>
+    <summary class="panel-accordion-summary">Tipografia <svg class="chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></summary>
+    <div class="panel-accordion-body">
         <div class="props-section">
           <div class="props-label">Fonte</div>
           <div class="props-row single"><select class="props-input" onchange="updLayer('${id}','font_family',this.value)">${fontOptions}</select></div>
@@ -2065,7 +2104,9 @@
           <div class="props-label">Conteúdo</div>
           <textarea class="props-input props-textarea" onchange="updLayer('${id}','content',this.value);scheduleLivePreview(1200)">${esc(layer.content||'')}</textarea>
           <div class="placeholder-chips">${placeholders.map(p=>`<span class="placeholder-chip" onclick="insertPlaceholder('${id}','${p}')">{{${p}}}</span>`).join('')}</div>
-        </div>`;
+        </div>
+    </div>
+  </details>`;
       }
 
       if (layer.type === 'image') {
@@ -2105,7 +2146,9 @@
 
         const placeholderField = (layer.source?.type === 'placeholder') ? (layer.source.field || '') : '';
         const placeholdersWithFiles = getActivePlaceholders(tipo, true);
-        html += `
+        html += `<details class="panel-accordion" open>
+    <summary class="panel-accordion-summary">Aparência <svg class="chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></summary>
+    <div class="panel-accordion-body">
         <div class="props-section">
           <div class="props-label">Fonte da imagem</div>
           <select class="props-input" onchange="updImageSourceType('${id}',this.value)">
@@ -2152,11 +2195,15 @@
             <div><div class="props-label">Espessura</div><input class="props-input" type="number" value="${layer.border?.width||0}" onchange="updLayerBorderWidth('${id}',+this.value)"></div>
             <div><div class="props-label">Cor</div>${renderColorPickerWithSwatches(`border-color-${id}`, layer.border?.color||'#ffffff', `updLayerBorderColor('${id}',this.value)`)}</div>
           </div>
-        </div>`;
+        </div>
+    </div>
+  </details>`;
       }
 
       if (layer.type === 'shape') {
-        html += `
+        html += `<details class="panel-accordion" open>
+    <summary class="panel-accordion-summary">Aparência <svg class="chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></summary>
+    <div class="panel-accordion-body">
         <div class="props-section">
           <div class="props-label">Tipo de forma</div>
           <select class="props-input" onchange="updLayer('${id}','shape',this.value);renderCanvas();showProps('${id}')">
@@ -2175,11 +2222,15 @@
           <div class="props-label" style="margin-top:8px">Arredondamento dos cantos (px)</div>
           <input class="props-input" type="number" min="0" value="${layer.border_radius||0}" onchange="updLayerN('${id}','border_radius',this.value)">
           `:''}
-        </div>`;
+        </div>
+    </div>
+  </details>`;
       }
 
       const linkType = layer.link?.type || '';
-      html += `
+      html += `<details class="panel-accordion">
+    <summary class="panel-accordion-summary">Comportamento <svg class="chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></summary>
+    <div class="panel-accordion-body">
       <div class="props-section">
         <div class="props-label">Link (clicável no PDF)</div>
         <select class="props-input" onchange="updLayerLinkType('${id}',this.value)">
@@ -2198,7 +2249,9 @@
           ${placeholders.map(p=>`<option value="${p}"${layer.link?.placeholder===p?' selected':''}>${p}</option>`).join('')}
         </select>
         `:''}
-      </div>`;
+      </div>
+    </div>
+  </details>`;
       html += `<div class="props-section">
         <button class="btn-duplicate-layer" onclick="duplicateLayer('${id}')">⧉ Duplicar layer</button>
         <button class="btn-delete-layer" onclick="deleteLayer('${id}')">Deletar layer</button>
@@ -2355,6 +2408,21 @@
       isDirty = true;
       document.getElementById('unsavedBadge').classList.add('visible');
       updateUndoRedoBtns();
+      updateSaveButton();
+    }
+
+    function updateSaveButton() {
+      const btn = document.getElementById('btnSalvar');
+      if (!btn) return;
+      if (isDirty) {
+        btn.classList.add('primary');
+        btn.disabled = false;
+        btn.textContent = 'Salvar';
+      } else {
+        btn.classList.remove('primary');
+        btn.disabled = true;
+        btn.textContent = 'Salvo';
+      }
     }
 
     // ── Live preview ─────────────────────────────────────────────
@@ -2425,6 +2493,7 @@
         return;
       }
       isDirty = false;
+      updateSaveButton();
       document.getElementById('unsavedBadge').classList.remove('visible');
       showToast('✓ Template salvo', 'success');
       const fb = document.getElementById('savedFeedback');
