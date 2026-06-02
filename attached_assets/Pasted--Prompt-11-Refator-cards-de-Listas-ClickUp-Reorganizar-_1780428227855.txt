@@ -1,0 +1,400 @@
+# Prompt 11 — Refator cards de Listas ClickUp
+
+Reorganizar a página `/admin-clickup-lists.html` pra reduzir densidade visual. Cards colapsados por default com resumo, expandem ao clicar "Editar formulários". Adicionar tag editável (cosmética, localStorage) ao lado do nome.
+
+**Estimativa**: 2h. **Risco**: 🟢 Baixo (mudança contida em 1 arquivo).
+
+═══════════════════════════════════════════════════════════════
+## 🎯 Comportamento esperado
+═══════════════════════════════════════════════════════════════
+
+**Card colapsado** (estado default ao abrir a página):
+```
+┌──────────────────────────────────────────────────┐
+│ [+ tag]  Solicitações                       [🗑] │
+│ ID 901300673533 · copiar                         │
+│                                                  │
+│ 14 formulários • Página Online, Artes de         │
+│ Divulgação, E-mail Marketing, Atualização +10    │
+│                                                  │
+│                       [Editar formulários ▼]     │
+└──────────────────────────────────────────────────┘
+```
+
+**Card expandido** (após clicar "Editar formulários"):
+- Mantém header (tag + nome + ID + lixeira)
+- Esconde o resumo
+- Mostra TODOS os checkboxes agrupados em categorias (markup atual)
+- Botão "Salvar formulários" + botão "Recolher ▲" abaixo
+
+**Tag editável**:
+- Default vazia: mostra `[+ tag]` com border tracejado sutil
+- Click → vira input inline, foca e seleciona texto
+- Enter ou blur: salva no `localStorage` (chave `svn_clickup_list_tag_${list_id}`)
+- Escape: descarta edição
+- Persistente entre sessões mas só no browser do usuário (não compartilhado)
+
+═══════════════════════════════════════════════════════════════
+## 🔧 Passo 1 — Adicionar CSS
+═══════════════════════════════════════════════════════════════
+
+No arquivo `public/admin-clickup-lists.html`, no bloco `<style>` (no `<head>`), **adicionar ao FINAL do bloco**, antes do `</style>`:
+
+```css
+    /* === Cards colapsáveis === */
+    .ccu-forms-area { display: none; }
+    .ccu-card.expanded .ccu-forms-area { display: block; }
+    .ccu-card.expanded .ccu-summary { display: none; }
+    .ccu-card.expanded .ccu-expand-btn .ccu-chevron { transform: rotate(180deg); }
+
+    /* === Tag editável === */
+    .ccu-list-name-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .ccu-tag {
+      font-size: 0.72rem;
+      font-weight: 600;
+      padding: 3px 9px;
+      border-radius: 999px;
+      background: rgba(34, 27, 25, 0.07);
+      color: var(--carbon-black, #221b19);
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: border-color 0.15s, background 0.15s;
+      white-space: nowrap;
+      flex-shrink: 0;
+      user-select: none;
+    }
+    .ccu-tag:hover { border-color: rgba(34, 27, 25, 0.18); }
+    .ccu-tag.empty {
+      background: transparent;
+      color: rgba(34, 27, 25, 0.35);
+      border: 1px dashed rgba(34, 27, 25, 0.2);
+    }
+    .ccu-tag.empty:hover {
+      border-color: var(--ruby-red);
+      color: var(--ruby-red);
+    }
+    .ccu-tag-input {
+      font-size: 0.72rem;
+      font-weight: 600;
+      padding: 2px 9px;
+      border-radius: 999px;
+      border: 1.5px solid var(--ruby-red);
+      background: #fff;
+      color: var(--carbon-black);
+      font-family: 'Nunito Sans', sans-serif;
+      outline: none;
+      width: 110px;
+      flex-shrink: 0;
+    }
+
+    /* === Resumo (estado colapsado) === */
+    .ccu-summary {
+      font-size: 0.86rem;
+      color: rgba(34, 27, 25, 0.65);
+      margin: 14px 0 16px;
+      line-height: 1.55;
+    }
+    .ccu-summary-count {
+      font-weight: 700;
+      color: var(--carbon-black);
+    }
+    .ccu-summary-more {
+      font-weight: 600;
+      color: rgba(34, 27, 25, 0.4);
+    }
+    .ccu-summary-empty {
+      font-style: italic;
+      color: rgba(34, 27, 25, 0.4);
+    }
+
+    /* === Botão expandir === */
+    .ccu-expand-btn {
+      padding: 7px 14px;
+      border-radius: 8px;
+      border: 1.5px solid #e8e2dc;
+      background: #fff;
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: 'Nunito Sans', sans-serif;
+      color: rgba(34, 27, 25, 0.75);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: background 0.15s, border-color 0.15s;
+    }
+    .ccu-expand-btn:hover {
+      background: #f5f3f0;
+      border-color: rgba(34, 27, 25, 0.2);
+    }
+    .ccu-chevron { transition: transform 0.2s; flex-shrink: 0; }
+
+    /* === Save row separada visualmente === */
+    .ccu-save-row {
+      margin-top: 14px;
+      padding-top: 14px;
+      border-top: 1px solid rgba(34, 27, 25, 0.06);
+    }
+```
+
+═══════════════════════════════════════════════════════════════
+## 🔧 Passo 2 — Substituir função `renderLists()` e adicionar helpers
+═══════════════════════════════════════════════════════════════
+
+**LOCALIZAR** a função `renderLists()` inteira (começa em ~linha 140, termina onde o `}).join('');` é seguido por `}`):
+
+```js
+    function renderLists() {
+      const area = document.getElementById('listArea');
+      if (!STATE.lists.length) {
+        area.innerHTML = '<div class="ccu-empty">Nenhuma lista cadastrada ainda. Adicione uma acima.</div>';
+        return;
+      }
+      area.innerHTML = STATE.lists.map(function (list) {
+        // ... TODO O conteúdo da função ...
+      }).join('');
+    }
+```
+
+**SUBSTITUIR POR**:
+
+```js
+    function renderLists() {
+      const area = document.getElementById('listArea');
+      if (!STATE.lists.length) {
+        area.innerHTML = '<div class="ccu-empty">Nenhuma lista cadastrada ainda. Adicione uma acima.</div>';
+        return;
+      }
+      area.innerHTML = STATE.lists.map(function (list) {
+        // Agrupar STATE.forms por categoria usando CATEGORIAS_SOLICITACAO do config.js
+        const formsByCategory = {};
+        const categoryOrder = [];
+        const formByTipo = {};
+        STATE.forms.forEach(function(f) { formByTipo[f.tipo] = f; });
+
+        if (typeof CATEGORIAS_SOLICITACAO !== 'undefined') {
+          CATEGORIAS_SOLICITACAO.forEach(function(cat) {
+            const catName = cat.categoria;
+            const itensNaLista = (cat.itens || []).filter(function(item) {
+              return !!formByTipo[item.id];
+            });
+            if (itensNaLista.length > 0) {
+              formsByCategory[catName] = itensNaLista.map(function(item) { return formByTipo[item.id]; });
+              categoryOrder.push(catName);
+            }
+          });
+        }
+
+        const usedTipos = new Set();
+        Object.values(formsByCategory).forEach(function(arr) { arr.forEach(function(f) { usedTipos.add(f.tipo); }); });
+        const outrosForms = STATE.forms.filter(function(f) { return !usedTipos.has(f.tipo); });
+        if (outrosForms.length > 0) {
+          formsByCategory['Outros'] = outrosForms;
+          categoryOrder.push('Outros');
+        }
+
+        const chips = categoryOrder.map(function(catName) {
+          const formsInCat = formsByCategory[catName];
+          formsInCat.sort(function(a, b) {
+            const aHere = STATE.assignedTipos[a.tipo] === list.list_id;
+            const bHere = STATE.assignedTipos[b.tipo] === list.list_id;
+            return (bHere ? 1 : 0) - (aHere ? 1 : 0);
+          });
+          const groupChips = formsInCat.map(function(f) {
+            const assignedTo = STATE.assignedTipos[f.tipo];
+            const here = assignedTo === list.list_id;
+            const lockedElsewhere = !!assignedTo && assignedTo !== list.list_id;
+            const cls = 'ccu-checkbox' + (here ? ' checked' : '') + (lockedElsewhere ? ' locked' : '');
+            const lockInfo = lockedElsewhere ? '<span class="ccu-lockinfo">em: ' + esc(listNameById(assignedTo)) + '</span>' : '';
+            return '<label class="' + cls + '">' +
+              '<input type="checkbox" value="' + esc(f.tipo) + '"' + (here ? ' checked' : '') + (lockedElsewhere ? ' disabled' : '') + '>' +
+              '<span class="ccu-checkbox-label">' + esc(f.label) + '</span>' +
+              lockInfo +
+            '</label>';
+          }).join('');
+          return '<div class="ccu-category">' +
+                   '<div class="ccu-category-title">' + esc(catName) + '</div>' +
+                   '<div class="ccu-checkbox-grid">' + groupChips + '</div>' +
+                 '</div>';
+        }).join('');
+        const delName = esc(list.list_name || list.list_id).replace(/'/g, "&#39;");
+
+        // === NOVO: Tipos atribuídos a esta lista (pra resumo) ===
+        const tiposAtribuidos = STATE.forms.filter(function(f) {
+          return STATE.assignedTipos[f.tipo] === list.list_id;
+        });
+        const summaryHtml = renderListSummary(tiposAtribuidos);
+
+        // === NOVO: Tag salva no localStorage ===
+        const tagSaved = getListTag(list.list_id);
+        const tagHtml = tagSaved
+          ? '<span class="ccu-tag" onclick="editListTag(\'' + esc(list.list_id) + '\', event)" title="Clique para editar a tag">' + esc(tagSaved) + '</span>'
+          : '<span class="ccu-tag empty" onclick="editListTag(\'' + esc(list.list_id) + '\', event)" title="Adicionar tag">+ tag</span>';
+
+        return '<div class="ccu-card" data-list-id="' + list.id + '">' +
+          '<div class="ccu-list-head">' +
+            '<div class="ccu-list-head-text">' +
+              '<div class="ccu-list-name-row">' +
+                tagHtml +
+                '<div class="ccu-list-name">' + esc(list.list_name || 'Lista') + '</div>' +
+              '</div>' +
+              '<div class="ccu-list-id">ID ' + esc(list.list_id) + ' · <button class="ccu-link-btn" onclick="copiarListId(\'' + esc(list.list_id) + '\', this)" title="Copiar">copiar</button></div>' +
+            '</div>' +
+            '<button class="ccu-icon-btn" onclick="excluirLista(' + list.id + ', \'' + delName + '\')" title="Excluir lista" aria-label="Excluir lista">' +
+              '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-2 14a2 2 0 01-2 2H9a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>' +
+            '</button>' +
+          '</div>' +
+          // Resumo (visível só quando collapsed)
+          '<div class="ccu-summary">' + summaryHtml + '</div>' +
+          // Botão expand
+          '<div class="ccu-row-actions">' +
+            '<button class="ccu-expand-btn" onclick="toggleCardExpand(\'' + list.id + '\')">' +
+              '<span class="ccu-expand-label">Editar formulários</span>' +
+              '<svg class="ccu-chevron" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>' +
+            '</button>' +
+          '</div>' +
+          // Área expandida (escondida por default via CSS)
+          '<div class="ccu-forms-area">' +
+            '<div class="ccu-forms-label">Formulários que usam esta lista</div>' +
+            '<div class="ccu-forms-grid">' + (chips || '<span class="ccu-empty" style="padding:0">Nenhum formulário disponível.</span>') + '</div>' +
+            '<div class="ccu-row-actions ccu-save-row">' +
+              '<button class="ccu-btn primary" onclick="salvarForms(' + list.id + ')">Salvar formulários</button>' +
+              '<span class="ccu-status" id="status-' + list.id + '"></span>' +
+            '</div>' +
+          '</div>' +
+        '</div>';
+      }).join('');
+    }
+
+    // === Helper: monta o resumo do estado colapsado ===
+    function renderListSummary(forms) {
+      if (forms.length === 0) {
+        return '<span class="ccu-summary-empty">Nenhum formulário atribuído.</span>';
+      }
+      const MAX_VISIBLE = 4;
+      const visibleLabels = forms.slice(0, MAX_VISIBLE).map(function(f) { return esc(f.label); }).join(', ');
+      const remaining = forms.length - MAX_VISIBLE;
+      const remainingHtml = remaining > 0 ? ' <span class="ccu-summary-more">+' + remaining + '</span>' : '';
+      const count = '<span class="ccu-summary-count">' + forms.length + ' formulário' + (forms.length === 1 ? '' : 's') + '</span>';
+      return count + ' • ' + visibleLabels + remainingHtml;
+    }
+
+    // === Toggle accordion ===
+    function toggleCardExpand(listId) {
+      const card = document.querySelector('.ccu-card[data-list-id="' + listId + '"]');
+      if (!card) return;
+      card.classList.toggle('expanded');
+      // Atualiza label do botão
+      const btn = card.querySelector('.ccu-expand-btn .ccu-expand-label');
+      if (btn) {
+        btn.textContent = card.classList.contains('expanded') ? 'Recolher' : 'Editar formulários';
+      }
+    }
+
+    // === Tag editável (localStorage) ===
+    function getListTag(listId) {
+      try {
+        return localStorage.getItem('svn_clickup_list_tag_' + listId) || '';
+      } catch (e) { return ''; }
+    }
+
+    function saveListTag(listId, value) {
+      try {
+        const v = (value || '').trim();
+        if (v) {
+          localStorage.setItem('svn_clickup_list_tag_' + listId, v);
+        } else {
+          localStorage.removeItem('svn_clickup_list_tag_' + listId);
+        }
+      } catch (e) {}
+    }
+
+    function editListTag(listId, event) {
+      event.stopPropagation();
+      const span = event.currentTarget;
+      const currentValue = getListTag(listId);
+      const input = document.createElement('input');
+      input.className = 'ccu-tag-input';
+      input.value = currentValue;
+      input.maxLength = 20;
+      input.placeholder = 'tag...';
+
+      let cancelled = false;
+
+      const finish = function() {
+        if (!cancelled) saveListTag(listId, input.value);
+        renderLists();
+      };
+
+      input.addEventListener('blur', finish);
+      input.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          input.blur();
+        } else if (e.key === 'Escape') {
+          e.preventDefault();
+          cancelled = true;
+          input.blur();
+        }
+      });
+
+      span.replaceWith(input);
+      input.focus();
+      input.select();
+    }
+```
+
+═══════════════════════════════════════════════════════════════
+## ✅ Verificação
+═══════════════════════════════════════════════════════════════
+
+### 1. Conferir div balanceado (lição aprendida)
+```bash
+cd artifacts/api-server/public
+open=$(grep -c '<div' admin-clickup-lists.html)
+close=$(grep -c '</div>' admin-clickup-lists.html)
+echo "open=$open close=$close diff=$((open - close))"
+```
+**Esperado: diff=0**.
+
+### 2. Visual
+
+Recarregar `/admin-clickup-lists.html`:
+
+- ✅ Cards aparecem **colapsados** com resumo (ex: "14 formulários • Página Online, Artes, E-mail Marketing, Atualização +10")
+- ✅ Cards com 0 formulários atribuídos mostram "Nenhum formulário atribuído." em itálico
+- ✅ Tag `[+ tag]` aparece à esquerda do nome da lista (border tracejado sutil)
+- ✅ Click no `[+ tag]` → vira input. Digitar "Eventos" + Enter → vira `[Eventos]` com background bege
+- ✅ Recarregar a página → a tag "Eventos" continua lá (localStorage funciona)
+- ✅ Click em "Editar formulários" → card expande, mostra todos os checkboxes
+- ✅ Botão muda de "Editar formulários ▼" para "Recolher ▲"
+- ✅ Salvar formulários funciona normal
+
+### 3. Teste de Escape
+
+- Click no tag → digitar algo → ESC → tag volta ao estado anterior (não salva)
+
+### 4. Teste de tag vazia
+
+- Clicar em uma tag preenchida → apagar todo o texto → Enter → tag volta a ser `[+ tag]` (vazia)
+
+═══════════════════════════════════════════════════════════════
+## 🚨 Cuidados
+═══════════════════════════════════════════════════════════════
+
+1. **Função `renderLists()` é chamada várias vezes** (no init e após salvar). O estado expanded NÃO persiste após re-render, sempre colapsa. Isso é INTENCIONAL — mantém o visual limpo.
+
+2. **Tag NÃO é compartilhada** entre usuários. Cada navegador tem seu próprio localStorage. Se múltiplas pessoas usam a admin, cada uma vê suas tags.
+
+3. **Limite de 20 chars** na tag pra não quebrar o layout.
+
+4. **Toggle do botão "Editar formulários" → "Recolher"** muda o texto via JS quando expande. Não esquecer.
+
+═══════════════════════════════════════════════════════════════
+
+Quando aplicar, manda screenshot do antes/depois pra confirmar. Se ficar bom, considera aplicar Prompt 10 (filtros grid) em paralelo — não conflita.

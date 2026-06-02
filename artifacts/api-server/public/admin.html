@@ -748,8 +748,14 @@
         }
 
         const CORES = ['#AC3631','#221B19','#4a7c2f','#1e40af','#9333ea','#ea580c','#0891b2','#be123c','#854d0e','#166534'];
-        canvas.width = 200; canvas.height = 200;
+        const DPR = window.devicePixelRatio || 1;
+        const SIZE = 200;
+        canvas.width = SIZE * DPR;
+        canvas.height = SIZE * DPR;
+        canvas.style.width = SIZE + 'px';
+        canvas.style.height = SIZE + 'px';
         const ctx = canvas.getContext('2d');
+        ctx.scale(DPR, DPR);
         const cx = 100, cy = 100, r = 85, rInner = 50;
 
         const slices = itens.map((item, i) => ({
