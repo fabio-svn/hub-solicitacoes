@@ -129,6 +129,26 @@ img { max-width: 100%; height: auto; }
   border: 1px solid rgba(34,27,25,0.2);
 }
 .btn-secondary:hover { background: rgba(34,27,25,0.12); }
+.btn-outline-ruby {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: 9px;
+  border: 1.5px solid var(--ruby-red);
+  background: transparent;
+  color: var(--ruby-red);
+  font-family: 'Nunito Sans', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background 0.15s, color 0.15s;
+}
+.btn-outline-ruby:hover {
+  background: var(--ruby-red);
+  color: var(--paper-white);
+}
 .btn-dark {
   background: var(--carbon-black);
   color: var(--paper-white);

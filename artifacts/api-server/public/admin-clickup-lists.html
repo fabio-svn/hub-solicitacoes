@@ -41,6 +41,9 @@
     .ccu-chip.checked { background: rgba(172,54,49,0.08); border-color: var(--ruby-red); color: #8f2c28; font-weight: 600; }
     .ccu-chip.locked { opacity: 0.5; cursor: not-allowed; background: #f5f3f0; }
     .ccu-chip.locked .ccu-lockinfo { font-size: 0.68rem; color: rgba(34,27,25,0.4); }
+    .ccu-category-header { font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: rgba(34,27,25,0.45); margin-top: 12px; margin-bottom: 6px; }
+    .ccu-category-header:first-child { margin-top: 0; }
+    .ccu-category-grid { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 4px; }
     .ccu-row-actions { display: flex; gap: 8px; margin-top: 14px; align-items: center; }
     .ccu-loading, .ccu-error, .ccu-empty { text-align: center; padding: 32px 20px; font-size: 0.88rem; }
     .ccu-loading { opacity: 0.5; }
@@ -128,16 +131,53 @@
         return;
       }
       area.innerHTML = STATE.lists.map(function (list) {
-        const chips = STATE.forms.map(function (f) {
-          const assignedTo = STATE.assignedTipos[f.tipo];
-          const here = assignedTo === list.list_id;
-          const lockedElsewhere = !!assignedTo && assignedTo !== list.list_id;
-          const cls = 'ccu-chip' + (here ? ' checked' : '') + (lockedElsewhere ? ' locked' : '');
-          const lockInfo = lockedElsewhere ? ' <span class="ccu-lockinfo">(em: ' + esc(listNameById(assignedTo)) + ')</span>' : '';
-          return '<label class="' + cls + '">' +
-            '<input type="checkbox" value="' + esc(f.tipo) + '"' + (here ? ' checked' : '') + (lockedElsewhere ? ' disabled' : '') + '>' +
-            esc(f.label) + lockInfo +
-          '</label>';
+        // Agrupar STATE.forms por categoria usando CATEGORIAS_SOLICITACAO do config.js
+        const formsByCategory = {};
+        const categoryOrder = [];
+        const formByTipo = {};
+        STATE.forms.forEach(function(f) { formByTipo[f.tipo] = f; });
+
+        if (typeof CATEGORIAS_SOLICITACAO !== 'undefined') {
+          CATEGORIAS_SOLICITACAO.forEach(function(cat) {
+            const catName = cat.categoria;
+            const itensNaLista = (cat.itens || []).filter(function(item) {
+              return !!formByTipo[item.id];
+            });
+            if (itensNaLista.length > 0) {
+              formsByCategory[catName] = itensNaLista.map(function(item) { return formByTipo[item.id]; });
+              categoryOrder.push(catName);
+            }
+          });
+        }
+
+        const usedTipos = new Set();
+        Object.values(formsByCategory).forEach(function(arr) { arr.forEach(function(f) { usedTipos.add(f.tipo); }); });
+        const outrosForms = STATE.forms.filter(function(f) { return !usedTipos.has(f.tipo); });
+        if (outrosForms.length > 0) {
+          formsByCategory['Outros'] = outrosForms;
+          categoryOrder.push('Outros');
+        }
+
+        const chips = categoryOrder.map(function(catName) {
+          const formsInCat = formsByCategory[catName];
+          formsInCat.sort(function(a, b) {
+            const aHere = STATE.assignedTipos[a.tipo] === list.list_id;
+            const bHere = STATE.assignedTipos[b.tipo] === list.list_id;
+            return (bHere ? 1 : 0) - (aHere ? 1 : 0);
+          });
+          const groupChips = formsInCat.map(function(f) {
+            const assignedTo = STATE.assignedTipos[f.tipo];
+            const here = assignedTo === list.list_id;
+            const lockedElsewhere = !!assignedTo && assignedTo !== list.list_id;
+            const cls = 'ccu-chip' + (here ? ' checked' : '') + (lockedElsewhere ? ' locked' : '');
+            const lockInfo = lockedElsewhere ? ' <span class="ccu-lockinfo">(em: ' + esc(listNameById(assignedTo)) + ')</span>' : '';
+            return '<label class="' + cls + '">' +
+              '<input type="checkbox" value="' + esc(f.tipo) + '"' + (here ? ' checked' : '') + (lockedElsewhere ? ' disabled' : '') + '>' +
+              esc(f.label) + lockInfo +
+            '</label>';
+          }).join('');
+          return '<div class="ccu-category-header">' + esc(catName) + '</div>' +
+                 '<div class="ccu-category-grid">' + groupChips + '</div>';
         }).join('');
         const delName = esc(list.list_name || list.list_id).replace(/'/g, "&#39;");
         return '<div class="ccu-card" data-list-id="' + list.id + '">' +

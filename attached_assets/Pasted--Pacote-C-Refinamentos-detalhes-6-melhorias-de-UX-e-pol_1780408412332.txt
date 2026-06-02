@@ -1,0 +1,444 @@
+# Pacote C — Refinamentos & detalhes
+
+6 melhorias de UX e polimento visual. **Itens 14 (preview thumbs) e 16 (editor clean) ficam de fora** — são refactors maiores que requerem prompts dedicados.
+
+Cada item é independente. Aplicar em ordem (do mais simples ao mais complexo).
+
+Tempo total estimado: 1-1.5h no agent.
+
+═══════════════════════════════════════════════════════════════
+# 🟢 Item 1 (#13) — Botões "Meu painel" e "Listas ClickUp" mais presentes
+═══════════════════════════════════════════════════════════════
+
+Hoje esses 2 botões no topo do `admin.html` usam `class="btn-secondary"` e ficam cinza-claro, parecem desabilitados. Como são navegação entre views similares, merecem mais presença.
+
+### Arquivo: `public/admin.html`
+
+**Localizar** (próximo à linha 30):
+```html
+<a href="/dashboard.html" class="btn btn-secondary">Meu painel</a>
+<a href="/admin-clickup-lists.html" class="btn btn-secondary" id="clickupListsLink" style="display:none">Listas ClickUp</a>
+```
+
+**Substituir por**:
+```html
+<a href="/dashboard.html" class="btn btn-outline-ruby">Meu painel</a>
+<a href="/admin-clickup-lists.html" class="btn btn-outline-ruby" id="clickupListsLink" style="display:none">Listas ClickUp</a>
+```
+
+### Arquivo: `public/style.css`
+
+**Adicionar no fim** (ou junto com outros estilos de botão):
+```css
+.btn-outline-ruby {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: 9px;
+  border: 1.5px solid var(--ruby-red);
+  background: transparent;
+  color: var(--ruby-red);
+  font-family: 'Nunito Sans', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background 0.15s, color 0.15s;
+}
+.btn-outline-ruby:hover {
+  background: var(--ruby-red);
+  color: var(--paper-white);
+}
+```
+
+### Verificação
+Botões "Meu painel" e "Listas ClickUp" agora aparecem com **borda rose** e texto rose, em vez de cinza apagado. Hover preenche de rose com texto branco.
+
+═══════════════════════════════════════════════════════════════
+# 🟢 Item 2 (#12) — Empty state mais compacto em admin-assets
+═══════════════════════════════════════════════════════════════
+
+Hoje a drop zone ocupa muito espaço mesmo quando há 0 assets. Reduzir padding para ficar mais densa.
+
+### Arquivo: `public/admin-assets.html`
+
+**Localizar** (próximo à linha 95):
+```css
+.upload-zone { border: 2px dashed var(--border-light); border-radius: 12px; padding: 28px; text-align: center; margin-bottom: 20px; cursor: pointer; transition: border-color 0.15s, background 0.15s; }
+.upload-zone:hover, .upload-zone.drag-over { border-color: var(--ruby-red); background: rgba(159,63,55,0.04); }
+.upload-zone p { font-size: 0.82rem; color: rgba(34,27,25,0.5); margin-top: 6px; }
+.upload-zone strong { color: var(--ruby-red); }
+```
+
+**Substituir por**:
+```css
+.upload-zone { border: 2px dashed var(--border-light); border-radius: 12px; padding: 16px 20px; text-align: center; margin-bottom: 16px; cursor: pointer; transition: border-color 0.15s, background 0.15s; display: flex; align-items: center; justify-content: center; gap: 10px; min-height: 56px; }
+.upload-zone svg { flex-shrink: 0; width: 20px; height: 20px; opacity: 0.5; }
+.upload-zone:hover, .upload-zone.drag-over { border-color: var(--ruby-red); background: rgba(159,63,55,0.04); }
+.upload-zone:hover svg, .upload-zone.drag-over svg { opacity: 1; color: var(--ruby-red); }
+.upload-zone p { font-size: 0.82rem; color: rgba(34,27,25,0.5); margin: 0; }
+.upload-zone strong { color: var(--ruby-red); }
+```
+
+(Reduzi padding de 28px → 16px/20px, transformei o flex-direction em row pra ícone e texto ficarem lado a lado, removi o margin-top do `p`.)
+
+### Atualizar o HTML da upload-zone
+
+**Localizar** (próximo à linha 131):
+```html
+<div class="upload-zone" id="uploadZone" onclick="document.getElementById('uploadInput').click()">
+  <!-- ícone svg upload aqui (28x28 antes) -->
+  <p>Arraste imagens aqui ou <strong>clique para selecionar</strong></p>
+</div>
+```
+
+**Garantir** que o `<svg>` antes do `<p>` está com tamanho compatível com o novo CSS. Se estiver com `width="28" height="28"`, o CSS força pra 20px automaticamente.
+
+### Verificação
+- Página `admin-assets.html` com 0 ou poucos assets: drop zone fica em uma única linha horizontal (ícone + texto), ocupando menos vertical
+- Hover continua destacando rose
+- Upload continua funcional
+
+═══════════════════════════════════════════════════════════════
+# 🟡 Item 3 (#17) — Affordance de edição na tabela de cartões
+═══════════════════════════════════════════════════════════════
+
+Hoje os inputs/selects da tabela de Validação de Cartões têm `border: 1px solid transparent` — visualmente parecem texto comum, sem indicar que são editáveis.
+
+### Arquivo: `public/validacao-cartoes.html`
+
+**Localizar** (próximo à linha 41):
+```css
+table.vc input, table.vc select, table.vc textarea { width: 100%; box-sizing: border-box; border: 1px solid transparent; background: transparent; font: inherit; text-align: center; padding: 5px; border-radius: 6px; color: #221b19; }
+table.vc input:focus, table.vc select:focus, table.vc textarea:focus { outline: none; border-color: #AC3631; background: #fff; }
+```
+
+**Substituir por**:
+```css
+table.vc input, table.vc select, table.vc textarea { width: 100%; box-sizing: border-box; border: 1px solid transparent; background: transparent; font: inherit; text-align: center; padding: 5px; border-radius: 6px; color: #221b19; transition: border-color 0.12s, background 0.12s; cursor: pointer; }
+table.vc input:hover, table.vc select:hover, table.vc textarea:hover { border-color: rgba(172,54,49,0.25); background: rgba(255,255,255,0.5); }
+table.vc input:focus, table.vc select:focus, table.vc textarea:focus { outline: none; border-color: #AC3631; background: #fff; cursor: text; }
+table.vc select:hover, table.vc select:focus { cursor: pointer; }
+```
+
+(Adicionei hover state com borda rose-claro + leve fundo branco semi-transparente, e cursor: pointer pra indicar interatividade.)
+
+### Verificação
+- Passar o mouse sobre qualquer célula editável da tabela `validacao-cartoes.html`
+- Aparece borda rose-claro sutil + leve fundo branco
+- Cursor muda pra pointer (em selects) ou text (em inputs ao focar)
+- Click + foco continua com borda rose-forte + fundo branco sólido
+
+═══════════════════════════════════════════════════════════════
+# 🟡 Item 4 (#15) — Aplicar "Pré-preenchido" em mais campos
+═══════════════════════════════════════════════════════════════
+
+Hoje `Auth.aplicarPerfilNoCampo()` (já existe em `auth.js`) é usado em ~14 forms, mas **apenas para o campo telefone**. Outros campos do perfil (unidade, escritório, cargo, código Ancord) também poderiam ser pré-preenchidos.
+
+### Funções disponíveis no Auth (já existem)
+```js
+Auth.getTelefone()    // perfil.telefone
+Auth.getUnidade()     // perfil.unidade
+Auth.getEscritorio()  // perfil.escritorio
+Auth.getCargo()       // perfil.cargo
+Auth.getCdAncord()    // perfil.cd_ancord
+Auth.getUserName()    // perfil/sessão
+Auth.getUserEmail()   // perfil/sessão
+```
+
+### Estratégia
+
+**Para cada form-*.html no `public/`** que já chama `Auth.aplicarPerfilNoCampo('telefone', Auth.getTelefone())`, **adicionar logo após** as chamadas correspondentes pros outros campos comuns, **se o form tiver esses campos**.
+
+### Padrão sugerido (template)
+
+```js
+// Após Auth.refreshProfile() ou em algum init():
+Auth.aplicarPerfilNoCampo('telefone',  Auth.getTelefone());
+Auth.aplicarPerfilNoCampo('unidade',   Auth.getUnidade());
+Auth.aplicarPerfilNoCampo('escritorio', Auth.getEscritorio());
+Auth.aplicarPerfilNoCampo('cargo',     Auth.getCargo());
+Auth.aplicarPerfilNoCampo('cdAncord',  Auth.getCdAncord());  // se houver campo
+Auth.aplicarPerfilNoCampo('email',     Auth.getUserEmail()); // se houver campo
+Auth.aplicarPerfilNoCampo('nome',      Auth.getUserName());  // se houver campo
+```
+
+A função `aplicarPerfilNoCampo` é **safe** — se o campo não existe no DOM ou o valor está vazio, ela retorna `false` sem quebrar nada.
+
+### Procedimento
+
+1. Buscar todos os forms que já têm `Auth.aplicarPerfilNoCampo('telefone', Auth.getTelefone())`
+2. Em cada um, logo após essa linha, adicionar as 5-6 linhas do template acima
+3. Manter o código existente intocado
+
+Pra agilizar, alvos prioritários (forms que sabidamente têm esses campos):
+- `form-cartao-visita-fisico.html` (tem unidade)
+- `form-cartao-visita-digital.html` (tem unidade)
+- `form-cartao-boas-vindas.html` (tem unidade)
+- `form-cartao-comemorativo.html` (tem unidade)
+- `form-pagina-assessores.html` (tem unidade, escritório, cargo, cdAncord)
+- `form-assinatura-email.html` (tem várias)
+- `form-apresentacao.html` (tem setor — campo diferente)
+- `form-convite-fp.html` (tem unidade, cargo)
+- `form-divulgacao-nps.html` (tem unidade)
+
+### Verificação
+- Abrir um dos forms da lista enquanto logado
+- Os campos pré-existentes no perfil devem aparecer com o ✓ verde + texto "Pré-preenchido do seu cadastro — pode editar se quiser"
+- Edição livre dos valores continua funcionando
+- Campos sem dado no perfil ficam vazios (sem hint)
+
+═══════════════════════════════════════════════════════════════
+# 🟠 Item 5 (#10) — Agrupar checkboxes do admin-clickup-lists por categoria
+═══════════════════════════════════════════════════════════════
+
+Hoje a lista de checkboxes de formulários numa "Lista ClickUp" é flat — todos os formulários misturados. Vamos agrupar por categoria usando `CATEGORIAS_SOLICITACAO` (já existe no config.js).
+
+### Arquivo: `public/admin-clickup-lists.html`
+
+**Localizar** a função `renderLists` (próximo à linha 138). Dentro dela tem este trecho que gera os chips/checkboxes:
+
+```js
+area.innerHTML = STATE.lists.map(function (list) {
+  const chips = STATE.forms.map(function (f) {
+    const assignedTo = STATE.assignedTipos[f.tipo];
+    const here = assignedTo === list.list_id;
+    const lockedElsewhere = !!assignedTo && assignedTo !== list.list_id;
+    const cls = 'ccu-chip' + (here ? ' checked' : '') + (lockedElsewhere ? ' locked' : '');
+    const lockInfo = lockedElsewhere ? ' <span class="ccu-lockinfo">(em: ' + esc(listNameById(assignedTo)) + ')</span>' : '';
+    return '<label class="' + cls + '">' +
+      '<input type="checkbox" value="' + esc(f.tipo) + '"' + (here ? ' checked' : '') + (lockedElsewhere ? ' disabled' : '') + '>' +
+      esc(f.label) + lockInfo +
+    '</label>';
+  }).join('');
+  // ...
+```
+
+**Substituir** essa renderização de chips por uma agrupada por categoria. Trocar o bloco `const chips = STATE.forms.map(...)` por:
+
+```js
+// Agrupar STATE.forms por categoria usando CATEGORIAS_SOLICITACAO do config.js
+const formsByCategory = {};
+const categoryOrder = [];
+const formByTipo = {};
+STATE.forms.forEach(function(f) { formByTipo[f.tipo] = f; });
+
+if (typeof CATEGORIAS_SOLICITACAO !== 'undefined') {
+  CATEGORIAS_SOLICITACAO.forEach(function(cat) {
+    const catName = cat.categoria;
+    const itensNaLista = (cat.itens || []).filter(function(item) {
+      return !!formByTipo[item.id]; // só inclui se o form existe em STATE.forms
+    });
+    if (itensNaLista.length > 0) {
+      formsByCategory[catName] = itensNaLista.map(function(item) { return formByTipo[item.id]; });
+      categoryOrder.push(catName);
+    }
+  });
+}
+
+// Forms que não estão em nenhuma categoria conhecida
+const usedTipos = new Set();
+Object.values(formsByCategory).forEach(function(arr) { arr.forEach(function(f) { usedTipos.add(f.tipo); }); });
+const outrosForms = STATE.forms.filter(function(f) { return !usedTipos.has(f.tipo); });
+if (outrosForms.length > 0) {
+  formsByCategory['Outros'] = outrosForms;
+  categoryOrder.push('Outros');
+}
+
+// Renderizar grupos com headers
+const chips = categoryOrder.map(function(catName) {
+  const formsInCat = formsByCategory[catName];
+  // Ordenar: selecionados primeiro dentro do grupo
+  formsInCat.sort(function(a, b) {
+    const aHere = STATE.assignedTipos[a.tipo] === list.list_id;
+    const bHere = STATE.assignedTipos[b.tipo] === list.list_id;
+    return (bHere ? 1 : 0) - (aHere ? 1 : 0);
+  });
+  const groupChips = formsInCat.map(function(f) {
+    const assignedTo = STATE.assignedTipos[f.tipo];
+    const here = assignedTo === list.list_id;
+    const lockedElsewhere = !!assignedTo && assignedTo !== list.list_id;
+    const cls = 'ccu-chip' + (here ? ' checked' : '') + (lockedElsewhere ? ' locked' : '');
+    const lockInfo = lockedElsewhere ? ' <span class="ccu-lockinfo">(em: ' + esc(listNameById(assignedTo)) + ')</span>' : '';
+    return '<label class="' + cls + '">' +
+      '<input type="checkbox" value="' + esc(f.tipo) + '"' + (here ? ' checked' : '') + (lockedElsewhere ? ' disabled' : '') + '>' +
+      esc(f.label) + lockInfo +
+    '</label>';
+  }).join('');
+  return '<div class="ccu-category-header">' + esc(catName) + '</div>' +
+         '<div class="ccu-category-grid">' + groupChips + '</div>';
+}).join('');
+```
+
+### Adicionar CSS para os headers de categoria
+
+No `<style>` da página (procurar onde estão definidos os `ccu-chip`, `ccu-forms-grid`, etc.):
+
+```css
+.ccu-category-header {
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: rgba(34,27,25,0.45);
+  margin-top: 12px;
+  margin-bottom: 6px;
+}
+.ccu-category-header:first-child { margin-top: 0; }
+.ccu-category-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+```
+
+E **substituir** o wrapper `.ccu-forms-grid` (que envolvia todos os chips flat) por um container vazio que só agrupa os headers/grids — ou seja, o `<div class="ccu-forms-grid">${chips || ...}</div>` no HTML existente continua funcionando porque agora `chips` é HTML estruturado com headers + grids dentro.
+
+### Verificação
+- Recarregar `admin-clickup-lists.html`
+- Cada Lista ClickUp cadastrada mostra os checkboxes **agrupados por categoria** ("Identidade e materiais pessoais", "Eventos e relacionamento", "Marketing e conteúdo", etc.)
+- Dentro de cada grupo, os checkboxes **selecionados aparecem primeiro**
+- Headers de categoria em uppercase fino (estilo igual aos já existentes na página principal)
+
+═══════════════════════════════════════════════════════════════
+# 🟠 Item 6 (#9) — Período + date range em popover (admin.html)
+═══════════════════════════════════════════════════════════════
+
+Hoje o filtro de período no Painel Admin tem 4 pills (7d/14d/30d/90d) + 2 date pickers separados ao lado. Confuso quem ganha quando ambos têm valor.
+
+**Solução**: manter as 4 pills + **substituir os 2 date inputs por um único botão "Personalizado"** que abre um popover com os 2 inputs.
+
+### Arquivo: `public/admin.html`
+
+**Localizar** (próximo à linha 56-67):
+```html
+<div style="display:flex;align-items:center;gap:10px;margin-top:24px;flex-wrap:wrap">
+  <span style="font-size:0.8rem;font-weight:600;opacity:0.5">Período:</span>
+  <div style="...">
+    <button class="filter-chip active" data-dias="7" onclick="setAdminPeriodo(this)">7 dias</button>
+    <button class="filter-chip" data-dias="14" onclick="setAdminPeriodo(this)">14 dias</button>
+    <button class="filter-chip" data-dias="30" onclick="setAdminPeriodo(this)">30 dias</button>
+    <!-- (talvez tenha 90 também) -->
+  </div>
+  <span style="...">até</span>
+  <input type="date" id="adminDe" ... onchange="setAdminCustomPeriodo()">
+  <span>até</span>
+  <input type="date" id="adminAte" ... onchange="setAdminCustomPeriodo()">
+</div>
+```
+
+**Substituir por**:
+```html
+<div style="display:flex;align-items:center;gap:10px;margin-top:24px;flex-wrap:wrap;position:relative">
+  <span style="font-size:0.8rem;font-weight:600;opacity:0.5">Período:</span>
+  <div style="display:flex;gap:6px;flex-wrap:wrap">
+    <button class="filter-chip active" data-dias="7" onclick="setAdminPeriodo(this)">7 dias</button>
+    <button class="filter-chip" data-dias="14" onclick="setAdminPeriodo(this)">14 dias</button>
+    <button class="filter-chip" data-dias="30" onclick="setAdminPeriodo(this)">30 dias</button>
+    <button class="filter-chip" data-dias="90" onclick="setAdminPeriodo(this)">90 dias</button>
+    <button class="filter-chip" id="customPeriodoBtn" onclick="toggleCustomPeriodo()">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:4px"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      Personalizado
+    </button>
+  </div>
+
+  <div id="customPeriodoPopover" style="display:none;position:absolute;top:calc(100% + 8px);left:0;background:var(--card-white);border:1px solid var(--border-light);border-radius:12px;padding:14px 16px;box-shadow:0 8px 24px rgba(0,0,0,0.12);z-index:50;min-width:280px">
+    <div style="font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;opacity:0.5;margin-bottom:8px">Intervalo personalizado</div>
+    <div style="display:flex;gap:8px;align-items:center">
+      <input type="date" id="adminDe" style="flex:1;padding:6px 10px;border:1px solid var(--border-light);border-radius:7px;font-size:0.82rem;font-family:'Nunito Sans',sans-serif" onchange="setAdminCustomPeriodo()">
+      <span style="font-size:0.78rem;opacity:0.5">até</span>
+      <input type="date" id="adminAte" style="flex:1;padding:6px 10px;border:1px solid var(--border-light);border-radius:7px;font-size:0.82rem;font-family:'Nunito Sans',sans-serif" onchange="setAdminCustomPeriodo()">
+    </div>
+    <div style="display:flex;justify-content:flex-end;margin-top:10px">
+      <button onclick="closeCustomPeriodo()" style="font-size:0.78rem;color:rgba(34,27,25,0.55);background:none;border:none;cursor:pointer;font-weight:600;font-family:'Nunito Sans',sans-serif">Fechar</button>
+    </div>
+  </div>
+</div>
+```
+
+### Adicionar funções JS no `<script>` da página
+
+```js
+function toggleCustomPeriodo() {
+  const pop = document.getElementById('customPeriodoPopover');
+  const isOpen = pop.style.display === 'block';
+  pop.style.display = isOpen ? 'none' : 'block';
+
+  // Click fora fecha
+  if (!isOpen) {
+    setTimeout(() => {
+      document.addEventListener('click', closeCustomPeriodoOnOutside, { once: true });
+    }, 0);
+  }
+}
+
+function closeCustomPeriodoOnOutside(e) {
+  const pop = document.getElementById('customPeriodoPopover');
+  const btn = document.getElementById('customPeriodoBtn');
+  if (!pop.contains(e.target) && !btn.contains(e.target)) {
+    pop.style.display = 'none';
+  } else {
+    // Continua escutando até clicar fora
+    setTimeout(() => {
+      document.addEventListener('click', closeCustomPeriodoOnOutside, { once: true });
+    }, 0);
+  }
+}
+
+function closeCustomPeriodo() {
+  document.getElementById('customPeriodoPopover').style.display = 'none';
+}
+```
+
+### Ajustar `setAdminCustomPeriodo` para marcar o botão "Personalizado" como ativo
+
+Localizar a função `setAdminCustomPeriodo()` existente. Dentro dela, ao final, **adicionar**:
+```js
+// Marcar o pill "Personalizado" como ativo e desmarcar os outros
+document.querySelectorAll('[data-dias]').forEach(b => b.classList.remove('active'));
+document.getElementById('customPeriodoBtn').classList.add('active');
+```
+
+E em `setAdminPeriodo(this)` existente, **garantir** que ao clicar em uma pill normal, o botão "Personalizado" perde o `active`:
+```js
+// Dentro de setAdminPeriodo, antes de adicionar active ao clicado:
+document.getElementById('customPeriodoBtn').classList.remove('active');
+// E limpar os date inputs:
+document.getElementById('adminDe').value = '';
+document.getElementById('adminAte').value = '';
+```
+
+### Verificação
+- No Painel Admin, os 4 pills + botão "Personalizado" aparecem na mesma linha
+- Os 2 date inputs anteriores **não estão mais visíveis** inline
+- Clicar em "Personalizado" abre o popover com os 2 inputs
+- Selecionar data → popover fica aberto pra escolher a segunda data → quando ambas estão preenchidas, filtro aplica
+- Clicar em "Fechar" ou fora do popover fecha
+- Clicar em qualquer pill (7d/14d/30d/90d) tira o highlight do "Personalizado" e limpa as datas
+
+═══════════════════════════════════════════════════════════════
+## ✅ Validação final
+═══════════════════════════════════════════════════════════════
+
+Após aplicar tudo:
+
+1. **Botões secundários** (`admin.html`): "Meu painel" e "Listas ClickUp" agora com borda rose ✓
+2. **Empty state assets** (`admin-assets.html`): upload-zone compacto, ícone + texto inline ✓
+3. **Tabela cartões** (`validacao-cartoes.html`): hover em células editáveis mostra borda rose-claro ✓
+4. **Pré-preenchido**: campos comuns (unidade, cargo, etc) auto-preenchem com hint ✓
+5. **ClickUp lists** (`admin-clickup-lists.html`): checkboxes agrupados por categoria, selecionados primeiro ✓
+6. **Período no painel admin** (`admin.html`): pills + botão "Personalizado" com popover ✓
+
+Hard refresh (Ctrl+Shift+R) por causa do `style.css`.
+
+═══════════════════════════════════════════════════════════════
+## 📌 Deixados de fora (refactor maior)
+═══════════════════════════════════════════════════════════════
+
+- **#14 Preview thumbs nos accordions de templates**: requer thumbnail server-side (gerar PNG da arte ativa de cada tipo no backend) ou chamadas de preview por template (custo de UX). Prompt dedicado quando você decidir como gerar os thumbs.
+
+- **#16 Editor de templates mais clean**: o editor vive dentro de `admin-templates.html` (2580 linhas, várias views em um único arquivo). Refactor da view do editor merece prompt dedicado, com análise específica do que limpar (sidebar de layers, painéis de propriedades, etc).
+
+Quer atacar um desses depois? Quando for, me avisa.

@@ -35,11 +35,12 @@
     table.vc td { border-bottom: 1px solid #eef1f4; border-right: 1px solid #f1f4f7; padding: 3px 4px; text-align: center; vertical-align: middle; background: #fff; }
     table.vc tr:nth-child(even) td { background: #fcfcfb; }
     table.vc tr.flash td { background: #ecfdf3 !important; transition: background .2s; }
-    table.vc input, table.vc select, table.vc textarea { width: 100%; box-sizing: border-box; border: 1px solid transparent; background: transparent; font: inherit; text-align: center; padding: 5px; border-radius: 6px; color: #221b19; }
+    table.vc input, table.vc select, table.vc textarea { width: 100%; box-sizing: border-box; border: 1px solid transparent; background: transparent; font: inherit; text-align: center; padding: 5px; border-radius: 6px; color: #221b19; transition: border-color 0.12s, background 0.12s; cursor: pointer; }
     table.vc select { cursor: pointer; -webkit-appearance: none; appearance: none; font-weight: 600; text-align: center; }
     table.vc textarea { text-align: center; resize: vertical; min-height: 34px; line-height: 1.3; }
-    table.vc input:focus, table.vc select:focus, table.vc textarea:focus { outline: none; border-color: var(--ruby-red); background: #fff; }
-    table.vc input:hover, table.vc select:hover, table.vc textarea:hover { border-color: #eef1f4; }
+    table.vc input:hover, table.vc select:hover, table.vc textarea:hover { border-color: rgba(172,54,49,0.25); background: rgba(255,255,255,0.5); }
+    table.vc input:focus, table.vc select:focus, table.vc textarea:focus { outline: none; border-color: var(--ruby-red); background: #fff; cursor: text; }
+    table.vc select:hover, table.vc select:focus { cursor: pointer; }
     td.col-observacao { min-width: 150px; }
     .vc-filter-select { padding: 5px 10px; border-radius: 7px; border: 1px solid var(--border-light, #e8e2dc); background: #fff; font-family: inherit; font-size: 0.8rem; color: #221b19; cursor: pointer; }
     .vc-filter-select:focus { outline: none; border-color: var(--ruby-red); }

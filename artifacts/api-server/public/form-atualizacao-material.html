@@ -97,6 +97,12 @@
       if (setorSel) { SETORES.filter(s => s !== 'Selecione seu setor').forEach(s => { const o = document.createElement('option'); o.value = s; o.textContent = s; setorSel.appendChild(o); }); }
 
       Auth.aplicarPerfilNoCampo('telefone', Auth.getTelefone());
+      Auth.aplicarPerfilNoCampo('unidade',    Auth.getUnidade());
+      Auth.aplicarPerfilNoCampo('escritorio', Auth.getEscritorio());
+      Auth.aplicarPerfilNoCampo('cargo',      Auth.getCargo());
+      Auth.aplicarPerfilNoCampo('cdAncord',   Auth.getCdAncord());
+      Auth.aplicarPerfilNoCampo('email',      Auth.getUserEmail());
+      Auth.aplicarPerfilNoCampo('nome',       Auth.getUserName());
     }
 
     function validateRequiredFields() {

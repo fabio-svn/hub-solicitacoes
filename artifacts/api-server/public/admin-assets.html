@@ -91,9 +91,11 @@
     .page-btn.active { background: var(--ruby-red); color: #fff; border-color: var(--ruby-red); }
     .page-btn:disabled { opacity: 0.35; cursor: not-allowed; }
     /* Upload drop zone */
-    .upload-zone { border: 2px dashed var(--border-light); border-radius: 12px; padding: 28px; text-align: center; margin-bottom: 20px; cursor: pointer; transition: border-color 0.15s, background 0.15s; }
+    .upload-zone { border: 2px dashed var(--border-light); border-radius: 12px; padding: 16px 20px; text-align: center; margin-bottom: 16px; cursor: pointer; transition: border-color 0.15s, background 0.15s; display: flex; align-items: center; justify-content: center; gap: 10px; min-height: 56px; }
+    .upload-zone svg { flex-shrink: 0; width: 20px; height: 20px; opacity: 0.5; }
     .upload-zone:hover, .upload-zone.drag-over { border-color: var(--ruby-red); background: rgba(159,63,55,0.04); }
-    .upload-zone p { font-size: 0.82rem; color: rgba(34,27,25,0.5); margin-top: 6px; }
+    .upload-zone:hover svg, .upload-zone.drag-over svg { opacity: 1; color: var(--ruby-red); }
+    .upload-zone p { font-size: 0.82rem; color: rgba(34,27,25,0.5); margin: 0; }
     .upload-zone strong { color: var(--ruby-red); }
     .upload-progress { height: 4px; background: #f0ece8; border-radius: 2px; margin-top: 10px; overflow: hidden; display: none; }
     .upload-progress-bar { height: 100%; background: var(--ruby-red); transition: width 0.3s; }
@@ -146,8 +148,10 @@
   <!-- Drop zone -->
   <div class="upload-zone" id="uploadZone" onclick="document.getElementById('uploadInput').click()">
     <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="rgba(34,27,25,0.25)" stroke-width="1.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-    <p>Arraste imagens aqui ou <strong>clique para selecionar</strong></p>
-    <p style="font-size:0.72rem;margin-top:3px">PNG, JPG, WebP — máx. 5MB por arquivo</p>
+    <div>
+      <p>Arraste imagens aqui ou <strong>clique para selecionar</strong></p>
+      <p style="font-size:0.72rem;margin-top:2px">PNG, JPG, WebP — máx. 5MB por arquivo</p>
+    </div>
     <div class="upload-progress" id="uploadProgress">
       <div class="upload-progress-bar" id="uploadProgressBar" style="width:0%"></div>
     </div>
