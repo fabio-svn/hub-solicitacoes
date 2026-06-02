@@ -40,7 +40,7 @@
       </div>
     </div>
 
-    <div class="stats-row" style="grid-template-columns:repeat(4,1fr)" id="adminStats">
+    <div class="stats-row" style="grid-template-columns:repeat(3,1fr)" id="adminStats">
       <div class="stat-card" style="border-color:var(--border-light)">
         <div class="stat-number" id="statTotal">0</div>
         <div class="stat-label">Total</div>
@@ -52,10 +52,6 @@
       <div class="stat-card" style="background:rgba(111,135,123,0.06);border-color:rgba(111,135,123,0.15)">
         <div class="stat-number" style="color:var(--sage-green)" id="statCompleted">0</div>
         <div class="stat-label">Concluídas</div>
-      </div>
-      <div class="stat-card" style="border-color:var(--border-light)">
-        <div class="stat-number" id="statMonth">0</div>
-        <div class="stat-label">Este mês</div>
       </div>
     </div>
 
@@ -264,7 +260,6 @@
         animateNum('statTotal', data.total);
         animateNum('statActive', data.active);
         animateNum('statCompleted', data.completed);
-        animateNum('statMonth', data.thisMonth);
       } catch (e) { console.error(e); }
     }
 

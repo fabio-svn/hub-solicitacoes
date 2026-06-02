@@ -101,6 +101,15 @@
     }
     .status-step-label.done { color: #6B9080; font-weight: 600; }
     .status-step-label.current { color: var(--current-color, #2563C0); font-weight: 700; }
+    /* Timeline vertical — usado em cartão físico (e mobile) */
+    .status-rail-scroll.vertical { overflow-x: hidden; overflow-y: visible; padding: 4px 0; }
+    .status-rail.vertical { flex-direction: column; gap: 0; min-width: 0; }
+    .status-rail.vertical .status-step { flex-direction: row; align-items: center; min-width: 0; gap: 12px; flex: none; }
+    .status-rail.vertical .status-step-track { flex-direction: column; align-items: center; width: 22px; flex-shrink: 0; }
+    .status-rail.vertical .status-step-line { width: 2px; height: 18px; flex: none; }
+    .status-rail.vertical .status-step-line.invisible { height: 0; }
+    .status-rail.vertical .status-step-label { margin-top: 0; text-align: left; font-size: 0.82rem; }
+
     @media (max-width: 560px) {
       .status-rail-scroll { overflow-x: hidden; overflow-y: visible; padding: 4px 0; }
       .status-rail { flex-direction: column; gap: 0; min-width: 0; }
@@ -967,9 +976,11 @@
           </div>`;
       }).join('');
 
+      const isVertical = item.tipo_solicitacao === 'cartao-visita-fisico';
+      const verticalClass = isVertical ? ' vertical' : '';
       card.innerHTML = `
         <p style="font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;opacity:0.38;margin-bottom:14px">Andamento</p>
-        <div class="status-rail-scroll"><div class="status-rail">${stepsHtml}</div></div>`;
+        <div class="status-rail-scroll${verticalClass}"><div class="status-rail${verticalClass}">${stepsHtml}</div></div>`;
     }
 
     /* ── Sistema de Aprovação v2 — storage de rodadas ── */

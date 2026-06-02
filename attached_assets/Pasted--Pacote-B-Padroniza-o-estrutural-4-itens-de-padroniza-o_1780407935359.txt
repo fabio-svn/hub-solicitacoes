@@ -1,0 +1,400 @@
+# Pacote B — Padronização estrutural
+
+4 itens de padronização visual. **Aplicar em ordem** porque alguns mexem em CSS compartilhado.
+
+Tempo estimado: 2-3h no agent. Cada item é independente — se travar em um, fechar essa sessão e fazer o próximo em sessão nova.
+
+═══════════════════════════════════════════════════════════════
+# Item 1 — Cards horizontal padrão Capital Humano (página principal)
+═══════════════════════════════════════════════════════════════
+
+Migrar os cards da página "Que tipo de solicitação" pro mesmo padrão visual da Capital Humano (ícone em badge à esquerda, texto à direita, cards menores).
+
+A página `solicitacoes.html` usa as classes `.selection-grid`, `.selection-btn`, `.btn-icon`, `.btn-label` (definidas no `style.css`). Vamos só reescrever essas classes.
+
+### Arquivo: `public/style.css`
+
+**Localizar** o bloco:
+```css
+.selection-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 12px;
+}
+.selection-btn {
+  background: var(--card-white);
+  border: 1px solid var(--border-light);
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  height: 100px;
+  padding: 16px;
+  cursor: pointer;
+  transition: 0.2s ease;
+  text-align: center;
+}
+.selection-btn:hover:not(.disabled) {
+  border-color: var(--ruby-red);
+  box-shadow: 0 4px 12px rgba(159,63,55,0.1);
+  transform: translateY(-2px);
+}
+.selection-btn.selected { border-color: var(--ruby-red); background: rgba(159,63,55,0.04); box-shadow: 0 0 0 3px rgba(159,63,55,0.1); }
+.selection-btn.disabled { opacity: 0.5; cursor: not-allowed; }
+.selection-btn .btn-icon { font-size: 28px; color: var(--carbon-black); }
+.selection-btn .btn-label { font-weight: 600; font-size: 0.875rem; }
+```
+
+**Substituir por** (mesmo padrão visual do `.ch-card` em capital-humano.html):
+```css
+.selection-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 12px;
+}
+.selection-btn {
+  background: var(--card-white);
+  border: 1.5px solid var(--border-light);
+  border-radius: 12px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  cursor: pointer;
+  transition: border-color 0.12s, transform 0.12s, box-shadow 0.12s;
+  text-align: left;
+  width: 100%;
+}
+.selection-btn:hover:not(.disabled) {
+  border-color: var(--ruby-red);
+  transform: translateY(-1px);
+}
+.selection-btn.selected { border-color: var(--ruby-red); background: rgba(159,63,55,0.04); box-shadow: 0 0 0 3px rgba(159,63,55,0.1); }
+.selection-btn.disabled { opacity: 0.5; cursor: not-allowed; }
+.selection-btn .btn-icon {
+  flex: 0 0 38px;
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: rgba(172,54,49,0.08);
+  color: var(--ruby-red);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.selection-btn .btn-icon svg {
+  width: 20px;
+  height: 20px;
+}
+.selection-btn .btn-label {
+  font-weight: 600;
+  font-size: 0.9rem;
+  line-height: 1.25;
+  flex: 1;
+  min-width: 0;
+}
+```
+
+### Arquivo: `public/solicitacoes.html`
+
+Tem um bloco no JS de `renderCategories` que renderiza categorias `trio` (linha próxima a "trioCats.forEach") onde cada botão tem inline `style="width:100%;height:100px;"`. **Localizar e remover** o `height:100px`:
+
+**Localizar**:
+```js
+btn.style.cssText = 'width:100%;height:100px;';
+```
+
+**Substituir por**:
+```js
+btn.style.cssText = 'width:100%;';
+```
+
+(O CSS novo deixa a altura automática baseada no conteúdo.)
+
+### Verificação
+- Recarregar a página "Que tipo de solicitação..."
+- Cards devem aparecer **horizontais** com ícone em badge rose-claro à esquerda + texto à direita
+- Visual idêntico ao da página de Capital Humano
+- Hover continua funcionando (borda rose + leve elevação)
+
+═══════════════════════════════════════════════════════════════
+# Item 2 — Padronizar tabelas com header carbon-black
+═══════════════════════════════════════════════════════════════
+
+Hoje cada tabela do hub tem um estilo diferente. Padrão alvo: o de `admin-usuarios.html` (header preto + texto branco + uppercase). A classe `.admin-table` já existe no `style.css` mas tá com header **claro** (texto cinza). Vamos:
+1. Atualizar `.admin-table th` pra ser carbon
+2. Migrar `admin-usuarios.html` e `admin-log.html` pra usar `.admin-table` (em vez de inlines)
+3. `admin.html` e `admin-assets.html` já usam `.admin-table` — vão pegar o novo estilo automaticamente
+
+### Arquivo: `public/style.css`
+
+**Localizar**:
+```css
+.admin-table { width: 100%; border-collapse: collapse; }
+.admin-table th {
+  text-align: left;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  opacity: 0.4;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border-light);
+}
+.admin-table td {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border-light);
+  font-size: 0.875rem;
+}
+.admin-table tr:hover td { background: var(--icon-bg); }
+```
+
+**Substituir por**:
+```css
+.admin-table { width: 100%; border-collapse: collapse; }
+.admin-table thead { background: var(--carbon-black); }
+.admin-table th {
+  text-align: left;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-weight: 800;
+  color: var(--paper-white);
+  padding: 12px 16px;
+}
+.admin-table th:first-child { border-top-left-radius: 8px; }
+.admin-table th:last-child { border-top-right-radius: 8px; }
+.admin-table td {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border-light);
+  font-size: 0.875rem;
+}
+.admin-table tbody tr:last-child td { border-bottom: none; }
+.admin-table tbody tr:hover td { background: var(--icon-bg); }
+```
+
+### Arquivo: `public/admin-usuarios.html`
+
+**Localizar** a tabela:
+```html
+<div class="usuarios-tabela-wrap admin-userlist-table-wrap" style="border-radius:12px;border:1px solid var(--border-light);overflow-x:auto">
+  <table class="usuarios-tabela" style="width:100%;border-collapse:collapse;font-size:0.82rem" id="usuariosTabela">
+    <thead>
+      <tr style="...">
+        <th style="padding:10px 14px;font-weight:800;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.06em;color:#fff;text-align:left">Nome</th>
+        ...
+```
+
+**Substituir** todo esse bloco da tabela por:
+```html
+<div class="admin-userlist-table-wrap" style="border-radius:12px;border:1px solid var(--border-light);overflow-x:auto">
+  <table class="admin-table" id="usuariosTabela">
+    <thead>
+      <tr>
+        <th>Nome</th>
+        <th>E-mail</th>
+        <th>Função</th>
+        <th>ClickUp ID</th>
+        <th>Formulários</th>
+        <th>Cadastro</th>
+        <th style="text-align:center">Ações</th>
+      </tr>
+    </thead>
+    <tbody id="usuariosBody"></tbody>
+  </table>
+</div>
+```
+
+(Apaga o `style="..."` inline dos `<th>` porque agora vem do CSS. Mantém só `text-align:center` no de Ações.)
+
+### Arquivo: `public/admin-log.html`
+
+**Localizar**:
+```html
+<table style="width:100%;border-collapse:collapse;font-size:0.82rem;table-layout:fixed" id="logTabela">
+  <colgroup>...</colgroup>
+  <thead>
+    <tr style="...">
+      <th style="padding:10px 14px;font-weight:800;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.06em;color:#fff;text-align:left">Data/Hora</th>
+      ...
+```
+
+**Substituir por**:
+```html
+<table class="admin-table" style="table-layout:fixed" id="logTabela">
+  <colgroup>...</colgroup>
+  <thead>
+    <tr>
+      <th>Data/Hora</th>
+      <th>Usuário</th>
+      <th>Nível</th>
+      <th>Tipo</th>
+      <th>Detalhe</th>
+    </tr>
+  </thead>
+  ...
+```
+
+(Mantém o `<colgroup>` que define largura das colunas. Mantém o `table-layout:fixed` como inline porque é específico.)
+
+### Verificação
+- `admin-usuarios.html`: tabela com header **preto + texto branco em UPPERCASE**
+- `admin-log.html`: idem
+- `admin.html` (Painel admin): visualmente igual aos outros agora
+- `admin-assets.html`: idem
+- Tudo com hover row + bordas consistentes
+
+═══════════════════════════════════════════════════════════════
+# Item 3 — Painel admin: 3 cards de stats (remover "Este mês")
+═══════════════════════════════════════════════════════════════
+
+### Arquivo: `public/admin.html`
+
+**Localizar** o bloco de stats:
+```html
+<div class="stats-row" style="grid-template-columns:repeat(4,1fr)" id="adminStats">
+  <div class="stat-card" style="border-color:var(--border-light)">
+    <div class="stat-number" id="statTotal">0</div>
+    <div class="stat-label">Total</div>
+  </div>
+  <div class="stat-card" style="background:rgba(159,63,55,0.06);border-color:rgba(159,63,55,0.15)">
+    <div class="stat-number" style="color:var(--ruby-red)" id="statActive">0</div>
+    <div class="stat-label">Em andamento</div>
+  </div>
+  <div class="stat-card" style="background:rgba(111,135,123,0.06);border-color:rgba(111,135,123,0.15)">
+    <div class="stat-number" style="color:var(--sage-green)" id="statCompleted">0</div>
+    <div class="stat-label">Concluídas</div>
+  </div>
+  <div class="stat-card" style="border-color:var(--border-light)">
+    <div class="stat-number" id="statMonth">0</div>
+    <div class="stat-label">Este mês</div>
+  </div>
+</div>
+```
+
+**Substituir por**:
+```html
+<div class="stats-row" style="grid-template-columns:repeat(3,1fr)" id="adminStats">
+  <div class="stat-card" style="border-color:var(--border-light)">
+    <div class="stat-number" id="statTotal">0</div>
+    <div class="stat-label">Total</div>
+  </div>
+  <div class="stat-card" style="background:rgba(159,63,55,0.06);border-color:rgba(159,63,55,0.15)">
+    <div class="stat-number" style="color:var(--ruby-red)" id="statActive">0</div>
+    <div class="stat-label">Em andamento</div>
+  </div>
+  <div class="stat-card" style="background:rgba(111,135,123,0.06);border-color:rgba(111,135,123,0.15)">
+    <div class="stat-number" style="color:var(--sage-green)" id="statCompleted">0</div>
+    <div class="stat-label">Concluídas</div>
+  </div>
+</div>
+```
+
+Mudanças:
+- `repeat(4,1fr)` → `repeat(3,1fr)`
+- Removido o `<div class="stat-card">` do "Este mês"
+
+### Limpar referência no JS
+
+No mesmo arquivo, **localizar** (próximo à linha de animação dos números):
+```js
+animateNum('statMonth', data.thisMonth);
+```
+
+**Remover essa linha**. O backend ainda manda `thisMonth` no JSON, mas tudo bem — só não consumimos no front.
+
+### Verificação
+- Painel admin agora tem **3 cards** em linha (Total / Em andamento / Concluídas)
+- Cada card mais respirável visualmente
+- Stats restantes continuam atualizando normalmente conforme filtros mudam
+
+═══════════════════════════════════════════════════════════════
+# Item 4 — Timeline vertical para cartão físico
+═══════════════════════════════════════════════════════════════
+
+Hoje o timeline de andamento do "Cartão de Visita — Físico" é horizontal com 6 passos e labels longos ("Aguardando contrato", "Liberado para Design"). Fica apertado em desktop e quebra mal mesmo no mobile. **Solução:** renderizar vertical para esse tipo específico.
+
+**Bônus**: o CSS já tem as regras de layout vertical implementadas no `@media (max-width: 560px)` — vamos reutilizar.
+
+### Arquivo: `public/solicitacao.html`
+
+### Parte A — Adicionar variante `.vertical` no CSS inline da página
+
+Próximo às definições de `.status-rail`, `.status-step` etc (~ linha 16218-16310 do pack), **adicionar** ao final do bloco (antes do `@media (max-width: 560px)`):
+
+```css
+/* Timeline vertical — usado em cartão físico (e mobile) */
+.status-rail-scroll.vertical { overflow-x: hidden; overflow-y: visible; padding: 4px 0; }
+.status-rail.vertical { flex-direction: column; gap: 0; min-width: 0; }
+.status-rail.vertical .status-step { flex-direction: row; align-items: center; min-width: 0; gap: 12px; flex: none; }
+.status-rail.vertical .status-step-track { flex-direction: column; align-items: center; width: 22px; flex-shrink: 0; }
+.status-rail.vertical .status-step-line { width: 2px; height: 18px; flex: none; }
+.status-rail.vertical .status-step-line.invisible { height: 0; }
+.status-rail.vertical .status-step-label { margin-top: 0; text-align: left; font-size: 0.82rem; }
+```
+
+### Parte B — Aplicar a classe no `renderFluxo`
+
+**Localizar** o final da função `renderFluxo` (próximo à linha 980 relativa do solicitacao.html):
+```js
+card.innerHTML = `
+  <p style="font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;opacity:0.38;margin-bottom:14px">Andamento</p>
+  <div class="status-rail-scroll"><div class="status-rail">${stepsHtml}</div></div>`;
+```
+
+**Substituir por**:
+```js
+const isVertical = item.tipo_solicitacao === 'cartao-visita-fisico';
+const verticalClass = isVertical ? ' vertical' : '';
+card.innerHTML = `
+  <p style="font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;opacity:0.38;margin-bottom:14px">Andamento</p>
+  <div class="status-rail-scroll${verticalClass}"><div class="status-rail${verticalClass}">${stepsHtml}</div></div>`;
+```
+
+### Verificação
+- Abrir a tela de detalhe de um Cartão de Visita Físico
+- Timeline aparece **vertical**, cada passo numa linha:
+  ```
+  ● Aguardando validação
+  │
+  ○ Aguardando contrato
+  │
+  ○ Liberado para Design
+  │
+  ○ Arte finalizada
+  │
+  ○ Envio gráfica
+  │
+  ○ Envio assessor
+  ```
+- Labels completos, sem truncamento, sem quebra
+- Para outros tipos (não cartão físico): continua horizontal como antes
+- Mobile: continua vertical (regra do `@media` ainda aplica)
+
+═══════════════════════════════════════════════════════════════
+## ✅ Validação final do Pacote B
+═══════════════════════════════════════════════════════════════
+
+Após aplicar tudo, conferir:
+
+1. **Página "Que tipo de solicitação"**: cards horizontais com ícone em badge à esquerda ✓
+2. **Tabela de Usuários**: header preto, texto branco, uppercase ✓
+3. **Tabela de Log de atividade**: idem ✓
+4. **Painel admin**: tabela com header preto (puxou do `.admin-table` automático) ✓
+5. **Stats do Painel admin**: 3 cards em vez de 4 ✓
+6. **Detalhe de Cartão de Visita Físico**: timeline vertical ✓
+7. **Detalhe de outras solicitações**: timeline horizontal preservado ✓
+
+Lembrar **hard refresh** (Ctrl+Shift+R) por causa do cache do Cloudflare — mexemos no `style.css`. Se ficar diferença visual entre testes, é cache TTL.
+
+═══════════════════════════════════════════════════════════════
+## 🚨 Atenção
+═══════════════════════════════════════════════════════════════
+
+- **Item 2 (tabelas)**: o `validacao-cartoes.html` tem header bicolor próprio (`vc-th` ou estrutura específica). **NÃO mexer nessa tabela** nesse pacote — tem editable cells e scroll horizontal próprio. Padronização dela fica pra refactor separado.
+
+- **Item 4 (timeline vertical)**: aplicado **apenas** para `tipo_solicitacao === 'cartao-visita-fisico'`. Outros tipos com timeline horizontal seguem inalterados. Se quiser estender pra outro tipo no futuro, adicionar mais condições no `isVertical`.
+
+- **Atualizar `style.css`**: mexemos em CSS compartilhado. Considere fazer cache-bust trocando `style.css` por `style-v3.css` (renomear arquivo + atualizar referências em todos os HTMLs) pra forçar invalidação no Cloudflare, em vez de esperar 4h do TTL.
