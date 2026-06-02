@@ -1,6 +1,6 @@
 # Pack do Projeto Hub SVN
 
-Gerado em: 2026-06-01 19:53:04
+Gerado em: 2026-06-02 14:15:08
 
 Root: `artifacts/api-server`
 
@@ -303,8 +303,6 @@ MYSQL_CONTATOS=                                              # [opcional]
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1029.0",
     "@azure/msal-node": "^5.1.2",
-    "@fontsource/nunito-sans": "^5.2.7",
-    "@fontsource/taviraj": "^5.2.8",
     "@workspace/api-zod": "workspace:*",
     "@workspace/db": "workspace:*",
     "compression": "^1.8.1",
@@ -315,8 +313,10 @@ MYSQL_CONTATOS=                                              # [opcional]
     "esbuild": "^0.27.3",
     "esbuild-plugin-pino": "^2.3.3",
     "express": "^5",
+    "express-rate-limit": "^8.5.2",
     "express-session": "^1.19.0",
     "fontkit": "^2.0.4",
+    "helmet": "^8.2.0",
     "multer": "^2.1.1",
     "mysql2": "^3.22.3",
     "pdf-lib": "^1.17.1",
@@ -334,6 +334,7 @@ MYSQL_CONTATOS=                                              # [opcional]
     "@types/cookie-parser": "^1.4.10",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
+    "@types/express-rate-limit": "^6.0.2",
     "@types/express-session": "^1.18.2",
     "@types/multer": "^2.1.0",
     "@types/node": "catalog:",
@@ -368,6 +369,8 @@ MYSQL_CONTATOS=                                              # [opcional]
   <script src="/config.js"></script>
   <script src="/auth.js"></script>
   <script src="/shell.js"></script>
+  <script src="utils.js"></script>
+  <script src="toast.js"></script>
   <link rel="stylesheet" href="style.css">
   <style>
     :root {
@@ -440,9 +443,11 @@ MYSQL_CONTATOS=                                              # [opcional]
     .page-btn.active { background: var(--ruby-red); color: #fff; border-color: var(--ruby-red); }
     .page-btn:disabled { opacity: 0.35; cursor: not-allowed; }
     /* Upload drop zone */
-    .upload-zone { border: 2px dashed var(--border-light); border-radius: 12px; padding: 28px; text-align: center; margin-bottom: 20px; cursor: pointer; transition: border-color 0.15s, background 0.15s; }
+    .upload-zone { border: 2px dashed var(--border-light); border-radius: 12px; padding: 16px 20px; text-align: center; margin-bottom: 16px; cursor: pointer; transition: border-color 0.15s, background 0.15s; display: flex; align-items: center; justify-content: center; gap: 10px; min-height: 56px; }
+    .upload-zone svg { flex-shrink: 0; width: 20px; height: 20px; opacity: 0.5; }
     .upload-zone:hover, .upload-zone.drag-over { border-color: var(--ruby-red); background: rgba(159,63,55,0.04); }
-    .upload-zone p { font-size: 0.82rem; color: rgba(34,27,25,0.5); margin-top: 6px; }
+    .upload-zone:hover svg, .upload-zone.drag-over svg { opacity: 1; color: var(--ruby-red); }
+    .upload-zone p { font-size: 0.82rem; color: rgba(34,27,25,0.5); margin: 0; }
     .upload-zone strong { color: var(--ruby-red); }
     .upload-progress { height: 4px; background: #f0ece8; border-radius: 2px; margin-top: 10px; overflow: hidden; display: none; }
     .upload-progress-bar { height: 100%; background: var(--ruby-red); transition: width 0.3s; }
@@ -459,27 +464,46 @@ MYSQL_CONTATOS=                                              # [opcional]
     </div>
     <p style="font-size:0.82rem;opacity:0.5;margin:0 0 16px">Imagens e recursos visuais usados nos templates de geração automática de materiais.</p>
 
-    <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;align-items:center">
-      <div class="search-bar" style="flex:1;max-width:300px;margin-bottom:0;height:34px;padding:0 14px;border-radius:8px">
+    <div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:0">
+      <div class="filter-bar" id="filterBarAssets" style="flex-shrink:0">
+        <button class="filter-toggle-btn" id="filterToggleAssets" onclick="toggleFilterPanel()">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+          Filtrar
+          <span class="filter-count-badge" id="filterCountAssets" style="display:none">0</span>
+        </button>
+        <div id="filterActiveBadgesAssets" style="display:contents"></div>
+        <button class="filter-clear-btn" id="filterClearAssets" style="display:none" onclick="clearAllFilters()">Limpar tudo</button>
+      </div>
+      <div class="search-bar" style="flex:1;margin-bottom:0;height:32px;padding:0 14px;border-radius:8px">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" opacity="0.4"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
         <input type="text" id="searchInput" placeholder="Buscar por nome..." oninput="debounceSearch()">
       </div>
-      <select id="filterTipo" onchange="loadAssets()" style="height:34px;border:1px solid var(--border-light);border-radius:8px;padding:0 10px;font-family:'Nunito Sans',sans-serif;font-size:0.82rem;background:var(--card-white)">
-        <option value="">Todos os formulários</option>
-      </select>
-      <div class="filter-chips-inline" style="display:inline-flex;gap:4px">
-        <button class="filter-chip-mini active" data-value="" onclick="setUsageFilter(this,'')">Todos</button>
-        <button class="filter-chip-mini" data-value="used" onclick="setUsageFilter(this,'used')">Em uso</button>
-        <button class="filter-chip-mini" data-value="orphan" onclick="setUsageFilter(this,'orphan')">Não utilizados</button>
+    </div>
+
+    <div class="filter-panel" id="filterPanelAssets" style="margin-top:10px">
+      <div class="filter-panel-row">
+        <span class="filter-panel-label">Tipo</span>
+        <button class="filter-chip active" data-filter="tipo" data-value="" data-label="Todos os tipos" onclick="toggleFilter(this, 'tipo')">Todos</button>
+        <button class="filter-chip" data-filter="tipo" data-value="bg-base" data-label="Background base" onclick="toggleFilter(this, 'tipo')">Background base</button>
+        <button class="filter-chip" data-filter="tipo" data-value="logo" data-label="Logo" onclick="toggleFilter(this, 'tipo')">Logo</button>
+        <button class="filter-chip" data-filter="tipo" data-value="elemento" data-label="Elemento" onclick="toggleFilter(this, 'tipo')">Elemento</button>
+        <button class="filter-chip" data-filter="tipo" data-value="outro" data-label="Outro" onclick="toggleFilter(this, 'tipo')">Outro</button>
       </div>
-      <input type="hidden" id="filterUsage" value="">
+      <div class="filter-panel-row">
+        <span class="filter-panel-label">Uso</span>
+        <button class="filter-chip active" data-filter="uso" data-value="" data-label="Todos" onclick="toggleFilter(this, 'uso')">Todos</button>
+        <button class="filter-chip" data-filter="uso" data-value="em-uso" data-label="Em uso" onclick="toggleFilter(this, 'uso')">Em uso</button>
+        <button class="filter-chip" data-filter="uso" data-value="orfaos" data-label="Órfãos" onclick="toggleFilter(this, 'uso')">Órfãos</button>
+      </div>
     </div>
 
   <!-- Drop zone -->
   <div class="upload-zone" id="uploadZone" onclick="document.getElementById('uploadInput').click()">
     <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="rgba(34,27,25,0.25)" stroke-width="1.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-    <p>Arraste imagens aqui ou <strong>clique para selecionar</strong></p>
-    <p style="font-size:0.72rem;margin-top:3px">PNG, JPG, WebP, SVG — máx. 5MB por arquivo</p>
+    <div>
+      <p>Arraste imagens aqui ou <strong>clique para selecionar</strong></p>
+      <p style="font-size:0.72rem;margin-top:2px">PNG, JPG, WebP — máx. 5MB por arquivo</p>
+    </div>
     <div class="upload-progress" id="uploadProgress">
       <div class="upload-progress-bar" id="uploadProgressBar" style="width:0%"></div>
     </div>
@@ -518,55 +542,29 @@ MYSQL_CONTATOS=                                              # [opcional]
     if (parent) parent.innerHTML = '<div class="no-thumb">🖼</div>';
   };
 
-  function esc(s) {
-    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-  }
-  function showToast(msg, type = 'info', duration = 3000) {
-    const t = document.createElement('div');
-    t.className = `toast ${type}`;
-    t.textContent = msg;
-    document.body.appendChild(t);
-    setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.remove(), 300); }, duration);
-  }
-
   async function init() {
     if (typeof _configReady !== 'undefined') await _configReady;
     await Auth.init();
     if (!Auth.isAuthenticated()) { window.location.href = '/auth/login?redirect=' + encodeURIComponent(window.location.pathname); return; }
     if (!Auth.isAdmin()) { window.location.href = '/solicitacoes.html'; return; }
     Shell.render({ activeRoute: 'admin-assets', contentEl: document.getElementById('pageContent') });
-    await loadFormSchemas();
     await loadAssets();
     setupDropZone();
-  }
-
-  async function loadFormSchemas() {
-    try {
-      const r = await fetch('/api/admin/form-schemas');
-      if (!r.ok) return;
-      const schemas = await r.json();
-      const sel = document.getElementById('filterTipo');
-      for (const s of schemas) {
-        const opt = document.createElement('option');
-        opt.value = s.tipo; opt.textContent = s.label;
-        sel.appendChild(opt);
-      }
-    } catch {}
   }
 
   async function loadAssets() {
     document.getElementById('loadingSkeleton').style.display = 'grid';
     document.getElementById('assetsContainer').innerHTML = '<div class="loading-grid" id="loadingSkeleton">' + Array(8).fill('<div class="skeleton"></div>').join('') + '</div>';
     try {
-      const usage = document.getElementById('filterUsage').value;
-      const tipo = document.getElementById('filterTipo').value;
+      const usage = filterState.uso;
+      const tipo = filterState.tipo;
       let url = '/api/admin/assets?';
-      if (usage === 'orphan') url += 'orphan=1&';
+      if (usage === 'orfaos') url += 'orphan=1&';
       if (tipo) url += 'tipo=' + encodeURIComponent(tipo) + '&';
       const r = await fetch(url);
       if (!r.ok) { document.getElementById('assetsContainer').innerHTML = '<div class="empty-state"><h3>Erro ao carregar assets.</h3></div>'; return; }
       allAssets = (await r.json()).assets || [];
-      if (usage === 'used') allAssets = allAssets.filter(a => a.usage_count > 0);
+      if (usage === 'em-uso') allAssets = allAssets.filter(a => a.usage_count > 0);
       applySearch();
     } catch(e) { document.getElementById('assetsContainer').innerHTML = '<div class="empty-state"><h3>Erro de rede.</h3></div>'; }
   }
@@ -680,7 +678,8 @@ MYSQL_CONTATOS=                                              # [opcional]
   }
 
   async function deleteAsset(id) {
-    if (!confirm('Deletar este asset permanentemente? Esta ação não pode ser desfeita.')) return;
+    const ok = await showConfirm('Deletar este asset permanentemente? Esta ação não pode ser desfeita.', { danger: true, okLabel: 'Excluir' });
+    if (!ok) return;
     const r = await fetch(`/api/admin/assets/${id}`, { method: 'DELETE' });
     if (!r.ok) { const d = await r.json().catch(()=>({})); showToast(d.error || 'Erro ao deletar.', 'error'); return; }
     showToast('Asset deletado.', 'success');
@@ -726,11 +725,64 @@ MYSQL_CONTATOS=                                              # [opcional]
     });
   }
 
-  function setUsageFilter(el, value) {
-    el.parentElement.querySelectorAll('.filter-chip-mini').forEach(b => b.classList.remove('active'));
-    el.classList.add('active');
-    document.getElementById('filterUsage').value = value;
+  const filterState = { tipo: '', uso: '' };
+
+  function toggleFilterPanel() {
+    const panel = document.getElementById('filterPanelAssets');
+    const btn = document.getElementById('filterToggleAssets');
+    const isOpen = panel.classList.contains('open');
+    panel.classList.toggle('open', !isOpen);
+    if (!hasActiveFilters() && isOpen) btn.classList.remove('has-filters');
+  }
+
+  function toggleFilter(btn, key) {
+    filterState[key] = btn.dataset.value;
+    document.querySelectorAll(`#filterPanelAssets [data-filter="${key}"]`).forEach(b => {
+      b.classList.toggle('active', b.dataset.value === filterState[key]);
+    });
+    updateFilterUI();
     loadAssets();
+  }
+
+  function clearAllFilters() {
+    Object.keys(filterState).forEach(k => filterState[k] = '');
+    document.querySelectorAll('#filterPanelAssets .filter-chip').forEach(b => {
+      b.classList.toggle('active', b.dataset.value === '');
+    });
+    updateFilterUI();
+    loadAssets();
+  }
+
+  function hasActiveFilters() {
+    return Object.values(filterState).some(v => v !== '');
+  }
+
+  function updateFilterUI() {
+    const count = Object.values(filterState).filter(v => v !== '').length;
+    const countBadge = document.getElementById('filterCountAssets');
+    const clearBtn = document.getElementById('filterClearAssets');
+    const btn = document.getElementById('filterToggleAssets');
+    if (count > 0) {
+      countBadge.textContent = count;
+      countBadge.style.display = 'inline-flex';
+      clearBtn.style.display = 'inline-block';
+      btn.classList.add('has-filters');
+    } else {
+      countBadge.style.display = 'none';
+      clearBtn.style.display = 'none';
+      btn.classList.remove('has-filters');
+    }
+    const badgesContainer = document.getElementById('filterActiveBadgesAssets');
+    badgesContainer.innerHTML = '';
+    Object.entries(filterState).forEach(([key, value]) => {
+      if (!value) return;
+      const btnRef = document.querySelector(`#filterPanelAssets [data-filter="${key}"][data-value="${value}"]`);
+      if (!btnRef) return;
+      const badge = document.createElement('span');
+      badge.className = 'filter-active-badge';
+      badge.innerHTML = `${btnRef.dataset.label} <span class="remove-badge" onclick="toggleFilter(document.querySelector('#filterPanelAssets [data-filter=\\'${key}\\'][data-value=\\'\\']'), '${key}')">×</span>`;
+      badgesContainer.appendChild(badge);
+    });
   }
 
   init();
@@ -765,10 +817,10 @@ MYSQL_CONTATOS=                                              # [opcional]
     .ccu-card { background: #fff; border: 1.5px solid #e8e2dc; border-radius: 14px; padding: 18px; margin-bottom: 12px; }
     .ccu-add-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
     .ccu-input { padding: 8px 12px; border: 1.5px solid #e8e2dc; border-radius: 8px; font-size: 0.88rem; font-family: 'Nunito Sans', sans-serif; color: #221b19; }
-    .ccu-input:focus { outline: none; border-color: #AC3631; }
+    .ccu-input:focus { outline: none; border-color: var(--ruby-red); }
     .ccu-btn { padding: 8px 15px; border-radius: 8px; border: 1.5px solid #e8e2dc; background: #fff; font-size: 0.82rem; font-weight: 600; cursor: pointer; font-family: 'Nunito Sans', sans-serif; color: rgba(34,27,25,0.7); transition: background 0.15s; }
     .ccu-btn:hover { background: #f5f3f0; }
-    .ccu-btn.primary { background: #AC3631; color: #fff; border-color: #AC3631; }
+    .ccu-btn.primary { background: var(--ruby-red); color: #fff; border-color: var(--ruby-red); }
     .ccu-btn.primary:hover { background: #b44b42; }
     .ccu-btn.danger { color: #b91c1c; border-color: #fecaca; }
     .ccu-btn.danger:hover { background: #fef2f2; }
@@ -783,10 +835,13 @@ MYSQL_CONTATOS=                                              # [opcional]
     .ccu-forms-label { font-size: 0.74rem; font-weight: 700; color: rgba(34,27,25,0.55); margin-bottom: 8px; }
     .ccu-forms-grid { display: flex; flex-wrap: wrap; gap: 8px; }
     .ccu-chip { display: inline-flex; align-items: center; gap: 6px; font-size: 0.8rem; padding: 6px 11px; border: 1.5px solid #e8e2dc; border-radius: 999px; cursor: pointer; user-select: none; transition: background 0.12s, border-color 0.12s; color: rgba(34,27,25,0.75); }
-    .ccu-chip input { accent-color: #AC3631; cursor: pointer; margin: 0; }
-    .ccu-chip.checked { background: rgba(172,54,49,0.08); border-color: #AC3631; color: #8f2c28; font-weight: 600; }
+    .ccu-chip input { accent-color: var(--ruby-red); cursor: pointer; margin: 0; }
+    .ccu-chip.checked { background: rgba(172,54,49,0.08); border-color: var(--ruby-red); color: #8f2c28; font-weight: 600; }
     .ccu-chip.locked { opacity: 0.5; cursor: not-allowed; background: #f5f3f0; }
     .ccu-chip.locked .ccu-lockinfo { font-size: 0.68rem; color: rgba(34,27,25,0.4); }
+    .ccu-category-header { font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: rgba(34,27,25,0.45); margin-top: 12px; margin-bottom: 6px; }
+    .ccu-category-header:first-child { margin-top: 0; }
+    .ccu-category-grid { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 4px; }
     .ccu-row-actions { display: flex; gap: 8px; margin-top: 14px; align-items: center; }
     .ccu-loading, .ccu-error, .ccu-empty { text-align: center; padding: 32px 20px; font-size: 0.88rem; }
     .ccu-loading { opacity: 0.5; }
@@ -824,14 +879,10 @@ MYSQL_CONTATOS=                                              # [opcional]
   <script src="config.js"></script>
   <script src="auth.js"></script>
   <script src="shell.js"></script>
+  <script src="utils.js"></script>
+  <script src="toast.js"></script>
   <script>
     let STATE = { lists: [], forms: [], assignedTipos: {} };
-
-    function esc(str) {
-      const d = document.createElement('div');
-      d.textContent = String(str == null ? '' : str);
-      return d.innerHTML;
-    }
 
     async function init() {
       try { if (typeof _configReady !== 'undefined') await _configReady; } catch (e) {}
@@ -878,16 +929,53 @@ MYSQL_CONTATOS=                                              # [opcional]
         return;
       }
       area.innerHTML = STATE.lists.map(function (list) {
-        const chips = STATE.forms.map(function (f) {
-          const assignedTo = STATE.assignedTipos[f.tipo];
-          const here = assignedTo === list.list_id;
-          const lockedElsewhere = !!assignedTo && assignedTo !== list.list_id;
-          const cls = 'ccu-chip' + (here ? ' checked' : '') + (lockedElsewhere ? ' locked' : '');
-          const lockInfo = lockedElsewhere ? ' <span class="ccu-lockinfo">(em: ' + esc(listNameById(assignedTo)) + ')</span>' : '';
-          return '<label class="' + cls + '">' +
-            '<input type="checkbox" value="' + esc(f.tipo) + '"' + (here ? ' checked' : '') + (lockedElsewhere ? ' disabled' : '') + '>' +
-            esc(f.label) + lockInfo +
-          '</label>';
+        // Agrupar STATE.forms por categoria usando CATEGORIAS_SOLICITACAO do config.js
+        const formsByCategory = {};
+        const categoryOrder = [];
+        const formByTipo = {};
+        STATE.forms.forEach(function(f) { formByTipo[f.tipo] = f; });
+
+        if (typeof CATEGORIAS_SOLICITACAO !== 'undefined') {
+          CATEGORIAS_SOLICITACAO.forEach(function(cat) {
+            const catName = cat.categoria;
+            const itensNaLista = (cat.itens || []).filter(function(item) {
+              return !!formByTipo[item.id];
+            });
+            if (itensNaLista.length > 0) {
+              formsByCategory[catName] = itensNaLista.map(function(item) { return formByTipo[item.id]; });
+              categoryOrder.push(catName);
+            }
+          });
+        }
+
+        const usedTipos = new Set();
+        Object.values(formsByCategory).forEach(function(arr) { arr.forEach(function(f) { usedTipos.add(f.tipo); }); });
+        const outrosForms = STATE.forms.filter(function(f) { return !usedTipos.has(f.tipo); });
+        if (outrosForms.length > 0) {
+          formsByCategory['Outros'] = outrosForms;
+          categoryOrder.push('Outros');
+        }
+
+        const chips = categoryOrder.map(function(catName) {
+          const formsInCat = formsByCategory[catName];
+          formsInCat.sort(function(a, b) {
+            const aHere = STATE.assignedTipos[a.tipo] === list.list_id;
+            const bHere = STATE.assignedTipos[b.tipo] === list.list_id;
+            return (bHere ? 1 : 0) - (aHere ? 1 : 0);
+          });
+          const groupChips = formsInCat.map(function(f) {
+            const assignedTo = STATE.assignedTipos[f.tipo];
+            const here = assignedTo === list.list_id;
+            const lockedElsewhere = !!assignedTo && assignedTo !== list.list_id;
+            const cls = 'ccu-chip' + (here ? ' checked' : '') + (lockedElsewhere ? ' locked' : '');
+            const lockInfo = lockedElsewhere ? ' <span class="ccu-lockinfo">(em: ' + esc(listNameById(assignedTo)) + ')</span>' : '';
+            return '<label class="' + cls + '">' +
+              '<input type="checkbox" value="' + esc(f.tipo) + '"' + (here ? ' checked' : '') + (lockedElsewhere ? ' disabled' : '') + '>' +
+              esc(f.label) + lockInfo +
+            '</label>';
+          }).join('');
+          return '<div class="ccu-category-header">' + esc(catName) + '</div>' +
+                 '<div class="ccu-category-grid">' + groupChips + '</div>';
         }).join('');
         const delName = esc(list.list_name || list.list_id).replace(/'/g, "&#39;");
         return '<div class="ccu-card" data-list-id="' + list.id + '">' +
@@ -963,13 +1051,14 @@ MYSQL_CONTATOS=                                              # [opcional]
     }
 
     async function excluirLista(listId, nome) {
-      if (!confirm('Excluir a lista "' + nome + '"? Os formulários atribuídos a ela voltam a usar a lista padrão.')) return;
+      const ok = await showConfirm('Excluir a lista "' + nome + '"? Os formulários atribuídos a ela voltam a usar a lista padrão.', { danger: true, okLabel: 'Excluir' });
+      if (!ok) return;
       try {
         const res = await fetch('/api/admin/clickup-lists/' + listId, { method: 'DELETE', credentials: 'include' });
         const d = await res.json().catch(function () { return {}; });
-        if (!res.ok || !d.ok) { alert(d.error || 'Erro ao excluir.'); return; }
+        if (!res.ok || !d.ok) { showToast(d.error || 'Erro ao excluir', 'error'); return; }
         loadConfig();
-      } catch (err) { alert('Erro de rede ao excluir.'); }
+      } catch (err) { showToast('Erro de rede ao excluir', 'error'); }
     }
 
     init();
@@ -1004,17 +1093,28 @@ MYSQL_CONTATOS=                                              # [opcional]
   <link rel="stylesheet" href="style.css">
 </head>
 <body class="page-light">
+<!-- ClickUp logo gradients (usados em CLICKUP_ICON) -->
+<svg xmlns="http://www.w3.org/2000/svg" width="0" height="0" style="position:absolute;overflow:hidden">
+  <defs>
+    <linearGradient id="cu1" x1="0" y1="15.05" x2="54.84" y2="15.05" gradientUnits="userSpaceOnUse" gradientTransform="matrix(1 0 0 -1 0 69.36)">
+      <stop offset="0" stop-color="#8930FD"/><stop offset="1" stop-color="#49CCF9"/>
+    </linearGradient>
+    <linearGradient id="cu2" x1="1.2" y1="53.17" x2="53.74" y2="53.17" gradientUnits="userSpaceOnUse" gradientTransform="matrix(1 0 0 -1 0 69.36)">
+      <stop offset="0" stop-color="#FF02F0"/><stop offset="1" stop-color="#FFC800"/>
+    </linearGradient>
+  </defs>
+</svg>
   <div id="pageContent">
-  <div class="container">
+  <div class="container container-wide">
     <div class="title-row">
       <h1 class="page-title">Painel Administrativo</h1>
       <div class="admin-actions admin-top-actions" style="display:flex;gap:8px">
-        <a href="/dashboard.html" class="btn btn-secondary">Meu painel</a>
-        <a href="/admin-clickup-lists.html" class="btn btn-secondary" id="clickupListsLink" style="display:none">Listas ClickUp</a>
+        <a href="/dashboard.html" class="btn btn-outline-ruby">Meu painel</a>
+        <a href="/admin-clickup-lists.html" class="btn btn-outline-ruby" id="clickupListsLink" style="display:none">Listas ClickUp</a>
       </div>
     </div>
 
-    <div class="stats-row" style="grid-template-columns:repeat(4,1fr)" id="adminStats">
+    <div class="stats-row" style="grid-template-columns:repeat(3,1fr)" id="adminStats">
       <div class="stat-card" style="border-color:var(--border-light)">
         <div class="stat-number" id="statTotal">0</div>
         <div class="stat-label">Total</div>
@@ -1027,25 +1127,32 @@ MYSQL_CONTATOS=                                              # [opcional]
         <div class="stat-number" style="color:var(--sage-green)" id="statCompleted">0</div>
         <div class="stat-label">Concluídas</div>
       </div>
-      <div class="stat-card" style="border-color:var(--border-light)">
-        <div class="stat-number" id="statMonth">0</div>
-        <div class="stat-label">Este mês</div>
-      </div>
     </div>
 
     <!-- Filtro de período para o gráfico -->
-    <div style="display:flex;align-items:center;gap:10px;margin-top:24px;flex-wrap:wrap">
+    <div style="display:flex;align-items:center;gap:10px;margin-top:24px;flex-wrap:wrap;position:relative">
       <span style="font-size:0.8rem;font-weight:600;opacity:0.5">Período:</span>
       <div style="display:flex;gap:6px;flex-wrap:wrap" id="adminPeriodoBtns">
         <button class="filter-chip active" data-dias="7" onclick="setAdminPeriodo(this)">7 dias</button>
         <button class="filter-chip" data-dias="14" onclick="setAdminPeriodo(this)">14 dias</button>
         <button class="filter-chip" data-dias="30" onclick="setAdminPeriodo(this)">30 dias</button>
         <button class="filter-chip" data-dias="90" onclick="setAdminPeriodo(this)">90 dias</button>
+        <button class="filter-chip" id="customPeriodoBtn" onclick="toggleCustomPeriodo()">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:4px"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          Personalizado
+        </button>
       </div>
-      <div style="display:flex;gap:6px;align-items:center;margin-left:auto">
-        <input type="date" id="adminDe" style="padding:5px 10px;border:1px solid var(--border-light);border-radius:7px;font-size:0.8rem;font-family:'Nunito Sans',sans-serif" onchange="setAdminCustomPeriodo()">
-        <span style="font-size:0.8rem;opacity:0.4">até</span>
-        <input type="date" id="adminAte" style="padding:5px 10px;border:1px solid var(--border-light);border-radius:7px;font-size:0.8rem;font-family:'Nunito Sans',sans-serif" onchange="setAdminCustomPeriodo()">
+
+      <div id="customPeriodoPopover" style="display:none;position:absolute;top:calc(100% + 8px);left:0;background:var(--card-white);border:1px solid var(--border-light);border-radius:12px;padding:14px 16px;box-shadow:0 8px 24px rgba(0,0,0,0.12);z-index:50;min-width:280px">
+        <div style="font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;opacity:0.5;margin-bottom:8px">Intervalo personalizado</div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <input type="date" id="adminDe" style="flex:1;padding:6px 10px;border:1px solid var(--border-light);border-radius:7px;font-size:0.82rem;font-family:'Nunito Sans',sans-serif" onchange="setAdminCustomPeriodo()">
+          <span style="font-size:0.78rem;opacity:0.5">até</span>
+          <input type="date" id="adminAte" style="flex:1;padding:6px 10px;border:1px solid var(--border-light);border-radius:7px;font-size:0.82rem;font-family:'Nunito Sans',sans-serif" onchange="setAdminCustomPeriodo()">
+        </div>
+        <div style="display:flex;justify-content:flex-end;margin-top:10px">
+          <button onclick="closeCustomPeriodo()" style="font-size:0.78rem;color:rgba(34,27,25,0.55);background:none;border:none;cursor:pointer;font-weight:600;font-family:'Nunito Sans',sans-serif">Fechar</button>
+        </div>
       </div>
     </div>
 
@@ -1094,23 +1201,36 @@ MYSQL_CONTATOS=                                              # [opcional]
     </div>
 
     <div class="tab-content" id="tab-eventos">
-      <div class="admin-list-toolbar">
-        <div class="filters">
-          <button class="filter-chip active" data-value="" onclick="setFilter(this,'eventos','periodo')">Todos</button>
-          <button class="filter-chip" data-value="hoje" onclick="setFilter(this,'eventos','periodo')">Hoje</button>
-          <button class="filter-chip" data-value="7dias" onclick="setFilter(this,'eventos','periodo')">7 dias</button>
-          <button class="filter-chip" data-value="30dias" onclick="setFilter(this,'eventos','periodo')">30 dias</button>
+      <div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:0">
+        <div class="filter-bar" id="filterBarEventos" style="flex-shrink:0">
+          <button class="filter-toggle-btn" id="filterToggleEventos" onclick="toggleFilterPanel('eventos')">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+            Filtrar
+            <span class="filter-count-badge" id="filterCountEventos" style="display:none">0</span>
+          </button>
+          <div id="filterActiveBadgesEventos" style="display:contents"></div>
+          <button class="filter-clear-btn" id="filterClearEventos" style="display:none" onclick="clearAllFilters('eventos')">Limpar tudo</button>
         </div>
-        <select class="filter-select-compact" data-tab="eventos" onchange="setFilterFromSelect(this,'eventos','status')">
-          <option value="">Todos os status</option>
-          <option value="recebido">Recebido</option>
-          <option value="em-producao">Em produção</option>
-          <option value="aguardando">Aguardando</option>
-          <option value="concluido">Concluído</option>
-        </select>
-        <div class="search-bar compact">
+        <div class="search-bar" style="flex:1;margin-bottom:0;height:32px;padding:0 14px;border-radius:8px">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" opacity="0.4"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
           <input type="text" placeholder="Buscar..." id="searchEventos" oninput="debounceLoad('eventos')">
+        </div>
+      </div>
+      <div class="filter-panel" id="filterPanelEventos" style="margin-top:10px">
+        <div class="filter-panel-row">
+          <span class="filter-panel-label">Período</span>
+          <button class="filter-chip active" data-filter="periodo" data-value="" data-label="Todos os períodos" onclick="toggleFilter(this,'eventos','periodo')">Todos</button>
+          <button class="filter-chip" data-filter="periodo" data-value="hoje" data-label="Hoje" onclick="toggleFilter(this,'eventos','periodo')">Hoje</button>
+          <button class="filter-chip" data-filter="periodo" data-value="7dias" data-label="7 dias" onclick="toggleFilter(this,'eventos','periodo')">7 dias</button>
+          <button class="filter-chip" data-filter="periodo" data-value="30dias" data-label="30 dias" onclick="toggleFilter(this,'eventos','periodo')">30 dias</button>
+        </div>
+        <div class="filter-panel-row">
+          <span class="filter-panel-label">Status</span>
+          <button class="filter-chip active" data-filter="status" data-value="" data-label="Todos os status" onclick="toggleFilter(this,'eventos','status')">Todos</button>
+          <button class="filter-chip" data-filter="status" data-value="recebido" data-label="Recebido" onclick="toggleFilter(this,'eventos','status')">Recebido</button>
+          <button class="filter-chip" data-filter="status" data-value="em-producao" data-label="Em produção" onclick="toggleFilter(this,'eventos','status')">Em produção</button>
+          <button class="filter-chip" data-filter="status" data-value="aguardando" data-label="Aguardando" onclick="toggleFilter(this,'eventos','status')">Aguardando</button>
+          <button class="filter-chip" data-filter="status" data-value="concluido" data-label="Concluído" onclick="toggleFilter(this,'eventos','status')">Concluído</button>
         </div>
       </div>
       <div id="tableEventos"></div>
@@ -1118,26 +1238,39 @@ MYSQL_CONTATOS=                                              # [opcional]
     </div>
 
     <div class="tab-content active" id="tab-geral">
-      <div class="admin-list-toolbar">
-        <div class="filters">
-          <button class="filter-chip active" data-value="" onclick="setFilter(this,'geral','periodo')">Todos</button>
-          <button class="filter-chip" data-value="hoje" onclick="setFilter(this,'geral','periodo')">Hoje</button>
-          <button class="filter-chip" data-value="7dias" onclick="setFilter(this,'geral','periodo')">7 dias</button>
-          <button class="filter-chip" data-value="30dias" onclick="setFilter(this,'geral','periodo')">30 dias</button>
+      <div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:0">
+        <div class="filter-bar" id="filterBarGeral" style="flex-shrink:0">
+          <button class="filter-toggle-btn" id="filterToggleGeral" onclick="toggleFilterPanel('geral')">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+            Filtrar
+            <span class="filter-count-badge" id="filterCountGeral" style="display:none">0</span>
+          </button>
+          <div id="filterActiveBadgesGeral" style="display:contents"></div>
+          <button class="filter-clear-btn" id="filterClearGeral" style="display:none" onclick="clearAllFilters('geral')">Limpar tudo</button>
         </div>
-        <select class="filter-select-compact" data-tab="geral" onchange="setFilterFromSelect(this,'geral','status')">
-          <option value="">Todos os status</option>
-          <option value="recebido">Recebido</option>
-          <option value="em-analise">Em análise</option>
-          <option value="aguardando">Aguardando</option>
-          <option value="em-producao">Em produção</option>
-          <option value="em-revisao">Em revisão</option>
-          <option value="em-aprovacao">Em aprovação</option>
-          <option value="concluido">Concluído</option>
-        </select>
-        <div class="search-bar compact">
+        <div class="search-bar" style="flex:1;margin-bottom:0;height:32px;padding:0 14px;border-radius:8px">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" opacity="0.4"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
           <input type="text" placeholder="Buscar..." id="searchGeral" oninput="debounceLoad('geral')">
+        </div>
+      </div>
+      <div class="filter-panel" id="filterPanelGeral" style="margin-top:10px">
+        <div class="filter-panel-row">
+          <span class="filter-panel-label">Período</span>
+          <button class="filter-chip active" data-filter="periodo" data-value="" data-label="Todos os períodos" onclick="toggleFilter(this,'geral','periodo')">Todos</button>
+          <button class="filter-chip" data-filter="periodo" data-value="hoje" data-label="Hoje" onclick="toggleFilter(this,'geral','periodo')">Hoje</button>
+          <button class="filter-chip" data-filter="periodo" data-value="7dias" data-label="7 dias" onclick="toggleFilter(this,'geral','periodo')">7 dias</button>
+          <button class="filter-chip" data-filter="periodo" data-value="30dias" data-label="30 dias" onclick="toggleFilter(this,'geral','periodo')">30 dias</button>
+        </div>
+        <div class="filter-panel-row">
+          <span class="filter-panel-label">Status</span>
+          <button class="filter-chip active" data-filter="status" data-value="" data-label="Todos os status" onclick="toggleFilter(this,'geral','status')">Todos</button>
+          <button class="filter-chip" data-filter="status" data-value="recebido" data-label="Recebido" onclick="toggleFilter(this,'geral','status')">Recebido</button>
+          <button class="filter-chip" data-filter="status" data-value="em-analise" data-label="Em análise" onclick="toggleFilter(this,'geral','status')">Em análise</button>
+          <button class="filter-chip" data-filter="status" data-value="aguardando" data-label="Aguardando" onclick="toggleFilter(this,'geral','status')">Aguardando</button>
+          <button class="filter-chip" data-filter="status" data-value="em-producao" data-label="Em produção" onclick="toggleFilter(this,'geral','status')">Em produção</button>
+          <button class="filter-chip" data-filter="status" data-value="em-revisao" data-label="Em revisão" onclick="toggleFilter(this,'geral','status')">Em revisão</button>
+          <button class="filter-chip" data-filter="status" data-value="em-aprovacao" data-label="Em aprovação" onclick="toggleFilter(this,'geral','status')">Em aprovação</button>
+          <button class="filter-chip" data-filter="status" data-value="concluido" data-label="Concluído" onclick="toggleFilter(this,'geral','status')">Concluído</button>
         </div>
       </div>
       <div id="tableGeral"></div>
@@ -1161,6 +1294,7 @@ MYSQL_CONTATOS=                                              # [opcional]
 
   </div>
   <script src="utils.js"></script>
+  <script src="toast.js"></script>
   <script src="config.js"></script>
   <script src="auth.js"></script>
   <script src="shell.js"></script>
@@ -1169,6 +1303,11 @@ MYSQL_CONTATOS=                                              # [opcional]
     let adminFilters = { eventos: { periodo: '', status: '' }, geral: { periodo: '', status: '' } };
     let adminPages = { eventos: 1, geral: 1 };
     let searchTimeout;
+    const CLICKUP_ICON = `<svg width="14" height="14" viewBox="0 0 54.8 65.8" xmlns="http://www.w3.org/2000/svg">
+  <path fill="url(#cu1)" d="M0,50.6l10.1-7.8c5.4,7,11.1,10.3,17.4,10.3c6.3,0,11.9-3.2,17-10.2l10.3,7.6c-7.4,10-16.6,15.3-27.3,15.3C16.9,65.8,7.6,60.5,0,50.6z"/>
+  <path fill="url(#cu2)" d="M27.5,16.9l-18,15.5l-8.3-9.7L27.6,0l26.2,22.7l-8.4,9.6L27.5,16.9z"/>
+</svg>`;
+
     let adminItemsCache = {};
 
     // ── Gráfico / Stats ─────────────────────────────────────────
@@ -1176,13 +1315,6 @@ MYSQL_CONTATOS=                                              # [opcional]
     let adminGraficoModo = 'tipo';
     let adminGraficoData = null;
     let graficoFiltrosAtivos = null;
-
-    function esc(str) {
-      if (!str) return '';
-      const d = document.createElement('div');
-      d.textContent = String(str);
-      return d.innerHTML;
-    }
 
     async function init() {
       await _configReady;
@@ -1213,7 +1345,6 @@ MYSQL_CONTATOS=                                              # [opcional]
         animateNum('statTotal', data.total);
         animateNum('statActive', data.active);
         animateNum('statCompleted', data.completed);
-        animateNum('statMonth', data.thisMonth);
       } catch (e) { console.error(e); }
     }
 
@@ -1267,10 +1398,10 @@ MYSQL_CONTATOS=                                              # [opcional]
         const acoesCell = isAdmin
           ? `<td onclick="event.stopPropagation()" style="text-align:center;white-space:nowrap">
               ${item.clickup_url ? `<a href="${esc(item.clickup_url)}" target="_blank" rel="noopener" title="Abrir no ClickUp" class="action-btn action-clickup">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/><path d="M21 14v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5"/></svg>
+                ${CLICKUP_ICON}
               </a>` : ''}
               <button onclick="deleteSol(${item.id}, event)" title="Excluir solicitação" class="action-btn action-delete">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>
               </button>
             </td>`
           : '';
@@ -1296,12 +1427,13 @@ MYSQL_CONTATOS=                                              # [opcional]
 
     async function deleteSol(id, ev) {
       if (ev) ev.stopPropagation();
-      if (!confirm('Tem certeza que deseja excluir essa solicitação? Esta ação não pode ser desfeita.')) return;
+      const ok = await showConfirm('Tem certeza que deseja excluir essa solicitação? Esta ação não pode ser desfeita.', { danger: true, okLabel: 'Excluir' });
+      if (!ok) return;
       try {
         const res = await fetch(`/api/solicitacoes/${id}`, { method: 'DELETE' });
         if (!res.ok) {
           const err = await res.json().catch(() => ({}));
-          alert('Erro ao excluir: ' + (err.error || res.statusText));
+          showToast('Erro ao excluir: ' + (err.error || res.statusText), 'error');
           return;
         }
         loadTable(currentTab);
@@ -1309,7 +1441,7 @@ MYSQL_CONTATOS=                                              # [opcional]
         loadAdminStats();
       } catch (e) {
         console.error(e);
-        alert('Erro de rede ao excluir solicitação.');
+        showToast('Erro de rede ao excluir solicitação', 'error');
       }
     }
 
@@ -1319,18 +1451,68 @@ MYSQL_CONTATOS=                                              # [opcional]
       document.querySelectorAll('.tab-content').forEach(c => c.classList.toggle('active', c.id === 'tab-' + tab));
     }
 
-    function setFilterFromSelect(el, tab, key) {
-      adminFilters[tab][key] = el.value;
+    function toggleFilterPanel(tab) {
+      const cap = tab.charAt(0).toUpperCase() + tab.slice(1);
+      const panel = document.getElementById('filterPanel' + cap);
+      const btn = document.getElementById('filterToggle' + cap);
+      const isOpen = panel.classList.contains('open');
+      panel.classList.toggle('open', !isOpen);
+      if (!hasActiveFilters(tab) && isOpen) btn.classList.remove('has-filters');
+    }
+
+    function toggleFilter(btn, tab, key) {
+      const cap = tab.charAt(0).toUpperCase() + tab.slice(1);
+      adminFilters[tab][key] = btn.dataset.value;
+      document.querySelectorAll(`#filterPanel${cap} [data-filter="${key}"]`).forEach(b => {
+        b.classList.toggle('active', b.dataset.value === adminFilters[tab][key]);
+      });
       adminPages[tab] = 1;
+      updateFilterUI(tab);
       loadTable(tab);
     }
 
-    function setFilter(el, tab, key) {
-      el.parentElement.querySelectorAll('.filter-chip').forEach(s => s.classList.remove('active'));
-      el.classList.add('active');
-      adminFilters[tab][key] = el.dataset.value;
+    function clearAllFilters(tab) {
+      const cap = tab.charAt(0).toUpperCase() + tab.slice(1);
+      Object.keys(adminFilters[tab]).forEach(k => adminFilters[tab][k] = '');
+      document.querySelectorAll(`#filterPanel${cap} .filter-chip`).forEach(b => {
+        b.classList.toggle('active', b.dataset.value === '');
+      });
       adminPages[tab] = 1;
+      updateFilterUI(tab);
       loadTable(tab);
+    }
+
+    function hasActiveFilters(tab) {
+      return Object.values(adminFilters[tab]).some(v => v !== '');
+    }
+
+    function updateFilterUI(tab) {
+      const cap = tab.charAt(0).toUpperCase() + tab.slice(1);
+      const count = Object.values(adminFilters[tab]).filter(v => v !== '').length;
+      const countBadge = document.getElementById('filterCount' + cap);
+      const clearBtn = document.getElementById('filterClear' + cap);
+      const btn = document.getElementById('filterToggle' + cap);
+      if (count > 0) {
+        countBadge.textContent = count;
+        countBadge.style.display = 'inline-flex';
+        clearBtn.style.display = 'inline-block';
+        btn.classList.add('has-filters');
+      } else {
+        countBadge.style.display = 'none';
+        clearBtn.style.display = 'none';
+        btn.classList.remove('has-filters');
+      }
+      const badgesContainer = document.getElementById('filterActiveBadges' + cap);
+      badgesContainer.innerHTML = '';
+      Object.entries(adminFilters[tab]).forEach(([key, value]) => {
+        if (!value) return;
+        const btnRef = document.querySelector(`#filterPanel${cap} [data-filter="${key}"][data-value="${value}"]`);
+        if (!btnRef) return;
+        const badge = document.createElement('span');
+        badge.className = 'filter-active-badge';
+        badge.innerHTML = `${btnRef.dataset.label} <span class="remove-badge" onclick="toggleFilter(document.querySelector('#filterPanel${cap} [data-filter=\\'${key}\\'][data-value=\\'\\']'), '${tab}', '${key}')">×</span>`;
+        badgesContainer.appendChild(badge);
+      });
     }
 
     function debounceLoad(tab) {
@@ -1421,8 +1603,36 @@ MYSQL_CONTATOS=                                              # [opcional]
 
     function setAdminCustomPeriodo() {
       document.querySelectorAll('#adminPeriodoBtns .filter-chip').forEach(b => b.classList.remove('active'));
+      document.getElementById('customPeriodoBtn').classList.add('active');
       adminDias = null;
       loadAdminStats();
+    }
+
+    function toggleCustomPeriodo() {
+      const pop = document.getElementById('customPeriodoPopover');
+      const isOpen = pop.style.display === 'block';
+      pop.style.display = isOpen ? 'none' : 'block';
+      if (!isOpen) {
+        setTimeout(() => {
+          document.addEventListener('click', closeCustomPeriodoOnOutside, { once: true });
+        }, 0);
+      }
+    }
+
+    function closeCustomPeriodoOnOutside(e) {
+      const pop = document.getElementById('customPeriodoPopover');
+      const btn = document.getElementById('customPeriodoBtn');
+      if (!pop.contains(e.target) && !btn.contains(e.target)) {
+        pop.style.display = 'none';
+      } else {
+        setTimeout(() => {
+          document.addEventListener('click', closeCustomPeriodoOnOutside, { once: true });
+        }, 0);
+      }
+    }
+
+    function closeCustomPeriodo() {
+      document.getElementById('customPeriodoPopover').style.display = 'none';
     }
 
     async function loadAdminStats() {
@@ -1749,21 +1959,34 @@ MYSQL_CONTATOS=                                              # [opcional]
 
       <p style="font-size:0.82rem;opacity:0.5;margin:0 0 16px">Log detalhado de atividades do sistema: criações, exclusões, aprovações e erros de integração.</p>
 
-      <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;align-items:center">
-        <div class="search-bar" style="flex:1;max-width:300px;margin-bottom:0;height:32px;padding:0 14px;border-radius:8px">
+      <div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:0">
+        <div class="filter-bar" id="filterBarLog" style="flex-shrink:0">
+          <button class="filter-toggle-btn" id="filterToggleLog" onclick="toggleFilterPanel()">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+            Filtrar
+            <span class="filter-count-badge" id="filterCountLog" style="display:none">0</span>
+          </button>
+          <div id="filterActiveBadgesLog" style="display:contents"></div>
+          <button class="filter-clear-btn" id="filterClearLog" style="display:none" onclick="clearAllFilters()">Limpar tudo</button>
+        </div>
+        <div class="search-bar" style="flex:1;margin-bottom:0;height:32px;padding:0 14px;border-radius:8px">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" opacity="0.4"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
           <input type="text" id="logBusca" placeholder="Buscar por usuário, detalhe..." oninput="debounceLogSearch()">
         </div>
-        <select id="logFiltroNivel" onchange="loadLog()" style="height:32px;border:1px solid var(--border-light);border-radius:8px;padding:0 10px;font-family:'Nunito Sans',sans-serif;font-size:0.8rem;background:var(--card-white)">
-          <option value="">Todos os níveis</option>
-          <option value="info">Info</option>
-          <option value="warn">Warn</option>
-          <option value="error">Error</option>
-        </select>
+      </div>
+
+      <div class="filter-panel" id="filterPanelLog" style="margin-top:10px">
+        <div class="filter-panel-row">
+          <span class="filter-panel-label">Nível</span>
+          <button class="filter-chip active" data-filter="nivel" data-value="" data-label="Todos os níveis" onclick="toggleFilter(this, 'nivel')">Todos</button>
+          <button class="filter-chip" data-filter="nivel" data-value="info" data-label="Info" onclick="toggleFilter(this, 'nivel')">Info</button>
+          <button class="filter-chip" data-filter="nivel" data-value="warn" data-label="Avisos" onclick="toggleFilter(this, 'nivel')">Avisos</button>
+          <button class="filter-chip" data-filter="nivel" data-value="error" data-label="Erros" onclick="toggleFilter(this, 'nivel')">Erros</button>
+        </div>
       </div>
 
       <div style="border-radius:12px;border:1px solid var(--border-light);overflow:hidden;position:relative">
-        <table style="width:100%;border-collapse:collapse;font-size:0.82rem;table-layout:fixed" id="logTabela">
+        <table class="admin-table" style="table-layout:fixed" id="logTabela">
           <colgroup>
             <col style="width:110px">
             <col style="width:120px">
@@ -1772,12 +1995,12 @@ MYSQL_CONTATOS=                                              # [opcional]
             <col style="width:auto">
           </colgroup>
           <thead>
-            <tr style="background:var(--carbon-black)">
-              <th style="padding:10px 14px;font-weight:800;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.06em;color:#fff;text-align:left">Data/Hora</th>
-              <th style="padding:10px 14px;font-weight:800;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.06em;color:#fff;text-align:left">Usuário</th>
-              <th style="padding:10px 14px;font-weight:800;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.06em;color:#fff;text-align:left">Nível</th>
-              <th style="padding:10px 14px;font-weight:800;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.06em;color:#fff;text-align:left">Tipo</th>
-              <th style="padding:10px 14px;font-weight:800;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.06em;color:#fff;text-align:left">Detalhe</th>
+            <tr>
+              <th>Data/Hora</th>
+              <th>Usuário</th>
+              <th>Nível</th>
+              <th>Tipo</th>
+              <th>Detalhe</th>
             </tr>
           </thead>
           <tbody id="logTabelaBody">
@@ -1793,16 +2016,11 @@ MYSQL_CONTATOS=                                              # [opcional]
   <script src="config.js"></script>
   <script src="auth.js"></script>
   <script src="shell.js"></script>
+  <script src="utils.js"></script>
+  <script src="toast.js"></script>
   <script>
     let logPage = 1;
     let logSearchTimeout;
-
-    function esc(str) {
-      if (!str) return '';
-      const d = document.createElement('div');
-      d.textContent = String(str);
-      return d.innerHTML;
-    }
 
     const LOG_NIVEL_STYLE = {
       info:  { bg: 'rgba(37,99,235,0.1)',  text: '#2563eb', label: 'INFO'  },
@@ -1827,7 +2045,7 @@ MYSQL_CONTATOS=                                              # [opcional]
       params.set('limit', '30');
       const busca = document.getElementById('logBusca')?.value?.trim();
       if (busca) params.set('busca', busca);
-      const nivel = document.getElementById('logFiltroNivel')?.value;
+      const nivel = filterState.nivel || '';
       if (nivel) params.set('nivel', nivel);
       try {
         const res = await fetch('/api/admin/activity-log?' + params.toString());
@@ -1885,6 +2103,66 @@ MYSQL_CONTATOS=                                              # [opcional]
 
     function logGoPage(page) { logPage = page; loadLog(); }
 
+    const filterState = { nivel: '' };
+
+    function toggleFilterPanel() {
+      const panel = document.getElementById('filterPanelLog');
+      const btn = document.getElementById('filterToggleLog');
+      const isOpen = panel.classList.contains('open');
+      panel.classList.toggle('open', !isOpen);
+      if (!hasActiveFilters() && isOpen) btn.classList.remove('has-filters');
+    }
+
+    function toggleFilter(btn, key) {
+      filterState[key] = btn.dataset.value;
+      document.querySelectorAll(`#filterPanelLog [data-filter="${key}"]`).forEach(b => {
+        b.classList.toggle('active', b.dataset.value === filterState[key]);
+      });
+      updateFilterUI();
+      loadLog();
+    }
+
+    function clearAllFilters() {
+      filterState.nivel = '';
+      document.querySelectorAll('#filterPanelLog .filter-chip').forEach(b => {
+        b.classList.toggle('active', b.dataset.value === '');
+      });
+      updateFilterUI();
+      loadLog();
+    }
+
+    function hasActiveFilters() {
+      return Object.values(filterState).some(v => v !== '');
+    }
+
+    function updateFilterUI() {
+      const count = Object.values(filterState).filter(v => v !== '').length;
+      const countBadge = document.getElementById('filterCountLog');
+      const clearBtn = document.getElementById('filterClearLog');
+      const btn = document.getElementById('filterToggleLog');
+      if (count > 0) {
+        countBadge.textContent = count;
+        countBadge.style.display = 'inline-flex';
+        clearBtn.style.display = 'inline-block';
+        btn.classList.add('has-filters');
+      } else {
+        countBadge.style.display = 'none';
+        clearBtn.style.display = 'none';
+        btn.classList.remove('has-filters');
+      }
+      const badgesContainer = document.getElementById('filterActiveBadgesLog');
+      badgesContainer.innerHTML = '';
+      Object.entries(filterState).forEach(([key, value]) => {
+        if (!value) return;
+        const btnRef = document.querySelector(`#filterPanelLog [data-filter="${key}"][data-value="${value}"]`);
+        if (!btnRef) return;
+        const badge = document.createElement('span');
+        badge.className = 'filter-active-badge';
+        badge.innerHTML = `${btnRef.dataset.label} <span class="remove-badge" onclick="toggleFilter(document.querySelector('#filterPanelLog [data-filter=\\'${key}\\'][data-value=\\'\\']'), '${key}')">×</span>`;
+        badgesContainer.appendChild(badge);
+      });
+    }
+
     function debounceLogSearch() {
       clearTimeout(logSearchTimeout);
       logSearchTimeout = setTimeout(() => { logPage = 1; loadLog(); }, 300);
@@ -1894,7 +2172,7 @@ MYSQL_CONTATOS=                                              # [opcional]
       const params = new URLSearchParams({ limit: '1000', order: 'created_at', dir: 'desc' });
       const busca = document.getElementById('logBusca')?.value?.trim();
       if (busca) params.set('busca', busca);
-      const nivel = document.getElementById('logFiltroNivel')?.value;
+      const nivel = filterState.nivel || '';
       if (nivel) params.set('nivel', nivel);
       fetch('/api/admin/activity-log?' + params.toString())
         .then(r => r.json())
@@ -1920,7 +2198,7 @@ MYSQL_CONTATOS=                                              # [opcional]
           a.download = 'log-hub-svn-' + new Date().toISOString().split('T')[0] + '.csv';
           a.click();
         })
-        .catch(() => alert('Erro ao exportar.'));
+        .catch(() => showToast('Erro ao exportar', 'error'));
     }
 
     async function init() {
@@ -1986,7 +2264,7 @@ MYSQL_CONTATOS=                                              # [opcional]
     /* ── Breadcrumb ── */
     .breadcrumb { display: flex; align-items: center; gap: 6px; font-size: 0.78rem; color: rgba(34,27,25,0.45); margin-bottom: 28px; flex-wrap: wrap; }
     .breadcrumb a { color: rgba(34,27,25,0.55); cursor: pointer; text-decoration: none; font-weight: 600; }
-    .breadcrumb a:hover { color: #AC3631; }
+    .breadcrumb a:hover { color: var(--ruby-red); }
     .breadcrumb .sep { opacity: 0.35; }
     .breadcrumb .current { color: rgba(34,27,25,0.75); font-weight: 600; }
 
@@ -1999,7 +2277,7 @@ MYSQL_CONTATOS=                                              # [opcional]
       padding: 36px 28px; cursor: pointer; transition: border-color 0.15s, box-shadow 0.15s;
       display: flex; flex-direction: column; gap: 10px;
     }
-    .landing-card:hover { border-color: #AC3631; box-shadow: 0 4px 20px rgba(159,63,55,0.1); }
+    .landing-card:hover { border-color: var(--ruby-red); box-shadow: 0 4px 20px rgba(159,63,55,0.1); }
     .landing-card-icon { font-size: 2rem; line-height: 1; }
     .landing-card-title { font-size: 1.05rem; font-weight: 700; }
     .landing-card-desc { font-size: 0.84rem; opacity: 0.55; line-height: 1.5; }
@@ -2033,7 +2311,7 @@ MYSQL_CONTATOS=                                              # [opcional]
     .row-btn:hover { background: #f5f3f0; border-color: #c8c4c0; }
     .row-btn.danger { color: #dc2626; }
     .row-btn.danger:hover { background: #fef2f2; border-color: #fecaca; }
-    .row-btn.primary { background: #AC3631; color: #fff; border-color: #AC3631; }
+    .row-btn.primary { background: var(--ruby-red); color: #fff; border-color: var(--ruby-red); }
     .row-btn.primary:hover { background: #b44b42; border-color: #b44b42; }
     .empty-state { text-align: center; padding: 60px 20px; opacity: 0.4; font-size: 0.9rem; }
 
@@ -2042,17 +2320,17 @@ MYSQL_CONTATOS=                                              # [opcional]
     .form-group { margin-bottom: 20px; }
     .form-label { font-size: 0.78rem; font-weight: 700; color: rgba(34,27,25,0.6); margin-bottom: 6px; display: block; letter-spacing: 0.03em; }
     .form-input { width: 100%; padding: 9px 12px; border: 1.5px solid #e8e2dc; border-radius: 8px; font-size: 0.88rem; font-family: 'Nunito Sans', sans-serif; color: #221b19; background: #fff; transition: border-color 0.15s; }
-    .form-input:focus { outline: none; border-color: #AC3631; }
+    .form-input:focus { outline: none; border-color: var(--ruby-red); }
     .form-input[type="radio"] { width: auto; }
     .radio-group { display: flex; flex-direction: column; gap: 10px; margin-top: 4px; }
     .radio-option { display: flex; align-items: flex-start; gap: 10px; cursor: pointer; }
-    .radio-option input { margin-top: 3px; accent-color: #AC3631; cursor: pointer; }
+    .radio-option input { margin-top: 3px; accent-color: var(--ruby-red); cursor: pointer; }
     .radio-label { font-size: 0.85rem; }
     .radio-label-sub { font-size: 0.75rem; opacity: 0.5; }
     .form-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 24px; border-top: 1px solid #f0ece8; padding-top: 20px; }
     .btn { padding: 8px 18px; border-radius: 8px; border: 1.5px solid #e8e2dc; background: #fff; font-size: 0.84rem; font-weight: 600; cursor: pointer; font-family: 'Nunito Sans', sans-serif; color: rgba(34,27,25,0.7); transition: background 0.15s; }
     .btn:hover { background: #f5f3f0; }
-    .btn.primary { background: #AC3631; color: #fff; border-color: #AC3631; }
+    .btn.primary { background: var(--ruby-red); color: #fff; border-color: var(--ruby-red); }
     .btn.primary:hover { background: #b44b42; border-color: #b44b42; }
     .btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
@@ -2072,10 +2350,10 @@ MYSQL_CONTATOS=                                              # [opcional]
     .panel-tmpl-tipo { font-size: 0.74rem; color: rgba(34,27,25,0.55); font-weight: 500; }
     .layer-item { padding: 6px 10px 6px 14px; cursor: pointer; border-left: 3px solid transparent; border-bottom: 1px solid rgba(34,27,25,0.06); font-size: 0.8rem; display: flex; align-items: center; gap: 6px; color: rgba(34,27,25,0.7); user-select: none; }
     .layer-item:hover { background: #f5f3f0; }
-    .layer-item.active { border-left-color: #AC3631; background: rgba(172,54,49,0.07); color: #8f2c28; }
+    .layer-item.active { border-left-color: var(--ruby-red); background: rgba(172,54,49,0.07); color: #8f2c28; }
     .layer-item.dragging { opacity: 0.35; background: #f5f3f0; }
-    .layer-item.drag-over-top { border-top: 2px solid #AC3631; }
-    .layer-item.drag-over-bottom { border-bottom: 2px solid #AC3631; }
+    .layer-item.drag-over-top { border-top: 2px solid var(--ruby-red); }
+    .layer-item.drag-over-bottom { border-bottom: 2px solid var(--ruby-red); }
     .layer-drag-handle { cursor: grab; color: rgba(34,27,25,0.2); font-size: 0.65rem; letter-spacing: 1px; flex-shrink: 0; user-select: none; padding: 2px 1px; }
     .layer-drag-handle:active { cursor: grabbing; }
     .layer-item:hover .layer-drag-handle { color: rgba(34,27,25,0.4); }
@@ -2093,7 +2371,7 @@ MYSQL_CONTATOS=                                              # [opcional]
     }
     .canvas-toolbar button { font-size: 0.78rem; padding: 5px 10px; border-radius: 6px; border: 1px solid rgba(34,27,25,0.12); background: rgba(34,27,25,0.05); color: var(--carbon-black); cursor: pointer; font-family: 'Nunito Sans', sans-serif; transition: background 0.15s; }
     .canvas-toolbar button:hover { background: rgba(34,27,25,0.10); }
-    .canvas-toolbar button.primary { background: #AC3631; border-color: #AC3631; color: #fff; }
+    .canvas-toolbar button.primary { background: var(--ruby-red); border-color: var(--ruby-red); color: #fff; }
     .canvas-toolbar button.primary:hover { background: #b44b42; }
     .canvas-toolbar button.active { background: rgba(34,27,25,0.15); }
     .canvas-toolbar button:disabled { opacity: 0.3; cursor: not-allowed; }
@@ -2127,20 +2405,20 @@ MYSQL_CONTATOS=                                              # [opcional]
       transition: background 0.12s, color 0.12s; white-space: nowrap;
     }
     .vsw-btn:hover { background: rgba(255,255,255,0.12); color: #fff; }
-    .vsw-btn.active { background: #AC3631; border-color: #AC3631; color: #fff; font-weight: 700; }
+    .vsw-btn.active { background: var(--ruby-red); border-color: var(--ruby-red); color: #fff; font-weight: 700; }
 
     .canvas-scroll { flex: 1; overflow: auto; display: flex; align-items: flex-start; justify-content: center; padding: 24px; }
     .canvas-wrap { position: relative; display: inline-block; box-shadow: 0 2px 12px rgba(0,0,0,0.12); flex-shrink: 0; }
     .canvas-wrap img.bg-img { display: block; width: 100%; height: 100%; object-fit: fill; }
     .layer-box { position: absolute; cursor: move; border: 1px dashed rgba(172,54,49,0.25); background: rgba(255,255,255,0.001); box-sizing: border-box; z-index: 2; transition: border 0.1s; pointer-events: auto; }
     .layer-box:hover { border: 1.5px dashed rgba(172,54,49,0.6); }
-    .layer-box.selected { border: 2px solid #AC3631; box-shadow: 0 0 0 2px rgba(172,54,49,0.25); z-index: 9999 !important; }
+    .layer-box.selected { border: 2px solid var(--ruby-red); box-shadow: 0 0 0 2px rgba(172,54,49,0.25); z-index: 9999 !important; }
     .layer-box * { pointer-events: auto; }
     .layer-box svg,
     .layer-box img { pointer-events: none; }
-    .layer-box .layer-label { display: none; position: absolute; top: -18px; left: 0; font-size: 9px; background: #AC3631; color: #fff; padding: 1px 5px; border-radius: 3px 3px 3px 0; white-space: nowrap; line-height: 16px; cursor: move; user-select: none; }
+    .layer-box .layer-label { display: none; position: absolute; top: -18px; left: 0; font-size: 9px; background: var(--ruby-red); color: #fff; padding: 1px 5px; border-radius: 3px 3px 3px 0; white-space: nowrap; line-height: 16px; cursor: move; user-select: none; }
     .layer-box:hover .layer-label, .layer-box.selected .layer-label { display: block; }
-    .resize-handle { position: absolute; width: 9px; height: 9px; background: #fff; border: 2px solid #AC3631; border-radius: 2px; z-index: 10; box-sizing: border-box; pointer-events: all; }
+    .resize-handle { position: absolute; width: 9px; height: 9px; background: #fff; border: 2px solid var(--ruby-red); border-radius: 2px; z-index: 10; box-sizing: border-box; pointer-events: all; }
     .resize-handle.nw { top: -5px; left: -5px; cursor: nw-resize; }
     .resize-handle.ne { top: -5px; right: -5px; cursor: ne-resize; }
     .resize-handle.sw { bottom: -5px; left: -5px; cursor: sw-resize; }
@@ -2157,13 +2435,13 @@ MYSQL_CONTATOS=                                              # [opcional]
     .props-row.single { grid-template-columns: 1fr; }
     .props-label { font-size: 0.72rem; color: rgba(34,27,25,0.5); font-weight: 600; margin-bottom: 3px; letter-spacing: 0.03em; }
     .props-input { width: 100%; padding: 5px 8px; border: 1px solid #e8e2dc; border-radius: 6px; font-size: 0.8rem; font-family: 'Nunito Sans', sans-serif; color: #221b19; background: #fff; transition: border-color 0.15s; }
-    .props-input:focus { outline: none; border-color: #AC3631; }
+    .props-input:focus { outline: none; border-color: var(--ruby-red); }
     .props-input[type="color"] { padding: 2px 4px; height: 30px; cursor: pointer; }
     .props-textarea { height: 90px; resize: vertical; }
     .props-empty { padding: 40px 14px; text-align: center; color: rgba(34,27,25,0.35); font-size: 0.82rem; }
-    .btn-delete-layer { width: 100%; padding: 8px; border: none; background: #AC3631; color: #fff; border-radius: 6px; cursor: pointer; font-size: 0.82rem; font-family: 'Nunito Sans', sans-serif; font-weight: 700; transition: background 0.15s; }
+    .btn-delete-layer { width: 100%; padding: 8px; border: none; background: var(--ruby-red); color: #fff; border-radius: 6px; cursor: pointer; font-size: 0.82rem; font-family: 'Nunito Sans', sans-serif; font-weight: 700; transition: background 0.15s; }
     .btn-delete-layer:hover { background: #8f2c28; }
-    .btn-duplicate-layer { width: 100%; padding: 7px; border: 1px solid rgba(172,54,49,0.22); background: rgba(172,54,49,0.07); color: #AC3631; border-radius: 6px; cursor: pointer; font-size: 0.78rem; font-family: 'Nunito Sans', sans-serif; font-weight: 600; transition: background 0.15s; margin-bottom: 6px; }
+    .btn-duplicate-layer { width: 100%; padding: 7px; border: 1px solid rgba(172,54,49,0.22); background: rgba(172,54,49,0.07); color: var(--ruby-red); border-radius: 6px; cursor: pointer; font-size: 0.78rem; font-family: 'Nunito Sans', sans-serif; font-weight: 600; transition: background 0.15s; margin-bottom: 6px; }
     .btn-duplicate-layer:hover { background: rgba(172,54,49,0.14); }
     /* ── Test data strip ── */
     .test-data-strip { background: #ede8e4; border-bottom: 1px solid rgba(34,27,25,0.08); flex-shrink: 0; display: none; }
@@ -2178,7 +2456,7 @@ MYSQL_CONTATOS=                                              # [opcional]
     .test-field input, .test-field select { padding: 4px 8px; border: 1px solid rgba(34,27,25,0.15); border-radius: 4px; font-size: 0.82rem; font-family: inherit; background: #fff; color: var(--carbon-black); }
     .add-layer-section { padding: 8px 14px 14px; }
     .add-layer-btn { font-size: 0.75rem; padding: 5px 10px; border: 1px dashed #ccc; background: transparent; border-radius: 5px; cursor: pointer; color: rgba(34,27,25,0.55); font-family: 'Nunito Sans',sans-serif; width: 100%; margin-bottom: 4px; }
-    .add-layer-btn:hover { border-color: #AC3631; color: #AC3631; background: #fdf5f5; }
+    .add-layer-btn:hover { border-color: var(--ruby-red); color: var(--ruby-red); background: #fdf5f5; }
     .bg-variant-select { font-size: 0.75rem; padding: 4px 8px; border: 1px solid rgba(255,255,255,0.2); border-radius: 5px; background: rgba(255,255,255,0.08); color: #fff; font-family: 'Nunito Sans',sans-serif; }
     .bg-variant-select option { background: #222; }
     .placeholder-chips { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
@@ -2196,9 +2474,9 @@ MYSQL_CONTATOS=                                              # [opcional]
     .layer-align-btn { flex: 1; padding: 6px 0; background: rgba(34,27,25,0.05); border: 1px solid rgba(34,27,25,0.1); border-radius: 5px; cursor: pointer; font-size: 0.85rem; color: rgba(34,27,25,0.7); display: flex; align-items: center; justify-content: center; transition: background 0.12s; font-family: 'Nunito Sans', sans-serif; }
     .layer-align-btn:hover { background: rgba(172,54,49,0.12); color: var(--ruby-red); }
     .layer-align-btn svg { display: block; }
-    .layer-icon-t  { font-size: 0.78rem; font-weight: 900; color: #AC3631; min-width: 18px; text-align: center; flex-shrink: 0; letter-spacing: -0.04em; }
-    .layer-icon-img { flex-shrink: 0; color: #AC3631; }
-    .layer-icon-shape { flex-shrink: 0; color: #AC3631; }
+    .layer-icon-t  { font-size: 0.78rem; font-weight: 900; color: var(--ruby-red); min-width: 18px; text-align: center; flex-shrink: 0; letter-spacing: -0.04em; }
+    .layer-icon-img { flex-shrink: 0; color: var(--ruby-red); }
+    .layer-icon-shape { flex-shrink: 0; color: var(--ruby-red); }
     .add-layer-btn { display: flex; align-items: center; gap: 6px; }
     .brand-swatch { transition: transform 0.12s, border-color 0.12s; }
     .brand-swatch:hover { transform: scale(1.15); border-color: var(--carbon-black) !important; }
@@ -2226,7 +2504,7 @@ MYSQL_CONTATOS=                                              # [opcional]
     .url-row .props-input { flex: 1; min-width: 0; }
     .url-action-btn { padding: 5px 7px; border-radius: 6px; border: 1px solid #e8e2dc; background: #f5f3f0; font-size: 0.7rem; cursor: pointer; color: rgba(34,27,25,0.65); white-space: nowrap; flex-shrink: 0; font-family: 'Nunito Sans', sans-serif; transition: background 0.15s; }
     .url-action-btn:hover { background: #ede8e4; }
-    .url-upload-status { font-size: 0.7rem; color: #AC3631; margin-top: 2px; }
+    .url-upload-status { font-size: 0.7rem; color: var(--ruby-red); margin-top: 2px; }
 
     /* ── Asset library modal ── */
     .asset-modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 3000; display: flex; align-items: center; justify-content: center; }
@@ -2238,7 +2516,7 @@ MYSQL_CONTATOS=                                              # [opcional]
     .asset-modal-body { flex: 1; overflow-y: auto; padding: 14px; }
     .asset-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; }
     .asset-card { border: 1.5px solid #e8e2dc; border-radius: 10px; overflow: hidden; transition: border-color 0.15s, box-shadow 0.15s; cursor: pointer; }
-    .asset-card:hover { border-color: #AC3631; box-shadow: 0 2px 8px rgba(159,63,55,0.15); }
+    .asset-card:hover { border-color: var(--ruby-red); box-shadow: 0 2px 8px rgba(159,63,55,0.15); }
     .asset-thumb-wrap { width: 100%; aspect-ratio: 1; background: #f5f3f0; display: flex; align-items: center; justify-content: center; overflow: hidden; }
     .asset-thumb-wrap img { width: 100%; height: 100%; object-fit: cover; display: block; }
     .asset-card-info { padding: 5px 7px 0; }
@@ -2246,7 +2524,7 @@ MYSQL_CONTATOS=                                              # [opcional]
     .asset-card-meta { font-size: 0.63rem; color: rgba(34,27,25,0.4); margin-top: 1px; }
     .asset-card-actions { padding: 4px 6px 6px; display: flex; gap: 4px; }
     .asset-action-btn { flex: 1; padding: 3px 5px; font-size: 0.67rem; border-radius: 5px; border: 1px solid #e8e2dc; background: #f5f3f0; cursor: pointer; font-family: 'Nunito Sans', sans-serif; text-align: center; }
-    .asset-action-btn.primary { background: #AC3631; color: #fff; border-color: #AC3631; }
+    .asset-action-btn.primary { background: var(--ruby-red); color: #fff; border-color: var(--ruby-red); }
     .asset-modal-footer { padding: 10px 16px; border-top: 1px solid #e8e2dc; display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
     .asset-empty { padding: 40px; text-align: center; color: rgba(34,27,25,0.35); font-size: 0.85rem; }
 
@@ -2260,7 +2538,7 @@ MYSQL_CONTATOS=                                              # [opcional]
       border-bottom: 2px solid transparent; transition: color 0.15s, border-color 0.15s; margin-bottom: -1px;
     }
     .panel-tab:hover { color: rgba(34,27,25,0.7); }
-    .panel-tab.active { color: #AC3631; border-bottom-color: #AC3631; }
+    .panel-tab.active { color: var(--ruby-red); border-bottom-color: var(--ruby-red); }
     .panel-scroll { flex: 1; overflow-y: auto; }
 
     /* ── Document panel ── */
@@ -2305,7 +2583,7 @@ MYSQL_CONTATOS=                                              # [opcional]
     .modal-actions { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; }
     .modal-btn { padding: 8px 16px; border-radius: 8px; border: 1.5px solid #e8e2dc; background: #fff; font-size: 0.82rem; font-weight: 600; cursor: pointer; font-family: 'Nunito Sans',sans-serif; transition: background 0.15s; }
     .modal-btn:hover { background: #f5f3f0; }
-    .modal-btn.primary { background: #AC3631; color: #fff; border-color: #AC3631; }
+    .modal-btn.primary { background: var(--ruby-red); color: #fff; border-color: var(--ruby-red); }
     .modal-btn.primary:hover { background: #b44b42; }
     .modal-btn.ghost { color: rgba(34,27,25,0.5); }
     /* Scrollbars sutis — fundo claro */
@@ -2357,20 +2635,20 @@ MYSQL_CONTATOS=                                              # [opcional]
       </div>
       <div class="create-form">
         <div class="form-group">
-          <label class="form-label">Para qual formulário esta arte será usada? <span style="color:#AC3631">*</span></label>
+          <label class="form-label">Para qual formulário esta arte será usada? <span style="color:var(--ruby-red)">*</span></label>
           <select class="form-input" id="createTipo" onchange="onCreateTipoChange()">
             <option value="">Selecione um formulário…</option>
           </select>
           <div id="createTipoLoading" style="display:none;font-size:0.75rem;color:rgba(34,27,25,0.4);margin-top:4px">Carregando formulários…</div>
         </div>
         <div class="form-group" id="createVariantGroup" style="display:none">
-          <label class="form-label">Para qual modelo? <span style="color:#AC3631">*</span></label>
+          <label class="form-label">Para qual modelo? <span style="color:var(--ruby-red)">*</span></label>
           <select class="form-input" id="createVariant" onchange="onCreateVariantChange()">
             <option value="">Selecione…</option>
           </select>
         </div>
         <div class="form-group">
-          <label class="form-label">Nome do template <span style="color:#AC3631">*</span></label>
+          <label class="form-label">Nome do template <span style="color:var(--ruby-red)">*</span></label>
           <input class="form-input" id="createName" placeholder='Ex: "Cartão minimalista v2"'>
         </div>
         <div class="form-group">
@@ -2544,6 +2822,8 @@ MYSQL_CONTATOS=                                              # [opcional]
   <script src="config.js"></script>
   <script src="auth.js"></script>
   <script src="shell.js"></script>
+  <script src="utils.js"></script>
+  <script src="toast.js"></script>
   <script>
     // ── Constants ────────────────────────────────────────────────
     const PLACEHOLDERS_BY_TIPO = {
@@ -2700,12 +2980,6 @@ MYSQL_CONTATOS=                                              # [opcional]
     let historyDebounce = null;
 
     // ── Helpers ──────────────────────────────────────────────────
-    function esc(str) {
-      if (!str) return '';
-      const d = document.createElement('div');
-      d.textContent = String(str);
-      return d.innerHTML;
-    }
     function humanizeTipo(tipo) {
       return TIPO_LABELS[tipo] || tipo.replace(/-/g,' ').replace(/\b\w/g, c=>c.toUpperCase());
     }
@@ -2891,12 +3165,12 @@ MYSQL_CONTATOS=                                              # [opcional]
       </div>`;
     }
 
-    function updDocTipo(val) {
+    async function updDocTipo(val) {
       if (!currentTemplateMeta) return;
       if (val === '_custom') return;
       const oldTipo = currentTemplateMeta.tipo;
       if (val !== oldTipo) {
-        const confirmed = confirm(`Mudar o tipo de "${oldTipo}" para "${val}" pode afetar a associação com o form atual. Confirma?`);
+        const confirmed = await showConfirm(`Mudar o tipo de "${oldTipo}" para "${val}" pode afetar a associação com o form atual. Confirma?`);
         if (!confirmed) { renderDocumentPanel(); return; }
         currentTemplateMeta.tipo = val;
         document.getElementById('panelTmplTipo').textContent = humanizeTipo(val);
@@ -3065,11 +3339,9 @@ MYSQL_CONTATOS=                                              # [opcional]
     }
 
     // ── Unsaved guard ────────────────────────────────────────────
-    function requestBack() {
-      console.log('[back] click detected, isDirty=', isDirty);
+    async function requestBack() {
       if (!isDirty) {
         goToList()
-          .then(() => console.log('[back] goToList ok'))
           .catch(err => {
             console.error('[back] goToList falhou — usando fallback:', err);
             try {
@@ -3089,7 +3361,7 @@ MYSQL_CONTATOS=                                              # [opcional]
         modal.classList.add('open');
       } else {
         console.warn('[back] modal não existe — usando confirm nativo');
-        if (confirm('Você tem alterações não salvas. Sair sem salvar?')) {
+        if (await showConfirm('Você tem alterações não salvas. Sair sem salvar?')) {
           isDirty = false;
           goToList().catch(err => {
             console.error('[back] goToList falhou:', err);
@@ -3201,19 +3473,20 @@ MYSQL_CONTATOS=                                              # [opcional]
     async function activateTemplateFromList(id) {
       const t = allTemplates.find(x => x.id === id); if (!t) return;
       const vInfo = t.variant_value ? ` [${t.variant_value}]` : '';
-      const confirmed = confirm(`Trocar para este template como ativo afeta as próximas solicitações de "${humanizeTipo(t.tipo)}"${vInfo}. Confirma?`);
+      const confirmed = await showConfirm(`Trocar para este template como ativo afeta as próximas solicitações de "${humanizeTipo(t.tipo)}"${vInfo}. Confirma?`);
       if (!confirmed) return;
       const res = await fetch(`/api/admin/art-templates/${id}/activate`, { method: 'PATCH' });
-      if (!res.ok) { const d = await res.json().catch(()=>({})); alert(d.error || 'Erro ao ativar template.'); return; }
+      if (!res.ok) { const d = await res.json().catch(()=>({})); showToast(d.error || 'Erro ao ativar template', 'error'); return; }
       await loadAllTemplates(); renderListView();
     }
 
     async function deleteTemplateConfirm(id, name, isActive) {
-      if (isActive) { alert('Não é possível deletar o template ativo. Ative outro primeiro.'); return; }
-      if (!confirm(`Deletar "${name}"? Esta ação não pode ser desfeita.`)) return;
+      if (isActive) { showToast('Não é possível deletar o template ativo. Ative outro primeiro.', 'warning'); return; }
+      const ok = await showConfirm(`Deletar "${name}"? Esta ação não pode ser desfeita.`, { danger: true, okLabel: 'Excluir' });
+      if (!ok) return;
       const res = await fetch(`/api/admin/art-templates/${id}`, { method: 'DELETE' });
       const d = await res.json().catch(()=>({}));
-      if (!res.ok) { alert(d.error || 'Erro ao deletar template.'); return; }
+      if (!res.ok) { showToast(d.error || 'Erro ao deletar template', 'error'); return; }
       await loadAllTemplates(); renderListView();
     }
 
@@ -3224,7 +3497,7 @@ MYSQL_CONTATOS=                                              # [opcional]
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name: newName || `${sourceName} (cópia)` }),
       });
-      if (!res.ok) { const d = await res.json().catch(()=>({})); alert(d.error || 'Erro ao duplicar.'); return; }
+      if (!res.ok) { const d = await res.json().catch(()=>({})); showToast(d.error || 'Erro ao duplicar', 'error'); return; }
       await loadAllTemplates(); renderListView();
     }
 
@@ -3397,7 +3670,7 @@ MYSQL_CONTATOS=                                              # [opcional]
     // ── Editor ───────────────────────────────────────────────────
     async function openEditor(id) {
       const res = await fetch(`/api/admin/art-templates/${id}`);
-      if (!res.ok) { alert('Erro ao carregar template.'); return; }
+      if (!res.ok) { showToast('Erro ao carregar template', 'error'); return; }
       const row = await res.json();
 
       currentTemplateMeta = { id: row.id, tipo: row.tipo, variant_value: row.variant_value || null, name: row.name, is_active: row.is_active };
@@ -3462,10 +3735,10 @@ MYSQL_CONTATOS=                                              # [opcional]
     async function activateCurrentTemplate() {
       if (!currentTemplateMeta) return;
       const vInfo = currentTemplateMeta.variant_value ? ` [variante: ${currentTemplateMeta.variant_value}]` : '';
-      const confirmed = confirm(`Tornar "${currentTemplateMeta.name}" o template ativo para "${humanizeTipo(currentTemplateMeta.tipo)}"${vInfo}? Isso afeta as próximas geradoras desta arte.`);
+      const confirmed = await showConfirm(`Tornar "${currentTemplateMeta.name}" o template ativo para "${humanizeTipo(currentTemplateMeta.tipo)}"${vInfo}? Isso afeta as próximas geradoras desta arte.`);
       if (!confirmed) return;
       const res = await fetch(`/api/admin/art-templates/${currentTemplateMeta.id}/activate`, { method: 'PATCH' });
-      if (!res.ok) { const d = await res.json().catch(()=>({})); alert(d.error || 'Erro ao ativar.'); return; }
+      if (!res.ok) { const d = await res.json().catch(()=>({})); showToast(d.error || 'Erro ao ativar', 'error'); return; }
       currentTemplateMeta.is_active = true;
       renderActiveBadge();
       await loadAllTemplates();
@@ -3479,7 +3752,7 @@ MYSQL_CONTATOS=                                              # [opcional]
         method: 'PUT', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name: newName.trim() }),
       });
-      if (!res.ok) { const d = await res.json().catch(()=>({})); alert(d.error || 'Erro ao renomear.'); }
+      if (!res.ok) { const d = await res.json().catch(()=>({})); showToast(d.error || 'Erro ao renomear', 'error'); }
       await loadAllTemplates();
     }
 
@@ -3843,8 +4116,9 @@ MYSQL_CONTATOS=                                              # [opcional]
       selectLayer(id);
       scheduleLivePreview(NORMAL_DEBOUNCE);
     }
-    function deleteLayer(id) {
-      if (!confirm('Deletar esta layer?')) return;
+    async function deleteLayer(id) {
+      const ok = await showConfirm('Deletar esta layer?', { danger: true, okLabel: 'Excluir' });
+      if (!ok) return;
       currentTemplate.layers = currentTemplate.layers.filter(l => l.id !== id);
       if (selectedLayerId === id) selectedLayerId = null;
       markDirty();
@@ -4474,9 +4748,10 @@ MYSQL_CONTATOS=                                              # [opcional]
     }
 
     async function deleteAsset(id) {
-      if (!confirm('Deletar este asset permanentemente?')) return;
+      const ok = await showConfirm('Deletar este asset permanentemente?', { danger: true, okLabel: 'Excluir' });
+      if (!ok) return;
       const r = await fetch(`/api/admin/assets/${id}`, { method: 'DELETE' });
-      if (!r.ok) { const d = await r.json().catch(()=>({})); alert(d.error || 'Erro ao deletar.'); return; }
+      if (!r.ok) { const d = await r.json().catch(()=>({})); showToast(d.error || 'Erro ao deletar', 'error'); return; }
       loadAssets();
     }
 
@@ -4572,17 +4847,17 @@ MYSQL_CONTATOS=                                              # [opcional]
       </div>
       <p style="font-size:0.82rem;opacity:0.5;margin:0 0 20px">Gerencie usuários do sistema: funções e IDs do ClickUp. Use o botão "Logar como" para visualizar o sistema como aquele usuário.</p>
 
-      <div class="usuarios-tabela-wrap admin-userlist-table-wrap" style="border-radius:12px;border:1px solid var(--border-light);overflow-x:auto">
-        <table class="usuarios-tabela" style="width:100%;border-collapse:collapse;font-size:0.82rem" id="usuariosTabela">
+      <div class="admin-userlist-table-wrap" style="border-radius:12px;border:1px solid var(--border-light);overflow-x:auto">
+        <table class="admin-table" id="usuariosTabela">
           <thead>
-            <tr style="background:var(--carbon-black)">
-              <th style="padding:10px 14px;font-weight:800;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.06em;color:#fff;text-align:left">Nome</th>
-              <th style="padding:10px 14px;font-weight:800;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.06em;color:#fff;text-align:left">E-mail</th>
-              <th style="padding:10px 14px;font-weight:800;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.06em;color:#fff;text-align:left">Função</th>
-              <th style="padding:10px 14px;font-weight:800;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.06em;color:#fff;text-align:left">ClickUp ID</th>
-              <th style="padding:10px 14px;font-weight:800;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.06em;color:#fff;text-align:left">Formulários</th>
-              <th style="padding:10px 14px;font-weight:800;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.06em;color:#fff;text-align:left">Cadastro</th>
-              <th style="padding:10px 14px;font-weight:800;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.06em;color:#fff;text-align:center">Ações</th>
+            <tr>
+              <th>Nome</th>
+              <th>E-mail</th>
+              <th>Função</th>
+              <th>ClickUp ID</th>
+              <th>Formulários</th>
+              <th>Cadastro</th>
+              <th style="text-align:center">Ações</th>
             </tr>
           </thead>
           <tbody id="usuariosTabelaBody">
@@ -4678,6 +4953,8 @@ MYSQL_CONTATOS=                                              # [opcional]
   <script src="config.js"></script>
   <script src="auth.js"></script>
   <script src="shell.js"></script>
+  <script src="utils.js"></script>
+  <script src="toast.js"></script>
   <script>
     let _allUsers = [];
     let _editingUserId = null;
@@ -4685,13 +4962,6 @@ MYSQL_CONTATOS=                                              # [opcional]
     let _tiposComClickup = [];
     let _editingClickupUserId = null;
     let _editingAssignmentsUserId = null;
-
-    function esc(str) {
-      if (!str) return '';
-      const d = document.createElement('div');
-      d.textContent = String(str);
-      return d.innerHTML;
-    }
 
     const ROLE_LABELS = {
       capital_humano: 'Capital Humano',
@@ -4786,7 +5056,8 @@ MYSQL_CONTATOS=                                              # [opcional]
     }
 
     async function logarComo(email) {
-      if (!confirm(`Visualizar o sistema como ${email}?`)) return;
+      const ok = await showConfirm(`Visualizar o sistema como ${email}?`, { okLabel: 'Logar como' });
+      if (!ok) return;
       try {
         const res = await fetch('/api/admin/impersonate', {
           method: 'POST',
@@ -4797,9 +5068,9 @@ MYSQL_CONTATOS=                                              # [opcional]
           sessionStorage.setItem('svn_impersonate', email);
           window.location.href = '/dashboard.html';
         } else {
-          alert('Não foi possível logar como esse usuário.');
+          showToast('Não foi possível logar como esse usuário', 'error');
         }
-      } catch { alert('Erro de conexão.'); }
+      } catch { showToast('Erro de conexão', 'error'); }
     }
 
     function abrirEditRole(userId, userName, currentRole) {
@@ -4829,9 +5100,9 @@ MYSQL_CONTATOS=                                              # [opcional]
           await loadUsuarios();
         } else {
           const err = await res.json().catch(() => ({}));
-          alert(err.error || 'Erro ao alterar função.');
+          showToast(err.error || 'Erro ao alterar função', 'error');
         }
-      } catch { alert('Erro de conexão.'); }
+      } catch { showToast('Erro de conexão', 'error'); }
     }
 
     async function _ensureTipos() {
@@ -4909,9 +5180,9 @@ MYSQL_CONTATOS=                                              # [opcional]
           await loadUsuarios();
         } else {
           const err = await res.json().catch(() => ({}));
-          alert(err.error || 'Erro ao atualizar ClickUp ID.');
+          showToast(err.error || 'Erro ao atualizar ClickUp ID', 'error');
         }
-      } catch { alert('Erro de conexão.'); }
+      } catch { showToast('Erro de conexão', 'error'); }
     }
 
     async function abrirEditAssignments(userId, userName) {
@@ -4952,9 +5223,9 @@ MYSQL_CONTATOS=                                              # [opcional]
           await loadUsuarios();
         } else {
           const err = await res.json().catch(() => ({}));
-          alert(err.error || 'Erro ao atualizar atribuições.');
+          showToast(err.error || 'Erro ao atualizar atribuições', 'error');
         }
-      } catch { alert('Erro de conexão.'); }
+      } catch { showToast('Erro de conexão', 'error'); }
     }
 
     async function init() {
@@ -5355,8 +5626,8 @@ window._sairImpersonar = async function() {
     .ch-section .ch-secsub { font-size: 0.85rem; color: rgba(34,27,25,0.55); margin: 0 0 20px; }
     .ch-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
     .ch-card { display: flex; align-items: center; gap: 12px; padding: 16px; border: 1.5px solid #e8e2dc; border-radius: 12px; text-decoration: none; color: var(--carbon-black,#221b19); background: #fff; transition: border-color .12s, transform .12s; }
-    .ch-card:hover { border-color: #AC3631; transform: translateY(-1px); }
-    .ch-card .ch-ico { flex: 0 0 38px; width: 38px; height: 38px; border-radius: 10px; background: rgba(172,54,49,0.08); color: #AC3631; display: flex; align-items: center; justify-content: center; }
+    .ch-card:hover { border-color: var(--ruby-red); transform: translateY(-1px); }
+    .ch-card .ch-ico { flex: 0 0 38px; width: 38px; height: 38px; border-radius: 10px; background: rgba(172,54,49,0.08); color: var(--ruby-red); display: flex; align-items: center; justify-content: center; }
     .ch-card .ch-cardlabel { font-size: 0.9rem; font-weight: 600; line-height: 1.25; }
   </style>
 </head>
@@ -5473,8 +5744,8 @@ const CATEGORIAS_SOLICITACAO = [
       { id: "pagina-assessores", label: "Página de Assessores", icon: "icon-user", ativo: true },
       { id: "assinatura-email", label: "Assinatura de E-mail", icon: "icon-mail", ativo: true },
       { id: "cartao-visita", label: "Cartão de Visita", icon: "icon-credit-card", ativo: true },
-      { id: "cartao-boas-vindas", label: "Cartão de Boas-vindas", icon: "icon-handshake", ativo: true },
-      { id: "cartao-comemorativo", label: "Cartão Comemorativo", icon: "icon-heart", ativo: true },
+      { id: "cartao-boas-vindas", label: "Cartão de Boas-vindas", icon: "icon-user-plus", ativo: true },
+      { id: "cartao-comemorativo", label: "Cartão Comemorativo", icon: "icon-party-popper", ativo: true },
       { id: "divulgacao-nps", label: "Divulgação NPS", icon: "icon-star", ativo: true },
       { id: "convite-fp", label: "Convite Financial Planning", icon: "icon-envelope", ativo: true },
     ]
@@ -5642,6 +5913,8 @@ const DRAWER_FIELD_LABELS = {
   natureza:            { label: "Natureza",                   skip: true },
   nome:                { label: "Nome",                       skip: true },
   materiaisDetalhes:   { label: "Detalhes dos materiais",     skip: true },
+  contrato_label:      { label: "Contrato (label)",           skip: true },
+  contratoLabel:       { label: "Contrato (label)",           skip: true },
 };
 
 const DRAWER_FIELD_LABELS_FLAT = Object.fromEntries(
@@ -5674,7 +5947,6 @@ const STATUS_SOLICITACAO = [
   { id: "aguardando-pagamento",   label: "Aguardando pagamento",       bg: "#8A6040", text: "#FFFFFF",  cor: "--leather-brown" },
   { id: "aguardando-finalizacao", label: "Aguardando finalização",     bg: "#7438B0", text: "#FFFFFF",  cor: "--leather-brown" },
   { id: "concluido",              label: "Concluído",                  bg: "#0A9060", text: "#FFFFFF",  cor: "--sage-green"    },
-  { id: "reprovado",              label: "Reprovado / Cancelado",      bg: "#C82828", text: "#FFFFFF",  cor: "--ruby-red"      },
   { id: "cancelado",              label: "Cancelado",                  bg: "#C82828", text: "#FFFFFF",  cor: "--carbon-black"  },
   { id: "em-espera",              label: "Em espera",                  bg: "#4D545F", text: "#FFFFFF",  cor: "--carbon-black"  },
   { id: "gerando",                label: "Gerando arte",               bg: "#dbeafe", text: "#1e40af" },
@@ -5685,7 +5957,7 @@ const STATUS_SOLICITACAO = [
   { id: "arte-finalizada",        label: "Arte finalizada",            bg: "#fef9c3", text: "#a16207" },
   { id: "envio-grafica",          label: "Envio gráfica",              bg: "#dbeafe", text: "#1d4ed8" },
   { id: "envio-assessor",         label: "Envio assessor",             bg: "#dcfce7", text: "#15803d" },
-  { id: "reprovado",              label: "Reprovado",                  bg: "#fecaca", text: "#dc2626" },
+  { id: "reprovado",              label: "Reprovado",                  bg: "#fecaca", text: "#dc2626", cor: "--ruby-red" },
 ];
 
 let SETORES = [
@@ -5914,7 +6186,6 @@ const FLUXOS_ETAPAS = {
     { id: "aguardando-pagamento",   label: "Aguardando pagamento",      visivel: true  },
     { id: "aguardando-finalizacao", label: "Aguardando finalização",    visivel: true  },
     { id: "concluido",              label: "Concluído",                 visivel: true  },
-    { id: "reprovado",              label: "Reprovado / Cancelado",     visivel: false },
     { id: "em-espera",              label: "Em espera",                 visivel: false },
     { id: "cancelado",              label: "Cancelado",                 visivel: false },
   ],
@@ -6115,6 +6386,7 @@ const FLUXOS_ETAPAS = {
   </div>
 
   <script src="utils.js"></script>
+  <script src="toast.js"></script>
   <script src="config.js"></script>
   <script src="auth.js"></script>
   <script src="shell.js"></script>
@@ -6133,15 +6405,6 @@ const FLUXOS_ETAPAS = {
     let pages = { eventos: 1, geral: 1 };
     let searchTimeout;
 
-    function esc(str) {
-      if (!str) return '';
-      return String(str)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#39;');
-    }
 
     async function init() {
       await _configReady;
@@ -7097,10 +7360,10 @@ const FLUXOS_ETAPAS = {
           limparSelecao();
           await loadAdminHistorico();
         } else {
-          alert(d.error || 'Erro ao excluir.');
+          showToast(d.error || 'Erro ao excluir', 'error');
         }
       } catch {
-        alert('Erro de conexão.');
+        showToast('Erro de conexão', 'error');
       } finally {
         btn.disabled = false; btn.textContent = 'Excluir permanentemente';
       }
@@ -7157,12 +7420,12 @@ const FLUXOS_ETAPAS = {
           const data = await res.json().catch(() => ({}));
           btn.disabled = false;
           btn.textContent = 'Excluir permanentemente';
-          alert(data.error || 'Erro ao excluir. Tente novamente.');
+          showToast(data.error || 'Erro ao excluir. Tente novamente.', 'error');
         }
       } catch {
         btn.disabled = false;
         btn.textContent = 'Excluir permanentemente';
-        alert('Erro de conexão.');
+        showToast('Erro de conexão', 'error');
       }
       _deleteTargetId = null;
       _deleteTargetRow = null;
@@ -7224,11 +7487,11 @@ const FLUXOS_ETAPAS = {
         });
         if (!res.ok) {
           const d = await res.json().catch(() => ({}));
-          alert(d.error || 'Erro ao atualizar função.');
+          showToast(d.error || 'Erro ao atualizar função', 'error');
           loadUsuarios();
         }
       } catch {
-        alert('Erro de conexão.');
+        showToast('Erro de conexão', 'error');
         loadUsuarios();
       } finally {
         selectEl.disabled = false;
@@ -7251,11 +7514,11 @@ const FLUXOS_ETAPAS = {
           btn.textContent = '✓';
           setTimeout(() => { if (btn) { btn.textContent = 'Salvar'; btn.disabled = false; } }, 1500);
         } else {
-          alert(d.error || 'Erro ao salvar.');
+          showToast(d.error || 'Erro ao salvar', 'error');
           btn.textContent = 'Salvar'; btn.disabled = false;
         }
       } catch {
-        alert('Erro de conexão.');
+        showToast('Erro de conexão', 'error');
         btn.textContent = 'Salvar'; btn.disabled = false;
       }
     }
@@ -7303,7 +7566,7 @@ const FLUXOS_ETAPAS = {
 <div id="deleteMassaModal" style="display:none;position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,0.45);align-items:center;justify-content:center">
   <div style="background:var(--card-white);border-radius:16px;padding:28px 32px;max-width:400px;width:90%;box-shadow:0 8px 40px rgba(0,0,0,0.18);text-align:center">
     <div style="width:44px;height:44px;border-radius:50%;background:rgba(220,38,38,0.1);display:flex;align-items:center;justify-content:center;margin:0 auto 16px">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>
     </div>
     <h3 style="font-size:1rem;font-weight:800;margin:0 0 8px">Excluir em massa</h3>
     <p style="font-size:0.85rem;opacity:0.6;margin:0 0 20px">Você está prestes a excluir <strong id="deleteMassaCount">0</strong> solicitação(ões) permanentemente. Esta ação não pode ser desfeita.</p>
@@ -7580,6 +7843,12 @@ const FLUXOS_ETAPAS = {
       if (setorSel) { SETORES.filter(s => s !== 'Selecione seu setor').forEach(s => { const o = document.createElement('option'); o.value = s; o.textContent = s; setorSel.appendChild(o); }); }
 
       Auth.aplicarPerfilNoCampo('telefone', Auth.getTelefone());
+      Auth.aplicarPerfilNoCampo('unidade',    Auth.getUnidade());
+      Auth.aplicarPerfilNoCampo('escritorio', Auth.getEscritorio());
+      Auth.aplicarPerfilNoCampo('cargo',      Auth.getCargo());
+      Auth.aplicarPerfilNoCampo('cdAncord',   Auth.getCdAncord());
+      Auth.aplicarPerfilNoCampo('email',      Auth.getUserEmail());
+      Auth.aplicarPerfilNoCampo('nome',       Auth.getUserName());
 
       restoreDraft();
     }
@@ -7959,6 +8228,12 @@ const FLUXOS_ETAPAS = {
       if (setorSel) { SETORES.filter(s => s !== 'Selecione seu setor').forEach(s => { const o = document.createElement('option'); o.value = s; o.textContent = s; setorSel.appendChild(o); }); }
 
       Auth.aplicarPerfilNoCampo('telefone', Auth.getTelefone());
+      Auth.aplicarPerfilNoCampo('unidade',    Auth.getUnidade());
+      Auth.aplicarPerfilNoCampo('escritorio', Auth.getEscritorio());
+      Auth.aplicarPerfilNoCampo('cargo',      Auth.getCargo());
+      Auth.aplicarPerfilNoCampo('cdAncord',   Auth.getCdAncord());
+      Auth.aplicarPerfilNoCampo('email',      Auth.getUserEmail());
+      Auth.aplicarPerfilNoCampo('nome',       Auth.getUserName());
 
       restoreSession();
     }
@@ -8250,6 +8525,12 @@ const FLUXOS_ETAPAS = {
       if (marcaSel) { MARCAS_OPTS_FORM.forEach(m => { const o = document.createElement('option'); o.value = m.value; o.textContent = m.label; marcaSel.appendChild(o); }); }
 
       Auth.aplicarPerfilNoCampo('telefone', Auth.getTelefone());
+      Auth.aplicarPerfilNoCampo('unidade',    Auth.getUnidade());
+      Auth.aplicarPerfilNoCampo('escritorio', Auth.getEscritorio());
+      Auth.aplicarPerfilNoCampo('cargo',      Auth.getCargo());
+      Auth.aplicarPerfilNoCampo('cdAncord',   Auth.getCdAncord());
+      Auth.aplicarPerfilNoCampo('email',      Auth.getUserEmail());
+      Auth.aplicarPerfilNoCampo('nome',       Auth.getUserName());
 
       restoreSession();
     }
@@ -8484,6 +8765,12 @@ const FLUXOS_ETAPAS = {
       if (setorSel) { SETORES.filter(s => s !== 'Selecione seu setor').forEach(s => { const o = document.createElement('option'); o.value = s; o.textContent = s; setorSel.appendChild(o); }); }
 
       Auth.aplicarPerfilNoCampo('telefone', Auth.getTelefone());
+      Auth.aplicarPerfilNoCampo('unidade',    Auth.getUnidade());
+      Auth.aplicarPerfilNoCampo('escritorio', Auth.getEscritorio());
+      Auth.aplicarPerfilNoCampo('cargo',      Auth.getCargo());
+      Auth.aplicarPerfilNoCampo('cdAncord',   Auth.getCdAncord());
+      Auth.aplicarPerfilNoCampo('email',      Auth.getUserEmail());
+      Auth.aplicarPerfilNoCampo('nome',       Auth.getUserName());
     }
 
     function validateRequiredFields() {
@@ -8771,6 +9058,12 @@ const FLUXOS_ETAPAS = {
       if (setorSel) { SETORES.filter(s => s !== 'Selecione seu setor').forEach(s => { const o = document.createElement('option'); o.value = s; o.textContent = s; setorSel.appendChild(o); }); }
 
       Auth.aplicarPerfilNoCampo('telefone', Auth.getTelefone());
+      Auth.aplicarPerfilNoCampo('unidade',    Auth.getUnidade());
+      Auth.aplicarPerfilNoCampo('escritorio', Auth.getEscritorio());
+      Auth.aplicarPerfilNoCampo('cargo',      Auth.getCargo());
+      Auth.aplicarPerfilNoCampo('cdAncord',   Auth.getCdAncord());
+      Auth.aplicarPerfilNoCampo('email',      Auth.getUserEmail());
+      Auth.aplicarPerfilNoCampo('nome',       Auth.getUserName());
 
       FileUpload.bind('arquivoApoio', 'arquivoApoioName');
     }
@@ -9007,6 +9300,12 @@ const FLUXOS_ETAPAS = {
       if (unidadeSel) { UNIDADES_SVN.forEach(u => { const o = document.createElement('option'); o.value = u.nome; o.textContent = u.nome; unidadeSel.appendChild(o); }); }
 
       Auth.aplicarPerfilNoCampo('telefone', Auth.getTelefone());
+      Auth.aplicarPerfilNoCampo('unidade',    Auth.getUnidade());
+      Auth.aplicarPerfilNoCampo('escritorio', Auth.getEscritorio());
+      Auth.aplicarPerfilNoCampo('cargo',      Auth.getCargo());
+      Auth.aplicarPerfilNoCampo('cdAncord',   Auth.getCdAncord());
+      Auth.aplicarPerfilNoCampo('email',      Auth.getUserEmail());
+      Auth.aplicarPerfilNoCampo('nome',       Auth.getUserName());
       Auth.aplicarPerfilNoCampo('nomeAssinatura', Auth.getUserName());
 
       restoreSession();
@@ -9246,6 +9545,12 @@ const FLUXOS_ETAPAS = {
       Shell.render({ activeRoute: 'nova-solicitacao', contentEl: document.getElementById('pageContent') });
 
       Auth.aplicarPerfilNoCampo('telefone', Auth.getTelefone());
+      Auth.aplicarPerfilNoCampo('unidade',    Auth.getUnidade());
+      Auth.aplicarPerfilNoCampo('escritorio', Auth.getEscritorio());
+      Auth.aplicarPerfilNoCampo('cargo',      Auth.getCargo());
+      Auth.aplicarPerfilNoCampo('cdAncord',   Auth.getCdAncord());
+      Auth.aplicarPerfilNoCampo('email',      Auth.getUserEmail());
+      Auth.aplicarPerfilNoCampo('nome',       Auth.getUserName());
 
       restoreSession();
     }
@@ -10680,6 +10985,12 @@ const FLUXOS_ETAPAS = {
       Shell.render({ activeRoute: 'nova-solicitacao', contentEl: document.getElementById('pageContent') });
 
       Auth.aplicarPerfilNoCampo('telefone', Auth.getTelefone());
+      Auth.aplicarPerfilNoCampo('unidade',    Auth.getUnidade());
+      Auth.aplicarPerfilNoCampo('escritorio', Auth.getEscritorio());
+      Auth.aplicarPerfilNoCampo('cargo',      Auth.getCargo());
+      Auth.aplicarPerfilNoCampo('cdAncord',   Auth.getCdAncord());
+      Auth.aplicarPerfilNoCampo('email',      Auth.getUserEmail());
+      Auth.aplicarPerfilNoCampo('nome',       Auth.getUserName());
 
       const cargoSel = document.getElementById('cargo');
       if (cargoSel) { CARGOS_ASSESSOR.forEach(c => { const o = document.createElement('option'); o.value = c; o.textContent = c; cargoSel.appendChild(o); }); }
@@ -10989,6 +11300,12 @@ const FLUXOS_ETAPAS = {
       if (setorSel) { SETORES.filter(s => s !== 'Selecione seu setor').forEach(s => { const o = document.createElement('option'); o.value = s; o.textContent = s; setorSel.appendChild(o); }); }
 
       Auth.aplicarPerfilNoCampo('telefone', Auth.getTelefone());
+      Auth.aplicarPerfilNoCampo('unidade',    Auth.getUnidade());
+      Auth.aplicarPerfilNoCampo('escritorio', Auth.getEscritorio());
+      Auth.aplicarPerfilNoCampo('cargo',      Auth.getCargo());
+      Auth.aplicarPerfilNoCampo('cdAncord',   Auth.getCdAncord());
+      Auth.aplicarPerfilNoCampo('email',      Auth.getUserEmail());
+      Auth.aplicarPerfilNoCampo('nome',       Auth.getUserName());
 
       restoreDraft();
     }
@@ -11278,6 +11595,12 @@ Muito obrigado(a), e conte sempre comigo!</textarea>
 
       FileUpload.bind('fotoPerfil', 'fotoPerfilName', { maxMB: 5, accept: '.jpg,.jpeg,.png,.webp' });
       Auth.aplicarPerfilNoCampo('telefone', Auth.getTelefone());
+      Auth.aplicarPerfilNoCampo('unidade',    Auth.getUnidade());
+      Auth.aplicarPerfilNoCampo('escritorio', Auth.getEscritorio());
+      Auth.aplicarPerfilNoCampo('cargo',      Auth.getCargo());
+      Auth.aplicarPerfilNoCampo('cdAncord',   Auth.getCdAncord());
+      Auth.aplicarPerfilNoCampo('email',      Auth.getUserEmail());
+      Auth.aplicarPerfilNoCampo('nome',       Auth.getUserName());
       restoreSession();
     }
 
@@ -11511,6 +11834,12 @@ Muito obrigado(a), e conte sempre comigo!</textarea>
       Shell.render({ activeRoute: 'nova-solicitacao', contentEl: document.getElementById('pageContent') });
 
       Auth.aplicarPerfilNoCampo('telefone', Auth.getTelefone());
+      Auth.aplicarPerfilNoCampo('unidade',    Auth.getUnidade());
+      Auth.aplicarPerfilNoCampo('escritorio', Auth.getEscritorio());
+      Auth.aplicarPerfilNoCampo('cargo',      Auth.getCargo());
+      Auth.aplicarPerfilNoCampo('cdAncord',   Auth.getCdAncord());
+      Auth.aplicarPerfilNoCampo('email',      Auth.getUserEmail());
+      Auth.aplicarPerfilNoCampo('nome',       Auth.getUserName());
 
       const setorSel = document.getElementById('setor');
       if (setorSel) { SETORES.filter(s => s !== 'Selecione seu setor').forEach(s => { const o = document.createElement('option'); o.value = s; o.textContent = s; setorSel.appendChild(o); }); }
@@ -12066,6 +12395,12 @@ Muito obrigado(a), e conte sempre comigo!</textarea>
       document.getElementById('tutorialLink').href = URL_TUTORIAL_TRANSMISSAO;
 
       Auth.aplicarPerfilNoCampo('telefone', Auth.getTelefone());
+      Auth.aplicarPerfilNoCampo('unidade',    Auth.getUnidade());
+      Auth.aplicarPerfilNoCampo('escritorio', Auth.getEscritorio());
+      Auth.aplicarPerfilNoCampo('cargo',      Auth.getCargo());
+      Auth.aplicarPerfilNoCampo('cdAncord',   Auth.getCdAncord());
+      Auth.aplicarPerfilNoCampo('email',      Auth.getUserEmail());
+      Auth.aplicarPerfilNoCampo('nome',       Auth.getUserName());
 
       const ratSel = document.getElementById('rateio');
       OPCOES_RATEIO.forEach(r => { const o = document.createElement('option'); o.value = r; o.textContent = r; ratSel.appendChild(o); });
@@ -13427,6 +13762,12 @@ Muito obrigado(a), e conte sempre comigo!</textarea>
       Shell.render({ activeRoute: 'nova-solicitacao', contentEl: document.getElementById('pageContent') });
 
       Auth.aplicarPerfilNoCampo('telefone', Auth.getTelefone());
+      Auth.aplicarPerfilNoCampo('unidade',    Auth.getUnidade());
+      Auth.aplicarPerfilNoCampo('escritorio', Auth.getEscritorio());
+      Auth.aplicarPerfilNoCampo('cargo',      Auth.getCargo());
+      Auth.aplicarPerfilNoCampo('cdAncord',   Auth.getCdAncord());
+      Auth.aplicarPerfilNoCampo('email',      Auth.getUserEmail());
+      Auth.aplicarPerfilNoCampo('nome',       Auth.getUserName());
 
       const setorSel = document.getElementById('setor');
       if (setorSel) { SETORES.filter(s => s !== 'Selecione seu setor').forEach(s => { const o = document.createElement('option'); o.value = s; o.textContent = s; setorSel.appendChild(o); }); }
@@ -13945,6 +14286,12 @@ Muito obrigado(a), e conte sempre comigo!</textarea>
       if (setorSel) { SETORES.filter(s => s !== 'Selecione seu setor').forEach(s => { const o = document.createElement('option'); o.value = s; o.textContent = s; setorSel.appendChild(o); }); }
 
       Auth.aplicarPerfilNoCampo('telefone', Auth.getTelefone());
+      Auth.aplicarPerfilNoCampo('unidade',    Auth.getUnidade());
+      Auth.aplicarPerfilNoCampo('escritorio', Auth.getEscritorio());
+      Auth.aplicarPerfilNoCampo('cargo',      Auth.getCargo());
+      Auth.aplicarPerfilNoCampo('cdAncord',   Auth.getCdAncord());
+      Auth.aplicarPerfilNoCampo('email',      Auth.getUserEmail());
+      Auth.aplicarPerfilNoCampo('nome',       Auth.getUserName());
       restoreSession();
     }
 
@@ -14400,6 +14747,12 @@ Muito obrigado(a), e conte sempre comigo!</textarea>
       renderSelos();
 
       Auth.aplicarPerfilNoCampo('telefone', Auth.getTelefone());
+      Auth.aplicarPerfilNoCampo('unidade',    Auth.getUnidade());
+      Auth.aplicarPerfilNoCampo('escritorio', Auth.getEscritorio());
+      Auth.aplicarPerfilNoCampo('cargo',      Auth.getCargo());
+      Auth.aplicarPerfilNoCampo('cdAncord',   Auth.getCdAncord());
+      Auth.aplicarPerfilNoCampo('email',      Auth.getUserEmail());
+      Auth.aplicarPerfilNoCampo('nome',       Auth.getUserName());
 
       FileUpload.bind('fotoPerfil', 'fotoPerfilName', {
         accept: '.jpg,.jpeg,.png,.webp',
@@ -14805,6 +15158,12 @@ Muito obrigado(a), e conte sempre comigo!</textarea>
       if (setorSel) { SETORES.filter(s => s !== 'Selecione seu setor').forEach(s => { const o = document.createElement('option'); o.value = s; o.textContent = s; setorSel.appendChild(o); }); }
 
       Auth.aplicarPerfilNoCampo('telefone', Auth.getTelefone());
+      Auth.aplicarPerfilNoCampo('unidade',    Auth.getUnidade());
+      Auth.aplicarPerfilNoCampo('escritorio', Auth.getEscritorio());
+      Auth.aplicarPerfilNoCampo('cargo',      Auth.getCargo());
+      Auth.aplicarPerfilNoCampo('cdAncord',   Auth.getCdAncord());
+      Auth.aplicarPerfilNoCampo('email',      Auth.getUserEmail());
+      Auth.aplicarPerfilNoCampo('nome',       Auth.getUserName());
       restoreSession();
     }
 
@@ -15164,6 +15523,12 @@ Muito obrigado(a), e conte sempre comigo!</textarea>
       if (setorSel) { SETORES.filter(s => s !== 'Selecione seu setor').forEach(s => { const o = document.createElement('option'); o.value = s; o.textContent = s; setorSel.appendChild(o); }); }
 
       Auth.aplicarPerfilNoCampo('telefone', Auth.getTelefone());
+      Auth.aplicarPerfilNoCampo('unidade',    Auth.getUnidade());
+      Auth.aplicarPerfilNoCampo('escritorio', Auth.getEscritorio());
+      Auth.aplicarPerfilNoCampo('cargo',      Auth.getCargo());
+      Auth.aplicarPerfilNoCampo('cdAncord',   Auth.getCdAncord());
+      Auth.aplicarPerfilNoCampo('email',      Auth.getUserEmail());
+      Auth.aplicarPerfilNoCampo('nome',       Auth.getUserName());
       FileUpload.bind('midiaKit', 'midiaKitName');
       FileUpload.bind('arquivoApoio', 'arquivoApoioName');
       await loadEstados();
@@ -15465,6 +15830,12 @@ Muito obrigado(a), e conte sempre comigo!</textarea>
       if (setorSel) { SETORES.filter(s => s !== 'Selecione seu setor').forEach(s => { const o = document.createElement('option'); o.value = s; o.textContent = s; setorSel.appendChild(o); }); }
 
       Auth.aplicarPerfilNoCampo('telefone', Auth.getTelefone());
+      Auth.aplicarPerfilNoCampo('unidade',    Auth.getUnidade());
+      Auth.aplicarPerfilNoCampo('escritorio', Auth.getEscritorio());
+      Auth.aplicarPerfilNoCampo('cargo',      Auth.getCargo());
+      Auth.aplicarPerfilNoCampo('cdAncord',   Auth.getCdAncord());
+      Auth.aplicarPerfilNoCampo('email',      Auth.getUserEmail());
+      Auth.aplicarPerfilNoCampo('nome',       Auth.getUserName());
       FileUpload.bind('arquivoApoio', 'arquivoApoioName');
     }
 
@@ -16297,6 +16668,15 @@ window.Shell = {
     }
     .status-step-label.done { color: #6B9080; font-weight: 600; }
     .status-step-label.current { color: var(--current-color, #2563C0); font-weight: 700; }
+    /* Timeline vertical — usado em cartão físico (e mobile) */
+    .status-rail-scroll.vertical { overflow-x: hidden; overflow-y: visible; padding: 4px 0; }
+    .status-rail.vertical { flex-direction: column; gap: 0; min-width: 0; }
+    .status-rail.vertical .status-step { flex-direction: row; align-items: center; min-width: 0; gap: 12px; flex: none; }
+    .status-rail.vertical .status-step-track { flex-direction: column; align-items: center; width: 22px; flex-shrink: 0; }
+    .status-rail.vertical .status-step-line { width: 2px; height: 18px; flex: none; }
+    .status-rail.vertical .status-step-line.invisible { height: 0; }
+    .status-rail.vertical .status-step-label { margin-top: 0; text-align: left; font-size: 0.82rem; }
+
     @media (max-width: 560px) {
       .status-rail-scroll { overflow-x: hidden; overflow-y: visible; padding: 4px 0; }
       .status-rail { flex-direction: column; gap: 0; min-width: 0; }
@@ -16840,6 +17220,7 @@ window.Shell = {
   </style>
 
   <script src="utils.js"></script>
+  <script src="toast.js"></script>
   <script src="config.js"></script>
   <script src="auth.js"></script>
   <script src="shell.js"></script>
@@ -16875,13 +17256,6 @@ window.Shell = {
     const solicitacaoId = params.get('id');
 
     /* ── util ─────────────────────────────────── */
-    function esc(str) {
-      if (!str) return '';
-      const d = document.createElement('div');
-      d.textContent = String(str);
-      return d.innerHTML;
-    }
-
     function dataRelativa(dateStr) {
       if (!dateStr) return '—';
       const d = new Date(dateStr);
@@ -16930,7 +17304,6 @@ window.Shell = {
         const res = await fetch('/api/solicitacoes/' + solicitacaoId);
         if (!res.ok) { window.location.href = '/dashboard.html'; return; }
         const item = await res.json();
-        console.log('[Solicitação] status atual:', item.status, '| id:', item.id);
         if (item.status === 'em-aprovacao' && typeof Auth !== 'undefined' && Auth.marcarComoLido) {
           Auth.marcarComoLido(item.id);
         }
@@ -16952,7 +17325,6 @@ window.Shell = {
         if (!r.ok) return;
         const d = await r.json();
         if (d.updated && d.status !== item.status) {
-          console.log('[Solicitação] status atualizado:', item.status, '→', d.status);
           item.status = d.status;
           renderPage(item);
         }
@@ -17171,9 +17543,11 @@ window.Shell = {
           </div>`;
       }).join('');
 
+      const isVertical = item.tipo_solicitacao === 'cartao-visita-fisico';
+      const verticalClass = isVertical ? ' vertical' : '';
       card.innerHTML = `
         <p style="font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;opacity:0.38;margin-bottom:14px">Andamento</p>
-        <div class="status-rail-scroll"><div class="status-rail">${stepsHtml}</div></div>`;
+        <div class="status-rail-scroll${verticalClass}"><div class="status-rail${verticalClass}">${stepsHtml}</div></div>`;
     }
 
     /* ── Sistema de Aprovação v2 — storage de rodadas ── */
@@ -17964,12 +18338,12 @@ window.Shell = {
           const data = await res.json().catch(() => ({}));
           btn.disabled = false;
           btn.textContent = 'Excluir permanentemente';
-          alert(data.error || 'Erro ao excluir. Tente novamente.');
+          showToast(data.error || 'Erro ao excluir. Tente novamente.', 'error');
         }
       } catch {
         btn.disabled = false;
         btn.textContent = 'Excluir permanentemente';
-        alert('Erro de conexão.');
+        showToast('Erro de conexão', 'error');
       }
       _deleteTargetId = null;
     }
@@ -18419,6 +18793,8 @@ window.Shell = {
       'icon-handshake': '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20.42 4.58a5.4 5.4 0 00-7.65 0l-.77.78-.77-.78a5.4 5.4 0 00-7.65 0C1.46 6.7 1.33 10.28 4 13l8 8 8-8c2.67-2.72 2.54-6.3.42-8.42z"/></svg>',
       'icon-heart': '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>',
       'icon-star': '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>',
+      'icon-user-plus': '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>',
+      'icon-party-popper': '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5.8 11.3 2 22l10.7-3.79"/><path d="M4 3h.01"/><path d="M22 8h.01"/><path d="M15 2h.01"/><path d="M22 20h.01"/><path d="m22 2-2.24.75a2.9 2.9 0 0 0-1.96 3.12c.1.86-.57 1.63-1.45 1.63h-.38c-.86 0-1.6.6-1.76 1.44L14 10"/><path d="m22 13-.82-.33c-.86-.34-1.82.2-1.98 1.11c-.11.7-.72 1.22-1.43 1.22H17"/><path d="m11 2 .33.82c.34.86-.2 1.82-1.11 1.98C9.52 4.9 9 5.52 9 6.23V7"/><path d="M11 13c1.93 1.93 2.83 4.17 2 5-.83.83-3.07-.07-5-2-1.93-1.93-2.83-4.17-2-5 .83-.83 3.07.07 5 2z"/></svg>',
       'icon-envelope': '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>',
       'icon-image': '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>',
       'icon-monitor': '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>',
@@ -18516,7 +18892,7 @@ window.Shell = {
           cat.itens.forEach(item => {
             const btn = document.createElement('button');
             btn.className = 'selection-btn' + (item.ativo ? '' : ' disabled');
-            btn.style.cssText = 'width:100%;height:100px;';
+            btn.style.cssText = 'width:100%;';
             if (!item.ativo) {
               btn.setAttribute('data-tooltip', 'Em breve');
               btn.addEventListener('click', function() {
@@ -18733,6 +19109,26 @@ img { max-width: 100%; height: auto; }
   border: 1px solid rgba(34,27,25,0.2);
 }
 .btn-secondary:hover { background: rgba(34,27,25,0.12); }
+.btn-outline-ruby {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: 9px;
+  border: 1.5px solid var(--ruby-red);
+  background: transparent;
+  color: var(--ruby-red);
+  font-family: 'Nunito Sans', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background 0.15s, color 0.15s;
+}
+.btn-outline-ruby:hover {
+  background: var(--ruby-red);
+  color: var(--paper-white);
+}
 .btn-dark {
   background: var(--carbon-black);
   color: var(--paper-white);
@@ -19078,33 +19474,51 @@ input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
 /* Selection grid */
 .selection-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
   gap: 12px;
 }
 .selection-btn {
   background: var(--card-white);
-  border: 1px solid var(--border-light);
+  border: 1.5px solid var(--border-light);
   border-radius: 12px;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
-  justify-content: center;
-  gap: 10px;
-  height: 100px;
+  gap: 12px;
   padding: 16px;
   cursor: pointer;
-  transition: 0.2s ease;
-  text-align: center;
+  transition: border-color 0.12s, transform 0.12s, box-shadow 0.12s;
+  text-align: left;
+  width: 100%;
 }
 .selection-btn:hover:not(.disabled) {
   border-color: var(--ruby-red);
-  box-shadow: 0 4px 12px rgba(159,63,55,0.1);
-  transform: translateY(-2px);
+  transform: translateY(-1px);
 }
 .selection-btn.selected { border-color: var(--ruby-red); background: rgba(159,63,55,0.04); box-shadow: 0 0 0 3px rgba(159,63,55,0.1); }
 .selection-btn.disabled { opacity: 0.5; cursor: not-allowed; }
-.selection-btn .btn-icon { font-size: 28px; color: var(--carbon-black); }
-.selection-btn .btn-label { font-weight: 600; font-size: 0.875rem; }
+.selection-btn .btn-icon {
+  flex: 0 0 38px;
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: rgba(172,54,49,0.08);
+  color: var(--ruby-red);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.selection-btn .btn-icon svg {
+  width: 20px;
+  height: 20px;
+}
+.selection-btn .btn-label {
+  font-weight: 600;
+  font-size: 0.9rem;
+  line-height: 1.25;
+  flex: 1;
+  min-width: 0;
+}
 
 /* Sub-options popup */
 .sub-options-overlay {
@@ -19314,21 +19728,25 @@ input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
 
 /* Admin table */
 .admin-table { width: 100%; border-collapse: collapse; }
+.admin-table thead { background: var(--carbon-black); }
 .admin-table th {
   text-align: left;
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  opacity: 0.4;
+  font-weight: 800;
+  color: var(--paper-white);
   padding: 12px 16px;
-  border-bottom: 1px solid var(--border-light);
 }
+.admin-table th:first-child { border-top-left-radius: 8px; }
+.admin-table th:last-child { border-top-right-radius: 8px; }
 .admin-table td {
   padding: 14px 16px;
   border-bottom: 1px solid var(--border-light);
   font-size: 0.875rem;
 }
-.admin-table tr:hover td { background: var(--icon-bg); }
+.admin-table tbody tr:last-child td { border-bottom: none; }
+.admin-table tbody tr:hover td { background: var(--icon-bg); }
 
 /* Status dot indicator */
 .status-dot {
@@ -20532,66 +20950,6 @@ input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
   }
 }
 
-/* Toolbar horizontal compacta para listas (admin.html) */
-/* === Toolbar horizontal compacta para listas (admin.html) === */
-.admin-list-toolbar {
-  display: flex !important;
-  align-items: center !important;
-  gap: 10px !important;
-  flex-wrap: nowrap !important;
-  margin-bottom: 16px !important;
-  width: 100%;
-}
-.admin-list-toolbar > .filters {
-  display: flex !important;
-  gap: 6px !important;
-  flex: 0 0 auto !important;
-  margin: 0 !important;
-  flex-wrap: nowrap;
-}
-.admin-list-toolbar > .filter-select-compact {
-  flex: 0 0 auto !important;
-  width: auto !important;
-  min-width: 140px !important;
-  max-width: 200px !important;
-  margin: 0 !important;
-  height: 36px !important;
-}
-.admin-list-toolbar > .search-bar.compact {
-  display: flex !important;
-  align-items: center !important;
-  gap: 8px !important;
-  background: var(--card-white) !important;
-  border: 1px solid var(--border-light) !important;
-  border-radius: 8px !important;
-  height: 36px !important;
-  padding: 0 12px !important;
-  margin: 0 !important;
-  flex: 1 1 auto !important;
-  min-width: 200px !important;
-  max-width: 360px !important;
-}
-.admin-list-toolbar > .search-bar.compact input {
-  font-size: 0.85rem !important;
-  border: none !important;
-  outline: none !important;
-  background: transparent !important;
-  width: 100% !important;
-}
-@media (max-width: 900px) {
-  .admin-list-toolbar {
-    flex-wrap: wrap !important;
-  }
-  .admin-list-toolbar > .search-bar.compact {
-    flex: 1 1 100% !important;
-    max-width: 100% !important;
-  }
-  .admin-list-toolbar > .filter-select-compact {
-    flex: 1 1 auto !important;
-    max-width: 100% !important;
-  }
-}
-
 /* Container mais largo pra páginas admin com tabelas */
 .container.container-wide { max-width: 1280px; }
 
@@ -20716,6 +21074,46 @@ input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
     white-space: normal;
   }
 }
+
+/* Confirm modal */
+.confirm-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fadeIn 0.15s ease;
+}
+.confirm-overlay.fade-out { animation: fadeOut 0.15s ease forwards; }
+.confirm-modal {
+  background: var(--paper-white);
+  border-radius: 14px;
+  padding: 24px;
+  max-width: 420px;
+  width: calc(100% - 32px);
+  box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+}
+.confirm-message {
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: var(--carbon-black);
+  margin-bottom: 20px;
+}
+.confirm-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+.confirm-actions .btn { min-height: 40px; padding: 8px 18px; }
+.btn-danger {
+  background: var(--ruby-red);
+  color: var(--paper-white);
+  border: 1px solid var(--ruby-red);
+}
+.btn-danger:hover { background: #8e2f2a; border-color: #8e2f2a; }
+@keyframes fadeOut { from { opacity: 1 } to { opacity: 0 } }
 
 ```
 
@@ -20970,6 +21368,64 @@ input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
 ```
 
 
+## File: artifacts/api-server/public/toast.js
+
+```
+// Toast — notificação não bloqueante
+window.showToast = function(message, type = 'success', duration = 3500) {
+  let container = document.getElementById('toastContainer');
+  if (!container) {
+    container = document.createElement('div');
+    container.id = 'toastContainer';
+    container.className = 'toast-container';
+    document.body.appendChild(container);
+  }
+  const toast = document.createElement('div');
+  toast.className = 'toast ' + type;
+  toast.textContent = message;
+  container.appendChild(toast);
+  setTimeout(() => toast.classList.add('fade-out'), duration - 500);
+  setTimeout(() => toast.remove(), duration);
+};
+
+// Confirm — modal de confirmação, retorna Promise<boolean>
+window.showConfirm = function(message, options = {}) {
+  return new Promise((resolve) => {
+    const overlay = document.createElement('div');
+    overlay.className = 'confirm-overlay';
+    overlay.innerHTML = `
+      <div class="confirm-modal" role="dialog" aria-modal="true">
+        <p class="confirm-message">${(message || '').replace(/</g, '&lt;')}</p>
+        <div class="confirm-actions">
+          <button class="btn btn-secondary confirm-cancel">${options.cancelLabel || 'Cancelar'}</button>
+          <button class="btn ${options.danger ? 'btn-danger' : 'btn-primary'} confirm-ok">${options.okLabel || 'Confirmar'}</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+
+    const cleanup = (result) => {
+      overlay.classList.add('fade-out');
+      setTimeout(() => overlay.remove(), 200);
+      document.removeEventListener('keydown', onKey);
+      resolve(result);
+    };
+    const onKey = (e) => {
+      if (e.key === 'Escape') cleanup(false);
+      if (e.key === 'Enter') cleanup(true);
+    };
+    overlay.querySelector('.confirm-cancel').addEventListener('click', () => cleanup(false));
+    overlay.querySelector('.confirm-ok').addEventListener('click', () => cleanup(true));
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) cleanup(false); });
+    document.addEventListener('keydown', onKey);
+
+    setTimeout(() => overlay.querySelector('.confirm-ok').focus(), 50);
+  });
+};
+
+```
+
+
 ## File: artifacts/api-server/public/upload-feedback.js
 
 ```
@@ -21050,6 +21506,17 @@ const FileUpload = {
 ## File: artifacts/api-server/public/utils.js
 
 ```
+// Escape HTML para uso seguro em innerHTML/template strings
+window.esc = function(s) {
+  if (s === null || s === undefined) return '';
+  return String(s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+};
+
 function mascaraTelefone(el) {
   let v = el.value.replace(/\D/g, '').substring(0, 11);
   if (v.length > 6) {
@@ -21273,14 +21740,15 @@ function humanizeValue(key, value) {
     table.vc td { border-bottom: 1px solid #eef1f4; border-right: 1px solid #f1f4f7; padding: 3px 4px; text-align: center; vertical-align: middle; background: #fff; }
     table.vc tr:nth-child(even) td { background: #fcfcfb; }
     table.vc tr.flash td { background: #ecfdf3 !important; transition: background .2s; }
-    table.vc input, table.vc select, table.vc textarea { width: 100%; box-sizing: border-box; border: 1px solid transparent; background: transparent; font: inherit; text-align: center; padding: 5px; border-radius: 6px; color: #221b19; }
+    table.vc input, table.vc select, table.vc textarea { width: 100%; box-sizing: border-box; border: 1px solid transparent; background: transparent; font: inherit; text-align: center; padding: 5px; border-radius: 6px; color: #221b19; transition: border-color 0.12s, background 0.12s; cursor: pointer; }
     table.vc select { cursor: pointer; -webkit-appearance: none; appearance: none; font-weight: 600; text-align: center; }
     table.vc textarea { text-align: center; resize: vertical; min-height: 34px; line-height: 1.3; }
-    table.vc input:focus, table.vc select:focus, table.vc textarea:focus { outline: none; border-color: #AC3631; background: #fff; }
-    table.vc input:hover, table.vc select:hover, table.vc textarea:hover { border-color: #eef1f4; }
+    table.vc input:hover, table.vc select:hover, table.vc textarea:hover { border-color: rgba(172,54,49,0.25); background: rgba(255,255,255,0.5); }
+    table.vc input:focus, table.vc select:focus, table.vc textarea:focus { outline: none; border-color: var(--ruby-red); background: #fff; cursor: text; }
+    table.vc select:hover, table.vc select:focus { cursor: pointer; }
     td.col-observacao { min-width: 150px; }
     .vc-filter-select { padding: 5px 10px; border-radius: 7px; border: 1px solid var(--border-light, #e8e2dc); background: #fff; font-family: inherit; font-size: 0.8rem; color: #221b19; cursor: pointer; }
-    .vc-filter-select:focus { outline: none; border-color: #AC3631; }
+    .vc-filter-select:focus { outline: none; border-color: var(--ruby-red); }
     .vc-empty { padding: 30px; text-align: center; color: rgba(34,27,25,0.5); font-size: 0.88rem; }
 
     /* Cards mobile (Grupo 5) */
@@ -21389,6 +21857,8 @@ function humanizeValue(key, value) {
   <script src="config.js"></script>
   <script src="auth.js"></script>
   <script src="shell.js"></script>
+  <script src="utils.js"></script>
+  <script src="toast.js"></script>
   <script>
     const CONTRATO_OPTS = [
       { v: '', label: 'Selecione…' },
@@ -21432,7 +21902,7 @@ function humanizeValue(key, value) {
       { f: 'contrato_social', label: 'Contrato Social', group: 'mng', type: 'select', opts: CONTRATO_OPTS, min: 120 },
       { f: 'envio_para', label: 'Envio para', group: 'mng', type: 'input', min: 100 },
       { f: 'custo', label: 'Custo', group: 'mng', type: 'select', opts: CUSTO_OPTS, colors: CUSTO_COLORS, min: 100 },
-      { f: 'status', label: 'Andamento', group: 'mng', type: 'select', opts: STATUS_OPTS, colors: STATUS_COLORS, min: 128 },
+      { f: 'status', label: 'Andamento', group: 'mng', type: 'select', opts: STATUS_OPTS, colors: STATUS_COLORS, min: 180 },
       { f: 'observacao', label: 'Observação', group: 'mng', type: 'textarea', min: 140 },
     ];
 
@@ -21440,8 +21910,7 @@ function humanizeValue(key, value) {
     let sortState = { field: null, dir: 1 };
     let filters = { status: '', contrato: '', unidade: '' };
 
-    function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]; }); }
-    function optionsHtml(opts, sel) { return opts.map(function (o) { return '<option value="' + esc(o.v) + '"' + (o.v === sel ? ' selected' : '') + '>' + esc(o.label) + '</option>'; }).join(''); }
+      function optionsHtml(opts, sel) { return opts.map(function (o) { return '<option value="' + esc(o.v) + '"' + (o.v === sel ? ' selected' : '') + '>' + esc(o.label) + '</option>'; }).join(''); }
     function colorSelect(el, map) { const c = map && map[el.value]; if (c) { el.style.background = c.bg; el.style.color = c.text; } else { el.style.background = 'transparent'; el.style.color = '#221b19'; } }
 
     function toggleFilterPanel() { document.getElementById('vcFilterPanel').classList.toggle('open'); }
@@ -21883,6 +22352,8 @@ main().catch(err => {
 
 ```
 import compression from "compression";
+import helmet from "helmet";
+import rateLimit from "express-rate-limit";
 import express, { type Express, type Request, type Response, type NextFunction } from "express";
 import cors from "cors";
 import session from "express-session";
@@ -21893,6 +22364,7 @@ import { fileURLToPath } from "url";
 import { randomBytes } from "crypto";
 import router from "./routes";
 import authRouter from "./routes/auth";
+import { MARCAS_OPTS, CONTRATOS_OPTS, SETORES_LIST, CARGOS_OPTS } from "./config/form-schemas";
 import { logger } from "./lib/logger";
 import { pool } from "@workspace/db";
 import { ApiError } from "./utils/api-error";
@@ -21901,6 +22373,29 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app: Express = express();
+
+// Security headers
+app.use(helmet({
+  contentSecurityPolicy: false,
+  crossOriginEmbedderPolicy: false,
+}));
+
+// Rate limiting
+const authLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: "Muitas tentativas. Aguarde alguns segundos e tente novamente." },
+});
+
+const apiLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 300,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: "Limite de requests atingido. Aguarde um momento." },
+});
 
 app.use(compression());
 
@@ -21978,9 +22473,15 @@ app.get("/api/config", (_req, res) => {
     urlLogoPreta: process.env.URL_LOGO_PRETA || "https://pub-a2132f9b61f940659cc98265acfcf64c.r2.dev/SVN-1.svg",
     urlManual: process.env.URL_MANUAL || "https://pub-a2132f9b61f940659cc98265acfcf64c.r2.dev/Manual-de-Eventos-SVN.pdf",
     urlTutorialTransmissao: process.env.URL_TUTORIAL_TRANSMISSAO || "https://drive.google.com/file/d/1L36fFqFC-sEPWggNmlZOUNnY2DqxP8HK/view?usp=sharing",
+    marcas: MARCAS_OPTS,
+    contratos: CONTRATOS_OPTS,
+    setores: SETORES_LIST,
+    cargos: CARGOS_OPTS,
   });
 });
 
+app.use("/auth", authLimiter);
+app.use("/api", apiLimiter);
 app.use("/api", router);
 app.use("/auth", authRouter);
 
@@ -22905,7 +23406,7 @@ router.get("/users", requireAuth, requireRole("admin"), async (req, res) => {
     res.json(enriched);
   } catch (err: any) {
     req.log.error({ err }, "Erro ao listar usuários");
-    res.status(500).json({ error: err.message || "Erro ao listar usuários", code: err.code });
+    res.status(500).json({ error: "Erro ao listar usuários", code: err.code });
   }
 });
 
@@ -22940,7 +23441,7 @@ router.put("/users/:id/role", requireAuth, requireRole("admin"), async (req, res
     res.json({ success: true });
   } catch (err: any) {
     req.log.error({ err, body: req.body }, "Erro ao alterar role");
-    res.status(500).json({ error: err.message || "Erro ao alterar role", code: err.code, details: err.stack?.split('\n').slice(0, 3).join('\n') });
+    res.status(500).json({ error: "Erro ao alterar role", code: err.code });
   }
 });
 
@@ -22951,19 +23452,29 @@ router.post("/impersonate", requireAuth, requireRole("admin", "gestor"), async (
       res.status(400).json({ error: "E-mail inválido" });
       return;
     }
+    const [targetUser] = await db.select().from(usersTable).where(eq(usersTable.email, email));
+    if (!targetUser) {
+      res.status(404).json({ error: "Usuário não encontrado" });
+      return;
+    }
+
     req.session.adminOriginal = req.session.user;
-    req.session.user = { email, name: email.split("@")[0], role: "user" };
+    req.session.user = {
+      email: targetUser.email,
+      name: targetUser.name || email.split("@")[0],
+      role: targetUser.role || "colaborador",
+    };
     req.session.save((err) => {
       if (err) {
         req.log.error({ err }, "Erro ao salvar sessão de impersonar");
-        res.status(500).json({ error: err.message || "Erro ao impersonar", code: (err as any).code });
+        res.status(500).json({ error: "Erro ao impersonar", code: (err as any).code });
         return;
       }
       res.json({ success: true, email });
     });
   } catch (err: any) {
     req.log.error({ err, body: req.body }, "Erro ao impersonar");
-    res.status(500).json({ error: err.message || "Erro ao impersonar", code: err.code, details: err.stack?.split('\n').slice(0, 3).join('\n') });
+    res.status(500).json({ error: "Erro ao impersonar", code: err.code });
   }
 });
 
@@ -22976,14 +23487,14 @@ router.post("/impersonate/stop", requireAuth, async (req, res): Promise<void> =>
     req.session.save((err) => {
       if (err) {
         req.log.error({ err }, "Erro ao salvar sessão ao sair impersonar");
-        res.status(500).json({ error: err.message || "Erro ao sair", code: (err as any).code });
+        res.status(500).json({ error: "Erro ao sair", code: (err as any).code });
         return;
       }
       res.json({ success: true });
     });
   } catch (err: any) {
     req.log.error({ err, body: req.body }, "Erro ao sair impersonar");
-    res.status(500).json({ error: err.message || "Erro ao sair", code: err.code, details: err.stack?.split('\n').slice(0, 3).join('\n') });
+    res.status(500).json({ error: "Erro ao sair", code: err.code });
   }
 });
 
@@ -23004,7 +23515,7 @@ router.put("/users/:id/clickup_user_id", requireAuth, requireRole("admin"), asyn
     res.json({ success: true });
   } catch (err: any) {
     req.log.error({ err, body: req.body }, "Erro ao atualizar clickup_user_id");
-    res.status(500).json({ error: err.message || "Erro ao atualizar ClickUp User ID", code: err.code, details: err.stack?.split('\n').slice(0, 3).join('\n') });
+    res.status(500).json({ error: "Erro ao atualizar ClickUp User ID", code: err.code });
   }
 });
 
@@ -23043,7 +23554,7 @@ router.get("/activity-log", requireAuth, async (req, res): Promise<void> => {
     res.json({ data: results, total, page, limit, totalPages: Math.ceil(total / limit) });
   } catch (err: any) {
     req.log.error({ err }, "Erro ao buscar activity log");
-    res.status(500).json({ error: err.message || "Erro ao buscar log", code: err.code, details: err.stack?.split('\n').slice(0, 3).join('\n') });
+    res.status(500).json({ error: "Erro ao buscar log", code: err.code });
   }
 });
 
@@ -23107,7 +23618,7 @@ router.get("/art-templates", requireAuth, requireRole("admin"), async (req, res)
     res.json(rows);
   } catch (err: any) {
     req.log.error({ err }, "Erro ao listar art-templates");
-    res.status(500).json({ error: err.message || "Erro ao listar templates", code: err.code, details: err.stack?.split('\n').slice(0, 3).join('\n') });
+    res.status(500).json({ error: "Erro ao listar templates", code: err.code });
   }
 });
 
@@ -23125,7 +23636,7 @@ router.post("/art-templates/preview", requireAuth, requireRole("admin"), async (
     res.set('Content-Type', 'image/png').send(pngBuffer);
   } catch (err: any) {
     req.log.error({ err, body: req.body }, "Erro ao renderizar preview");
-    res.status(500).json({ error: err.message || "Erro ao renderizar preview", code: err.code, details: err.stack?.split('\n').slice(0, 3).join('\n') });
+    res.status(500).json({ error: "Erro ao renderizar preview", code: err.code });
   }
 });
 
@@ -23139,7 +23650,7 @@ router.get("/art-templates/:id", requireAuth, requireRole("admin"), async (req, 
     res.json(row);
   } catch (err: any) {
     req.log.error({ err }, "Erro ao buscar art-template");
-    res.status(500).json({ error: err.message || "Erro ao buscar template", code: err.code, details: err.stack?.split('\n').slice(0, 3).join('\n') });
+    res.status(500).json({ error: "Erro ao buscar template", code: err.code });
   }
 });
 
@@ -23160,7 +23671,7 @@ router.post("/art-templates", requireAuth, requireRole("admin"), async (req, res
     res.json(inserted);
   } catch (err: any) {
     req.log.error({ err, body: req.body }, "Erro ao criar art-template");
-    res.status(500).json({ error: err.message || "Erro ao criar template", code: err.code, details: err.stack?.split('\n').slice(0, 3).join('\n') });
+    res.status(500).json({ error: "Erro ao criar template", code: err.code });
   }
 });
 
@@ -23185,7 +23696,7 @@ router.put("/art-templates/:id", requireAuth, requireRole("admin"), async (req, 
     res.json({ success: true, template: updated });
   } catch (err: any) {
     req.log.error({ err, body: req.body }, "Erro ao atualizar art-template");
-    res.status(500).json({ error: err.message || "Erro ao atualizar template", code: err.code, details: err.stack?.split('\n').slice(0, 3).join('\n') });
+    res.status(500).json({ error: "Erro ao atualizar template", code: err.code });
   }
 });
 
@@ -23206,7 +23717,7 @@ router.patch("/art-templates/:id/activate", requireAuth, requireRole("admin"), a
     res.json({ success: true });
   } catch (err: any) {
     req.log.error({ err, body: req.body }, "Erro ao ativar art-template");
-    res.status(err.status || 500).json({ error: err.message || "Erro ao ativar template", code: err.code, details: err.stack?.split('\n').slice(0, 3).join('\n') });
+    res.status(err.status || 500).json({ error: "Erro ao ativar template", code: err.code });
   }
 });
 
@@ -23232,7 +23743,7 @@ router.delete("/art-templates/:id", requireAuth, requireRole("admin"), async (re
     res.json({ success: true });
   } catch (err: any) {
     req.log.error({ err, body: req.body }, "Erro ao deletar art-template");
-    res.status(500).json({ error: err.message || "Erro ao deletar template", code: err.code, details: err.stack?.split('\n').slice(0, 3).join('\n') });
+    res.status(500).json({ error: "Erro ao deletar template", code: err.code });
   }
 });
 
@@ -23298,7 +23809,7 @@ router.post("/art-templates/:id/duplicate", requireAuth, requireRole("admin"), a
     res.json(inserted);
   } catch (err: any) {
     req.log.error({ err, body: req.body }, "Erro ao duplicar art-template");
-    res.status(500).json({ error: err.message || "Erro ao duplicar template", code: err.code, details: err.stack?.split('\n').slice(0, 3).join('\n') });
+    res.status(500).json({ error: "Erro ao duplicar template", code: err.code });
   }
 });
 
@@ -23341,7 +23852,7 @@ router.post("/users", requireAuth, requireRole("admin"), async (req, res): Promi
     res.json({ success: true, user: inserted });
   } catch (err: any) {
     req.log.error({ err, body: req.body }, "Erro ao criar usuário");
-    res.status(500).json({ error: err.message || "Erro ao criar usuário", code: err.code });
+    res.status(500).json({ error: "Erro ao criar usuário", code: err.code });
   }
 });
 
@@ -23377,7 +23888,7 @@ router.put("/users/:id/assignments", requireAuth, requireRole("admin"), async (r
     res.json({ success: true, tipos });
   } catch (err: any) {
     req.log.error({ err, body: req.body }, "Erro ao atualizar assignments");
-    res.status(500).json({ error: err.message || "Erro ao atualizar atribuições", code: err.code });
+    res.status(500).json({ error: "Erro ao atualizar atribuições", code: err.code });
   }
 });
 
@@ -23511,7 +24022,7 @@ function getS3(): S3Client | null {
   });
 }
 
-const ALLOWED_MIME = new Set(["image/png", "image/jpeg", "image/webp", "image/svg+xml"]);
+const ALLOWED_MIME = new Set(["image/png", "image/jpeg", "image/webp"]);
 const MAX_BYTES = 10 * 1024 * 1024; // 10 MB
 const MAX_DIM   = 8000;
 
@@ -23547,22 +24058,17 @@ router.post(
     try {
       if (!ALLOWED_MIME.has(file.mimetype)) {
         await cleanup();
-        res.status(400).json({ error: "Tipo inválido. Use PNG, JPG, WEBP ou SVG." });
+        res.status(400).json({ error: "Tipo inválido. Use PNG, JPG ou WEBP." });
         return;
       }
 
-      // Get dimensions (skip SVG — sharp can't reliably read SVG dimensions)
-      let width: number | undefined;
-      let height: number | undefined;
-      if (file.mimetype !== "image/svg+xml") {
-        const meta = await sharp(file.path).metadata();
-        width  = meta.width;
-        height = meta.height;
-        if ((width && width > MAX_DIM) || (height && height > MAX_DIM)) {
-          await cleanup();
-          res.status(400).json({ error: `Imagem muito grande (máx ${MAX_DIM}×${MAX_DIM}px)` });
-          return;
-        }
+      const meta   = await sharp(file.path).metadata();
+      const width  = meta.width;
+      const height = meta.height;
+      if ((width && width > MAX_DIM) || (height && height > MAX_DIM)) {
+        await cleanup();
+        res.status(400).json({ error: `Imagem muito grande (máx ${MAX_DIM}×${MAX_DIM}px)` });
+        return;
       }
 
       const now     = new Date();
@@ -24281,7 +24787,7 @@ function addLine(items: string[], label: string, value: string | null | undefine
 function formatDate(raw: string | undefined): string | null {
   const s = str(raw);
   if (!s) return null;
-  const d = new Date(s + "T00:00:00");
+  const d = new Date(s + "T00:00:00-03:00");
   if (isNaN(d.getTime())) return s;
   return `${String(d.getDate()).padStart(2, "0")}/${String(d.getMonth() + 1).padStart(2, "0")}/${d.getFullYear()}`;
 }
@@ -24992,7 +25498,7 @@ async function setGeneralCustomFields(
   // ── Dropdown, prazo e arquivos — paralelo ──────────────────────────────────
   const tipoDemandaOrderindex = TIPO_DEMANDA_ORDERINDEX[tipo] ?? 3;
   const prazoRaw = str(dados.prazoEntrega as string);
-  const prazoDate = prazoRaw ? new Date(prazoRaw + "T12:00:00") : null;
+  const prazoDate = prazoRaw ? new Date(prazoRaw + "T12:00:00-03:00") : null;
   if (prazoRaw && prazoDate && isNaN(prazoDate.getTime())) {
     logger.warn({ taskId, prazoRaw }, "ClickUp: data de prazo inválida, pulando");
   }
@@ -25119,7 +25625,7 @@ function buildGeneralCustomFieldsArray(
 
   const prazoRaw = str(dados.prazoEntrega as string);
   if (prazoRaw) {
-    const prazoDate = new Date(prazoRaw + "T12:00:00");
+    const prazoDate = new Date(prazoRaw + "T12:00:00-03:00");
     if (!isNaN(prazoDate.getTime())) {
       fields.push({ id: "33c5d4c5-1e0d-48ba-b0a5-6decdea6e138", value: prazoDate.getTime() });
     }
@@ -25398,7 +25904,7 @@ import { logEventoBg } from "../services/activity-log";
 import { eventosSolicitacaoTable } from "@workspace/db";
 
 const router = Router();
-const upload = multer({ dest: os.tmpdir(), limits: { fileSize: 250 * 1024 * 1024, files: 10, fields: 20 } });
+const upload = multer({ dest: os.tmpdir(), limits: { fileSize: 50 * 1024 * 1024, files: 10, fields: 20 } });
 
 router.get("/form-schemas", (_req, res) => {
   res.json({
@@ -27021,6 +27527,14 @@ router.post(
 
       if (solicitacao.status === 'gerando' || solicitacao.status === 'erro') {
         logger.info({ taskId, status: solicitacao.status }, "ClickUp webhook: status em render, ignorando");
+        return;
+      }
+
+      if (solicitacao.tipo_solicitacao === 'cartao-visita-fisico') {
+        logger.info(
+          { taskId, status: solicitacao.status, rawStatus },
+          "ClickUp webhook: cartão físico tem fluxo manual, ignorando update de status"
+        );
         return;
       }
 

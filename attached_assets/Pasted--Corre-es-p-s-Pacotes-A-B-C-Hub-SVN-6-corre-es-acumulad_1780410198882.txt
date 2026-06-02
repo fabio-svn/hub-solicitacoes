@@ -1,0 +1,637 @@
+# Correções pós-Pacotes A/B/C — Hub SVN
+
+6 correções acumuladas após validação visual dos pacotes anteriores. Aplicar em ordem.
+
+Tempo estimado: 1h30 - 2h no agent. Cada correção é independente — se travar em uma, pular e continuar.
+
+═══════════════════════════════════════════════════════════════
+# Correção #1 — Reverter cards principais + padronizar Capital Humano
+═══════════════════════════════════════════════════════════════
+
+**Problema**: o layout horizontal com badge rose-claro (aplicado no Pacote B item #1) ficou poluído na página principal por causa da quantidade de cards repetidos. O visual original (vertical, ícone preto centralizado, minimalista) é mais elegante.
+
+**Solução**: reverter os cards da página principal pro original e **migrar a Capital Humano pra usar o mesmo padrão** (substituir as classes `.ch-*` pelas classes `.selection-*` padronizadas).
+
+### Arquivo 1: `public/style.css`
+
+**Localizar**:
+```css
+.selection-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 12px;
+}
+.selection-btn {
+  background: var(--card-white);
+  border: 1.5px solid var(--border-light);
+  border-radius: 12px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  cursor: pointer;
+  transition: border-color 0.12s, transform 0.12s, box-shadow 0.12s;
+  text-align: left;
+  width: 100%;
+}
+.selection-btn:hover:not(.disabled) {
+  border-color: var(--ruby-red);
+  transform: translateY(-1px);
+}
+.selection-btn.selected { border-color: var(--ruby-red); background: rgba(159,63,55,0.04); box-shadow: 0 0 0 3px rgba(159,63,55,0.1); }
+.selection-btn.disabled { opacity: 0.5; cursor: not-allowed; }
+.selection-btn .btn-icon {
+  flex: 0 0 38px;
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: rgba(172,54,49,0.08);
+  color: var(--ruby-red);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.selection-btn .btn-icon svg {
+  width: 20px;
+  height: 20px;
+}
+.selection-btn .btn-label {
+  font-weight: 600;
+  font-size: 0.9rem;
+  line-height: 1.25;
+  flex: 1;
+  min-width: 0;
+}
+```
+
+**Substituir por**:
+```css
+.selection-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 12px;
+}
+.selection-btn {
+  background: var(--card-white);
+  border: 1px solid var(--border-light);
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  height: 100px;
+  padding: 16px;
+  cursor: pointer;
+  transition: 0.2s ease;
+  text-align: center;
+  text-decoration: none;
+  color: inherit;
+}
+.selection-btn:hover:not(.disabled) {
+  border-color: var(--ruby-red);
+  box-shadow: 0 4px 12px rgba(159,63,55,0.1);
+  transform: translateY(-2px);
+}
+.selection-btn.selected { border-color: var(--ruby-red); background: rgba(159,63,55,0.04); box-shadow: 0 0 0 3px rgba(159,63,55,0.1); }
+.selection-btn.disabled { opacity: 0.5; cursor: not-allowed; }
+.selection-btn .btn-icon { font-size: 28px; color: var(--carbon-black); }
+.selection-btn .btn-label { font-weight: 600; font-size: 0.875rem; }
+```
+
+*Mudanças: voltou flex column, height 100px, ícone preto sem badge, label centralizada. Adicionei `text-decoration: none` e `color: inherit` pra funcionar com `<a>` (necessário pra Capital Humano).*
+
+### Arquivo 2: `public/solicitacoes.html`
+
+**Localizar** (dentro do `renderCategories`, na seção `trioCats`):
+```js
+btn.style.cssText = 'width:100%;';
+```
+
+**Substituir por**:
+```js
+btn.style.cssText = 'width:100%;height:100px;';
+```
+
+### Arquivo 3: `public/capital-humano.html`
+
+**Localizar** o bloco `<style>`:
+```html
+  <style>
+    .ch-wrap { max-width: 920px; margin: 0 auto; padding: 32px 24px; }
+    .ch-title { font-family: 'Taviraj', serif; font-weight: 300; margin: 0 0 6px; font-size: 1.8rem; color: var(--carbon-black, #221b19); }
+    .ch-sub { font-size: 0.9rem; color: rgba(34,27,25,0.5); margin: 0 0 28px; }
+    .ch-section { background: #fff; border: 1.5px solid #e8e2dc; border-radius: 16px; padding: 26px; margin-bottom: 16px; }
+    .ch-section h2 { font-family: 'Taviraj', serif; font-weight: 400; font-size: 1.15rem; margin: 0 0 4px; color: var(--carbon-black, #221b19); }
+    .ch-section .ch-secsub { font-size: 0.85rem; color: rgba(34,27,25,0.55); margin: 0 0 20px; }
+    .ch-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
+    .ch-card { display: flex; align-items: center; gap: 12px; padding: 16px; border: 1.5px solid #e8e2dc; border-radius: 12px; text-decoration: none; color: var(--carbon-black,#221b19); background: #fff; transition: border-color .12s, transform .12s; }
+    .ch-card:hover { border-color: var(--ruby-red); transform: translateY(-1px); }
+    .ch-card .ch-ico { flex: 0 0 38px; width: 38px; height: 38px; border-radius: 10px; background: rgba(172,54,49,0.08); color: var(--ruby-red); display: flex; align-items: center; justify-content: center; }
+    .ch-card .ch-cardlabel { font-size: 0.9rem; font-weight: 600; line-height: 1.25; }
+  </style>
+```
+
+**Substituir por** (mantém só wrap/title/sub/section, remove as regras `.ch-grid` e `.ch-card*` que viram redundantes):
+```html
+  <style>
+    .ch-wrap { max-width: 920px; margin: 0 auto; padding: 32px 24px; }
+    .ch-title { font-family: 'Taviraj', serif; font-weight: 300; margin: 0 0 6px; font-size: 1.8rem; color: var(--carbon-black, #221b19); }
+    .ch-sub { font-size: 0.9rem; color: rgba(34,27,25,0.5); margin: 0 0 28px; }
+    .ch-section { background: #fff; border: 1.5px solid #e8e2dc; border-radius: 16px; padding: 26px; margin-bottom: 16px; }
+    .ch-section h2 { font-family: 'Taviraj', serif; font-weight: 400; font-size: 1.15rem; margin: 0 0 4px; color: var(--carbon-black, #221b19); }
+    .ch-section .ch-secsub { font-size: 0.85rem; color: rgba(34,27,25,0.55); margin: 0 0 20px; }
+  </style>
+```
+
+**Localizar** o bloco dos 7 cards:
+```html
+        <div class="ch-grid">
+          <a class="ch-card" href="/form-ch-kit-onboarding.html"><span class="ch-ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/><path d="M3.27 6.96L12 12.01l8.73-5.05"/><path d="M12 22.08V12"/></svg></span><span class="ch-cardlabel">Kit Onboarding</span></a>
+          <a class="ch-card" href="/form-ch-atualizacao-pessoas.html"><span class="ch-ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg></span><span class="ch-cardlabel">Atualização de Pessoas nos Sites</span></a>
+          <a class="ch-card" href="/form-criacao-pdf.html?ch=1"><span class="ch-ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/><path d="M9 15h6M9 11h2"/></svg></span><span class="ch-cardlabel">Conteúdo em PDF</span></a>
+          <a class="ch-card" href="/form-artes-divulgacao.html?ch=1"><span class="ch-ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg></span><span class="ch-cardlabel">Arte de Divulgação</span></a>
+          <a class="ch-card" href="/form-ch-atualizacao-books.html"><span class="ch-ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg></span><span class="ch-cardlabel">Atualização de Books</span></a>
+          <a class="ch-card" href="/form-ch-linha-do-tempo.html"><span class="ch-ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></span><span class="ch-cardlabel">Linha do Tempo</span></a>
+          <a class="ch-card" href="/form-ch-aniversariantes.html"><span class="ch-ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-8a2 2 0 00-2-2H6a2 2 0 00-2 2v8"/><path d="M4 16s.5-1 2-1 2.5 2 4 2 2.5-2 4-2 2.5 2 4 2 2-1 2-1"/><path d="M2 21h20"/><path d="M7 8v3M12 8v3M17 8v3"/><path d="M7 4h.01M12 4h.01M17 4h.01"/></svg></span><span class="ch-cardlabel">Aniversariantes do Mês</span></a>
+        </div>
+```
+
+**Substituir por** (troca classes pra `.selection-*` e SVGs viram 28x28):
+```html
+        <div class="selection-grid">
+          <a class="selection-btn" href="/form-ch-kit-onboarding.html"><div class="btn-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/><path d="M3.27 6.96L12 12.01l8.73-5.05"/><path d="M12 22.08V12"/></svg></div><div class="btn-label">Kit Onboarding</div></a>
+          <a class="selection-btn" href="/form-ch-atualizacao-pessoas.html"><div class="btn-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg></div><div class="btn-label">Atualização de Pessoas nos Sites</div></a>
+          <a class="selection-btn" href="/form-criacao-pdf.html?ch=1"><div class="btn-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/><path d="M9 15h6M9 11h2"/></svg></div><div class="btn-label">Conteúdo em PDF</div></a>
+          <a class="selection-btn" href="/form-artes-divulgacao.html?ch=1"><div class="btn-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg></div><div class="btn-label">Arte de Divulgação</div></a>
+          <a class="selection-btn" href="/form-ch-atualizacao-books.html"><div class="btn-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg></div><div class="btn-label">Atualização de Books</div></a>
+          <a class="selection-btn" href="/form-ch-linha-do-tempo.html"><div class="btn-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></div><div class="btn-label">Linha do Tempo</div></a>
+          <a class="selection-btn" href="/form-ch-aniversariantes.html"><div class="btn-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20 21v-8a2 2 0 00-2-2H6a2 2 0 00-2 2v8"/><path d="M4 16s.5-1 2-1 2.5 2 4 2 2.5-2 4-2 2.5 2 4 2 2-1 2-1"/><path d="M2 21h20"/><path d="M7 8v3M12 8v3M17 8v3"/><path d="M7 4h.01M12 4h.01M17 4h.01"/></svg></div><div class="btn-label">Aniversariantes do Mês</div></a>
+        </div>
+```
+
+### Verificação
+- Página `solicitacoes.html`: cards voltam ao visual original (vertical, ícone preto centralizado em cima, label embaixo).
+- Página `capital-humano.html`: cards agora idênticos ao padrão da página principal.
+- Container `.ch-section` continua envolvendo os cards (moldura branca com borda).
+
+═══════════════════════════════════════════════════════════════
+# Correção #2 — Reverter timeline vertical + encurtar labels longos
+═══════════════════════════════════════════════════════════════
+
+**Problema**: o timeline vertical do cartão físico (aplicado no Pacote B item #4) deixa a página muito longa e cria dissonância visual com outros tipos que têm timeline horizontal.
+
+**Solução**: voltar pra horizontal em todos os tipos + encurtar os labels longos pra caberem melhor.
+
+### Arquivo 1: `public/solicitacao.html`
+
+**Parte A — Remover detecção de tipo vertical no `renderFluxo`**:
+
+**Localizar**:
+```js
+      const isVertical = item.tipo_solicitacao === 'cartao-visita-fisico';
+      const verticalClass = isVertical ? ' vertical' : '';
+      card.innerHTML = `
+        <p style="font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;opacity:0.38;margin-bottom:14px">Andamento</p>
+        <div class="status-rail-scroll${verticalClass}"><div class="status-rail${verticalClass}">${stepsHtml}</div></div>`;
+```
+
+**Substituir por**:
+```js
+      card.innerHTML = `
+        <p style="font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;opacity:0.38;margin-bottom:14px">Andamento</p>
+        <div class="status-rail-scroll"><div class="status-rail">${stepsHtml}</div></div>`;
+```
+
+**Parte B — Limpar o CSS sem uso**:
+
+**Localizar** (no `<style>` da página):
+```css
+    .status-rail-scroll.vertical { overflow-x: hidden; overflow-y: visible; padding: 4px 0; }
+    .status-rail.vertical { flex-direction: column; gap: 0; min-width: 0; }
+    .status-rail.vertical .status-step { flex-direction: row; align-items: center; min-width: 0; gap: 12px; flex: none; }
+    .status-rail.vertical .status-step-track { flex-direction: column; align-items: center; width: 22px; flex-shrink: 0; }
+    .status-rail.vertical .status-step-line { width: 2px; height: 18px; flex: none; }
+    .status-rail.vertical .status-step-line.invisible { height: 0; }
+    .status-rail.vertical .status-step-label { margin-top: 0; text-align: left; font-size: 0.82rem; }
+```
+
+**Remover esse bloco inteiro**.
+
+### Arquivo 2: `public/config.js`
+
+**Parte C — Encurtar labels em `STATUS_SOLICITACAO`**:
+
+**Localizar**:
+```js
+  { id: "aguardando-validacao",   label: "Aguardando validação",       bg: "#fee2e2", text: "#b91c1c" },
+  { id: "aguardando-contrato",    label: "Aguardando contrato",        bg: "#f1f5f9", text: "#475569" },
+  { id: "liberado-design",        label: "Liberado para Design",       bg: "#ede9fe", text: "#6d28d9" },
+```
+
+**Substituir por**:
+```js
+  { id: "aguardando-validacao",   label: "Em validação",               bg: "#fee2e2", text: "#b91c1c" },
+  { id: "aguardando-contrato",    label: "Em contrato",                bg: "#f1f5f9", text: "#475569" },
+  { id: "liberado-design",        label: "Em design",                  bg: "#ede9fe", text: "#6d28d9" },
+```
+
+**Parte D — Encurtar labels em `FLUXOS_ETAPAS`** (mesmos labels duplicados aqui):
+
+**Localizar**:
+```js
+  "cartao-visita-fisico": [
+    { id: "aguardando-validacao", label: "Aguardando validação", visivel: true  },
+    { id: "aguardando-contrato",  label: "Aguardando contrato",  visivel: true  },
+    { id: "liberado-design",      label: "Liberado para Design", visivel: true  },
+    { id: "arte-finalizada",      label: "Arte finalizada",      visivel: true  },
+    { id: "envio-grafica",        label: "Envio gráfica",        visivel: true  },
+    { id: "envio-assessor",       label: "Envio assessor",       visivel: true  },
+    { id: "reprovado",            label: "Reprovado",            visivel: false },
+  ],
+```
+
+**Substituir por**:
+```js
+  "cartao-visita-fisico": [
+    { id: "aguardando-validacao", label: "Em validação",         visivel: true  },
+    { id: "aguardando-contrato",  label: "Em contrato",          visivel: true  },
+    { id: "liberado-design",      label: "Em design",            visivel: true  },
+    { id: "arte-finalizada",      label: "Arte finalizada",      visivel: true  },
+    { id: "envio-grafica",        label: "Envio gráfica",        visivel: true  },
+    { id: "envio-assessor",       label: "Envio assessor",       visivel: true  },
+    { id: "reprovado",            label: "Reprovado",            visivel: false },
+  ],
+```
+
+### Verificação
+- Detalhe de cartão físico: timeline volta a horizontal.
+- Labels agora aparecem como "Em validação", "Em contrato", "Em design" (mais curtos, padrão consistente).
+- Outros tipos: continuam com seus labels normais (mudanças só afetam os 3 acima).
+- IDs dos status NÃO mudaram — banco de dados, ClickUp, etc continuam funcionando.
+
+═══════════════════════════════════════════════════════════════
+# Correção #3 — CONTRATO SOCIAL duplicado (raiz do problema)
+═══════════════════════════════════════════════════════════════
+
+**Causa raiz identificada**: o backend `normalizeFormDados` (em `src/...` no Express) faz mapping camelCase→snake_case ao receber o form, mas **mantém ambas as keys no objeto `dados`**. Resultado: `dados` final tem `contratoSocial: "svn-capital"` E `contrato_social: "svn-capital"`. No frontend, o `renderDados` itera tudo e renderiza:
+- `contratoSocial` → label "Contrato social" (via `DRAWER_FIELD_LABELS_FLAT`)
+- `contrato_social` → label "Contrato social" (via fallback `contrato_social` → "Contrato social")
+
+A correção do Pacote A (skipar `contrato_label`) cobriu só o label computado, não o duplicate raw.
+
+**Solução**: marcar todas as versões snake_case do `KEY_MAP` do backend como `skip: true` no `DRAWER_FIELD_LABELS`. Assim, no front, o renderDados pula essas chaves redundantes e só mostra a versão canônica camelCase (que tem label correto).
+
+**Por que não mexer no backend**: as funções de notificação por email (`addLine(items, "Contrato social", str(dados.contratoSocial))` na linha ~25052), o body do ClickUp e a função de enrich (`dados.contratoSocial` na linha 27223) ainda dependem da versão camelCase. Mexer lá causaria regressão.
+
+### Arquivo: `public/config.js`
+
+**Localizar** o final do objeto `DRAWER_FIELD_LABELS` (perto das entries já existentes com `skip: true`):
+```js
+  idSolicitacao:       { label: "ID",                         skip: true },
+  natureza:            { label: "Natureza",                   skip: true },
+  nome:                { label: "Nome",                       skip: true },
+  materiaisDetalhes:   { label: "Detalhes dos materiais",     skip: true },
+  contrato_label:      { label: "Contrato (label)",           skip: true },
+  contratoLabel:       { label: "Contrato (label)",           skip: true },
+};
+```
+
+**Substituir por** (adicionando 9 novas entries antes da chave `};`):
+```js
+  idSolicitacao:       { label: "ID",                         skip: true },
+  natureza:            { label: "Natureza",                   skip: true },
+  nome:                { label: "Nome",                       skip: true },
+  materiaisDetalhes:   { label: "Detalhes dos materiais",     skip: true },
+  contrato_label:      { label: "Contrato (label)",           skip: true },
+  contratoLabel:       { label: "Contrato (label)",           skip: true },
+  // Versões snake_case duplicadas pelo backend normalizeFormDados — skip no display, a versão camelCase é a canônica
+  contrato_social:     { label: "Contrato social",            skip: true },
+  is_private_key:      { label: "Cliente Private?",           skip: true },
+  modelo_cartao:       { label: "Modelo do cartão",           skip: true },
+  modelo_arte:         { label: "Modelo de arte",             skip: true },
+  nome_cliente:        { label: "Nome do cliente",            skip: true },
+  nome_assinatura:     { label: "Nome para assinatura",       skip: true },
+  nome_completo:       { label: "Nome completo",              skip: true },
+  codigo_assessor:     { label: "Código do assessor",         skip: true },
+  foto_perfil:         { label: "Foto de perfil",             skip: true },
+};
+```
+
+### Verificação
+- Abrir detalhe de Cartão de Visita Físico já existente: "CONTRATO SOCIAL" aparece **uma vez só**.
+- Abrir detalhe de Cartão de Boas-vindas, Cartão Comemorativo, Convite FP: idem, sem duplicação.
+- Outros tipos: tudo igual.
+- Notificações por e-mail e ClickUp continuam funcionando (não mexemos no backend).
+
+═══════════════════════════════════════════════════════════════
+# Correção #4 — Filter-panel como popover flutuante
+═══════════════════════════════════════════════════════════════
+
+**Problema**: quando clico em "Filtrar", o painel abre INLINE (empurra o conteúdo abaixo). Deveria abrir como POPOVER flutuante (sobre o conteúdo), igual o filtro do gráfico do Painel Admin.
+
+**Solução**: atualizar CSS pra `.filter-panel.open` ser absolute + envolver `.filter-bar` + `.filter-panel` num wrapper relative em cada HTML que usa esse padrão + adicionar click-outside no JS.
+
+### Arquivo 1: `public/style.css`
+
+**Localizar**:
+```css
+.filter-panel { background:var(--card-white); border:1px solid var(--border-light); border-radius:12px; padding:16px 20px; margin-bottom:16px; display:none; animation:fadeIn 0.2s ease; }
+.filter-panel.open { display:block; }
+```
+
+**Substituir por**:
+```css
+.filter-panel { background:var(--card-white); border:1px solid var(--border-light); border-radius:12px; padding:16px 20px; margin-bottom:16px; display:none; animation:fadeIn 0.2s ease; }
+.filter-panel.open {
+  display: block;
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  z-index: 100;
+  min-width: 380px;
+  max-width: 90vw;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+  margin-bottom: 0;
+}
+```
+
+### Arquivo 2: `public/admin.html`
+
+Tem **2 instâncias** (tab eventos + tab geral). Em cada uma, **localizar** o pattern:
+
+```html
+      <div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:0">
+        <div class="filter-bar" id="filterBarEventos" style="flex-shrink:0">
+```
+
+E `</div>` correspondente + o `<div class="filter-panel" ...>` que vem DEPOIS. Reestruturar pra:
+
+```html
+      <div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:0">
+        <div style="position:relative;flex-shrink:0">
+          <div class="filter-bar" id="filterBarEventos">
+            <!-- conteúdo da filter-bar igual -->
+          </div>
+          <div class="filter-panel" id="filterPanelEventos" style="margin-top:0">
+            <!-- conteúdo do filter-panel igual -->
+          </div>
+        </div>
+        <div class="search-bar" ...>
+          <!-- search-bar igual -->
+        </div>
+      </div>
+```
+
+Repetir o mesmo padrão para a tab `geral` (com `filterBarGeral` e `filterPanelGeral`).
+
+**Resumo da mudança**: o `.filter-panel` deixa de ser irmão do container flex e vira **filho** do wrapper `<div style="position:relative">` que também contém o `.filter-bar`. O `search-bar` continua irmão do wrapper, fora dele. Remover o `style="margin-top:10px"` do filter-panel (não é mais necessário com popover).
+
+**Atualizar a função `toggleFilterPanel`** em `admin.html`:
+
+**Localizar**:
+```js
+    function toggleFilterPanel(tab) {
+      const cap = tab.charAt(0).toUpperCase() + tab.slice(1);
+      const panel = document.getElementById('filterPanel' + cap);
+      const btn = document.getElementById('filterToggle' + cap);
+      const isOpen = panel.classList.contains('open');
+      panel.classList.toggle('open', !isOpen);
+      if (!hasActiveFilters(tab) && isOpen) btn.classList.remove('has-filters');
+    }
+```
+
+**Substituir por**:
+```js
+    let _filterClickOutsideHandler = null;
+    function toggleFilterPanel(tab) {
+      const cap = tab.charAt(0).toUpperCase() + tab.slice(1);
+      const panel = document.getElementById('filterPanel' + cap);
+      const btn = document.getElementById('filterToggle' + cap);
+      const isOpen = panel.classList.contains('open');
+
+      // Fechar handler anterior se existir
+      if (_filterClickOutsideHandler) {
+        document.removeEventListener('click', _filterClickOutsideHandler);
+        _filterClickOutsideHandler = null;
+      }
+
+      panel.classList.toggle('open', !isOpen);
+      if (!hasActiveFilters(tab) && isOpen) btn.classList.remove('has-filters');
+
+      // Click-outside handler quando abrir
+      if (!isOpen) {
+        setTimeout(() => {
+          _filterClickOutsideHandler = (e) => {
+            if (!panel.contains(e.target) && !btn.contains(e.target)) {
+              panel.classList.remove('open');
+              document.removeEventListener('click', _filterClickOutsideHandler);
+              _filterClickOutsideHandler = null;
+            }
+          };
+          document.addEventListener('click', _filterClickOutsideHandler);
+        }, 0);
+      }
+    }
+```
+
+### Arquivo 3: `public/dashboard.html`
+
+Mesma estrutura do `admin.html` (também tem 2 instâncias: eventos + geral). Aplicar exatamente o mesmo padrão de reestruturação HTML + atualização da função `toggleFilterPanel`.
+
+### Arquivo 4: `public/validacao-cartoes.html`
+
+**Localizar** a estrutura HTML do filter-bar + filter-panel (procurar `id="vcFilterPanel"` e `class="filter-bar"`) e aplicar mesmo wrapper relative.
+
+**Atualizar `toggleFilterPanel`**:
+**Localizar**:
+```js
+    function toggleFilterPanel() { document.getElementById('vcFilterPanel').classList.toggle('open'); }
+```
+
+**Substituir por**:
+```js
+    let _vcFilterClickOutsideHandler = null;
+    function toggleFilterPanel() {
+      const panel = document.getElementById('vcFilterPanel');
+      const btn = document.getElementById('vcFilterToggle');
+      const isOpen = panel.classList.contains('open');
+
+      if (_vcFilterClickOutsideHandler) {
+        document.removeEventListener('click', _vcFilterClickOutsideHandler);
+        _vcFilterClickOutsideHandler = null;
+      }
+
+      panel.classList.toggle('open', !isOpen);
+
+      if (!isOpen) {
+        setTimeout(() => {
+          _vcFilterClickOutsideHandler = (e) => {
+            if (!panel.contains(e.target) && !btn.contains(e.target)) {
+              panel.classList.remove('open');
+              document.removeEventListener('click', _vcFilterClickOutsideHandler);
+              _vcFilterClickOutsideHandler = null;
+            }
+          };
+          document.addEventListener('click', _vcFilterClickOutsideHandler);
+        }, 0);
+      }
+    }
+```
+
+### Arquivo 5: `public/admin-log.html` e `public/admin-assets.html`
+
+Mesma estrutura. Aplicar wrapper relative no HTML + atualizar `toggleFilterPanel` com click-outside (versão simples, sem `tab`):
+
+```js
+    let _filterClickOutsideHandler = null;
+    function toggleFilterPanel() {
+      const panel = document.getElementById('filterPanelAssets'); // ou filterPanelLog
+      const btn = document.getElementById('filterToggleAssets'); // ou filterToggleLog
+      const isOpen = panel.classList.contains('open');
+
+      if (_filterClickOutsideHandler) {
+        document.removeEventListener('click', _filterClickOutsideHandler);
+        _filterClickOutsideHandler = null;
+      }
+
+      panel.classList.toggle('open', !isOpen);
+
+      if (!isOpen) {
+        setTimeout(() => {
+          _filterClickOutsideHandler = (e) => {
+            if (!panel.contains(e.target) && !btn.contains(e.target)) {
+              panel.classList.remove('open');
+              document.removeEventListener('click', _filterClickOutsideHandler);
+              _filterClickOutsideHandler = null;
+            }
+          };
+          document.addEventListener('click', _filterClickOutsideHandler);
+        }, 0);
+      }
+    }
+```
+
+### Verificação
+- Clicar em "Filtrar" em qualquer página: painel abre **flutuante sobre o conteúdo**, sem empurrar nada.
+- Clicar fora do painel ou no próprio botão Filtrar: fecha.
+- Funcionar em: `dashboard.html` (eventos + geral), `admin.html` (eventos + geral), `validacao-cartoes.html`, `admin-log.html`, `admin-assets.html`.
+
+═══════════════════════════════════════════════════════════════
+# Correção #5 — Background da página de Assets
+═══════════════════════════════════════════════════════════════
+
+**Problema**: a página `admin-assets.html` tem fundo `#f5f3f0` (cinza-bege) em vez de `#FFF8F3` (paper-white) do resto do hub.
+
+**Causa**: o body tem background hardcoded e não usa `class="page-light"`.
+
+### Arquivo: `public/admin-assets.html`
+
+**Localizar** no `<style>`:
+```css
+    body { font-family: 'Nunito Sans', sans-serif; background: #f5f3f0; color: var(--carbon-black); min-height: 100vh; }
+```
+
+**Substituir por**:
+```css
+    body { font-family: 'Nunito Sans', sans-serif; color: var(--carbon-black); }
+```
+
+**Localizar** o `<body>`:
+```html
+<body>
+```
+
+**Substituir por**:
+```html
+<body class="page-light">
+```
+
+### Verificação
+- `admin-assets.html` agora tem o mesmo fundo bege das outras páginas.
+
+### ⚠️ Outras páginas inspecionadas: nenhuma outra página tem o mesmo problema
+Verifiquei todos os HTMLs. `index.html` e `thankyou.html` usam `page-dark` propositadamente (telas de login/agradecimento). Só `admin-assets` precisava de fix.
+
+═══════════════════════════════════════════════════════════════
+# Correção #6 — Remover botões de navegação redundantes
+═══════════════════════════════════════════════════════════════
+
+**Problema**: a sidebar lateral já navega entre admin/dashboard/listas. Os botões no header das páginas viraram redundantes.
+
+### Arquivo 1: `public/admin.html`
+
+**Localizar**:
+```html
+      <div class="admin-actions admin-top-actions" style="display:flex;gap:8px">
+        <a href="/dashboard.html" class="btn btn-outline-ruby">Meu painel</a>
+        <a href="/admin-clickup-lists.html" class="btn btn-outline-ruby" id="clickupListsLink" style="display:none">Listas ClickUp</a>
+      </div>
+```
+
+**Substituir por** (remove o bloco inteiro):
+```html
+```
+
+*(deixa em branco — o `<div class="title-row">` continua envolvendo só o `<h1>`)*
+
+**Localizar** no JS (dentro do `init()` ou similar):
+```js
+      if (Auth.getUserRole() === 'admin') {
+        const lnk = document.getElementById('clickupListsLink');
+        if (lnk) lnk.style.display = '';
+      }
+```
+
+**Substituir por** (remove o bloco — não há mais o link pra mostrar):
+```js
+```
+
+### Arquivo 2: `public/admin-clickup-lists.html`
+
+**Localizar**:
+```html
+        <a href="/admin.html" class="ccu-btn" style="margin-left:auto">&larr; Admin</a>
+```
+
+**Substituir por** (remove a linha inteira):
+```html
+```
+
+*(o `<div class="ccu-head">` continua envolvendo só o `<h1>`)*
+
+### Verificação
+- Painel admin: header agora só tem o título "Painel Administrativo", sem botões à direita.
+- Listas ClickUp: header só tem "Listas do ClickUp", sem botão "← Admin".
+- Navegação entre páginas: usar sidebar lateral.
+
+═══════════════════════════════════════════════════════════════
+## ✅ Validação final
+═══════════════════════════════════════════════════════════════
+
+Após aplicar tudo, conferir:
+
+1. **Página principal (`solicitacoes.html`)**: cards vertical, minimalista, com ícone preto centralizado em cima ✓
+2. **Capital Humano**: cards idênticos ao da principal, dentro do `.ch-section` ✓
+3. **Detalhe de Cartão Físico**: timeline horizontal, labels curtos ("Em validação", "Em contrato", "Em design") ✓
+4. **Detalhe de Cartão Físico**: "CONTRATO SOCIAL" aparece uma vez só ✓
+5. **Detalhes de outros cartões** (Boas-vindas, Comemorativo, Convite FP): sem duplicações de campos ✓
+6. **Filtros em qualquer página**: clicar abre popover flutuante sobre o conteúdo, fechado por clique fora ✓
+7. **Assets de Templates**: fundo bege igual ao resto do hub ✓
+8. **Painel admin**: header sem os botões "Meu painel"/"Listas ClickUp" ✓
+9. **Listas ClickUp**: header sem botão "← Admin" ✓
+
+**Hard refresh** (Ctrl+Shift+R) por causa do `style.css`. Se ainda houver inconsistência visual, é cache TTL do Cloudflare (4h).
+
+═══════════════════════════════════════════════════════════════
+## 📌 Notas importantes
+═══════════════════════════════════════════════════════════════
+
+- **Correção #3 ataca o sintoma, não a causa**: a causa raiz é o backend `normalizeFormDados` não remover a versão camelCase após criar a snake. Resolver na causa exigiria atualizar várias funções de notificação/ClickUp. Optei por skipar no front (mais seguro). Se no futuro quiserem refatorar o backend, o fix proposto continua funcionando.
+
+- **Correção #2 IDs não mudam**: só os labels visuais foram encurtados. IDs (`aguardando-validacao`, `aguardando-contrato`, `liberado-design`) continuam iguais — banco, ClickUp, notificações não quebram.
+
+- **Correção #4 click-outside**: a função `setTimeout(..., 0)` é necessária pra evitar que o próprio clique no botão Filtrar feche o painel logo após abri-lo (race condition entre event bubbling e listener).
+
+- **Correção #1 capital-humano.html**: o `<a>` tem `text-decoration: none` e `color: inherit` agora no CSS `.selection-btn` (linha que adicionei), funcionando tanto pra `<button>` (principal) quanto `<a>` (CH).

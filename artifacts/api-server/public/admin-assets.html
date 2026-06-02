@@ -29,7 +29,7 @@
       --icon-bg: #f5f3f0;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: 'Nunito Sans', sans-serif; background: #f5f3f0; color: var(--carbon-black); min-height: 100vh; }
+    body { font-family: 'Nunito Sans', sans-serif; color: var(--carbon-black); }
     .header { background: var(--card-white); border-bottom: 1px solid var(--border-light); padding: 0 24px; height: 58px; }
     .header-inner { display: flex; align-items: center; justify-content: space-between; height: 100%; max-width: 1400px; margin: 0 auto; }
     .header-logo img { display: block; }
@@ -101,7 +101,7 @@
     .upload-progress-bar { height: 100%; background: var(--ruby-red); transition: width 0.3s; }
   </style>
 </head>
-<body>
+<body class="page-light">
 
 
 <div id="pageContent">
@@ -113,22 +113,17 @@
     <p style="font-size:0.82rem;opacity:0.5;margin:0 0 16px">Imagens e recursos visuais usados nos templates de geração automática de materiais.</p>
 
     <div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:0">
-      <div class="filter-bar" id="filterBarAssets" style="flex-shrink:0">
-        <button class="filter-toggle-btn" id="filterToggleAssets" onclick="toggleFilterPanel()">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
-          Filtrar
-          <span class="filter-count-badge" id="filterCountAssets" style="display:none">0</span>
-        </button>
-        <div id="filterActiveBadgesAssets" style="display:contents"></div>
-        <button class="filter-clear-btn" id="filterClearAssets" style="display:none" onclick="clearAllFilters()">Limpar tudo</button>
-      </div>
-      <div class="search-bar" style="flex:1;margin-bottom:0;height:32px;padding:0 14px;border-radius:8px">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" opacity="0.4"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        <input type="text" id="searchInput" placeholder="Buscar por nome..." oninput="debounceSearch()">
-      </div>
-    </div>
-
-    <div class="filter-panel" id="filterPanelAssets" style="margin-top:10px">
+      <div style="position:relative;flex-shrink:0">
+        <div class="filter-bar" id="filterBarAssets">
+          <button class="filter-toggle-btn" id="filterToggleAssets" onclick="toggleFilterPanel()">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+            Filtrar
+            <span class="filter-count-badge" id="filterCountAssets" style="display:none">0</span>
+          </button>
+          <div id="filterActiveBadgesAssets" style="display:contents"></div>
+          <button class="filter-clear-btn" id="filterClearAssets" style="display:none" onclick="clearAllFilters()">Limpar tudo</button>
+        </div>
+        <div class="filter-panel" id="filterPanelAssets">
       <div class="filter-panel-row">
         <span class="filter-panel-label">Tipo</span>
         <button class="filter-chip active" data-filter="tipo" data-value="" data-label="Todos os tipos" onclick="toggleFilter(this, 'tipo')">Todos</button>
@@ -381,6 +376,16 @@
     const isOpen = panel.classList.contains('open');
     panel.classList.toggle('open', !isOpen);
     if (!hasActiveFilters() && isOpen) btn.classList.remove('has-filters');
+    if (!isOpen) {
+      setTimeout(function() {
+        document.addEventListener('click', function handler(e) {
+          if (!panel.parentElement.contains(e.target)) {
+            panel.classList.remove('open');
+            document.removeEventListener('click', handler);
+          }
+        });
+      }, 0);
+    }
   }
 
   function toggleFilter(btn, key) {

@@ -136,7 +136,7 @@
           cat.itens.forEach(item => {
             const btn = document.createElement('button');
             btn.className = 'selection-btn' + (item.ativo ? '' : ' disabled');
-            btn.style.cssText = 'width:100%;';
+            btn.style.cssText = 'width:100%;height:100px;';
             if (!item.ativo) {
               btn.setAttribute('data-tooltip', 'Em breve');
               btn.addEventListener('click', function() {

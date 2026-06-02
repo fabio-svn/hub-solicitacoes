@@ -102,20 +102,16 @@
       <p class="vc-sub">Validação dos cartões físicos. As alterações são salvas automaticamente.</p>
 
       <div style="display:flex;gap:10px;align-items:flex-start">
-        <div class="filter-bar" style="flex-shrink:0;margin-bottom:0">
-          <button class="filter-toggle-btn" id="vcFilterToggle" onclick="toggleFilterPanel()">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
-            Filtrar
-            <span class="filter-count-badge" id="vcFilterBadge" style="display:none">1</span>
-          </button>
-          <button class="filter-clear-btn" id="vcFilterClear" style="display:none" onclick="limparFiltro()">Limpar</button>
-        </div>
-        <div class="search-bar" style="flex:1;margin-bottom:0;height:32px;padding:0 14px;border-radius:8px">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" opacity="0.4"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          <input type="text" placeholder="Buscar..." id="vcSearch" oninput="render()">
-        </div>
-      </div>
-      <div class="filter-panel" id="vcFilterPanel">
+        <div style="position:relative;flex-shrink:0">
+          <div class="filter-bar">
+            <button class="filter-toggle-btn" id="vcFilterToggle" onclick="toggleFilterPanel()">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+              Filtrar
+              <span class="filter-count-badge" id="vcFilterBadge" style="display:none">1</span>
+            </button>
+            <button class="filter-clear-btn" id="vcFilterClear" style="display:none" onclick="limparFiltro()">Limpar</button>
+          </div>
+          <div class="filter-panel" id="vcFilterPanel">
         <div class="filter-panel-row">
           <span class="filter-panel-label">Andamento</span>
           <button class="filter-chip active" data-value="" onclick="setChip(this,'status','')">Todos</button>
@@ -208,7 +204,21 @@
       function optionsHtml(opts, sel) { return opts.map(function (o) { return '<option value="' + esc(o.v) + '"' + (o.v === sel ? ' selected' : '') + '>' + esc(o.label) + '</option>'; }).join(''); }
     function colorSelect(el, map) { const c = map && map[el.value]; if (c) { el.style.background = c.bg; el.style.color = c.text; } else { el.style.background = 'transparent'; el.style.color = '#221b19'; } }
 
-    function toggleFilterPanel() { document.getElementById('vcFilterPanel').classList.toggle('open'); }
+    function toggleFilterPanel() {
+      const panel = document.getElementById('vcFilterPanel');
+      const isOpen = panel.classList.contains('open');
+      panel.classList.toggle('open', !isOpen);
+      if (!isOpen) {
+        setTimeout(function() {
+          document.addEventListener('click', function handler(e) {
+            if (!panel.parentElement.contains(e.target)) {
+              panel.classList.remove('open');
+              document.removeEventListener('click', handler);
+            }
+          });
+        }, 0);
+      }
+    }
     function setChip(btn, categoria, value) {
       filters[categoria] = value;
       btn.closest('.filter-panel-row').querySelectorAll('.filter-chip').forEach(function (c) { c.classList.remove('active'); });

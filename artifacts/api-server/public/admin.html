@@ -34,10 +34,6 @@
   <div class="container container-wide">
     <div class="title-row">
       <h1 class="page-title">Painel Administrativo</h1>
-      <div class="admin-actions admin-top-actions" style="display:flex;gap:8px">
-        <a href="/dashboard.html" class="btn btn-outline-ruby">Meu painel</a>
-        <a href="/admin-clickup-lists.html" class="btn btn-outline-ruby" id="clickupListsLink" style="display:none">Listas ClickUp</a>
-      </div>
     </div>
 
     <div class="stats-row" style="grid-template-columns:repeat(3,1fr)" id="adminStats">
@@ -128,77 +124,79 @@
 
     <div class="tab-content" id="tab-eventos">
       <div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:0">
-        <div class="filter-bar" id="filterBarEventos" style="flex-shrink:0">
-          <button class="filter-toggle-btn" id="filterToggleEventos" onclick="toggleFilterPanel('eventos')">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
-            Filtrar
-            <span class="filter-count-badge" id="filterCountEventos" style="display:none">0</span>
-          </button>
-          <div id="filterActiveBadgesEventos" style="display:contents"></div>
-          <button class="filter-clear-btn" id="filterClearEventos" style="display:none" onclick="clearAllFilters('eventos')">Limpar tudo</button>
+        <div style="position:relative;flex-shrink:0">
+          <div class="filter-bar" id="filterBarEventos">
+            <button class="filter-toggle-btn" id="filterToggleEventos" onclick="toggleFilterPanel('eventos')">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+              Filtrar
+              <span class="filter-count-badge" id="filterCountEventos" style="display:none">0</span>
+            </button>
+            <div id="filterActiveBadgesEventos" style="display:contents"></div>
+            <button class="filter-clear-btn" id="filterClearEventos" style="display:none" onclick="clearAllFilters('eventos')">Limpar tudo</button>
+          </div>
+        <div class="filter-panel" id="filterPanelEventos">
+          <div class="filter-panel-row">
+            <span class="filter-panel-label">Período</span>
+            <button class="filter-chip active" data-filter="periodo" data-value="" data-label="Todos os períodos" onclick="toggleFilter(this,'eventos','periodo')">Todos</button>
+            <button class="filter-chip" data-filter="periodo" data-value="hoje" data-label="Hoje" onclick="toggleFilter(this,'eventos','periodo')">Hoje</button>
+            <button class="filter-chip" data-filter="periodo" data-value="7dias" data-label="7 dias" onclick="toggleFilter(this,'eventos','periodo')">7 dias</button>
+            <button class="filter-chip" data-filter="periodo" data-value="30dias" data-label="30 dias" onclick="toggleFilter(this,'eventos','periodo')">30 dias</button>
+          </div>
+          <div class="filter-panel-row">
+            <span class="filter-panel-label">Status</span>
+            <button class="filter-chip active" data-filter="status" data-value="" data-label="Todos os status" onclick="toggleFilter(this,'eventos','status')">Todos</button>
+            <button class="filter-chip" data-filter="status" data-value="recebido" data-label="Recebido" onclick="toggleFilter(this,'eventos','status')">Recebido</button>
+            <button class="filter-chip" data-filter="status" data-value="em-producao" data-label="Em produção" onclick="toggleFilter(this,'eventos','status')">Em produção</button>
+            <button class="filter-chip" data-filter="status" data-value="aguardando" data-label="Aguardando" onclick="toggleFilter(this,'eventos','status')">Aguardando</button>
+            <button class="filter-chip" data-filter="status" data-value="concluido" data-label="Concluído" onclick="toggleFilter(this,'eventos','status')">Concluído</button>
+          </div>
+        </div>
         </div>
         <div class="search-bar" style="flex:1;margin-bottom:0;height:32px;padding:0 14px;border-radius:8px">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" opacity="0.4"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
           <input type="text" placeholder="Buscar..." id="searchEventos" oninput="debounceLoad('eventos')">
         </div>
-      </div>
-      <div class="filter-panel" id="filterPanelEventos" style="margin-top:10px">
-        <div class="filter-panel-row">
-          <span class="filter-panel-label">Período</span>
-          <button class="filter-chip active" data-filter="periodo" data-value="" data-label="Todos os períodos" onclick="toggleFilter(this,'eventos','periodo')">Todos</button>
-          <button class="filter-chip" data-filter="periodo" data-value="hoje" data-label="Hoje" onclick="toggleFilter(this,'eventos','periodo')">Hoje</button>
-          <button class="filter-chip" data-filter="periodo" data-value="7dias" data-label="7 dias" onclick="toggleFilter(this,'eventos','periodo')">7 dias</button>
-          <button class="filter-chip" data-filter="periodo" data-value="30dias" data-label="30 dias" onclick="toggleFilter(this,'eventos','periodo')">30 dias</button>
-        </div>
-        <div class="filter-panel-row">
-          <span class="filter-panel-label">Status</span>
-          <button class="filter-chip active" data-filter="status" data-value="" data-label="Todos os status" onclick="toggleFilter(this,'eventos','status')">Todos</button>
-          <button class="filter-chip" data-filter="status" data-value="recebido" data-label="Recebido" onclick="toggleFilter(this,'eventos','status')">Recebido</button>
-          <button class="filter-chip" data-filter="status" data-value="em-producao" data-label="Em produção" onclick="toggleFilter(this,'eventos','status')">Em produção</button>
-          <button class="filter-chip" data-filter="status" data-value="aguardando" data-label="Aguardando" onclick="toggleFilter(this,'eventos','status')">Aguardando</button>
-          <button class="filter-chip" data-filter="status" data-value="concluido" data-label="Concluído" onclick="toggleFilter(this,'eventos','status')">Concluído</button>
-        </div>
-      </div>
       <div id="tableEventos"></div>
       <div class="pagination" id="paginationEventos"></div>
     </div>
 
     <div class="tab-content active" id="tab-geral">
       <div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:0">
-        <div class="filter-bar" id="filterBarGeral" style="flex-shrink:0">
-          <button class="filter-toggle-btn" id="filterToggleGeral" onclick="toggleFilterPanel('geral')">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
-            Filtrar
-            <span class="filter-count-badge" id="filterCountGeral" style="display:none">0</span>
-          </button>
-          <div id="filterActiveBadgesGeral" style="display:contents"></div>
-          <button class="filter-clear-btn" id="filterClearGeral" style="display:none" onclick="clearAllFilters('geral')">Limpar tudo</button>
+        <div style="position:relative;flex-shrink:0">
+          <div class="filter-bar" id="filterBarGeral">
+            <button class="filter-toggle-btn" id="filterToggleGeral" onclick="toggleFilterPanel('geral')">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+              Filtrar
+              <span class="filter-count-badge" id="filterCountGeral" style="display:none">0</span>
+            </button>
+            <div id="filterActiveBadgesGeral" style="display:contents"></div>
+            <button class="filter-clear-btn" id="filterClearGeral" style="display:none" onclick="clearAllFilters('geral')">Limpar tudo</button>
+          </div>
+        <div class="filter-panel" id="filterPanelGeral">
+          <div class="filter-panel-row">
+            <span class="filter-panel-label">Período</span>
+            <button class="filter-chip active" data-filter="periodo" data-value="" data-label="Todos os períodos" onclick="toggleFilter(this,'geral','periodo')">Todos</button>
+            <button class="filter-chip" data-filter="periodo" data-value="hoje" data-label="Hoje" onclick="toggleFilter(this,'geral','periodo')">Hoje</button>
+            <button class="filter-chip" data-filter="periodo" data-value="7dias" data-label="7 dias" onclick="toggleFilter(this,'geral','periodo')">7 dias</button>
+            <button class="filter-chip" data-filter="periodo" data-value="30dias" data-label="30 dias" onclick="toggleFilter(this,'geral','periodo')">30 dias</button>
+          </div>
+          <div class="filter-panel-row">
+            <span class="filter-panel-label">Status</span>
+            <button class="filter-chip active" data-filter="status" data-value="" data-label="Todos os status" onclick="toggleFilter(this,'geral','status')">Todos</button>
+            <button class="filter-chip" data-filter="status" data-value="recebido" data-label="Recebido" onclick="toggleFilter(this,'geral','status')">Recebido</button>
+            <button class="filter-chip" data-filter="status" data-value="em-analise" data-label="Em análise" onclick="toggleFilter(this,'geral','status')">Em análise</button>
+            <button class="filter-chip" data-filter="status" data-value="aguardando" data-label="Aguardando" onclick="toggleFilter(this,'geral','status')">Aguardando</button>
+            <button class="filter-chip" data-filter="status" data-value="em-producao" data-label="Em produção" onclick="toggleFilter(this,'geral','status')">Em produção</button>
+            <button class="filter-chip" data-filter="status" data-value="em-revisao" data-label="Em revisão" onclick="toggleFilter(this,'geral','status')">Em revisão</button>
+            <button class="filter-chip" data-filter="status" data-value="em-aprovacao" data-label="Em aprovação" onclick="toggleFilter(this,'geral','status')">Em aprovação</button>
+            <button class="filter-chip" data-filter="status" data-value="concluido" data-label="Concluído" onclick="toggleFilter(this,'geral','status')">Concluído</button>
+          </div>
+        </div>
         </div>
         <div class="search-bar" style="flex:1;margin-bottom:0;height:32px;padding:0 14px;border-radius:8px">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" opacity="0.4"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
           <input type="text" placeholder="Buscar..." id="searchGeral" oninput="debounceLoad('geral')">
         </div>
-      </div>
-      <div class="filter-panel" id="filterPanelGeral" style="margin-top:10px">
-        <div class="filter-panel-row">
-          <span class="filter-panel-label">Período</span>
-          <button class="filter-chip active" data-filter="periodo" data-value="" data-label="Todos os períodos" onclick="toggleFilter(this,'geral','periodo')">Todos</button>
-          <button class="filter-chip" data-filter="periodo" data-value="hoje" data-label="Hoje" onclick="toggleFilter(this,'geral','periodo')">Hoje</button>
-          <button class="filter-chip" data-filter="periodo" data-value="7dias" data-label="7 dias" onclick="toggleFilter(this,'geral','periodo')">7 dias</button>
-          <button class="filter-chip" data-filter="periodo" data-value="30dias" data-label="30 dias" onclick="toggleFilter(this,'geral','periodo')">30 dias</button>
-        </div>
-        <div class="filter-panel-row">
-          <span class="filter-panel-label">Status</span>
-          <button class="filter-chip active" data-filter="status" data-value="" data-label="Todos os status" onclick="toggleFilter(this,'geral','status')">Todos</button>
-          <button class="filter-chip" data-filter="status" data-value="recebido" data-label="Recebido" onclick="toggleFilter(this,'geral','status')">Recebido</button>
-          <button class="filter-chip" data-filter="status" data-value="em-analise" data-label="Em análise" onclick="toggleFilter(this,'geral','status')">Em análise</button>
-          <button class="filter-chip" data-filter="status" data-value="aguardando" data-label="Aguardando" onclick="toggleFilter(this,'geral','status')">Aguardando</button>
-          <button class="filter-chip" data-filter="status" data-value="em-producao" data-label="Em produção" onclick="toggleFilter(this,'geral','status')">Em produção</button>
-          <button class="filter-chip" data-filter="status" data-value="em-revisao" data-label="Em revisão" onclick="toggleFilter(this,'geral','status')">Em revisão</button>
-          <button class="filter-chip" data-filter="status" data-value="em-aprovacao" data-label="Em aprovação" onclick="toggleFilter(this,'geral','status')">Em aprovação</button>
-          <button class="filter-chip" data-filter="status" data-value="concluido" data-label="Concluído" onclick="toggleFilter(this,'geral','status')">Concluído</button>
-        </div>
-      </div>
       <div id="tableGeral"></div>
       <div class="pagination" id="paginationGeral"></div>
     </div>
@@ -254,10 +252,6 @@
         return;
       }
       Shell.render({ activeRoute: 'admin-painel', contentEl: document.getElementById('pageContent') });
-      if (Auth.getUserRole() === 'admin') {
-        const lnk = document.getElementById('clickupListsLink');
-        if (lnk) lnk.style.display = '';
-      }
       loadStats();
       loadAdminStats();
       loadTable('geral');
@@ -384,6 +378,16 @@
       const isOpen = panel.classList.contains('open');
       panel.classList.toggle('open', !isOpen);
       if (!hasActiveFilters(tab) && isOpen) btn.classList.remove('has-filters');
+      if (!isOpen) {
+        setTimeout(function() {
+          document.addEventListener('click', function handler(e) {
+            if (!panel.parentElement.contains(e.target)) {
+              panel.classList.remove('open');
+              document.removeEventListener('click', handler);
+            }
+          });
+        }, 0);
+      }
     }
 
     function toggleFilter(btn, tab, key) {
