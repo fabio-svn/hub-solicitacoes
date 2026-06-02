@@ -117,9 +117,6 @@
           <label>Contrato social <span style="color:var(--ruby-red)">*</span></label>
           <select id="contratoSocialFisico" required>
             <option value="">Selecione</option>
-            <option value="svn-capital">SVN Capital</option>
-            <option value="svn-connect">SVN Connect</option>
-            <option value="svn-investimentos">SVN Investimentos</option>
           </select>
         </div>
         <div style="border-top:1px solid rgba(34,27,25,.08);margin:28px 0 20px;padding-top:22px">
@@ -159,9 +156,6 @@
           <label>Contrato social <span style="color:var(--ruby-red)">*</span></label>
           <select id="contratoSocial" required>
             <option value="">Selecione</option>
-            <option value="svn-capital">SVN Capital</option>
-            <option value="svn-connect">SVN Connect</option>
-            <option value="svn-investimentos">SVN Investimentos</option>
           </select>
         </div>
         <div class="field">
@@ -210,6 +204,18 @@
 
       const unidadeSel = document.getElementById('unidadeFisico');
       if (unidadeSel) { UNIDADES_SVN.forEach(u => { const o = document.createElement('option'); o.value = u.nome; o.textContent = u.nome; unidadeSel.appendChild(o); }); }
+
+      const contratosOpts = window._svnFormSchemas?.contratos || [];
+      ['contratoSocialFisico', 'contratoSocial'].forEach(id => {
+        const sel = document.getElementById(id);
+        if (!sel) return;
+        contratosOpts.forEach(c => {
+          const o = document.createElement('option');
+          o.value = c.value;
+          o.textContent = c.label;
+          sel.appendChild(o);
+        });
+      });
 
       Auth.aplicarPerfilNoCampo('whatsappFisico', Auth.getTelefone());
       Auth.aplicarPerfilNoCampo('unidadeFisico', Auth.getUnidade());

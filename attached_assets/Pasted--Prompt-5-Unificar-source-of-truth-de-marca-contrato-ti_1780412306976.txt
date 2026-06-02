@@ -1,0 +1,374 @@
+# Prompt 5 — Unificar source of truth de marca/contrato/tipo
+
+Eliminar duplicação de **9 marcas**, **3 contratos** e **24 tipos** que estão hardcoded em 6+ lugares. Tornar `form-schemas.ts` (backend) a **única fonte de verdade**.
+
+**Estimativa**: 2-3h agent. **Risco**: 🟠 Médio-alto (mexe em 6 arquivos críticos). **Recompensa**: elimina ~80 linhas de código duplicado e a maior fonte recorrente de bugs.
+
+═══════════════════════════════════════════════════════════════
+## 📋 Contexto
+═══════════════════════════════════════════════════════════════
+
+O backend `src/config/form-schemas.ts` já exporta `CONTRATOS_OPTS` e `MARCAS_OPTS`. Existe o endpoint público `GET /api/form-schemas` (linha 25909) que retorna `{ marcas, contratos, cargos, setores, tipos }`. O frontend já consome em `config.js` linha 5712.
+
+**MAS** vários lugares ainda têm fallbacks hardcoded "por garantia". Quando alguém adiciona uma marca nova, esquece de atualizar tudo → bug.
+
+**Objetivo**: remover TODOS os fallbacks hardcoded, deixando apenas as listas exportadas de `form-schemas.ts`.
+
+═══════════════════════════════════════════════════════════════
+## 🔧 Mudança 1: template-renderer.ts (backend)
+═══════════════════════════════════════════════════════════════
+
+Já tem um **TODO P1.1** documentado: "unificar via API /form-schemas". Hora de resolver.
+
+### Arquivo: `src/services/template-renderer.ts`
+
+**Localizar**:
+```ts
+// Mapeamentos slug → label, espelhando form-schemas.ts
+// IMPORTANTE: se essas listas mudarem em form-schemas.ts, atualizar aqui.
+// TODO P1.1: unificar via API /form-schemas
+const CONTRATO_LABELS: Record<string, string> = {
+  'svn-investimentos': 'SVN Investimentos',
+  'svn-capital':       'SVN Capital',
+  'svn-connect':       'SVN Connect',
+};
+
+const MARCA_LABELS: Record<string, string> = {
+  'svn-investimentos':           'SVN Investimentos',
+  'svn-capital':                 'SVN Capital',
+  'svn-connect':                 'SVN Connect',
+  'svn-gestao':                  'SVN Gestão',
+  'svn-global':                  'SVN Global',
+  'svn-imb':                     'SVN Investment & Merchant Banking',
+  'svn-agro-cambio-commodities': 'SVN Agro, Câmbio & Commodities',
+  'svn-protecao-patrimonial':    'SVN Proteção Patrimonial',
+  'svn-wealth-planning':         'SVN Wealth Planning',
+};
+```
+
+**Substituir por**:
+```ts
+import { CONTRATOS_OPTS, MARCAS_OPTS } from '../config/form-schemas';
+
+const CONTRATO_LABELS: Record<string, string> = Object.fromEntries(
+  CONTRATOS_OPTS.map(c => [c.value, c.label])
+);
+
+const MARCA_LABELS: Record<string, string> = Object.fromEntries(
+  MARCAS_OPTS.map(m => [m.value, m.label])
+);
+```
+
+⚠️ O `import` deve ir junto aos outros imports no topo do arquivo (mover pra lá).
+
+═══════════════════════════════════════════════════════════════
+## 🔧 Mudança 2: admin-templates.html (FIELD_OPTIONS)
+═══════════════════════════════════════════════════════════════
+
+A constante `FIELD_OPTIONS` hardcoded gera as opções dos selects no editor de templates. Substituir por uma versão que consome `window._svnFormSchemas`.
+
+### Arquivo: `public/admin-templates.html`
+
+**Localizar**:
+```js
+    const FIELD_OPTIONS = {
+      'contrato_social': [
+        { value: 'svn-investimentos', label: 'SVN Investimentos' },
+        { value: 'svn-capital',       label: 'SVN Capital' },
+        { value: 'svn-connect',       label: 'SVN Connect' },
+      ],
+      'marca': [
+        { value: 'svn-investimentos',           label: 'SVN Investimentos' },
+        { value: 'svn-capital',                 label: 'SVN Capital' },
+        { value: 'svn-connect',                 label: 'SVN Connect' },
+        { value: 'svn-gestao',                  label: 'SVN Gestão' },
+        { value: 'svn-global',                  label: 'SVN Global' },
+        { value: 'svn-imb',                     label: 'SVN IMB' },
+        { value: 'svn-agro-cambio-commodities', label: 'SVN Agro/Câmbio/Commodities' },
+        { value: 'svn-protecao-patrimonial',    label: 'SVN Proteção Patrimonial' },
+        { value: 'svn-wealth-planning',         label: 'SVN Wealth Planning' },
+      ],
+      'is_private_key': [
+        { value: 'padrao',  label: 'Padrão' },
+        { value: 'private', label: 'Private' },
+      ],
+      'tem_cfp': [
+        { value: 'sim', label: 'Sim' },
+        { value: 'nao', label: 'Não' },
+      ],
+    };
+```
+
+**Substituir por**:
+```js
+    // FIELD_OPTIONS — populated dynamically from /api/form-schemas via window._svnFormSchemas.
+    // contrato_social and marca vêm do backend (CONTRATOS_OPTS, MARCAS_OPTS no form-schemas.ts).
+    // is_private_key e tem_cfp são opções fixas (booleanos UX).
+    const FIELD_OPTIONS = {
+      'contrato_social': (window._svnFormSchemas?.contratos || []),
+      'marca':           (window._svnFormSchemas?.marcas    || []),
+      'is_private_key': [
+        { value: 'padrao',  label: 'Padrão' },
+        { value: 'private', label: 'Private' },
+      ],
+      'tem_cfp': [
+        { value: 'sim', label: 'Sim' },
+        { value: 'nao', label: 'Não' },
+      ],
+    };
+```
+
+⚠️ **IMPORTANTE**: o `FIELD_OPTIONS` é referenciado em outros lugares do `admin-templates.html`. Garantir que essa referência aconteça **depois** de `_configReady` ser resolvido (linha 3402 já mostra isso sendo feito corretamente — manter).
+
+═══════════════════════════════════════════════════════════════
+## 🔧 Mudança 3: form-cartao-visita.html (opções HTML hardcoded)
+═══════════════════════════════════════════════════════════════
+
+O form tem `<option>` HTML hardcoded em **2 selects** (físico + digital). Trocar pra popular dinamicamente.
+
+### Arquivo: `public/form-cartao-visita.html`
+
+**Localizar** (no select do Cartão Físico):
+```html
+          <select id="contratoSocialFisico" required>
+            <option value="">Selecione</option>
+            <option value="svn-capital">SVN Capital</option>
+            <option value="svn-connect">SVN Connect</option>
+            <option value="svn-investimentos">SVN Investimentos</option>
+          </select>
+```
+
+**Substituir por**:
+```html
+          <select id="contratoSocialFisico" required>
+            <option value="">Selecione</option>
+          </select>
+```
+
+**Localizar** (no select do Cartão Digital):
+```html
+          <select id="contratoSocial" required>
+            <option value="">Selecione</option>
+            <option value="svn-capital">SVN Capital</option>
+            <option value="svn-connect">SVN Connect</option>
+            <option value="svn-investimentos">SVN Investimentos</option>
+          </select>
+```
+
+**Substituir por**:
+```html
+          <select id="contratoSocial" required>
+            <option value="">Selecione</option>
+          </select>
+```
+
+**Adicionar** (dentro do `init()` ou após `await _configReady`, antes do `Shell.render`):
+```js
+      // Popular contratos dinamicamente dos schemas
+      const contratosOpts = window._svnFormSchemas?.contratos || [];
+      ['contratoSocialFisico', 'contratoSocial'].forEach(id => {
+        const sel = document.getElementById(id);
+        if (!sel) return;
+        contratosOpts.forEach(c => {
+          const o = document.createElement('option');
+          o.value = c.value;
+          o.textContent = c.label;
+          sel.appendChild(o);
+        });
+      });
+```
+
+═══════════════════════════════════════════════════════════════
+## 🔧 Mudança 4: form-cartao-boas-vindas.html (fallback hardcoded)
+═══════════════════════════════════════════════════════════════
+
+### Arquivo: `public/form-cartao-boas-vindas.html`
+
+**Localizar**:
+```js
+      const contratoSel = document.getElementById('contratoSocial');
+      if (contratoSel) {
+        (window._svnFormSchemas?.contratos || [
+          { value: 'svn-investimentos', label: 'SVN Investimentos' },
+          { value: 'svn-capital',       label: 'SVN Capital' },
+          { value: 'svn-connect',       label: 'SVN Connect' },
+        ]).forEach(c => { const o = document.createElement('option'); o.value = c.value || c.id || ''; o.textContent = c.label; contratoSel.appendChild(o); });
+      }
+```
+
+**Substituir por**:
+```js
+      const contratoSel = document.getElementById('contratoSocial');
+      if (contratoSel) {
+        (window._svnFormSchemas?.contratos || []).forEach(c => {
+          const o = document.createElement('option');
+          o.value = c.value || c.id || '';
+          o.textContent = c.label;
+          contratoSel.appendChild(o);
+        });
+      }
+```
+
+═══════════════════════════════════════════════════════════════
+## 🔧 Mudança 5: form-assinatura-email.html (MARCAS_CONTRATO truncado)
+═══════════════════════════════════════════════════════════════
+
+Esse caso é INTERESSANTE — a constante hardcoded tem só **3 marcas** das 9 disponíveis. Provavelmente código antigo. Vale investigar se ainda é usado.
+
+### Arquivo: `public/form-assinatura-email.html`
+
+**Localizar**:
+```js
+    const MARCAS_CONTRATO = ['svn-investimentos', 'svn-capital', 'svn-connect'];
+```
+
+**Investigar primeiro** (não substituir cegamente): rodar busca:
+```bash
+grep -n "MARCAS_CONTRATO" public/form-assinatura-email.html
+```
+
+Se **aparece em 1 lugar** (só a definição) → é dead code, **deletar a linha**.
+
+Se aparece em **mais lugares** (sendo usado em alguma lógica), entender o uso e:
+- Se a lógica precisa diferenciar "marcas que TÊM contrato social" das outras (faz sentido: SVN Capital/Connect/Investimentos têm contrato, as outras 6 são marcas guarda-chuva sem contrato próprio), **manter a constante** mas adicionar um comentário:
+```js
+// Subset de marcas que possuem contrato social específico (vs marcas guarda-chuva)
+const MARCAS_CONTRATO = ['svn-investimentos', 'svn-capital', 'svn-connect'];
+```
+
+═══════════════════════════════════════════════════════════════
+## 🔧 Mudança 6: config.js (fallbacks marcados como tal)
+═══════════════════════════════════════════════════════════════
+
+O `config.js` tem 3 arrays-fallback. Eles existem pra cobrir o caso do fetch falhar. Aceitável manter, mas tornar explícito o status.
+
+### Arquivo: `public/config.js`
+
+**Localizar**:
+```js
+// Fallback inicial — sobrescrito pelo fetch quando /api/form-schemas disponível
+window.MARCAS_OPTS_FORM = [
+  { value: 'svn-investimentos',           label: 'SVN Investimentos' },
+  { value: 'svn-capital',                 label: 'SVN Capital' },
+  { value: 'svn-connect',                 label: 'SVN Connect' },
+  { value: 'svn-gestao',                  label: 'SVN Gestão' },
+  { value: 'svn-global',                  label: 'SVN Global' },
+  { value: 'svn-imb',                     label: 'SVN Investment & Merchant Banking' },
+  { value: 'svn-agro-cambio-commodities', label: 'SVN Agro, Câmbio & Commodities' },
+  { value: 'svn-protecao-patrimonial',    label: 'SVN Proteção Patrimonial' },
+  { value: 'svn-wealth-planning',         label: 'SVN Wealth Planning' },
+];
+```
+
+**Substituir por**:
+```js
+// FALLBACK só pra evitar tela em branco se /api/form-schemas falhar.
+// FONTE DA VERDADE: src/config/form-schemas.ts (MARCAS_OPTS) — não editar aqui.
+window.MARCAS_OPTS_FORM = [];
+```
+
+**Localizar**:
+```js
+let CONTRATOS_SOCIAIS = ["SVN Capital", "SVN Connect", "SVN Investimentos"];
+
+let MARCAS_SVN = [
+  "SVN Investimentos",
+  "SVN Capital",
+  "SVN Connect",
+  "SVN Agro, Câmbio & Commodities",
+  "SVN Gestão",
+  "SVN Global",
+  "SVN Proteção Patrimonial",
+  "SVN Investment & Merchant Banking",
+  "SVN Wealth Planning",
+];
+```
+
+**Substituir por**:
+```js
+// FALLBACK só pra evitar tela em branco se /api/form-schemas falhar.
+// FONTE DA VERDADE: src/config/form-schemas.ts — não editar aqui.
+let CONTRATOS_SOCIAIS = [];
+let MARCAS_SVN = [];
+```
+
+⚠️ **IMPORTANTE**: rodar a aplicação e verificar que NADA quebra durante o carregamento inicial. Como há `_configReady`, todos os usos dessas variáveis devem aguardar a Promise — mas pode haver algum código que use ANTES de await. Se aparecer tela vazia em algum form, é sinal de que algum lugar lê essas variáveis sem aguardar config.
+
+Se isso acontecer, **reverter pra versão com fallback** (deixando hardcoded por enquanto) e investigar quais arquivos não aguardam `_configReady`.
+
+═══════════════════════════════════════════════════════════════
+## ✅ Verificação
+═══════════════════════════════════════════════════════════════
+
+### 1. Typecheck
+```bash
+pnpm run typecheck
+```
+
+### 2. Curl no endpoint pra confirmar que retorna tudo
+```bash
+curl https://hub.portalsvn.com.br/api/form-schemas | jq '.marcas | length'
+# Deve retornar 9
+
+curl https://hub.portalsvn.com.br/api/form-schemas | jq '.contratos | length'
+# Deve retornar 3
+```
+
+### 3. Testar TODOS os forms que dependem disso (importantíssimo)
+
+Para cada form, abrir, preencher e verificar que o select de **Contrato Social** e **Marca** mostra TODAS as opções corretamente:
+
+- ✅ `form-cartao-visita.html` (físico + digital)
+- ✅ `form-cartao-boas-vindas.html`
+- ✅ `form-cartao-comemorativo.html`
+- ✅ `form-convite-fp.html`
+- ✅ `form-assinatura-email.html` (marca)
+- ✅ `form-divulgacao-nps.html` (marca)
+
+### 4. Admin Templates
+- Abrir `admin-templates.html`
+- Editar um template existente que use `{contrato_social}` ou `{marca}`
+- Verificar que as opções aparecem corretamente no select de "field value"
+
+### 5. Geração de arte (template-renderer)
+- Criar nova solicitação de Cartão de Boas-vindas com `contrato_social: "svn-capital"`
+- Verificar que a arte gerada mostra "SVN Capital" (não "svn-capital")
+- Significa que `enrichDataWithLabels` ainda está funcionando
+
+### 6. Verificar que NÃO há tela em branco
+- Hard refresh em **todas** as páginas principais (dashboard, solicitacoes, admin, todos os forms)
+- Se alguma tela ficar em branco, é sinal de que algum código não aguarda `_configReady` antes de ler `MARCAS_SVN`/`CONTRATOS_SOCIAIS`
+
+### 7. Testar offline (DevTools → Network → Offline)
+- Recarregar uma página com `/api/form-schemas` falhando
+- Verificar que a UI mostra empty state ou mensagem clara (não exception JS)
+- Esse é o cenário pior; se aparecer empty select é OK, importante é não dar exception
+
+═══════════════════════════════════════════════════════════════
+## 🚨 Se algo quebrar
+═══════════════════════════════════════════════════════════════
+
+**Sintoma**: Select de contrato/marca vazio em algum form  
+**Causa provável**: o form usa `MARCAS_SVN` ou `CONTRATOS_SOCIAIS` antes de `await _configReady`  
+**Fix**: adicionar `await _configReady` no início do init do form, ou reverter o fallback pra hardcoded TEMPORARIAMENTE e investigar o uso
+
+**Sintoma**: typecheck falha em `template-renderer.ts`  
+**Causa provável**: import path errado  
+**Fix**: confirmar que `'../config/form-schemas'` é o path correto (pode ser `'../../config/form-schemas'` dependendo da estrutura)
+
+**Sintoma**: arte gerada mostra slug em vez de label  
+**Causa provável**: `CONTRATOS_OPTS`/`MARCAS_OPTS` não foram importados corretamente do form-schemas.ts  
+**Fix**: rebuild com `pnpm run build` e conferir warnings/erros
+
+═══════════════════════════════════════════════════════════════
+## 🎯 Resultado esperado
+
+Após esse prompt:
+- ✅ **1 fonte de verdade**: `src/config/form-schemas.ts`
+- ❌ **Hardcodes eliminados** em 5 arquivos diferentes
+- ✅ **Adicionar uma nova marca** = editar UM arquivo (form-schemas.ts), sistema todo se atualiza
+- ✅ Bug recorrente de "esqueci de atualizar X" não acontece mais
+
+═══════════════════════════════════════════════════════════════
+
+**É o último prompt da série**. Após aplicar, o Hub fica em estado bem mais saudável. Backlog restante (form-core, api wrapper, CSP) pode ser planejado quando quiser.

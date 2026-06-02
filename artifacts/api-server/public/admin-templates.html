@@ -644,23 +644,12 @@
       { label: '4078×988',   w: 4078, h: 988  },
     ];
 
+    // FIELD_OPTIONS — populated dynamically from /api/form-schemas via window._svnFormSchemas.
+    // contrato_social and marca vêm do backend (CONTRATOS_OPTS, MARCAS_OPTS no form-schemas.ts).
+    // is_private_key e tem_cfp são opções fixas (booleanos UX).
     const FIELD_OPTIONS = {
-      'contrato_social': [
-        { value: 'svn-investimentos', label: 'SVN Investimentos' },
-        { value: 'svn-capital',       label: 'SVN Capital' },
-        { value: 'svn-connect',       label: 'SVN Connect' },
-      ],
-      'marca': [
-        { value: 'svn-investimentos',           label: 'SVN Investimentos' },
-        { value: 'svn-capital',                 label: 'SVN Capital' },
-        { value: 'svn-connect',                 label: 'SVN Connect' },
-        { value: 'svn-gestao',                  label: 'SVN Gestão' },
-        { value: 'svn-global',                  label: 'SVN Global' },
-        { value: 'svn-imb',                     label: 'SVN IMB' },
-        { value: 'svn-agro-cambio-commodities', label: 'SVN Agro/Câmbio/Commodities' },
-        { value: 'svn-protecao-patrimonial',    label: 'SVN Proteção Patrimonial' },
-        { value: 'svn-wealth-planning',         label: 'SVN Wealth Planning' },
-      ],
+      'contrato_social': (window._svnFormSchemas?.contratos || []),
+      'marca':           (window._svnFormSchemas?.marcas    || []),
       'is_private_key': [
         { value: 'padrao',  label: 'Padrão' },
         { value: 'private', label: 'Private' },
@@ -1171,9 +1160,9 @@
       await _configReady;
       if (window._svnFormSchemas) {
         if (window._svnFormSchemas.contratos?.length)
-          FIELD_OPTIONS['contrato_social'] = window._svnFormSchemas.contratos.map(c => ({ value: c.id, label: c.label }));
+          FIELD_OPTIONS['contrato_social'] = window._svnFormSchemas.contratos;
         if (window._svnFormSchemas.marcas?.length)
-          FIELD_OPTIONS['marca'] = window._svnFormSchemas.marcas.map(m => ({ value: m.id, label: m.label }));
+          FIELD_OPTIONS['marca'] = window._svnFormSchemas.marcas;
       }
       await Auth.init();
       if (!Auth.isAuthenticated()) { window.location.href = '/auth/login?redirect=/admin-templates.html'; return; }

@@ -4,31 +4,19 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { ArtTemplate, TextLineLayer, TextBlockLayer, ImageLayer, ShapeLayer } from '../types/art-template';
 import { logger } from '../lib/logger';
+import { CONTRATOS_OPTS, MARCAS_OPTS } from '../config/form-schemas';
 
 const fontkit = fontkitLib as any;
 
 const ASSETS_DIR = path.resolve(__dirname, 'assets');
 
-// Mapeamentos slug → label, espelhando form-schemas.ts
-// IMPORTANTE: se essas listas mudarem em form-schemas.ts, atualizar aqui.
-// TODO P1.1: unificar via API /form-schemas
-const CONTRATO_LABELS: Record<string, string> = {
-  'svn-investimentos': 'SVN Investimentos',
-  'svn-capital':       'SVN Capital',
-  'svn-connect':       'SVN Connect',
-};
+const CONTRATO_LABELS: Record<string, string> = Object.fromEntries(
+  CONTRATOS_OPTS.map(c => [c.value, c.label])
+);
 
-const MARCA_LABELS: Record<string, string> = {
-  'svn-investimentos':           'SVN Investimentos',
-  'svn-capital':                 'SVN Capital',
-  'svn-connect':                 'SVN Connect',
-  'svn-gestao':                  'SVN Gestão',
-  'svn-global':                  'SVN Global',
-  'svn-imb':                     'SVN Investment & Merchant Banking',
-  'svn-agro-cambio-commodities': 'SVN Agro, Câmbio & Commodities',
-  'svn-protecao-patrimonial':    'SVN Proteção Patrimonial',
-  'svn-wealth-planning':         'SVN Wealth Planning',
-};
+const MARCA_LABELS: Record<string, string> = Object.fromEntries(
+  MARCAS_OPTS.map(m => [m.value, m.label])
+);
 
 function enrichDataWithLabels(data: Record<string, any>): Record<string, any> {
   const enriched = { ...data };

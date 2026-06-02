@@ -14,18 +14,9 @@ let PACOTE_PADRAO_IMAGENS = [
 
 let EMAIL_UPLOAD = "gabriela.franca@svninvest.com.br";
 
-// Fallback inicial — sobrescrito pelo fetch quando /api/form-schemas disponível
-window.MARCAS_OPTS_FORM = [
-  { value: 'svn-investimentos',           label: 'SVN Investimentos' },
-  { value: 'svn-capital',                 label: 'SVN Capital' },
-  { value: 'svn-connect',                 label: 'SVN Connect' },
-  { value: 'svn-gestao',                  label: 'SVN Gestão' },
-  { value: 'svn-global',                  label: 'SVN Global' },
-  { value: 'svn-imb',                     label: 'SVN Investment & Merchant Banking' },
-  { value: 'svn-agro-cambio-commodities', label: 'SVN Agro, Câmbio & Commodities' },
-  { value: 'svn-protecao-patrimonial',    label: 'SVN Proteção Patrimonial' },
-  { value: 'svn-wealth-planning',         label: 'SVN Wealth Planning' },
-];
+// FALLBACK só pra evitar tela em branco se /api/form-schemas falhar.
+// FONTE DA VERDADE: src/config/form-schemas.ts (MARCAS_OPTS) — não editar aqui.
+window.MARCAS_OPTS_FORM = [];
 
 const _configReady = Promise.all([
   fetch('/api/config').then(r => r.json()).catch(() => ({})),
@@ -137,19 +128,13 @@ const TIPO_SOLICITACAO_LABELS = {
   "outro":                          "Outro",
 };
 
-let CONTRATOS_SOCIAIS = ["SVN Capital", "SVN Connect", "SVN Investimentos"];
+// FALLBACK só pra evitar tela em branco se /api/form-schemas falhar.
+// FONTE DA VERDADE: src/config/form-schemas.ts — não editar aqui.
+let CONTRATOS_SOCIAIS = [];
 
-let MARCAS_SVN = [
-  "SVN Investimentos",
-  "SVN Capital",
-  "SVN Connect",
-  "SVN Agro, Câmbio & Commodities",
-  "SVN Gestão",
-  "SVN Global",
-  "SVN Proteção Patrimonial",
-  "SVN Investment & Merchant Banking",
-  "SVN Wealth Planning",
-];
+// FALLBACK só pra evitar tela em branco se /api/form-schemas falhar.
+// FONTE DA VERDADE: src/config/form-schemas.ts — não editar aqui.
+let MARCAS_SVN = [];
 
 let CARGOS_ASSESSOR = [
   "Assessor de Investimentos",
