@@ -1,0 +1,407 @@
+# Padronização do padrão de Filtro
+
+Replicar o padrão de `dashboard.html` (botão Filtrar + search na mesma linha + popup com chips) em **3 páginas**: `admin.html`, `admin-log.html`, `admin-assets.html`.
+
+**Cada página é um sub-prompt independente.** Aplicar em ordem (do mais simples ao mais complexo). Se o agent travar em uma, fechar essa sessão e fazer a próxima em sessão nova.
+
+Ordem sugerida:
+1. **admin-log.html** (mais simples — só tem search + select de nível)
+2. **admin-assets.html** (search + select tipo + filter-chips inline)
+3. **admin.html** (já tem chips, vamos só mover pro padrão popup)
+
+═══════════════════════════════════════════════════════════════
+# 📋 Padrão de referência (já existente em dashboard.html)
+═══════════════════════════════════════════════════════════════
+
+Pra cada página migrar, a estrutura final é:
+
+```html
+<!-- Linha do filtro: botão + search -->
+<div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:0">
+  <div class="filter-bar" id="filterBar{PAGE}" style="flex-shrink:0">
+    <button class="filter-toggle-btn" id="filterToggle{PAGE}" onclick="toggleFilterPanel()">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+      Filtrar
+      <span class="filter-count-badge" id="filterCount{PAGE}" style="display:none">0</span>
+    </button>
+    <div id="filterActiveBadges{PAGE}" style="display:contents"></div>
+    <button class="filter-clear-btn" id="filterClear{PAGE}" style="display:none" onclick="clearAllFilters()">Limpar tudo</button>
+  </div>
+  <div class="search-bar" style="flex:1;margin-bottom:0;height:32px;padding:0 14px;border-radius:8px">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" opacity="0.4"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    <input type="text" placeholder="Buscar..." id="search{PAGE}" oninput="debounceSearch()">
+  </div>
+</div>
+
+<!-- Painel que abre ao clicar Filtrar -->
+<div class="filter-panel" id="filterPanel{PAGE}" style="margin-top:10px">
+  <div class="filter-panel-row">
+    <span class="filter-panel-label">Categoria 1</span>
+    <button class="filter-chip active" data-filter="chave1" data-value="" data-label="Todos" onclick="toggleFilter(this, 'chave1')">Todos</button>
+    <button class="filter-chip" data-filter="chave1" data-value="valor1" data-label="Valor 1" onclick="toggleFilter(this, 'chave1')">Valor 1</button>
+    <!-- ... mais opções ... -->
+  </div>
+  <!-- Mais .filter-panel-row pra outras categorias -->
+</div>
+```
+
+═══════════════════════════════════════════════════════════════
+# 🟢 Sub-prompt 1 — admin-log.html
+═══════════════════════════════════════════════════════════════
+
+Hoje tem: search bar + `<select>` de nível (info/warn/error). Migrar pra padrão.
+
+### Arquivo: `public/admin-log.html`
+
+**Localizar** este bloco (linhas ~38-46 aprox):
+```html
+<div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;align-items:center">
+  <div class="search-bar" style="flex:1;max-width:300px;margin-bottom:0;height:32px;padding:0 14px;border-radius:8px">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" opacity="0.4"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    <input type="text" id="logBusca" placeholder="Buscar por usuário, detalhe..." oninput="debounceLogSearch()">
+  </div>
+  <select id="logFiltroNivel" onchange="loadLog()" style="height:32px;border:1px solid var(--border-light);border-radius:8px;padding:0 10px;font-family:'Nunito Sans',sans-serif;font-size:0.8rem;background:var(--card-white)">
+    <option value="">Todos os níveis</option>
+    <option value="info">Info</option>
+    <option value="warn">Warn</option>
+    <option value="error">Error</option>
+  </select>
+</div>
+```
+
+**Substituir por**:
+```html
+<div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:0">
+  <div class="filter-bar" id="filterBarLog" style="flex-shrink:0">
+    <button class="filter-toggle-btn" id="filterToggleLog" onclick="toggleFilterPanel()">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+      Filtrar
+      <span class="filter-count-badge" id="filterCountLog" style="display:none">0</span>
+    </button>
+    <div id="filterActiveBadgesLog" style="display:contents"></div>
+    <button class="filter-clear-btn" id="filterClearLog" style="display:none" onclick="clearAllFilters()">Limpar tudo</button>
+  </div>
+  <div class="search-bar" style="flex:1;margin-bottom:0;height:32px;padding:0 14px;border-radius:8px">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" opacity="0.4"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    <input type="text" id="logBusca" placeholder="Buscar por usuário, detalhe..." oninput="debounceLogSearch()">
+  </div>
+</div>
+
+<div class="filter-panel" id="filterPanelLog" style="margin-top:10px">
+  <div class="filter-panel-row">
+    <span class="filter-panel-label">Nível</span>
+    <button class="filter-chip active" data-filter="nivel" data-value="" data-label="Todos os níveis" onclick="toggleFilter(this, 'nivel')">Todos</button>
+    <button class="filter-chip" data-filter="nivel" data-value="info" data-label="Info" onclick="toggleFilter(this, 'nivel')">Info</button>
+    <button class="filter-chip" data-filter="nivel" data-value="warn" data-label="Avisos" onclick="toggleFilter(this, 'nivel')">Avisos</button>
+    <button class="filter-chip" data-filter="nivel" data-value="error" data-label="Erros" onclick="toggleFilter(this, 'nivel')">Erros</button>
+  </div>
+</div>
+```
+
+### Adicionar funções JS no `<script>` da página
+
+**Localizar** onde está `debounceLogSearch` e `loadLog`, e **adicionar** estas funções no mesmo `<script>`:
+
+```js
+// State dos filtros
+const filterState = { nivel: '' };
+
+function toggleFilterPanel() {
+  const panel = document.getElementById('filterPanelLog');
+  const btn = document.getElementById('filterToggleLog');
+  const isOpen = panel.classList.contains('open');
+  panel.classList.toggle('open', !isOpen);
+  btn.classList.toggle('has-filters', hasActiveFilters() || !isOpen);
+  if (!hasActiveFilters() && isOpen) btn.classList.remove('has-filters');
+}
+
+function toggleFilter(btn, key) {
+  const value = btn.dataset.value;
+  filterState[key] = value;
+  // Marca o ativo do mesmo grupo
+  const group = document.querySelectorAll(`#filterPanelLog [data-filter="${key}"]`);
+  group.forEach(b => b.classList.toggle('active', b.dataset.value === value));
+  updateFilterUI();
+  // Sincronizar com a função que faz a busca real
+  // (atualiza o valor antigo do select pra função existente continuar funcionando)
+  document.getElementById('logFiltroNivel')?.remove?.(); // garante que não conflita
+  loadLog();
+}
+
+function clearAllFilters() {
+  filterState.nivel = '';
+  document.querySelectorAll('#filterPanelLog .filter-chip').forEach(b => {
+    b.classList.toggle('active', b.dataset.value === '');
+  });
+  updateFilterUI();
+  loadLog();
+}
+
+function hasActiveFilters() {
+  return Object.values(filterState).some(v => v !== '');
+}
+
+function updateFilterUI() {
+  const count = Object.values(filterState).filter(v => v !== '').length;
+  const countBadge = document.getElementById('filterCountLog');
+  const clearBtn = document.getElementById('filterClearLog');
+  const btn = document.getElementById('filterToggleLog');
+
+  if (count > 0) {
+    countBadge.textContent = count;
+    countBadge.style.display = 'inline-flex';
+    clearBtn.style.display = 'inline-block';
+    btn.classList.add('has-filters');
+  } else {
+    countBadge.style.display = 'none';
+    clearBtn.style.display = 'none';
+    btn.classList.remove('has-filters');
+  }
+
+  // Render dos badges de filtro ativo
+  const badgesContainer = document.getElementById('filterActiveBadgesLog');
+  badgesContainer.innerHTML = '';
+  Object.entries(filterState).forEach(([key, value]) => {
+    if (!value) return;
+    const btnRef = document.querySelector(`#filterPanelLog [data-filter="${key}"][data-value="${value}"]`);
+    if (!btnRef) return;
+    const badge = document.createElement('span');
+    badge.className = 'filter-active-badge';
+    badge.innerHTML = `${btnRef.dataset.label} <span class="remove-badge" onclick="toggleFilter(document.querySelector('#filterPanelLog [data-filter=\\'${key}\\'][data-value=\\'\\']'), '${key}')">×</span>`;
+    badgesContainer.appendChild(badge);
+  });
+}
+```
+
+### Ajustar função `loadLog()` existente
+
+Localizar a função `loadLog()` no mesmo arquivo. Onde ela hoje lê `document.getElementById('logFiltroNivel').value` pra montar a URL, trocar pra ler de `filterState.nivel`:
+
+```js
+// ANTES
+const nivel = document.getElementById('logFiltroNivel')?.value || '';
+
+// DEPOIS
+const nivel = filterState.nivel || '';
+```
+
+═══════════════════════════════════════════════════════════════
+# 🟡 Sub-prompt 2 — admin-assets.html
+═══════════════════════════════════════════════════════════════
+
+Hoje tem: search + select tipo + filter-chips-inline (provavelmente pra filtrar "órfãos"). Migrar.
+
+### Arquivo: `public/admin-assets.html`
+
+**Localizar** o bloco de filtros atual (search + select + chips inline). Sem ver o número exato da linha (varia conforme edições), procurar pelo container que tem `id="searchInput"` e `id="filterTipo"`.
+
+**Substituir** todo esse bloco por:
+```html
+<div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:0">
+  <div class="filter-bar" id="filterBarAssets" style="flex-shrink:0">
+    <button class="filter-toggle-btn" id="filterToggleAssets" onclick="toggleFilterPanel()">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+      Filtrar
+      <span class="filter-count-badge" id="filterCountAssets" style="display:none">0</span>
+    </button>
+    <div id="filterActiveBadgesAssets" style="display:contents"></div>
+    <button class="filter-clear-btn" id="filterClearAssets" style="display:none" onclick="clearAllFilters()">Limpar tudo</button>
+  </div>
+  <div class="search-bar" style="flex:1;margin-bottom:0;height:32px;padding:0 14px;border-radius:8px">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" opacity="0.4"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    <input type="text" id="searchInput" placeholder="Buscar por nome..." oninput="debounceSearch()">
+  </div>
+</div>
+
+<div class="filter-panel" id="filterPanelAssets" style="margin-top:10px">
+  <div class="filter-panel-row">
+    <span class="filter-panel-label">Tipo</span>
+    <button class="filter-chip active" data-filter="tipo" data-value="" data-label="Todos os tipos" onclick="toggleFilter(this, 'tipo')">Todos</button>
+    <button class="filter-chip" data-filter="tipo" data-value="bg-base" data-label="Background base" onclick="toggleFilter(this, 'tipo')">Background base</button>
+    <button class="filter-chip" data-filter="tipo" data-value="logo" data-label="Logo" onclick="toggleFilter(this, 'tipo')">Logo</button>
+    <button class="filter-chip" data-filter="tipo" data-value="elemento" data-label="Elemento" onclick="toggleFilter(this, 'tipo')">Elemento</button>
+    <button class="filter-chip" data-filter="tipo" data-value="outro" data-label="Outro" onclick="toggleFilter(this, 'tipo')">Outro</button>
+  </div>
+  <div class="filter-panel-row">
+    <span class="filter-panel-label">Uso</span>
+    <button class="filter-chip active" data-filter="uso" data-value="" data-label="Todos" onclick="toggleFilter(this, 'uso')">Todos</button>
+    <button class="filter-chip" data-filter="uso" data-value="em-uso" data-label="Em uso" onclick="toggleFilter(this, 'uso')">Em uso</button>
+    <button class="filter-chip" data-filter="uso" data-value="orfaos" data-label="Órfãos" onclick="toggleFilter(this, 'uso')">Órfãos</button>
+  </div>
+</div>
+```
+
+(Conferir as opções de "Tipo" — copiar do `<select id="filterTipo">` original pra não perder nenhuma. As opções acima são chute conservador.)
+
+### JS análogo ao admin-log
+
+No `<script>` da página, adicionar funções idênticas à `admin-log` mas com:
+- `filterState = { tipo: '', uso: '' }`
+- IDs com sufixo `Assets`
+- Função `loadAssets()` substitui `loadLog()` na chamada
+- Em vez de `loadLog()`, chamar a função existente que faz fetch dos assets (provavelmente `loadAssets()`)
+
+**Ajustar a função existente** que filtra os assets pra ler de `filterState.tipo` e `filterState.uso` em vez do select e dos chips antigos.
+
+═══════════════════════════════════════════════════════════════
+# 🟠 Sub-prompt 3 — admin.html (migrar do admin-list-toolbar pro padrão popup)
+═══════════════════════════════════════════════════════════════
+
+No nosso último prompt, criamos `admin-list-toolbar` com chips inline. Agora vamos migrar pra padrão filter-bar + filter-panel.
+
+### Arquivo: `public/admin.html`
+
+**Para CADA aba** (eventos e geral) — localizar o bloco `<div class="admin-list-toolbar">` e **substituir** por (exemplo da aba `geral`; replicar pra `eventos` trocando `Geral` por `Eventos`):
+
+```html
+<div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:0">
+  <div class="filter-bar" id="filterBarGeral" style="flex-shrink:0">
+    <button class="filter-toggle-btn" id="filterToggleGeral" onclick="toggleFilterPanel('geral')">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+      Filtrar
+      <span class="filter-count-badge" id="filterCountGeral" style="display:none">0</span>
+    </button>
+    <div id="filterActiveBadgesGeral" style="display:contents"></div>
+    <button class="filter-clear-btn" id="filterClearGeral" style="display:none" onclick="clearAllFilters('geral')">Limpar tudo</button>
+  </div>
+  <div class="search-bar" style="flex:1;margin-bottom:0;height:32px;padding:0 14px;border-radius:8px">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" opacity="0.4"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    <input type="text" placeholder="Buscar..." id="searchGeral" oninput="debounceLoad('geral')">
+  </div>
+</div>
+
+<div class="filter-panel" id="filterPanelGeral" style="margin-top:10px">
+  <div class="filter-panel-row">
+    <span class="filter-panel-label">Período</span>
+    <button class="filter-chip active" data-filter="periodo" data-value="" data-label="Todos os períodos" onclick="toggleFilter(this,'geral','periodo')">Todos</button>
+    <button class="filter-chip" data-filter="periodo" data-value="hoje" data-label="Hoje" onclick="toggleFilter(this,'geral','periodo')">Hoje</button>
+    <button class="filter-chip" data-filter="periodo" data-value="7dias" data-label="7 dias" onclick="toggleFilter(this,'geral','periodo')">7 dias</button>
+    <button class="filter-chip" data-filter="periodo" data-value="30dias" data-label="30 dias" onclick="toggleFilter(this,'geral','periodo')">30 dias</button>
+  </div>
+  <div class="filter-panel-row">
+    <span class="filter-panel-label">Status</span>
+    <button class="filter-chip active" data-filter="status" data-value="" data-label="Todos os status" onclick="toggleFilter(this,'geral','status')">Todos</button>
+    <button class="filter-chip" data-filter="status" data-value="recebido" data-label="Recebido" onclick="toggleFilter(this,'geral','status')">Recebido</button>
+    <button class="filter-chip" data-filter="status" data-value="em-analise" data-label="Em análise" onclick="toggleFilter(this,'geral','status')">Em análise</button>
+    <button class="filter-chip" data-filter="status" data-value="aguardando" data-label="Aguardando" onclick="toggleFilter(this,'geral','status')">Aguardando</button>
+    <button class="filter-chip" data-filter="status" data-value="em-producao" data-label="Em produção" onclick="toggleFilter(this,'geral','status')">Em produção</button>
+    <button class="filter-chip" data-filter="status" data-value="em-revisao" data-label="Em revisão" onclick="toggleFilter(this,'geral','status')">Em revisão</button>
+    <button class="filter-chip" data-filter="status" data-value="em-aprovacao" data-label="Em aprovação" onclick="toggleFilter(this,'geral','status')">Em aprovação</button>
+    <button class="filter-chip" data-filter="status" data-value="concluido" data-label="Concluído" onclick="toggleFilter(this,'geral','status')">Concluído</button>
+  </div>
+</div>
+```
+
+**Replicar exatamente o mesmo bloco** pra aba `eventos` — trocar `Geral` → `Eventos` e `'geral'` → `'eventos'` em TODOS os IDs e parâmetros de função. Status pode ser ajustado pros status específicos de eventos.
+
+### JS — adaptar funções existentes
+
+O admin.html já tem `setFilter`, `setFilterFromSelect`, `debounceLoad`. Adaptar pra usar o mesmo padrão de `dashboard.html`:
+
+```js
+// Adicionar/garantir no <script>
+const filters = {
+  eventos: { periodo: '', status: '' },
+  geral: { periodo: '', status: '' },
+};
+
+function toggleFilterPanel(tab) {
+  const cap = tab.charAt(0).toUpperCase() + tab.slice(1);
+  const panel = document.getElementById('filterPanel' + cap);
+  const btn = document.getElementById('filterToggle' + cap);
+  const isOpen = panel.classList.contains('open');
+  panel.classList.toggle('open', !isOpen);
+  btn.classList.toggle('has-filters', hasActiveFilters(tab));
+}
+
+function toggleFilter(btn, tab, key) {
+  const value = btn.dataset.value;
+  filters[tab][key] = value;
+  const cap = tab.charAt(0).toUpperCase() + tab.slice(1);
+  const group = document.querySelectorAll(`#filterPanel${cap} [data-filter="${key}"]`);
+  group.forEach(b => b.classList.toggle('active', b.dataset.value === value));
+  updateFilterUI(tab);
+  loadTable(tab);
+}
+
+function clearAllFilters(tab) {
+  Object.keys(filters[tab]).forEach(k => filters[tab][k] = '');
+  const cap = tab.charAt(0).toUpperCase() + tab.slice(1);
+  document.querySelectorAll(`#filterPanel${cap} .filter-chip`).forEach(b => {
+    b.classList.toggle('active', b.dataset.value === '');
+  });
+  updateFilterUI(tab);
+  loadTable(tab);
+}
+
+function hasActiveFilters(tab) {
+  return Object.values(filters[tab]).some(v => v !== '');
+}
+
+function updateFilterUI(tab) {
+  const cap = tab.charAt(0).toUpperCase() + tab.slice(1);
+  const count = Object.values(filters[tab]).filter(v => v !== '').length;
+  const countBadge = document.getElementById('filterCount' + cap);
+  const clearBtn = document.getElementById('filterClear' + cap);
+  const btn = document.getElementById('filterToggle' + cap);
+
+  if (count > 0) {
+    countBadge.textContent = count;
+    countBadge.style.display = 'inline-flex';
+    clearBtn.style.display = 'inline-block';
+    btn.classList.add('has-filters');
+  } else {
+    countBadge.style.display = 'none';
+    clearBtn.style.display = 'none';
+    btn.classList.remove('has-filters');
+  }
+
+  const badgesContainer = document.getElementById('filterActiveBadges' + cap);
+  badgesContainer.innerHTML = '';
+  Object.entries(filters[tab]).forEach(([key, value]) => {
+    if (!value) return;
+    const btnRef = document.querySelector(`#filterPanel${cap} [data-filter="${key}"][data-value="${value}"]`);
+    if (!btnRef) return;
+    const badge = document.createElement('span');
+    badge.className = 'filter-active-badge';
+    badge.innerHTML = `${btnRef.dataset.label} <span class="remove-badge" onclick="toggleFilter(document.querySelector('#filterPanel${cap} [data-filter=\\'${key}\\'][data-value=\\'\\']'), '${tab}', '${key}')">×</span>`;
+    badgesContainer.appendChild(badge);
+  });
+}
+```
+
+**Ajustar a função `loadTable(tab)`** (já existe) — onde ela monta a URL/params, trocar referências a chip ativo `.filter-chip.active` por `filters[tab].periodo`, `filters[tab].status` etc.
+
+### Apagar funções obsoletas
+
+Após a migração, **deletar** as funções antigas que não são mais usadas:
+- `setFilter(button, tab, key)` (substituída por `toggleFilter`)
+- `setFilterFromSelect(select, tab, key)` (não tem mais select)
+
+E **remover** o CSS de `.admin-list-toolbar` do style.css se ele só era usado nessa página (provavelmente é).
+
+═══════════════════════════════════════════════════════════════
+# ✅ Validação após cada sub-prompt
+═══════════════════════════════════════════════════════════════
+
+Pra cada página que migrar:
+
+1. Carregar a página em test.
+2. Linha do filtro: botão "Filtrar" com ícone funil + campo de busca, **ambos na mesma linha**.
+3. Clicar "Filtrar" → abre o painel embaixo com chips agrupados por categoria.
+4. Selecionar um chip não-Todos → badge vermelho aparece no botão Filtrar com contagem, chip "Limpar tudo" aparece, e um badge mostrando o filtro ativo aparece ao lado do botão.
+5. Clicar no `×` do badge ativo → filtro removido, lista atualiza.
+6. Clicar "Limpar tudo" → todos os filtros resetam.
+7. Filtros funcionam — a lista realmente filtra conforme as seleções.
+
+═══════════════════════════════════════════════════════════════
+# 🚧 Nota importante de refatoração
+═══════════════════════════════════════════════════════════════
+
+Esse prompt **duplica o JS** das funções `toggleFilterPanel`, `toggleFilter`, `clearAllFilters`, `hasActiveFilters`, `updateFilterUI` em 5 lugares (dashboard, validacao-cartoes, admin, admin-log, admin-assets). É **dívida técnica conhecida e aceita** pra ganhar consistência visual rápido.
+
+**Refactor futuro** (não fazer agora): extrair tudo isso pra `public/js/filter-panel.js` com API genérica:
+```js
+FilterPanel.bind('elementoBase', { keys: ['nivel', 'tipo'], onChange: () => loadLog() });
+```
+E remover as duplicações. **Quando você quiser atacar, me avisa que eu monto.**

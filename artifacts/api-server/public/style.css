@@ -1928,66 +1928,6 @@ input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
   }
 }
 
-/* Toolbar horizontal compacta para listas (admin.html) */
-/* === Toolbar horizontal compacta para listas (admin.html) === */
-.admin-list-toolbar {
-  display: flex !important;
-  align-items: center !important;
-  gap: 10px !important;
-  flex-wrap: nowrap !important;
-  margin-bottom: 16px !important;
-  width: 100%;
-}
-.admin-list-toolbar > .filters {
-  display: flex !important;
-  gap: 6px !important;
-  flex: 0 0 auto !important;
-  margin: 0 !important;
-  flex-wrap: nowrap;
-}
-.admin-list-toolbar > .filter-select-compact {
-  flex: 0 0 auto !important;
-  width: auto !important;
-  min-width: 140px !important;
-  max-width: 200px !important;
-  margin: 0 !important;
-  height: 36px !important;
-}
-.admin-list-toolbar > .search-bar.compact {
-  display: flex !important;
-  align-items: center !important;
-  gap: 8px !important;
-  background: var(--card-white) !important;
-  border: 1px solid var(--border-light) !important;
-  border-radius: 8px !important;
-  height: 36px !important;
-  padding: 0 12px !important;
-  margin: 0 !important;
-  flex: 1 1 auto !important;
-  min-width: 200px !important;
-  max-width: 360px !important;
-}
-.admin-list-toolbar > .search-bar.compact input {
-  font-size: 0.85rem !important;
-  border: none !important;
-  outline: none !important;
-  background: transparent !important;
-  width: 100% !important;
-}
-@media (max-width: 900px) {
-  .admin-list-toolbar {
-    flex-wrap: wrap !important;
-  }
-  .admin-list-toolbar > .search-bar.compact {
-    flex: 1 1 100% !important;
-    max-width: 100% !important;
-  }
-  .admin-list-toolbar > .filter-select-compact {
-    flex: 1 1 auto !important;
-    max-width: 100% !important;
-  }
-}
-
 /* Container mais largo pra páginas admin com tabelas */
 .container.container-wide { max-width: 1280px; }
 

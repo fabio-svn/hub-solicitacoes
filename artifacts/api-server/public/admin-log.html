@@ -32,17 +32,30 @@
 
       <p style="font-size:0.82rem;opacity:0.5;margin:0 0 16px">Log detalhado de atividades do sistema: criações, exclusões, aprovações e erros de integração.</p>
 
-      <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;align-items:center">
-        <div class="search-bar" style="flex:1;max-width:300px;margin-bottom:0;height:32px;padding:0 14px;border-radius:8px">
+      <div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:0">
+        <div class="filter-bar" id="filterBarLog" style="flex-shrink:0">
+          <button class="filter-toggle-btn" id="filterToggleLog" onclick="toggleFilterPanel()">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+            Filtrar
+            <span class="filter-count-badge" id="filterCountLog" style="display:none">0</span>
+          </button>
+          <div id="filterActiveBadgesLog" style="display:contents"></div>
+          <button class="filter-clear-btn" id="filterClearLog" style="display:none" onclick="clearAllFilters()">Limpar tudo</button>
+        </div>
+        <div class="search-bar" style="flex:1;margin-bottom:0;height:32px;padding:0 14px;border-radius:8px">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" opacity="0.4"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
           <input type="text" id="logBusca" placeholder="Buscar por usuário, detalhe..." oninput="debounceLogSearch()">
         </div>
-        <select id="logFiltroNivel" onchange="loadLog()" style="height:32px;border:1px solid var(--border-light);border-radius:8px;padding:0 10px;font-family:'Nunito Sans',sans-serif;font-size:0.8rem;background:var(--card-white)">
-          <option value="">Todos os níveis</option>
-          <option value="info">Info</option>
-          <option value="warn">Warn</option>
-          <option value="error">Error</option>
-        </select>
+      </div>
+
+      <div class="filter-panel" id="filterPanelLog" style="margin-top:10px">
+        <div class="filter-panel-row">
+          <span class="filter-panel-label">Nível</span>
+          <button class="filter-chip active" data-filter="nivel" data-value="" data-label="Todos os níveis" onclick="toggleFilter(this, 'nivel')">Todos</button>
+          <button class="filter-chip" data-filter="nivel" data-value="info" data-label="Info" onclick="toggleFilter(this, 'nivel')">Info</button>
+          <button class="filter-chip" data-filter="nivel" data-value="warn" data-label="Avisos" onclick="toggleFilter(this, 'nivel')">Avisos</button>
+          <button class="filter-chip" data-filter="nivel" data-value="error" data-label="Erros" onclick="toggleFilter(this, 'nivel')">Erros</button>
+        </div>
       </div>
 
       <div style="border-radius:12px;border:1px solid var(--border-light);overflow:hidden;position:relative">
@@ -105,7 +118,7 @@
       params.set('limit', '30');
       const busca = document.getElementById('logBusca')?.value?.trim();
       if (busca) params.set('busca', busca);
-      const nivel = document.getElementById('logFiltroNivel')?.value;
+      const nivel = filterState.nivel || '';
       if (nivel) params.set('nivel', nivel);
       try {
         const res = await fetch('/api/admin/activity-log?' + params.toString());
@@ -163,6 +176,66 @@
 
     function logGoPage(page) { logPage = page; loadLog(); }
 
+    const filterState = { nivel: '' };
+
+    function toggleFilterPanel() {
+      const panel = document.getElementById('filterPanelLog');
+      const btn = document.getElementById('filterToggleLog');
+      const isOpen = panel.classList.contains('open');
+      panel.classList.toggle('open', !isOpen);
+      if (!hasActiveFilters() && isOpen) btn.classList.remove('has-filters');
+    }
+
+    function toggleFilter(btn, key) {
+      filterState[key] = btn.dataset.value;
+      document.querySelectorAll(`#filterPanelLog [data-filter="${key}"]`).forEach(b => {
+        b.classList.toggle('active', b.dataset.value === filterState[key]);
+      });
+      updateFilterUI();
+      loadLog();
+    }
+
+    function clearAllFilters() {
+      filterState.nivel = '';
+      document.querySelectorAll('#filterPanelLog .filter-chip').forEach(b => {
+        b.classList.toggle('active', b.dataset.value === '');
+      });
+      updateFilterUI();
+      loadLog();
+    }
+
+    function hasActiveFilters() {
+      return Object.values(filterState).some(v => v !== '');
+    }
+
+    function updateFilterUI() {
+      const count = Object.values(filterState).filter(v => v !== '').length;
+      const countBadge = document.getElementById('filterCountLog');
+      const clearBtn = document.getElementById('filterClearLog');
+      const btn = document.getElementById('filterToggleLog');
+      if (count > 0) {
+        countBadge.textContent = count;
+        countBadge.style.display = 'inline-flex';
+        clearBtn.style.display = 'inline-block';
+        btn.classList.add('has-filters');
+      } else {
+        countBadge.style.display = 'none';
+        clearBtn.style.display = 'none';
+        btn.classList.remove('has-filters');
+      }
+      const badgesContainer = document.getElementById('filterActiveBadgesLog');
+      badgesContainer.innerHTML = '';
+      Object.entries(filterState).forEach(([key, value]) => {
+        if (!value) return;
+        const btnRef = document.querySelector(`#filterPanelLog [data-filter="${key}"][data-value="${value}"]`);
+        if (!btnRef) return;
+        const badge = document.createElement('span');
+        badge.className = 'filter-active-badge';
+        badge.innerHTML = `${btnRef.dataset.label} <span class="remove-badge" onclick="toggleFilter(document.querySelector('#filterPanelLog [data-filter=\\'${key}\\'][data-value=\\'\\']'), '${key}')">×</span>`;
+        badgesContainer.appendChild(badge);
+      });
+    }
+
     function debounceLogSearch() {
       clearTimeout(logSearchTimeout);
       logSearchTimeout = setTimeout(() => { logPage = 1; loadLog(); }, 300);
@@ -172,7 +245,7 @@
       const params = new URLSearchParams({ limit: '1000', order: 'created_at', dir: 'desc' });
       const busca = document.getElementById('logBusca')?.value?.trim();
       if (busca) params.set('busca', busca);
-      const nivel = document.getElementById('logFiltroNivel')?.value;
+      const nivel = filterState.nivel || '';
       if (nivel) params.set('nivel', nivel);
       fetch('/api/admin/activity-log?' + params.toString())
         .then(r => r.json())
