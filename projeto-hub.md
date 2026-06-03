@@ -1,6 +1,6 @@
 # Pack do Projeto Hub SVN
 
-Gerado em: 2026-06-03 20:23:14
+Gerado em: 2026-06-03 20:49:02
 
 Root: `artifacts/api-server`
 
@@ -366,9 +366,9 @@ MYSQL_CONTATOS=                                              # [opcional]
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@300;400;600;700;900&display=swap">
   <link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@300;400;600;700;900&display=swap" rel="stylesheet">
-  <script src="/config.js"></script>
-  <script src="/auth.js"></script>
-  <script src="/shell.js"></script>
+  <script src="config.js?v=20260602"></script>
+  <script src="auth.js?v=20260602"></script>
+  <script src="shell.js?v=20260602"></script>
   <script src="utils.js?v=20260602"></script>
   <script src="toast.js?v=20260602"></script>
   <link rel="stylesheet" href="style.css?v=20260602">
@@ -699,15 +699,37 @@ MYSQL_CONTATOS=                                              # [opcional]
     progressWrap.style.display = 'block';
     let done = 0;
     const results = [];
-    for (const file of arr) {
-      if (file.size > 5 * 1024 * 1024) { showToast(`${file.name}: arquivo muito grande (máx. 5MB)`, 'error'); done++; progressBar.style.width = (done/arr.length*100)+'%'; continue; }
+
+    // Upload com concorrência limitada (3 simultâneos)
+    const uploadOne = async (file) => {
+      if (file.size > 5 * 1024 * 1024) {
+        showToast(`${file.name}: arquivo muito grande (máx. 5MB)`, 'error');
+        return null;
+      }
       const fd = new FormData(); fd.append('file', file);
       try {
         const r = await fetch('/api/admin/assets/upload', { method: 'POST', body: fd });
         const d = await r.json();
-        if (!r.ok) { showToast(`${file.name}: ${d.error || 'Erro'}`, 'error'); } else { results.push(d); }
-      } catch (err) { console.error('[admin-assets/upload]', file.name, err); showToast(`${file.name}: erro de rede.`, 'error'); }
-      done++;
+        if (!r.ok) {
+          showToast(`${file.name}: ${d.error || 'Erro'}`, 'error');
+          return null;
+        }
+        return d;
+      } catch (err) {
+        console.error('[admin-assets/upload]', file.name, err);
+        showToast(`${file.name}: erro de rede.`, 'error');
+        return null;
+      }
+    };
+
+    const CONCURRENCY = 3;
+    for (let i = 0; i < arr.length; i += CONCURRENCY) {
+      const batch = arr.slice(i, i + CONCURRENCY);
+      const batchResults = await Promise.all(batch.map(uploadOne));
+      for (const r of batchResults) {
+        done++;
+        if (r) results.push(r);
+      }
       progressBar.style.width = (done/arr.length*100)+'%';
     }
     setTimeout(() => { progressWrap.style.display = 'none'; progressBar.style.width = '0%'; }, 600);
@@ -5936,6 +5958,20 @@ window._sairImpersonar = async function() {
   window.location.reload();
 };
 
+// === Helpers globais — uso recomendado em vez de checks verbose ===
+// Esses helpers fazem o check 'typeof Auth' internamente, então são
+// seguros em qualquer página, mesmo onde auth.js carregou parcial.
+window.isCurrentUserAuthed = function() {
+  return typeof Auth !== 'undefined' && Auth.isAuthenticated && Auth.isAuthenticated();
+};
+window.isCurrentUserAdmin = function() {
+  return typeof Auth !== 'undefined' && Auth.isAdmin && Auth.isAdmin();
+};
+window.isCurrentUserStaff = function() {
+  return typeof Auth !== 'undefined' && Auth.isStaff && Auth.isStaff();
+};
+
+
 ```
 
 
@@ -5987,6 +6023,7 @@ window._sairImpersonar = async function() {
 
   <script src="config.js?v=20260602"></script>
   <script src="auth.js?v=20260602"></script>
+  <script src="utils.js?v=20260602"></script>
   <script src="shell.js?v=20260602"></script>
   <script>
     async function init() {
@@ -6830,8 +6867,8 @@ const FLUXOS_ETAPAS = {
         let dados = {};
         try { dados = typeof item.dados === 'string' ? JSON.parse(item.dados) : (item.dados || {}); } catch { dados = {}; }
         const titulo = item.titulo || dados.nomeEvento || dados.tituloEvento || dados.titulo || dados.nome_completo || dados.nomeCompleto || item.tipo_solicitacao;
-        const isAdm = typeof Auth !== 'undefined' && Auth.isAdmin && Auth.isAdmin();
-        const isStaff = typeof Auth !== 'undefined' && Auth.isStaff && Auth.isStaff();
+        const isAdm = isCurrentUserAdmin();
+        const isStaff = isCurrentUserStaff();
         const tipoLabel = TIPO_SOLICITACAO_LABELS[item.tipo_solicitacao] || item.tipo_solicitacao;
         const statusObj = getStatus(item.status);
         const dataRel = dataRelativa(item.created_at);
@@ -6846,7 +6883,7 @@ const FLUXOS_ETAPAS = {
         }
 
         const temErros = (item.erros_24h || 0) > 0;
-        const isAdmin = typeof Auth !== 'undefined' && Auth.isAdmin && Auth.isAdmin();
+        const isAdmin = isCurrentUserAdmin();
         const erroBadgeHtml = (temErros && isAdmin)
           ? `<span title="${item.erros_24h} erro(s) nas últimas 24h" style="display:inline-flex;align-items:center;gap:3px;font-size:0.62rem;font-weight:800;background:#fee2e2;color:#b91c1c;padding:2px 7px;border-radius:999px;vertical-align:middle;margin-left:4px;flex-shrink:0">
               <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
@@ -8084,7 +8121,7 @@ const FLUXOS_ETAPAS = {
 
   </div>
   <script src="utils.js?v=20260602"></script>
-  <script src="upload-feedback.js"></script>
+  <script src="upload-feedback.js?v=20260602"></script>
   <script src="config.js?v=20260602"></script>
   <script src="auth.js?v=20260602"></script>
   <script src="shell.js?v=20260602"></script>
@@ -8519,7 +8556,7 @@ const FLUXOS_ETAPAS = {
 
   </div>
   <script src="utils.js?v=20260602"></script>
-  <script src="upload-feedback.js"></script>
+  <script src="upload-feedback.js?v=20260602"></script>
   <script src="config.js?v=20260602"></script>
   <script src="auth.js?v=20260602"></script>
   <script src="shell.js?v=20260602"></script>
@@ -8818,7 +8855,7 @@ const FLUXOS_ETAPAS = {
 
   </div>
   <script src="utils.js?v=20260602"></script>
-  <script src="upload-feedback.js"></script>
+  <script src="upload-feedback.js?v=20260602"></script>
   <script src="config.js?v=20260602"></script>
   <script src="auth.js?v=20260602"></script>
   <script src="shell.js?v=20260602"></script>
@@ -9059,7 +9096,7 @@ const FLUXOS_ETAPAS = {
 
   </div>
   <script src="utils.js?v=20260602"></script>
-  <script src="upload-feedback.js"></script>
+  <script src="upload-feedback.js?v=20260602"></script>
   <script src="config.js?v=20260602"></script>
   <script src="auth.js?v=20260602"></script>
   <script src="shell.js?v=20260602"></script>
@@ -9353,7 +9390,7 @@ const FLUXOS_ETAPAS = {
 
   </div>
   <script src="utils.js?v=20260602"></script>
-  <script src="upload-feedback.js"></script>
+  <script src="upload-feedback.js?v=20260602"></script>
   <script src="config.js?v=20260602"></script>
   <script src="auth.js?v=20260602"></script>
   <script src="shell.js?v=20260602"></script>
@@ -9586,7 +9623,7 @@ const FLUXOS_ETAPAS = {
 
   </div>
   <script src="utils.js?v=20260602"></script>
-  <script src="upload-feedback.js"></script>
+  <script src="upload-feedback.js?v=20260602"></script>
   <script src="config.js?v=20260602"></script>
   <script src="auth.js?v=20260602"></script>
   <script src="shell.js?v=20260602"></script>
@@ -9844,7 +9881,7 @@ const FLUXOS_ETAPAS = {
 
   </div>
   <script src="utils.js?v=20260602"></script>
-  <script src="upload-feedback.js"></script>
+  <script src="upload-feedback.js?v=20260602"></script>
   <script src="config.js?v=20260602"></script>
   <script src="auth.js?v=20260602"></script>
   <script src="shell.js?v=20260602"></script>
@@ -10171,7 +10208,7 @@ const FLUXOS_ETAPAS = {
 
   </div>
   <script src="utils.js?v=20260602"></script>
-  <script src="upload-feedback.js"></script>
+  <script src="upload-feedback.js?v=20260602"></script>
   <script src="config.js?v=20260602"></script>
   <script src="auth.js?v=20260602"></script>
   <script src="shell.js?v=20260602"></script>
@@ -10429,8 +10466,9 @@ const FLUXOS_ETAPAS = {
 
   <script src="config.js?v=20260602"></script>
   <script src="auth.js?v=20260602"></script>
+  <script src="utils.js?v=20260602"></script>
   <script src="shell.js?v=20260602"></script>
-  <script src="upload-feedback.js"></script>
+  <script src="upload-feedback.js?v=20260602"></script>
   <script>
     const TIPO = 'ch-aniversariantes';
     const MESES = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
@@ -10621,8 +10659,9 @@ const FLUXOS_ETAPAS = {
 
   <script src="config.js?v=20260602"></script>
   <script src="auth.js?v=20260602"></script>
+  <script src="utils.js?v=20260602"></script>
   <script src="shell.js?v=20260602"></script>
-  <script src="upload-feedback.js"></script>
+  <script src="upload-feedback.js?v=20260602"></script>
   <script>
     const TIPO = 'ch-atualizacao-books';
 
@@ -10798,8 +10837,9 @@ const FLUXOS_ETAPAS = {
 
   <script src="config.js?v=20260602"></script>
   <script src="auth.js?v=20260602"></script>
+  <script src="utils.js?v=20260602"></script>
   <script src="shell.js?v=20260602"></script>
-  <script src="upload-feedback.js"></script>
+  <script src="upload-feedback.js?v=20260602"></script>
   <script>
     const TIPO = 'ch-atualizacao-pessoas';
 
@@ -10950,6 +10990,7 @@ const FLUXOS_ETAPAS = {
 
   <script src="config.js?v=20260602"></script>
   <script src="auth.js?v=20260602"></script>
+  <script src="utils.js?v=20260602"></script>
   <script src="shell.js?v=20260602"></script>
   <script>
     const TIPO = 'ch-kit-onboarding';
@@ -11100,8 +11141,9 @@ const FLUXOS_ETAPAS = {
 
   <script src="config.js?v=20260602"></script>
   <script src="auth.js?v=20260602"></script>
+  <script src="utils.js?v=20260602"></script>
   <script src="shell.js?v=20260602"></script>
-  <script src="upload-feedback.js"></script>
+  <script src="upload-feedback.js?v=20260602"></script>
   <script>
     const TIPO = 'ch-linha-do-tempo';
     const MESES = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
@@ -11290,7 +11332,7 @@ const FLUXOS_ETAPAS = {
 
   </div>
   <script src="utils.js?v=20260602"></script>
-  <script src="upload-feedback.js"></script>
+  <script src="upload-feedback.js?v=20260602"></script>
   <script src="config.js?v=20260602"></script>
   <script src="auth.js?v=20260602"></script>
   <script src="shell.js?v=20260602"></script>
@@ -11578,7 +11620,7 @@ const FLUXOS_ETAPAS = {
 
   </div>
   <script src="utils.js?v=20260602"></script>
-  <script src="upload-feedback.js"></script>
+  <script src="upload-feedback.js?v=20260602"></script>
   <script src="config.js?v=20260602"></script>
   <script src="auth.js?v=20260602"></script>
   <script src="shell.js?v=20260602"></script>
@@ -11896,7 +11938,7 @@ Muito obrigado(a), e conte sempre comigo!</textarea>
 
   </div>
   <script src="utils.js?v=20260602"></script>
-  <script src="upload-feedback.js"></script>
+  <script src="upload-feedback.js?v=20260602"></script>
   <script src="config.js?v=20260602"></script>
   <script src="auth.js?v=20260602"></script>
   <script src="shell.js?v=20260602"></script>
@@ -12139,7 +12181,7 @@ Muito obrigado(a), e conte sempre comigo!</textarea>
 
   </div>
   <script src="utils.js?v=20260602"></script>
-  <script src="upload-feedback.js"></script>
+  <script src="upload-feedback.js?v=20260602"></script>
   <script src="config.js?v=20260602"></script>
   <script src="auth.js?v=20260602"></script>
   <script src="shell.js?v=20260602"></script>
@@ -12566,11 +12608,11 @@ Muito obrigado(a), e conte sempre comigo!</textarea>
 
   </div>
   <script src="utils.js?v=20260602"></script>
-  <script src="upload-feedback.js"></script>
+  <script src="upload-feedback.js?v=20260602"></script>
   <script src="config.js?v=20260602"></script>
   <script src="auth.js?v=20260602"></script>
   <script src="shell.js?v=20260602"></script>
-  <script src="ibge-loader.js"></script>
+  <script src="ibge-loader.js?v=20260602"></script>
   <script>
     const STORAGE_KEY = 'hub_form_eventos';
     window.addEventListener('pageshow', function(e) {
@@ -14039,7 +14081,7 @@ Muito obrigado(a), e conte sempre comigo!</textarea>
 
   </div>
   <script src="utils.js?v=20260602"></script>
-  <script src="upload-feedback.js"></script>
+  <script src="upload-feedback.js?v=20260602"></script>
   <script src="config.js?v=20260602"></script>
   <script src="auth.js?v=20260602"></script>
   <script src="shell.js?v=20260602"></script>
@@ -14588,7 +14630,7 @@ Muito obrigado(a), e conte sempre comigo!</textarea>
 
   </div>
   <script src="utils.js?v=20260602"></script>
-  <script src="upload-feedback.js"></script>
+  <script src="upload-feedback.js?v=20260602"></script>
   <script src="config.js?v=20260602"></script>
   <script src="auth.js?v=20260602"></script>
   <script src="shell.js?v=20260602"></script>
@@ -14954,7 +14996,7 @@ Muito obrigado(a), e conte sempre comigo!</textarea>
 
   </div>
   <script src="utils.js?v=20260602"></script>
-  <script src="upload-feedback.js"></script>
+  <script src="upload-feedback.js?v=20260602"></script>
   <script src="config.js?v=20260602"></script>
   <script src="auth.js?v=20260602"></script>
   <script src="shell.js?v=20260602"></script>
@@ -15460,7 +15502,7 @@ Muito obrigado(a), e conte sempre comigo!</textarea>
 
   </div>
   <script src="utils.js?v=20260602"></script>
-  <script src="upload-feedback.js"></script>
+  <script src="upload-feedback.js?v=20260602"></script>
   <script src="config.js?v=20260602"></script>
   <script src="auth.js?v=20260602"></script>
   <script src="shell.js?v=20260602"></script>
@@ -15798,7 +15840,7 @@ Muito obrigado(a), e conte sempre comigo!</textarea>
 
   </div>
   <script src="utils.js?v=20260602"></script>
-  <script src="upload-feedback.js"></script>
+  <script src="upload-feedback.js?v=20260602"></script>
   <script src="config.js?v=20260602"></script>
   <script src="auth.js?v=20260602"></script>
   <script src="shell.js?v=20260602"></script>
@@ -16132,7 +16174,7 @@ Muito obrigado(a), e conte sempre comigo!</textarea>
 
   </div>
   <script src="utils.js?v=20260602"></script>
-  <script src="upload-feedback.js"></script>
+  <script src="upload-feedback.js?v=20260602"></script>
   <script src="config.js?v=20260602"></script>
   <script src="auth.js?v=20260602"></script>
   <script src="shell.js?v=20260602"></script>
@@ -17655,8 +17697,8 @@ window.Shell = {
 
       // ── Layout clean para todos os tipos de automação ──────────────
       if (isTipoAutomacao(item.tipo_solicitacao)) {
-        const isAdm = typeof Auth !== 'undefined' && Auth.isAdmin && Auth.isAdmin();
-        const isStaff = typeof Auth !== 'undefined' && Auth.isStaff && Auth.isStaff();
+        const isAdm = isCurrentUserAdmin();
+        const isStaff = isCurrentUserStaff();
 
         const tEl = document.getElementById('solTitulo');
         tEl.textContent = tipoLabel;
@@ -17739,8 +17781,8 @@ window.Shell = {
       }
       renderDados(dados, item);
 
-      const isAdm = typeof Auth !== 'undefined' && Auth.isAdmin && Auth.isAdmin();
-      const isStaff = typeof Auth !== 'undefined' && Auth.isStaff && Auth.isStaff();
+      const isAdm = isCurrentUserAdmin();
+      const isStaff = isCurrentUserStaff();
       if (isAdm || isStaff) mostrarAtividade();
       document.getElementById('solRodape').innerHTML =
         `<span>ID interno: ${item.id}</span>` +
@@ -19083,6 +19125,7 @@ window.Shell = {
   </div>
   <script src="config.js?v=20260602"></script>
   <script src="auth.js?v=20260602"></script>
+  <script src="utils.js?v=20260602"></script>
   <script src="shell.js?v=20260602"></script>
   <script>
     const ICONS = {
