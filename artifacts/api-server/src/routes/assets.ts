@@ -92,16 +92,23 @@ router.post(
       const user    = req.session.user!;
       const [userRow] = await db.select({ id: usersTable.id }).from(usersTable).where(eq(usersTable.email, user.email));
 
-      const [inserted] = await db.insert(artAssetsTable).values({
-        filename: file.originalname,
-        storage_key: key,
-        url,
-        mime_type: file.mimetype,
-        size_bytes: file.size,
-        width:  width  ?? null,
-        height: height ?? null,
-        uploaded_by: userRow?.id ?? null,
-      }).returning();
+      let inserted: typeof artAssetsTable.$inferSelect;
+      try {
+        [inserted] = await db.insert(artAssetsTable).values({
+          filename: file.originalname,
+          storage_key: key,
+          url,
+          mime_type: file.mimetype,
+          size_bytes: file.size,
+          width:  width  ?? null,
+          height: height ?? null,
+          uploaded_by: userRow?.id ?? null,
+        }).returning();
+      } catch (dbErr) {
+        logger.error({ dbErr, key }, "DB insert falhou após upload R2 — deletando objeto órfão");
+        await s3.send(new DeleteObjectCommand({ Bucket: R2_BUCKET, Key: key })).catch(() => {});
+        throw dbErr;
+      }
 
       res.json({ id: inserted.id, url: inserted.url, filename: inserted.filename });
     } catch (err) {

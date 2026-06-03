@@ -4,7 +4,7 @@ import * as os from "os";
 import { db } from "@workspace/db";
 import { solicitacoesTable, artTemplatesTable } from "@workspace/db";
 import { eq, and, isNull, desc } from "drizzle-orm";
-import { uploadToR2 } from "../routes/r2";
+import { uploadToR2, deleteFromR2 } from "../routes/r2";
 import { logger } from "../lib/logger";
 import { renderFromTemplate } from "./template-renderer";
 import { renderTemplateToPdf } from "./pdf-renderer";
@@ -143,14 +143,20 @@ export async function gerarArteParaSolicitacao(
     logger.info({ solicitacaoId, tipo, url }, "[r2] upload OK");
 
     const label = TIPO_LABELS[tipo] || tipo;
-    await db.update(solicitacoesTable)
-      .set({
-        entrega_links: [{ label, url }],
-        status: "concluido",
-        erro_geracao: null,
-        updated_at: new Date(),
-      })
-      .where(eq(solicitacoesTable.id, solicitacaoId));
+    try {
+      await db.update(solicitacoesTable)
+        .set({
+          entrega_links: [{ label, url }],
+          status: "concluido",
+          erro_geracao: null,
+          updated_at: new Date(),
+        })
+        .where(eq(solicitacoesTable.id, solicitacaoId));
+    } catch (dbErr) {
+      logger.error({ dbErr, solicitacaoId, url }, "DB update falhou após upload R2 — deletando objeto órfão");
+      await deleteFromR2(url).catch(() => {});
+      throw dbErr;
+    }
 
     notificarMarcoBg(solicitacaoId, "concluida");
     logEventoBg(solicitacaoId, { tipo: "info", origem: "art-generator", mensagem: "Geração concluída", detalhes: { url } });
