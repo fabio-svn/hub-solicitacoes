@@ -14,9 +14,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@300;400;600;700;900&display=swap">
   <link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@300;400;600;700;900&display=swap" rel="stylesheet">
-  <script src="/config.js"></script>
-  <script src="/auth.js"></script>
-  <script src="/shell.js"></script>
+  <script src="config.js?v=20260602"></script>
+  <script src="auth.js?v=20260602"></script>
+  <script src="shell.js?v=20260602"></script>
   <script src="utils.js?v=20260602"></script>
   <script src="toast.js?v=20260602"></script>
   <link rel="stylesheet" href="style.css?v=20260602">
@@ -347,15 +347,37 @@
     progressWrap.style.display = 'block';
     let done = 0;
     const results = [];
-    for (const file of arr) {
-      if (file.size > 5 * 1024 * 1024) { showToast(`${file.name}: arquivo muito grande (máx. 5MB)`, 'error'); done++; progressBar.style.width = (done/arr.length*100)+'%'; continue; }
+
+    // Upload com concorrência limitada (3 simultâneos)
+    const uploadOne = async (file) => {
+      if (file.size > 5 * 1024 * 1024) {
+        showToast(`${file.name}: arquivo muito grande (máx. 5MB)`, 'error');
+        return null;
+      }
       const fd = new FormData(); fd.append('file', file);
       try {
         const r = await fetch('/api/admin/assets/upload', { method: 'POST', body: fd });
         const d = await r.json();
-        if (!r.ok) { showToast(`${file.name}: ${d.error || 'Erro'}`, 'error'); } else { results.push(d); }
-      } catch (err) { console.error('[admin-assets/upload]', file.name, err); showToast(`${file.name}: erro de rede.`, 'error'); }
-      done++;
+        if (!r.ok) {
+          showToast(`${file.name}: ${d.error || 'Erro'}`, 'error');
+          return null;
+        }
+        return d;
+      } catch (err) {
+        console.error('[admin-assets/upload]', file.name, err);
+        showToast(`${file.name}: erro de rede.`, 'error');
+        return null;
+      }
+    };
+
+    const CONCURRENCY = 3;
+    for (let i = 0; i < arr.length; i += CONCURRENCY) {
+      const batch = arr.slice(i, i + CONCURRENCY);
+      const batchResults = await Promise.all(batch.map(uploadOne));
+      for (const r of batchResults) {
+        done++;
+        if (r) results.push(r);
+      }
       progressBar.style.width = (done/arr.length*100)+'%';
     }
     setTimeout(() => { progressWrap.style.display = 'none'; progressBar.style.width = '0%'; }, 600);

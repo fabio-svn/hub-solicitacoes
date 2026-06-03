@@ -1,6 +1,6 @@
 # Pack do Projeto Hub SVN
 
-Gerado em: 2026-06-02 19:26:28
+Gerado em: 2026-06-03 20:23:14
 
 Root: `artifacts/api-server`
 
@@ -369,9 +369,9 @@ MYSQL_CONTATOS=                                              # [opcional]
   <script src="/config.js"></script>
   <script src="/auth.js"></script>
   <script src="/shell.js"></script>
-  <script src="utils.js"></script>
-  <script src="toast.js"></script>
-  <link rel="stylesheet" href="style.css">
+  <script src="utils.js?v=20260602"></script>
+  <script src="toast.js?v=20260602"></script>
+  <link rel="stylesheet" href="style.css?v=20260602">
   <style>
     :root {
       --carbon-black: #221b19;
@@ -706,7 +706,7 @@ MYSQL_CONTATOS=                                              # [opcional]
         const r = await fetch('/api/admin/assets/upload', { method: 'POST', body: fd });
         const d = await r.json();
         if (!r.ok) { showToast(`${file.name}: ${d.error || 'Erro'}`, 'error'); } else { results.push(d); }
-      } catch { showToast(`${file.name}: erro de rede.`, 'error'); }
+      } catch (err) { console.error('[admin-assets/upload]', file.name, err); showToast(`${file.name}: erro de rede.`, 'error'); }
       done++;
       progressBar.style.width = (done/arr.length*100)+'%';
     }
@@ -821,7 +821,7 @@ MYSQL_CONTATOS=                                              # [opcional]
   <title>Listas do ClickUp — Hub SVN</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap">
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css?v=20260602">
   <style>
     .ccu-wrap { max-width: 920px; margin: 0 auto; padding: 32px 24px; }
     .ccu-head { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
@@ -998,11 +998,11 @@ MYSQL_CONTATOS=                                              # [opcional]
     </div>
   </div>
 
-  <script src="config.js"></script>
-  <script src="auth.js"></script>
-  <script src="shell.js"></script>
-  <script src="utils.js"></script>
-  <script src="toast.js"></script>
+  <script src="config.js?v=20260602"></script>
+  <script src="auth.js?v=20260602"></script>
+  <script src="shell.js?v=20260602"></script>
+  <script src="utils.js?v=20260602"></script>
+  <script src="toast.js?v=20260602"></script>
   <script>
     let STATE = { lists: [], forms: [], assignedTipos: {} };
 
@@ -1254,7 +1254,7 @@ MYSQL_CONTATOS=                                              # [opcional]
           } else {
             setStatus(status, '⚠ ' + esc(d.error || 'Lista inválida'), 'err');
           }
-        } catch (err) { setStatus(status, 'Erro de rede ao validar.', 'err'); }
+        } catch (err) { console.error('[clickup-lists/validate]', err); setStatus(status, 'Erro de rede ao validar.', 'err'); }
       }, 500);
     }
 
@@ -1278,7 +1278,7 @@ MYSQL_CONTATOS=                                              # [opcional]
         setStatus(status, '✓ Lista adicionada' + (d.list && d.list.list_name ? ' — ' + esc(d.list.list_name) : ''), 'ok');
         input.value = '';
         loadConfig();
-      } catch (err) { setStatus(status, 'Erro de rede ao salvar.', 'err'); }
+      } catch (err) { console.error('[clickup-lists/save]', err); setStatus(status, 'Erro de rede ao salvar.', 'err'); }
     }
 
     async function salvarForms(listId) {
@@ -1296,7 +1296,7 @@ MYSQL_CONTATOS=                                              # [opcional]
         if (!res.ok || !d.ok) { setStatus(status, '⚠ ' + esc(d.error || ('Erro ' + res.status)), 'err'); return; }
         setStatus(status, '✓ Salvo', 'ok');
         loadConfig();
-      } catch (err) { setStatus(status, 'Erro de rede ao salvar.', 'err'); }
+      } catch (err) { console.error('[clickup-lists/save]', err); setStatus(status, 'Erro de rede ao salvar.', 'err'); }
     }
 
     async function copiarListId(listId, btn) {
@@ -1318,7 +1318,7 @@ MYSQL_CONTATOS=                                              # [opcional]
         const d = await res.json().catch(function () { return {}; });
         if (!res.ok || !d.ok) { showToast(d.error || 'Erro ao excluir', 'error'); return; }
         loadConfig();
-      } catch (err) { showToast('Erro de rede ao excluir', 'error'); }
+      } catch (err) { console.error('[clickup-lists/delete]', err); showToast('Erro de rede ao excluir', 'error'); }
     }
 
     init();
@@ -1350,20 +1350,9 @@ MYSQL_CONTATOS=                                              # [opcional]
     <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap" media="print" onload="this.media='all'">
   <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap"></noscript>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css?v=20260602">
 </head>
 <body class="page-light">
-<!-- ClickUp logo gradients (usados em CLICKUP_ICON) -->
-<svg xmlns="http://www.w3.org/2000/svg" width="0" height="0" style="position:absolute;overflow:hidden">
-  <defs>
-    <linearGradient id="cu1" x1="0" y1="15.05" x2="54.84" y2="15.05" gradientUnits="userSpaceOnUse" gradientTransform="matrix(1 0 0 -1 0 69.36)">
-      <stop offset="0" stop-color="#8930FD"/><stop offset="1" stop-color="#49CCF9"/>
-    </linearGradient>
-    <linearGradient id="cu2" x1="1.2" y1="53.17" x2="53.74" y2="53.17" gradientUnits="userSpaceOnUse" gradientTransform="matrix(1 0 0 -1 0 69.36)">
-      <stop offset="0" stop-color="#FF02F0"/><stop offset="1" stop-color="#FFC800"/>
-    </linearGradient>
-  </defs>
-</svg>
   <div id="pageContent">
   <div class="container container-wide">
     <div class="title-row">
@@ -1376,7 +1365,7 @@ MYSQL_CONTATOS=                                              # [opcional]
         <div class="stat-label">Total</div>
       </div>
       <div class="stat-card" style="background:rgba(159,63,55,0.06);border-color:rgba(159,63,55,0.15)">
-        <div class="stat-number" style="color:var(--ruby-red)" id="statActive">0</div>
+        <div class="stat-number" class="text-ruby" id="statActive">0</div>
         <div class="stat-label">Em andamento</div>
       </div>
       <div class="stat-card" style="background:rgba(111,135,123,0.06);border-color:rgba(111,135,123,0.15)">
@@ -1561,20 +1550,17 @@ MYSQL_CONTATOS=                                              # [opcional]
   </div>
 
   </div>
-  <script src="utils.js"></script>
-  <script src="toast.js"></script>
-  <script src="config.js"></script>
-  <script src="auth.js"></script>
-  <script src="shell.js"></script>
+  <script src="utils.js?v=20260602"></script>
+  <script src="toast.js?v=20260602"></script>
+  <script src="config.js?v=20260602"></script>
+  <script src="auth.js?v=20260602"></script>
+  <script src="shell.js?v=20260602"></script>
   <script>
     let currentTab = 'geral';
     let adminFilters = { eventos: { periodo: '', status: '' }, geral: { periodo: '', status: '' } };
     let adminPages = { eventos: 1, geral: 1 };
     let searchTimeout;
-    const CLICKUP_ICON = `<svg width="14" height="14" viewBox="0 0 54.8 65.8" xmlns="http://www.w3.org/2000/svg">
-  <path fill="url(#cu1)" d="M0,50.6l10.1-7.8c5.4,7,11.1,10.3,17.4,10.3c6.3,0,11.9-3.2,17-10.2l10.3,7.6c-7.4,10-16.6,15.3-27.3,15.3C16.9,65.8,7.6,60.5,0,50.6z"/>
-  <path fill="url(#cu2)" d="M27.5,16.9l-18,15.5l-8.3-9.7L27.6,0l26.2,22.7l-8.4,9.6L27.5,16.9z"/>
-</svg>`;
+    const CLICKUP_ICON = getClickupIcon();
 
     let adminItemsCache = {};
 
@@ -2223,7 +2209,7 @@ MYSQL_CONTATOS=                                              # [opcional]
     <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap" media="print" onload="this.media='all'">
   <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap"></noscript>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css?v=20260602">
 </head>
 <body class="page-light">
   <div id="pageContent">
@@ -2296,11 +2282,11 @@ MYSQL_CONTATOS=                                              # [opcional]
     </div>
   </div>
 
-  <script src="config.js"></script>
-  <script src="auth.js"></script>
-  <script src="shell.js"></script>
-  <script src="utils.js"></script>
-  <script src="toast.js"></script>
+  <script src="config.js?v=20260602"></script>
+  <script src="auth.js?v=20260602"></script>
+  <script src="shell.js?v=20260602"></script>
+  <script src="utils.js?v=20260602"></script>
+  <script src="toast.js?v=20260602"></script>
   <script>
     let logPage = 1;
     let logSearchTimeout;
@@ -2536,7 +2522,7 @@ MYSQL_CONTATOS=                                              # [opcional]
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap" media="print" onload="this.media='all'">
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css?v=20260602">
   <script src="/vendor/interact.min.js" data-cfasync="false"></script>
   <script data-cfasync="false">
     if (typeof interact === 'undefined') {
@@ -2943,20 +2929,20 @@ MYSQL_CONTATOS=                                              # [opcional]
       </div>
       <div class="create-form">
         <div class="form-group">
-          <label class="form-label">Para qual formulário esta arte será usada? <span style="color:var(--ruby-red)">*</span></label>
+          <label class="form-label">Para qual formulário esta arte será usada? <span class="text-ruby">*</span></label>
           <select class="form-input" id="createTipo" onchange="onCreateTipoChange()">
             <option value="">Selecione um formulário…</option>
           </select>
           <div id="createTipoLoading" style="display:none;font-size:0.75rem;color:rgba(34,27,25,0.4);margin-top:4px">Carregando formulários…</div>
         </div>
         <div class="form-group" id="createVariantGroup" style="display:none">
-          <label class="form-label">Para qual modelo? <span style="color:var(--ruby-red)">*</span></label>
+          <label class="form-label">Para qual modelo? <span class="text-ruby">*</span></label>
           <select class="form-input" id="createVariant" onchange="onCreateVariantChange()">
             <option value="">Selecione…</option>
           </select>
         </div>
         <div class="form-group">
-          <label class="form-label">Nome do template <span style="color:var(--ruby-red)">*</span></label>
+          <label class="form-label">Nome do template <span class="text-ruby">*</span></label>
           <input class="form-input" id="createName" placeholder='Ex: "Cartão minimalista v2"'>
         </div>
         <div class="form-group">
@@ -3135,11 +3121,11 @@ MYSQL_CONTATOS=                                              # [opcional]
       </div>
     </div>
   </div>
-  <script src="config.js"></script>
-  <script src="auth.js"></script>
-  <script src="shell.js"></script>
-  <script src="utils.js"></script>
-  <script src="toast.js"></script>
+  <script src="config.js?v=20260602"></script>
+  <script src="auth.js?v=20260602"></script>
+  <script src="shell.js?v=20260602"></script>
+  <script src="utils.js?v=20260602"></script>
+  <script src="toast.js?v=20260602"></script>
   <script>
     // ── Constants ────────────────────────────────────────────────
     const PLACEHOLDERS_BY_TIPO = {
@@ -5132,7 +5118,7 @@ MYSQL_CONTATOS=                                              # [opcional]
         if (!r.ok) { showToast(d.error || 'Erro no upload.', 'error'); return; }
         cb(d.url);
         showToast('✓ Upload concluído', 'success');
-      } catch(e) { showToast('Erro de rede.', 'error'); }
+      } catch (e) { console.error('[admin-templates/upload]', e); showToast('Erro de rede.', 'error'); }
       input.value = '';
     }
   </script>
@@ -5173,7 +5159,7 @@ MYSQL_CONTATOS=                                              # [opcional]
     <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap" media="print" onload="this.media='all'">
   <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap"></noscript>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css?v=20260602">
 </head>
 <body class="page-light">
   <div id="pageContent">
@@ -5222,10 +5208,10 @@ MYSQL_CONTATOS=                                              # [opcional]
         <div style="background:white;padding:24px;border-radius:12px;max-width:440px;width:90%;max-height:90vh;overflow:auto">
           <h2 style="font-family:'Taviraj',serif;font-size:1.3rem;margin-bottom:6px">Adicionar usuário</h2>
           <p style="font-size:0.82rem;opacity:0.6;margin-bottom:20px">Crie um usuário no banco mesmo antes da pessoa fazer login. Quando ela logar via Microsoft, mantém role e atribuições.</p>
-          <div class="field"><label>E-mail <span style="color:var(--ruby-red)">*</span></label>
+          <div class="field"><label>E-mail <span class="text-ruby">*</span></label>
             <input type="email" id="novoUsuarioEmail" placeholder="usuario@svninvest.com.br" required>
           </div>
-          <div class="field"><label>Nome completo <span style="color:var(--ruby-red)">*</span></label>
+          <div class="field"><label>Nome completo <span class="text-ruby">*</span></label>
             <input type="text" id="novoUsuarioNome" placeholder="João Silva" required>
           </div>
           <div class="field"><label>Função</label>
@@ -5301,11 +5287,11 @@ MYSQL_CONTATOS=                                              # [opcional]
     </div>
   </div>
 
-  <script src="config.js"></script>
-  <script src="auth.js"></script>
-  <script src="shell.js"></script>
-  <script src="utils.js"></script>
-  <script src="toast.js"></script>
+  <script src="config.js?v=20260602"></script>
+  <script src="auth.js?v=20260602"></script>
+  <script src="shell.js?v=20260602"></script>
+  <script src="utils.js?v=20260602"></script>
+  <script src="toast.js?v=20260602"></script>
   <script>
     let _allUsers = [];
     let _editingUserId = null;
@@ -5421,7 +5407,7 @@ MYSQL_CONTATOS=                                              # [opcional]
         } else {
           showToast('Não foi possível logar como esse usuário', 'error');
         }
-      } catch { showToast('Erro de conexão', 'error'); }
+      } catch (err) { console.error('[admin-usuarios/impersonate]', err); showToast('Erro de conexão', 'error'); }
     }
 
     function abrirEditRole(userId, userName, currentRole) {
@@ -5453,7 +5439,7 @@ MYSQL_CONTATOS=                                              # [opcional]
           const err = await res.json().catch(() => ({}));
           showToast(err.error || 'Erro ao alterar função', 'error');
         }
-      } catch { showToast('Erro de conexão', 'error'); }
+      } catch (err) { console.error('[admin-usuarios/role]', err); showToast('Erro de conexão', 'error'); }
     }
 
     async function _ensureTipos() {
@@ -5533,7 +5519,7 @@ MYSQL_CONTATOS=                                              # [opcional]
           const err = await res.json().catch(() => ({}));
           showToast(err.error || 'Erro ao atualizar ClickUp ID', 'error');
         }
-      } catch { showToast('Erro de conexão', 'error'); }
+      } catch (err) { console.error('[admin-usuarios/clickup-id]', err); showToast('Erro de conexão', 'error'); }
     }
 
     async function abrirEditAssignments(userId, userName) {
@@ -5576,7 +5562,7 @@ MYSQL_CONTATOS=                                              # [opcional]
           const err = await res.json().catch(() => ({}));
           showToast(err.error || 'Erro ao atualizar atribuições', 'error');
         }
-      } catch { showToast('Erro de conexão', 'error'); }
+      } catch (err) { console.error('[admin-usuarios/atribuicoes]', err); showToast('Erro de conexão', 'error'); }
     }
 
     async function init() {
@@ -5938,7 +5924,7 @@ window._impersonar = async function() {
     } else {
       alert('Não foi possível entrar como esse usuário.');
     }
-  } catch { alert('Erro de conexão.'); }
+  } catch (err) { console.error('[auth/impersonate]', err); alert('Erro de conexão.'); }
 };
 
 window._sairImpersonar = async function() {
@@ -5967,7 +5953,7 @@ window._sairImpersonar = async function() {
   <title>Capital Humano — Hub SVN</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap">
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css?v=20260602">
   <style>
     .ch-wrap { max-width: 920px; margin: 0 auto; padding: 32px 24px; }
     .ch-title { font-family: 'Taviraj', serif; font-weight: 300; margin: 0 0 6px; font-size: 1.8rem; color: var(--carbon-black, #221b19); }
@@ -5999,9 +5985,9 @@ window._sairImpersonar = async function() {
     </div>
   </div>
 
-  <script src="config.js"></script>
-  <script src="auth.js"></script>
-  <script src="shell.js"></script>
+  <script src="config.js?v=20260602"></script>
+  <script src="auth.js?v=20260602"></script>
+  <script src="shell.js?v=20260602"></script>
   <script>
     async function init() {
       try { if (typeof _configReady !== 'undefined') await _configReady; } catch (e) {}
@@ -6068,6 +6054,9 @@ const _configReady = Promise.all([
   if (schemas.cargos && schemas.cargos.length) CARGOS_ASSESSOR = schemas.cargos.map(c => c.label);
   if (schemas.setores && schemas.setores.length) SETORES = ['Selecione seu setor', ...schemas.setores];
   if (schemas.tipos) window._svnFormSchemas = schemas;
+  if (schemas.labels && typeof schemas.labels === 'object') {
+    Object.assign(TIPO_SOLICITACAO_LABELS, schemas.labels);
+  }
 });
 
 const MSG_THANKYOU_TITULO = "Solicitação enviada com sucesso!";
@@ -6148,10 +6137,17 @@ const TIPO_SOLICITACAO_LABELS = {
   "brindes":                        "Brindes",
   "pagina-online":                  "Página Online",
   "producao-video":                 "Produção de Vídeo",
-  "producao-audiovisual":           "Produção Audiovisual",
   "sessao-fotos":                   "Sessão de Fotos",
   "materiais-impressos":            "Materiais Impressos",
   "outro":                          "Outro",
+  // Capital Humano
+  "ch-kit-onboarding":              "Kit Onboarding",
+  "ch-atualizacao-pessoas":         "Atualização de Pessoas nos Sites",
+  "ch-conteudo-pdf":                "Conteúdo em PDF (CH)",
+  "ch-arte-divulgacao":             "Arte de Divulgação (CH)",
+  "ch-atualizacao-books":           "Atualização de Books",
+  "ch-linha-do-tempo":              "Linha do Tempo",
+  "ch-aniversariantes":             "Aniversariantes do Mês",
 };
 
 // FALLBACK só pra evitar tela em branco se /api/form-schemas falhar.
@@ -6362,50 +6358,6 @@ const IBGE_ESTADOS = {
   "35":"São Paulo","28":"Sergipe","17":"Tocantins",
 };
 
-// NOTA: Este mapa é intencionalmente duplicado de SETOR_CODIGO_MAP em clickup.ts.
-// config.js roda no browser, clickup.ts no Node.js — não há como compartilhar.
-// Ao adicionar ou alterar setores, atualizar AMBOS os arquivos.
-const SETOR_CODIGOS = {
-  "Administração":                           "ADM",
-  "Alocação":                                "ALO",
-  "Aracaju":                                 "AJU",
-  "Câmbio":                                  "CAM",
-  "Campo Grande":                            "CGR",
-  "Capital Humano":                          "RH",
-  "Cascavel":                                "CVV",
-  "Commodities":                             "CMO",
-  "Connect":                                 "CONN",
-  "Corporate":                               "COR",
-  "Cuiabá":                                  "CBA",
-  "Curitiba":                                "CTB",
-  "Curitiba Digital":                        "CTBDGT",
-  "Digital":                                 "DIG",
-  "Financeiro":                              "FIN",
-  "Foz do Iguaçu":                           "FOZ",
-  "Institucional":                           "INST",
-  "Jurídico":                                "JUR",
-  "Londrina":                                "LDN",
-  "Marketing":                               "MKT",
-  "Marketing Digital":                       "MKTDGT",
-  "Maringá":                                 "MGF",
-  "Maringá Digital":                         "MGFDGT",
-  "Middle":                                  "MID",
-  "Performance":                             "PER",
-  "Produto":                                 "PRO",
-  "Proteção Patrimonial":                    "PPA",
-  "Renda Fixa":                              "RF",
-  "Renda Variável":                          "RV",
-  "Salvador":                                "SSA",
-  "São Paulo":                               "SAO",
-  "São Paulo Digital":                       "SAODGT",
-  "SVN Gestão":                              "GEST",
-  "SVN Global":                              "GLO",
-  "SVN Investment & Merchant Banking (M&A)": "IMB",
-  "Toledo":                                  "TLD",
-  "Universidade SVN":                        "USVN",
-  "Vitória da Conquista":                    "VDC",
-  "Wealth Planning":                         "WEAL",
-};
 
 const ORIGENS_EVENTO = [
   "Selecione a origem",
@@ -6584,19 +6536,9 @@ const FLUXOS_ETAPAS = {
     <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap" media="print" onload="this.media='all'">
   <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap"></noscript>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css?v=20260602">
 </head>
 <body class="page-light">
-<svg xmlns="http://www.w3.org/2000/svg" width="0" height="0" style="position:absolute;overflow:hidden">
-  <defs>
-    <linearGradient id="cu1" x1="0" y1="15.05" x2="54.84" y2="15.05" gradientUnits="userSpaceOnUse" gradientTransform="matrix(1 0 0 -1 0 69.36)">
-      <stop offset="0" stop-color="#8930FD"/><stop offset="1" stop-color="#49CCF9"/>
-    </linearGradient>
-    <linearGradient id="cu2" x1="1.2" y1="53.17" x2="53.74" y2="53.17" gradientUnits="userSpaceOnUse" gradientTransform="matrix(1 0 0 -1 0 69.36)">
-      <stop offset="0" stop-color="#FF02F0"/><stop offset="1" stop-color="#FFC800"/>
-    </linearGradient>
-  </defs>
-</svg>
   <div id="pageContent">
   <div class="container">
     <div class="title-row">
@@ -6609,7 +6551,7 @@ const FLUXOS_ETAPAS = {
 
     <div class="stats-row" id="statsRow">
       <div class="stat-card" style="background:rgba(159,63,55,0.06);border-color:rgba(159,63,55,0.15)">
-        <div class="stat-number" style="color:var(--ruby-red)" id="statActive">0</div>
+        <div class="stat-number" class="text-ruby" id="statActive">0</div>
         <div class="stat-label">Em andamento</div>
       </div>
       <div class="stat-card" style="background:rgba(111,135,123,0.06);border-color:rgba(111,135,123,0.15)">
@@ -6754,16 +6696,13 @@ const FLUXOS_ETAPAS = {
   </div>
   </div>
 
-  <script src="utils.js"></script>
-  <script src="toast.js"></script>
-  <script src="config.js"></script>
-  <script src="auth.js"></script>
-  <script src="shell.js"></script>
+  <script src="utils.js?v=20260602"></script>
+  <script src="toast.js?v=20260602"></script>
+  <script src="config.js?v=20260602"></script>
+  <script src="auth.js?v=20260602"></script>
+  <script src="shell.js?v=20260602"></script>
   <script>
-    const CLICKUP_ICON = `<svg width="14" height="14" viewBox="0 0 54.8 65.8" xmlns="http://www.w3.org/2000/svg">
-      <path fill="url(#cu1)" d="M0,50.6l10.1-7.8c5.4,7,11.1,10.3,17.4,10.3c6.3,0,11.9-3.2,17-10.2l10.3,7.6c-7.4,10-16.6,15.3-27.3,15.3C16.9,65.8,7.6,60.5,0,50.6z"/>
-      <path fill="url(#cu2)" d="M27.5,16.9l-18,15.5l-8.3-9.7L27.6,0l26.2,22.7l-8.4,9.6L27.5,16.9z"/>
-    </svg>`;
+    const CLICKUP_ICON = getClickupIcon();
 
     let _svnTab = sessionStorage.getItem('svn_dashboard_tab') || 'geral';
     let currentTab = ['geral', 'eventos'].includes(_svnTab) ? _svnTab : 'geral';
@@ -7981,18 +7920,18 @@ const FLUXOS_ETAPAS = {
     <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap" media="print" onload="this.media='all'">
   <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap"></noscript>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css?v=20260602">
 </head>
 <body class="page-light">
   <div id="pageContent">
-  <div class="container-narrow" style="padding-top:32px;padding-bottom:80px">
+  <div class="container-narrow" class="page-padding">
     <div class="form-card">
       <div class="form-progress"><div class="form-progress-bar" id="progressBar" style="width:33%"></div></div>
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-        <h2 style="font-weight:500;font-size:1.1rem;margin:0" id="formTitle">Apresentação</h2>
+      <div class="flex-between">
+        <h2 class="text-md-medium" id="formTitle">Apresentação</h2>
         <span style="font-size:0.8rem;opacity:0.4" id="stepLabel">Etapa 1 de 3</span>
       </div>
-      <div style="height:1px;background:var(--border-light);margin-bottom:24px"></div>
+      <hr class="sep">
 
       <div class="form-step active" id="step1">
         <h2 style="font-weight:600;font-size:1.1rem;margin-bottom:8px">Qual tipo de solicitação?</h2>
@@ -8035,11 +7974,11 @@ const FLUXOS_ETAPAS = {
         </div>
 
         <div class="field">
-          <label>Telefone <span style="color:var(--ruby-red)">*</span></label>
+          <label>Telefone <span class="text-ruby">*</span></label>
           <input type="tel" id="telefone" placeholder="(00) 00000-0000" oninput="mascaraTelefone(this)" required>
         </div>
         <div class="field">
-          <label>Setor <span style="color:var(--ruby-red)">*</span></label>
+          <label>Setor <span class="text-ruby">*</span></label>
           <select id="setor" required>
             <option value="">Selecione seu setor</option>
           </select>
@@ -8133,7 +8072,7 @@ const FLUXOS_ETAPAS = {
           <label>Observações finais (opcional)</label>
           <textarea id="observacoes" placeholder="Informações adicionais..."></textarea>
         </div>
-        <div style="border-top:1px solid rgba(34,27,25,.08);margin:28px 0 20px;padding-top:22px">
+        <div class="section-divider">
           <div class="form-nav">
             <button class="btn btn-secondary" onclick="goStep(2)">Voltar</button>
             <button class="btn btn-primary btn-submit-gold" id="btnSubmit" onclick="submitForm()">Enviar</button>
@@ -8144,11 +8083,11 @@ const FLUXOS_ETAPAS = {
   </div>
 
   </div>
-  <script src="utils.js"></script>
+  <script src="utils.js?v=20260602"></script>
   <script src="upload-feedback.js"></script>
-  <script src="config.js"></script>
-  <script src="auth.js"></script>
-  <script src="shell.js"></script>
+  <script src="config.js?v=20260602"></script>
+  <script src="auth.js?v=20260602"></script>
+  <script src="shell.js?v=20260602"></script>
   <script>
     const params = new URLSearchParams(window.location.search);
     let subtipo = params.get('subtipo') || '';
@@ -8465,11 +8404,11 @@ const FLUXOS_ETAPAS = {
     <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap" media="print" onload="this.media='all'">
   <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap"></noscript>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css?v=20260602">
 </head>
 <body class="page-light">
   <div id="pageContent">
-  <div class="container-narrow" style="padding-top:32px;padding-bottom:80px">
+  <div class="container-narrow" class="page-padding">
     <div class="alert-card alert-danger" style="margin-bottom:12px">
       <div class="alert-title">Atenção</div>
       <div class="alert-text">Este formulário é destinado a artes de comunicação interna/institucional. Para convites de eventos (online ou presenciais), utilize o formulário de Eventos.</div>
@@ -8481,20 +8420,20 @@ const FLUXOS_ETAPAS = {
 
     <div class="form-card">
       <div class="form-progress"><div class="form-progress-bar" id="progressBar" style="width:50%"></div></div>
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-        <h2 style="font-weight:500;font-size:1.1rem;margin:0">Arte de Divulgação</h2>
+      <div class="flex-between">
+        <h2 class="text-md-medium">Arte de Divulgação</h2>
         <span style="font-size:0.8rem;opacity:0.4" id="stepLabel">Etapa 1 de 2</span>
       </div>
-      <div style="height:1px;background:var(--border-light);margin-bottom:24px"></div>
+      <hr class="sep">
 
       <div class="form-step active" id="step1">
         <h2 style="font-weight:600;font-size:1.1rem;margin-bottom:20px">Informações do material</h2>
         <div class="field">
-          <label>Telefone <span style="color:var(--ruby-red)">*</span></label>
+          <label>Telefone <span class="text-ruby">*</span></label>
           <input type="tel" id="telefone" placeholder="(00) 00000-0000" oninput="mascaraTelefone(this)" required>
         </div>
         <div class="field">
-          <label>Setor <span style="color:var(--ruby-red)">*</span></label>
+          <label>Setor <span class="text-ruby">*</span></label>
           <select id="setor" required>
             <option value="">Selecione seu setor</option>
           </select>
@@ -8566,7 +8505,7 @@ const FLUXOS_ETAPAS = {
           <label>Observações finais (opcional)</label>
           <textarea id="observacoes" placeholder="Informações adicionais..."></textarea>
         </div>
-        <div style="border-top:1px solid rgba(34,27,25,.08);margin:28px 0 20px;padding-top:22px">
+        <div class="section-divider">
           <div id="submitError" class="alert-card alert-danger" style="display:none;margin-bottom:16px"></div>
         <div id="formStatusArea" style="display:none;margin-top:16px"></div>
           <div class="form-nav">
@@ -8579,11 +8518,11 @@ const FLUXOS_ETAPAS = {
   </div>
 
   </div>
-  <script src="utils.js"></script>
+  <script src="utils.js?v=20260602"></script>
   <script src="upload-feedback.js"></script>
-  <script src="config.js"></script>
-  <script src="auth.js"></script>
-  <script src="shell.js"></script>
+  <script src="config.js?v=20260602"></script>
+  <script src="auth.js?v=20260602"></script>
+  <script src="shell.js?v=20260602"></script>
   <script>
     window.addEventListener('pageshow', function(e) {
       if (e.persisted) {
@@ -8808,18 +8747,18 @@ const FLUXOS_ETAPAS = {
     <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap" media="print" onload="this.media='all'">
   <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap"></noscript>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css?v=20260602">
 </head>
 <body class="page-light">
   <div id="pageContent">
-  <div class="container-narrow" style="padding-top:32px;padding-bottom:80px">
+  <div class="container-narrow" class="page-padding">
 
     <div class="form-card">
       <div class="form-progress"><div class="form-progress-bar" id="progressBar" style="width:100%"></div></div>
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-        <h2 style="font-weight:500;font-size:1.1rem;margin:0">Assinatura de E-mail</h2>
+      <div class="flex-between">
+        <h2 class="text-md-medium">Assinatura de E-mail</h2>
       </div>
-      <div style="height:1px;background:var(--border-light);margin-bottom:24px"></div>
+      <hr class="sep">
 
       <div class="alert-card alert-info" style="margin-bottom:24px">
         <div class="alert-title">Como funciona</div>
@@ -8827,26 +8766,26 @@ const FLUXOS_ETAPAS = {
       </div>
 
       <div class="field">
-        <label>Nome completo <span style="color:var(--ruby-red)">*</span></label>
+        <label>Nome completo <span class="text-ruby">*</span></label>
         <input type="text" id="nomeCompleto" placeholder="Seu nome completo" required>
       </div>
       <div class="field">
-        <label>Telefone / WhatsApp <span style="color:var(--ruby-red)">*</span></label>
+        <label>Telefone / WhatsApp <span class="text-ruby">*</span></label>
         <input type="tel" id="telefone" placeholder="(00) 00000-0000" oninput="mascaraTelefone(this)" required>
       </div>
       <div class="field">
-        <label>E-mail <span style="color:var(--ruby-red)">*</span></label>
+        <label>E-mail <span class="text-ruby">*</span></label>
         <div class="field-hint">Assessores: use seu e-mail de assessor. Time de Gestão: use seu e-mail corporativo.</div>
         <input type="email" id="emailCorporativo" placeholder="seu@svninvest.com.br" required>
       </div>
       <div class="field">
-        <label>Marca <span style="color:var(--ruby-red)">*</span></label>
+        <label>Marca <span class="text-ruby">*</span></label>
         <select id="marca" required onchange="handleMarcaChange()">
           <option value="">Selecione a marca</option>
         </select>
       </div>
       <div class="field" id="campoCargoWrap" style="display:none">
-        <label>Cargo <span style="color:var(--ruby-red)">*</span></label>
+        <label>Cargo <span class="text-ruby">*</span></label>
         <input type="text" id="cargo" placeholder="Seu cargo">
       </div>
       <div class="field" id="campoCfpWrap" style="display:none">
@@ -8863,7 +8802,7 @@ const FLUXOS_ETAPAS = {
         </div>
       </div>
 
-      <div style="border-top:1px solid rgba(34,27,25,.08);margin:28px 0 20px;padding-top:22px">
+      <div class="section-divider">
         <div id="submitError" class="alert-card alert-danger" style="display:none;margin-bottom:16px"></div>
         <div id="formStatusArea" style="display:none;margin-top:16px"></div>
         <div class="form-nav" style="justify-content:flex-end">
@@ -8878,11 +8817,11 @@ const FLUXOS_ETAPAS = {
   
 
   </div>
-  <script src="utils.js"></script>
+  <script src="utils.js?v=20260602"></script>
   <script src="upload-feedback.js"></script>
-  <script src="config.js"></script>
-  <script src="auth.js"></script>
-  <script src="shell.js"></script>
+  <script src="config.js?v=20260602"></script>
+  <script src="auth.js?v=20260602"></script>
+  <script src="shell.js?v=20260602"></script>
   <script>
     const TIPO = 'assinatura-email';
     window.addEventListener('pageshow', function(e) {
@@ -9063,22 +9002,22 @@ const FLUXOS_ETAPAS = {
     <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap" media="print" onload="this.media='all'">
   <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap"></noscript>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css?v=20260602">
 </head>
 <body class="page-light">
   <div id="pageContent">
-  <div class="container-narrow" style="padding-top:32px;padding-bottom:80px">
+  <div class="container-narrow" class="page-padding">
     <div class="form-card">
       <div class="form-progress"><div class="form-progress-bar" id="progressBar" style="width:100%"></div></div>
 
       <div class="form-step active" id="step1">
         <h2 style="font-weight:600;font-size:1.1rem;margin-bottom:20px">Informações do material</h2>
         <div class="field">
-          <label>Telefone <span style="color:var(--ruby-red)">*</span></label>
+          <label>Telefone <span class="text-ruby">*</span></label>
           <input type="tel" id="telefone" placeholder="(00) 00000-0000" oninput="mascaraTelefone(this)" required>
         </div>
         <div class="field">
-          <label>Setor <span style="color:var(--ruby-red)">*</span></label>
+          <label>Setor <span class="text-ruby">*</span></label>
           <select id="setor" required>
             <option value="">Selecione seu setor</option>
           </select>
@@ -9107,7 +9046,7 @@ const FLUXOS_ETAPAS = {
           <label>Descrição do que precisa ser atualizado</label>
           <textarea id="descricao" placeholder="Descreva com clareza o que deve ser alterado, corrigido ou adicionado. Quanto mais detalhado, melhor." required></textarea>
         </div>
-        <div style="border-top:1px solid rgba(34,27,25,.08);margin:28px 0 20px;padding-top:22px">
+        <div class="section-divider">
           <div id="submitError" class="alert-card alert-danger" style="display:none;margin-bottom:16px"></div>
         <div id="formStatusArea" style="display:none;margin-top:16px"></div>
           <div class="form-nav" style="justify-content:flex-end">
@@ -9119,11 +9058,11 @@ const FLUXOS_ETAPAS = {
   </div>
 
   </div>
-  <script src="utils.js"></script>
+  <script src="utils.js?v=20260602"></script>
   <script src="upload-feedback.js"></script>
-  <script src="config.js"></script>
-  <script src="auth.js"></script>
-  <script src="shell.js"></script>
+  <script src="config.js?v=20260602"></script>
+  <script src="auth.js?v=20260602"></script>
+  <script src="shell.js?v=20260602"></script>
   <script>
     window.addEventListener('pageshow', function(e) {
       if (e.persisted) {
@@ -9316,17 +9255,17 @@ const FLUXOS_ETAPAS = {
     <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap" media="print" onload="this.media='all'">
   <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap"></noscript>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css?v=20260602">
 </head>
 <body class="page-light">
   <div id="pageContent">
-  <div class="container-narrow" style="padding-top:32px;padding-bottom:80px">
+  <div class="container-narrow" class="page-padding">
     <div class="form-card">
       <div class="form-progress"><div class="form-progress-bar" id="progressBar" style="width:100%"></div></div>
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-        <h2 style="font-weight:500;font-size:1.1rem;margin:0">Brindes</h2>
+      <div class="flex-between">
+        <h2 class="text-md-medium">Brindes</h2>
       </div>
-      <div style="height:1px;background:var(--border-light);margin-bottom:24px"></div>
+      <hr class="sep">
 
       <div class="alert-card alert-info" style="margin-bottom:24px">
         <div class="alert-text">
@@ -9335,29 +9274,29 @@ const FLUXOS_ETAPAS = {
       </div>
 
       <div class="field">
-        <label>Telefone <span style="color:var(--ruby-red)">*</span></label>
+        <label>Telefone <span class="text-ruby">*</span></label>
         <input type="tel" id="telefone" placeholder="(00) 00000-0000" oninput="mascaraTelefone(this)" required>
       </div>
       <div class="field">
-        <label>Setor <span style="color:var(--ruby-red)">*</span></label>
+        <label>Setor <span class="text-ruby">*</span></label>
         <select id="setor" required>
           <option value="">Selecione seu setor</option>
         </select>
       </div>
       <div class="field">
-        <label>Título da solicitação <span style="color:var(--ruby-red)">*</span></label>
+        <label>Título da solicitação <span class="text-ruby">*</span></label>
         <input type="text" id="titulo" placeholder="Ex: brinde para [ocasião]" required>
       </div>
       <div class="field">
-        <label>Para qual finalidade você usará esses brindes? <span style="color:var(--ruby-red)">*</span></label>
+        <label>Para qual finalidade você usará esses brindes? <span class="text-ruby">*</span></label>
         <input type="text" id="finalidade" placeholder="Descreva a finalidade" required>
       </div>
       <div class="field">
-        <label>Em qual data pretende entregar esse brinde? <span style="color:var(--ruby-red)">*</span></label>
+        <label>Em qual data pretende entregar esse brinde? <span class="text-ruby">*</span></label>
         <input type="date" id="dataEntrega" required>
       </div>
       <div class="field">
-        <label>O que você irá oferecer como brinde? <span style="color:var(--ruby-red)">*</span></label>
+        <label>O que você irá oferecer como brinde? <span class="text-ruby">*</span></label>
         <div class="checkbox-group" id="itensContainer">
           <label class="checkbox-option"><input type="checkbox" value="Moleskine"><span class="checkbox-custom"></span><span>Moleskine</span></label>
           <label class="checkbox-option"><input type="checkbox" value="Bloco de notas"><span class="checkbox-custom"></span><span>Bloco de notas</span></label>
@@ -9398,7 +9337,7 @@ const FLUXOS_ETAPAS = {
         </div>
       </div>
 
-      <div style="border-top:1px solid rgba(34,27,25,.08);margin:28px 0 20px;padding-top:22px">
+      <div class="section-divider">
         <div id="submitError" class="alert-card alert-danger" style="display:none;margin-bottom:16px"></div>
         <div id="formStatusArea" style="display:none;margin-top:16px"></div>
         <div class="form-nav" style="justify-content:flex-end">
@@ -9413,11 +9352,11 @@ const FLUXOS_ETAPAS = {
   
 
   </div>
-  <script src="utils.js"></script>
+  <script src="utils.js?v=20260602"></script>
   <script src="upload-feedback.js"></script>
-  <script src="config.js"></script>
-  <script src="auth.js"></script>
-  <script src="shell.js"></script>
+  <script src="config.js?v=20260602"></script>
+  <script src="auth.js?v=20260602"></script>
+  <script src="shell.js?v=20260602"></script>
   <script>
     const TIPO = 'brindes';
     window.addEventListener('pageshow', function(e) {
@@ -9573,18 +9512,18 @@ const FLUXOS_ETAPAS = {
     <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap" media="print" onload="this.media='all'">
   <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap"></noscript>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css?v=20260602">
 </head>
 <body class="page-light">
   <div id="pageContent">
-  <div class="container-narrow" style="padding-top:32px;padding-bottom:80px">
+  <div class="container-narrow" class="page-padding">
 
     <div class="form-card">
       <div class="form-progress"><div class="form-progress-bar" id="progressBar" style="width:100%"></div></div>
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-        <h2 style="font-weight:500;font-size:1.1rem;margin:0">Cartão de Boas-vindas</h2>
+      <div class="flex-between">
+        <h2 class="text-md-medium">Cartão de Boas-vindas</h2>
       </div>
-      <div style="height:1px;background:var(--border-light);margin-bottom:24px"></div>
+      <hr class="sep">
 
       <div class="alert-card alert-info" style="margin-bottom:24px">
         <div class="alert-title">Como funciona</div>
@@ -9592,31 +9531,31 @@ const FLUXOS_ETAPAS = {
       </div>
 
       <div class="field">
-        <label>Telefone <span style="color:var(--ruby-red)">*</span></label>
+        <label>Telefone <span class="text-ruby">*</span></label>
         <input type="tel" id="telefone" placeholder="(00) 00000-0000" oninput="mascaraTelefone(this)" required>
       </div>
       <div class="field">
-        <label>Nome do cliente <span style="color:var(--ruby-red)">*</span></label>
+        <label>Nome do cliente <span class="text-ruby">*</span></label>
         <input type="text" id="nomeCliente" placeholder="Nome completo do cliente" required>
       </div>
       <div class="field">
-        <label>Nome para assinatura <span style="color:var(--ruby-red)">*</span></label>
+        <label>Nome para assinatura <span class="text-ruby">*</span></label>
         <input type="text" id="nomeAssinatura" placeholder="Nome do assessor que assina o cartão" required>
       </div>
       <div class="field">
-        <label>Contrato social <span style="color:var(--ruby-red)">*</span></label>
+        <label>Contrato social <span class="text-ruby">*</span></label>
         <select id="contratoSocial" required>
           <option value="">Selecione</option>
         </select>
       </div>
       <div class="field">
-        <label>Unidade <span style="color:var(--ruby-red)">*</span></label>
+        <label>Unidade <span class="text-ruby">*</span></label>
         <select id="unidade" required>
           <option value="">Selecione a unidade</option>
         </select>
       </div>
       <div class="field">
-        <label>Seu cliente se enquadra como Private? <span style="color:var(--ruby-red)">*</span></label>
+        <label>Seu cliente se enquadra como Private? <span class="text-ruby">*</span></label>
         <div class="radio-group" style="flex-direction:row;gap:24px">
           <label class="radio-option">
             <input type="radio" name="isPrivate" value="sim" required>
@@ -9631,7 +9570,7 @@ const FLUXOS_ETAPAS = {
         </div>
       </div>
 
-      <div style="border-top:1px solid rgba(34,27,25,.08);margin:28px 0 20px;padding-top:22px">
+      <div class="section-divider">
         <div id="submitError" class="alert-card alert-danger" style="display:none;margin-bottom:16px"></div>
         <div id="formStatusArea" style="display:none;margin-top:16px"></div>
         <div class="form-nav" style="justify-content:flex-end">
@@ -9646,11 +9585,11 @@ const FLUXOS_ETAPAS = {
   
 
   </div>
-  <script src="utils.js"></script>
+  <script src="utils.js?v=20260602"></script>
   <script src="upload-feedback.js"></script>
-  <script src="config.js"></script>
-  <script src="auth.js"></script>
-  <script src="shell.js"></script>
+  <script src="config.js?v=20260602"></script>
+  <script src="auth.js?v=20260602"></script>
+  <script src="shell.js?v=20260602"></script>
   <script>
     const TIPO = 'cartao-boas-vindas';
     window.addEventListener('pageshow', function(e) {
@@ -9834,18 +9773,18 @@ const FLUXOS_ETAPAS = {
     <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap" media="print" onload="this.media='all'">
   <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap"></noscript>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css?v=20260602">
 </head>
 <body class="page-light">
   <div id="pageContent">
-  <div class="container-narrow" style="padding-top:32px;padding-bottom:80px">
+  <div class="container-narrow" class="page-padding">
 
     <div class="form-card">
       <div class="form-progress"><div class="form-progress-bar" id="progressBar" style="width:100%"></div></div>
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-        <h2 style="font-weight:500;font-size:1.1rem;margin:0">Cartão Comemorativo</h2>
+      <div class="flex-between">
+        <h2 class="text-md-medium">Cartão Comemorativo</h2>
       </div>
-      <div style="height:1px;background:var(--border-light);margin-bottom:24px"></div>
+      <hr class="sep">
 
       <div class="alert-card alert-info" style="margin-bottom:24px">
         <div class="alert-text">
@@ -9858,15 +9797,15 @@ const FLUXOS_ETAPAS = {
       </div>
 
       <div class="field">
-        <label>Telefone <span style="color:var(--ruby-red)">*</span></label>
+        <label>Telefone <span class="text-ruby">*</span></label>
         <input type="tel" id="telefone" placeholder="(00) 00000-0000" oninput="mascaraTelefone(this)" required>
       </div>
       <div class="field">
-        <label>Nome do aniversariante (nome e 1 sobrenome) <span style="color:var(--ruby-red)">*</span></label>
+        <label>Nome do aniversariante (nome e 1 sobrenome) <span class="text-ruby">*</span></label>
         <input type="text" id="nomeAniversariante" placeholder="Ex: João Silva" required>
       </div>
       <div class="field">
-        <label>Modelo do cartão <span style="color:var(--ruby-red)">*</span></label>
+        <label>Modelo do cartão <span class="text-ruby">*</span></label>
         <select id="modeloCartao" required>
           <option value="">Selecione</option>
           <option value="dourado">Dourado</option>
@@ -9874,22 +9813,22 @@ const FLUXOS_ETAPAS = {
         </select>
       </div>
       <div class="field">
-        <label>Mensagem <span style="color:var(--ruby-red)">*</span></label>
+        <label>Mensagem <span class="text-ruby">*</span></label>
         <textarea id="mensagem" required>Desejamos que este novo ciclo da sua vida seja repleto de conquistas e realizações. Somos gratos por fazer parte da sua trajetória e por sua confiança em nosso trabalho. Conte sempre conosco para acompanhar e apoiar cada passo rumo aos seus objetivos. Parabéns! Que seu dia seja tão extraordinário quanto você merece!</textarea>
         <div class="field-hint">Você pode editar o texto ou usar o modelo padrão acima.</div>
       </div>
       <div class="field">
-        <label>Assinatura <span style="color:var(--ruby-red)">*</span></label>
+        <label>Assinatura <span class="text-ruby">*</span></label>
         <textarea id="assinatura" required>Um abraço, Assessor(a).</textarea>
         <div class="field-hint">Personalize com seu nome se preferir.</div>
       </div>
       <div class="field">
-        <label>E-mail <span style="color:var(--ruby-red)">*</span></label>
+        <label>E-mail <span class="text-ruby">*</span></label>
         <input type="email" id="emailDestinatario" placeholder="email@svninvest.com.br" required>
         <div class="field-hint">E-mail de quem vai receber o cartão (não o seu).</div>
       </div>
 
-      <div style="border-top:1px solid rgba(34,27,25,.08);margin:28px 0 20px;padding-top:22px">
+      <div class="section-divider">
         <div id="submitError" class="alert-card alert-danger" style="display:none;margin-bottom:16px"></div>
         <div id="formStatusArea" style="display:none;margin-top:16px"></div>
         <div class="form-nav" style="justify-content:flex-end">
@@ -9904,11 +9843,11 @@ const FLUXOS_ETAPAS = {
   
 
   </div>
-  <script src="utils.js"></script>
+  <script src="utils.js?v=20260602"></script>
   <script src="upload-feedback.js"></script>
-  <script src="config.js"></script>
-  <script src="auth.js"></script>
-  <script src="shell.js"></script>
+  <script src="config.js?v=20260602"></script>
+  <script src="auth.js?v=20260602"></script>
+  <script src="shell.js?v=20260602"></script>
   <script>
     const TIPO = 'cartao-comemorativo';
     window.addEventListener('pageshow', function(e) {
@@ -10065,7 +10004,7 @@ const FLUXOS_ETAPAS = {
     <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap" media="print" onload="this.media='all'">
   <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap"></noscript>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css?v=20260602">
   <style>
     .tipo-option {
       display: flex;
@@ -10090,15 +10029,15 @@ const FLUXOS_ETAPAS = {
 </head>
 <body class="page-light">
   <div id="pageContent">
-  <div class="container-narrow" style="padding-top:32px;padding-bottom:80px">
+  <div class="container-narrow" class="page-padding">
 
     <div class="form-card">
       <div class="form-progress"><div class="form-progress-bar" id="progressBar" style="width:50%"></div></div>
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-        <h2 style="font-weight:500;font-size:1.1rem;margin:0">Cartão de Visita</h2>
+      <div class="flex-between">
+        <h2 class="text-md-medium">Cartão de Visita</h2>
         <span id="stepLabel" style="font-size:0.78rem;opacity:0.5">Passo 1 de 2</span>
       </div>
-      <div style="height:1px;background:var(--border-light);margin-bottom:24px"></div>
+      <hr class="sep">
 
       <!-- Passo 1: Escolha do tipo -->
       <div class="form-step active" id="step1">
@@ -10144,31 +10083,31 @@ const FLUXOS_ETAPAS = {
         </div>
 
         <div class="field">
-          <label>Nome no cartão <span style="color:var(--ruby-red)">*</span></label>
+          <label>Nome no cartão <span class="text-ruby">*</span></label>
           <input type="text" id="nomeCartaoFisico" placeholder="Nome exatamente como deve aparecer" required>
         </div>
         <div class="field">
-          <label>WhatsApp <span style="color:var(--ruby-red)">*</span></label>
+          <label>WhatsApp <span class="text-ruby">*</span></label>
           <input type="tel" id="whatsappFisico" placeholder="(00) 00000-0000" oninput="mascaraTelefone(this)" required>
         </div>
         <div class="field">
-          <label>E-mail <span style="color:var(--ruby-red)">*</span></label>
+          <label>E-mail <span class="text-ruby">*</span></label>
           <p style="font-size:0.78rem;opacity:0.55;margin:-12px 0 8px">Use o e-mail de assessor (AAI) ou o corporativo (time interno)</p>
           <input type="email" id="emailCorporativoFisico" placeholder="seu@svninvest.com.br" required>
         </div>
         <div class="field">
-          <label>Unidade <span style="color:var(--ruby-red)">*</span></label>
+          <label>Unidade <span class="text-ruby">*</span></label>
           <select id="unidadeFisico" required>
             <option value="">Selecione a unidade</option>
           </select>
         </div>
         <div class="field">
-          <label>Contrato social <span style="color:var(--ruby-red)">*</span></label>
+          <label>Contrato social <span class="text-ruby">*</span></label>
           <select id="contratoSocialFisico" required>
             <option value="">Selecione</option>
           </select>
         </div>
-        <div style="border-top:1px solid rgba(34,27,25,.08);margin:28px 0 20px;padding-top:22px">
+        <div class="section-divider">
           <div id="submitErrorFisico" class="alert-card alert-danger" style="display:none;margin-bottom:16px"></div>
           <div class="form-nav" style="justify-content:flex-end">
             <button class="btn btn-primary btn-submit-gold" id="btnSubmitFisico" onclick="submitFormFisico()">Enviar</button>
@@ -10189,26 +10128,26 @@ const FLUXOS_ETAPAS = {
         </div>
 
         <div class="field">
-          <label>Nome completo <span style="color:var(--ruby-red)">*</span></label>
+          <label>Nome completo <span class="text-ruby">*</span></label>
           <input type="text" id="nomeCompletoDigital" placeholder="Seu nome completo" required>
         </div>
         <div class="field">
-          <label>Telefone / WhatsApp <span style="color:var(--ruby-red)">*</span></label>
+          <label>Telefone / WhatsApp <span class="text-ruby">*</span></label>
           <input type="tel" id="telefoneDigital" placeholder="(00) 00000-0000" oninput="mascaraTelefone(this)" required>
         </div>
         <div class="field">
-          <label>E-mail <span style="color:var(--ruby-red)">*</span></label>
+          <label>E-mail <span class="text-ruby">*</span></label>
           <p style="font-size:0.78rem;opacity:0.55;margin:-12px 0 8px">Use o e-mail de assessor (AAI) ou o corporativo (time interno)</p>
           <input type="email" id="emailCorporativoDigital" placeholder="seu@svninvest.com.br" required>
         </div>
         <div class="field">
-          <label>Contrato social <span style="color:var(--ruby-red)">*</span></label>
+          <label>Contrato social <span class="text-ruby">*</span></label>
           <select id="contratoSocial" required>
             <option value="">Selecione</option>
           </select>
         </div>
         <div class="field">
-          <label>Foto de perfil <span style="color:var(--ruby-red)">*</span></label>
+          <label>Foto de perfil <span class="text-ruby">*</span></label>
           <div style="font-size:0.78rem;opacity:0.55;margin-bottom:8px">Usada na geração do cartão. JPG ou PNG, fundo neutro preferencialmente.</div>
           <div class="file-input-wrapper">
             <label class="file-input-btn" for="fotoPerfilDigital">Escolher foto</label>
@@ -10216,7 +10155,7 @@ const FLUXOS_ETAPAS = {
             <div class="file-name" id="fotoPerfilDigitalName"></div>
           </div>
         </div>
-        <div style="border-top:1px solid rgba(34,27,25,.08);margin:28px 0 20px;padding-top:22px">
+        <div class="section-divider">
           <div id="submitErrorDigital" class="alert-card alert-danger" style="display:none;margin-bottom:16px"></div>
           <div class="form-nav" style="justify-content:flex-end">
             <button class="btn btn-primary btn-submit-gold" id="btnSubmitDigital" onclick="submitFormDigital()">Enviar</button>
@@ -10231,11 +10170,11 @@ const FLUXOS_ETAPAS = {
   
 
   </div>
-  <script src="utils.js"></script>
+  <script src="utils.js?v=20260602"></script>
   <script src="upload-feedback.js"></script>
-  <script src="config.js"></script>
-  <script src="auth.js"></script>
-  <script src="shell.js"></script>
+  <script src="config.js?v=20260602"></script>
+  <script src="auth.js?v=20260602"></script>
+  <script src="shell.js?v=20260602"></script>
   <script>
     window.addEventListener('pageshow', function(e) {
       if (e.persisted) {
@@ -10444,25 +10383,25 @@ const FLUXOS_ETAPAS = {
   <title>Aniversariantes do Mês — Hub SVN</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap">
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css?v=20260602">
 </head>
 <body class="page-light">
   <div id="pageContent">
-  <div class="container-narrow" style="padding-top:32px;padding-bottom:80px">
+  <div class="container-narrow" class="page-padding">
     <div class="form-card">
       <div class="form-progress"><div class="form-progress-bar" style="width:100%"></div></div>
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-        <h2 style="font-weight:500;font-size:1.1rem;margin:0">Aniversariantes do Mês</h2>
+      <div class="flex-between">
+        <h2 class="text-md-medium">Aniversariantes do Mês</h2>
       </div>
-      <div style="height:1px;background:var(--border-light);margin-bottom:24px"></div>
+      <hr class="sep">
 
       <div class="field">
-        <label>Mês de referência <span style="color:var(--ruby-red)">*</span></label>
+        <label>Mês de referência <span class="text-ruby">*</span></label>
         <select id="mes" required></select>
       </div>
 
       <div class="field">
-        <label>Faça o upload do arquivo que consta os aniversariantes do mês. <span style="color:var(--ruby-red)">*</span></label>
+        <label>Faça o upload do arquivo que consta os aniversariantes do mês. <span class="text-ruby">*</span></label>
         <div class="file-input-wrapper">
           <label class="file-input-btn" for="arquivoApoio">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
@@ -10478,7 +10417,7 @@ const FLUXOS_ETAPAS = {
         <textarea id="observacoes" placeholder="Observações…"></textarea>
       </div>
 
-      <div style="border-top:1px solid rgba(34,27,25,.08);margin:28px 0 20px;padding-top:22px">
+      <div class="section-divider">
         <div id="submitError" class="alert-card alert-danger" style="display:none;margin-bottom:16px"></div>
         <div class="form-nav" style="justify-content:flex-end">
           <button class="btn btn-primary btn-submit-gold" id="btnSubmit" onclick="submitForm()">Enviar</button>
@@ -10488,9 +10427,9 @@ const FLUXOS_ETAPAS = {
   </div>
   </div>
 
-  <script src="config.js"></script>
-  <script src="auth.js"></script>
-  <script src="shell.js"></script>
+  <script src="config.js?v=20260602"></script>
+  <script src="auth.js?v=20260602"></script>
+  <script src="shell.js?v=20260602"></script>
   <script src="upload-feedback.js"></script>
   <script>
     const TIPO = 'ch-aniversariantes';
@@ -10615,7 +10554,7 @@ const FLUXOS_ETAPAS = {
   <title>Atualização de Books — Hub SVN</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap">
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css?v=20260602">
   <style>
     .opt-checks { display: flex; flex-direction: column; gap: 8px; }
     .opt-check { display: flex; align-items: center; gap: 10px; padding: 11px 13px; border: 1px solid var(--border-light, #e8e2dc); border-radius: 10px; cursor: pointer; font-size: .92rem; }
@@ -10625,16 +10564,16 @@ const FLUXOS_ETAPAS = {
 </head>
 <body class="page-light">
   <div id="pageContent">
-  <div class="container-narrow" style="padding-top:32px;padding-bottom:80px">
+  <div class="container-narrow" class="page-padding">
     <div class="form-card">
       <div class="form-progress"><div class="form-progress-bar" style="width:100%"></div></div>
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-        <h2 style="font-weight:500;font-size:1.1rem;margin:0">Atualização de Books</h2>
+      <div class="flex-between">
+        <h2 class="text-md-medium">Atualização de Books</h2>
       </div>
-      <div style="height:1px;background:var(--border-light);margin-bottom:24px"></div>
+      <hr class="sep">
 
       <div class="field" id="booksField">
-        <label>Quais books você quer atualizar? <span style="color:var(--ruby-red)">*</span></label>
+        <label>Quais books você quer atualizar? <span class="text-ruby">*</span></label>
         <div class="opt-checks">
           <label class="opt-check"><input type="checkbox" name="book" value="Book SVN"> Book SVN</label>
           <label class="opt-check"><input type="checkbox" name="book" value="Book Academia de Assessores"> Book Academia de Assessores</label>
@@ -10644,12 +10583,12 @@ const FLUXOS_ETAPAS = {
       </div>
 
       <div class="field">
-        <label>O que precisa ser atualizado? <span style="color:var(--ruby-red)">*</span></label>
+        <label>O que precisa ser atualizado? <span class="text-ruby">*</span></label>
         <textarea id="oQueAtualizar" placeholder="Descreva o que deve ser alterado em cada book…" required></textarea>
       </div>
 
       <div class="field">
-        <label>Faça o upload dos arquivos de apoio. <span style="color:var(--ruby-red)">*</span></label>
+        <label>Faça o upload dos arquivos de apoio. <span class="text-ruby">*</span></label>
         <div class="file-input-wrapper">
           <label class="file-input-btn" for="arquivoApoio">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
@@ -10661,7 +10600,7 @@ const FLUXOS_ETAPAS = {
       </div>
 
       <div class="field">
-        <label>Em qual data o book precisa estar pronto para ser divulgado? <span style="color:var(--ruby-red)">*</span></label>
+        <label>Em qual data o book precisa estar pronto para ser divulgado? <span class="text-ruby">*</span></label>
         <input type="date" id="dataPronto" required>
       </div>
 
@@ -10670,7 +10609,7 @@ const FLUXOS_ETAPAS = {
         <textarea id="observacoes" placeholder="Observações…"></textarea>
       </div>
 
-      <div style="border-top:1px solid rgba(34,27,25,.08);margin:28px 0 20px;padding-top:22px">
+      <div class="section-divider">
         <div id="submitError" class="alert-card alert-danger" style="display:none;margin-bottom:16px"></div>
         <div class="form-nav" style="justify-content:flex-end">
           <button class="btn btn-primary btn-submit-gold" id="btnSubmit" onclick="submitForm()">Enviar</button>
@@ -10680,9 +10619,9 @@ const FLUXOS_ETAPAS = {
   </div>
   </div>
 
-  <script src="config.js"></script>
-  <script src="auth.js"></script>
-  <script src="shell.js"></script>
+  <script src="config.js?v=20260602"></script>
+  <script src="auth.js?v=20260602"></script>
+  <script src="shell.js?v=20260602"></script>
   <script src="upload-feedback.js"></script>
   <script>
     const TIPO = 'ch-atualizacao-books';
@@ -10807,25 +10746,25 @@ const FLUXOS_ETAPAS = {
   <title>Atualização de Pessoas nos Sites — Hub SVN</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap">
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css?v=20260602">
 </head>
 <body class="page-light">
   <div id="pageContent">
-  <div class="container-narrow" style="padding-top:32px;padding-bottom:80px">
+  <div class="container-narrow" class="page-padding">
     <div class="form-card">
       <div class="form-progress"><div class="form-progress-bar" style="width:100%"></div></div>
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-        <h2 style="font-weight:500;font-size:1.1rem;margin:0">Atualização de Pessoas nos Sites</h2>
+      <div class="flex-between">
+        <h2 class="text-md-medium">Atualização de Pessoas nos Sites</h2>
       </div>
-      <div style="height:1px;background:var(--border-light);margin-bottom:24px"></div>
+      <hr class="sep">
 
       <div class="field">
-        <label>Descreva as alterações necessárias <span style="color:var(--ruby-red)">*</span></label>
+        <label>Descreva as alterações necessárias <span class="text-ruby">*</span></label>
         <textarea id="alteracoes" placeholder="Ex.: incluir novos entrantes, remover desligados, atualizar cargos…" required></textarea>
       </div>
 
       <div class="field">
-        <label>Link da pasta com fotos <span style="color:var(--ruby-red)">*</span></label>
+        <label>Link da pasta com fotos <span class="text-ruby">*</span></label>
         <input type="url" id="linkFotos" placeholder="https://…" required>
         <div style="font-size:.8rem;color:var(--text-muted,rgba(34,27,25,.5));margin-top:6px">As fotos devem estar tituladas com o nome e cidade de cada novo entrante.</div>
       </div>
@@ -10847,7 +10786,7 @@ const FLUXOS_ETAPAS = {
         <textarea id="observacoes" placeholder="Observações…"></textarea>
       </div>
 
-      <div style="border-top:1px solid rgba(34,27,25,.08);margin:28px 0 20px;padding-top:22px">
+      <div class="section-divider">
         <div id="submitError" class="alert-card alert-danger" style="display:none;margin-bottom:16px"></div>
         <div class="form-nav" style="justify-content:flex-end">
           <button class="btn btn-primary btn-submit-gold" id="btnSubmit" onclick="submitForm()">Enviar</button>
@@ -10857,9 +10796,9 @@ const FLUXOS_ETAPAS = {
   </div>
   </div>
 
-  <script src="config.js"></script>
-  <script src="auth.js"></script>
-  <script src="shell.js"></script>
+  <script src="config.js?v=20260602"></script>
+  <script src="auth.js?v=20260602"></script>
+  <script src="shell.js?v=20260602"></script>
   <script src="upload-feedback.js"></script>
   <script>
     const TIPO = 'ch-atualizacao-pessoas';
@@ -10970,36 +10909,36 @@ const FLUXOS_ETAPAS = {
   <title>Kit Onboarding — Hub SVN</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap">
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css?v=20260602">
 </head>
 <body class="page-light">
   <div id="pageContent">
-  <div class="container-narrow" style="padding-top:32px;padding-bottom:80px">
+  <div class="container-narrow" class="page-padding">
     <div class="form-card">
       <div class="form-progress"><div class="form-progress-bar" style="width:100%"></div></div>
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-        <h2 style="font-weight:500;font-size:1.1rem;margin:0">Kit Onboarding</h2>
+      <div class="flex-between">
+        <h2 class="text-md-medium">Kit Onboarding</h2>
       </div>
-      <div style="height:1px;background:var(--border-light);margin-bottom:24px"></div>
+      <hr class="sep">
 
       <div class="field">
-        <label>Qual unidade receberá o kit? <span style="color:var(--ruby-red)">*</span></label>
+        <label>Qual unidade receberá o kit? <span class="text-ruby">*</span></label>
         <select id="unidade" required>
           <option value="">Selecione a unidade…</option>
         </select>
       </div>
 
       <div class="field">
-        <label>Quantidade de kits que deverão ser enviados para a unidade <span style="color:var(--ruby-red)">*</span></label>
+        <label>Quantidade de kits que deverão ser enviados para a unidade <span class="text-ruby">*</span></label>
         <input type="number" id="quantidade" min="1" step="1" placeholder="Ex.: 5" required>
       </div>
 
       <div class="field">
-        <label>Qual a data prevista para a entrega desses kits? <span style="color:var(--ruby-red)">*</span></label>
+        <label>Qual a data prevista para a entrega desses kits? <span class="text-ruby">*</span></label>
         <input type="date" id="dataEntrega" required>
       </div>
 
-      <div style="border-top:1px solid rgba(34,27,25,.08);margin:28px 0 20px;padding-top:22px">
+      <div class="section-divider">
         <div id="submitError" class="alert-card alert-danger" style="display:none;margin-bottom:16px"></div>
         <div class="form-nav" style="justify-content:flex-end">
           <button class="btn btn-primary btn-submit-gold" id="btnSubmit" onclick="submitForm()">Enviar</button>
@@ -11009,9 +10948,9 @@ const FLUXOS_ETAPAS = {
   </div>
   </div>
 
-  <script src="config.js"></script>
-  <script src="auth.js"></script>
-  <script src="shell.js"></script>
+  <script src="config.js?v=20260602"></script>
+  <script src="auth.js?v=20260602"></script>
+  <script src="shell.js?v=20260602"></script>
   <script>
     const TIPO = 'ch-kit-onboarding';
 
@@ -11115,25 +11054,25 @@ const FLUXOS_ETAPAS = {
   <title>Linha do Tempo — Hub SVN</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap">
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css?v=20260602">
 </head>
 <body class="page-light">
   <div id="pageContent">
-  <div class="container-narrow" style="padding-top:32px;padding-bottom:80px">
+  <div class="container-narrow" class="page-padding">
     <div class="form-card">
       <div class="form-progress"><div class="form-progress-bar" style="width:100%"></div></div>
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-        <h2 style="font-weight:500;font-size:1.1rem;margin:0">Linha do Tempo</h2>
+      <div class="flex-between">
+        <h2 class="text-md-medium">Linha do Tempo</h2>
       </div>
-      <div style="height:1px;background:var(--border-light);margin-bottom:24px"></div>
+      <hr class="sep">
 
       <div class="field">
-        <label>Mês de referência <span style="color:var(--ruby-red)">*</span></label>
+        <label>Mês de referência <span class="text-ruby">*</span></label>
         <select id="mes" required></select>
       </div>
 
       <div class="field">
-        <label>Faça o upload do arquivo que consta o tempo de casa dos colaboradores. <span style="color:var(--ruby-red)">*</span></label>
+        <label>Faça o upload do arquivo que consta o tempo de casa dos colaboradores. <span class="text-ruby">*</span></label>
         <div class="file-input-wrapper">
           <label class="file-input-btn" for="arquivoApoio">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
@@ -11149,7 +11088,7 @@ const FLUXOS_ETAPAS = {
         <textarea id="observacoes" placeholder="Observações…"></textarea>
       </div>
 
-      <div style="border-top:1px solid rgba(34,27,25,.08);margin:28px 0 20px;padding-top:22px">
+      <div class="section-divider">
         <div id="submitError" class="alert-card alert-danger" style="display:none;margin-bottom:16px"></div>
         <div class="form-nav" style="justify-content:flex-end">
           <button class="btn btn-primary btn-submit-gold" id="btnSubmit" onclick="submitForm()">Enviar</button>
@@ -11159,9 +11098,9 @@ const FLUXOS_ETAPAS = {
   </div>
   </div>
 
-  <script src="config.js"></script>
-  <script src="auth.js"></script>
-  <script src="shell.js"></script>
+  <script src="config.js?v=20260602"></script>
+  <script src="auth.js?v=20260602"></script>
+  <script src="shell.js?v=20260602"></script>
   <script src="upload-feedback.js"></script>
   <script>
     const TIPO = 'ch-linha-do-tempo';
@@ -11293,18 +11232,18 @@ const FLUXOS_ETAPAS = {
     <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap" media="print" onload="this.media='all'">
   <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap"></noscript>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css?v=20260602">
 </head>
 <body class="page-light">
   <div id="pageContent">
-  <div class="container-narrow" style="padding-top:32px;padding-bottom:80px">
+  <div class="container-narrow" class="page-padding">
 
     <div class="form-card">
       <div class="form-progress"><div class="form-progress-bar" id="progressBar" style="width:100%"></div></div>
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-        <h2 style="font-weight:500;font-size:1.1rem;margin:0">Convite Financial Planning</h2>
+      <div class="flex-between">
+        <h2 class="text-md-medium">Convite Financial Planning</h2>
       </div>
-      <div style="height:1px;background:var(--border-light);margin-bottom:24px"></div>
+      <hr class="sep">
 
       <div class="alert-card alert-info" style="margin-bottom:24px">
         <div class="alert-title">Convite personalizado</div>
@@ -11312,30 +11251,30 @@ const FLUXOS_ETAPAS = {
       </div>
 
       <div class="field">
-        <label>Telefone <span style="color:var(--ruby-red)">*</span></label>
+        <label>Telefone <span class="text-ruby">*</span></label>
         <input type="tel" id="telefone" placeholder="(00) 00000-0000" oninput="mascaraTelefone(this)" required>
       </div>
       <div class="field">
-        <label>Código do assessor <span style="color:var(--ruby-red)">*</span></label>
+        <label>Código do assessor <span class="text-ruby">*</span></label>
         <input type="text" id="codigoAssessor" placeholder="Ex: 12345" required>
       </div>
       <div class="field">
-        <label>Nome para assinatura <span style="color:var(--ruby-red)">*</span></label>
+        <label>Nome para assinatura <span class="text-ruby">*</span></label>
         <input type="text" id="nomeAssinatura" placeholder="Nome completo para assinar o convite" required>
       </div>
       <div class="field">
-        <label>Cargo <span style="color:var(--ruby-red)">*</span></label>
+        <label>Cargo <span class="text-ruby">*</span></label>
         <select id="cargo" required>
           <option value="">Selecione o cargo</option>
         </select>
       </div>
       <div class="field">
-        <label>Contrato social <span style="color:var(--ruby-red)">*</span></label>
+        <label>Contrato social <span class="text-ruby">*</span></label>
         <select id="contratoSocial" required>
           <option value="">Selecione</option>
         </select>
       </div>
-      <div style="border-top:1px solid rgba(34,27,25,.08);margin:28px 0 20px;padding-top:22px">
+      <div class="section-divider">
         <div id="submitError" class="alert-card alert-danger" style="display:none;margin-bottom:16px"></div>
         <div id="formStatusArea" style="display:none;margin-top:16px"></div>
         <div class="form-nav" style="justify-content:flex-end">
@@ -11350,11 +11289,11 @@ const FLUXOS_ETAPAS = {
   
 
   </div>
-  <script src="utils.js"></script>
+  <script src="utils.js?v=20260602"></script>
   <script src="upload-feedback.js"></script>
-  <script src="config.js"></script>
-  <script src="auth.js"></script>
-  <script src="shell.js"></script>
+  <script src="config.js?v=20260602"></script>
+  <script src="auth.js?v=20260602"></script>
+  <script src="shell.js?v=20260602"></script>
   <script>
     const TIPO = 'convite-fp';
     window.addEventListener('pageshow', function(e) {
@@ -11515,18 +11454,18 @@ const FLUXOS_ETAPAS = {
     <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap" media="print" onload="this.media='all'">
   <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap"></noscript>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css?v=20260602">
 </head>
 <body class="page-light">
   <div id="pageContent">
-  <div class="container-narrow" style="padding-top:32px;padding-bottom:80px">
+  <div class="container-narrow" class="page-padding">
     <div class="form-card">
       <div class="form-progress"><div class="form-progress-bar" id="progressBar" style="width:33%"></div></div>
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-        <h2 style="font-weight:500;font-size:1.1rem;margin:0" id="formTitle">Conteúdo em PDF</h2>
+      <div class="flex-between">
+        <h2 class="text-md-medium" id="formTitle">Conteúdo em PDF</h2>
         <span style="font-size:0.8rem;opacity:0.4" id="stepLabel">Etapa 1 de 3</span>
       </div>
-      <div style="height:1px;background:var(--border-light);margin-bottom:24px"></div>
+      <hr class="sep">
 
       <div class="form-step active" id="step1">
         <h2 style="font-weight:600;font-size:1.1rem;margin-bottom:8px">Qual tipo de PDF?</h2>
@@ -11554,11 +11493,11 @@ const FLUXOS_ETAPAS = {
       <div class="form-step" id="step2">
         <h2 style="font-weight:600;font-size:1.1rem;margin-bottom:20px">Informações do material</h2>
         <div class="field">
-          <label>Telefone <span style="color:var(--ruby-red)">*</span></label>
+          <label>Telefone <span class="text-ruby">*</span></label>
           <input type="tel" id="telefone" placeholder="(00) 00000-0000" oninput="mascaraTelefone(this)" required>
         </div>
         <div class="field">
-          <label>Setor <span style="color:var(--ruby-red)">*</span></label>
+          <label>Setor <span class="text-ruby">*</span></label>
           <select id="setor" required>
             <option value="">Selecione seu setor</option>
           </select>
@@ -11627,7 +11566,7 @@ const FLUXOS_ETAPAS = {
           <label>Observações finais (opcional)</label>
           <textarea id="observacoes" placeholder="Informações adicionais..."></textarea>
         </div>
-        <div style="border-top:1px solid rgba(34,27,25,.08);margin:28px 0 20px;padding-top:22px">
+        <div class="section-divider">
           <div class="form-nav">
             <button class="btn btn-secondary" onclick="goStep(2)">Voltar</button>
             <button class="btn btn-primary btn-submit-gold" id="btnSubmit" onclick="submitForm()">Enviar</button>
@@ -11638,11 +11577,11 @@ const FLUXOS_ETAPAS = {
   </div>
 
   </div>
-  <script src="utils.js"></script>
+  <script src="utils.js?v=20260602"></script>
   <script src="upload-feedback.js"></script>
-  <script src="config.js"></script>
-  <script src="auth.js"></script>
-  <script src="shell.js"></script>
+  <script src="config.js?v=20260602"></script>
+  <script src="auth.js?v=20260602"></script>
+  <script src="shell.js?v=20260602"></script>
   <script>
     const params = new URLSearchParams(window.location.search);
     let subtipo = params.get('subtipo') || '';
@@ -11886,18 +11825,18 @@ const FLUXOS_ETAPAS = {
     <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap" media="print" onload="this.media='all'">
   <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap"></noscript>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css?v=20260602">
 </head>
 <body class="page-light">
   <div id="pageContent">
-  <div class="container-narrow" style="padding-top:32px;padding-bottom:80px">
+  <div class="container-narrow" class="page-padding">
 
     <div class="form-card">
       <div class="form-progress"><div class="form-progress-bar" id="progressBar" style="width:100%"></div></div>
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-        <h2 style="font-weight:500;font-size:1.1rem;margin:0">Arte NPS</h2>
+      <div class="flex-between">
+        <h2 class="text-md-medium">Arte NPS</h2>
       </div>
-      <div style="height:1px;background:var(--border-light);margin-bottom:24px"></div>
+      <hr class="sep">
 
       <div class="alert-card alert-info" style="margin-bottom:24px">
         <div class="alert-title">Arte de divulgação NPS</div>
@@ -11905,27 +11844,27 @@ const FLUXOS_ETAPAS = {
       </div>
 
       <div class="field">
-        <label>Telefone <span style="color:var(--ruby-red)">*</span></label>
+        <label>Telefone <span class="text-ruby">*</span></label>
         <input type="tel" id="telefone" placeholder="(00) 00000-0000" oninput="mascaraTelefone(this)" required>
       </div>
       <div class="field">
-        <label>Nome para assinatura <span style="color:var(--ruby-red)">*</span></label>
+        <label>Nome para assinatura <span class="text-ruby">*</span></label>
         <input type="text" id="nomeAssinatura" placeholder="Nome do assessor para assinar a arte" required>
       </div>
       <div class="field">
-        <label>Cargo <span style="color:var(--ruby-red)">*</span></label>
+        <label>Cargo <span class="text-ruby">*</span></label>
         <select id="cargo" required>
           <option value="">Selecione o cargo</option>
         </select>
       </div>
       <div class="field">
-        <label>Mensagem de agradecimento <span style="color:var(--ruby-red)">*</span></label>
+        <label>Mensagem de agradecimento <span class="text-ruby">*</span></label>
         <textarea id="agradecimento" required>Essa avaliação é de suma importância para que o meu trabalho possa ser reconhecido, e otimizado.
 
 Muito obrigado(a), e conte sempre comigo!</textarea>
       </div>
       <div class="field">
-        <label>Modelo de arte desejada <span style="color:var(--ruby-red)">*</span></label>
+        <label>Modelo de arte desejada <span class="text-ruby">*</span></label>
         <select id="modeloArte" required onchange="handleModeloArte()">
           <option value="">Selecione</option>
           <option value="com-foto">Com foto</option>
@@ -11941,7 +11880,7 @@ Muito obrigado(a), e conte sempre comigo!</textarea>
         </div>
       </div>
 
-      <div style="border-top:1px solid rgba(34,27,25,.08);margin:28px 0 20px;padding-top:22px">
+      <div class="section-divider">
         <div id="submitError" class="alert-card alert-danger" style="display:none;margin-bottom:16px"></div>
         <div id="formStatusArea" style="display:none;margin-top:16px"></div>
         <div class="form-nav" style="justify-content:flex-end">
@@ -11956,11 +11895,11 @@ Muito obrigado(a), e conte sempre comigo!</textarea>
   
 
   </div>
-  <script src="utils.js"></script>
+  <script src="utils.js?v=20260602"></script>
   <script src="upload-feedback.js"></script>
-  <script src="config.js"></script>
-  <script src="auth.js"></script>
-  <script src="shell.js"></script>
+  <script src="config.js?v=20260602"></script>
+  <script src="auth.js?v=20260602"></script>
+  <script src="shell.js?v=20260602"></script>
   <script>
     const TIPO = 'divulgacao-nps';
     window.addEventListener('pageshow', function(e) {
@@ -12127,17 +12066,17 @@ Muito obrigado(a), e conte sempre comigo!</textarea>
     <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap" media="print" onload="this.media='all'">
   <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap"></noscript>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css?v=20260602">
 </head>
 <body class="page-light">
   <div id="pageContent">
-  <div class="container-narrow" style="padding-top:32px;padding-bottom:80px">
+  <div class="container-narrow" class="page-padding">
     <div class="form-card">
       <div class="form-progress"><div class="form-progress-bar" id="progressBar" style="width:100%"></div></div>
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-        <h2 style="font-weight:500;font-size:1.1rem;margin:0">E-mail Marketing</h2>
+      <div class="flex-between">
+        <h2 class="text-md-medium">E-mail Marketing</h2>
       </div>
-      <div style="height:1px;background:var(--border-light);margin-bottom:24px"></div>
+      <hr class="sep">
 
       <div class="alert-card alert-info" style="margin-bottom:24px">
         <div class="alert-text">
@@ -12146,29 +12085,29 @@ Muito obrigado(a), e conte sempre comigo!</textarea>
       </div>
 
       <div class="field">
-        <label>Telefone <span style="color:var(--ruby-red)">*</span></label>
+        <label>Telefone <span class="text-ruby">*</span></label>
         <input type="tel" id="telefone" placeholder="(00) 00000-0000" oninput="mascaraTelefone(this)" required>
       </div>
       <div class="field">
-        <label>Setor <span style="color:var(--ruby-red)">*</span></label>
+        <label>Setor <span class="text-ruby">*</span></label>
         <select id="setor" required>
           <option value="">Selecione seu setor</option>
         </select>
       </div>
       <div class="field">
-        <label>Assunto do e-mail que quer produzir <span style="color:var(--ruby-red)">*</span></label>
+        <label>Assunto do e-mail que quer produzir <span class="text-ruby">*</span></label>
         <input type="text" id="assunto" placeholder="Assunto do e-mail" required>
       </div>
       <div class="field">
-        <label>Explique sua finalidade com o e-mail que quer enviar <span style="color:var(--ruby-red)">*</span></label>
+        <label>Explique sua finalidade com o e-mail que quer enviar <span class="text-ruby">*</span></label>
         <textarea id="finalidade" placeholder="Para que serve esse e-mail?" required></textarea>
       </div>
       <div class="field">
-        <label>Qual o tema e um breve resumo do conteúdo abordado? <span style="color:var(--ruby-red)">*</span></label>
+        <label>Qual o tema e um breve resumo do conteúdo abordado? <span class="text-ruby">*</span></label>
         <textarea id="tema" placeholder="Tema e resumo do conteúdo..." required></textarea>
       </div>
       <div class="field">
-        <label>Qual a data esperada para o disparo do e-mail? <span style="color:var(--ruby-red)">*</span></label>
+        <label>Qual a data esperada para o disparo do e-mail? <span class="text-ruby">*</span></label>
         <input type="date" id="dataDisparo" required>
       </div>
       <div class="field">
@@ -12180,11 +12119,11 @@ Muito obrigado(a), e conte sempre comigo!</textarea>
         </div>
       </div>
       <div class="field">
-        <label>Quem irá assinar o e-mail? (nome, cargo e e-mail) <span style="color:var(--ruby-red)">*</span></label>
+        <label>Quem irá assinar o e-mail? (nome, cargo e e-mail) <span class="text-ruby">*</span></label>
         <input type="text" id="assinaturaEmail" placeholder="Ex: João Silva, Assessor de Investimentos, joao@svninvest.com.br" required>
       </div>
 
-      <div style="border-top:1px solid rgba(34,27,25,.08);margin:28px 0 20px;padding-top:22px">
+      <div class="section-divider">
         <div id="submitError" class="alert-card alert-danger" style="display:none;margin-bottom:16px"></div>
         <div id="formStatusArea" style="display:none;margin-top:16px"></div>
         <div class="form-nav" style="justify-content:flex-end">
@@ -12199,11 +12138,11 @@ Muito obrigado(a), e conte sempre comigo!</textarea>
   
 
   </div>
-  <script src="utils.js"></script>
+  <script src="utils.js?v=20260602"></script>
   <script src="upload-feedback.js"></script>
-  <script src="config.js"></script>
-  <script src="auth.js"></script>
-  <script src="shell.js"></script>
+  <script src="config.js?v=20260602"></script>
+  <script src="auth.js?v=20260602"></script>
+  <script src="shell.js?v=20260602"></script>
   <script>
     const TIPO = 'email-marketing';
     window.addEventListener('pageshow', function(e) {
@@ -12364,20 +12303,20 @@ Muito obrigado(a), e conte sempre comigo!</textarea>
     <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap" media="print" onload="this.media='all'">
   <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap"></noscript>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css?v=20260602">
 </head>
 <body class="page-light">
   <div id="pageContent">
-  <div class="container" style="padding-top:32px;padding-bottom:80px">
+  <div class="container" class="page-padding">
     <div class="form-split">
       <div class="form-main">
         <div class="form-card">
           <div class="form-progress"><div class="form-progress-bar" id="progressBar" style="width:14%"></div></div>
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-            <h2 style="font-weight:500;font-size:1.1rem;margin:0" id="formTitulo">Eventos</h2>
+          <div class="flex-between">
+            <h2 class="text-md-medium" id="formTitulo">Eventos</h2>
             <span style="font-size:0.8rem;opacity:0.4" id="stepLabel">Etapa 1 de 6</span>
           </div>
-          <div style="height:1px;background:var(--border-light);margin-bottom:24px"></div>
+          <hr class="sep">
 
           <!-- STEP 1: Natureza -->
           <div class="form-step active" id="step1">
@@ -12402,11 +12341,11 @@ Muito obrigado(a), e conte sempre comigo!</textarea>
               </label>
             </div>
             <div class="field" style="margin-top:16px">
-              <label>Telefone <span style="color:var(--ruby-red)">*</span></label>
+              <label>Telefone <span class="text-ruby">*</span></label>
               <input type="tel" id="telefone" placeholder="(00) 00000-0000" oninput="mascaraTelefone(this)" required>
             </div>
             <div class="field" style="margin-top:16px">
-              <label>Setor <span style="color:var(--ruby-red)">*</span></label>
+              <label>Setor <span class="text-ruby">*</span></label>
               <select id="setor" required>
                 <option value="">Selecione seu setor</option>
               </select>
@@ -12415,7 +12354,7 @@ Muito obrigado(a), e conte sempre comigo!</textarea>
               <label class="checkbox-option">
                 <input type="checkbox" id="checkPrazos">
                 <span class="checkbox-custom"></span>
-                <span>Confirmo que estou ciente dos <a href="#" onclick="event.preventDefault();openPrazosModal()" style="color:var(--ruby-red)">prazos necessários</a> para a organização do evento.</span>
+                <span>Confirmo que estou ciente dos <a href="#" onclick="event.preventDefault();openPrazosModal()" class="text-ruby">prazos necessários</a> para a organização do evento.</span>
               </label>
             </div>
             <div class="form-nav">
@@ -12550,7 +12489,7 @@ Muito obrigado(a), e conte sempre comigo!</textarea>
               <label>Observações gerais (opcional)</label>
               <input type="text" id="observacoes" placeholder="Algo mais que você queira informar?">
             </div>
-            <div style="border-top:1px solid rgba(34,27,25,.08);margin:28px 0 20px;padding-top:22px">
+            <div class="section-divider">
               <div id="submitError" class="alert-card alert-danger" style="display:none;margin-bottom:16px"></div>
         <div id="formStatusArea" style="display:none;margin-top:16px"></div>
               <div class="form-nav">
@@ -12626,11 +12565,11 @@ Muito obrigado(a), e conte sempre comigo!</textarea>
   </div>
 
   </div>
-  <script src="utils.js"></script>
+  <script src="utils.js?v=20260602"></script>
   <script src="upload-feedback.js"></script>
-  <script src="config.js"></script>
-  <script src="auth.js"></script>
-  <script src="shell.js"></script>
+  <script src="config.js?v=20260602"></script>
+  <script src="auth.js?v=20260602"></script>
+  <script src="shell.js?v=20260602"></script>
   <script src="ibge-loader.js"></script>
   <script>
     const STORAGE_KEY = 'hub_form_eventos';
@@ -14021,7 +13960,7 @@ Muito obrigado(a), e conte sempre comigo!</textarea>
     <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap" media="print" onload="this.media='all'">
   <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap"></noscript>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css?v=20260602">
   <style>
     .tipo-material-btn {
       display:flex;align-items:center;gap:10px;padding:10px 14px;
@@ -14042,35 +13981,35 @@ Muito obrigado(a), e conte sempre comigo!</textarea>
 </head>
 <body class="page-light">
   <div id="pageContent">
-  <div class="container" style="padding-top:32px;padding-bottom:80px">
+  <div class="container" class="page-padding">
     <div class="form-split">
       <div class="form-main">
         <div class="form-card">
           <div class="form-progress"><div class="form-progress-bar" id="progressBar" style="width:100%"></div></div>
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-            <h2 style="font-weight:500;font-size:1.1rem;margin:0">Materiais Impressos</h2>
+          <div class="flex-between">
+            <h2 class="text-md-medium">Materiais Impressos</h2>
           </div>
-          <div style="height:1px;background:var(--border-light);margin-bottom:24px"></div>
+          <hr class="sep">
 
           <div class="field">
-            <label>Telefone <span style="color:var(--ruby-red)">*</span></label>
+            <label>Telefone <span class="text-ruby">*</span></label>
             <input type="tel" id="telefone" placeholder="(00) 00000-0000" oninput="mascaraTelefone(this)" required>
           </div>
           <div class="field">
-            <label>Setor <span style="color:var(--ruby-red)">*</span></label>
+            <label>Setor <span class="text-ruby">*</span></label>
             <select id="setor" required>
               <option value="">Selecione seu setor</option>
             </select>
           </div>
 
           <div class="field">
-            <label style="margin-bottom:12px">Qual tipo de material você quer produzir? <span style="color:var(--ruby-red)">*</span></label>
+            <label style="margin-bottom:12px">Qual tipo de material você quer produzir? <span class="text-ruby">*</span></label>
             <div id="tipoMaterialContainer" style="display:grid;grid-template-columns:1fr 1fr;gap:8px"></div>
           </div>
 
           <div id="camposCondicionais" style="margin-top:20px"></div>
 
-          <div style="border-top:1px solid rgba(34,27,25,.08);margin:28px 0 20px;padding-top:22px">
+          <div class="section-divider">
             <div id="submitError" class="alert-card alert-danger" style="display:none;margin-bottom:16px"></div>
         <div id="formStatusArea" style="display:none;margin-top:16px"></div>
             <div class="form-nav" style="justify-content:flex-end">
@@ -14099,11 +14038,11 @@ Muito obrigado(a), e conte sempre comigo!</textarea>
   
 
   </div>
-  <script src="utils.js"></script>
+  <script src="utils.js?v=20260602"></script>
   <script src="upload-feedback.js"></script>
-  <script src="config.js"></script>
-  <script src="auth.js"></script>
-  <script src="shell.js"></script>
+  <script src="config.js?v=20260602"></script>
+  <script src="auth.js?v=20260602"></script>
+  <script src="shell.js?v=20260602"></script>
   <script>
     const TIPO = 'materiais-impressos';
     window.addEventListener('pageshow', function(e) {
@@ -14224,11 +14163,11 @@ Muito obrigado(a), e conte sempre comigo!</textarea>
               </div>
             </div>
             <div class="field">
-              <label>Descrição da solicitação <span style="color:var(--ruby-red)">*</span></label>
+              <label>Descrição da solicitação <span class="text-ruby">*</span></label>
               <input type="text" id="descricaoSolicitacao" placeholder="Descreva a solicitação" required>
             </div>
             <div class="field">
-              <label>Conteúdo ${tipo === 'carta' ? 'da carta' : 'do documento'} <span style="color:var(--ruby-red)">*</span></label>
+              <label>Conteúdo ${tipo === 'carta' ? 'da carta' : 'do documento'} <span class="text-ruby">*</span></label>
               <textarea id="conteudoMaterial" placeholder="Descreva o conteúdo..." required></textarea>
             </div>
             <div class="field">
@@ -14244,7 +14183,7 @@ Muito obrigado(a), e conte sempre comigo!</textarea>
               <button type="button" onclick="verModeloFlyer()" style="flex-shrink:0;background:none;border:1.5px solid var(--border-light);border-radius:8px;padding:5px 12px;font-size:0.78rem;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap">Ver modelo padrão</button>
             </div>
             <div class="field">
-              <label>Descrição da solicitação <span style="color:var(--ruby-red)">*</span></label>
+              <label>Descrição da solicitação <span class="text-ruby">*</span></label>
               <textarea id="conteudoMaterial" placeholder="Descreva o conteúdo..." required></textarea>
             </div>`;
           break;
@@ -14288,7 +14227,7 @@ Muito obrigado(a), e conte sempre comigo!</textarea>
               </div>
             </div>
             <div class="field">
-              <label>Descreva o conteúdo <span style="color:var(--ruby-red)">*</span></label>
+              <label>Descreva o conteúdo <span class="text-ruby">*</span></label>
               <textarea id="conteudoMaterial" placeholder="Descreva o conteúdo..." required></textarea>
             </div>`;
           break;
@@ -14296,7 +14235,7 @@ Muito obrigado(a), e conte sempre comigo!</textarea>
         case 'banner':
           container.innerHTML = `
             <div class="field">
-              <label>Tamanho <span style="color:var(--ruby-red)">*</span></label>
+              <label>Tamanho <span class="text-ruby">*</span></label>
               <input type="text" id="tamanhoBanner" placeholder="Ex.: 80x200cm, 100x200cm" required oninput="atualizarPreview()">
             </div>
             <div class="field">
@@ -14307,7 +14246,7 @@ Muito obrigado(a), e conte sempre comigo!</textarea>
               </div>
             </div>
             <div class="field">
-              <label>Descreva o conteúdo <span style="color:var(--ruby-red)">*</span></label>
+              <label>Descreva o conteúdo <span class="text-ruby">*</span></label>
               <textarea id="conteudoMaterial" placeholder="Descreva o conteúdo..." required></textarea>
             </div>`;
           break;
@@ -14322,11 +14261,11 @@ Muito obrigado(a), e conte sempre comigo!</textarea>
               </div>
             </div>
             <div class="field">
-              <label>Tamanho <span style="color:var(--ruby-red)">*</span></label>
+              <label>Tamanho <span class="text-ruby">*</span></label>
               <input type="text" id="tamanhoAdesivo" placeholder="Ex.: 5x5cm, 10cm diâmetro" required oninput="atualizarPreview()">
             </div>
             <div class="field">
-              <label>Descreva o conteúdo <span style="color:var(--ruby-red)">*</span></label>
+              <label>Descreva o conteúdo <span class="text-ruby">*</span></label>
               <textarea id="conteudoMaterial" placeholder="Descreva o conteúdo..." required></textarea>
             </div>`;
           break;
@@ -14334,7 +14273,7 @@ Muito obrigado(a), e conte sempre comigo!</textarea>
         case 'bloco-notas':
           container.innerHTML = `
             <div class="field">
-              <label>Descreva o conteúdo <span style="color:var(--ruby-red)">*</span></label>
+              <label>Descreva o conteúdo <span class="text-ruby">*</span></label>
               <textarea id="conteudoMaterial" placeholder="Descreva o que deve constar no bloco..." required></textarea>
             </div>
             <div class="field">
@@ -14361,7 +14300,7 @@ Muito obrigado(a), e conte sempre comigo!</textarea>
               </div>
             </div>
             <div class="field">
-              <label>Descreva o visual esperado da camiseta <span style="color:var(--ruby-red)">*</span></label>
+              <label>Descreva o visual esperado da camiseta <span class="text-ruby">*</span></label>
               <textarea id="conteudoMaterial" placeholder="Ex.: logo na frente, frase nas costas, etc." required></textarea>
             </div>
             <div class="field">
@@ -14377,7 +14316,7 @@ Muito obrigado(a), e conte sempre comigo!</textarea>
         case 'outro-impresso':
           container.innerHTML = `
             <div class="field">
-              <label>Descreva o material <span style="color:var(--ruby-red)">*</span></label>
+              <label>Descreva o material <span class="text-ruby">*</span></label>
               <textarea id="conteudoMaterial" placeholder="Descreva o material impresso que precisa..." required></textarea>
             </div>
             <div class="field">
@@ -14593,18 +14532,18 @@ Muito obrigado(a), e conte sempre comigo!</textarea>
     <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap" media="print" onload="this.media='all'">
   <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap"></noscript>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css?v=20260602">
 </head>
 <body class="page-light">
   <div id="pageContent">
-  <div class="container-narrow" style="padding-top:32px;padding-bottom:80px">
+  <div class="container-narrow" class="page-padding">
 
     <div class="form-card">
       <div class="form-progress"><div class="form-progress-bar" id="progressBar" style="width:100%"></div></div>
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-        <h2 style="font-weight:500;font-size:1.1rem;margin:0">Outro</h2>
+      <div class="flex-between">
+        <h2 class="text-md-medium">Outro</h2>
       </div>
-      <div style="height:1px;background:var(--border-light);margin-bottom:24px"></div>
+      <hr class="sep">
 
       <div class="alert-card alert-warning" style="margin-bottom:24px">
         <div class="alert-title">Solicitação livre</div>
@@ -14612,28 +14551,28 @@ Muito obrigado(a), e conte sempre comigo!</textarea>
       </div>
 
       <div class="field">
-        <label>Setor <span style="color:var(--ruby-red)">*</span></label>
+        <label>Setor <span class="text-ruby">*</span></label>
         <select id="setor" required>
           <option value="">Selecione seu setor</option>
         </select>
       </div>
       <div class="field">
-        <label>Telefone <span style="color:var(--ruby-red)">*</span></label>
+        <label>Telefone <span class="text-ruby">*</span></label>
         <input type="tel" id="telefone" placeholder="(00) 00000-0000" oninput="mascaraTelefone(this)" required>
       </div>
       <div class="field">
-        <label>Título da solicitação <span style="color:var(--ruby-red)">*</span></label>
+        <label>Título da solicitação <span class="text-ruby">*</span></label>
         <input type="text" id="titulo" placeholder="Um título curto e descritivo" required>
       </div>
       <div class="field">
-        <label>Finalidade <span style="color:var(--ruby-red)">*</span></label>
+        <label>Finalidade <span class="text-ruby">*</span></label>
         <textarea id="finalidade" placeholder="Qual é o objetivo desta solicitação?" required></textarea>
       </div>
       <div class="field">
-        <label>Descrição detalhada <span style="color:var(--ruby-red)">*</span></label>
+        <label>Descrição detalhada <span class="text-ruby">*</span></label>
         <textarea id="descricao" placeholder="Descreva com detalhes o que precisa ser feito, incluindo referências, prazos desejados e qualquer outra informação relevante..." required></textarea>
       </div>
-      <div style="border-top:1px solid rgba(34,27,25,.08);margin:28px 0 20px;padding-top:22px">
+      <div class="section-divider">
         <div id="submitError" class="alert-card alert-danger" style="display:none;margin-bottom:16px"></div>
         <div id="formStatusArea" style="display:none;margin-top:16px"></div>
         <div class="form-nav" style="justify-content:flex-end">
@@ -14648,11 +14587,11 @@ Muito obrigado(a), e conte sempre comigo!</textarea>
   
 
   </div>
-  <script src="utils.js"></script>
+  <script src="utils.js?v=20260602"></script>
   <script src="upload-feedback.js"></script>
-  <script src="config.js"></script>
-  <script src="auth.js"></script>
-  <script src="shell.js"></script>
+  <script src="config.js?v=20260602"></script>
+  <script src="auth.js?v=20260602"></script>
+  <script src="shell.js?v=20260602"></script>
   <script>
     const TIPO = 'outro';
     window.addEventListener('pageshow', function(e) {
@@ -14803,18 +14742,18 @@ Muito obrigado(a), e conte sempre comigo!</textarea>
     <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap" media="print" onload="this.media='all'">
   <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap"></noscript>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css?v=20260602">
 </head>
 <body class="page-light">
   <div id="pageContent">
-  <div class="container-narrow" style="padding-top:32px;padding-bottom:80px">
+  <div class="container-narrow" class="page-padding">
     <div class="form-card">
       <div class="form-progress"><div class="form-progress-bar" id="progressBar" style="width:50%"></div></div>
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-        <h2 style="font-weight:500;font-size:1.1rem;margin:0" id="formTitle">Página de Assessores</h2>
+      <div class="flex-between">
+        <h2 class="text-md-medium" id="formTitle">Página de Assessores</h2>
         <span style="font-size:0.8rem;opacity:0.4" id="stepLabel">Etapa 1 de 2</span>
       </div>
-      <div style="height:1px;background:var(--border-light);margin-bottom:24px"></div>
+      <hr class="sep">
 
       <div class="form-step active" id="step1">
         <h2 style="font-weight:600;font-size:1.1rem;margin-bottom:8px">Qual tipo de solicitação?</h2>
@@ -14866,7 +14805,7 @@ Muito obrigado(a), e conte sempre comigo!</textarea>
 
         <h2 style="font-weight:600;font-size:1.1rem;margin-bottom:20px">Informações do assessor</h2>
         <div class="field">
-          <label>Telefone <span style="color:var(--ruby-red)">*</span></label>
+          <label>Telefone <span class="text-ruby">*</span></label>
           <input type="tel" id="telefone" placeholder="(00) 00000-0000" oninput="mascaraTelefone(this)" required>
         </div>
         <div class="field" id="field_nomeCompleto">
@@ -14945,7 +14884,7 @@ Muito obrigado(a), e conte sempre comigo!</textarea>
 
         <div id="submitError" class="alert-card alert-danger" style="display:none;margin-bottom:16px"></div>
         <div id="formStatusArea" style="display:none;margin-top:16px"></div>
-        <div style="border-top:1px solid rgba(34,27,25,.08);margin:28px 0 20px;padding-top:22px">
+        <div class="section-divider">
           <div class="form-nav" style="justify-content:space-between">
             <button class="btn btn-secondary" onclick="voltarDoStep2()">Voltar</button>
             <div style="display:flex;gap:8px">
@@ -15014,11 +14953,11 @@ Muito obrigado(a), e conte sempre comigo!</textarea>
   </div>
 
   </div>
-  <script src="utils.js"></script>
+  <script src="utils.js?v=20260602"></script>
   <script src="upload-feedback.js"></script>
-  <script src="config.js"></script>
-  <script src="auth.js"></script>
-  <script src="shell.js"></script>
+  <script src="config.js?v=20260602"></script>
+  <script src="auth.js?v=20260602"></script>
+  <script src="shell.js?v=20260602"></script>
   <script>
     const params = new URLSearchParams(window.location.search);
     let subtipo = params.get('subtipo') || '';
@@ -15464,18 +15403,18 @@ Muito obrigado(a), e conte sempre comigo!</textarea>
     <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap" media="print" onload="this.media='all'">
   <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap"></noscript>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css?v=20260602">
 </head>
 <body class="page-light">
   <div id="pageContent">
-  <div class="container-narrow" style="padding-top:32px;padding-bottom:80px">
+  <div class="container-narrow" class="page-padding">
 
     <div class="form-card">
       <div class="form-progress"><div class="form-progress-bar" id="progressBar" style="width:100%"></div></div>
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-        <h2 style="font-weight:500;font-size:1.1rem;margin:0">Página Online</h2>
+      <div class="flex-between">
+        <h2 class="text-md-medium">Página Online</h2>
       </div>
-      <div style="height:1px;background:var(--border-light);margin-bottom:24px"></div>
+      <hr class="sep">
 
       <div class="alert-card alert-info" style="margin-bottom:24px">
         <div class="alert-title">Solicitação de página online</div>
@@ -15483,21 +15422,21 @@ Muito obrigado(a), e conte sempre comigo!</textarea>
       </div>
 
       <div class="field">
-        <label>Setor <span style="color:var(--ruby-red)">*</span></label>
+        <label>Setor <span class="text-ruby">*</span></label>
         <select id="setor" required>
           <option value="">Selecione seu setor</option>
         </select>
       </div>
       <div class="field">
-        <label>Telefone <span style="color:var(--ruby-red)">*</span></label>
+        <label>Telefone <span class="text-ruby">*</span></label>
         <input type="tel" id="telefone" placeholder="(00) 00000-0000" oninput="mascaraTelefone(this)" required>
       </div>
       <div class="field">
-        <label>Título da página <span style="color:var(--ruby-red)">*</span></label>
+        <label>Título da página <span class="text-ruby">*</span></label>
         <input type="text" id="titulo" placeholder="Ex: Landing page Evento X, Página de inscrição FP..." required>
       </div>
       <div class="field">
-        <label>Finalidade <span style="color:var(--ruby-red)">*</span></label>
+        <label>Finalidade <span class="text-ruby">*</span></label>
         <textarea id="finalidade" placeholder="Descreva o objetivo da página, o que ela deve conter e para qual público é destinada..." required></textarea>
       </div>
       <div class="field">
@@ -15505,7 +15444,7 @@ Muito obrigado(a), e conte sempre comigo!</textarea>
         <textarea id="observacoes" placeholder="Referências visuais, textos, links ou outros detalhes..."></textarea>
       </div>
 
-      <div style="border-top:1px solid rgba(34,27,25,.08);margin:28px 0 20px;padding-top:22px">
+      <div class="section-divider">
         <div id="submitError" class="alert-card alert-danger" style="display:none;margin-bottom:16px"></div>
         <div id="formStatusArea" style="display:none;margin-top:16px"></div>
         <div class="form-nav" style="justify-content:flex-end">
@@ -15520,11 +15459,11 @@ Muito obrigado(a), e conte sempre comigo!</textarea>
   
 
   </div>
-  <script src="utils.js"></script>
+  <script src="utils.js?v=20260602"></script>
   <script src="upload-feedback.js"></script>
-  <script src="config.js"></script>
-  <script src="auth.js"></script>
-  <script src="shell.js"></script>
+  <script src="config.js?v=20260602"></script>
+  <script src="auth.js?v=20260602"></script>
+  <script src="shell.js?v=20260602"></script>
   <script>
     const TIPO = 'pagina-online';
     window.addEventListener('pageshow', function(e) {
@@ -15675,18 +15614,18 @@ Muito obrigado(a), e conte sempre comigo!</textarea>
     <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap" media="print" onload="this.media='all'">
   <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap"></noscript>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css?v=20260602">
 </head>
 <body class="page-light">
   <div id="pageContent">
-  <div class="container-narrow" style="padding-top:32px;padding-bottom:80px">
+  <div class="container-narrow" class="page-padding">
     <div class="form-card">
       <div class="form-progress"><div class="form-progress-bar" id="progressBar" style="width:50%"></div></div>
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-        <h2 style="font-weight:500;font-size:1.1rem;margin:0">Patrocínio</h2>
+      <div class="flex-between">
+        <h2 class="text-md-medium">Patrocínio</h2>
         <span id="stepLabel" style="font-size:0.78rem;opacity:0.5">Passo 1 de 2</span>
       </div>
-      <div style="height:1px;background:var(--border-light);margin-bottom:24px"></div>
+      <hr class="sep">
 
       <!-- Passo 1 -->
       <div class="form-step active" id="step1">
@@ -15697,30 +15636,30 @@ Muito obrigado(a), e conte sempre comigo!</textarea>
         </div>
 
         <div class="field">
-          <label>Setor <span style="color:var(--ruby-red)">*</span></label>
+          <label>Setor <span class="text-ruby">*</span></label>
           <select id="setor" required>
             <option value="">Selecione seu setor</option>
           </select>
         </div>
         <div class="field">
-          <label>Telefone <span style="color:var(--ruby-red)">*</span></label>
+          <label>Telefone <span class="text-ruby">*</span></label>
           <input type="tel" id="telefone" placeholder="(00) 00000-0000" oninput="mascaraTelefone(this)" required>
         </div>
         <div class="field">
-          <label>Título do evento patrocinado <span style="color:var(--ruby-red)">*</span></label>
+          <label>Título do evento patrocinado <span class="text-ruby">*</span></label>
           <input type="text" id="tituloEvento" placeholder="Nome do evento" required>
         </div>
         <div class="field">
-          <label>Qual ou quais serão as marcas parceiras neste patrocínio? <span style="color:var(--ruby-red)">*</span></label>
+          <label>Qual ou quais serão as marcas parceiras neste patrocínio? <span class="text-ruby">*</span></label>
           <input type="text" id="marcasParceiras" placeholder="Marcas parceiras" required>
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
           <div class="field">
-            <label>Data do evento <span style="color:var(--ruby-red)">*</span></label>
+            <label>Data do evento <span class="text-ruby">*</span></label>
             <input type="date" id="dataEvento" required>
           </div>
           <div class="field">
-            <label>Horário <span style="color:var(--ruby-red)">*</span></label>
+            <label>Horário <span class="text-ruby">*</span></label>
             <input type="time" id="horario" required>
           </div>
         </div>
@@ -15732,25 +15671,25 @@ Muito obrigado(a), e conte sempre comigo!</textarea>
           </div>
         </div>
         <div class="field">
-          <label>Local (nome e endereço) <span style="color:var(--ruby-red)">*</span></label>
+          <label>Local (nome e endereço) <span class="text-ruby">*</span></label>
           <textarea id="local" placeholder="Nome do local e endereço completo" required></textarea>
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
           <div class="field">
-            <label>Estado <span style="color:var(--ruby-red)">*</span></label>
+            <label>Estado <span class="text-ruby">*</span></label>
             <select id="estado" onchange="loadCidades()" required>
               <option value="">Selecione</option>
             </select>
           </div>
           <div class="field">
-            <label>Cidade <span style="color:var(--ruby-red)">*</span></label>
+            <label>Cidade <span class="text-ruby">*</span></label>
             <select id="cidade" disabled required>
               <option value="">Selecione o estado</option>
             </select>
           </div>
         </div>
         <div class="field">
-          <label>Tipo de evento <span style="color:var(--ruby-red)">*</span></label>
+          <label>Tipo de evento <span class="text-ruby">*</span></label>
           <select id="tipoEvento" required>
             <option value="">Selecione</option>
             <option>Almoço</option>
@@ -15764,7 +15703,7 @@ Muito obrigado(a), e conte sempre comigo!</textarea>
           </select>
         </div>
         <div class="field">
-          <label>O evento será aberto ou fechado? <span style="color:var(--ruby-red)">*</span></label>
+          <label>O evento será aberto ou fechado? <span class="text-ruby">*</span></label>
           <select id="publico" required>
             <option value="">Selecione</option>
             <option value="aberto">Será aberto ao público em geral</option>
@@ -15772,7 +15711,7 @@ Muito obrigado(a), e conte sempre comigo!</textarea>
           </select>
         </div>
         <div class="field">
-          <label>Explique a ideia do patrocínio <span style="color:var(--ruby-red)">*</span></label>
+          <label>Explique a ideia do patrocínio <span class="text-ruby">*</span></label>
           <textarea id="explicacao" placeholder="Descreva a proposta e objetivos..." required></textarea>
         </div>
 
@@ -15808,19 +15747,19 @@ Muito obrigado(a), e conte sempre comigo!</textarea>
         <h2 style="font-weight:600;font-size:1.1rem;margin-bottom:20px">Informações financeiras</h2>
 
         <div class="field">
-          <label>Centro de custo <span style="color:var(--ruby-red)">*</span></label>
+          <label>Centro de custo <span class="text-ruby">*</span></label>
           <input type="text" id="centroCusto" placeholder="Centro de custo" required>
         </div>
         <div class="field">
-          <label>Valor da cota de patrocínio <span style="color:var(--ruby-red)">*</span></label>
+          <label>Valor da cota de patrocínio <span class="text-ruby">*</span></label>
           <input type="text" id="valorCota" placeholder="R$ 0,00" oninput="mascaraMoeda(this)" required>
         </div>
         <div class="field">
-          <label>Orçamento total (incluindo patrocínio e materiais extras) <span style="color:var(--ruby-red)">*</span></label>
+          <label>Orçamento total (incluindo patrocínio e materiais extras) <span class="text-ruby">*</span></label>
           <input type="text" id="orcamentoTotal" placeholder="R$ 0,00" oninput="mascaraMoeda(this)" required>
         </div>
         <div class="field">
-          <label>Expectativa de retorno em Delta de Receita <span style="color:var(--ruby-red)">*</span></label>
+          <label>Expectativa de retorno em Delta de Receita <span class="text-ruby">*</span></label>
           <input type="text" id="expectativaRetorno" placeholder="Ex: R$ 50.000" required>
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
@@ -15842,7 +15781,7 @@ Muito obrigado(a), e conte sempre comigo!</textarea>
           </div>
         </div>
 
-        <div style="border-top:1px solid rgba(34,27,25,.08);margin:28px 0 20px;padding-top:22px">
+        <div class="section-divider">
           <div id="submitError" class="alert-card alert-danger" style="display:none;margin-bottom:16px"></div>
         <div id="formStatusArea" style="display:none;margin-top:16px"></div>
           <div class="form-nav" style="justify-content:flex-end">
@@ -15858,11 +15797,11 @@ Muito obrigado(a), e conte sempre comigo!</textarea>
   
 
   </div>
-  <script src="utils.js"></script>
+  <script src="utils.js?v=20260602"></script>
   <script src="upload-feedback.js"></script>
-  <script src="config.js"></script>
-  <script src="auth.js"></script>
-  <script src="shell.js"></script>
+  <script src="config.js?v=20260602"></script>
+  <script src="auth.js?v=20260602"></script>
+  <script src="shell.js?v=20260602"></script>
   <script>
     const TIPO = 'patrocinio';
     window.addEventListener('pageshow', function(e) {
@@ -16050,18 +15989,18 @@ Muito obrigado(a), e conte sempre comigo!</textarea>
     <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap" media="print" onload="this.media='all'">
   <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap"></noscript>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css?v=20260602">
 </head>
 <body class="page-light">
   <div id="pageContent">
-  <div class="container-narrow" style="padding-top:32px;padding-bottom:80px">
+  <div class="container-narrow" class="page-padding">
     <div class="form-card">
       <div class="form-progress"><div class="form-progress-bar" id="progressBar" style="width:50%"></div></div>
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-        <h2 style="font-weight:500;font-size:1.1rem;margin:0">Produção Audiovisual</h2>
+      <div class="flex-between">
+        <h2 class="text-md-medium">Produção Audiovisual</h2>
         <span id="stepLabel" style="font-size:0.78rem;opacity:0.5">Passo 1 de 2</span>
       </div>
-      <div style="height:1px;background:var(--border-light);margin-bottom:24px"></div>
+      <hr class="sep">
 
       <!-- Step 1: escolha modalidade -->
       <div class="form-step active" id="step1">
@@ -16110,28 +16049,28 @@ Muito obrigado(a), e conte sempre comigo!</textarea>
         </button>
 
         <div class="field">
-          <label>Setor <span style="color:var(--ruby-red)">*</span></label>
+          <label>Setor <span class="text-ruby">*</span></label>
           <select id="setor" required>
             <option value="">Selecione seu setor</option>
           </select>
         </div>
         <div class="field">
-          <label>Telefone <span style="color:var(--ruby-red)">*</span></label>
+          <label>Telefone <span class="text-ruby">*</span></label>
           <input type="tel" id="telefone" placeholder="(00) 00000-0000" oninput="mascaraTelefone(this)" required>
         </div>
 
         <!-- Campos de Vídeo -->
         <div id="camposVideo">
           <div class="field">
-            <label>Título do material <span style="color:var(--ruby-red)">*</span></label>
+            <label>Título do material <span class="text-ruby">*</span></label>
             <input type="text" id="titulo" placeholder="Título do vídeo" required>
           </div>
           <div class="field">
-            <label>Qual a ideia do vídeo? <span style="color:var(--ruby-red)">*</span></label>
+            <label>Qual a ideia do vídeo? <span class="text-ruby">*</span></label>
             <textarea id="ideia" placeholder="Descreva a ideia..." required></textarea>
           </div>
           <div class="field">
-            <label>Formato <span style="color:var(--ruby-red)">*</span></label>
+            <label>Formato <span class="text-ruby">*</span></label>
             <div class="checkbox-group" id="formatoVideoGroup">
               <label class="checkbox-option"><input type="checkbox" value="Feed do Instagram"><span class="checkbox-custom"></span><span>Feed do Instagram</span></label>
               <label class="checkbox-option"><input type="checkbox" value="LinkedIn"><span class="checkbox-custom"></span><span>LinkedIn</span></label>
@@ -16167,16 +16106,16 @@ Muito obrigado(a), e conte sempre comigo!</textarea>
         <!-- Campos de Fotos -->
         <div id="camposFotos" style="display:none">
           <div class="field">
-            <label>Título da sessão de fotos <span style="color:var(--ruby-red)">*</span></label>
+            <label>Título da sessão de fotos <span class="text-ruby">*</span></label>
             <input type="text" id="tituloFotos" placeholder="Ex: fotos corporativas de colaboradores, captação em eventos">
           </div>
           <div class="field">
-            <label>Descreva o conteúdo da sessão <span style="color:var(--ruby-red)">*</span></label>
+            <label>Descreva o conteúdo da sessão <span class="text-ruby">*</span></label>
             <textarea id="descricaoFotos" placeholder="Descreva o que será fotografado..."></textarea>
           </div>
         </div>
 
-        <div style="border-top:1px solid rgba(34,27,25,.08);margin:28px 0 20px;padding-top:22px">
+        <div class="section-divider">
           <div id="submitError" class="alert-card alert-danger" style="display:none;margin-bottom:16px"></div>
         <div id="formStatusArea" style="display:none;margin-top:16px"></div>
           <div class="form-nav" style="justify-content:flex-end">
@@ -16192,11 +16131,11 @@ Muito obrigado(a), e conte sempre comigo!</textarea>
   
 
   </div>
-  <script src="utils.js"></script>
+  <script src="utils.js?v=20260602"></script>
   <script src="upload-feedback.js"></script>
-  <script src="config.js"></script>
-  <script src="auth.js"></script>
-  <script src="shell.js"></script>
+  <script src="config.js?v=20260602"></script>
+  <script src="auth.js?v=20260602"></script>
+  <script src="shell.js?v=20260602"></script>
   <script>
     window.addEventListener('pageshow', function(e) {
       if (e.persisted) {
@@ -16452,7 +16391,7 @@ const IBGELoader = {
     <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap" media="print" onload="this.media='all'">
   <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap"></noscript>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css?v=20260602">
   <style>
     .home-card {
       background: rgba(20, 12, 10, 0.45);
@@ -16529,8 +16468,8 @@ const IBGELoader = {
     </div>
     <div class="error-msg" id="errorMsg"></div>
   </div>
-  <script src="config.js"></script>
-  <script src="auth.js"></script>
+  <script src="config.js?v=20260602"></script>
+  <script src="auth.js?v=20260602"></script>
   <script>
     document.getElementById('bgVideo').src = URL_VIDEO_HERO;
     document.getElementById('logoBottom').src = URL_LOGO_BRANCA;
@@ -16687,15 +16626,15 @@ window.Shell = {
       const el = document.createElement('div');
       el.id = 'impersonarBanner';
       el.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:9999;background:#7c3aed;color:#fff;padding:8px 20px;display:flex;align-items:center;justify-content:center;gap:10px;font-size:0.82rem;font-weight:600;font-family:"Nunito Sans",sans-serif';
-      el.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg> Visualizando como: <strong>' + this._esc(email) + '</strong> <button onclick="window._sairImpersonar()" style="background:rgba(255,255,255,0.2);border:none;color:#fff;padding:3px 10px;border-radius:6px;cursor:pointer;font-family:\'Nunito Sans\',sans-serif;font-weight:600;font-size:0.78rem;margin-left:6px">Sair ✕</button>';
+      el.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg> Visualizando como: <strong>' + window.esc(email) + '</strong> <button onclick="window._sairImpersonar()" style="background:rgba(255,255,255,0.2);border:none;color:#fff;padding:3px 10px;border-radius:6px;cursor:pointer;font-family:\'Nunito Sans\',sans-serif;font-weight:600;font-size:0.78rem;margin-left:6px">Sair ✕</button>';
       document.body.prepend(el);
     }
     document.body.style.paddingTop = '40px';
   },
 
   _buildHeader(isAdmin) {
-    const initials = typeof Auth !== 'undefined' ? this._esc(Auth.getInitials()) : '?';
-    const name = typeof Auth !== 'undefined' ? this._esc(Auth.getUserName()) : '';
+    const initials = typeof Auth !== 'undefined' ? window.esc(Auth.getInitials()) : '?';
+    const name = typeof Auth !== 'undefined' ? window.esc(Auth.getUserName()) : '';
     const logoUrl = typeof URL_LOGO_PRETA !== 'undefined' ? URL_LOGO_PRETA : '';
 
     return `<header class="app-header" id="appShellHeader">
@@ -16818,7 +16757,7 @@ window.Shell = {
       const isActive = item.route === activeRoute;
       return `<a href="${item.href}" class="sidebar-link${isActive ? ' active' : ''}" data-route="${item.route}">
         <span class="sidebar-icon">${item.icon}</span>
-        <span class="sidebar-label">${this._esc(item.label)}</span>
+        <span class="sidebar-label">${window.esc(item.label)}</span>
       </a>`;
     };
 
@@ -16940,9 +16879,6 @@ window.Shell = {
     window.location.href = url;
   },
 
-  _esc(s) {
-    return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-  },
 };
 
 ```
@@ -16969,7 +16905,7 @@ window.Shell = {
     <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap" media="print" onload="this.media='all'">
   <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap"></noscript>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css?v=20260602">
   <style>
     /* ─── Status rail horizontal ─── */
     .status-rail-scroll {
@@ -17596,24 +17532,13 @@ window.Shell = {
     }
   </style>
 
-  <script src="utils.js"></script>
-  <script src="toast.js"></script>
-  <script src="config.js"></script>
-  <script src="auth.js"></script>
-  <script src="shell.js"></script>
+  <script src="utils.js?v=20260602"></script>
+  <script src="toast.js?v=20260602"></script>
+  <script src="config.js?v=20260602"></script>
+  <script src="auth.js?v=20260602"></script>
+  <script src="shell.js?v=20260602"></script>
   <script>
-    const CLICKUP_ICON = `<svg width="14" height="14" viewBox="0 0 54.8 65.8" xmlns="http://www.w3.org/2000/svg">
-      <defs>
-        <linearGradient id="cu1b" x1="0" y1="15.05" x2="54.84" y2="15.05" gradientUnits="userSpaceOnUse" gradientTransform="matrix(1 0 0 -1 0 69.36)">
-          <stop offset="0" stop-color="#8930FD"/><stop offset="1" stop-color="#49CCF9"/>
-        </linearGradient>
-        <linearGradient id="cu2b" x1="1.2" y1="53.17" x2="53.74" y2="53.17" gradientUnits="userSpaceOnUse" gradientTransform="matrix(1 0 0 -1 0 69.36)">
-          <stop offset="0" stop-color="#FF02F0"/><stop offset="1" stop-color="#FFC800"/>
-        </linearGradient>
-      </defs>
-      <path fill="url(#cu1b)" d="M0,50.6l10.1-7.8c5.4,7,11.1,10.3,17.4,10.3c6.3,0,11.9-3.2,17-10.2l10.3,7.6c-7.4,10-16.6,15.3-27.3,15.3C16.9,65.8,7.6,60.5,0,50.6z"/>
-      <path fill="url(#cu2b)" d="M27.5,16.9l-18,15.5l-8.3-9.7L27.6,0l26.2,22.7l-8.4,9.6L27.5,16.9z"/>
-    </svg>`;
+    const CLICKUP_ICON = getClickupIcon();
 
     const TIPOS_AUTOMACAO = [
       'assinatura-email',
@@ -19146,7 +19071,7 @@ window.Shell = {
     <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap" media="print" onload="this.media='all'">
   <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap"></noscript>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css?v=20260602">
 </head>
 <body class="page-light">
   <div id="pageContent">
@@ -19156,9 +19081,9 @@ window.Shell = {
   </div>
 
   </div>
-  <script src="config.js"></script>
-  <script src="auth.js"></script>
-  <script src="shell.js"></script>
+  <script src="config.js?v=20260602"></script>
+  <script src="auth.js?v=20260602"></script>
+  <script src="shell.js?v=20260602"></script>
   <script>
     const ICONS = {
       'icon-user': '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>',
@@ -19927,7 +19852,6 @@ input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
 @keyframes fadeSlideOut { from { opacity: 1; transform: translateX(0); } to { opacity: 0; transform: translateX(-16px); } }
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 @keyframes scaleIn { from { opacity: 0; transform: scale(0.96); } to { opacity: 1; transform: scale(1); } }
-.request-card { opacity: 0; animation: cardEnter 0.25s ease forwards; }
 @keyframes cardEnter { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 
 /* Split layout for events form */
@@ -20076,6 +20000,8 @@ input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
   display: flex;
   align-items: center;
   gap: 16px;
+  opacity: 0;
+  animation: cardEnter 0.25s ease forwards;
 }
 .request-card:hover { border-color: var(--ruby-red); box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
 .request-info { flex: 1; min-width: 0; }
@@ -21511,6 +21437,16 @@ input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
 .btn-danger:hover { background: #8e2f2a; border-color: #8e2f2a; }
 @keyframes fadeOut { from { opacity: 1 } to { opacity: 0 } }
 
+/* ─────────────────────────────────────────────────────
+   Utility classes — substituem inline styles repetidos
+   ───────────────────────────────────────────────────── */
+.text-ruby { color: var(--ruby-red); }
+.section-divider { border-top: 1px solid rgba(34, 27, 25, 0.08); margin: 28px 0 20px; padding-top: 22px; }
+.page-padding { padding-top: 32px; padding-bottom: 80px; }
+.sep { height: 1px; background: var(--border-light); margin-bottom: 24px; border: none; }
+.flex-between { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+.text-md-medium { font-weight: 500; font-size: 1.1rem; margin: 0; }
+
 ```
 
 
@@ -21534,7 +21470,7 @@ input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
     <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap" media="print" onload="this.media='all'">
   <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap"></noscript>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css?v=20260602">
 </head>
 <body class="page-dark">
   <video autoplay loop muted playsinline style="position:fixed;inset:0;width:100%;height:100%;object-fit:cover;z-index:0" id="bgVideo"></video>
@@ -21581,7 +21517,7 @@ input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
     @keyframes spin { to { transform: rotate(360deg); } }
   </style>
 
-  <script src="config.js"></script>
+  <script src="config.js?v=20260602"></script>
   <script>
     const TIPOS_AUTOMACAO = [
       'assinatura-email',
@@ -21913,6 +21849,23 @@ window.esc = function(s) {
     .replace(/'/g, '&#39;');
 };
 
+// Ícone do ClickUp (SVG auto-contido com gradientes inline).
+// Usado em cards/tabelas pra abrir tasks no ClickUp.
+window.getClickupIcon = function() {
+  return '<svg width="14" height="14" viewBox="0 0 54.8 65.8" xmlns="http://www.w3.org/2000/svg">' +
+    '<defs>' +
+      '<linearGradient id="cu1" x1="0" y1="15.05" x2="54.84" y2="15.05" gradientUnits="userSpaceOnUse" gradientTransform="matrix(1 0 0 -1 0 69.36)">' +
+        '<stop offset="0" stop-color="#8930FD"/><stop offset="1" stop-color="#49CCF9"/>' +
+      '</linearGradient>' +
+      '<linearGradient id="cu2" x1="1.2" y1="53.17" x2="53.74" y2="53.17" gradientUnits="userSpaceOnUse" gradientTransform="matrix(1 0 0 -1 0 69.36)">' +
+        '<stop offset="0" stop-color="#FF02F0"/><stop offset="1" stop-color="#FFC800"/>' +
+      '</linearGradient>' +
+    '</defs>' +
+    '<path fill="url(#cu1)" d="M0,50.6l10.1-7.8c5.4,7,11.1,10.3,17.4,10.3c6.3,0,11.9-3.2,17-10.2l10.3,7.6c-7.4,10-16.6,15.3-27.3,15.3C16.9,65.8,7.6,60.5,0,50.6z"/>' +
+    '<path fill="url(#cu2)" d="M27.5,16.9l-18,15.5l-8.3-9.7L27.6,0l26.2,22.7l-8.4,9.6L27.5,16.9z"/>' +
+  '</svg>';
+};
+
 function mascaraTelefone(el) {
   let v = el.value.replace(/\D/g, '').substring(0, 11);
   if (v.length > 6) {
@@ -22110,7 +22063,7 @@ function humanizeValue(key, value) {
   <title>Validação de Cartões — Hub SVN</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap">
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css?v=20260602">
   <style>
     .app-main { min-width: 0; }
     .vc-wrap { max-width: 1340px; margin: 0 auto; padding: 32px 24px; }
@@ -22254,11 +22207,11 @@ function humanizeValue(key, value) {
     </div>
   </div>
 
-  <script src="config.js"></script>
-  <script src="auth.js"></script>
-  <script src="shell.js"></script>
-  <script src="utils.js"></script>
-  <script src="toast.js"></script>
+  <script src="config.js?v=20260602"></script>
+  <script src="auth.js?v=20260602"></script>
+  <script src="shell.js?v=20260602"></script>
+  <script src="utils.js?v=20260602"></script>
+  <script src="toast.js?v=20260602"></script>
   <script>
     const CONTRATO_OPTS = [
       { v: '', label: 'Selecione…' },
@@ -24533,16 +24486,23 @@ router.post(
       const user    = req.session.user!;
       const [userRow] = await db.select({ id: usersTable.id }).from(usersTable).where(eq(usersTable.email, user.email));
 
-      const [inserted] = await db.insert(artAssetsTable).values({
-        filename: file.originalname,
-        storage_key: key,
-        url,
-        mime_type: file.mimetype,
-        size_bytes: file.size,
-        width:  width  ?? null,
-        height: height ?? null,
-        uploaded_by: userRow?.id ?? null,
-      }).returning();
+      let inserted: typeof artAssetsTable.$inferSelect;
+      try {
+        [inserted] = await db.insert(artAssetsTable).values({
+          filename: file.originalname,
+          storage_key: key,
+          url,
+          mime_type: file.mimetype,
+          size_bytes: file.size,
+          width:  width  ?? null,
+          height: height ?? null,
+          uploaded_by: userRow?.id ?? null,
+        }).returning();
+      } catch (dbErr) {
+        logger.error({ dbErr, key }, "DB insert falhou após upload R2 — deletando objeto órfão");
+        await s3.send(new DeleteObjectCommand({ Bucket: R2_BUCKET, Key: key })).catch(() => {});
+        throw dbErr;
+      }
 
       res.json({ id: inserted.id, url: inserted.url, filename: inserted.filename });
     } catch (err) {
@@ -25045,32 +25005,6 @@ function gerarIdSolicitacao(dados: FormDados, tipo: string): string {
   return `${tipoCode}-${setorCode}-${ano}-${mes}-${dia}-${rand}`;
 }
 
-export const REQUEST_TYPE_LABELS: Record<string, string> = {
-  "artes-divulgacao":              "Arte de Divulgação",
-  "atualizacao-material":          "Atualização de Material",
-  "conteudo-pdf-informativo":      "PDF Informativo",
-  "conteudo-pdf-ebook":            "PDF Ebook",
-  "apresentacao-nova":             "Apresentação Nova",
-  "apresentacao-atualizar":        "Atualização de Apresentação",
-  "pagina-assessores-dados":       "Página de Assessores",
-  "pagina-assessores-atualizacao": "Página de Assessores",
-  "cartao-visita-fisico":          "Cartão de Visita — Físico",
-  "pagina-online":                 "Página Online",
-  "outro":                         "Outro",
-  "email-marketing":               "E-mail Marketing",
-  "producao-video":                "Produção de Vídeo",
-  "sessao-fotos":                  "Sessão de Fotos",
-  "materiais-impressos":           "Materiais Impressos",
-  "brindes":                       "Brindes",
-  "patrocinio":                    "Patrocínio",
-  "ch-kit-onboarding":      "Kit Onboarding",
-  "ch-atualizacao-pessoas": "Atualização de Pessoas nos Sites",
-  "ch-conteudo-pdf":        "Conteúdo em PDF",
-  "ch-arte-divulgacao":     "Arte de Divulgação",
-  "ch-atualizacao-books":   "Atualização de Books",
-  "ch-linha-do-tempo":      "Linha do Tempo",
-  "ch-aniversariantes":     "Aniversariantes do Mês",
-};
 
 const ARQUIVO_LABELS: Record<string, string> = {
   arquivoBase:     "Arquivo base",
@@ -25265,7 +25199,7 @@ function getUserDepartment(user: UserData, dados: FormDados): string {
 }
 
 function humanizeRequestType(tipo: string): string {
-  return REQUEST_TYPE_LABELS[tipo] || tipo;
+  return FORM_SCHEMAS[tipo]?.label || tipo;
 }
 
 // ─────────────────────────────────────────────
@@ -26344,12 +26278,15 @@ const router = Router();
 const upload = multer({ dest: os.tmpdir(), limits: { fileSize: 50 * 1024 * 1024, files: 10, fields: 20 } });
 
 router.get("/form-schemas", (_req, res) => {
+  const schemaList = getFormSchemaList();
+  const labels = Object.fromEntries(schemaList.map(s => [s.tipo, s.label]));
   res.json({
     marcas:    MARCAS_OPTS,
     contratos: CONTRATOS_OPTS,
     cargos:    CARGOS_OPTS,
     setores:   SETORES_LIST,
-    tipos:     getFormSchemaList(),
+    tipos:     schemaList,
+    labels,
   });
 });
 
@@ -27133,7 +27070,6 @@ router.get("/solicitacoes/:id/entrega", requireAuth, async (req, res): Promise<v
     const entregaRaw = entregaField?.value || "";
 
     const links: Array<{ label: string; url: string }> = [];
-    logger.info({ entregaRaw, taskId: solicitacao.clickup_task_id }, "Entrega field raw value");
 
     if (entregaRaw) {
       const lines = entregaRaw.split(/\n+/);
@@ -28343,7 +28279,7 @@ import * as os from "os";
 import { db } from "@workspace/db";
 import { solicitacoesTable, artTemplatesTable } from "@workspace/db";
 import { eq, and, isNull, desc } from "drizzle-orm";
-import { uploadToR2 } from "../routes/r2";
+import { uploadToR2, deleteFromR2 } from "../routes/r2";
 import { logger } from "../lib/logger";
 import { renderFromTemplate } from "./template-renderer";
 import { renderTemplateToPdf } from "./pdf-renderer";
@@ -28482,14 +28418,20 @@ export async function gerarArteParaSolicitacao(
     logger.info({ solicitacaoId, tipo, url }, "[r2] upload OK");
 
     const label = TIPO_LABELS[tipo] || tipo;
-    await db.update(solicitacoesTable)
-      .set({
-        entrega_links: [{ label, url }],
-        status: "concluido",
-        erro_geracao: null,
-        updated_at: new Date(),
-      })
-      .where(eq(solicitacoesTable.id, solicitacaoId));
+    try {
+      await db.update(solicitacoesTable)
+        .set({
+          entrega_links: [{ label, url }],
+          status: "concluido",
+          erro_geracao: null,
+          updated_at: new Date(),
+        })
+        .where(eq(solicitacoesTable.id, solicitacaoId));
+    } catch (dbErr) {
+      logger.error({ dbErr, solicitacaoId, url }, "DB update falhou após upload R2 — deletando objeto órfão");
+      await deleteFromR2(url).catch(() => {});
+      throw dbErr;
+    }
 
     notificarMarcoBg(solicitacaoId, "concluida");
     logEventoBg(solicitacaoId, { tipo: "info", origem: "art-generator", mensagem: "Geração concluída", detalhes: { url } });
@@ -28525,7 +28467,7 @@ export async function gerarArteParaSolicitacao(
 import { db, solicitacoesTable } from "@workspace/db";
 import { eq, sql } from "drizzle-orm";
 import { logger } from "../lib/logger";
-import { REQUEST_TYPE_LABELS } from "../routes/clickup";
+import { FORM_SCHEMAS } from "../config/form-schemas";
 import { logEventoBg } from "./activity-log";
 
 const WEBHOOK_URL = process.env.N8N_NOTIFICATIONS_WEBHOOK_URL;
@@ -28574,7 +28516,7 @@ export async function notificarMarco(solicitacaoId: number, marco: Marco): Promi
 
     const dados: any = sol.dados || {};
     const userName = String(dados.nome || sol.user_email?.split("@")[0] || "").trim();
-    const tipoLabel = REQUEST_TYPE_LABELS[tipo] || tipo;
+    const tipoLabel = FORM_SCHEMAS[tipo]?.label || tipo;
 
     const payload = {
       marco,

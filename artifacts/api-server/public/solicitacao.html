@@ -766,8 +766,8 @@
 
       // ── Layout clean para todos os tipos de automação ──────────────
       if (isTipoAutomacao(item.tipo_solicitacao)) {
-        const isAdm = typeof Auth !== 'undefined' && Auth.isAdmin && Auth.isAdmin();
-        const isStaff = typeof Auth !== 'undefined' && Auth.isStaff && Auth.isStaff();
+        const isAdm = isCurrentUserAdmin();
+        const isStaff = isCurrentUserStaff();
 
         const tEl = document.getElementById('solTitulo');
         tEl.textContent = tipoLabel;
@@ -850,8 +850,8 @@
       }
       renderDados(dados, item);
 
-      const isAdm = typeof Auth !== 'undefined' && Auth.isAdmin && Auth.isAdmin();
-      const isStaff = typeof Auth !== 'undefined' && Auth.isStaff && Auth.isStaff();
+      const isAdm = isCurrentUserAdmin();
+      const isStaff = isCurrentUserStaff();
       if (isAdm || isStaff) mostrarAtividade();
       document.getElementById('solRodape').innerHTML =
         `<span>ID interno: ${item.id}</span>` +

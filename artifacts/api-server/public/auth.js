@@ -329,3 +329,17 @@ window._sairImpersonar = async function() {
   try { sessionStorage.removeItem('svn_auth_cache'); localStorage.removeItem('svn_layout_state'); } catch {}
   window.location.reload();
 };
+
+// === Helpers globais — uso recomendado em vez de checks verbose ===
+// Esses helpers fazem o check 'typeof Auth' internamente, então são
+// seguros em qualquer página, mesmo onde auth.js carregou parcial.
+window.isCurrentUserAuthed = function() {
+  return typeof Auth !== 'undefined' && Auth.isAuthenticated && Auth.isAuthenticated();
+};
+window.isCurrentUserAdmin = function() {
+  return typeof Auth !== 'undefined' && Auth.isAdmin && Auth.isAdmin();
+};
+window.isCurrentUserStaff = function() {
+  return typeof Auth !== 'undefined' && Auth.isStaff && Auth.isStaff();
+};
+
