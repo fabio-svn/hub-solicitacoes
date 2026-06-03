@@ -18,12 +18,15 @@ const router = Router();
 const upload = multer({ dest: os.tmpdir(), limits: { fileSize: 50 * 1024 * 1024, files: 10, fields: 20 } });
 
 router.get("/form-schemas", (_req, res) => {
+  const schemaList = getFormSchemaList();
+  const labels = Object.fromEntries(schemaList.map(s => [s.tipo, s.label]));
   res.json({
     marcas:    MARCAS_OPTS,
     contratos: CONTRATOS_OPTS,
     cargos:    CARGOS_OPTS,
     setores:   SETORES_LIST,
-    tipos:     getFormSchemaList(),
+    tipos:     schemaList,
+    labels,
   });
 });
 

@@ -77,32 +77,6 @@ function gerarIdSolicitacao(dados: FormDados, tipo: string): string {
   return `${tipoCode}-${setorCode}-${ano}-${mes}-${dia}-${rand}`;
 }
 
-export const REQUEST_TYPE_LABELS: Record<string, string> = {
-  "artes-divulgacao":              "Arte de Divulgação",
-  "atualizacao-material":          "Atualização de Material",
-  "conteudo-pdf-informativo":      "PDF Informativo",
-  "conteudo-pdf-ebook":            "PDF Ebook",
-  "apresentacao-nova":             "Apresentação Nova",
-  "apresentacao-atualizar":        "Atualização de Apresentação",
-  "pagina-assessores-dados":       "Página de Assessores",
-  "pagina-assessores-atualizacao": "Página de Assessores",
-  "cartao-visita-fisico":          "Cartão de Visita — Físico",
-  "pagina-online":                 "Página Online",
-  "outro":                         "Outro",
-  "email-marketing":               "E-mail Marketing",
-  "producao-video":                "Produção de Vídeo",
-  "sessao-fotos":                  "Sessão de Fotos",
-  "materiais-impressos":           "Materiais Impressos",
-  "brindes":                       "Brindes",
-  "patrocinio":                    "Patrocínio",
-  "ch-kit-onboarding":      "Kit Onboarding",
-  "ch-atualizacao-pessoas": "Atualização de Pessoas nos Sites",
-  "ch-conteudo-pdf":        "Conteúdo em PDF",
-  "ch-arte-divulgacao":     "Arte de Divulgação",
-  "ch-atualizacao-books":   "Atualização de Books",
-  "ch-linha-do-tempo":      "Linha do Tempo",
-  "ch-aniversariantes":     "Aniversariantes do Mês",
-};
 
 const ARQUIVO_LABELS: Record<string, string> = {
   arquivoBase:     "Arquivo base",
@@ -297,7 +271,7 @@ function getUserDepartment(user: UserData, dados: FormDados): string {
 }
 
 function humanizeRequestType(tipo: string): string {
-  return REQUEST_TYPE_LABELS[tipo] || tipo;
+  return FORM_SCHEMAS[tipo]?.label || tipo;
 }
 
 // ─────────────────────────────────────────────

@@ -42,6 +42,9 @@ const _configReady = Promise.all([
   if (schemas.cargos && schemas.cargos.length) CARGOS_ASSESSOR = schemas.cargos.map(c => c.label);
   if (schemas.setores && schemas.setores.length) SETORES = ['Selecione seu setor', ...schemas.setores];
   if (schemas.tipos) window._svnFormSchemas = schemas;
+  if (schemas.labels && typeof schemas.labels === 'object') {
+    Object.assign(TIPO_SOLICITACAO_LABELS, schemas.labels);
+  }
 });
 
 const MSG_THANKYOU_TITULO = "Solicitação enviada com sucesso!";
