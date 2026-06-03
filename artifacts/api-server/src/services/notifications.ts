@@ -1,7 +1,7 @@
 import { db, solicitacoesTable } from "@workspace/db";
 import { eq, sql } from "drizzle-orm";
 import { logger } from "../lib/logger";
-import { REQUEST_TYPE_LABELS } from "../routes/clickup";
+import { FORM_SCHEMAS } from "../config/form-schemas";
 import { logEventoBg } from "./activity-log";
 
 const WEBHOOK_URL = process.env.N8N_NOTIFICATIONS_WEBHOOK_URL;
@@ -50,7 +50,7 @@ export async function notificarMarco(solicitacaoId: number, marco: Marco): Promi
 
     const dados: any = sol.dados || {};
     const userName = String(dados.nome || sol.user_email?.split("@")[0] || "").trim();
-    const tipoLabel = REQUEST_TYPE_LABELS[tipo] || tipo;
+    const tipoLabel = FORM_SCHEMAS[tipo]?.label || tipo;
 
     const payload = {
       marco,

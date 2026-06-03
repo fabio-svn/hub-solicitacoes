@@ -354,7 +354,7 @@
         const r = await fetch('/api/admin/assets/upload', { method: 'POST', body: fd });
         const d = await r.json();
         if (!r.ok) { showToast(`${file.name}: ${d.error || 'Erro'}`, 'error'); } else { results.push(d); }
-      } catch { showToast(`${file.name}: erro de rede.`, 'error'); }
+      } catch (err) { console.error('[admin-assets/upload]', file.name, err); showToast(`${file.name}: erro de rede.`, 'error'); }
       done++;
       progressBar.style.width = (done/arr.length*100)+'%';
     }

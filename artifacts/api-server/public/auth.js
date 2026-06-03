@@ -318,7 +318,7 @@ window._impersonar = async function() {
     } else {
       alert('Não foi possível entrar como esse usuário.');
     }
-  } catch { alert('Erro de conexão.'); }
+  } catch (err) { console.error('[auth/impersonate]', err); alert('Erro de conexão.'); }
 };
 
 window._sairImpersonar = async function() {

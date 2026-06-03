@@ -2610,7 +2610,7 @@
         if (!r.ok) { showToast(d.error || 'Erro no upload.', 'error'); return; }
         cb(d.url);
         showToast('✓ Upload concluído', 'success');
-      } catch(e) { showToast('Erro de rede.', 'error'); }
+      } catch (e) { console.error('[admin-templates/upload]', e); showToast('Erro de rede.', 'error'); }
       input.value = '';
     }
   </script>

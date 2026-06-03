@@ -264,7 +264,7 @@
         } else {
           showToast('Não foi possível logar como esse usuário', 'error');
         }
-      } catch { showToast('Erro de conexão', 'error'); }
+      } catch (err) { console.error('[admin-usuarios/impersonate]', err); showToast('Erro de conexão', 'error'); }
     }
 
     function abrirEditRole(userId, userName, currentRole) {
@@ -296,7 +296,7 @@
           const err = await res.json().catch(() => ({}));
           showToast(err.error || 'Erro ao alterar função', 'error');
         }
-      } catch { showToast('Erro de conexão', 'error'); }
+      } catch (err) { console.error('[admin-usuarios/role]', err); showToast('Erro de conexão', 'error'); }
     }
 
     async function _ensureTipos() {
@@ -376,7 +376,7 @@
           const err = await res.json().catch(() => ({}));
           showToast(err.error || 'Erro ao atualizar ClickUp ID', 'error');
         }
-      } catch { showToast('Erro de conexão', 'error'); }
+      } catch (err) { console.error('[admin-usuarios/clickup-id]', err); showToast('Erro de conexão', 'error'); }
     }
 
     async function abrirEditAssignments(userId, userName) {
@@ -419,7 +419,7 @@
           const err = await res.json().catch(() => ({}));
           showToast(err.error || 'Erro ao atualizar atribuições', 'error');
         }
-      } catch { showToast('Erro de conexão', 'error'); }
+      } catch (err) { console.error('[admin-usuarios/atribuicoes]', err); showToast('Erro de conexão', 'error'); }
     }
 
     async function init() {
