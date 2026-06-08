@@ -203,6 +203,7 @@
       { f: 'custo', label: 'Custo', group: 'mng', type: 'select', opts: CUSTO_OPTS, colors: CUSTO_COLORS, min: 100 },
       { f: 'status', label: 'Andamento', group: 'mng', type: 'select', opts: STATUS_OPTS, colors: STATUS_COLORS, min: 180 },
       { f: 'observacao', label: 'Observação', group: 'mng', type: 'textarea', min: 140 },
+      { f: 'pdf_url', label: 'Cartão (PDF)', group: 'ver', type: 'pdf', min: 90 },
     ];
 
     let RAW = [];
@@ -318,6 +319,7 @@
         const tds = COLS.map(function (c) {
           const val = l[c.f];
           const w = ' style="min-width:' + c.min + 'px"';
+          if (c.type === 'pdf') return '<td' + w + '>' + (val ? '<a href="' + esc(val) + '" target="_blank" rel="noopener" style="display:inline-block;padding:4px 10px;border-radius:6px;background:var(--ruby-red,#AC3631);color:#fff;font-weight:700;text-decoration:none;font-size:0.7rem">Baixar</a>' : '<span style="opacity:.4">—</span>') + '</td>';
           if (c.type === 'select') return '<td' + w + '><select data-f="' + c.f + '">' + optionsHtml(c.opts, val) + '</select></td>';
           if (c.type === 'textarea') return '<td class="col-observacao"' + w + '><textarea data-f="' + c.f + '" rows="1" placeholder="—">' + esc(val) + '</textarea></td>';
           return '<td' + w + '><input data-f="' + c.f + '" value="' + esc(val) + '" title="' + esc(val) + '"' + (c.f === 'envio_para' ? ' placeholder="—"' : '') + '></td>';
@@ -373,6 +375,7 @@
             '<div class="cartao-card-field"><span class="cartao-card-label">Unidade</span><span class="cartao-card-value">' + esc(c.unidade || '—') + '</span></div>' +
           '</div>' +
           '<div class="cartao-card-field"><span class="cartao-card-label">E-mail</span><span class="cartao-card-value">' + esc(c.email || '—') + '</span></div>' +
+          (c.pdf_url ? '<div class="cartao-card-field"><span class="cartao-card-label">Cartão (PDF)</span><a href="' + esc(c.pdf_url) + '" target="_blank" rel="noopener" style="display:inline-block;margin-top:4px;padding:8px 12px;border-radius:8px;background:var(--ruby-red,#AC3631);color:#fff;font-weight:700;text-decoration:none;font-size:0.8rem;text-align:center">Baixar PDF</a></div>' : '') +
           '<div class="cartao-card-row">' +
             '<div class="cartao-card-field"><span class="cartao-card-label">Contrato Social</span><span class="cartao-card-value">' + esc(c.contrato_social || '—') + '</span></div>' +
             '<div class="cartao-card-field"><span class="cartao-card-label">Envio para</span><span class="cartao-card-value">' + esc(c.envio_para || '—') + '</span></div>' +

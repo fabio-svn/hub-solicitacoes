@@ -79,11 +79,22 @@ async function gerarCartaoVisitaFisico(
 
   try {
     // form: nome | whatsapp | email (o campo do telefone se chama 'whatsapp')
-    const pdfBuffer = await gerarCartaoPdf({
-      nome: String(dados.nome ?? ""),
-      telefone: String(dados.whatsapp ?? ""),
-      email: String(dados.email ?? ""),
-    });
+    const pick = (...keys: string[]): string => {
+      for (const k of keys) {
+        const v = (dados as any)[k];
+        if (v != null && String(v).trim() !== "") return String(v).trim();
+      }
+      return "";
+    };
+    const nome     = pick("nome", "nomeCartao", "nome_cartao");
+    const telefone = pick("whatsapp", "telefone", "celular");
+    const email    = pick("email", "emailCorporativo", "email_corporativo");
+
+    if (!nome || !email) {
+      logger.warn({ solicitacaoId, dadosKeys: Object.keys(dados) }, "[cartao] nome/email vazios — conferir nomes dos campos no 'dados'");
+    }
+
+    const pdfBuffer = await gerarCartaoPdf({ nome, telefone, email });
 
     const filename = `cartao-visita-fisico-${solicitacaoId}-${Date.now()}.pdf`;
     const tmpPath = path.join(os.tmpdir(), filename);
@@ -141,13 +152,6 @@ export async function gerarArteParaSolicitacao(
   const formSchema = FORM_SCHEMAS[tipo];
 
   const resolvedDados = resolveComputed(dados, formSchema);
-
-  // Cartão de visita físico: gerador dedicado (SVG→curvas→PDF 2 páginas c/ sangria 0,2cm).
-  // Não usa artTemplatesTable; reusa o fluxo de upload/entrega/status via helper abaixo.
-  if (tipo === "cartao-visita-fisico") {
-    await gerarCartaoVisitaFisico(solicitacaoId, resolvedDados);
-    return;
-  }
 
   if (tipo === "cartao-visita-fisico") {
     await gerarCartaoVisitaFisico(solicitacaoId, resolvedDados);

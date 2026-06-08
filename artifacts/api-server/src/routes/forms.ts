@@ -1335,6 +1335,7 @@ router.get("/cartao-aprovacoes", requireAuth, async (req, res): Promise<void> =>
         custo: a?.custo ?? "",
         status: a?.status ?? "aguardando-validacao",
         observacao: a?.observacao ?? "",
+        pdf_url: (Array.isArray(s.entrega_links) && (s.entrega_links as any)[0]?.url) ? (s.entrega_links as any)[0].url : "",
       };
     });
     res.json({ linhas });
