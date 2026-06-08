@@ -138,7 +138,7 @@ app.use(express.static(publicDir, {
     if (filePath.endsWith('.html')) {
       res.setHeader('Cache-Control', 'no-cache');
     } else if (/\.(js|css|woff2?|ttf|otf|png|jpg|jpeg|webp|svg|ico)$/i.test(filePath)) {
-      res.setHeader('Cache-Control', 'public, max-age=3600, must-revalidate');
+      res.setHeader('Cache-Control', 'public, max-age=300, must-revalidate');
     }
   },
 }));
