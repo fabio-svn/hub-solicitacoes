@@ -319,7 +319,14 @@
         const tds = COLS.map(function (c) {
           const val = l[c.f];
           const w = ' style="min-width:' + c.min + 'px"';
-          if (c.type === 'pdf') return '<td' + w + '>' + (val ? '<a href="' + esc(val) + '" target="_blank" rel="noopener" style="display:inline-block;padding:4px 10px;border-radius:6px;background:var(--ruby-red,#AC3631);color:#fff;font-weight:700;text-decoration:none;font-size:0.7rem">Baixar</a>' : '<span style="opacity:.4">—</span>') + '</td>';
+          if (c.type === 'pdf') {
+            const sid = l.solicitacao_id;
+            if (!val) return '<td' + w + '><button type="button" onclick="gerarPdfCartao(' + sid + ',this)" style="padding:4px 10px;border-radius:6px;border:1px solid var(--ruby-red,#AC3631);background:#fff;color:var(--ruby-red,#AC3631);font-weight:700;font-size:0.7rem;cursor:pointer">Gerar</button></td>';
+            return '<td' + w + '><div style="display:flex;gap:4px;justify-content:center;align-items:center">'
+              + '<a href="' + esc(val) + '" target="_blank" rel="noopener" style="display:inline-block;padding:4px 10px;border-radius:6px;background:var(--ruby-red,#AC3631);color:#fff;font-weight:700;text-decoration:none;font-size:0.7rem">Baixar</a>'
+              + '<button type="button" onclick="gerarPdfCartao(' + sid + ',this)" title="Gerar novamente" style="padding:4px 7px;border-radius:6px;border:1px solid var(--ruby-red,#AC3631);background:#fff;color:var(--ruby-red,#AC3631);font-weight:700;font-size:0.78rem;cursor:pointer">&#8635;</button>'
+              + '</div></td>';
+          }
           if (c.type === 'select') return '<td' + w + '><select data-f="' + c.f + '">' + optionsHtml(c.opts, val) + '</select></td>';
           if (c.type === 'textarea') return '<td class="col-observacao"' + w + '><textarea data-f="' + c.f + '" rows="1" placeholder="—">' + esc(val) + '</textarea></td>';
           return '<td' + w + '><input data-f="' + c.f + '" value="' + esc(val) + '" title="' + esc(val) + '"' + (c.f === 'envio_para' ? ' placeholder="—"' : '') + '></td>';
@@ -375,7 +382,11 @@
             '<div class="cartao-card-field"><span class="cartao-card-label">Unidade</span><span class="cartao-card-value">' + esc(c.unidade || '—') + '</span></div>' +
           '</div>' +
           '<div class="cartao-card-field"><span class="cartao-card-label">E-mail</span><span class="cartao-card-value">' + esc(c.email || '—') + '</span></div>' +
-          (c.pdf_url ? '<div class="cartao-card-field"><span class="cartao-card-label">Cartão (PDF)</span><a href="' + esc(c.pdf_url) + '" target="_blank" rel="noopener" style="display:inline-block;margin-top:4px;padding:8px 12px;border-radius:8px;background:var(--ruby-red,#AC3631);color:#fff;font-weight:700;text-decoration:none;font-size:0.8rem;text-align:center">Baixar PDF</a></div>' : '') +
+          '<div class="cartao-card-field"><span class="cartao-card-label">Cartão (PDF)</span>' +
+            (c.pdf_url
+              ? '<div style="display:flex;gap:8px"><a href="' + esc(c.pdf_url) + '" target="_blank" rel="noopener" style="flex:1;padding:8px 12px;border-radius:8px;background:var(--ruby-red,#AC3631);color:#fff;font-weight:700;text-decoration:none;font-size:0.8rem;text-align:center">Baixar PDF</a><button type="button" onclick="gerarPdfCartao(' + c.solicitacao_id + ',this)" style="padding:8px 12px;border-radius:8px;border:1px solid var(--ruby-red,#AC3631);background:#fff;color:var(--ruby-red,#AC3631);font-weight:700;font-size:0.8rem;cursor:pointer">Regerar</button></div>'
+              : '<button type="button" onclick="gerarPdfCartao(' + c.solicitacao_id + ',this)" style="margin-top:4px;padding:8px 12px;border-radius:8px;border:1px solid var(--ruby-red,#AC3631);background:#fff;color:var(--ruby-red,#AC3631);font-weight:700;font-size:0.8rem;cursor:pointer">Gerar PDF</button>') +
+          '</div>' +
           '<div class="cartao-card-row">' +
             '<div class="cartao-card-field"><span class="cartao-card-label">Contrato Social</span><span class="cartao-card-value">' + esc(c.contrato_social || '—') + '</span></div>' +
             '<div class="cartao-card-field"><span class="cartao-card-label">Envio para</span><span class="cartao-card-value">' + esc(c.envio_para || '—') + '</span></div>' +
@@ -427,6 +438,41 @@
           clearTimeout(saveTimer); saveTimer = setTimeout(function () { tag.classList.remove('show'); }, 1500);
         }
       } catch (e) {}
+    }
+
+    async function gerarPdfCartao(id, btn) {
+      const raw = RAW.find(function (r) { return r.solicitacao_id === id; }) || {};
+      let nome = raw.nome || '', whatsapp = raw.whatsapp || '', email = raw.email || '';
+      // Se o clique veio da tabela (desktop), usa os valores atuais dos inputs da linha.
+      const tr = btn.closest('tr');
+      if (tr) {
+        const g = function (f) { const el = tr.querySelector('[data-f="' + f + '"]'); return el ? el.value : null; };
+        if (g('nome') != null) nome = g('nome');
+        if (g('whatsapp') != null) whatsapp = g('whatsapp');
+        if (g('email') != null) email = g('email');
+      }
+      if (!String(nome).trim() || !String(email).trim()) {
+        alert('Preencha Nome e E-mail antes de gerar o cartão.');
+        return;
+      }
+      const orig = btn.textContent; btn.disabled = true; btn.textContent = 'Gerando…';
+      try {
+        const res = await fetch('/api/cartao-aprovacoes/' + id + '/gerar-pdf', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ nome: nome, whatsapp: whatsapp, email: email }),
+        });
+        const d = await res.json().catch(function () { return {}; });
+        if (res.ok && d.url) {
+          if (raw) raw.pdf_url = d.url;
+          render();
+        } else {
+          alert(d.error || 'Erro ao gerar o PDF.');
+          btn.disabled = false; btn.textContent = orig;
+        }
+      } catch (e) {
+        alert('Erro de rede ao gerar o PDF.');
+        btn.disabled = false; btn.textContent = orig;
+      }
     }
 
     init();

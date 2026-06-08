@@ -1,0 +1,136 @@
+# Tarefa: gerar o PDF do Cartão de Visita Físico SOB DEMANDA (botão na Validação)
+
+Mudança de abordagem: o cartão físico **não** deve mais ser gerado automaticamente no submit.
+Em vez disso, o Capital Humano clica num botão na tela de Validação (que envia os dados já
+corrigidos da tabela) e o PDF é gerado na hora. Faça **apenas** as alterações abaixo, de forma
+**cirúrgica**. **NÃO** refatore nada além do especificado. Pacote: `@workspace/api-server`.
+
+(O frontend `public/validacao-cartoes.html` será substituído manualmente — NÃO mexa nele.)
+
+---
+
+## Alteração 1 — `artifacts/api-server/src/services/art-generator.ts`
+
+### 1.1 — Remover a geração no submit
+
+Dentro de `gerarArteParaSolicitacao`, ENCONTRE e DELETE este bloco inteiro:
+```ts
+  // Cartão de visita físico: gerador dedicado (SVG→curvas→PDF 2 páginas c/ sangria 0,2cm).
+  // Não usa artTemplatesTable; reusa o fluxo de upload/entrega/status via helper abaixo.
+  if (tipo === "cartao-visita-fisico") {
+    await gerarCartaoVisitaFisico(solicitacaoId, resolvedDados);
+    return;
+  }
+```
+(Depois disso, `cartao-visita-fisico` simplesmente cai na busca de template, não acha nenhum
+e retorna — comportamento inofensivo. NÃO mude mais nada nessa função.)
+
+### 1.2 — Substituir a função `gerarCartaoVisitaFisico` pela versão sob demanda
+
+ENCONTRE a função inteira `async function gerarCartaoVisitaFisico(...) { ... }`
+(da declaração até a chave de fechamento) e SUBSTITUA-A inteira por esta nova função exportada:
+
+```ts
+/**
+ * Gera o PDF do cartão de visita físico a partir dos campos já informados (ex.: corrigidos
+ * na tela de Validação), sobe no R2, grava em entrega_links e retorna a URL.
+ * Geração SOB DEMANDA — chamada pelo endpoint POST /cartao-aprovacoes/:id/gerar-pdf.
+ */
+export async function gerarCartaoFisicoPdf(
+  solicitacaoId: number,
+  campos: { nome: string; telefone: string; email: string },
+): Promise<string> {
+  const pdfBuffer = await gerarCartaoPdf(campos);
+
+  const filename = `cartao-visita-fisico-${solicitacaoId}-${Date.now()}.pdf`;
+  const tmpPath = path.join(os.tmpdir(), filename);
+  await fs.promises.writeFile(tmpPath, pdfBuffer);
+
+  const url = await uploadToR2(
+    { path: tmpPath, originalname: "cartao-visita-fisico.pdf", mimetype: "application/pdf" },
+    solicitacaoId,
+    "cartao-visita-fisico",
+  );
+
+  try {
+    await db.update(solicitacoesTable)
+      .set({
+        entrega_links: [{ label: TIPO_LABELS["cartao-visita-fisico"], url }],
+        updated_at: new Date(),
+      })
+      .where(eq(solicitacoesTable.id, solicitacaoId));
+  } catch (dbErr) {
+    logger.error({ dbErr, solicitacaoId, url }, "DB update falhou após upload R2 — deletando objeto órfão");
+    await deleteFromR2(url).catch(() => {});
+    throw dbErr;
+  }
+
+  logger.info({ solicitacaoId, url }, "[cartao] PDF gerado sob demanda");
+  return url;
+}
+```
+
+(Use os mesmos imports que já existem no arquivo: `gerarCartaoPdf` de `../cartao/gerar-cartao`,
+`uploadToR2`/`deleteFromR2`, `db`, `solicitacoesTable`, `eq`, `logger`, `TIPO_LABELS`, `fs`, `path`, `os`.
+NÃO crie imports novos. Não deve sobrar nenhuma referência a `gerarCartaoVisitaFisico`.)
+
+---
+
+## Alteração 2 — `artifacts/api-server/src/routes/forms.ts`
+
+### 2.1 — Importar a nova função
+
+ENCONTRE:
+```ts
+import { gerarArteParaSolicitacao } from "../services/art-generator";
+```
+SUBSTITUA POR:
+```ts
+import { gerarArteParaSolicitacao, gerarCartaoFisicoPdf } from "../services/art-generator";
+```
+
+### 2.2 — Adicionar o endpoint de geração sob demanda
+
+Logo APÓS o handler `router.put("/cartao-aprovacoes/:solicitacaoId", ...)` (ou seja, depois da
+chave/`});` que o fecha), ADICIONE este novo handler:
+
+```ts
+router.post("/cartao-aprovacoes/:solicitacaoId/gerar-pdf", requireAuth, async (req, res): Promise<void> => {
+  try {
+    const role = req.session.user!.role;
+    if (role !== "capital_humano" && role !== "gestor" && role !== "admin") { res.status(403).json({ error: "Sem permissão" }); return; }
+
+    const solicitacaoId = parseInt(req.params.solicitacaoId, 10);
+    if (!Number.isFinite(solicitacaoId)) { res.status(400).json({ error: "ID inválido" }); return; }
+
+    const [sol] = await db.select().from(solicitacoesTable).where(eq(solicitacoesTable.id, solicitacaoId));
+    if (!sol || sol.tipo_solicitacao !== "cartao-visita-fisico") { res.status(404).json({ error: "Cartão não encontrado" }); return; }
+
+    const b = req.body || {};
+    const nome = String(b.nome ?? "").trim();
+    const telefone = String(b.whatsapp ?? b.telefone ?? "").trim();
+    const email = String(b.email ?? "").trim();
+    if (!nome || !email) { res.status(400).json({ error: "Nome e e-mail são obrigatórios para gerar o cartão" }); return; }
+
+    const url = await gerarCartaoFisicoPdf(solicitacaoId, { nome, telefone, email });
+    res.json({ url });
+  } catch (err: any) {
+    logger.error({ err }, "Erro ao gerar PDF do cartão sob demanda");
+    res.status(500).json({ error: err?.message || "Erro ao gerar o PDF" });
+  }
+});
+```
+
+---
+
+## Validação final
+
+1. `pnpm --filter @workspace/api-server run build` deve concluir sem erros.
+2. Não deve restar nenhuma referência a `gerarCartaoVisitaFisico` no projeto.
+3. `git diff` deve mostrar mudanças SOMENTE em `art-generator.ts` e `forms.ts`.
+
+## NÃO FAÇA
+- Não mexa em `public/validacao-cartoes.html`, `build.mjs`, `gerar-cartao.ts` nem nos assets.
+- Não altere o fluxo de `gerarArteParaSolicitacao` para outros tipos.
+- Não adicione dependências nem imports novos.
+- Não crie migrations (usa o `entrega_links` que já existe).

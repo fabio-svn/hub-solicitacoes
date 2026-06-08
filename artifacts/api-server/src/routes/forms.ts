@@ -7,7 +7,7 @@ import { eq, desc, and, ne, sql, inArray } from "drizzle-orm";
 import { requireAuth, requireRole } from "../middleware/auth.middleware";
 import { createClickUpTask, getClickUpTaskStatus, type ArquivosMap } from "./clickup";
 import { uploadToR2, deleteFromR2 } from "./r2";
-import { gerarArteParaSolicitacao } from "../services/art-generator";
+import { gerarArteParaSolicitacao, gerarCartaoFisicoPdf } from "../services/art-generator";
 import { logger } from "../lib/logger";
 import { CONTRATOS_OPTS, MARCAS_OPTS, CARGOS_OPTS, SETORES_LIST, getFormSchemaList, VALID_TIPOS } from "../config/form-schemas";
 import { notificarMarcoBg } from "../services/notifications";
@@ -1393,6 +1393,31 @@ router.put("/cartao-aprovacoes/:solicitacaoId", requireAuth, async (req, res): P
   } catch (err) {
     logger.error({ err }, "Erro salvando cartao-aprovacao");
     res.status(500).json({ error: "Erro ao salvar" });
+  }
+});
+
+router.post("/cartao-aprovacoes/:solicitacaoId/gerar-pdf", requireAuth, async (req, res): Promise<void> => {
+  try {
+    const role = req.session.user!.role;
+    if (role !== "capital_humano" && role !== "gestor" && role !== "admin") { res.status(403).json({ error: "Sem permissão" }); return; }
+
+    const solicitacaoId = parseInt(req.params.solicitacaoId, 10);
+    if (!Number.isFinite(solicitacaoId)) { res.status(400).json({ error: "ID inválido" }); return; }
+
+    const [sol] = await db.select().from(solicitacoesTable).where(eq(solicitacoesTable.id, solicitacaoId));
+    if (!sol || sol.tipo_solicitacao !== "cartao-visita-fisico") { res.status(404).json({ error: "Cartão não encontrado" }); return; }
+
+    const b = req.body || {};
+    const nome = String(b.nome ?? "").trim();
+    const telefone = String(b.whatsapp ?? b.telefone ?? "").trim();
+    const email = String(b.email ?? "").trim();
+    if (!nome || !email) { res.status(400).json({ error: "Nome e e-mail são obrigatórios para gerar o cartão" }); return; }
+
+    const url = await gerarCartaoFisicoPdf(solicitacaoId, { nome, telefone, email });
+    res.json({ url });
+  } catch (err: any) {
+    logger.error({ err }, "Erro ao gerar PDF do cartão sob demanda");
+    res.status(500).json({ error: err?.message || "Erro ao gerar o PDF" });
   }
 });
 
