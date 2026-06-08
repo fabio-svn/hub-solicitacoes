@@ -92,14 +92,6 @@
     return PLACEHOLDERS_BY_TIPO[tipo] || [];
   }
 
-  function showCenterIndicator(text) {
-    const el = document.getElementById('centerIndicator');
-    if (!el) return;
-    el.textContent = '↔ ' + text;
-    el.classList.add('visible');
-    clearTimeout(centerIndicatorTimer);
-    centerIndicatorTimer = setTimeout(() => el.classList.remove('visible'), NORMAL_DEBOUNCE);
-  }
 
   // ── State ────────────────────────────────────────────────────
   let currentView = 'list';
@@ -132,7 +124,6 @@
   let bgVariantKey = null;
   let testData = {};
   let canvasScale = 1;
-  let liveEnabled = true;
   let previewDebounce = null;
   let previewAbortCtrl = null;
   let pendingNavAction = null;
@@ -363,17 +354,6 @@
     applyCanvasScale();
     fitToView();
     renderDocumentPanel();
-  }
-  function updDocBgType(type) {
-    if (!currentTemplate) return;
-    currentTemplate.bg = type === 'static'
-      ? { type: 'static', url: '' }
-      : { type: 'variant', variants: {}, variant_source: '' };
-    markDirty();
-    pushHistory();
-    renderBgVariantSelect();
-    renderDocumentPanel();
-    scheduleLivePreview(NORMAL_DEBOUNCE);
   }
   function updDocBgUrl(url) {
     if (!currentTemplate || currentTemplate.bg.type !== 'static') return;
@@ -655,16 +635,6 @@
     await loadAllTemplates(); renderListView();
   }
 
-  async function duplicateTemplateFromList(id, sourceName) {
-    const newName = prompt('Nome do template duplicado:', `${sourceName} (cópia)`);
-    if (newName === null) return;
-    const res = await fetch(`/api/admin/art-templates/${id}/duplicate`, {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name: newName || `${sourceName} (cópia)` }),
-    });
-    if (!res.ok) { const d = await res.json().catch(()=>({})); showToast(d.error || 'Erro ao duplicar', 'error'); return; }
-    await loadAllTemplates(); renderListView();
-  }
 
   function toggleGroup(key, titleEl) {
     const body = document.getElementById(key);
@@ -1815,23 +1785,7 @@
   }
 
   // ── Live preview ─────────────────────────────────────────────
-  function toggleLive() {
-    liveEnabled = !liveEnabled;
-    const btn = document.getElementById('liveToggleBtn');
-    btn.classList.toggle('on', liveEnabled);
-    btn.textContent = liveEnabled ? '● Live' : '○ Live';
-    const manualBtn = document.getElementById('manualPreviewBtn');
-    if (manualBtn) manualBtn.style.display = liveEnabled ? 'none' : '';
-
-    if (liveEnabled) {
-      scheduleLivePreview(0);
-    } else {
-      document.getElementById('previewImg').style.display = 'none';
-      document.getElementById('canvasWrap').classList.remove('live-preview-active');
-    }
-  }
   function scheduleLivePreview(delay = 700) {
-    if (!liveEnabled) return;
     if (previewDebounce) clearTimeout(previewDebounce);
     previewDebounce = setTimeout(() => doLivePreview(), delay);
   }

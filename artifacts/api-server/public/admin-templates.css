@@ -137,8 +137,6 @@
   .rendering-indicator.visible { display: flex; }
   .spinner { width: 12px; height: 12px; border: 2px solid rgba(255,255,255,0.2); border-top-color: #c8a96e; border-radius: 50%; animation: spin 0.7s linear infinite; }
   @keyframes spin { to { transform: rotate(360deg); } }
-  .live-toggle { font-size: 0.72rem; color: #aaa; cursor: pointer; padding: 4px 8px; border-radius: 5px; border: 1px solid rgba(255,255,255,0.1); background: transparent; }
-  .live-toggle.on { color: #c8a96e; border-color: rgba(200,169,110,0.3); background: rgba(200,169,110,0.1); }
 
   /* ── Variant switches bar ── */
   .variant-switches-bar {
