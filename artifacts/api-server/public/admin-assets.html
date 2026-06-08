@@ -144,6 +144,7 @@
       </div>
     </div>
     </div>
+      <input type="text" id="searchInput" class="search-input" placeholder="Buscar por nome do arquivo…" oninput="debounceSearch()">
   </div>
 
   <!-- Drop zone -->
@@ -208,11 +209,13 @@
       const usage = filterState.uso;
       const tipo = filterState.tipo;
       let url = '/api/admin/assets?';
-      if (usage === 'orfaos') url += 'orphan=1&';
+      if (usage === 'orfaos') url += 'orphan=true&';
       if (tipo) url += 'tipo=' + encodeURIComponent(tipo) + '&';
       const r = await fetch(url);
       if (!r.ok) { document.getElementById('assetsContainer').innerHTML = '<div class="empty-state"><h3>Erro ao carregar assets.</h3></div>'; return; }
-      allAssets = (await r.json()).assets || [];
+      allAssets = ((await r.json()).assets || []).map(function (a) {
+        return Object.assign({}, a, { usage_count: (a.used_in_template_ids || []).length });
+      });
       if (usage === 'em-uso') allAssets = allAssets.filter(a => a.usage_count > 0);
       applySearch();
     } catch(e) {
@@ -227,7 +230,8 @@
   }
 
   function applySearch() {
-    const q = document.getElementById('searchInput').value.trim().toLowerCase();
+    const el = document.getElementById('searchInput');
+    const q = (el ? el.value : '').trim().toLowerCase();
     filteredAssets = q ? allAssets.filter(a => a.filename.toLowerCase().includes(q)) : [...allAssets];
     currentPage = 1;
     renderStats();
