@@ -11,6 +11,7 @@ import { renderTemplateToPdf } from "./pdf-renderer";
 import { FORM_SCHEMAS, FormSchema } from "../config/form-schemas";
 import { notificarMarcoBg } from "./notifications";
 import { logEventoBg } from "./activity-log";
+import { gerarPdf as gerarCartaoPdf } from "../cartao/gerar-cartao";
 
 function camelToSnake(str: string): string {
   return str.replace(/[A-Z]/g, c => "_" + c.toLowerCase());
@@ -65,6 +66,70 @@ const TIPO_LABELS: Record<string, string> = {
   "assinatura-email":      "Assinatura de E-mail",
 };
 
+async function gerarCartaoVisitaFisico(
+  solicitacaoId: number,
+  dados: Record<string, unknown>,
+): Promise<void> {
+  logger.info({ solicitacaoId }, "[cartao] gerando cartão de visita físico");
+  logEventoBg(solicitacaoId, { tipo: "info", origem: "art-generator", mensagem: "Iniciando geração do cartão", detalhes: {} });
+
+  await db.update(solicitacoesTable)
+    .set({ status: "gerando", updated_at: new Date() })
+    .where(eq(solicitacoesTable.id, solicitacaoId));
+
+  try {
+    // form: nome | whatsapp | email (o campo do telefone se chama 'whatsapp')
+    const pdfBuffer = await gerarCartaoPdf({
+      nome: String(dados.nome ?? ""),
+      telefone: String(dados.whatsapp ?? ""),
+      email: String(dados.email ?? ""),
+    });
+
+    const filename = `cartao-visita-fisico-${solicitacaoId}-${Date.now()}.pdf`;
+    const tmpPath = path.join(os.tmpdir(), filename);
+    await fs.promises.writeFile(tmpPath, pdfBuffer);
+
+    const url = await uploadToR2(
+      { path: tmpPath, originalname: "cartao-visita-fisico.pdf", mimetype: "application/pdf" },
+      solicitacaoId,
+      "cartao-visita-fisico",
+    );
+    logger.info({ solicitacaoId, url }, "[r2] upload OK (cartão físico)");
+
+    try {
+      await db.update(solicitacoesTable)
+        .set({
+          entrega_links: [{ label: TIPO_LABELS["cartao-visita-fisico"], url }],
+          status: "concluido",
+          erro_geracao: null,
+          updated_at: new Date(),
+        })
+        .where(eq(solicitacoesTable.id, solicitacaoId));
+    } catch (dbErr) {
+      logger.error({ dbErr, solicitacaoId, url }, "DB update falhou após upload R2 — deletando objeto órfão");
+      await deleteFromR2(url).catch(() => {});
+      throw dbErr;
+    }
+
+    notificarMarcoBg(solicitacaoId, "concluida");
+    logEventoBg(solicitacaoId, { tipo: "info", origem: "art-generator", mensagem: "Cartão gerado", detalhes: { url } });
+    logger.info({ solicitacaoId, url }, "Cartão físico gerado e salvo");
+  } catch (error: any) {
+    logger.error({ solicitacaoId, error }, "geração de cartão físico falhou");
+    logEventoBg(solicitacaoId, {
+      tipo: "error", origem: "art-generator", mensagem: "Falha na geração do cartão", detalhes: { err: String(error) },
+    });
+    await db.update(solicitacoesTable)
+      .set({
+        status: "erro",
+        erro_geracao: error instanceof Error ? error.message : String(error),
+        updated_at: new Date(),
+      })
+      .where(eq(solicitacoesTable.id, solicitacaoId));
+    throw error;
+  }
+}
+
 export async function gerarArteParaSolicitacao(
   solicitacaoId: number,
   tipo: string,
@@ -76,6 +141,18 @@ export async function gerarArteParaSolicitacao(
   const formSchema = FORM_SCHEMAS[tipo];
 
   const resolvedDados = resolveComputed(dados, formSchema);
+
+  // Cartão de visita físico: gerador dedicado (SVG→curvas→PDF 2 páginas c/ sangria 0,2cm).
+  // Não usa artTemplatesTable; reusa o fluxo de upload/entrega/status via helper abaixo.
+  if (tipo === "cartao-visita-fisico") {
+    await gerarCartaoVisitaFisico(solicitacaoId, resolvedDados);
+    return;
+  }
+
+  if (tipo === "cartao-visita-fisico") {
+    await gerarCartaoVisitaFisico(solicitacaoId, resolvedDados);
+    return; // pula a busca de template
+  }
 
   const variantField = formSchema?.template_variant_field;
   const variantValue = variantField && resolvedDados[variantField] != null

@@ -32,6 +32,8 @@ async function buildAll() {
       "*.node",
       "sharp",
       "fontkit",
+      "pdfkit",
+      "svg-to-pdfkit",
       "better-sqlite3",
       "sqlite3",
       "canvas",
