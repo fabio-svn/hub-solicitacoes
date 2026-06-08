@@ -1,9 +1,3 @@
-<script src="config.js?v=20260603"></script>
-<script src="auth.js?v=20260603"></script>
-<script src="shell.js?v=20260603"></script>
-<script src="utils.js?v=20260603"></script>
-<script src="toast.js?v=20260603"></script>
-<script>
   // ── Constants ────────────────────────────────────────────────
   const PLACEHOLDERS_BY_TIPO = {
     'assinatura-email':      ['nome','cargo','telefone','email','marca_label','tem_cfp','marca'],
@@ -1998,4 +1992,3 @@
     } catch (e) { console.error('[admin-templates/upload]', e); showToast('Erro de rede.', 'error'); }
     input.value = '';
   }
-</script>
