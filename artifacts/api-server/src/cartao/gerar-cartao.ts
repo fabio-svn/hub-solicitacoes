@@ -40,6 +40,7 @@ interface LinhaLayout {
   cx: number;       // eixo central (pt) — texto centralizado nele
   y: number;
   maxWidth: number; // largura máxima (pt) — acima dela o texto encolhe p/ caber
+  tracking?: number; // espaçamento entre letras em em (Illustrator: 200 = 0.2)
   transform?: (s: string) => string;
 }
 
@@ -47,7 +48,7 @@ interface LinhaLayout {
 // Nome não passa da largura da divisória (~146pt); contato pode ir um pouco mais largo.
 const CX = 127.56;
 const LAYOUT: LinhaLayout[] = [
-  { campo: "nome",     font: "bold",    size: 10,  cx: CX, y: 53.96, maxWidth: 146, transform: (s) => s.toUpperCase() },
+  { campo: "nome",     font: "bold",    size: 10,  cx: CX, y: 53.96, maxWidth: 146, tracking: 0.2, transform: (s) => s.toUpperCase() },
   { campo: "telefone", font: "regular", size: 8.5, cx: CX, y: 81.03, maxWidth: 235 },
   { campo: "email",    font: "regular", size: 8.5, cx: CX, y: 95.03, maxWidth: 235 }, // 2ª linha do bloco (81.03 + 14)
 ];
@@ -66,9 +67,33 @@ function loadFont(key: FontKey): opentype.Font {
   return _fontCache[key]!;
 }
 
-// Largura do texto numa dada fonte/tamanho (para auto-shrink do nome).
-function larguraTexto(font: opentype.Font, texto: string, size: number): number {
-  return font.getAdvanceWidth(texto, size);
+// Largura do texto considerando tracking (espaçamento entre letras), em pt.
+function medirLargura(font: opentype.Font, texto: string, size: number, trackingEm = 0): number {
+  const base = font.getAdvanceWidth(texto, size);
+  if (!trackingEm) return base;
+  const ls = trackingEm * size;
+  const n = font.stringToGlyphs(texto).length;
+  return base + Math.max(0, n - 1) * ls; // n-1 espaços entre as letras
+}
+
+// Gera o path do texto aplicando tracking (espaço extra após cada glifo).
+// Retorna o path-data e a largura visual (sem o espaço final, para centralizar bem).
+function pathComTracking(
+  font: opentype.Font, texto: string, x: number, y: number, size: number, trackingEm = 0,
+): { d: string } {
+  if (!trackingEm) {
+    return { d: font.getPath(texto, x, y, size).toPathData(2) };
+  }
+  const ls = trackingEm * size;
+  const scale = size / font.unitsPerEm;
+  const glyphs = font.stringToGlyphs(texto);
+  const full = new opentype.Path();
+  let cursor = x;
+  for (const g of glyphs) {
+    full.extend(g.getPath(cursor, y, size));
+    cursor += (g.advanceWidth || 0) * scale + ls;
+  }
+  return { d: full.toPathData(2) };
 }
 
 interface DadosCartao {
@@ -94,16 +119,17 @@ export function gerarVersoSvg(dados: DadosCartao): string {
     if (!valor) return "";
 
     const font = loadFont(l.font);
+    const tracking = l.tracking ?? 0;
 
     // Auto-shrink: se a linha estourar a largura máxima, reduz o corpo até caber (piso 6pt).
     let size = l.size;
-    while (size > 6 && larguraTexto(font, valor, size) > l.maxWidth) size -= 0.25;
+    while (size > 6 && medirLargura(font, valor, size, tracking) > l.maxWidth) size -= 0.25;
 
-    // Centralização: startX recua metade da largura do texto a partir do eixo central.
-    const startX = l.cx - larguraTexto(font, valor, size) / 2;
+    // Centralização: startX recua metade da largura (com tracking) a partir do eixo central.
+    const startX = l.cx - medirLargura(font, valor, size, tracking) / 2;
 
-    const p = font.getPath(valor, startX, l.y, size);
-    return `  <path d="${p.toPathData(2)}" fill="${FILL}"/>`;
+    const { d } = pathComTracking(font, valor, startX, l.y, size, tracking);
+    return `  <path d="${d}" fill="${FILL}"/>`;
   }).filter(Boolean).join("\n");
 
   // 3) Injeta os paths antes do </svg>.
@@ -135,12 +161,17 @@ export async function gerarPdf(dados: DadosCartao): Promise<Buffer> {
   doc.on("data", (c) => chunks.push(c));
   const done = new Promise<Buffer>((resolve) => doc.on("end", () => resolve(Buffer.concat(chunks))));
 
-  // Marca o corte final na página atual (BleedBox = página inteira; TrimBox = 9x5cm interno).
+  // Marca o corte na página atual. O Illustrator usa o CropBox como artboard:
+  // CropBox/TrimBox = 9x5cm (corte) → artboard 9x5cm; MediaBox/BleedBox = 9,4x5,4cm
+  // → os 0,2cm de sangria aparecem FORA do artboard, com as guias vermelhas.
   const marcarCorte = () => {
     try {
       const d = (doc as any).page.dictionary.data;
-      d.BleedBox = [0, 0, MEDIA_W, MEDIA_H];
-      d.TrimBox = [SANGRIA, SANGRIA, SANGRIA + TRIM_W, SANGRIA + TRIM_H];
+      const trim = [SANGRIA, SANGRIA, SANGRIA + TRIM_W, SANGRIA + TRIM_H];
+      d.MediaBox = [0, 0, MEDIA_W, MEDIA_H]; // página física (com sangria)
+      d.CropBox = trim;                       // artboard no Illustrator = 9x5cm
+      d.TrimBox = trim;                       // corte final = 9x5cm
+      d.BleedBox = [0, 0, MEDIA_W, MEDIA_H];  // sangria = 0,2cm fora do trim
     } catch { /* fallback: MediaBox com sangria já é suficiente p/ maioria das gráficas */ }
   };
 

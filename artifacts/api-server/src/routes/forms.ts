@@ -1396,6 +1396,36 @@ router.put("/cartao-aprovacoes/:solicitacaoId", requireAuth, async (req, res): P
   }
 });
 
+router.delete("/cartao-aprovacoes/:solicitacaoId", requireAuth, async (req, res): Promise<void> => {
+  try {
+    const role = req.session.user!.role;
+    if (role !== "admin") { res.status(403).json({ error: "Apenas administradores podem excluir" }); return; }
+
+    const solicitacaoId = parseInt(req.params.solicitacaoId, 10);
+    if (!Number.isFinite(solicitacaoId)) { res.status(400).json({ error: "ID inválido" }); return; }
+
+    const [sol] = await db.select().from(solicitacoesTable).where(eq(solicitacoesTable.id, solicitacaoId));
+    if (!sol || sol.tipo_solicitacao !== "cartao-visita-fisico") { res.status(404).json({ error: "Cartão não encontrado" }); return; }
+
+    const url = (Array.isArray(sol.entrega_links) && (sol.entrega_links as any)[0]?.url) ? (sol.entrega_links as any)[0].url : null;
+
+    await db.transaction(async (tx) => {
+      await tx.delete(cartaoAprovacoesTable).where(eq(cartaoAprovacoesTable.solicitacao_id, solicitacaoId));
+      await tx.delete(arquivosTable).where(eq(arquivosTable.solicitacao_id, solicitacaoId));
+      await tx.delete(activityLogTable).where(eq(activityLogTable.solicitacao_id, solicitacaoId));
+      await tx.delete(solicitacoesTable).where(eq(solicitacoesTable.id, solicitacaoId));
+    });
+
+    if (url) { await deleteFromR2(url).catch(() => {}); }
+
+    logger.info({ solicitacaoId }, "[cartao] solicitação excluída permanentemente (admin)");
+    res.json({ ok: true });
+  } catch (err: any) {
+    logger.error({ err }, "Erro ao excluir cartão");
+    res.status(500).json({ error: err?.message || "Erro ao excluir" });
+  }
+});
+
 router.post("/cartao-aprovacoes/:solicitacaoId/gerar-pdf", requireAuth, async (req, res): Promise<void> => {
   try {
     const role = req.session.user!.role;
