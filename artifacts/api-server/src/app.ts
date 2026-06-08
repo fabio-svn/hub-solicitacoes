@@ -156,11 +156,9 @@ app.use((err: Error, req: Request, res: Response, _next: NextFunction) => {
     });
     return;
   }
-  const anyErr = err as any;
   req.log?.error({ err }, "Unhandled error");
   res.status(500).json({
-    error: anyErr.message || "Erro interno do servidor",
-    code: anyErr.code,
+    error: process.env.NODE_ENV !== "production" ? ((err as any).message || "Erro interno do servidor") : "Erro interno do servidor",
   });
 });
 

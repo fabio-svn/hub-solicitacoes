@@ -375,6 +375,11 @@ router.post("/solicitacoes", requireAuth, upload.any(), async (req, res): Promis
   }
 });
 
+function linksParaSolicitante(sol: { tipo_solicitacao: string | null; entrega_links: unknown }): Array<{ label: string; url: string }> {
+  if (sol.tipo_solicitacao === "cartao-visita-fisico") return [];
+  return Array.isArray(sol.entrega_links) ? sol.entrega_links as Array<{ label: string; url: string }> : [];
+}
+
 router.get("/solicitacoes", requireAuth, async (req, res) => {
   try {
     const user = req.session.user!;
@@ -497,6 +502,7 @@ router.get("/solicitacoes", requireAuth, async (req, res) => {
 
     const dataComErros = results.map(r => ({
       ...r,
+      entrega_links: linksParaSolicitante(r),
       erros_24h: erros24hMap[r.id] ?? 0,
     }));
 
@@ -751,12 +757,12 @@ router.get("/solicitacoes/:id/artefato", requireAuth, async (req, res): Promise<
     }
 
     const [sol] = await db
-      .select({ entrega_links: solicitacoesTable.entrega_links, status: solicitacoesTable.status })
+      .select({ entrega_links: solicitacoesTable.entrega_links, status: solicitacoesTable.status, tipo_solicitacao: solicitacoesTable.tipo_solicitacao })
       .from(solicitacoesTable)
       .where(and(...conditions));
     if (!sol) { res.status(404).json({ error: "Não encontrada" }); return; }
 
-    const links = (sol.entrega_links as Array<{ label: string; url: string }> | null) || [];
+    const links = linksParaSolicitante(sol);
     res.json({ ready: links.length > 0, links, status: sol.status });
   } catch (err) {
     logger.error({ err }, "Erro ao buscar artefato");
@@ -777,6 +783,11 @@ router.get("/solicitacoes/:id/entrega", requireAuth, async (req, res): Promise<v
 
     const [solicitacao] = await db.select().from(solicitacoesTable).where(and(...conditions));
     if (!solicitacao) { res.status(404).json({ error: "Solicitação não encontrada" }); return; }
+
+    if (solicitacao.tipo_solicitacao === "cartao-visita-fisico") {
+      res.json({ links: [], status: solicitacao.status });
+      return;
+    }
 
     const tiposSemAprovacao = ["pagina-assessores-dados", "pagina-assessores-atualizacao"];
     if (tiposSemAprovacao.includes(solicitacao.tipo_solicitacao)) {
@@ -1198,9 +1209,14 @@ router.delete("/solicitacoes/:id", requireRole("admin"), async (req, res): Promi
     if (!solicitacao) { res.status(404).json({ error: "Solicitação não encontrada" }); return; }
 
     const arquivosParaDeletar = await db.select().from(arquivosTable).where(eq(arquivosTable.solicitacao_id, id));
-    await Promise.all(arquivosParaDeletar.map(a => deleteFromR2(a.url_r2)));
-    await db.delete(arquivosTable).where(eq(arquivosTable.solicitacao_id, id));
-    await db.delete(solicitacoesTable).where(eq(solicitacoesTable.id, id));
+    await db.transaction(async (tx) => {
+      await tx.delete(arquivosTable).where(eq(arquivosTable.solicitacao_id, id));
+      await tx.delete(solicitacoesTable).where(eq(solicitacoesTable.id, id));
+    });
+    const r2Del = await Promise.allSettled(arquivosParaDeletar.map(a => deleteFromR2(a.url_r2)));
+    r2Del.forEach((r, i) => {
+      if (r.status === "rejected") logger.warn({ url: arquivosParaDeletar[i]?.url_r2, reason: r.reason }, "Falha ao deletar arquivo do R2");
+    });
 
     await logAtividade({
       userEmail: user.email, userName: user.name,
@@ -1277,9 +1293,14 @@ router.post("/solicitacoes/massa-delete", requireRole("admin"), async (req, res)
     if (validIds.length === 0) { res.status(400).json({ error: "IDs inválidos" }); return; }
 
     const arquivosParaDeletar = await db.select().from(arquivosTable).where(inArray(arquivosTable.solicitacao_id, validIds));
-    await Promise.all(arquivosParaDeletar.map(a => deleteFromR2(a.url_r2)));
-    await db.delete(arquivosTable).where(inArray(arquivosTable.solicitacao_id, validIds));
-    await db.delete(solicitacoesTable).where(inArray(solicitacoesTable.id, validIds));
+    await db.transaction(async (tx) => {
+      await tx.delete(arquivosTable).where(inArray(arquivosTable.solicitacao_id, validIds));
+      await tx.delete(solicitacoesTable).where(inArray(solicitacoesTable.id, validIds));
+    });
+    const r2Del = await Promise.allSettled(arquivosParaDeletar.map(a => deleteFromR2(a.url_r2)));
+    r2Del.forEach((r, i) => {
+      if (r.status === "rejected") logger.warn({ url: arquivosParaDeletar[i]?.url_r2, reason: r.reason }, "Falha ao deletar arquivo do R2");
+    });
 
     await logAtividade({
       userEmail: user.email, userName: user.name,
@@ -1409,7 +1430,7 @@ router.delete("/cartao-aprovacoes/:solicitacaoId", requireAuth, async (req, res)
     res.json({ ok: true });
   } catch (err: any) {
     logger.error({ err }, "Erro ao excluir cartão");
-    res.status(500).json({ error: err?.message || "Erro ao excluir" });
+    res.status(500).json({ error: "Erro ao excluir" });
   }
 });
 
@@ -1434,7 +1455,7 @@ router.post("/cartao-aprovacoes/:solicitacaoId/gerar-pdf", requireAuth, async (r
     res.json({ url });
   } catch (err: any) {
     logger.error({ err }, "Erro ao gerar PDF do cartão sob demanda");
-    res.status(500).json({ error: err?.message || "Erro ao gerar o PDF" });
+    res.status(500).json({ error: "Erro ao gerar o PDF" });
   }
 });
 
