@@ -1162,23 +1162,32 @@
     }
   }
   function setupInteract(el) {
+    interact(el).unset();
+
     interact(el)
       .draggable({
         ignoreFrom: '.resize-handle',
         listeners: {
           move(event) {
-            const cur = parseFloat(el.style.left) || 0;
-            const curt = parseFloat(el.style.top) || 0;
-            el.style.left = (cur + event.dx) + 'px';
-            el.style.top  = (curt + event.dy) + 'px';
+            let x = (parseFloat(el.getAttribute('data-x')) || parseFloat(el.style.left) || 0);
+            let y = (parseFloat(el.getAttribute('data-y')) || parseFloat(el.style.top) || 0);
+
+            x += event.dx;
+            y += event.dy;
+
+            el.style.left = x + 'px';
+            el.style.top  = y + 'px';
+
+            el.setAttribute('data-x', x);
+            el.setAttribute('data-y', y);
           },
           end() {
-            const SCALE = getScale();
+            const SCALE_FACTOR = getScale();
             const layer = getLayer(el.dataset.id); if (!layer) return;
-            layer.x = Math.round(parseFloat(el.style.left) / SCALE);
-            layer.y = Math.round(parseFloat(el.style.top)  / SCALE);
+            layer.x = Math.round(parseFloat(el.style.left) / SCALE_FACTOR);
+            layer.y = Math.round(parseFloat(el.style.top)  / SCALE_FACTOR);
             markDirty();
-            pushHistory();
+            debouncedPushHistory();
             if (el.dataset.id === selectedLayerId) showProps(selectedLayerId);
             scheduleLivePreview(NORMAL_DEBOUNCE);
           }
@@ -1186,35 +1195,36 @@
       })
       .resizable({
         edges: { left: true, right: true, bottom: true, top: true },
-        allowFrom: '.resize-handle',
         listeners: {
           move(event) {
-            let { x, y } = event.target.dataset;
-            x = (parseFloat(x) || 0) + event.deltaRect.left;
-            y = (parseFloat(y) || 0) + event.deltaRect.top;
-            Object.assign(event.target.style, {
-              width:  `${event.rect.width}px`,
-              height: `${event.rect.height}px`,
-              left: `${parseFloat(event.target.style.left) + event.deltaRect.left}px`,
-              top:  `${parseFloat(event.target.style.top)  + event.deltaRect.top}px`,
-            });
-            event.target.dataset.x = x;
-            event.target.dataset.y = y;
+            let x = (parseFloat(el.getAttribute('data-x')) || parseFloat(el.style.left) || 0);
+            let y = (parseFloat(el.getAttribute('data-y')) || parseFloat(el.style.top) || 0);
+
+            el.style.width  = event.rect.width  + 'px';
+            el.style.height = event.rect.height + 'px';
+
+            x += event.deltaRect.left;
+            y += event.deltaRect.top;
+
+            el.style.left = x + 'px';
+            el.style.top  = y + 'px';
+            el.setAttribute('data-x', x);
+            el.setAttribute('data-y', y);
           },
           end(event) {
-            const SCALE = getScale();
+            const SCALE_FACTOR = getScale();
             const layer = getLayer(event.target.dataset.id); if (!layer) return;
-            layer.x = Math.round(parseFloat(event.target.style.left) / SCALE);
-            layer.y = Math.round(parseFloat(event.target.style.top)  / SCALE);
-            layer.w = Math.round(event.rect.width / SCALE);
-            if (layer.type !== 'text-line') layer.h = Math.round(event.rect.height / SCALE);
+            layer.x = Math.round(parseFloat(event.target.style.left) / SCALE_FACTOR);
+            layer.y = Math.round(parseFloat(event.target.style.top)  / SCALE_FACTOR);
+            layer.w = Math.round(event.rect.width  / SCALE_FACTOR);
+            if (layer.type !== 'text-line') {
+              layer.h = Math.round(event.rect.height / SCALE_FACTOR);
+            }
             markDirty();
             pushHistory();
-            if (event.target.dataset.id === selectedLayerId) showProps(selectedLayerId);
             scheduleLivePreview(NORMAL_DEBOUNCE);
           }
-        },
-        modifiers: [interact.modifiers.restrictEdges({ outer: 'parent' })]
+        }
       });
   }
 

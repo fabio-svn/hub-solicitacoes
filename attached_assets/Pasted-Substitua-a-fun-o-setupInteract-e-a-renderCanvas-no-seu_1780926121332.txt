@@ -1,0 +1,118 @@
+Substitua a função setupInteract e a renderCanvas no seu arquivo admin-templates.js pelas versões corrigidas abaixo:
+No JavaScript (admin-templates.js):
+code
+JavaScript
+function setupInteract(el) {
+  // Primeiro, removemos instâncias anteriores para evitar múltiplos listeners
+  interact(el).unset();
+
+  interact(el)
+    .draggable({
+      ignoreFrom: '.resize-handle',
+      listeners: {
+        move(event) {
+          // Ajustamos o delta (dx/dy) com base no zoom atual
+          const scale = canvasScale || 1;
+          
+          // Pegamos a posição atual dos atributos data ou do estilo
+          let x = (parseFloat(el.getAttribute('data-x')) || parseFloat(el.style.left) || 0);
+          let y = (parseFloat(el.getAttribute('data-y')) || parseFloat(el.style.top) || 0);
+
+          // Soma o movimento do mouse dividido pela escala
+          x += event.dx;
+          y += event.dy;
+
+          // Aplica ao elemento visualmente
+          el.style.left = x + 'px';
+          el.style.top  = y + 'px';
+
+          // Salva para o próximo movimento
+          el.setAttribute('data-x', x);
+          el.setAttribute('data-y', y);
+        },
+        end(event) {
+          const SCALE_FACTOR = getScale(); // Proporção canvas original vs visual
+          const layer = getLayer(el.dataset.id);
+          if (layer) {
+            // Converte a posição visual (px) para a posição real do template
+            layer.x = Math.round(parseFloat(el.style.left) / SCALE_FACTOR);
+            layer.y = Math.round(parseFloat(el.style.top) / SCALE_FACTOR);
+            
+            markDirty();
+            debouncedPushHistory();
+            if (el.dataset.id === selectedLayerId) showProps(selectedLayerId);
+            scheduleLivePreview(NORMAL_DEBOUNCE);
+          }
+        }
+      }
+    })
+    .resizable({
+      edges: { left: true, right: true, bottom: true, top: true },
+      listeners: {
+        move(event) {
+          const scale = canvasScale || 1;
+          let x = (parseFloat(el.getAttribute('data-x')) || parseFloat(el.style.left) || 0);
+          let y = (parseFloat(el.getAttribute('data-y')) || parseFloat(el.style.top) || 0);
+
+          // Atualiza largura e altura
+          el.style.width = event.rect.width + 'px';
+          el.style.height = event.rect.height + 'px';
+
+          // Ajusta posição se redimensionar pelas bordas top/left
+          x += event.deltaRect.left;
+          y += event.deltaRect.top;
+
+          el.style.left = x + 'px';
+          el.style.top  = y + 'px';
+          el.setAttribute('data-x', x);
+          el.setAttribute('data-y', y);
+        },
+        end(event) {
+          const SCALE_FACTOR = getScale();
+          const layer = getLayer(event.target.dataset.id);
+          if (layer) {
+            layer.x = Math.round(parseFloat(event.target.style.left) / SCALE_FACTOR);
+            layer.y = Math.round(parseFloat(event.target.style.top) / SCALE_FACTOR);
+            layer.w = Math.round(event.rect.width / SCALE_FACTOR);
+            if (layer.type !== 'text-line') {
+                layer.h = Math.round(event.rect.height / SCALE_FACTOR);
+            }
+            markDirty();
+            pushHistory();
+            scheduleLivePreview(NORMAL_DEBOUNCE);
+          }
+        }
+      }
+    });
+}
+No CSS (admin-templates.css):
+Certifique-se de que as camadas fiquem sempre clicáveis, mesmo com o preview ativo:
+code
+CSS
+/* Garante que nada bloqueie os cliques nas camadas */
+.layer-box {
+  pointer-events: all !important;
+  touch-action: none; /* Necessário para interact.js em alguns browsers */
+  user-select: none;
+}
+
+/* A imagem de preview deve estar ABAIXO das caixas de edição (layer-box) */
+.canvas-preview-img {
+  z-index: 1; /* Preview fica no fundo */
+  pointer-events: none !important; /* Nunca recebe clique */
+}
+
+.layer-box {
+  z-index: 10; /* Camadas de edição ficam no topo */
+}
+
+.layer-box.selected {
+  z-index: 100 !important;
+}
+4. Verificação do Replit / Script Loading
+No seu HTML, você tem uma verificação para carregar o interact.js. No Replit, o caminho /vendor/interact.min.js pode falhar se a pasta não estiver correta.
+Dica: No admin-templates.html, simplifique o carregamento do script para garantir que ele funcione:
+code
+Html
+<!-- Remova o bloco antigo e use apenas o CDN para testar -->
+<script src="https://cdn.jsdelivr.net/npm/interactjs@1.10.27/dist/interact.min.js"></script>

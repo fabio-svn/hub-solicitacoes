@@ -159,7 +159,7 @@
   .canvas-scroll { flex: 1; overflow: auto; display: flex; align-items: flex-start; justify-content: center; padding: 24px; }
   .canvas-wrap { position: relative; display: inline-block; box-shadow: 0 2px 12px rgba(0,0,0,0.12); flex-shrink: 0; }
   .canvas-wrap img.bg-img { display: block; width: 100%; height: 100%; object-fit: fill; }
-  .layer-box { position: absolute; cursor: move; border: 1px dashed rgba(172,54,49,0.25); background: rgba(255,255,255,0.001); box-sizing: border-box; z-index: 2; transition: border 0.1s; pointer-events: auto; }
+  .layer-box { position: absolute; cursor: move; border: 1px dashed rgba(172,54,49,0.25); background: rgba(255,255,255,0.001); box-sizing: border-box; z-index: 10; transition: border 0.1s; pointer-events: all !important; touch-action: none; user-select: none; }
   .layer-box:hover { border: 1.5px dashed rgba(172,54,49,0.6); }
   .layer-box.selected { border: 2px solid var(--ruby-red); box-shadow: 0 0 0 2px rgba(172,54,49,0.25); z-index: 9999 !important; }
   .layer-box * { pointer-events: auto; }
