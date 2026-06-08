@@ -26,7 +26,7 @@ export async function validateClickUpList(
       else if (r.status === 404) msg = "Lista não encontrada no ClickUp.";
       return { ok: false, error: msg };
     }
-    const data = await r.json().catch(() => ({} as any));
+    const data = await r.json().catch(() => ({})) as { name?: string };
     return { ok: true, name: data?.name };
   } catch (err) {
     return { ok: false, error: "Falha de rede ao consultar o ClickUp." };

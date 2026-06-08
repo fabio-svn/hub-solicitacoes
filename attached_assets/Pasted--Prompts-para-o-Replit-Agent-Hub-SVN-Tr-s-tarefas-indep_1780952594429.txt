@@ -1,0 +1,63 @@
+# Prompts para o Replit Agent — Hub SVN
+
+Três tarefas independentes. Pode aplicar uma de cada vez (recomendado) e validar com `pnpm exec tsc -p tsconfig.json --noEmit` + Stop → Run entre elas.
+
+---
+
+## Prompt 1 — Deixar o `tsc` 100% verde e o `typecheck` self-contained
+
+```
+Contexto: monorepo pnpm. O pacote artifacts/api-server compila com esbuild (build.mjs), mas o script `typecheck` (tsc -p tsconfig.json --noEmit) ainda acusa ~18 erros pré-existentes de tipagem. Quero zerar esses erros SEM mudar comportamento de runtime, e deixar o typecheck rodando sozinho (sem precisar pré-buildar as libs).
+
+Tarefas:
+
+1) req.params tipado como `string | string[]`. Em todos os sites onde isso causa erro (parseInt(req.params.x) e indexação tipo SAMPLE_DATA[req.params.tipo] / FORM_SCHEMAS[req.params.tipo]), corrigir. Primeiro investigue se há uma causa-raiz única (ex.: uma tipagem custom de Request em src/types/express.d.ts, ou versão de @types/express). Se houver fix de raiz simples e seguro, prefira ele. Caso contrário, coaja cada site com String(...): `parseInt(String(req.params.id), 10)` e `SAMPLE_DATA[String(req.params.tipo)]`. Arquivos afetados: src/routes/admin.ts (vários), src/routes/assets.ts, src/routes/forms.ts.
+
+2) TS7030 "Not all code paths return a value" nas 4 rotas de src/routes/admin.ts: POST /clickup-lists/validate, POST /clickup-lists, PUT /clickup-lists/:id/forms, DELETE /clickup-lists/:id. Garantir que todos os caminhos retornem (adicionar `return` antes dos res.json/res.status, ou tipar o handler como `: Promise<void>` e dar return nos early-exits). Não alterar a lógica/contrato das respostas.
+
+3) src/routes/clickup.ts (~linha 30): o resultado do fetch está tipado como `{}`, e `data?.name` falha. Tipar o retorno do fetch (ex.: `const data = await resp.json() as { name?: string }`) ou um cast mínimo. Não mudar a lógica.
+
+4) Tornar o `typecheck` durável: hoje ele depende de lib/db e lib/api-zod terem sido buildadas antes (senão dá TS6305). Resolver de forma que `pnpm run typecheck` funcione a partir de um estado limpo (após `rm -rf lib/db/dist lib/api-zod/dist`). Opção preferida: criar artifacts/api-server/tsconfig.typecheck.json que NÃO use project references e use compilerOptions.paths para mapear "@workspace/db" e "@workspace/db/schema" e "@workspace/api-zod" diretamente para os ./src dessas libs, com noEmit:true, e apontar o script "typecheck" para esse arquivo. Alternativa aceitável: trocar o script para modo build (tsc -b). O que for mais robusto no ambiente.
+
+Restrições: não tocar em build.mjs nem na lógica de negócio. Manter o src/types/vendor-shims.d.ts existente. NÃO instalar @types novos sem necessidade.
+
+Critério de aceite: `rm -rf lib/db/dist lib/api-zod/dist && pnpm run typecheck` sai com 0 erros, e `pnpm run build` continua funcionando.
+```
+
+---
+
+## Prompt 2 — Auditoria do impersonate (item 27)
+
+```
+Contexto: src/routes/admin.ts tem POST /impersonate (requireRole("admin","gestor")) que salva req.session.adminOriginal = req.session.user e troca req.session.user pelo usuário-alvo; e POST /impersonate/stop que restaura. Hoje NADA disso é registrado no activity_log — não há rastro de quem assumiu a conta de quem. Quero fechar esse buraco de auditoria.
+
+Tarefas:
+
+1) No POST /impersonate, ANTES de trocar a sessão (enquanto req.session.user ainda é o admin/gestor real), registrar no activity_log: quem (e-mail e nome reais), qual alvo (e-mail/id do usuário sendo assumido, conforme o que o handler já recebe no body/params), e a ação. Use tipo: "impersonate_inicio", nivel: "warn", detalhe no formato `${adminEmail} assumiu a conta de ${alvoEmail}`, e metadata: { admin: adminEmail, alvo: alvoEmail }.
+
+2) No POST /impersonate/stop, registrar o encerramento: tipo "impersonate_fim", nivel "info", detalhe `${adminEmail} encerrou o impersonate de ${alvoEmail}` (o admin real está em req.session.adminOriginal antes de restaurar; o alvo é o req.session.user atual).
+
+3) Implementação: reutilize o helper de log do activity_log se existir um compartilhado. Se a função logAtividade for local (não exportada) em forms.ts, faça um db.insert(activityLogTable).values({...}) direto em admin.ts, espelhando as colunas que logAtividade usa (user_email, user_name se existir, tipo, nivel, detalhe, metadata). Envolva o log em try/catch (ou padrão fire-and-forget) para que uma falha de logging NUNCA quebre o impersonate.
+
+Restrições: não mudar o fluxo de troca de sessão nem as permissões. Só adicionar o registro de auditoria.
+
+Critério de aceite: `pnpm exec tsc -p tsconfig.json --noEmit` continua verde; impersonate e stop seguem funcionando; cada início/fim gera uma linha em activity_log com admin real + alvo.
+```
+
+---
+
+## Prompt 3 (bônus) — Limpezas de baixo risco nos deletes (itens 3 e 4)
+
+```
+Contexto: src/routes/forms.ts, nas rotas DELETE /solicitacoes/:id e POST /solicitacoes/massa-delete.
+
+Tarefas:
+
+1) Remover branch de permissão morto (item 3): ambas as rotas têm o middleware requireRole("admin") E, dentro do handler, um check `if (user.role !== "admin" && user.role !== "gestor") { res.status(403)... }`. Esse check interno é inalcançável (o middleware já restringe a admin; gestor nunca chega aqui). Remover o check interno nas duas rotas, MANTENDO o comportamento atual = somente admin. Não alterar o middleware.
+
+2) Remover logEventoBg fantasma (item 4): em DELETE /solicitacoes/:id existe um logEventoBg(id, { ... "Solicitação deletada por admin" ... }) ANTES de deletar a solicitação. Como eventos_solicitacao tem ON DELETE CASCADE em solicitacao_id, esse evento é inserido e imediatamente apagado junto com a solicitação — é trabalho perdido. Remover SOMENTE esse logEventoBg. Manter o logAtividade (que grava em activity_log, sem FK, e é a auditoria que sobrevive).
+
+Restrições: não tocar em mais nada nessas rotas. Não mudar o status code nem o corpo das respostas.
+
+Critério de aceite: `pnpm exec tsc -p tsconfig.json --noEmit` continua verde; delete individual e em massa seguem funcionando (admin); a exclusão continua registrada em activity_log via logAtividade.
+```

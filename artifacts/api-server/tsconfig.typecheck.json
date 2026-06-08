@@ -1,0 +1,15 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "types": ["node"],
+    "noEmit": true,
+    "baseUrl": ".",
+    "paths": {
+      "@workspace/db": ["../../lib/db/src/index.ts"],
+      "@workspace/db/schema": ["../../lib/db/src/schema/index.ts"],
+      "@workspace/api-zod": ["../../lib/api-zod/src/index.ts"],
+      "@workspace/api-zod/*": ["../../lib/api-zod/src/*"]
+    }
+  },
+  "include": ["src"]
+}

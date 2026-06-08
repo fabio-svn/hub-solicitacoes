@@ -1185,13 +1185,9 @@ router.get("/admin/historico", requireAuth, async (req, res): Promise<void> => {
   }
 });
 
-router.delete("/solicitacoes/:id", requireAuth, requireRole("admin"), async (req, res): Promise<void> => {
+router.delete("/solicitacoes/:id", requireRole("admin"), async (req, res): Promise<void> => {
   try {
     const user = req.session.user!;
-    if (user.role !== "admin" && user.role !== "gestor") {
-      res.status(403).json({ error: "Acesso negado" }); return;
-    }
-
     const id = parseInt(String(req.params.id), 10);
     if (isNaN(id)) { res.status(400).json({ error: "ID inválido" }); return; }
 
@@ -1201,12 +1197,6 @@ router.delete("/solicitacoes/:id", requireAuth, requireRole("admin"), async (req
 
     if (!solicitacao) { res.status(404).json({ error: "Solicitação não encontrada" }); return; }
 
-    logEventoBg(id, {
-      tipo: "warning",
-      origem: "admin",
-      mensagem: "Solicitação deletada por admin",
-      user_email: user.email,
-    });
     const arquivosParaDeletar = await db.select().from(arquivosTable).where(eq(arquivosTable.solicitacao_id, id));
     await Promise.all(arquivosParaDeletar.map(a => deleteFromR2(a.url_r2)));
     await db.delete(arquivosTable).where(eq(arquivosTable.solicitacao_id, id));
@@ -1276,12 +1266,9 @@ router.get("/solicitacoes/:id/avaliacao", requireAuth, async (req, res): Promise
   }
 });
 
-router.post("/solicitacoes/massa-delete", requireAuth, requireRole("admin"), async (req, res): Promise<void> => {
+router.post("/solicitacoes/massa-delete", requireRole("admin"), async (req, res): Promise<void> => {
   try {
     const user = req.session.user!;
-    if (user.role !== "admin" && user.role !== "gestor") {
-      res.status(403).json({ error: "Acesso negado" }); return;
-    }
     const { ids } = req.body as { ids: number[] };
     if (!Array.isArray(ids) || ids.length === 0) {
       res.status(400).json({ error: "IDs inválidos" }); return;
@@ -1349,7 +1336,7 @@ router.put("/cartao-aprovacoes/:solicitacaoId", requireAuth, async (req, res): P
   try {
     const role = req.session.user!.role;
     if (role !== "capital_humano" && role !== "gestor" && role !== "admin") { res.status(403).json({ error: "Sem permissão" }); return; }
-    const solicitacaoId = parseInt(req.params.solicitacaoId, 10);
+    const solicitacaoId = parseInt(String(req.params.solicitacaoId), 10);
     if (Number.isNaN(solicitacaoId)) { res.status(400).json({ error: "ID inválido" }); return; }
     const b = req.body || {};
     const valores = {
@@ -1401,7 +1388,7 @@ router.delete("/cartao-aprovacoes/:solicitacaoId", requireAuth, async (req, res)
     const role = req.session.user!.role;
     if (role !== "admin") { res.status(403).json({ error: "Apenas administradores podem excluir" }); return; }
 
-    const solicitacaoId = parseInt(req.params.solicitacaoId, 10);
+    const solicitacaoId = parseInt(String(req.params.solicitacaoId), 10);
     if (!Number.isFinite(solicitacaoId)) { res.status(400).json({ error: "ID inválido" }); return; }
 
     const [sol] = await db.select().from(solicitacoesTable).where(eq(solicitacoesTable.id, solicitacaoId));
@@ -1431,7 +1418,7 @@ router.post("/cartao-aprovacoes/:solicitacaoId/gerar-pdf", requireAuth, async (r
     const role = req.session.user!.role;
     if (role !== "capital_humano" && role !== "gestor" && role !== "admin") { res.status(403).json({ error: "Sem permissão" }); return; }
 
-    const solicitacaoId = parseInt(req.params.solicitacaoId, 10);
+    const solicitacaoId = parseInt(String(req.params.solicitacaoId), 10);
     if (!Number.isFinite(solicitacaoId)) { res.status(400).json({ error: "ID inválido" }); return; }
 
     const [sol] = await db.select().from(solicitacoesTable).where(eq(solicitacoesTable.id, solicitacaoId));

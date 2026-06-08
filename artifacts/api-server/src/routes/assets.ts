@@ -120,7 +120,7 @@ router.post(
 );
 
 // ── GET /api/admin/assets ─────────────────────────────────────────
-router.get("/", requireAuth, requireRole("admin"), async (req, res): Promise<void> => {
+router.get("/", requireRole("admin"), async (req, res): Promise<void> => {
   try {
     const { orphan, uploaded_before, page, limit: lim } = req.query as Record<string, string>;
 
@@ -156,9 +156,9 @@ router.get("/", requireAuth, requireRole("admin"), async (req, res): Promise<voi
 });
 
 // ── DELETE /api/admin/assets/:id ──────────────────────────────────
-router.delete("/:id", requireAuth, requireRole("admin"), async (req, res): Promise<void> => {
+router.delete("/:id", requireRole("admin"), async (req, res): Promise<void> => {
   try {
-    const id = parseInt(req.params.id, 10);
+    const id = parseInt(String(req.params.id), 10);
     if (isNaN(id)) { res.status(400).json({ error: "ID inválido" }); return; }
 
     const [asset] = await db.select().from(artAssetsTable).where(eq(artAssetsTable.id, id));
@@ -186,7 +186,7 @@ router.delete("/:id", requireAuth, requireRole("admin"), async (req, res): Promi
 });
 
 // ── POST /api/admin/assets/scan-usage ────────────────────────────
-router.post("/scan-usage", requireAuth, requireRole("admin"), async (req, res): Promise<void> => {
+router.post("/scan-usage", requireRole("admin"), async (req, res): Promise<void> => {
   try {
     await scanAssetUsage();
     res.json({ ok: true, message: "Uso de assets recomputado com sucesso" });

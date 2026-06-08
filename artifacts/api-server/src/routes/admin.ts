@@ -14,7 +14,7 @@ const TIPOS_COM_CLICKUP_SET = new Set(TIPOS_COM_CLICKUP.map(t => t.tipo));
 
 const router = Router();
 
-router.get("/users", requireAuth, requireRole("admin"), async (req, res) => {
+router.get("/users", requireRole("admin"), async (req, res) => {
   try {
     const users = await db.select().from(usersTable);
     const assignments = await db.select().from(userTipoAssignmentsTable);
@@ -38,7 +38,7 @@ router.get("/users", requireAuth, requireRole("admin"), async (req, res) => {
   }
 });
 
-router.put("/users/:id/role", requireAuth, requireRole("admin"), async (req, res): Promise<void> => {
+router.put("/users/:id/role", requireRole("admin"), async (req, res): Promise<void> => {
   try {
     const userId = parseInt(String(req.params.id));
     if (isNaN(userId)) {
@@ -73,7 +73,7 @@ router.put("/users/:id/role", requireAuth, requireRole("admin"), async (req, res
   }
 });
 
-router.post("/impersonate", requireAuth, requireRole("admin", "gestor"), async (req, res): Promise<void> => {
+router.post("/impersonate", requireRole("admin", "gestor"), async (req, res): Promise<void> => {
   try {
     const { email } = req.body as { email: string };
     if (!email || !email.includes("@")) {
@@ -86,6 +86,14 @@ router.post("/impersonate", requireAuth, requireRole("admin", "gestor"), async (
       return;
     }
 
+    db.insert(activityLogTable).values({
+      user_email: req.session.user?.email,
+      user_name: req.session.user?.name,
+      tipo: "impersonate_inicio",
+      nivel: "warn" as any,
+      detalhe: `${req.session.user?.email} assumiu a conta de ${targetUser.email}`,
+      metadata: { admin: req.session.user?.email, alvo: targetUser.email } as any,
+    }).catch(() => {});
     req.session.adminOriginal = req.session.user;
     req.session.user = {
       email: targetUser.email,
@@ -109,6 +117,16 @@ router.post("/impersonate", requireAuth, requireRole("admin", "gestor"), async (
 router.post("/impersonate/stop", requireAuth, async (req, res): Promise<void> => {
   try {
     if (req.session.adminOriginal) {
+      const _adminEmail = req.session.adminOriginal.email;
+      const _alvoEmail = req.session.user?.email ?? "desconhecido";
+      db.insert(activityLogTable).values({
+        user_email: _adminEmail,
+        user_name: req.session.adminOriginal.name,
+        tipo: "impersonate_fim",
+        nivel: "info" as any,
+        detalhe: `${_adminEmail} encerrou o impersonate de ${_alvoEmail}`,
+        metadata: { admin: _adminEmail, alvo: _alvoEmail } as any,
+      }).catch(() => {});
       req.session.user = req.session.adminOriginal;
       delete req.session.adminOriginal;
     }
@@ -126,7 +144,7 @@ router.post("/impersonate/stop", requireAuth, async (req, res): Promise<void> =>
   }
 });
 
-router.put("/users/:id/clickup_user_id", requireAuth, requireRole("admin"), async (req, res): Promise<void> => {
+router.put("/users/:id/clickup_user_id", requireRole("admin"), async (req, res): Promise<void> => {
   try {
     const userId = parseInt(String(req.params.id));
     if (isNaN(userId)) {
@@ -230,7 +248,7 @@ const SAMPLE_DATA: Record<string, Record<string, string>> = {
 };
 
 // GET /art-templates — list all templates (no config for perf)
-router.get("/art-templates", requireAuth, requireRole("admin"), async (req, res): Promise<void> => {
+router.get("/art-templates", requireRole("admin"), async (req, res): Promise<void> => {
   try {
     const rows = await db.select({
       id:            artTemplatesTable.id,
@@ -251,12 +269,12 @@ router.get("/art-templates", requireAuth, requireRole("admin"), async (req, res)
 });
 
 // GET /art-templates/sample-data/:tipo — must come before /:id
-router.get("/art-templates/sample-data/:tipo", requireAuth, requireRole("admin"), async (req, res): Promise<void> => {
-  res.json(SAMPLE_DATA[req.params.tipo] || {});
+router.get("/art-templates/sample-data/:tipo", requireRole("admin"), async (req, res): Promise<void> => {
+  res.json(SAMPLE_DATA[String(req.params.tipo)] || {});
 });
 
 // POST /art-templates/preview — ad-hoc render, must come before /:id routes
-router.post("/art-templates/preview", requireAuth, requireRole("admin"), async (req, res): Promise<void> => {
+router.post("/art-templates/preview", requireRole("admin"), async (req, res): Promise<void> => {
   try {
     const { config, data } = req.body as { config: any; data: Record<string, any> };
     if (!config) { res.status(400).json({ error: "Campo config obrigatório" }); return; }
@@ -269,9 +287,9 @@ router.post("/art-templates/preview", requireAuth, requireRole("admin"), async (
 });
 
 // GET /art-templates/:id — full template with config
-router.get("/art-templates/:id", requireAuth, requireRole("admin"), async (req, res): Promise<void> => {
+router.get("/art-templates/:id", requireRole("admin"), async (req, res): Promise<void> => {
   try {
-    const id = parseInt(req.params.id);
+    const id = parseInt(String(req.params.id));
     if (isNaN(id)) { res.status(400).json({ error: "ID inválido" }); return; }
     const [row] = await db.select().from(artTemplatesTable).where(eq(artTemplatesTable.id, id));
     if (!row) { res.status(404).json({ error: "Template não encontrado" }); return; }
@@ -283,7 +301,7 @@ router.get("/art-templates/:id", requireAuth, requireRole("admin"), async (req, 
 });
 
 // POST /art-templates — create new template
-router.post("/art-templates", requireAuth, requireRole("admin"), async (req, res): Promise<void> => {
+router.post("/art-templates", requireRole("admin"), async (req, res): Promise<void> => {
   try {
     const user = req.session.user!;
     const { tipo, name, config, variant_value } = req.body as { tipo: string; name: string; config: any; variant_value?: string };
@@ -304,10 +322,10 @@ router.post("/art-templates", requireAuth, requireRole("admin"), async (req, res
 });
 
 // PUT /art-templates/:id — update name and/or config
-router.put("/art-templates/:id", requireAuth, requireRole("admin"), async (req, res): Promise<void> => {
+router.put("/art-templates/:id", requireRole("admin"), async (req, res): Promise<void> => {
   try {
     const user = req.session.user!;
-    const id = parseInt(req.params.id);
+    const id = parseInt(String(req.params.id));
     if (isNaN(id)) { res.status(400).json({ error: "ID inválido" }); return; }
     const { name, config, variant_value } = req.body as { name?: string; config?: any; variant_value?: string };
     if (config) {
@@ -329,9 +347,9 @@ router.put("/art-templates/:id", requireAuth, requireRole("admin"), async (req, 
 });
 
 // PATCH /art-templates/:id/activate — mark as active, deactivate siblings
-router.patch("/art-templates/:id/activate", requireAuth, requireRole("admin"), async (req, res): Promise<void> => {
+router.patch("/art-templates/:id/activate", requireRole("admin"), async (req, res): Promise<void> => {
   try {
-    const id = parseInt(req.params.id);
+    const id = parseInt(String(req.params.id));
     if (isNaN(id)) { res.status(400).json({ error: "ID inválido" }); return; }
     await db.transaction(async (tx) => {
       const [target] = await tx.select().from(artTemplatesTable).where(eq(artTemplatesTable.id, id));
@@ -350,9 +368,9 @@ router.patch("/art-templates/:id/activate", requireAuth, requireRole("admin"), a
 });
 
 // DELETE /art-templates/:id — delete (blocked if active or last of tipo)
-router.delete("/art-templates/:id", requireAuth, requireRole("admin"), async (req, res): Promise<void> => {
+router.delete("/art-templates/:id", requireRole("admin"), async (req, res): Promise<void> => {
   try {
-    const id = parseInt(req.params.id);
+    const id = parseInt(String(req.params.id));
     if (isNaN(id)) { res.status(400).json({ error: "ID inválido" }); return; }
     const [target] = await db.select().from(artTemplatesTable).where(eq(artTemplatesTable.id, id));
     if (!target) { res.status(404).json({ error: "Template não encontrado" }); return; }
@@ -376,18 +394,18 @@ router.delete("/art-templates/:id", requireAuth, requireRole("admin"), async (re
 });
 
 // ── Form schemas ─────────────────────────────────────────────────
-router.get("/form-schemas", requireAuth, requireRole("admin"), (_req, res) => {
+router.get("/form-schemas", requireRole("admin"), (_req, res) => {
   res.json(getFormSchemaList());
 });
 
-router.get("/form-schemas/:tipo", requireAuth, requireRole("admin"), (req, res): void => {
-  const schema = FORM_SCHEMAS[req.params.tipo];
+router.get("/form-schemas/:tipo", requireRole("admin"), (req, res): void => {
+  const schema = FORM_SCHEMAS[String(req.params.tipo)];
   if (!schema) { res.status(404).json({ error: "Schema não encontrado para este tipo" }); return; }
   res.json(schema);
 });
 
 // POST /solicitacoes/:id/regerar — re-execute art generation for a specific request
-router.post("/solicitacoes/:id/regerar", requireAuth, requireRole("admin", "gestor"), async (req, res): Promise<void> => {
+router.post("/solicitacoes/:id/regerar", requireRole("admin", "gestor"), async (req, res): Promise<void> => {
   try {
     const id = parseInt(String(req.params.id));
     if (isNaN(id)) { res.status(400).json({ error: "ID inválido" }); return; }
@@ -414,10 +432,10 @@ router.post("/solicitacoes/:id/regerar", requireAuth, requireRole("admin", "gest
 });
 
 // POST /art-templates/:id/duplicate — clone a template
-router.post("/art-templates/:id/duplicate", requireAuth, requireRole("admin"), async (req, res): Promise<void> => {
+router.post("/art-templates/:id/duplicate", requireRole("admin"), async (req, res): Promise<void> => {
   try {
     const user = req.session.user!;
-    const id = parseInt(req.params.id);
+    const id = parseInt(String(req.params.id));
     if (isNaN(id)) { res.status(400).json({ error: "ID inválido" }); return; }
     const { name, variant_value } = req.body as { name?: string; variant_value?: string };
     const [source] = await db.select().from(artTemplatesTable).where(eq(artTemplatesTable.id, id));
@@ -441,11 +459,11 @@ router.post("/art-templates/:id/duplicate", requireAuth, requireRole("admin"), a
   }
 });
 
-router.get("/tipos-com-clickup", requireAuth, requireRole("admin"), (_req, res) => {
+router.get("/tipos-com-clickup", requireRole("admin"), (_req, res) => {
   res.json(TIPOS_COM_CLICKUP);
 });
 
-router.post("/users", requireAuth, requireRole("admin"), async (req, res): Promise<void> => {
+router.post("/users", requireRole("admin"), async (req, res): Promise<void> => {
   try {
     const { email, name, role, clickup_user_id } = req.body as {
       email: string; name: string; role: string; clickup_user_id?: string | null;
@@ -484,7 +502,7 @@ router.post("/users", requireAuth, requireRole("admin"), async (req, res): Promi
   }
 });
 
-router.put("/users/:id/assignments", requireAuth, requireRole("admin"), async (req, res): Promise<void> => {
+router.put("/users/:id/assignments", requireRole("admin"), async (req, res): Promise<void> => {
   try {
     const userId = parseInt(String(req.params.id));
     if (isNaN(userId)) { res.status(400).json({ error: "ID inválido" }); return; }
@@ -546,19 +564,19 @@ router.get("/clickup-lists", requireRole("admin"), async (_req, res) => {
 });
 
 // Testa um list_id no ClickUp (botão Validar)
-router.post("/clickup-lists/validate", requireRole("admin"), async (req, res) => {
+router.post("/clickup-lists/validate", requireRole("admin"), async (req, res): Promise<void> => {
   const listId = String(req.body?.list_id ?? "").trim();
-  if (!listId) return res.status(400).json({ ok: false, error: "Informe o ID da lista." });
+  if (!listId) { res.status(400).json({ ok: false, error: "Informe o ID da lista." }); return; }
   const result = await validateClickUpList(listId);
   res.json(result);
 });
 
 // Adiciona uma lista ao registro. Valida no ClickUp antes.
-router.post("/clickup-lists", requireRole("admin"), async (req, res) => {
+router.post("/clickup-lists", requireRole("admin"), async (req, res): Promise<void> => {
   const listId = String(req.body?.list_id ?? "").trim();
-  if (!listId) return res.status(400).json({ error: "Informe o ID da lista." });
+  if (!listId) { res.status(400).json({ error: "Informe o ID da lista." }); return; }
   const v = await validateClickUpList(listId);
-  if (!v.ok) return res.status(400).json({ error: v.error || "Lista inválida no ClickUp." });
+  if (!v.ok) { res.status(400).json({ error: v.error || "Lista inválida no ClickUp." }); return; }
   try {
     const [row] = await db.insert(clickupListsTable)
       .values({ list_id: listId, list_name: v.name ?? null })
@@ -572,12 +590,12 @@ router.post("/clickup-lists", requireRole("admin"), async (req, res) => {
 });
 
 // Define os forms atribuídos a uma lista. Move o form de qualquer outra lista.
-router.put("/clickup-lists/:id/forms", requireRole("admin"), async (req, res) => {
-  const id = parseInt(req.params.id, 10);
+router.put("/clickup-lists/:id/forms", requireRole("admin"), async (req, res): Promise<void> => {
+  const id = parseInt(String(req.params.id), 10);
   const tipos: string[] = Array.isArray(req.body?.tipos) ? req.body.tipos.map((t: any) => String(t)) : [];
   try {
     const [list] = await db.select().from(clickupListsTable).where(eq(clickupListsTable.id, id));
-    if (!list) return res.status(404).json({ error: "Lista não encontrada." });
+    if (!list) { res.status(404).json({ error: "Lista não encontrada." }); return; }
     if (tipos.length) {
       await db.delete(tipoClickupListTable)
         .where(and(eq(tipoClickupListTable.list_id, list.list_id), notInArray(tipoClickupListTable.tipo, tipos)));
@@ -601,11 +619,11 @@ router.put("/clickup-lists/:id/forms", requireRole("admin"), async (req, res) =>
 });
 
 // Exclui a lista do registro e suas atribuições
-router.delete("/clickup-lists/:id", requireRole("admin"), async (req, res) => {
-  const id = parseInt(req.params.id, 10);
+router.delete("/clickup-lists/:id", requireRole("admin"), async (req, res): Promise<void> => {
+  const id = parseInt(String(req.params.id), 10);
   try {
     const [list] = await db.select().from(clickupListsTable).where(eq(clickupListsTable.id, id));
-    if (!list) return res.status(404).json({ error: "Lista não encontrada." });
+    if (!list) { res.status(404).json({ error: "Lista não encontrada." }); return; }
     await db.delete(tipoClickupListTable).where(eq(tipoClickupListTable.list_id, list.list_id));
     await db.delete(clickupListsTable).where(eq(clickupListsTable.id, id));
     res.json({ ok: true });
