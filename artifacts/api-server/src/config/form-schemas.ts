@@ -332,13 +332,16 @@ export const VALID_TIPOS: string[] = [
   "producao-video",
   "sessao-fotos",
   "materiais-impressos",
+  "ch-kit-onboarding",
+  "ch-atualizacao-pessoas",
+  "ch-atualizacao-books",
+  "ch-linha-do-tempo",
+  "ch-aniversariantes",
 ];
 
 export const TIPOS_COM_CLICKUP: Array<{ tipo: string; label: string }> = [
   { tipo: "ch-kit-onboarding",      label: "Kit Onboarding" },
   { tipo: "ch-atualizacao-pessoas", label: "Atualização de Pessoas nos Sites" },
-  { tipo: "ch-conteudo-pdf",        label: "Conteúdo em PDF (CH)" },
-  { tipo: "ch-arte-divulgacao",     label: "Arte de Divulgação (CH)" },
   { tipo: "ch-atualizacao-books",   label: "Atualização de Books" },
   { tipo: "ch-linha-do-tempo",      label: "Linha do Tempo" },
   { tipo: "ch-aniversariantes",     label: "Aniversariantes do Mês" },
