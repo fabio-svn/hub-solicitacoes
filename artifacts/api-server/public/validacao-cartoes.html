@@ -323,7 +323,7 @@
             const sid = l.solicitacao_id;
             if (!val) return '<td' + w + '><button type="button" onclick="gerarPdfCartao(' + sid + ',this)" style="padding:4px 10px;border-radius:6px;border:1px solid var(--ruby-red,#AC3631);background:var(--ruby-red,#AC3631);color:#fff;font-weight:700;font-size:0.7rem;cursor:pointer">Gerar PDF</button></td>';
             return '<td' + w + '><div style="display:flex;gap:5px;justify-content:center;align-items:center;flex-wrap:nowrap">'
-              + '<a href="' + esc(val) + '" target="_blank" rel="noopener" style="display:inline-block;padding:4px 10px;border-radius:6px;background:var(--ruby-red,#AC3631);color:#fff;font-weight:700;text-decoration:none;font-size:0.7rem">Baixar</a>'
+              + '<a href="' + esc(val) + '" rel="noopener" style="display:inline-block;padding:4px 10px;border-radius:6px;background:var(--ruby-red,#AC3631);color:#fff;font-weight:700;text-decoration:none;font-size:0.7rem">Baixar</a>'
               + '<button type="button" onclick="gerarPdfCartao(' + sid + ',this)" title="Gerar o PDF novamente com os dados atuais" style="padding:4px 8px;border-radius:6px;border:1px solid var(--ruby-red,#AC3631);background:#fff;color:var(--ruby-red,#AC3631);font-weight:700;font-size:0.7rem;cursor:pointer;white-space:nowrap">Gerar novo</button>'
               + '</div></td>';
           }
@@ -387,7 +387,7 @@
           '<div class="cartao-card-field"><span class="cartao-card-label">E-mail</span><span class="cartao-card-value">' + esc(c.email || '—') + '</span></div>' +
           '<div class="cartao-card-field"><span class="cartao-card-label">Cartão (PDF)</span>' +
             (c.pdf_url
-              ? '<div style="display:flex;gap:8px"><a href="' + esc(c.pdf_url) + '" target="_blank" rel="noopener" style="flex:1;padding:8px 12px;border-radius:8px;background:var(--ruby-red,#AC3631);color:#fff;font-weight:700;text-decoration:none;font-size:0.8rem;text-align:center">Baixar PDF</a><button type="button" onclick="gerarPdfCartao(' + c.solicitacao_id + ',this)" style="padding:8px 12px;border-radius:8px;border:1px solid var(--ruby-red,#AC3631);background:#fff;color:var(--ruby-red,#AC3631);font-weight:700;font-size:0.8rem;cursor:pointer">Gerar novo</button></div>'
+              ? '<div style="display:flex;gap:8px"><a href="' + esc(c.pdf_url) + '" rel="noopener" style="flex:1;padding:8px 12px;border-radius:8px;background:var(--ruby-red,#AC3631);color:#fff;font-weight:700;text-decoration:none;font-size:0.8rem;text-align:center">Baixar PDF</a><button type="button" onclick="gerarPdfCartao(' + c.solicitacao_id + ',this)" style="padding:8px 12px;border-radius:8px;border:1px solid var(--ruby-red,#AC3631);background:#fff;color:var(--ruby-red,#AC3631);font-weight:700;font-size:0.8rem;cursor:pointer">Gerar novo</button></div>'
               : '<button type="button" onclick="gerarPdfCartao(' + c.solicitacao_id + ',this)" style="margin-top:4px;padding:8px 12px;border-radius:8px;border:1px solid var(--ruby-red,#AC3631);background:#fff;color:var(--ruby-red,#AC3631);font-weight:700;font-size:0.8rem;cursor:pointer">Gerar PDF</button>') +
           '</div>' +
           '<div class="cartao-card-row">' +
