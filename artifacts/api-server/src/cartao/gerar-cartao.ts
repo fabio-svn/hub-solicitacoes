@@ -19,6 +19,7 @@ import path from "path";
 import opentype from "opentype.js";
 import PDFDocument from "pdfkit";
 import SVGtoPDF from "svg-to-pdfkit";
+import { PDFDocument as PdfLib } from "pdf-lib";
 
 // SVGs do cartão (verso/frente) ficam em assets/cartao/.
 // Fontes ficam em assets/fonts/ (pasta compartilhada com assinaturas de e-mail etc).
@@ -161,30 +162,23 @@ export async function gerarPdf(dados: DadosCartao): Promise<Buffer> {
   doc.on("data", (c) => chunks.push(c));
   const done = new Promise<Buffer>((resolve) => doc.on("end", () => resolve(Buffer.concat(chunks))));
 
-  // Marca o corte na página atual. O Illustrator usa o CropBox como artboard:
-  // CropBox/TrimBox = 9x5cm (corte) → artboard 9x5cm; MediaBox/BleedBox = 9,4x5,4cm
-  // → os 0,2cm de sangria aparecem FORA do artboard, com as guias vermelhas.
-  const marcarCorte = () => {
-    try {
-      const d = (doc as any).page.dictionary.data;
-      const trim = [SANGRIA, SANGRIA, SANGRIA + TRIM_W, SANGRIA + TRIM_H];
-      d.MediaBox = [0, 0, MEDIA_W, MEDIA_H]; // página física (com sangria)
-      d.CropBox = trim;                       // artboard no Illustrator = 9x5cm
-      d.TrimBox = trim;                       // corte final = 9x5cm
-      d.BleedBox = [0, 0, MEDIA_W, MEDIA_H];  // sangria = 0,2cm fora do trim
-    } catch { /* fallback: MediaBox com sangria já é suficiente p/ maioria das gráficas */ }
-  };
-
   const desenhar = (svg: string) =>
     SVGtoPDF(doc, svg, SANGRIA, SANGRIA, { width: TRIM_W, height: TRIM_H });
 
   if (temFrente) {
     desenhar(fs.readFileSync(frentePath, "utf8"));
-    marcarCorte();
     doc.addPage({ size: [MEDIA_W, MEDIA_H], margin: 0 });
   }
   desenhar(versoSvg);
-  marcarCorte();
   doc.end();
-  return done;
+
+  const raw = await done;
+  const pdf = await PdfLib.load(raw);
+  for (const page of pdf.getPages()) {
+    page.setMediaBox(0, 0, MEDIA_W, MEDIA_H);
+    page.setBleedBox(0, 0, MEDIA_W, MEDIA_H);
+    page.setTrimBox(SANGRIA, SANGRIA, TRIM_W, TRIM_H);
+    page.setCropBox(SANGRIA, SANGRIA, TRIM_W, TRIM_H);
+  }
+  return Buffer.from(await pdf.save());
 }
