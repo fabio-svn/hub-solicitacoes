@@ -81,10 +81,14 @@ export async function gerarCartaoFisicoPdf(
   const tmpPath = path.join(os.tmpdir(), filename);
   await fs.promises.writeFile(tmpPath, pdfBuffer);
 
+  const nomeLabel = campos.nome?.trim() || String(solicitacaoId);
+  const downloadName = `Cartão de Visita - ${nomeLabel}.pdf`;
+
   const url = await uploadToR2(
     { path: tmpPath, originalname: "cartao-visita-fisico.pdf", mimetype: "application/pdf" },
     solicitacaoId,
     "cartao-visita-fisico",
+    downloadName,
   );
 
   try {

@@ -8,10 +8,24 @@ import { logEventoBg } from "../services/activity-log";
 const R2_PUBLIC_URL = (process.env.R2_PUBLIC_URL || "").replace(/\/*$/, "/");
 
 
+function buildContentDisposition(raw: string): string {
+  const sanitized = raw
+    .replace(/["]/g, "")
+    .replace(/[\r\n]/g, "")
+    .replace(/[/\\]/g, "-")
+    .replace(/[\x00-\x1f\x7f]/g, "");
+  const asciiFallback = sanitized
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^\x20-\x7e]/g, "");
+  return `attachment; filename="${asciiFallback}"; filename*=UTF-8''${encodeURIComponent(sanitized)}`;
+}
+
 export async function uploadToR2(
   file: { path: string; originalname: string; mimetype: string },
   solicitacaoId: number,
-  campo: string
+  campo: string,
+  downloadName?: string
 ): Promise<string> {
   const client = getR2Client();
 
@@ -31,6 +45,7 @@ export async function uploadToR2(
       Key: key,
       Body: fs.createReadStream(file.path),
       ContentType: file.mimetype,
+      ...(downloadName ? { ContentDisposition: buildContentDisposition(downloadName) } : {}),
     }));
   } finally {
     await fs.promises.unlink(file.path).catch(() => {});
