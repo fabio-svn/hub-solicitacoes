@@ -147,7 +147,7 @@ export function gerarVersoSvg(dados: DadosCartao): string {
  */
 export async function gerarPdf(dados: DadosCartao): Promise<Buffer> {
   const PT_CM = 28.3465;        // 1cm em pt
-  const SANGRIA = 0.2 * PT_CM;  // 0,2cm = 5.67pt por lado
+  const SANGRIA = 0 * PT_CM;  // cartao 9x5 exato (sem area de sangria)
   const TRIM_W = 255.12;        // corte final: 9cm
   const TRIM_H = 141.73;        // corte final: 5cm
   const MEDIA_W = TRIM_W + 2 * SANGRIA; // 9,4cm
