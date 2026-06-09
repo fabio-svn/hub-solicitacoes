@@ -84,9 +84,9 @@ img { max-width: 100%; height: auto; }
   padding-bottom: 80px;
   box-sizing: border-box;
 }
-.page-container--standard { max-width: 1100px; }
+.page-container--standard { max-width: 960px; }
 .page-container--narrow { max-width: 800px; }
-.page-container--wide { max-width: 1440px; }
+.page-container--wide { max-width: 1100px; }
 .page-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin: 0 0 24px; flex-wrap: wrap; }
 .page-header__actions { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
 .page-subtitle { font-size: 0.9rem; color: rgba(34, 27, 25, 0.5); margin: 4px 0 0; }
