@@ -23,9 +23,7 @@
     .vc-scroll::-webkit-scrollbar-thumb:hover { background: #d8d0c5; background-clip: padding-box; }
     table.vc { border-collapse: separate; border-spacing: 0; width: 100%; min-width: 1200px; font-size: 0.74rem; }
     table.vc th { position: sticky; top: 0; z-index: 2; font-weight: 700; padding: 7px 10px; text-align: center; white-space: nowrap; box-shadow: inset 0 -1px 0 rgba(0,0,0,.08); user-select: none; }
-    table.vc th.form { background: #d6e8df; color: #2f4a3f; }
-    table.vc th.mng { background: #f1ded9; color: #8a3f37; }
-    table.vc th.ver { background: #f3efec; color: #6b6b6b; }
+    table.vc th.form, table.vc th.mng, table.vc th.ver { background: var(--carbon-black); color: var(--paper-white); }
     table.vc th.sortable { cursor: pointer; }
     table.vc th.sortable:hover { filter: brightness(0.97); }
     table.vc th .sort-ind { font-size: 0.7rem; margin-left: 5px; opacity: 0.85; }
@@ -39,9 +37,6 @@
     table.vc input:focus, table.vc select:focus, table.vc textarea:focus { outline: none; border-color: var(--ruby-red); background: #fff; cursor: text; }
     table.vc select:hover, table.vc select:focus { cursor: pointer; }
     td.col-observacao { min-width: 150px; }
-    .vc-filter-select { padding: 5px 10px; border-radius: 7px; border: 1px solid var(--border-light); background: #fff; font-family: inherit; font-size: 0.8rem; color: #221b19; cursor: pointer; }
-    .vc-filter-select:focus { outline: none; border-color: var(--ruby-red); }
-    .vc-empty { padding: 30px; text-align: center; color: rgba(34,27,25,0.5); font-size: 0.88rem; }
 
     /* Cards mobile (Grupo 5) */
     .cartoes-cards-mobile { display: none; }
@@ -55,9 +50,6 @@
       }
     }
     .cartao-card {
-      background: var(--paper-white);
-      border: 1px solid var(--border-light);
-      border-radius: 12px;
       padding: 16px;
       display: flex;
       flex-direction: column;
@@ -138,7 +130,7 @@
         <div class="filter-panel-row">
           <span class="filter-panel-label">Unidade</span>
           <div class="filter-panel-chips">
-            <select class="vc-filter-select" id="vcFilterUnidade" onchange="setUnidadeFilter(this)"><option value="">Todas</option></select>
+            <select class="select" id="vcFilterUnidade" onchange="setUnidadeFilter(this)"><option value="">Todas</option></select>
           </div>
         </div>
       </div>
@@ -149,7 +141,7 @@
         <span class="vc-count" id="vcCount"></span>
       </div>
 
-      <div id="vcContent"><div class="vc-empty">Carregando…</div></div>
+      <div id="vcContent"><div class="empty-state"><p>Carregando…</p></div></div>
       <div class="cartoes-cards-mobile"></div>
     </div>
   </div>
@@ -275,7 +267,7 @@
         render();
       } catch (e) {
         console.error('Erro em carregar():', e);
-        document.getElementById('vcContent').innerHTML = '<div class="vc-empty">Erro ao carregar. Recarregue a página.</div>';
+        document.getElementById('vcContent').innerHTML = '<div class="empty-state"><p>Erro ao carregar. Recarregue a página.</p></div>';
       }
     }
 
@@ -312,7 +304,7 @@
     function render() {
       const view = getView();
       document.getElementById('vcCount').textContent = view.length + (view.length === 1 ? ' cartão' : ' cartões');
-      if (!RAW.length) { document.getElementById('vcContent').innerHTML = '<div class="vc-empty">Nenhuma solicitação de cartão físico ainda.</div>'; return; }
+      if (!RAW.length) { document.getElementById('vcContent').innerHTML = '<div class="empty-state"><p>Nenhuma solicitação de cartão físico ainda.</p></div>'; return; }
 
       const head = '<tr>' + COLS.map(function (c) {
         const ind = sortState.field === c.f ? (sortState.dir === 1 ? '▲' : '▼') : '';
@@ -325,7 +317,7 @@
           const w = ' style="min-width:' + c.min + 'px"';
           if (c.type === 'delete') {
             if (!IS_ADMIN) return '<td' + w + '></td>';
-            return '<td' + w + '><button type="button" onclick="deleteCartao(' + l.solicitacao_id + ',this)" title="Excluir permanentemente" aria-label="Excluir" style="border:none;background:transparent;cursor:pointer;padding:4px;color:#b91c1c;display:inline-flex;align-items:center;justify-content:center"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg></button></td>';
+            return '<td' + w + '><button type="button" onclick="deleteCartao(' + l.solicitacao_id + ',this)" title="Excluir permanentemente" aria-label="Excluir" style="border:none;background:transparent;cursor:pointer;padding:4px;color:var(--danger);display:inline-flex;align-items:center;justify-content:center"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg></button></td>';
           }
           if (c.type === 'pdf') {
             const sid = l.solicitacao_id;
@@ -377,7 +369,7 @@
         var statusColor = STATUS_COLORS[c.status] || { bg: '#f1f5f9', text: '#475569' };
         var statusLabel = (STATUS_OPTS.find(function(s) { return s.v === c.status; }) || {}).label || c.status || '—';
         var dataFmt = c.data_pedido ? new Date(c.data_pedido).toLocaleDateString('pt-BR', { day:'2-digit', month:'short', year:'numeric' }) : '—';
-        return '<article class="cartao-card" data-id="' + c.solicitacao_id + '">' +
+        return '<article class="card cartao-card" data-id="' + c.solicitacao_id + '">' +
           '<div class="cartao-card-header">' +
             '<div>' +
               '<div class="cartao-card-nome">' + esc(c.nome || '—') + '</div>' +
@@ -385,7 +377,7 @@
             '</div>' +
             '<div style="display:flex;align-items:center;gap:8px">' +
               '<span style="display:inline-flex;align-items:center;padding:4px 10px;border-radius:6px;font-size:0.72rem;font-weight:700;background:' + statusColor.bg + ';color:' + statusColor.text + '">' + esc(statusLabel) + '</span>' +
-              (IS_ADMIN ? '<button type="button" onclick="deleteCartao(' + c.solicitacao_id + ',this)" title="Excluir permanentemente" aria-label="Excluir" style="border:none;background:transparent;cursor:pointer;color:#b91c1c;padding:2px;display:inline-flex;align-items:center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg></button>' : '') +
+              (IS_ADMIN ? '<button type="button" onclick="deleteCartao(' + c.solicitacao_id + ',this)" title="Excluir permanentemente" aria-label="Excluir" style="border:none;background:transparent;cursor:pointer;color:var(--danger);padding:2px;display:inline-flex;align-items:center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg></button>' : '') +
             '</div>' +
           '</div>' +
           '<div class="cartao-card-row">' +

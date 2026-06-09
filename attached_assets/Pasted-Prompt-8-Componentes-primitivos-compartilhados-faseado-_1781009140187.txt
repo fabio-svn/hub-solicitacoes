@@ -1,0 +1,20 @@
+Prompt 8 — Componentes primitivos compartilhados (faseado, depois do 7)
+Contexto: depois de unificar a base (Prompt 7), cada página ainda reimplementa componentes-núcleo no seu <style> local. Objetivo: criar primitivos compartilhados no style.css e migrar as páginas para eles, UMA ÁREA POR VEZ, validando visualmente a cada passo. Tudo via tokens (var(--...)). Não mudar funcionalidade.
+
+Criar no style.css (e migrar os usos locais):
+
+1) BOTÕES — .btn (base) + variantes .btn--primary (fundo var(--ruby-red), texto branco), .btn--ghost (borda + texto ruby, fundo transparente/branco), .btn--danger (var(--danger)). Migrar: .btn/.primary/.danger (admin-assets), .ccu-btn (clickup-lists), .btn-aprovar/.btn-alterar (solicitacao) e os botões com style= inline (validacao-cartoes) para .btn + variante.
+
+2) INPUTS/SELECTS — .input e .select (e uma .search-input única). Migrar .ccu-input, .vc-filter-select e o .search-input local do admin-assets.
+
+3) TABELA — .data-table com cabeçalho padrão em var(--carbon-black) (texto claro), bordas/linhas e padding consistentes. Migrar as tabelas de usuarios/log/admin para ela E corrigir o cabeçalho verde hardcoded (#d6e8df) do validacao-cartoes para o padrão. (Resolve a divergência: hoje há cabeçalho preto em umas e verde em outra.)
+
+4) EMPTY STATE — .empty-state único. Migrar .ccu-empty e .vc-empty.
+
+5) CARD — .card primitivo (fundo var(--card-white), borda var(--border-light), radius/sombra padrão). Migrar onde for card genérico (.asset-card, .ccu-card, .cartao-card); manter layout específico interno se for realmente próprio da página.
+
+Faseamento: implementar os primitivos no style.css primeiro; depois migrar página por página (sugestão de ordem: admin-assets → clickup-lists → validacao-cartoes → solicitacao), apagando o CSS local equivalente a cada migração e conferindo a tela antes de seguir. Não migrar tudo de uma vez.
+
+Restrições: via tokens, sem mudar funcionalidade/JS. pnpm exec tsc verde. Sem regressão visual perceptível além da unificação pretendida.
+
+Critério de aceite: botões, inputs, tabelas, empty states e cards com aparência consistente entre as páginas; CSS local equivalente removido; nenhum hex off-brand cru remanescente nesses componentes.

@@ -34,18 +34,11 @@
     .filter-chip-mini:hover { background: var(--icon-bg); }
     .filter-chip-mini.active { background: var(--carbon-black); color: var(--paper-white); border-color: var(--carbon-black); }
     .toolbar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-    .btn { display: inline-flex; align-items: center; gap: 6px; padding: 7px 16px; border-radius: 8px; border: 1.5px solid var(--border-light); background: var(--card-white); font-family: 'Nunito Sans', sans-serif; font-size: 0.82rem; font-weight: 600; cursor: pointer; color: var(--carbon-black); text-decoration: none; transition: background 0.15s; }
-    .btn:hover { background: #f5f3f0; }
-    .btn.primary { background: var(--ruby-red); color: #fff; border-color: var(--ruby-red); }
-    .btn.primary:hover { background: #7a2e28; border-color: #7a2e28; }
-    .search-input { padding: 7px 12px; border: 1.5px solid var(--border-light); border-radius: 8px; font-family: 'Nunito Sans', sans-serif; font-size: 0.82rem; min-width: 220px; }
-    .search-input:focus { outline: none; border-color: var(--ruby-red); }
-    .filter-select { padding: 7px 10px; border: 1.5px solid var(--border-light); border-radius: 8px; font-family: 'Nunito Sans', sans-serif; font-size: 0.82rem; background: var(--card-white); cursor: pointer; }
     .stats-bar { display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
     .stat-pill { background: var(--card-white); border: 1px solid var(--border-light); border-radius: 8px; padding: 8px 14px; font-size: 0.78rem; font-weight: 600; color: rgba(34,27,25,0.6); }
     .stat-pill strong { color: var(--carbon-black); }
     .asset-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 14px; }
-    .asset-card { background: var(--card-white); border: 1.5px solid var(--border-light); border-radius: 12px; overflow: hidden; transition: box-shadow 0.15s, border-color 0.15s; }
+    .asset-card { overflow: hidden; transition: box-shadow 0.15s, border-color 0.15s; }
     .asset-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.08); border-color: #d0cac4; }
     .asset-card.selected { border-color: var(--ruby-red); box-shadow: 0 0 0 2px rgba(159,63,55,0.2); }
     .asset-thumb { width: 100%; aspect-ratio: 1; background: #f0ece8; display: flex; align-items: center; justify-content: center; overflow: hidden; cursor: pointer; position: relative; }
@@ -66,10 +59,6 @@
     .asset-act-btn:hover { background: #e8e2dc; }
     .asset-act-btn.danger { color: var(--danger); border-color: #fecaca; }
     .asset-act-btn.danger:hover { background: #fef2f2; }
-    .empty-state { text-align: center; padding: 80px 24px; color: rgba(34,27,25,0.35); }
-    .empty-state svg { margin: 0 auto 16px; opacity: 0.2; display: block; }
-    .empty-state h3 { font-size: 1rem; font-weight: 700; margin-bottom: 6px; color: rgba(34,27,25,0.5); }
-    .empty-state p { font-size: 0.82rem; }
     .loading-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 14px; }
     .skeleton { background: linear-gradient(90deg, #f0ece8 25%, #e8e2dc 50%, #f0ece8 75%); background-size: 200% 100%; animation: shimmer 1.4s infinite; border-radius: 12px; aspect-ratio: 1; }
     @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
@@ -135,7 +124,7 @@
       </div>
     </div>
     </div>
-      <input type="text" id="searchInput" class="search-input" placeholder="Buscar por nome do arquivo…" oninput="debounceSearch()">
+      <input type="text" id="searchInput" class="input" style="min-width:220px" placeholder="Buscar por nome do arquivo…" oninput="debounceSearch()">
   </div>
 
   <!-- Drop zone -->
@@ -258,7 +247,7 @@
       const isOrphan = !a.usage_count || a.usage_count === 0;
       const sizeKb = Math.round(a.size_bytes / 1024);
       const sizeStr = sizeKb >= 1024 ? (sizeKb/1024).toFixed(1) + 'MB' : sizeKb + 'KB';
-      return `<div class="asset-card" id="ac-${a.id}">
+      return `<div class="card asset-card" id="ac-${a.id}">
         <div class="asset-thumb" onclick="previewAsset('${esc(a.url)}')">
           <img src="${esc(a.url)}" alt="${esc(a.filename)}" loading="lazy" onerror="window.handleAssetImgError(this)">
           <div class="overlay">

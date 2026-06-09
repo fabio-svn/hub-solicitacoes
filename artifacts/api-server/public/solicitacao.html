@@ -293,19 +293,12 @@
     }
 
     .btn-aprovar {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
       padding: 9px 18px;
-      background: #16a34a;
-      color: white;
       border: none;
       border-radius: 10px;
-      font-family: 'Nunito Sans', sans-serif;
-      font-weight: 700;
+      background: #16a34a;
+      color: white;
       font-size: 0.875rem;
-      cursor: pointer;
-      transition: background 0.2s;
       box-shadow: 0 2px 6px rgba(22,163,74,0.3);
     }
     .btn-aprovar:hover { background: #15803d; }
@@ -323,19 +316,12 @@
     .btn-link-admin:hover { opacity: 1; }
 
     .btn-alterar {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
       padding: 9px 18px;
-      background: #dc2626;
-      color: white;
       border: none;
       border-radius: 10px;
-      font-family: 'Nunito Sans', sans-serif;
-      font-weight: 700;
+      background: var(--danger);
+      color: white;
       font-size: 0.875rem;
-      cursor: pointer;
-      transition: background 0.2s;
       box-shadow: 0 2px 6px rgba(220,38,38,0.3);
     }
     .btn-alterar:hover { background: #b91c1c; }
@@ -1398,11 +1384,11 @@
 
     function renderBotoesDecisao() {
       return `<div class="chat-action-btns">
-        <button class="btn-aprovar" onclick="acaoAprovar()">
+        <button class="btn btn-aprovar" onclick="acaoAprovar()">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
           Aprovado
         </button>
-        <button class="btn-alterar" onclick="acaoSolicitarAlteracao()">
+        <button class="btn btn-alterar" onclick="acaoSolicitarAlteracao()">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
           Solicitar alterações
         </button>
@@ -1507,11 +1493,11 @@
         `Anotado! Gostaria de acrescentar mais alguma coisa?`,
         false,
         `<div class="chat-action-btns" style="margin-top:6px">
-          <button class="btn-aprovar" style="background:#2563eb" onclick="acaoTemMais()">
+          <button class="btn btn-aprovar" style="background:#2563eb" onclick="acaoTemMais()">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
             Sim, tenho mais
           </button>
-          <button class="btn-alterar" style="background:#7c3aed" onclick="acaoFinalizarAlteracao()">
+          <button class="btn btn-alterar" style="background:#7c3aed" onclick="acaoFinalizarAlteracao()">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
             Não, pode enviar
           </button>

@@ -13,19 +13,11 @@
   <style>
 
     .ccu-section-title { font-size: 0.72rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(34,27,25,0.5); margin: 28px 0 12px; }
-    .ccu-card { background: #fff; border: 1.5px solid #e8e2dc; border-radius: 14px; padding: 18px; margin-bottom: 12px; }
+    .ccu-card { padding: 18px; margin-bottom: 12px; border-radius: 14px; }
     .ccu-add-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-    .ccu-input { padding: 8px 12px; border: 1.5px solid #e8e2dc; border-radius: 8px; font-size: 0.88rem; font-family: 'Nunito Sans', sans-serif; color: #221b19; }
-    .ccu-input:focus { outline: none; border-color: var(--ruby-red); }
-    .ccu-btn { padding: 8px 15px; border-radius: 8px; border: 1.5px solid #e8e2dc; background: #fff; font-size: 0.82rem; font-weight: 600; cursor: pointer; font-family: 'Nunito Sans', sans-serif; color: rgba(34,27,25,0.7); transition: background 0.15s; }
-    .ccu-btn:hover { background: #f5f3f0; }
-    .ccu-btn.primary { background: var(--ruby-red); color: #fff; border-color: var(--ruby-red); }
-    .ccu-btn.primary:hover { background: #b44b42; }
-    .ccu-btn.danger { color: #b91c1c; border-color: #fecaca; }
-    .ccu-btn.danger:hover { background: #fef2f2; }
     .ccu-status { font-size: 0.78rem; margin-top: 8px; min-height: 1em; }
     .ccu-status.ok { color: #0A7040; }
-    .ccu-status.err { color: #b91c1c; }
+    .ccu-status.err { color: var(--danger); }
     .ccu-hint { font-size: 0.78rem; color: rgba(34,27,25,0.5); margin-top: 8px; line-height: 1.45; }
     .ccu-hint code { background: rgba(34,27,25,0.06); padding: 1px 5px; border-radius: 4px; }
     .ccu-add-inline { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; flex-wrap: wrap; }
@@ -38,7 +30,7 @@
     .ccu-link-btn { background: none; border: none; padding: 0; font-size: inherit; color: inherit; cursor: pointer; font-family: inherit; text-decoration: underline; text-decoration-style: dotted; text-underline-offset: 2px; }
     .ccu-link-btn:hover { color: var(--ruby-red); }
     .ccu-icon-btn { width: 32px; height: 32px; border-radius: 8px; border: 1px solid transparent; background: transparent; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; color: rgba(34,27,25,0.45); transition: background 0.15s, color 0.15s, border-color 0.15s; flex-shrink: 0; }
-    .ccu-icon-btn:hover { background: #fef2f2; color: #b91c1c; border-color: #fecaca; }
+    .ccu-icon-btn:hover { background: #fef2f2; color: var(--danger); border-color: #fecaca; }
     .ccu-forms-label { font-size: 0.74rem; font-weight: 700; color: rgba(34,27,25,0.55); margin-bottom: 8px; }
     .ccu-forms-grid { display: block; }
     .ccu-category { margin-bottom: 16px; }
@@ -53,10 +45,9 @@
     .ccu-checkbox.locked .ccu-checkbox-label { color: rgba(34,27,25,0.35); text-decoration: line-through; text-decoration-thickness: 1px; }
     .ccu-checkbox .ccu-lockinfo { font-size: 0.7rem; color: rgba(34,27,25,0.4); font-style: italic; }
     .ccu-row-actions { display: flex; gap: 8px; margin-top: 14px; align-items: center; }
-    .ccu-loading, .ccu-error, .ccu-empty { text-align: center; padding: 32px 20px; font-size: 0.88rem; }
+    .ccu-loading, .ccu-error { text-align: center; padding: 32px 20px; font-size: 0.88rem; }
     .ccu-loading { opacity: 0.5; }
-    .ccu-error { color: #b91c1c; }
-    .ccu-empty { opacity: 0.45; }
+    .ccu-error { color: var(--danger); }
 
     /* === Cards colapsáveis === */
     .ccu-forms-area { display: none; }
@@ -170,8 +161,8 @@
       </div>
 
       <div class="ccu-add-inline">
-        <input class="ccu-input" id="addInput" type="text" inputmode="numeric" placeholder="ID da lista do ClickUp" oninput="onAddInputChange()" style="flex:1;min-width:240px">
-        <button class="ccu-btn primary" id="addBtn" onclick="adicionarLista()" disabled>+ Adicionar</button>
+        <input class="input" id="addInput" type="text" inputmode="numeric" placeholder="ID da lista do ClickUp" oninput="onAddInputChange()" style="flex:1;min-width:240px">
+        <button class="btn btn--primary" id="addBtn" onclick="adicionarLista()" disabled>+ Adicionar</button>
         <button class="ccu-help-btn" type="button" onclick="toggleAddHint()" title="Como encontrar o ID" aria-label="Ajuda">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
         </button>
@@ -234,7 +225,7 @@
     function renderLists() {
       const area = document.getElementById('listArea');
       if (!STATE.lists.length) {
-        area.innerHTML = '<div class="ccu-empty">Nenhuma lista cadastrada ainda. Adicione uma acima.</div>';
+        area.innerHTML = '<div class="empty-state"><p>Nenhuma lista cadastrada ainda. Adicione uma acima.</p></div>';
         return;
       }
       area.innerHTML = STATE.lists.map(function (list) {
@@ -300,7 +291,7 @@
           ? '<span class="ccu-tag" onclick="editListTag(\'' + esc(list.list_id) + '\', event)" title="Clique para editar a tag">' + esc(tagSaved) + '</span>'
           : '<span class="ccu-tag empty" onclick="editListTag(\'' + esc(list.list_id) + '\', event)" title="Adicionar tag">+ tag</span>';
 
-        return '<div class="ccu-card" data-list-id="' + list.id + '">' +
+        return '<div class="card ccu-card" data-list-id="' + list.id + '">' +
           '<div class="ccu-list-head">' +
             '<div class="ccu-list-head-text">' +
               '<div class="ccu-list-name-row">' +
@@ -322,9 +313,9 @@
           '</div>' +
           '<div class="ccu-forms-area">' +
             '<div class="ccu-forms-label">Formulários que usam esta lista</div>' +
-            '<div class="ccu-forms-grid">' + (chips || '<span class="ccu-empty" style="padding:0">Nenhum formulário disponível.</span>') + '</div>' +
+            '<div class="ccu-forms-grid">' + (chips || '<span style="color:rgba(34,27,25,0.45);font-size:0.82rem">Nenhum formulário disponível.</span>') + '</div>' +
             '<div class="ccu-row-actions ccu-save-row">' +
-              '<button class="ccu-btn primary" onclick="salvarForms(' + list.id + ')">Salvar formulários</button>' +
+              '<button class="btn btn--primary" onclick="salvarForms(' + list.id + ')">Salvar formulários</button>' +
               '<span class="ccu-status" id="status-' + list.id + '"></span>' +
             '</div>' +
           '</div>' +
