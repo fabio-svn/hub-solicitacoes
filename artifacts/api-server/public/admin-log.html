@@ -20,17 +20,19 @@
 </head>
 <body class="page-light">
   <div id="pageContent">
-    <div class="container" style="padding-top:28px;padding-bottom:60px">
+    <div class="page-wrap">
 
-      <div class="title-row" style="margin-bottom:24px">
+      <div class="page-header">
         <h1 class="page-title">Log de atividade</h1>
-        <button onclick="exportarLogCSV()" style="display:inline-flex;align-items:center;gap:6px;padding:7px 16px;border-radius:9px;border:1px solid var(--border-light);background:transparent;font-family:'Nunito Sans',sans-serif;font-size:0.82rem;font-weight:600;cursor:pointer">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-          Exportar CSV
-        </button>
+        <div class="page-header__actions">
+          <button onclick="exportarLogCSV()" style="display:inline-flex;align-items:center;gap:6px;padding:7px 16px;border-radius:9px;border:1px solid var(--border-light);background:transparent;font-family:'Nunito Sans',sans-serif;font-size:0.82rem;font-weight:600;cursor:pointer">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Exportar CSV
+          </button>
+        </div>
       </div>
 
-      <p style="font-size:0.82rem;opacity:0.5;margin:0 0 16px">Log detalhado de atividades do sistema: criações, exclusões, aprovações e erros de integração.</p>
+      <p class="page-subtitle" style="margin-bottom:16px">Log detalhado de atividades do sistema: criações, exclusões, aprovações e erros de integração.</p>
 
       <div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:0">
         <div style="position:relative;flex-shrink:0">

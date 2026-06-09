@@ -10,6 +10,7 @@
   --surface: #1a1412;
   --border: rgba(255, 248, 243, 0.1);
   --border-light: rgba(34, 27, 25, 0.12);
+  --danger: #dc2626;
   --dark-bg-from: #221B19;
   --dark-bg-to: #0d0a09;
 }
@@ -67,6 +68,12 @@ img { max-width: 100%; height: auto; }
 
 .container { max-width: 960px; margin: 0 auto; padding: 32px 24px; }
 .container-narrow { max-width: 700px; margin: 0 auto; padding: 0 24px; }
+
+.page-wrap { max-width: 1340px; margin: 0 auto; padding: 32px 24px; }
+.page-wrap--wide { max-width: none; }
+.page-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin: 0 0 24px; flex-wrap: wrap; }
+.page-header__actions { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.page-subtitle { font-size: 0.9rem; color: rgba(34, 27, 25, 0.5); margin: 4px 0 0; }
 
 /* Header */
 .header {

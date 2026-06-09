@@ -11,10 +11,7 @@
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap">
   <link rel="stylesheet" href="style.css?v=20260603">
   <style>
-    .app-main { min-width: 0; }
-    .vc-wrap { max-width: 1340px; margin: 0 auto; padding: 32px 24px; }
-    .vc-title { font-family: 'Taviraj', serif; font-weight: 300; margin: 0 0 4px; font-size: 1.8rem; color: var(--carbon-black,#221b19); }
-    .vc-sub { font-size: 0.9rem; color: rgba(34,27,25,0.5); margin: 0 0 24px; }
+
     .vc-count { font-size: 0.85rem; color: rgba(34,27,25,0.5); }
     .vc-saved { font-size: 0.78rem; color: #15803d; opacity: 0; transition: opacity .2s; }
     .vc-saved.show { opacity: 1; }
@@ -42,7 +39,7 @@
     table.vc input:focus, table.vc select:focus, table.vc textarea:focus { outline: none; border-color: var(--ruby-red); background: #fff; cursor: text; }
     table.vc select:hover, table.vc select:focus { cursor: pointer; }
     td.col-observacao { min-width: 150px; }
-    .vc-filter-select { padding: 5px 10px; border-radius: 7px; border: 1px solid var(--border-light, #e8e2dc); background: #fff; font-family: inherit; font-size: 0.8rem; color: #221b19; cursor: pointer; }
+    .vc-filter-select { padding: 5px 10px; border-radius: 7px; border: 1px solid var(--border-light); background: #fff; font-family: inherit; font-size: 0.8rem; color: #221b19; cursor: pointer; }
     .vc-filter-select:focus { outline: none; border-color: var(--ruby-red); }
     .vc-empty { padding: 30px; text-align: center; color: rgba(34,27,25,0.5); font-size: 0.88rem; }
 
@@ -58,8 +55,8 @@
       }
     }
     .cartao-card {
-      background: var(--paper-white, #fff);
-      border: 1px solid var(--border-light, #e8e2dc);
+      background: var(--paper-white);
+      border: 1px solid var(--border-light);
       border-radius: 12px;
       padding: 16px;
       display: flex;
@@ -72,34 +69,38 @@
       display: flex; justify-content: space-between; align-items: flex-start;
       gap: 12px;
       padding-bottom: 10px;
-      border-bottom: 1px solid var(--border-light, #e8e2dc);
+      border-bottom: 1px solid var(--border-light);
     }
-    .cartao-card-nome { font-weight: 700; font-size: 0.95rem; color: var(--carbon-black, #221b19); }
-    .cartao-card-data { font-size: 0.72rem; color: var(--carbon-black, #221b19); opacity: 0.5; margin-top: 2px; }
+    .cartao-card-nome { font-weight: 700; font-size: 0.95rem; color: var(--carbon-black); }
+    .cartao-card-data { font-size: 0.72rem; color: var(--carbon-black); opacity: 0.5; margin-top: 2px; }
     .cartao-card-field { display: flex; flex-direction: column; gap: 4px; }
     .cartao-card-label {
       font-size: 0.66rem; font-weight: 700; text-transform: uppercase;
-      letter-spacing: 0.08em; color: var(--carbon-black, #221b19); opacity: 0.5;
+      letter-spacing: 0.08em; color: var(--carbon-black); opacity: 0.5;
     }
-    .cartao-card-value { font-size: 0.85rem; color: var(--carbon-black, #221b19); word-break: break-word; }
+    .cartao-card-value { font-size: 0.85rem; color: var(--carbon-black); word-break: break-word; }
     .cartao-card-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
     .cartao-card select,
     .cartao-card input,
     .cartao-card textarea {
       width: 100%; padding: 8px 10px;
-      border: 1px solid var(--border-light, #e8e2dc);
+      border: 1px solid var(--border-light);
       border-radius: 8px;
       font-family: inherit; font-size: 0.85rem;
-      background: var(--paper-white, #fff);
+      background: var(--paper-white);
     }
     .cartao-card textarea { min-height: 60px; resize: vertical; }
   </style>
 </head>
 <body class="page-light">
   <div id="pageContent">
-    <div class="vc-wrap">
-      <h1 class="vc-title">Validação de Cartões de Visita</h1>
-      <p class="vc-sub">Validação dos cartões físicos. As alterações são salvas automaticamente.</p>
+    <div class="page-wrap">
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Validação de Cartões de Visita</h1>
+          <p class="page-subtitle">Validação dos cartões físicos. As alterações são salvas automaticamente.</p>
+        </div>
+      </div>
 
       <div style="display:flex;gap:10px;align-items:flex-start">
         <div style="position:relative;flex-shrink:0">

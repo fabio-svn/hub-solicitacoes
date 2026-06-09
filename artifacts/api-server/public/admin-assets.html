@@ -21,13 +21,6 @@
   <script src="toast.js?v=20260603"></script>
   <link rel="stylesheet" href="style.css?v=20260603">
   <style>
-    :root {
-      --carbon-black: #221b19;
-      --ruby-red: #AC3631;
-      --border-light: #e8e2dc;
-      --card-white: #fff;
-      --icon-bg: #f5f3f0;
-    }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: 'Nunito Sans', sans-serif; color: var(--carbon-black); }
     .header { background: var(--card-white); border-bottom: 1px solid var(--border-light); padding: 0 24px; height: 58px; }
@@ -35,10 +28,8 @@
     .header-logo img { display: block; }
     .avatar { width: 34px; height: 34px; border-radius: 50%; background: var(--ruby-red); color: #fff; font-size: 0.78rem; font-weight: 700; display: flex; align-items: center; justify-content: center; cursor: pointer; }
     .user-name { font-size: 0.82rem; font-weight: 600; }
-    .notif-badge { position: absolute; top: -3px; right: -3px; background: #dc2626; color: #fff; border-radius: 50%; width: 16px; height: 16px; font-size: 0.6rem; display: flex; align-items: center; justify-content: center; font-weight: 700; }
-    .notif-badge-menu { background: #dc2626; color: #fff; border-radius: 4px; padding: 1px 5px; font-size: 0.65rem; font-weight: 700; margin-left: auto; }
-    .page-wrap { max-width: 1300px; margin: 0 auto; padding: 28px 24px; }
-    .page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; gap: 16px; flex-wrap: wrap; }
+    .notif-badge { position: absolute; top: -3px; right: -3px; background: var(--danger); color: #fff; border-radius: 50%; width: 16px; height: 16px; font-size: 0.6rem; display: flex; align-items: center; justify-content: center; font-weight: 700; }
+    .notif-badge-menu { background: var(--danger); color: #fff; border-radius: 4px; padding: 1px 5px; font-size: 0.65rem; font-weight: 700; margin-left: auto; }
     .filter-chip-mini { padding: 5px 12px; border-radius: 7px; border: 1px solid var(--border-light); background: var(--card-white); font-family: 'Nunito Sans',sans-serif; font-size: 0.78rem; font-weight: 600; cursor: pointer; color: rgba(34,27,25,0.65); transition: all 0.12s; }
     .filter-chip-mini:hover { background: var(--icon-bg); }
     .filter-chip-mini.active { background: var(--carbon-black); color: var(--paper-white); border-color: var(--carbon-black); }
@@ -73,7 +64,7 @@
     .asset-actions { padding: 0 10px 10px; display: flex; gap: 6px; }
     .asset-act-btn { flex: 1; padding: 5px; font-size: 0.72rem; border-radius: 6px; border: 1px solid var(--border-light); background: var(--icon-bg); cursor: pointer; font-family: 'Nunito Sans', sans-serif; text-align: center; transition: background 0.12s; }
     .asset-act-btn:hover { background: #e8e2dc; }
-    .asset-act-btn.danger { color: #dc2626; border-color: #fecaca; }
+    .asset-act-btn.danger { color: var(--danger); border-color: #fecaca; }
     .asset-act-btn.danger:hover { background: #fef2f2; }
     .empty-state { text-align: center; padding: 80px 24px; color: rgba(34,27,25,0.35); }
     .empty-state svg { margin: 0 auto 16px; opacity: 0.2; display: block; }
@@ -84,7 +75,7 @@
     @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
     .toast { position: fixed; bottom: 24px; right: 24px; background: #221b19; color: #fff; padding: 10px 18px; border-radius: 10px; font-size: 0.82rem; font-weight: 600; z-index: 9000; transition: opacity 0.3s; box-shadow: 0 4px 16px rgba(0,0,0,0.2); }
     .toast.success { background: #166534; }
-    .toast.error { background: #dc2626; }
+    .toast.error { background: var(--danger); }
     .pagination { display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 28px; padding-bottom: 40px; }
     .page-btn { padding: 6px 12px; border: 1.5px solid var(--border-light); border-radius: 7px; background: var(--card-white); font-family: 'Nunito Sans', sans-serif; font-size: 0.78rem; cursor: pointer; transition: background 0.12s; }
     .page-btn:hover { background: #f5f3f0; }
@@ -105,12 +96,12 @@
 
 
 <div id="pageContent">
-  <div class="container" style="padding-top:28px;padding-bottom:60px">
+  <div class="page-wrap">
 
-    <div class="title-row" style="margin-bottom:8px">
+    <div class="page-header">
       <h1 class="page-title">Assets de Templates <span id="totalCount"></span></h1>
     </div>
-    <p style="font-size:0.82rem;opacity:0.5;margin:0 0 16px">Imagens e recursos visuais usados nos templates de geração automática de materiais.</p>
+    <p class="page-subtitle" style="margin-bottom:16px">Imagens e recursos visuais usados nos templates de geração automática de materiais.</p>
 
     <div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:0">
       <div style="position:relative;flex-shrink:0">

@@ -1,0 +1,31 @@
+Prompt 7 — Base visual: tokens + contêiner de página + cabeçalho (o "trio do alinhamento")
+Contexto: o frontend (artifacts/api-server/public) tem um style.css central com um :root rico (--paper-white, --carbon-black, --ruby-red, --icon-bg, --card-white, --border, --border-light etc.) e uma classe .page-title (Taviraj, weight 300, 1.6rem, color var(--carbon-black)). MAS várias páginas têm <style> local que sobrescreve essa base, causando inconsistência de cor/espaçamento/título entre telas. Objetivo: unificar a BASE (tokens + contêiner de página + cabeçalho) sem mexer em componentes específicos (botões/inputs/tabelas ficam para o Prompt 8) e sem mudar funcionalidade.
+
+== 1) TOKENS (um :root só) ==
+- O :root global do style.css é a única fonte. Em public/admin-assets.html existe um :root LOCAL que duplica --carbon-black/--ruby-red e redefine --icon-bg (#f5f3f0 vs global #f8f4f1), --border-light (#e8e2dc vs global rgba(34,27,25,0.12)) e --card-white. REMOVER esse :root local inteiro — a página passa a herdar os tokens globais (todos já existem).
+- Substituir os fallbacks redundantes var(--ruby-red, #AC3631) por var(--ruby-red) (o token existe). Idem para outros var(--token, #hex) onde o token já existe no :root global.
+- Substituir hex de marca crus por token em todo o public/: #221B19→var(--carbon-black), #AC3631→var(--ruby-red), #fef8f4/#FFF8F3→var(--paper-white). NÃO trocar o #hex dentro das DEFINIÇÕES do :root.
+- Vermelho off-brand #dc2626 (em admin.html): NÃO mudar a aparência — criar um token --danger no :root global com esse valor e trocar as ocorrências por var(--danger). (Mantém o vermelho de ação destrutiva separado e tematizável, sem virar a cor de marca.)
+- O verde de cabeçalho de tabela #d6e8df (validacao-cartoes) NÃO é deste prompt — fica no Prompt 8 (tabela).
+
+== 2) CONTÊINER DE PÁGINA (.page-wrap) ==
+- Criar no style.css uma classe única de contêiner de conteúdo:
+    .page-wrap { max-width: 1340px; margin: 0 auto; padding: 32px 24px; }
+  (e um modificador .page-wrap--wide { max-width: none; } para páginas que HOJE são propositalmente largura cheia — ex.: dashboards/tabelas largas — para não quebrar o layout delas.)
+- Aplicar .page-wrap como o wrapper de conteúdo de TODAS as páginas, aposentando os wrappers locais: .vc-wrap (validacao-cartoes), o wrapper externo .ccu-* (admin-clickup-lists), o .page-wrap LOCAL do admin-assets, e contêineres com padding/max-width inline. Manter as classes internas de componente (.ccu-*, .cartao-card, .asset-*) — elas são do Prompt 8.
+- Remover overrides locais de .app-main (ex.: validacao-cartoes tem .app-main { min-width:0 }) se forem redundantes; o global .app-main { grid-area: main } permanece.
+- Resultado esperado: mesma largura máxima e mesmo recuo lateral/topo em todas as páginas.
+
+== 3) CABEÇALHO (.page-header + .page-title + .page-subtitle + ações) ==
+- Padronizar no style.css:
+    .page-header { display:flex; align-items:flex-start; justify-content:space-between; gap:16px; margin:0 0 24px; flex-wrap:wrap; }
+    .page-header__actions { display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+    .page-subtitle { font-size:0.9rem; color:rgba(34,27,25,0.5); margin:4px 0 0; }
+  Manter a .page-title existente (Taviraj, 300, 1.6rem, var(--carbon-black)) como o título canônico.
+- Trocar TODAS as variações de título por .page-title: .vc-title (validacao), .ccu-title (clickup-lists), .ch-title (capital-humano) e o <h1 style="..."> inline do solicitacoes.html.
+- Envolver título + subtítulo (à esquerda) e os botões de ação (à direita) num .page-header. Os botões de ação de cada página — "Nova solicitação" (solicitacoes), "Novo template" (templates), "Exportar CSV" (log), "Adicionar usuário" + busca (usuarios) — vão para .page-header__actions, para alinharem igual em todas.
+- Apagar o CSS local agora morto (.vc-title, .ccu-title, .ch-title e o que mais ficar órfão dessas três áreas).
+
+Restrições: NÃO alterar lógica/JS, nem componentes (botão/input/tabela/card/empty-state) — isso é o Prompt 8. Mexer só na base (tokens + contêiner + cabeçalho) e no markup necessário para aplicá-la. Não precisa rebuild (HTML/CSS estático); só refresh. pnpm exec tsc -p tsconfig.json --noEmit deve continuar verde.
+
+Critério de aceite: em TODAS as páginas admin (Minhas solicitações, Capital Humano, Validação de Cartões, Painel Admin, Log, Templates, Assets, Usuários, Listas do ClickUp) o título usa .page-title, com mesmo recuo lateral/topo e mesma largura máxima, e as ações alinhadas à direita no topo. Nenhum :root local restante. Sem regressão funcional.

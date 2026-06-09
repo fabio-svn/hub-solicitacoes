@@ -26,11 +26,13 @@
   <!-- VIEW: List -->
   <div class="full-view" id="view-list" style="display:none">
     <div class="full-view-inner">
-      <div class="title-row" style="margin-bottom:8px;display:flex;align-items:center;gap:12px">
-        <h1 class="page-title" style="margin:0">Templates de Arte</h1>
-        <button class="btn primary" onclick="showView('create')" style="margin-left:auto;padding:7px 14px;font-size:0.82rem">+ Novo template</button>
+      <div class="page-header">
+        <h1 class="page-title">Templates de Arte</h1>
+        <div class="page-header__actions">
+          <button class="btn primary" onclick="showView('create')" style="padding:7px 14px;font-size:0.82rem">+ Novo template</button>
+        </div>
       </div>
-      <p style="font-size:0.82rem;opacity:0.5;margin:0 0 20px">Templates visuais usados para gerar artes automaticamente nas solicitações de automação.</p>
+      <p class="page-subtitle" style="margin-bottom:20px">Templates visuais usados para gerar artes automaticamente nas solicitações de automação.</p>
       <div id="listContent">
         <div class="empty-state">Carregando...</div>
       </div>
