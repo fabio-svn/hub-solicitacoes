@@ -210,5 +210,10 @@ function humanizeValue(key, value) {
     if (found) return found.label;
   }
   if (typeof value === 'string' && (value.includes('-') || value.includes('_'))) return humanizeSlug(value);
+  // Ultimo recurso: token unico minusculo (so letras, sem espaco/digito) -> capitaliza inicial.
+  // Ex.: "fisico" -> "Fisico", "online" -> "Online". Nao toca nome/email/telefone/multi-palavra.
+  if (typeof value === 'string' && /^\p{L}{2,}$/u.test(value) && value === value.toLowerCase()) {
+    return value.charAt(0).toUpperCase() + value.slice(1);
+  }
   return value;
 }
