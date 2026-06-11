@@ -158,6 +158,22 @@
       { v: 'svn-connect', label: 'SVN Connect' },
       { v: 'svn-investimentos', label: 'SVN Investimentos' },
     ];
+    const ENVIO_OPTS = [
+      { v: '', label: 'Selecione…' },
+      { v: 'Aracaju', label: 'Aracaju' },
+      { v: 'Campo Grande', label: 'Campo Grande' },
+      { v: 'Cascavel', label: 'Cascavel' },
+      { v: 'Cuiabá', label: 'Cuiabá' },
+      { v: 'Curitiba - Digital', label: 'Curitiba - Digital' },
+      { v: 'Curitiba - Relacionamento', label: 'Curitiba - Relacionamento' },
+      { v: 'Foz do Iguaçu', label: 'Foz do Iguaçu' },
+      { v: 'Londrina', label: 'Londrina' },
+      { v: 'Maringá - Digital', label: 'Maringá - Digital' },
+      { v: 'Maringá - Relacionamento', label: 'Maringá - Relacionamento' },
+      { v: 'Salvador', label: 'Salvador' },
+      { v: 'São Paulo - Digital', label: 'São Paulo - Digital' },
+      { v: 'São Paulo - Relacionamento', label: 'São Paulo - Relacionamento' },
+    ];
     const CUSTO_OPTS = [
       { v: '', label: 'Selecione…' },
       { v: 'interno', label: 'Interno' },
@@ -193,7 +209,7 @@
       { f: 'email', label: 'E-Mail', group: 'form', type: 'input', min: 200 },
       { f: 'unidade', label: 'Unidade', group: 'form', type: 'input', min: 100 },
       { f: 'contrato_social', label: 'Contrato Social', group: 'mng', type: 'select', opts: CONTRATO_OPTS, min: 120 },
-      { f: 'envio_para', label: 'Envio para', group: 'mng', type: 'input', min: 100 },
+      { f: 'envio_para', label: 'Envio para', group: 'mng', type: 'select', opts: ENVIO_OPTS, min: 100 },
       { f: 'custo', label: 'Custo', group: 'mng', type: 'select', opts: CUSTO_OPTS, colors: CUSTO_COLORS, min: 100 },
       { f: 'status', label: 'Andamento', group: 'mng', type: 'select', opts: STATUS_OPTS, colors: STATUS_COLORS, min: 180 },
       { f: 'observacao', label: 'Observação', group: 'mng', type: 'textarea', min: 140 },

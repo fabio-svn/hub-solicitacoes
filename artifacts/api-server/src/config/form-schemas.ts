@@ -34,6 +34,7 @@ export const CONTRATOS_OPTS = [
 ];
 
 export const MARCAS_OPTS = [
+  { value: 'svn', label: 'SVN' },
   { value: 'svn-investimentos',           label: 'SVN Investimentos' },
   { value: 'svn-capital',                 label: 'SVN Capital' },
   { value: 'svn-connect',                 label: 'SVN Connect' },
@@ -248,6 +249,15 @@ export const FORM_SCHEMAS: Record<string, FormSchema> = {
     ],
     computed: [
       { name: 'contrato_label', label: 'Contrato (label)', derived_from: 'contrato_social' },
+      {
+        name: 'fp_link', label: 'Link Financial Planning',
+        derived_from: 'contrato_social', transform: 'website_by_value',
+        lookup: {
+          'svn-investimentos': 'https://svninvestimentos.com.br/financial-planning/',
+          'svn-connect':       'https://svnconnect.com.br/financial-planning/',
+          'svn-capital':       'https://svncapital.com.br/financial-planning/',
+        },
+      },
     ],
   },
 

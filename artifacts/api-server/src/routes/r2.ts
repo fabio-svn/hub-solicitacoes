@@ -55,7 +55,7 @@ export async function uploadToR2(
   logEventoBg(solicitacaoId, {
     tipo: "info",
     origem: "r2",
-    mensagem: "Arquivo subido para R2",
+    mensagem: "Arquivo armazenado no R2",
     detalhes: { chave: key, content_type: file.mimetype },
   });
   return url;
