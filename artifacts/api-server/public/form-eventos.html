@@ -20,14 +20,15 @@
 </head>
 <body class="page-light">
   <div id="pageContent">
-  <div class="page-container page-container--narrow">
+  <div class="page-container page-container--wide">
     <div class="form-split">
       <div class="form-main">
         <div class="form-card">
-          <div class="form-progress"><div class="form-progress-bar" id="progressBar" style="width:14%"></div></div>
+          <div class="svn-stepper" id="formStepper" data-steps="Formato|Informações|Materiais|Palestrantes|Custos|Anexos"></div>
+          <div class="form-progress" style="display:none"><div class="form-progress-bar" id="progressBar"></div></div>
           <div class="flex-between">
             <h2 class="text-md-medium" id="formTitulo">Eventos</h2>
-            <span style="font-size:0.8rem;opacity:0.4" id="stepLabel">Etapa 1 de 6</span>
+            <span style="display:none" id="stepLabel">Etapa 1 de 6</span>
           </div>
           <hr class="sep">
 
@@ -1646,5 +1647,6 @@
   </svg>
 </a>
 
+  <script src="form-core.js?v=20260611c"></script>
 </body>
 </html>

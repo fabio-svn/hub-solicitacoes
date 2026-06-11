@@ -166,6 +166,7 @@ window.FormCore = (function () {
 
   function renderStepper(el, steps, current) {
     if (!el || !Array.isArray(steps)) return;
+    el.classList.toggle('svn-stepper--compact', steps.length > 4);
     let html = '';
     steps.forEach(function (label, i) {
       const n = i + 1;

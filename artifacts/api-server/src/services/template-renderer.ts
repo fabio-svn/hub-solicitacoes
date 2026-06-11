@@ -252,7 +252,8 @@ async function renderTextBlock(
   let allLines = buildLines(fontSize);
 
   while (fontSize > minFont) {
-    const lh = layer.line_height * (fontSize / layer.font_size);
+    const naturalLh = ((font.ascent + Math.abs(font.descent)) / font.unitsPerEm) * fontSize;
+    const lh = Math.max(layer.line_height * (fontSize / layer.font_size), naturalLh);
     const ch = allLines.length * lh;
     const maxW = allLines.reduce(
       (max, l) => (l ? Math.max(max, measureTextWidth(font, l, fontSize)) : max),
@@ -263,7 +264,8 @@ async function renderTextBlock(
     allLines = buildLines(fontSize);
   }
 
-  const lineHeight = layer.line_height * (fontSize / layer.font_size);
+  const naturalLh = ((font.ascent + Math.abs(font.descent)) / font.unitsPerEm) * fontSize;
+  const lineHeight = Math.max(layer.line_height * (fontSize / layer.font_size), naturalLh);
   const contentHeight = allLines.length * lineHeight;
 
   let yCursor = layer.y;
