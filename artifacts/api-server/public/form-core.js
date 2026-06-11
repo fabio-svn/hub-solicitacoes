@@ -1,6 +1,5 @@
-/* form-core.js — plumbing compartilhado dos forms do Hub SVN.
- * Mantém o markup de cada form; centraliza auth, validação, submit e sucesso.
- * Uso: FormCore.initForm({tipo, onReady}); FormCore.validateRequired(extra); FormCore.submit({tipo, dados, files}); */
+/* form-core.js — plumbing compartilhado dos forms do Hub SVN. v2 (rascunho opcional)
+ * FormCore.initForm({tipo, onReady, draft}); validateRequired(extra); markInvalid(); submit({tipo, dados, files}); */
 window.FormCore = (function () {
   function _bindPageshow() {
     window.addEventListener('pageshow', function (e) {
@@ -11,11 +10,13 @@ window.FormCore = (function () {
     });
   }
   function _bindClearInvalid() {
-    document.addEventListener('change', function (e) {
-      const field = e.target.closest && e.target.closest('.field');
-      if (field && field.classList.contains('field-invalid') && (e.target.value || '').trim()) {
-        field.classList.remove('field-invalid');
-      }
+    ['input', 'change'].forEach(function (evt) {
+      document.addEventListener(evt, function (e) {
+        const field = e.target.closest && e.target.closest('.field');
+        if (field && field.classList.contains('field-invalid') && (e.target.value || '').trim()) {
+          field.classList.remove('field-invalid');
+        }
+      });
     });
   }
   function _popularSetor() {
@@ -36,6 +37,28 @@ window.FormCore = (function () {
     Auth.aplicarPerfilNoCampo('email',      Auth.getUserEmail && Auth.getUserEmail());
     Auth.aplicarPerfilNoCampo('nome',       Auth.getUserName && Auth.getUserName());
   }
+  function _draftKey(tipo) { return 'form-' + tipo; }
+  function _saveDraft(tipo) {
+    try {
+      const root = document.getElementById('pageContent') || document;
+      const blob = {};
+      root.querySelectorAll('input[id], select[id], textarea[id]').forEach(function (el) {
+        if (el.type === 'file' || el.type === 'checkbox' || el.type === 'radio') return;
+        blob[el.id] = el.value;
+      });
+      sessionStorage.setItem(_draftKey(tipo), JSON.stringify(blob));
+    } catch (_) {}
+  }
+  function _restoreDraft(tipo) {
+    try {
+      const blob = JSON.parse(sessionStorage.getItem(_draftKey(tipo)) || 'null');
+      if (!blob) return;
+      Object.keys(blob).forEach(function (id) {
+        const el = document.getElementById(id);
+        if (el && blob[id] != null && blob[id] !== '') el.value = blob[id];
+      });
+    } catch (_) {}
+  }
 
   async function initForm(opts) {
     opts = opts || {};
@@ -53,6 +76,12 @@ window.FormCore = (function () {
     _popularSetor();
     _aplicarPerfil();
     if (typeof opts.onReady === 'function') { try { await opts.onReady(); } catch (e) { console.error(e); } }
+    if (opts.draft && opts.tipo) {
+      _restoreDraft(opts.tipo);
+      ['input', 'change'].forEach(function (evt) {
+        document.addEventListener(evt, function () { _saveDraft(opts.tipo); });
+      });
+    }
     return true;
   }
 
@@ -110,8 +139,10 @@ window.FormCore = (function () {
     } catch (_) {}
 
     if (res.ok) {
+      try { sessionStorage.removeItem('form-' + tipo); } catch (_) {}
       try {
         sessionStorage.setItem('svn_ultimo_resumo', JSON.stringify({
+          tipo_id: tipo,
           tipo: (typeof TIPO_SOLICITACAO_LABELS !== 'undefined' && TIPO_SOLICITACAO_LABELS[tipo]) || tipo,
           solicitante: Auth.getUserName ? Auth.getUserName() : '',
           setor: dados.setor || '',

@@ -91,82 +91,16 @@
   <script src="config.js?v=20260603"></script>
   <script src="auth.js?v=20260603"></script>
   <script src="shell.js?v=20260603"></script>
+  <script src="form-core.js?v=20260611b"></script>
   <script>
     const TIPO = 'cartao-comemorativo';
-    window.addEventListener('pageshow', function(e) {
-      if (e.persisted) {
-        try { sessionStorage.removeItem('form-' + TIPO); } catch {}
-        window.location.reload();
-      }
-    });
 
     async function init() {
-      await _configReady;
-      await Auth.init();
-      if (!Auth.isAuthenticated()) { window.location.href = '/auth/login?redirect=/form-cartao-comemorativo.html'; return; }
-      Shell.render({ activeRoute: 'nova-solicitacao', contentEl: document.getElementById('pageContent') });
-
-      Auth.aplicarPerfilNoCampo('telefone', Auth.getTelefone());
-      Auth.aplicarPerfilNoCampo('unidade',    Auth.getUnidade());
-      Auth.aplicarPerfilNoCampo('escritorio', Auth.getEscritorio());
-      Auth.aplicarPerfilNoCampo('cargo',      Auth.getCargo());
-      Auth.aplicarPerfilNoCampo('cdAncord',   Auth.getCdAncord());
-      Auth.aplicarPerfilNoCampo('email',      Auth.getUserEmail());
-      Auth.aplicarPerfilNoCampo('nome',       Auth.getUserName());
-
-      restoreSession();
-    }
-
-    function saveSession() {
-      try {
-        sessionStorage.setItem('form-cartao-comemorativo', JSON.stringify({
-          telefone: document.getElementById('telefone')?.value || '',
-          nome_aniversariante: document.getElementById('nomeAniversariante')?.value || '',
-          modelo_cartao: document.getElementById('modeloCartao')?.value || '',
-          mensagem: document.getElementById('mensagem')?.value || '',
-          assinatura: document.getElementById('assinatura')?.value || '',
-          email_destinatario: document.getElementById('emailDestinatario')?.value || '',
-        }));
-      } catch {}
-    }
-
-    function restoreSession() {
-      try {
-        const data = JSON.parse(sessionStorage.getItem('form-cartao-comemorativo'));
-        if (!data) return;
-        if (data.telefone) document.getElementById('telefone').value = data.telefone;
-        if (data.nome_aniversariante) document.getElementById('nomeAniversariante').value = data.nome_aniversariante;
-        if (data.modelo_cartao) { const el = document.getElementById('modeloCartao'); if (el) el.value = data.modelo_cartao; }
-        if (data.mensagem) document.getElementById('mensagem').value = data.mensagem;
-        if (data.assinatura) document.getElementById('assinatura').value = data.assinatura;
-        if (data.email_destinatario) document.getElementById('emailDestinatario').value = data.email_destinatario;
-      } catch {}
-    }
-
-    function validateRequiredFields() {
-      document.querySelectorAll('.field-invalid').forEach(el => el.classList.remove('field-invalid'));
-      const invalidFields = [];
-      document.querySelectorAll('input[required], select[required], textarea[required]').forEach(input => {
-        if (!input.value.trim()) {
-          const fieldWrapper = input.closest('.field');
-          if (fieldWrapper) {
-            fieldWrapper.classList.add('field-invalid');
-            let errorEl = fieldWrapper.querySelector('.field-error');
-            if (!errorEl) { errorEl = document.createElement('div'); errorEl.className = 'field-error'; input.parentElement.appendChild(errorEl); }
-            errorEl.textContent = 'Este campo é obrigatório.';
-            invalidFields.push(fieldWrapper);
-          }
-        }
-      });
-      if (invalidFields.length > 0) { invalidFields[0].scrollIntoView({ behavior: 'smooth', block: 'center' }); return false; }
-      return true;
+      await FormCore.initForm({ tipo: TIPO, draft: true });
     }
 
     async function submitForm() {
-      if (!validateRequiredFields()) return;
-      const btn = document.getElementById('btnSubmit');
-      btn.disabled = true; btn.textContent = 'Enviando...'; if(window.formLockUI)window.formLockUI(btn);
-
+      if (!FormCore.validateRequired()) return;
       const dados = {
         nome: Auth.getUserName(),
         telefone: document.getElementById('telefone').value,
@@ -176,47 +110,8 @@
         assinatura: document.getElementById('assinatura').value,
         email_destinatario: document.getElementById('emailDestinatario').value,
       };
-
-      const formData = new FormData();
-      formData.append('tipo_solicitacao', TIPO);
-      formData.append('dados', JSON.stringify(dados));
-
-      try {
-        const res = await fetch('/api/solicitacoes', { method: 'POST', body: formData });
-        const d = await res.json().catch(() => ({}));
-        if (res.ok) {
-          sessionStorage.removeItem('form-cartao-comemorativo');
-          try {
-            sessionStorage.setItem('svn_ultimo_resumo', JSON.stringify({
-              tipo_id: TIPO,
-              tipo: TIPO_SOLICITACAO_LABELS[TIPO] || TIPO,
-              solicitante: Auth.getUserName(),
-              data: new Date().toLocaleDateString('pt-BR'),
-              hora: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
-              id: d.id,
-            }));
-          } catch {}
-          window.location.replace('/thankyou.html');
-        } else {
-          throw new Error(d.error || 'submit_failed');
-        }
-      } catch (e) {
-        const errEl = document.getElementById('submitError');
-        if (errEl) { errEl.style.display = 'block'; errEl.textContent = 'Erro ao enviar. Tente novamente ou verifique sua conexão.'; }
-        if (window.formUnlockUI) window.formUnlockUI(btn); else { btn.disabled = false; btn.textContent = 'Enviar'; }
-      }
+      await FormCore.submit({ tipo: TIPO, dados: dados });
     }
-
-    document.addEventListener('input', function(e) {
-      const field = e.target.closest('.field');
-      if (field && field.classList.contains('field-invalid') && e.target.value.trim()) field.classList.remove('field-invalid');
-      saveSession();
-    });
-    document.addEventListener('change', function(e) {
-      const field = e.target.closest('.field');
-      if (field && field.classList.contains('field-invalid')) field.classList.remove('field-invalid');
-      saveSession();
-    });
 
     init();
   </script>
