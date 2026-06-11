@@ -150,8 +150,8 @@ export async function gerarPdf(dados: DadosCartao): Promise<Buffer> {
   const SANGRIA = 0 * PT_CM;  // cartao 9x5 exato (sem area de sangria)
   const TRIM_W = 255.12;        // corte final: 9cm
   const TRIM_H = 141.73;        // corte final: 5cm
-  const MEDIA_W = TRIM_W + 2 * SANGRIA; // 9,4cm
-  const MEDIA_H = TRIM_H + 2 * SANGRIA; // 5,4cm
+  const MEDIA_W = TRIM_W + 2 * SANGRIA; // = 9cm (sangria 0 -> igual ao TRIM)
+  const MEDIA_H = TRIM_H + 2 * SANGRIA; // = 5cm (sangria 0 -> igual ao TRIM)
 
   const versoSvg = gerarVersoSvg(dados);
   const frentePath = path.join(ASSETS_CARTAO, "frente.svg");

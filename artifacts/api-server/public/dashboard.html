@@ -16,7 +16,7 @@
     <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap" media="print" onload="this.media='all'">
   <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap"></noscript>
-  <link rel="stylesheet" href="style.css?v=20260611e">
+  <link rel="stylesheet" href="style.css?v=20260611f">
 </head>
 <body class="page-light">
   <div id="pageContent">
@@ -176,11 +176,11 @@
   </div>
   </div>
 
-  <script src="utils.js?v=20260611e"></script>
+  <script src="utils.js?v=20260611f"></script>
   <script src="toast.js?v=20260603"></script>
-  <script src="config.js?v=20260611e"></script>
-  <script src="auth.js?v=20260611e"></script>
-  <script src="shell.js?v=20260611e"></script>
+  <script src="config.js?v=20260611f"></script>
+  <script src="auth.js?v=20260611f"></script>
+  <script src="shell.js?v=20260611f"></script>
   <script>
     const CLICKUP_ICON = getClickupIcon();
 
@@ -527,202 +527,9 @@
 
 
     // ── Admin Dashboard ────────────────────────────────────────
-    let adminDias = 7;
-    let adminPageHistorico = 1;
     let adminGraficoModo = 'tipo';
     let adminGraficoData = null;
     let graficoFiltrosAtivos = null;
-    let adminSearchTimeout;
-    let adminSort = 'criado_em';
-    let adminDir = 'desc';
-    let adminTiposSelecionados = new Set();
-    let adminStatusesSelecionados = new Set();
-
-    function renderDropdownTipos() {
-      const container = document.getElementById('dropdownTipo');
-      if (!container) return;
-      const CATEGORIAS = [
-        {
-          label: 'Eventos',
-          itens: [{ value: 'eventos', label: 'Eventos' }]
-        },
-        {
-          label: 'Arte',
-          itens: [{ value: 'artes-divulgacao', label: 'Arte de Divulgação' }]
-        },
-        {
-          label: 'Apresentações',
-          itens: [
-            { value: 'apresentacao-nova', label: 'Apresentação Nova' },
-            { value: 'apresentacao-atualizar', label: 'Att. Apresentação' }
-          ]
-        },
-        {
-          label: 'Conteúdo PDF',
-          itens: [
-            { value: 'conteudo-pdf-informativo', label: 'PDF Informativo' },
-            { value: 'conteudo-pdf-ebook', label: 'PDF Ebook' }
-          ]
-        },
-        {
-          label: 'Materiais',
-          itens: [{ value: 'atualizacao-material', label: 'Att. Material' }]
-        },
-        {
-          label: 'Pág. Assessores',
-          itens: [
-            { value: 'pagina-assessores-dados', label: 'Dados Assessores' },
-            { value: 'pagina-assessores-atualizacao', label: 'Att. Pág. Assessores' }
-          ]
-        }
-      ];
-      let html = '';
-      CATEGORIAS.forEach(cat => {
-        html += '<div style="font-size:0.68rem;font-weight:700;opacity:0.35;text-transform:uppercase;letter-spacing:.06em;padding:8px 6px 3px">' + cat.label + '</div>';
-        cat.itens.forEach(item => {
-          html += '<label class="dropdown-checkbox-label"><input type="checkbox" value="' + item.value + '" onchange="updateAdminTiposFiltro()">' + item.label + '</label>';
-        });
-      });
-      html += '<button onclick="limparAdminTipos()" style="margin-top:8px;width:100%;text-align:center;background:none;border:none;font-size:0.78rem;opacity:0.5;cursor:pointer;font-family:\'Nunito Sans\',sans-serif;border-top:1px solid var(--border-light);padding-top:8px">Limpar</button>';
-      container.innerHTML = html;
-    }
-
-    function toggleDropdown(tipo) {
-      const elTipo = document.getElementById('dropdownTipo');
-      const elStatus = document.getElementById('dropdownStatus');
-      if (tipo === 'tipo') {
-        const open = elTipo.style.display === 'block';
-        elTipo.style.display = open ? 'none' : 'block';
-        elStatus.style.display = 'none';
-      } else {
-        const open = elStatus.style.display === 'block';
-        elStatus.style.display = open ? 'none' : 'block';
-        elTipo.style.display = 'none';
-      }
-    }
-
-    function updateAdminTiposFiltro() {
-      adminTiposSelecionados = new Set(
-        [...document.querySelectorAll('#dropdownTipo input:checked')].map(c => c.value)
-      );
-      const btn = document.getElementById('adminFiltroTipoBtn');
-      btn.style.borderColor = adminTiposSelecionados.size ? 'var(--ruby-red)' : '';
-      btn.style.color = adminTiposSelecionados.size ? 'var(--ruby-red)' : '';
-      const badge = btn.querySelector('.filter-count-badge');
-      if (badge) { badge.style.display = adminTiposSelecionados.size ? 'inline' : 'none'; badge.textContent = adminTiposSelecionados.size; }
-      adminPageHistorico = 1; loadAdminHistorico();
-    }
-
-    function updateAdminStatusFiltro() {
-      adminStatusesSelecionados = new Set(
-        [...document.querySelectorAll('#dropdownStatus input:checked')].map(c => c.value)
-      );
-      const btn = document.getElementById('adminFiltroStatusBtn');
-      btn.style.borderColor = adminStatusesSelecionados.size ? 'var(--ruby-red)' : '';
-      btn.style.color = adminStatusesSelecionados.size ? 'var(--ruby-red)' : '';
-      const badge = btn.querySelector('.filter-count-badge');
-      if (badge) { badge.style.display = adminStatusesSelecionados.size ? 'inline' : 'none'; badge.textContent = adminStatusesSelecionados.size; }
-      adminPageHistorico = 1; loadAdminHistorico();
-    }
-
-    function limparAdminTipos() {
-      document.querySelectorAll('#dropdownTipo input').forEach(c => c.checked = false);
-      updateAdminTiposFiltro();
-    }
-
-    function limparAdminStatuses() {
-      document.querySelectorAll('#dropdownStatus input').forEach(c => c.checked = false);
-      updateAdminStatusFiltro();
-    }
-
-    function sortAdmin(coluna) {
-      if (adminSort === coluna) {
-        adminDir = adminDir === 'desc' ? 'asc' : 'desc';
-      } else {
-        adminSort = coluna;
-        adminDir = 'asc';
-      }
-      const sortSpans = {
-        criado_em:        'sortCreated',
-        user_email:       'sortEmail',
-        titulo:           'sortTitulo',
-        tipo_solicitacao: 'sortTipo',
-        status:           'sortStatus',
-      };
-      Object.values(sortSpans).forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.textContent = '';
-      });
-      const activeSpan = document.getElementById(sortSpans[coluna]);
-      if (activeSpan) activeSpan.textContent = adminDir === 'asc' ? ' ↑' : ' ↓';
-      adminPageHistorico = 1; loadAdminHistorico();
-    }
-
-    function toggleAvaliacaoFiltro() {
-      const cb = document.getElementById('adminFiltroAvaliacao');
-      const label = document.getElementById('adminAvaliacaoLabel');
-      const star = document.getElementById('adminAvaliacaoStar');
-      cb.checked = !cb.checked;
-      if (cb.checked) {
-        label.style.borderColor = '#f59e0b';
-        label.style.background = 'rgba(245,158,11,0.08)';
-        star.setAttribute('fill', '#f59e0b');
-        star.setAttribute('stroke', '#f59e0b');
-      } else {
-        label.style.borderColor = 'rgba(34,27,25,0.12)';
-        label.style.background = 'transparent';
-        star.setAttribute('fill', 'none');
-        star.setAttribute('stroke', 'currentColor');
-      }
-      adminPageHistorico = 1;
-      loadAdminHistorico();
-    }
-
-    function setAdminPeriodo(btn) {
-      document.querySelectorAll('#adminPeriodoBtns .filter-chip').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      adminDias = parseInt(btn.dataset.dias);
-      document.getElementById('adminDe').value = '';
-      document.getElementById('adminAte').value = '';
-      Promise.all([loadAdminStats(), loadAdminHistorico()]);
-    }
-
-    function setAdminCustomPeriodo() {
-      document.querySelectorAll('#adminPeriodoBtns .filter-chip').forEach(b => b.classList.remove('active'));
-      adminDias = null;
-      Promise.all([loadAdminStats(), loadAdminHistorico()]);
-    }
-
-    async function loadAdminStats() {
-      try {
-        let url = '/api/admin/stats';
-        const de = document.getElementById('adminDe').value;
-        const ate = document.getElementById('adminAte').value;
-        if (de && ate) {
-          const diff = Math.ceil((new Date(ate) - new Date(de)) / 86400000);
-          url += '?dias=' + Math.max(1, diff);
-        } else {
-          url += '?dias=' + (adminDias || 7);
-        }
-        const res = await fetch(url);
-        const data = await res.json();
-
-        document.getElementById('adminTotal').textContent = data.total;
-        document.getElementById('adminAvaliacoes').textContent = data.avaliacoes;
-        document.getElementById('adminMediaNota').textContent =
-          data.mediaNotas ? 'Média: ' + data.mediaNotas + '/10' : 'Sem notas ainda';
-
-        const deltaEl = document.getElementById('adminDelta');
-        if (data.delta !== undefined) {
-          const sinal = data.deltaPositivo ? '+' : '';
-          const cor = data.delta === 0 ? 'rgba(34,27,25,0.4)' : data.deltaPositivo ? '#16a34a' : '#dc2626';
-          deltaEl.innerHTML = '<span style="color:' + cor + '">' + sinal + data.delta + '% vs período anterior</span>';
-        }
-
-        adminGraficoData = data;
-        renderAdminGrafico();
-      } catch (e) { console.error(e); }
-    }
 
     function switchGrafico(modo) {
       adminGraficoModo = modo;
@@ -817,10 +624,6 @@
         label.querySelector('input').addEventListener('change', () => toggleGraficoFiltro(item.id));
         container.appendChild(label);
       });
-    }
-
-    function atualizarContadorGrafico(modo, todosItens) {
-      // Removido — sem contador nos botões do gráfico
     }
 
     document.addEventListener('click', e => {
@@ -964,208 +767,7 @@
       }, 180);
     }
 
-    async function loadAdminHistorico() {
-      const tbody = document.getElementById('adminTabelaBody');
-      tbody.innerHTML = '<tr><td colspan="8" style="padding:24px;text-align:center;opacity:0.4">Carregando...</td></tr>';
-
-      const params = new URLSearchParams();
-      params.set('page', adminPageHistorico);
-      params.set('limit', '25');
-      params.set('order', adminSort);
-      params.set('dir', adminDir);
-
-      const busca = document.getElementById('adminBusca')?.value?.trim();
-      if (busca) params.set('busca', busca);
-      if (adminTiposSelecionados.size > 0)
-        params.set('tipos', [...adminTiposSelecionados].join(','));
-      if (adminStatusesSelecionados.size > 0)
-        params.set('statuses', [...adminStatusesSelecionados].join(','));
-      const avaliacaoCb = document.getElementById('adminFiltroAvaliacao');
-      if (avaliacaoCb?.checked) params.set('avaliacao', 'sim');
-      const de = document.getElementById('adminDe')?.value;
-      const ate = document.getElementById('adminAte')?.value;
-      if (de) params.set('de', de);
-      if (ate) params.set('ate', ate);
-
-      try {
-        const res = await fetch('/api/admin/historico?' + params.toString());
-        const data = await res.json();
-        renderAdminHistorico(data);
-      } catch (e) {
-        tbody.innerHTML = '<tr><td colspan="8" style="padding:24px;text-align:center;color:var(--ruby-red)">Erro ao carregar.</td></tr>';
-      }
-    }
-
-    function renderAdminHistorico(data) {
-      limparSelecao();
-      const tbody = document.getElementById('adminTabelaBody');
-      if (!data.data || data.data.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="8" style="padding:24px;text-align:center;opacity:0.4">Nenhuma solicitação encontrada.</td></tr>';
-        document.getElementById('adminPaginacao').innerHTML = '';
-        return;
-      }
-
-      tbody.innerHTML = data.data.map(item => {
-        let dados = {};
-        try { dados = typeof item.dados === 'string' ? JSON.parse(item.dados) : (item.dados || {}); } catch {}
-        const tituloDisplay = item.titulo || dados.nomeEvento || dados.tituloEvento || dados.titulo || dados.nome_completo || dados.nomeCompleto || '—';
-        let tipoLabel = (typeof TIPO_SOLICITACAO_LABELS !== 'undefined' && TIPO_SOLICITACAO_LABELS[item.tipo_solicitacao]) || item.tipo_solicitacao;
-        if (item.tipo_solicitacao === 'eventos') {
-          if (dados.natureza) {
-            const naturezaLabel = dados.natureza === 'presencial' ? 'Presencial'
-              : dados.natureza === 'online' ? 'Online'
-              : dados.natureza === 'patrocinio' ? 'Patrocínio'
-              : dados.natureza;
-            tipoLabel = 'Evento — ' + naturezaLabel;
-          }
-        } // end eventos block
-        const statusObj = getStatus(item.status);
-        const data_fmt = new Date(item.created_at).toLocaleDateString('pt-BR', { day:'2-digit', month:'2-digit', year:'2-digit' });
-        const hora_fmt = new Date(item.created_at).toLocaleTimeString('pt-BR', { hour:'2-digit', minute:'2-digit' });
-        const avaliacao = item.avaliacao;
-        const notaHtml = avaliacao?.nota
-          ? '<span style="font-weight:700;color:' + (avaliacao.nota >= 8 ? '#16a34a' : avaliacao.nota >= 5 ? '#ea580c' : '#dc2626') + '">' + avaliacao.nota + '/10</span>' +
-            (avaliacao.comentario ? '<div style="font-size:0.7rem;opacity:0.5;max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="' + esc(avaliacao.comentario) + '">' + esc(avaliacao.comentario) + '</div>' : '')
-          : '<span style="opacity:0.25">—</span>';
-
-        const statusCor = statusObj?.bg || '#94a3b8';
-        const statusDot = '<span class="status-dot" style="background:' + statusCor + ';display:block;margin:0 auto" title="' + esc(statusObj?.label || item.status) + '"></span>';
-
-        const clickupBtn = item.clickup_url
-          ? '<button style="width:28px;height:28px;border-radius:7px;border:none;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;background:rgba(137,48,253,0.08);color:#7c3aed;transition:all 0.15s" title="Abrir no ClickUp" onmouseover="this.style.background=\'rgba(137,48,253,0.15)\';this.style.transform=\'scale(1.08)\'" onmouseout="this.style.background=\'rgba(137,48,253,0.08)\';this.style.transform=\'scale(1)\'" onclick="window.open(\'' + esc(item.clickup_url) + '\',\'_blank\')">' + CLICKUP_ICON + '</button>'
-          : '<div style="width:28px"></div>';
-
-        return '<tr style="border-top:1px solid var(--border-light);transition:background 0.12s"' +
-          ' onmouseover="this.style.background=\'var(--icon-bg)\'"' +
-          ' onmouseout="this.style.background=\'\'">' +
-          '<td style="padding:10px 10px;text-align:center">' +
-            '<input type="checkbox" class="row-check" data-id="' + item.id + '" style="width:14px;height:14px;accent-color:var(--ruby-red);cursor:pointer" onchange="atualizarSelecao()">' +
-          '</td>' +
-          '<td style="padding:10px 14px;white-space:nowrap">' +
-            '<div style="font-size:0.8rem">' + data_fmt + '</div>' +
-            '<div style="font-size:0.72rem;opacity:0.4">' + hora_fmt + '</div>' +
-          '</td>' +
-          '<td style="padding:8px 10px;overflow:hidden">' +
-            '<div style="font-size:0.82rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="' + esc(item.user_email || '') + '">' + esc(item.user_email?.split('@')[0] || '—') + '</div>' +
-          '</td>' +
-          '<td style="padding:8px 10px;overflow:hidden">' +
-            '<div style="font-size:0.82rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="' + esc(tituloDisplay) + '">' + esc(tituloDisplay) + '</div>' +
-          '</td>' +
-          '<td style="padding:8px 10px;overflow:hidden">' +
-            '<span style="font-size:0.78rem;opacity:0.7;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block" title="' + esc(tipoLabel) + '">' + esc(tipoLabel) + '</span>' +
-          '</td>' +
-          '<td style="padding:10px 14px">' +
-            '<div style="display:flex;align-items:center;justify-content:center">' + statusDot + '</div>' +
-          '</td>' +
-          '<td style="padding:10px 14px;text-align:center">' + notaHtml + '</td>' +
-          '<td style="padding:8px 10px">' +
-            '<div style="display:flex;align-items:center;gap:4px;justify-content:center">' +
-              '<button style="width:28px;height:28px;border-radius:7px;border:none;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;background:rgba(37,99,235,0.08);color:#2563eb;transition:all 0.15s" title="Ver solicitação" onmouseover="this.style.background=\'rgba(37,99,235,0.18)\';this.style.transform=\'scale(1.08)\'" onmouseout="this.style.background=\'rgba(37,99,235,0.08)\';this.style.transform=\'scale(1)\'" onclick="window.open(\'/solicitacao.html?id=' + item.id + '\',\'_blank\')">' +
-                '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>' +
-              '</button>' +
-              clickupBtn +
-              '<button style="width:28px;height:28px;border-radius:7px;border:none;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;background:rgba(220,38,38,0.08);color:#dc2626;transition:all 0.15s" title="Excluir solicitação" onmouseover="this.style.background=\'#dc2626\';this.style.color=\'white\';this.style.transform=\'scale(1.08)\'" onmouseout="this.style.background=\'rgba(220,38,38,0.08)\';this.style.color=\'#dc2626\';this.style.transform=\'scale(1)\'" onclick="confirmarExcluir(' + item.id + ', this)">' +
-                '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>' +
-              '</button>' +
-            '</div>' +
-          '</td>' +
-          '</tr>';
-      }).join('');
-
-      const pag = document.getElementById('adminPaginacao');
-      if (data.totalPages <= 1) { pag.innerHTML = ''; return; }
-      let html = '';
-      html += '<button ' + (data.page <= 1 ? 'disabled' : '') + ' onclick="adminGoPage(' + (data.page - 1) + ')">&laquo;</button>';
-      const start = Math.max(1, data.page - 2);
-      const end = Math.min(data.totalPages, data.page + 2);
-      if (start > 1) html += '<button onclick="adminGoPage(1)">1</button>' + (start > 2 ? '<span>…</span>' : '');
-      for (let i = start; i <= end; i++) {
-        html += '<button class="' + (i === data.page ? 'active' : '') + '" onclick="adminGoPage(' + i + ')">' + i + '</button>';
-      }
-      if (end < data.totalPages) html += (end < data.totalPages - 1 ? '<span>…</span>' : '') + '<button onclick="adminGoPage(' + data.totalPages + ')">' + data.totalPages + '</button>';
-      html += '<button ' + (data.page >= data.totalPages ? 'disabled' : '') + ' onclick="adminGoPage(' + (data.page + 1) + ')">&raquo;</button>';
-      pag.innerHTML = html;
-    }
-
-    function adminGoPage(page) {
-      adminPageHistorico = page;
-      loadAdminHistorico();
-    }
-
-    function debounceAdminSearch() {
-      clearTimeout(adminSearchTimeout);
-      adminSearchTimeout = setTimeout(() => { adminPageHistorico = 1; loadAdminHistorico(); }, 300);
-    }
-
     // ── Exclusão em massa ────────────────────────────────────────
-    function toggleCheckAll(cb) {
-      document.querySelectorAll('.row-check').forEach(c => c.checked = cb.checked);
-      atualizarSelecao();
-    }
-
-    function atualizarSelecao() {
-      const checks = [...document.querySelectorAll('.row-check')];
-      const selecionados = checks.filter(c => c.checked);
-      const bar = document.getElementById('acoesMassaBar');
-      const countEl = document.getElementById('acoesMassaCount');
-      if (selecionados.length > 0) {
-        bar.style.display = 'flex';
-        countEl.textContent = selecionados.length + (selecionados.length === 1 ? ' selecionada' : ' selecionadas');
-      } else {
-        bar.style.display = 'none';
-      }
-      const allChecked = checks.length > 0 && selecionados.length === checks.length;
-      const chkAll = document.getElementById('checkAll');
-      if (chkAll) { chkAll.checked = allChecked; chkAll.indeterminate = !allChecked && selecionados.length > 0; }
-    }
-
-    function limparSelecao() {
-      document.querySelectorAll('.row-check').forEach(c => c.checked = false);
-      const chkAll = document.getElementById('checkAll');
-      if (chkAll) { chkAll.checked = false; chkAll.indeterminate = false; }
-      document.getElementById('acoesMassaBar').style.display = 'none';
-    }
-
-    function excluirSelecionados() {
-      const ids = [...document.querySelectorAll('.row-check:checked')].map(c => parseInt(c.dataset.id));
-      if (ids.length === 0) return;
-      const modal = document.getElementById('deleteMassaModal');
-      document.getElementById('deleteMassaCount').textContent = ids.length;
-      modal.style.display = 'flex';
-    }
-
-    function cancelarExclusaoMassa() {
-      document.getElementById('deleteMassaModal').style.display = 'none';
-      const btn = document.getElementById('btnConfirmarMassa');
-      if (btn) { btn.disabled = false; btn.textContent = 'Excluir permanentemente'; }
-    }
-
-    async function confirmarExclusaoMassa() {
-      const ids = [...document.querySelectorAll('.row-check:checked')].map(c => parseInt(c.dataset.id));
-      if (ids.length === 0) return;
-      const btn = document.getElementById('btnConfirmarMassa');
-      btn.disabled = true; btn.textContent = 'Excluindo...';
-      try {
-        const res = await fetch('/api/solicitacoes/massa-delete', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ ids }),
-        });
-        const d = await res.json();
-        if (res.ok && d.success) {
-          document.getElementById('deleteMassaModal').style.display = 'none';
-          limparSelecao();
-          await loadAdminHistorico();
-        } else {
-          showToast(d.error || 'Erro ao excluir', 'error');
-        }
-      } catch {
-        showToast('Erro de conexão', 'error');
-      } finally {
-        btn.disabled = false; btn.textContent = 'Excluir permanentemente';
-      }
-    }
-
     // ── Delete modal ─────────────────────────────────────────────
     let _deleteTargetId = null;
     let _deleteTargetRow = null;
@@ -1348,30 +950,10 @@
       </div>
     </div>
   </div>
-<a href="https://wa.me/5544991689207" target="_blank" rel="noopener"
-   class="float-whatsapp" title="Falar com o time de Marketing">
-  <svg width="22" height="22" viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg">
-    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/>
-    <path d="M11.999 2C6.477 2 2 6.484 2 12.017c0 1.99.521 3.86 1.43 5.484L2 22l4.644-1.414A9.96 9.96 0 0011.999 22C17.523 22 22 17.516 22 11.983 22 6.472 17.523 2 11.999 2zm0 18.15a8.124 8.124 0 01-4.162-1.145l-.299-.178-3.088.941.923-3.121-.196-.32A8.185 8.185 0 013.85 11.983c0-4.51 3.644-8.183 8.15-8.183 4.507 0 8.152 3.672 8.152 8.183 0 4.51-3.645 8.167-8.153 8.167z"/>
-  </svg>
-</a>
 
 
 <div id="graficoDropdownTipo" style="display:none;position:fixed;z-index:500;background:var(--card-white);border:1px solid var(--border-light);border-radius:10px;box-shadow:0 4px 20px rgba(0,0,0,.12);padding:8px;min-width:280px"></div>
 <div id="graficoDropdownStatus" style="display:none;position:fixed;z-index:500;background:var(--card-white);border:1px solid var(--border-light);border-radius:10px;box-shadow:0 4px 20px rgba(0,0,0,.12);padding:8px;min-width:280px"></div>
 
-<div id="deleteMassaModal" style="display:none;position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,0.45);align-items:center;justify-content:center">
-  <div style="background:var(--card-white);border-radius:16px;padding:28px 32px;max-width:400px;width:90%;box-shadow:0 8px 40px rgba(0,0,0,0.18);text-align:center">
-    <div style="width:44px;height:44px;border-radius:50%;background:rgba(220,38,38,0.1);display:flex;align-items:center;justify-content:center;margin:0 auto 16px">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>
-    </div>
-    <h3 style="font-size:1rem;font-weight:800;margin:0 0 8px">Excluir em massa</h3>
-    <p style="font-size:0.85rem;opacity:0.6;margin:0 0 20px">Você está prestes a excluir <strong id="deleteMassaCount">0</strong> solicitação(ões) permanentemente. Esta ação não pode ser desfeita.</p>
-    <div style="display:flex;gap:10px;justify-content:center">
-      <button onclick="cancelarExclusaoMassa()" style="padding:9px 20px;border-radius:9px;border:1px solid var(--border-light);background:transparent;font-family:'Nunito Sans',sans-serif;font-size:0.85rem;font-weight:600;cursor:pointer;color:var(--carbon-black)">Cancelar</button>
-      <button id="btnConfirmarMassa" onclick="confirmarExclusaoMassa()" style="padding:9px 20px;border-radius:9px;border:none;background:var(--ruby-red);color:white;font-family:'Nunito Sans',sans-serif;font-size:0.85rem;font-weight:700;cursor:pointer">Excluir permanentemente</button>
-    </div>
-  </div>
-</div>
 </body>
 </html>
