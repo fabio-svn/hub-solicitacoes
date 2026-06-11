@@ -22,10 +22,11 @@
   <div id="pageContent">
   <div class="page-container page-container--narrow">
     <div class="form-card">
-      <div class="form-progress"><div class="form-progress-bar" id="progressBar" style="width:50%"></div></div>
+      <div class="svn-stepper" id="formStepper" data-steps="Informações|Financeiro"></div>
+      <div class="form-progress" style="display:none"><div class="form-progress-bar" id="progressBar"></div></div>
       <div class="flex-between">
         <h2 class="text-md-medium">Patrocínio</h2>
-        <span id="stepLabel" style="font-size:0.78rem;opacity:0.5">Passo 1 de 2</span>
+        <span id="stepLabel" style="display:none">Passo 1 de 2</span>
       </div>
       <hr class="sep">
 
@@ -364,5 +365,6 @@
 
     init();
   </script>
+  <script src="form-core.js?v=20260611c"></script>
 </body>
 </html>

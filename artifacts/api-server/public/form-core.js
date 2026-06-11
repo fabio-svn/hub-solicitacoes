@@ -176,5 +176,33 @@ window.FormCore = (function () {
     el.innerHTML = html;
   }
 
-  return { initForm: initForm, validateRequired: validateRequired, markInvalid: markInvalid, submit: submit, renderStepper: renderStepper };
+  function attachStepper(el, steps) {
+    if (!el || !Array.isArray(steps)) return;
+    const labelEl = document.getElementById('stepLabel');
+    function cur() {
+      const m = labelEl && (labelEl.textContent || '').match(/(\d+)\s*de\s*\d+/i);
+      return m ? parseInt(m[1], 10) : 1;
+    }
+    function draw() { renderStepper(el, steps, cur()); }
+    draw();
+    if (labelEl && window.MutationObserver) {
+      new MutationObserver(draw).observe(labelEl, { childList: true, characterData: true, subtree: true });
+    }
+  }
+
+  function _autoSteppers() {
+    if (!document.getElementById('stepLabel')) return;
+    document.querySelectorAll('.svn-stepper[data-steps]').forEach(function (el) {
+      if (el.dataset.stepperReady) return;
+      el.dataset.stepperReady = '1';
+      attachStepper(el, el.getAttribute('data-steps').split('|'));
+    });
+  }
+  if (typeof document !== 'undefined') {
+    document.addEventListener('DOMContentLoaded', _autoSteppers);
+    if (window.MutationObserver) new MutationObserver(_autoSteppers).observe(document.documentElement, { childList: true, subtree: true });
+    _autoSteppers();
+  }
+
+  return { initForm: initForm, validateRequired: validateRequired, markInvalid: markInvalid, submit: submit, renderStepper: renderStepper, attachStepper: attachStepper };
 })();

@@ -22,10 +22,11 @@
   <div id="pageContent">
   <div class="page-container page-container--narrow">
     <div class="form-card">
-      <div class="form-progress"><div class="form-progress-bar" id="progressBar" style="width:50%"></div></div>
+      <div class="svn-stepper" id="formStepper" data-steps="Tipo|Assessor"></div>
+      <div class="form-progress" style="display:none"><div class="form-progress-bar" id="progressBar"></div></div>
       <div class="flex-between">
         <h2 class="text-md-medium" id="formTitle">Página de Assessores</h2>
-        <span style="font-size:0.8rem;opacity:0.4" id="stepLabel">Etapa 1 de 2</span>
+        <span style="display:none" id="stepLabel">Etapa 1 de 2</span>
       </div>
       <hr class="sep">
 
@@ -650,5 +651,6 @@
   </svg>
 </a>
 
+  <script src="form-core.js?v=20260611c"></script>
 </body>
 </html>

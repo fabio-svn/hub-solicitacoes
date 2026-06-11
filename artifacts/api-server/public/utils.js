@@ -138,6 +138,9 @@ function humanizeValue(key, value) {
       'cracha':'Crachá','crachá':'Crachá','roll-up':'Roll-Up','banner':'Banner',
       'flyer':'Flyer','folder':'Folder','totem':'Totem','adesivo':'Adesivo',
       'cartao':'Cartão','cartaz':'Cartaz','camisa':'Camisa','brinde':'Brinde',
+      'documento':'Documento','carta':'Carta','camiseta':'Camiseta',
+      'flyer-institucional':'Flyer Institucional','flyer-personalizado':'Flyer Personalizado',
+      'bloco-notas':'Bloco de Notas','outro-impresso':'Outro',
     };
     const lv = String(value).toLowerCase();
     return map[lv] || humanizeSlug(String(value));
@@ -167,9 +170,20 @@ function humanizeValue(key, value) {
   }
 
   const maps = {
-    natureza: { presencial:'Presencial', online:'Online', patrocinio:'Patrocínio' },
-    maturidade: { 1:'Tenho a maioria das informações', 2:'Tenho algumas informações', 3:'Ainda estou estruturando' },
-    localEvento: { unidade:'Unidade SVN', externo:'Local externo', 'nao-definido':'Não definido' },
+    natureza:     { presencial:'Presencial', online:'Online', patrocinio:'Patrocínio' },
+    maturidade:   { 1:'Tenho a maioria das informações', 2:'Tenho algumas informações', 3:'Ainda estou estruturando' },
+    localEvento:  { unidade:'Unidade SVN', externo:'Local externo', 'nao-definido':'Não definido' },
+    modalidade:   { video:'Produção de Vídeo', fotos:'Sessão de Fotos' },
+    formatoPapel: { 'A4':'A4', 'A5':'A5', 'outro-papel':'Outro' },
+    orientacao:   { horizontal:'Horizontal', vertical:'Vertical' },
+    tamanho:      { 'menos30':'Menos de 30 páginas', 'menos100':'Menos de 100 páginas', 'mais100':'Mais de 100 páginas' },
+    tipoCriacao:  { 'base-existente':'Já existe uma base', 'do-zero':'Será criada do zero' },
+    tipoAdesivo:  { quadrado:'Quadrado', redondo:'Redondo' },
+    tipoCamiseta: { polo:'Polo', dryfit:'Dry-Fit', tshirt:'T-Shirt' },
+    corCamiseta:  { branco:'Branco', preto:'Preto', azul:'Azul', vermelho:'Vermelho', amarelo:'Amarelo', laranja:'Laranja', roxo:'Roxo', multicolorida:'Multicolorida', outro:'Outro' },
+    temPalestrante: { sim:'Sim', nao:'Não' },
+    horBrasilia:  { sim:'Sim', nao:'Não' },
+    baseFlyer:    { sim:'Sim', nao:'Não' },
   };
 
   const matMap = {};

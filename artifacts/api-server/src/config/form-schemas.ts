@@ -315,6 +315,229 @@ export const FORM_SCHEMAS: Record<string, FormSchema> = {
       { name: 'marca_label', label: 'Marca (label)', derived_from: 'marca' },
     ],
   },
+
+  'eventos': {
+    tipo: 'eventos',
+    label: 'Eventos',
+    is_automation: false,
+    has_clickup: true,
+    has_approval_flow: false,
+    has_downloadable_artifact: false,
+    fields: [
+      {
+        name: 'natureza', label: 'Natureza', type: 'radio',
+        options: [
+          { value: 'presencial', label: 'Presencial' },
+          { value: 'online',     label: 'Online' },
+        ],
+      },
+      {
+        name: 'maturidade', label: 'Maturidade', type: 'radio',
+        options: [
+          { value: '1', label: 'Tenho a maioria das informações' },
+          { value: '2', label: 'Tenho algumas informações' },
+          { value: '3', label: 'Ainda estou estruturando' },
+        ],
+      },
+      {
+        name: 'localEvento', label: 'Local do evento', type: 'select',
+        options: [
+          { value: 'unidade',      label: 'Unidade SVN' },
+          { value: 'externo',      label: 'Local externo' },
+          { value: 'nao-definido', label: 'Não definido' },
+        ],
+      },
+      {
+        name: 'temPalestrante', label: 'Tem palestrante?', type: 'radio',
+        options: [
+          { value: 'sim', label: 'Sim' },
+          { value: 'nao', label: 'Não' },
+        ],
+      },
+    ],
+  },
+
+  'materiais-impressos': {
+    tipo: 'materiais-impressos',
+    label: 'Materiais Impressos',
+    is_automation: false,
+    has_clickup: true,
+    has_approval_flow: false,
+    has_downloadable_artifact: false,
+    fields: [
+      {
+        name: 'tipoMaterial', label: 'Tipo de material', type: 'radio',
+        options: [
+          { value: 'documento',           label: 'Documento' },
+          { value: 'flyer-institucional', label: 'Flyer Institucional' },
+          { value: 'flyer-personalizado', label: 'Flyer Personalizado' },
+          { value: 'carta',               label: 'Carta' },
+          { value: 'banner',              label: 'Banner' },
+          { value: 'adesivo',             label: 'Adesivo' },
+          { value: 'bloco-notas',         label: 'Bloco de Notas' },
+          { value: 'camiseta',            label: 'Camiseta' },
+          { value: 'outro-impresso',      label: 'Outro' },
+        ],
+      },
+      {
+        name: 'formatoPapel', label: 'Formato do papel', type: 'radio',
+        options: [
+          { value: 'A4',         label: 'A4' },
+          { value: 'A5',         label: 'A5' },
+          { value: 'outro-papel',label: 'Outro' },
+        ],
+      },
+      {
+        name: 'orientacao', label: 'Orientação', type: 'radio',
+        options: [
+          { value: 'horizontal', label: 'Horizontal' },
+          { value: 'vertical',   label: 'Vertical' },
+        ],
+      },
+      {
+        name: 'tipoAdesivo', label: 'Tipo de adesivo', type: 'radio',
+        options: [
+          { value: 'quadrado', label: 'Quadrado' },
+          { value: 'redondo',  label: 'Redondo' },
+        ],
+      },
+      {
+        name: 'tipoCamiseta', label: 'Tipo de camiseta', type: 'radio',
+        options: [
+          { value: 'polo',   label: 'Polo' },
+          { value: 'dryfit', label: 'Dry-Fit' },
+          { value: 'tshirt', label: 'T-Shirt' },
+        ],
+      },
+      {
+        name: 'corCamiseta', label: 'Cor da camiseta', type: 'radio',
+        options: [
+          { value: 'branco',        label: 'Branco' },
+          { value: 'preto',         label: 'Preto' },
+          { value: 'azul',          label: 'Azul' },
+          { value: 'vermelho',      label: 'Vermelho' },
+          { value: 'amarelo',       label: 'Amarelo' },
+          { value: 'laranja',       label: 'Laranja' },
+          { value: 'roxo',          label: 'Roxo' },
+          { value: 'multicolorida', label: 'Multicolorida' },
+          { value: 'outro',         label: 'Outro' },
+        ],
+      },
+    ],
+  },
+
+  'apresentacao-nova': {
+    tipo: 'apresentacao-nova',
+    label: 'Apresentação — Nova',
+    is_automation: false,
+    has_clickup: true,
+    has_approval_flow: false,
+    has_downloadable_artifact: false,
+    fields: [
+      {
+        name: 'tamanho', label: 'Tamanho', type: 'radio',
+        options: [
+          { value: 'menos30',  label: 'Menos de 30 páginas' },
+          { value: 'menos100', label: 'Menos de 100 páginas' },
+          { value: 'mais100',  label: 'Mais de 100 páginas' },
+        ],
+      },
+      {
+        name: 'tipoCriacao', label: 'Tipo de criação', type: 'radio',
+        options: [
+          { value: 'base-existente', label: 'Já existe uma base' },
+          { value: 'do-zero',        label: 'Será criada do zero' },
+        ],
+      },
+    ],
+  },
+
+  'apresentacao-atualizar': {
+    tipo: 'apresentacao-atualizar',
+    label: 'Apresentação — Atualização',
+    is_automation: false,
+    has_clickup: true,
+    has_approval_flow: false,
+    has_downloadable_artifact: false,
+    fields: [
+      {
+        name: 'tamanho', label: 'Tamanho', type: 'radio',
+        options: [
+          { value: 'menos30',  label: 'Menos de 30 páginas' },
+          { value: 'menos100', label: 'Menos de 100 páginas' },
+          { value: 'mais100',  label: 'Mais de 100 páginas' },
+        ],
+      },
+      {
+        name: 'tipoCriacao', label: 'Tipo de criação', type: 'radio',
+        options: [
+          { value: 'base-existente', label: 'Já existe uma base' },
+          { value: 'do-zero',        label: 'Será criada do zero' },
+        ],
+      },
+    ],
+  },
+
+  'producao-video': {
+    tipo: 'producao-video',
+    label: 'Produção de Vídeo',
+    is_automation: false,
+    has_clickup: true,
+    has_approval_flow: false,
+    has_downloadable_artifact: false,
+    fields: [
+      {
+        name: 'modalidade', label: 'Modalidade', type: 'radio',
+        options: [
+          { value: 'video', label: 'Produção de Vídeo' },
+          { value: 'fotos', label: 'Sessão de Fotos' },
+        ],
+      },
+    ],
+  },
+
+  'sessao-fotos': {
+    tipo: 'sessao-fotos',
+    label: 'Sessão de Fotos',
+    is_automation: false,
+    has_clickup: true,
+    has_approval_flow: false,
+    has_downloadable_artifact: false,
+    fields: [
+      {
+        name: 'modalidade', label: 'Modalidade', type: 'radio',
+        options: [
+          { value: 'video', label: 'Produção de Vídeo' },
+          { value: 'fotos', label: 'Sessão de Fotos' },
+        ],
+      },
+    ],
+  },
+
+  'patrocinio': {
+    tipo: 'patrocinio',
+    label: 'Patrocínio',
+    is_automation: false,
+    has_clickup: true,
+    has_approval_flow: false,
+    has_downloadable_artifact: false,
+    fields: [
+      {
+        name: 'horBrasilia', label: 'Horário de Brasília?', type: 'radio',
+        options: [
+          { value: 'sim', label: 'Sim' },
+          { value: 'nao', label: 'Não' },
+        ],
+      },
+      {
+        name: 'publico', label: 'Público do evento', type: 'select',
+        options: [
+          { value: 'aberto',  label: 'Aberto ao público em geral' },
+          { value: 'fechado', label: 'Fechado para convidados' },
+        ],
+      },
+    ],
+  },
 };
 
 export const VALID_TIPOS: string[] = [
