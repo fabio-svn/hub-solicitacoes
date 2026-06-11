@@ -387,6 +387,11 @@ export function getFormSchemaList() {
       description: s.description,
       template_variant_field: variantField ?? null,
       template_variant_options: variantOptions,
+      field_options: Object.fromEntries(
+        s.fields
+          .filter(fl => Array.isArray(fl.options) && fl.options.length > 0)
+          .map(fl => [fl.name, Object.fromEntries((fl.options ?? []).map(o => [o.value, o.label]))]),
+      ),
       is_automation: s.is_automation,
       has_clickup: s.has_clickup,
       has_approval_flow: s.has_approval_flow,

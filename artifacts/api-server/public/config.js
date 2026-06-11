@@ -41,7 +41,15 @@ const _configReady = Promise.all([
   if (schemas.contratos && schemas.contratos.length) CONTRATOS_SOCIAIS = schemas.contratos.map(c => c.label);
   if (schemas.cargos && schemas.cargos.length) CARGOS_ASSESSOR = schemas.cargos.map(c => c.label);
   if (schemas.setores && schemas.setores.length) SETORES = ['Selecione seu setor', ...schemas.setores];
-  if (schemas.tipos) window._svnFormSchemas = schemas;
+  if (schemas.tipos) {
+    window._svnFormSchemas = schemas;
+    const fl = {};
+    for (const t of schemas.tipos) {
+      if (!t.field_options) continue;
+      for (const [k, m] of Object.entries(t.field_options)) fl[k] = Object.assign(fl[k] || {}, m);
+    }
+    window._svnFieldLabels = fl;   // { campo: { valor: label_autoral } }
+  }
   if (schemas.labels && typeof schemas.labels === 'object') {
     Object.assign(TIPO_SOLICITACAO_LABELS, schemas.labels);
   }

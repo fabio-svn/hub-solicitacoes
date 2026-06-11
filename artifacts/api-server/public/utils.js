@@ -132,6 +132,13 @@ function humanizeValue(key, value) {
   if (value === null || value === undefined) return '—';
   if (typeof value === 'boolean') return value ? 'Sim' : 'Não';
 
+  // Fonte da verdade: options do schema (label autoral, com acento/acronimo/frase).
+  // Cobre todo select/radio automaticamente e tem prioridade sobre os mapas manuais.
+  if (typeof window !== 'undefined' && window._svnFieldLabels && window._svnFieldLabels[key]) {
+    const lbl = window._svnFieldLabels[key][String(value)];
+    if (lbl) return lbl;
+  }
+
   if (key === 'tipoMaterial' || key === 'tipoImpresso') {
     const map = {
       'cracha':'Crachá','crachá':'Crachá','roll-up':'Roll-Up','banner':'Banner',
