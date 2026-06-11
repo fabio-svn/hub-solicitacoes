@@ -36,7 +36,9 @@ function resolveComputed(
   const result = { ...dados };
   for (const c of schema.computed) {
     if (!c.derived_from || !c.transform) continue;
-    const source = String(dados[c.derived_from] ?? "");
+    const df = c.derived_from;
+    const dfKey = df in dados ? df : Object.keys(dados).find(k => camelToSnake(k) === camelToSnake(df));
+    const source = String((dfKey != null ? dados[dfKey] : undefined) ?? "");
     if (!source) continue;
     switch (c.transform) {
       case "digits_only": {
@@ -120,10 +122,14 @@ function addOptionLabels(
 ): Record<string, unknown> {
   if (!schema?.fields?.length) return dados;
   const out = { ...dados };
+  const findKey = (name: string): string | undefined =>
+    name in dados ? name : Object.keys(dados).find(k => camelToSnake(k) === camelToSnake(name));
   for (const fld of schema.fields) {
     const opts = fld.options;
     if (!opts?.length) continue;
-    const raw = dados[fld.name];
+    const dk = findKey(fld.name);
+    if (!dk) continue;
+    const raw = dados[dk];
     if (raw == null || raw === "") continue;
     const labelOf = (v: unknown) =>
       opts.find(o => o.value === String(v))?.label ?? String(v);
