@@ -856,20 +856,33 @@
             ${CLICKUP_ICON}
           </a>` : '') +
         (isAdm ? ((() => {
-          const temAvaliacao = !!(item.avaliacao && item.avaliacao.nota);
-          return `<button
-            ${temAvaliacao ? `onclick="verAvaliacao(${item.id})"` : 'disabled'}
-            id="btnVerAvaliacao"
-            title="${temAvaliacao ? 'Ver avaliação' : 'Sem avaliação'}"
-            style="display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:8px;border:none;background:var(--icon-bg);cursor:${temAvaliacao ? 'pointer' : 'default'};transition:background 0.15s;opacity:${temAvaliacao ? '1' : '0.35'}"
-            ${temAvaliacao ? `onmouseover="this.style.background='rgba(34,27,25,0.1)'" onmouseout="this.style.background='var(--icon-bg)'"` : ''}>
-            <svg width="15" height="15" viewBox="0 0 24 24"
-              fill="${temAvaliacao ? '#f59e0b' : 'none'}"
-              stroke="${temAvaliacao ? '#f59e0b' : 'currentColor'}"
-              stroke-width="2">
-              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
-            </svg>
-          </button>`;
+          const nota = item.avaliacao && item.avaliacao.nota;
+          if (nota) {
+            const cor = nota >= 8 ? '#16a34a' : nota >= 5 ? '#ea580c' : '#dc2626';
+            const corBg = nota >= 8 ? 'rgba(22,163,74,0.12)' : nota >= 5 ? 'rgba(234,88,12,0.12)' : 'rgba(220,38,38,0.12)';
+            return `<button
+              onclick="verAvaliacao(${item.id})"
+              id="btnVerAvaliacao"
+              title="Ver avaliação: ${nota}/10"
+              style="display:inline-flex;align-items:center;gap:5px;height:32px;padding:0 11px;border-radius:8px;border:none;background:${corBg};color:${cor};cursor:pointer;transition:filter 0.15s"
+              onmouseover="this.style.filter='brightness(0.94)'" onmouseout="this.style.filter='none'">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="${cor}" stroke="${cor}" stroke-width="2">
+                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+              </svg>
+              <span style="font-size:13px;font-weight:600;line-height:1">${nota}<span style="font-size:11px;font-weight:400;opacity:0.65">/10</span></span>
+            </button>`;
+          }
+          if (item.status === 'concluido') {
+            return `<span
+              title="Concluída — aguardando avaliação do solicitante"
+              style="display:inline-flex;align-items:center;gap:5px;height:32px;padding:0 10px;border-radius:8px;background:transparent;opacity:0.4;cursor:default">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+              </svg>
+              <span style="font-size:12px">Sem nota</span>
+            </span>`;
+          }
+          return ''
         })() + `
           <div class="sol-actions-kebab">
             <button class="kebab-btn" onclick="toggleKebabMenu()" aria-label="Mais ações">⋯</button>

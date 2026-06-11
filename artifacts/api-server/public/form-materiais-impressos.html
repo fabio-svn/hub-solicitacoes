@@ -99,6 +99,7 @@
   <script src="config.js?v=20260611e"></script>
   <script src="auth.js?v=20260611e"></script>
   <script src="shell.js?v=20260611e"></script>
+  <script src="form-core.js?v=20260611e"></script>
   <script>
     const TIPO = 'materiais-impressos';
     window.addEventListener('pageshow', function(e) {
@@ -136,24 +137,15 @@
       'amarelo':'#eab308','laranja':'#ea580c','roxo':'#7c3aed','multicolorida':'url(#gradMulti)','outro':'#9ca3af',
     };
 
-    async function init() {
-      await _configReady;
-      await Auth.init();
-      if (!Auth.isAuthenticated()) { window.location.href = '/auth/login?redirect=/form-materiais-impressos.html'; return; }
-      Shell.render({ activeRoute: 'nova-solicitacao', contentEl: document.getElementById('pageContent') });
-
-      Auth.aplicarPerfilNoCampo('telefone', Auth.getTelefone());
-      Auth.aplicarPerfilNoCampo('unidade',    Auth.getUnidade());
-      Auth.aplicarPerfilNoCampo('escritorio', Auth.getEscritorio());
-      Auth.aplicarPerfilNoCampo('cargo',      Auth.getCargo());
-      Auth.aplicarPerfilNoCampo('cdAncord',   Auth.getCdAncord());
-      Auth.aplicarPerfilNoCampo('email',      Auth.getUserEmail());
-      Auth.aplicarPerfilNoCampo('nome',       Auth.getUserName());
-
-      const setorSel = document.getElementById('setor');
-      if (setorSel) { SETORES.filter(s => s !== 'Selecione seu setor').forEach(s => { const o = document.createElement('option'); o.value = s; o.textContent = s; setorSel.appendChild(o); }); }
-
-      renderTiposMaterial();
+    function init() {
+      FormCore.initForm({
+        tipo: 'materiais-impressos',
+        redirectPath: '/form-materiais-impressos.html',
+        activeRoute: 'nova-solicitacao',
+        onReady: function () {
+          renderTiposMaterial();
+        }
+      });
     }
 
     function renderTiposMaterial() {

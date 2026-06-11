@@ -425,61 +425,49 @@
       { id: "horario", label: "Horário do evento" },
     ];
 
-    async function init() {
-      await _configReady;
-      await Auth.init();
-      if (!Auth.isAuthenticated()) { window.location.href = '/auth/login?redirect=/form-eventos.html'; return; }
-      document.querySelectorAll('[data-email-upload]').forEach(el => { el.textContent = EMAIL_UPLOAD; });
-      Shell.render({ activeRoute: 'nova-solicitacao', contentEl: document.getElementById('pageContent') });
-      document.getElementById('tutorialLink').href = URL_TUTORIAL_TRANSMISSAO;
+    function init() {
+      FormCore.initForm({
+        tipo: 'eventos',
+        redirectPath: '/form-eventos.html',
+        activeRoute: 'nova-solicitacao',
+        onReady: function () {
+          document.querySelectorAll('[data-email-upload]').forEach(el => { el.textContent = EMAIL_UPLOAD; });
+          document.getElementById('tutorialLink').href = URL_TUTORIAL_TRANSMISSAO;
 
-      Auth.aplicarPerfilNoCampo('telefone', Auth.getTelefone());
-      Auth.aplicarPerfilNoCampo('unidade',    Auth.getUnidade());
-      Auth.aplicarPerfilNoCampo('escritorio', Auth.getEscritorio());
-      Auth.aplicarPerfilNoCampo('cargo',      Auth.getCargo());
-      Auth.aplicarPerfilNoCampo('cdAncord',   Auth.getCdAncord());
-      Auth.aplicarPerfilNoCampo('email',      Auth.getUserEmail());
-      Auth.aplicarPerfilNoCampo('nome',       Auth.getUserName());
+          const ratSel = document.getElementById('rateio');
+          OPCOES_RATEIO.forEach(r => { const o = document.createElement('option'); o.value = r; o.textContent = r; ratSel.appendChild(o); });
 
-      const ratSel = document.getElementById('rateio');
-      OPCOES_RATEIO.forEach(r => { const o = document.createElement('option'); o.value = r; o.textContent = r; ratSel.appendChild(o); });
+          restoreFormState();
 
-      const setorSel = document.getElementById('setor');
-      if (setorSel) { SETORES.filter(s => s !== 'Selecione seu setor').forEach(s => { const o = document.createElement('option'); o.value = s; o.textContent = s; setorSel.appendChild(o); }); }
+          document.getElementById('setor')?.addEventListener('change', () => { validateStep1(); saveFormState(); });
+          document.getElementById('checkPrazos').addEventListener('change', () => { validateStep1(); saveFormState(); });
+          document.getElementById('checkTutorial')?.addEventListener('change', () => { validateStep1(); saveFormState(); });
 
-      Auth.aplicarPerfilNoCampo('telefone', Auth.getTelefone());
+          ['logoFile','demaisFile'].forEach(id => { FileUpload.bind(id, id.replace('File','FileName')); });
+          FileUpload.bind('imgFile', 'imgFileName', { maxMB: 50 });
 
-      restoreFormState();
-
-      document.getElementById('setor')?.addEventListener('change', () => { validateStep1(); saveFormState(); });
-      document.getElementById('checkPrazos').addEventListener('change', () => { validateStep1(); saveFormState(); });
-      document.getElementById('checkTutorial')?.addEventListener('change', () => { validateStep1(); saveFormState(); });
-
-      ['logoFile','demaisFile'].forEach(id => {
-        FileUpload.bind(id, id.replace('File','FileName'));
-      });
-      FileUpload.bind('imgFile', 'imgFileName', { maxMB: 50 });
-
-      const dataInput = document.getElementById('dataEvento');
-      if (dataInput) {
-        const hoje = new Date().toISOString().split('T')[0];
-        dataInput.min = hoje;
-        dataInput.addEventListener('change', function() {
-          const diasAte = Math.ceil((new Date(this.value) - new Date()) / (1000 * 60 * 60 * 24));
-          const avisoEl = document.getElementById('dataAvisoMinimo');
-          if (avisoEl) {
-            if (diasAte < 15) {
-              avisoEl.textContent = '⚠️ Atenção: o prazo mínimo para organização é de 15 dias. Verifique se a data escolhida é viável.';
-              avisoEl.style.display = 'block';
-            } else {
-              avisoEl.style.display = 'none';
-            }
+          const dataInput = document.getElementById('dataEvento');
+          if (dataInput) {
+            const hoje = new Date().toISOString().split('T')[0];
+            dataInput.min = hoje;
+            dataInput.addEventListener('change', function() {
+              const diasAte = Math.ceil((new Date(this.value) - new Date()) / (1000 * 60 * 60 * 24));
+              const avisoEl = document.getElementById('dataAvisoMinimo');
+              if (avisoEl) {
+                if (diasAte < 15) {
+                  avisoEl.textContent = '⚠️ Atenção: o prazo mínimo para organização é de 15 dias. Verifique se a data escolhida é viável.';
+                  avisoEl.style.display = 'block';
+                } else {
+                  avisoEl.style.display = 'none';
+                }
+              }
+            });
           }
-        });
-      }
 
-      updatePreview('pvSolicitante', Auth.getUserName());
-      validateStep1();
+          updatePreview('pvSolicitante', Auth.getUserName());
+          validateStep1();
+        }
+      });
     }
 
     function updatePreview(id, val) {

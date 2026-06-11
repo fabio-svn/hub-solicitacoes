@@ -44,10 +44,11 @@
   <div class="page-container page-container--narrow">
 
     <div class="form-card">
-      <div class="form-progress"><div class="form-progress-bar" id="progressBar" style="width:50%"></div></div>
+      <div class="svn-stepper" id="formStepper" data-steps="Tipo|Detalhes"></div>
+      <div class="form-progress" style="display:none"><div class="form-progress-bar" id="progressBar" style="width:50%"></div></div>
       <div class="flex-between">
         <h2 class="text-md-medium">Cartão de Visita</h2>
-        <span id="stepLabel" style="font-size:0.78rem;opacity:0.5">Passo 1 de 2</span>
+        <span id="stepLabel" style="display:none">Passo 1 de 2</span>
       </div>
       <hr class="sep">
 
@@ -187,6 +188,7 @@
   <script src="config.js?v=20260611e"></script>
   <script src="auth.js?v=20260611e"></script>
   <script src="shell.js?v=20260611e"></script>
+  <script src="form-core.js?v=20260611e"></script>
   <script>
     window.addEventListener('pageshow', function(e) {
       if (e.persisted) {
@@ -196,32 +198,34 @@
     });
     let tipoSelecionado = null;
 
-    async function init() {
-      await _configReady;
-      await Auth.init();
-      if (!Auth.isAuthenticated()) { window.location.href = '/auth/login?redirect=/form-cartao-visita.html'; return; }
-      Shell.render({ activeRoute: 'nova-solicitacao', contentEl: document.getElementById('pageContent') });
+    function init() {
+      FormCore.initForm({
+        tipo: 'cartao-visita',
+        redirectPath: '/form-cartao-visita.html',
+        activeRoute: 'nova-solicitacao',
+        onReady: function () {
+          const unidadeSel = document.getElementById('unidadeFisico');
+          if (unidadeSel) { UNIDADES_SVN.forEach(u => { const o = document.createElement('option'); o.value = u.nome; o.textContent = u.nome; unidadeSel.appendChild(o); }); }
 
-      const unidadeSel = document.getElementById('unidadeFisico');
-      if (unidadeSel) { UNIDADES_SVN.forEach(u => { const o = document.createElement('option'); o.value = u.nome; o.textContent = u.nome; unidadeSel.appendChild(o); }); }
+          const contratosOpts = window._svnFormSchemas?.contratos || [];
+          ['contratoSocialFisico', 'contratoSocial'].forEach(id => {
+            const sel = document.getElementById(id);
+            if (!sel) return;
+            contratosOpts.forEach(c => {
+              const o = document.createElement('option');
+              o.value = c.value;
+              o.textContent = c.label;
+              sel.appendChild(o);
+            });
+          });
 
-      const contratosOpts = window._svnFormSchemas?.contratos || [];
-      ['contratoSocialFisico', 'contratoSocial'].forEach(id => {
-        const sel = document.getElementById(id);
-        if (!sel) return;
-        contratosOpts.forEach(c => {
-          const o = document.createElement('option');
-          o.value = c.value;
-          o.textContent = c.label;
-          sel.appendChild(o);
-        });
+          Auth.aplicarPerfilNoCampo('whatsappFisico', Auth.getTelefone());
+          Auth.aplicarPerfilNoCampo('unidadeFisico', Auth.getUnidade());
+          Auth.aplicarPerfilNoCampo('telefoneDigital', Auth.getTelefone());
+
+          FileUpload.bind('fotoPerfilDigital', 'fotoPerfilDigitalName', { accept: '.jpg,.jpeg,.png,.webp', maxMB: 10 });
+        }
       });
-
-      Auth.aplicarPerfilNoCampo('whatsappFisico', Auth.getTelefone());
-      Auth.aplicarPerfilNoCampo('unidadeFisico', Auth.getUnidade());
-      Auth.aplicarPerfilNoCampo('telefoneDigital', Auth.getTelefone());
-
-      FileUpload.bind('fotoPerfilDigital', 'fotoPerfilDigitalName', { accept: '.jpg,.jpeg,.png,.webp', maxMB: 10 });
     }
 
     function selectTipo(tipo) {

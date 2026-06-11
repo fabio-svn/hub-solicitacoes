@@ -22,10 +22,11 @@
   <div id="pageContent">
   <div class="page-container page-container--narrow">
     <div class="form-card">
-      <div class="form-progress"><div class="form-progress-bar" id="progressBar" style="width:50%"></div></div>
+      <div class="svn-stepper" id="formStepper" data-steps="Modalidade|Detalhes"></div>
+      <div class="form-progress" style="display:none"><div class="form-progress-bar" id="progressBar" style="width:50%"></div></div>
       <div class="flex-between">
         <h2 class="text-md-medium">Produção Audiovisual</h2>
-        <span id="stepLabel" style="font-size:0.78rem;opacity:0.5">Passo 1 de 2</span>
+        <span id="stepLabel" style="display:none">Passo 1 de 2</span>
       </div>
       <hr class="sep">
 
@@ -168,6 +169,7 @@
   <script src="config.js?v=20260611e"></script>
   <script src="auth.js?v=20260611e"></script>
   <script src="shell.js?v=20260611e"></script>
+  <script src="form-core.js?v=20260611e"></script>
   <script>
     window.addEventListener('pageshow', function(e) {
       if (e.persisted) {
@@ -177,23 +179,15 @@
     });
     let _modalidade = null;
 
-    async function init() {
-      await _configReady;
-      await Auth.init();
-      if (!Auth.isAuthenticated()) { window.location.href = '/auth/login?redirect=/form-producao-audiovisual.html'; return; }
-      Shell.render({ activeRoute: 'nova-solicitacao', contentEl: document.getElementById('pageContent') });
-
-      const setorSel = document.getElementById('setor');
-      if (setorSel) { SETORES.filter(s => s !== 'Selecione seu setor').forEach(s => { const o = document.createElement('option'); o.value = s; o.textContent = s; setorSel.appendChild(o); }); }
-
-      Auth.aplicarPerfilNoCampo('telefone', Auth.getTelefone());
-      Auth.aplicarPerfilNoCampo('unidade',    Auth.getUnidade());
-      Auth.aplicarPerfilNoCampo('escritorio', Auth.getEscritorio());
-      Auth.aplicarPerfilNoCampo('cargo',      Auth.getCargo());
-      Auth.aplicarPerfilNoCampo('cdAncord',   Auth.getCdAncord());
-      Auth.aplicarPerfilNoCampo('email',      Auth.getUserEmail());
-      Auth.aplicarPerfilNoCampo('nome',       Auth.getUserName());
-      FileUpload.bind('arquivoApoio', 'arquivoApoioName');
+    function init() {
+      FormCore.initForm({
+        tipo: 'producao-audiovisual',
+        redirectPath: '/form-producao-audiovisual.html',
+        activeRoute: 'nova-solicitacao',
+        onReady: function () {
+          FileUpload.bind('arquivoApoio', 'arquivoApoioName');
+        }
+      });
     }
 
     function selectModalidade(m) {
