@@ -108,6 +108,32 @@ export async function gerarCartaoFisicoPdf(
   return url;
 }
 
+/**
+ * Para cada campo com `options` no schema, gera `{campo}_label` com o label
+ * autoral da option correspondente. Fonte da verdade = as proprias options
+ * (acento/acronimo/frase intactos). Aditivo: mantem o valor cru intacto.
+ * Valor fora das options cai no proprio valor (nunca fica em branco).
+ */
+function addOptionLabels(
+  dados: Record<string, unknown>,
+  schema: FormSchema | undefined,
+): Record<string, unknown> {
+  if (!schema?.fields?.length) return dados;
+  const out = { ...dados };
+  for (const fld of schema.fields) {
+    const opts = fld.options;
+    if (!opts?.length) continue;
+    const raw = dados[fld.name];
+    if (raw == null || raw === "") continue;
+    const labelOf = (v: unknown) =>
+      opts.find(o => o.value === String(v))?.label ?? String(v);
+    out[`${fld.name}_label`] = Array.isArray(raw)
+      ? raw.map(labelOf).join("; ")
+      : labelOf(raw);
+  }
+  return out;
+}
+
 export async function gerarArteParaSolicitacao(
   solicitacaoId: number,
   tipo: string,
@@ -118,7 +144,7 @@ export async function gerarArteParaSolicitacao(
 
   const formSchema = FORM_SCHEMAS[tipo];
 
-  const resolvedDados = resolveComputed(dados, formSchema);
+  const resolvedDados = addOptionLabels(resolveComputed(dados, formSchema), formSchema);
 
 
   const variantField = formSchema?.template_variant_field;
