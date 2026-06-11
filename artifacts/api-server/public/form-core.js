@@ -82,6 +82,9 @@ window.FormCore = (function () {
         document.addEventListener(evt, function () { _saveDraft(opts.tipo); });
       });
     }
+    if (opts.stepper && opts.stepper.el) {
+      renderStepper(document.getElementById(opts.stepper.el), opts.stepper.steps || [], opts.stepper.current || 1);
+    }
     return true;
   }
 
@@ -161,5 +164,17 @@ window.FormCore = (function () {
     return false;
   }
 
-  return { initForm: initForm, validateRequired: validateRequired, markInvalid: markInvalid, submit: submit };
+  function renderStepper(el, steps, current) {
+    if (!el || !Array.isArray(steps)) return;
+    let html = '';
+    steps.forEach(function (label, i) {
+      const n = i + 1;
+      const cls = n < current ? 'is-done' : (n === current ? 'is-active' : '');
+      html += '<div class="svn-step ' + cls + '"><span class="svn-step-num">' + (n < current ? '\u2713' : n) + '</span><span class="svn-step-label">' + label + '</span></div>';
+      if (i < steps.length - 1) html += '<span class="svn-step-line"></span>';
+    });
+    el.innerHTML = html;
+  }
+
+  return { initForm: initForm, validateRequired: validateRequired, markInvalid: markInvalid, submit: submit, renderStepper: renderStepper };
 })();

@@ -31,10 +31,9 @@
     </div>
 
     <div class="form-card">
-      <div class="form-progress"><div class="form-progress-bar" id="progressBar" style="width:50%"></div></div>
+      <div class="svn-stepper" id="formStepper"></div>
       <div class="flex-between">
         <h2 class="text-md-medium">Arte de Divulgação</h2>
-        <span style="font-size:0.8rem;opacity:0.4" id="stepLabel">Etapa 1 de 2</span>
       </div>
       <hr class="sep">
 
@@ -88,7 +87,7 @@
           </div>
         </div>
         <div class="form-nav">
-          <button class="btn btn-primary" onclick="validateStep1() && goStep(2)">Próximo</button>
+          <button class="btn btn-primary" onclick="validateStep1() && goStep(2)">Continuar →</button>
         </div>
       </div>
 
@@ -140,8 +139,11 @@
 
     const TIPO = 'artes-divulgacao';
 
+    const STEPS = ['Informações', 'Detalhes e envio'];
+
     async function init() {
       await FormCore.initForm({
+        stepper: { el: 'formStepper', steps: STEPS },
         tipo: TIPO,
         draft: true,
         onReady: function() {
@@ -175,8 +177,7 @@
     function goStep(step) {
       document.querySelectorAll('.form-step').forEach(function(s) { s.classList.remove('active'); });
       document.getElementById('step' + step).classList.add('active');
-      document.getElementById('progressBar').style.width = (step / 2 * 100) + '%';
-      document.getElementById('stepLabel').textContent = 'Etapa ' + step + ' de 2';
+      FormCore.renderStepper(document.getElementById('formStepper'), STEPS, step);
       window.scrollTo(0, 0);
     }
 

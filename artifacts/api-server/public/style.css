@@ -2250,3 +2250,23 @@ input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
 .sep { height: 1px; background: var(--border-light); margin-bottom: 24px; border: none; }
 .flex-between { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
 .text-md-medium { font-weight: 500; font-size: 1.1rem; margin: 0; }
+
+/* Stepper de etapas — multi-step forms (Opção A) */
+.svn-stepper { display:flex; align-items:center; gap:10px; margin:4px 0 20px; }
+.svn-step { display:flex; align-items:center; gap:8px; flex-shrink:0; }
+.svn-step-num {
+  width:28px; height:28px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  font-size:13px; font-weight:600; transition:all .2s ease;
+  background:transparent; border:1.5px solid rgba(34,27,25,0.28); color:rgba(34,27,25,0.45);
+}
+.svn-step-label { font-size:13px; color:rgba(34,27,25,0.45); white-space:nowrap; transition:color .2s ease; }
+.svn-step-line { flex:1; height:2px; min-width:16px; background:rgba(34,27,25,0.15); }
+.svn-step.is-active .svn-step-num,
+.svn-step.is-done .svn-step-num { background:var(--ruby-red,#AC3631); border-color:var(--ruby-red,#AC3631); color:var(--paper-white,#FFF8F3); }
+.svn-step.is-active .svn-step-label { color:var(--carbon-black,#221B19); font-weight:600; }
+.svn-step.is-done .svn-step-label { color:var(--carbon-black,#221B19); }
+@media (max-width:520px) {
+  .svn-step-label { display:none; }
+  .svn-step.is-active .svn-step-label { display:inline; }
+}
