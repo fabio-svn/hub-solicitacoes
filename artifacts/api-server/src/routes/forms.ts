@@ -387,7 +387,7 @@ router.get("/solicitacoes", requireAuth, async (req, res) => {
 
     const conditions: ReturnType<typeof eq>[] = [];
 
-    if (!isAdmin) {
+    if (!isAdmin || req.query.escopo === 'proprias') {
       conditions.push(eq(solicitacoesTable.user_email, user.email));
     }
 
@@ -523,7 +523,7 @@ router.get("/solicitacoes/stats", requireAuth, async (req, res) => {
   try {
     const user = req.session.user!;
     const isAdmin = user.role === "admin" || user.role === "gestor";
-    const baseCondition = isAdmin ? undefined : eq(solicitacoesTable.user_email, user.email);
+    const baseCondition = (isAdmin && req.query.escopo !== 'proprias') ? undefined : eq(solicitacoesTable.user_email, user.email);
 
     const activeStatuses = [
       "recebido", "em-analise", "em-producao", "aguardando",

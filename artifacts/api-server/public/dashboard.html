@@ -219,7 +219,7 @@
 
     async function loadStats() {
       try {
-        const res = await fetch('/api/solicitacoes/stats');
+        const res = await fetch('/api/solicitacoes/stats?escopo=proprias');
         const data = await res.json();
         animateNumber('statActive', data.active);
         animateNumber('statCompleted', data.completed);
@@ -270,7 +270,7 @@
       }
 
       try {
-        const res = await fetch('/api/solicitacoes?' + params.toString());
+        const res = await fetch('/api/solicitacoes?escopo=proprias&' + params.toString());
         const data = await res.json();
         // filtro client-side "Com erros (24h)"
         if (f.erros === 'com-erros' && Array.isArray(data.data)) {

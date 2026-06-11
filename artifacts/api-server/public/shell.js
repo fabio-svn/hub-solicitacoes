@@ -131,6 +131,20 @@ window.Shell = {
   _buildSidebar(activeRoute, role) {
     const nav = [
       {
+        route: 'home',
+        href: '/index.html',
+        icon: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9.5L12 3l9 6.5"/><path d="M5 9v11a1 1 0 001 1h12a1 1 0 001-1V9"/><path d="M9 21v-6h6v6"/></svg>',
+        label: 'Home',
+        roles: ['admin', 'gestor', 'capital_humano'],
+      },
+      {
+        route: 'solicitacoes',
+        href: '/solicitacoes.html',
+        icon: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><line x1="12" y1="11" x2="12" y2="17"/><line x1="9" y1="14" x2="15" y2="14"/></svg>',
+        label: 'Solicitações',
+        roles: ['admin', 'gestor', 'capital_humano'],
+      },
+      {
         route: 'dashboard',
         href: '/dashboard.html',
         icon: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="13" y2="16"/></svg>',
