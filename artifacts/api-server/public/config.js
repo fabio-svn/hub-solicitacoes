@@ -165,6 +165,9 @@ let CARGOS_ASSESSOR = [
 // As 9 chaves camelCase do KEY_MAP (contratoSocial, nomeAssinatura, etc) servem só
 // pra retrocompatibilidade com dados legacy do banco. Forms novos enviam snake_case.
 const DRAWER_FIELD_LABELS = {
+  objetivo:            { label: "Objetivo da sessão",          wide: true },
+  qtdParticipantes:    { label: "Quantidade de participantes" },
+  localSessao:         { label: "Local da sessão" },
   subTipo:             { label: "Subtipo" },
   nomeCartao:          { label: "Nome no cartão" },
   whatsapp:            { label: "WhatsApp" },

@@ -48,7 +48,7 @@
               </svg>
             </div>
             <div class="card-label">Produção de Vídeo</div>
-            <div class="card-desc">Prazo mínimo: 7 dias úteis</div>
+            <div class="card-desc">Prazo mínimo: 30 dias úteis</div>
           </div>
           <div class="radio-card" onclick="selectModalidade('fotos')" id="cardFotos">
             <div class="card-icon">
@@ -59,7 +59,7 @@
               </svg>
             </div>
             <div class="card-label">Sessão de Fotos</div>
-            <div class="card-desc">Prazo mínimo: 7 dias úteis</div>
+            <div class="card-desc">Prazo mínimo: 30 dias úteis</div>
           </div>
         </div>
 
@@ -133,12 +133,16 @@
         <!-- Campos de Fotos -->
         <div id="camposFotos" style="display:none">
           <div class="field">
-            <label>Título da sessão de fotos <span class="text-ruby">*</span></label>
-            <input type="text" id="tituloFotos" placeholder="Ex: fotos corporativas de colaboradores, captação em eventos">
+            <label>Objetivo da sessão de fotos <span class="text-ruby">*</span></label>
+            <textarea id="objetivoFotos" placeholder="Ex: registrar a equipe para o site, captação em evento corporativo..."></textarea>
           </div>
           <div class="field">
-            <label>Descreva o conteúdo da sessão <span class="text-ruby">*</span></label>
-            <textarea id="descricaoFotos" placeholder="Descreva o que será fotografado..."></textarea>
+            <label>Quantidade de participantes <span class="text-ruby">*</span></label>
+            <input type="number" id="qtdParticipantes" min="1" placeholder="Ex: 8">
+          </div>
+          <div class="field">
+            <label>Local da sessão <span class="text-ruby">*</span></label>
+            <input type="text" id="localSessao" placeholder="Ex: Unidade SVN Maringá, estúdio externo...">
           </div>
         </div>
 
@@ -214,7 +218,7 @@
 
       // Update required attrs for correct step
       const videoRequired = ['titulo', 'ideia'];
-      const fotosRequired = ['tituloFotos', 'descricaoFotos'];
+      const fotosRequired = ['objetivoFotos', 'qtdParticipantes', 'localSessao'];
       videoRequired.forEach(id => {
         const el = document.getElementById(id);
         if (el) el.required = _modalidade === 'video';
@@ -302,8 +306,9 @@
         dados.formato = getFormatos();
         dados.restricoes = document.getElementById('restricoes').value;
       } else {
-        dados.titulo = document.getElementById('tituloFotos').value;
-        dados.descricao = document.getElementById('descricaoFotos').value;
+        dados.objetivo = document.getElementById('objetivoFotos').value;
+        dados.qtdParticipantes = document.getElementById('qtdParticipantes').value;
+        dados.localSessao = document.getElementById('localSessao').value;
       }
 
       const formData = new FormData();

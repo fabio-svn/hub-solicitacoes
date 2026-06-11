@@ -721,7 +721,9 @@ function buildProducaoAudiovisualDescription(dados: FormDados, user: UserData, a
   addLine(items, "Setor", str(dados.setor as string));
   addLine(items, "Modalidade", isVideo ? "Produção de Vídeo" : "Sessão de Fotos");
   addLine(items, "Título", str(dados.titulo) || str(dados.tituloFotos));
-  addLine(items, "Ideia / Descrição", str(dados.ideia) || str(dados.descricaoFotos));
+  addLine(items, "Objetivo / Ideia", str(dados.ideia) || str(dados.objetivo) || str(dados.descricaoFotos));
+  addLine(items, "Participantes", str(dados.qtdParticipantes));
+  addLine(items, "Local", str(dados.localSessao));
   addLine(items, "Formato", Array.isArray(dados.formato)
     ? (dados.formato as string[]).join(", ")
     : str(dados.formato));

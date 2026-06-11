@@ -118,33 +118,15 @@
   <script src="config.js?v=20260603"></script>
   <script src="auth.js?v=20260603"></script>
   <script src="shell.js?v=20260603"></script>
+  <script src="form-core.js?v=20260611"></script>
   <script>
     const TIPO = 'brindes';
-    window.addEventListener('pageshow', function(e) {
-      if (e.persisted) {
-        try { sessionStorage.removeItem('svn_ultimo_resumo'); } catch {}
-        window.location.reload();
-      }
-    });
 
     async function init() {
-      await _configReady;
-      await Auth.init();
-      if (!Auth.isAuthenticated()) { window.location.href = '/auth/login?redirect=/form-brindes.html'; return; }
-      Shell.render({ activeRoute: 'nova-solicitacao', contentEl: document.getElementById('pageContent') });
-
-      const setorSel = document.getElementById('setor');
-      if (setorSel) { SETORES.filter(s => s !== 'Selecione seu setor').forEach(s => { const o = document.createElement('option'); o.value = s; o.textContent = s; setorSel.appendChild(o); }); }
-
-      Auth.aplicarPerfilNoCampo('telefone', Auth.getTelefone());
-      Auth.aplicarPerfilNoCampo('unidade',    Auth.getUnidade());
-      Auth.aplicarPerfilNoCampo('escritorio', Auth.getEscritorio());
-      Auth.aplicarPerfilNoCampo('cargo',      Auth.getCargo());
-      Auth.aplicarPerfilNoCampo('cdAncord',   Auth.getCdAncord());
-      Auth.aplicarPerfilNoCampo('email',      Auth.getUserEmail());
-      Auth.aplicarPerfilNoCampo('nome',       Auth.getUserName());
-
-      FileUpload.bind('arquivoApoio', 'arquivoApoioName');
+      await FormCore.initForm({
+        tipo: TIPO,
+        onReady: function () { FileUpload.bind('arquivoApoio', 'arquivoApoioName'); },
+      });
     }
 
     function toggleOutroBrinde(cb) {
@@ -153,7 +135,7 @@
 
     function getItensSelecionados() {
       const checks = document.querySelectorAll('#itensContainer input[type="checkbox"]:checked');
-      const vals = Array.from(checks).map(c => c.value);
+      const vals = Array.from(checks).map(function (c) { return c.value; });
       const outroIdx = vals.indexOf('Outro');
       if (outroIdx !== -1) {
         const outroBrinde = document.getElementById('outroBrinde').value.trim();
@@ -162,48 +144,18 @@
       return vals.join(', ');
     }
 
-    function validateRequiredFields() {
-      document.querySelectorAll('.field-invalid').forEach(el => el.classList.remove('field-invalid'));
-      const invalidFields = [];
-      document.querySelectorAll('input[required], select[required], textarea[required]').forEach(input => {
-        if (!input.value.trim()) {
-          const fieldWrapper = input.closest('.field');
-          if (fieldWrapper) {
-            fieldWrapper.classList.add('field-invalid');
-            let errorEl = fieldWrapper.querySelector('.field-error');
-            if (!errorEl) { errorEl = document.createElement('div'); errorEl.className = 'field-error'; input.parentElement.appendChild(errorEl); }
-            errorEl.textContent = 'Este campo é obrigatório.';
-            invalidFields.push(fieldWrapper);
-          }
+    async function submitForm() {
+      const ok = FormCore.validateRequired(function (invalidFields) {
+        if (!getItensSelecionados()) {
+          FormCore.markInvalid(invalidFields, document.getElementById('itensContainer'), 'Selecione pelo menos um item.');
         }
       });
-
-      const itens = getItensSelecionados();
-      if (!itens) {
-        const container = document.getElementById('itensContainer');
-        const field = container?.closest('.field');
-        if (field && !field.classList.contains('field-invalid')) {
-          field.classList.add('field-invalid');
-          let errorEl = field.querySelector('.field-error');
-          if (!errorEl) { errorEl = document.createElement('div'); errorEl.className = 'field-error'; container.parentElement.appendChild(errorEl); }
-          errorEl.textContent = 'Selecione pelo menos um item.';
-          invalidFields.push(field);
-        }
-      }
-
-      if (invalidFields.length > 0) { invalidFields[0].scrollIntoView({ behavior: 'smooth', block: 'center' }); return false; }
-      return true;
-    }
-
-    async function submitForm() {
-      if (!validateRequiredFields()) return;
-      const btn = document.getElementById('btnSubmit');
-      btn.disabled = true; btn.textContent = 'Enviando...'; if(window.formLockUI)window.formLockUI(btn);
+      if (!ok) return;
 
       const dados = {
         nome: Auth.getUserName(),
         telefone: document.getElementById('telefone').value,
-        setor: document.getElementById('setor')?.value || '',
+        setor: document.getElementById('setor') ? document.getElementById('setor').value : '',
         titulo: document.getElementById('titulo').value,
         finalidade: document.getElementById('finalidade').value,
         dataEntrega: document.getElementById('dataEntrega').value,
@@ -212,37 +164,8 @@
         personalizacao: document.getElementById('personalizacao').value,
       };
 
-      const formData = new FormData();
-      formData.append('tipo_solicitacao', TIPO);
-      formData.append('dados', JSON.stringify(dados));
-      const arquivoInput = document.getElementById('arquivoApoio');
-      if (arquivoInput?.files[0]) formData.append('arquivo', arquivoInput.files[0]);
-
-      const res = await fetch('/api/solicitacoes', { method: 'POST', body: formData });
-      const d = await res.json().catch(() => ({}));
-      if (res.ok) {
-        try {
-          sessionStorage.setItem('svn_ultimo_resumo', JSON.stringify({
-            tipo: TIPO_SOLICITACAO_LABELS[TIPO] || TIPO,
-            solicitante: Auth.getUserName(),
-            setor: dados.setor,
-            data: new Date().toLocaleDateString('pt-BR'),
-            hora: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
-            id: d.id,
-          }));
-        } catch {}
-        window.location.replace('/thankyou.html');
-      } else {
-        const errEl = document.getElementById('submitError');
-        if (errEl) { errEl.style.display = 'block'; errEl.textContent = d.error || 'Erro ao enviar. Tente novamente.'; }
-        if(window.formUnlockUI)window.formUnlockUI(btn); else { btn.disabled = false; btn.textContent = 'Enviar'; }
-      }
+      await FormCore.submit({ tipo: TIPO, dados: dados, files: ['arquivoApoio'] });
     }
-
-    document.addEventListener('change', function(e) {
-      const field = e.target.closest('.field');
-      if (field && field.classList.contains('field-invalid') && e.target.value.trim()) field.classList.remove('field-invalid');
-    });
 
     init();
   </script>

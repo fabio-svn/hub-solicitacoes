@@ -97,7 +97,7 @@ const REQUIRED_FIELDS: Record<string, string[]> = {
   "patrocinio":            ["nome", "tituloEvento", "marcasParceiras", "dataEvento", "horario", "local", "estado", "cidade", "tipoEvento", "publico", "explicacao", "centroCusto", "valorCota", "orcamentoTotal", "expectativaRetorno"],
   "email-marketing":       ["nome", "assunto", "finalidade", "tema", "dataDisparo", "assinaturaEmail"],
   "producao-video":        ["nome", "titulo", "ideia", "formato"],
-  "sessao-fotos":          ["nome", "titulo", "descricao"],
+  "sessao-fotos":          ["nome", "objetivo", "qtdParticipantes", "localSessao"],
   "materiais-impressos":   ["nome", "tipoMaterial"],
 };
 
