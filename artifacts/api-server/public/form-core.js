@@ -131,8 +131,11 @@ window.FormCore = (function () {
     (opts.files || []).forEach(function (f) {
       const inputId = typeof f === 'string' ? f : f.inputId;
       const field = typeof f === 'string' ? 'arquivo' : (f.field || 'arquivo');
+      const multiple = typeof f === 'object' && f.multiple;
       const el = document.getElementById(inputId);
-      if (el && el.files && el.files[0]) fd.append(field, el.files[0]);
+      if (!el || !el.files || !el.files.length) return;
+      if (multiple) { for (let i = 0; i < el.files.length; i++) fd.append(field, el.files[i]); }
+      else { fd.append(field, el.files[0]); }
     });
 
     let res = { ok: false }, d = {};
@@ -200,8 +203,14 @@ window.FormCore = (function () {
     });
   }
   if (typeof document !== 'undefined') {
-    document.addEventListener('DOMContentLoaded', _autoSteppers);
-    if (window.MutationObserver) new MutationObserver(_autoSteppers).observe(document.documentElement, { childList: true, subtree: true });
+    var _docObs = window.MutationObserver ? new MutationObserver(_autoSteppers) : null;
+    document.addEventListener('DOMContentLoaded', function () {
+      _autoSteppers();
+      if (_docObs) {
+        _docObs.observe(document.documentElement, { childList: true, subtree: true });
+        setTimeout(function () { _autoSteppers(); _docObs.disconnect(); }, 3000);
+      }
+    });
     _autoSteppers();
   }
 

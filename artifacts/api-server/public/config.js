@@ -194,6 +194,7 @@ const DRAWER_FIELD_LABELS = {
   mensagem:            { label: "Mensagem",                   wide: true },
   assinatura:          { label: "Assinatura",                 wide: true },
   dataEntrega:         { label: "Data de entrega" },
+  prazoEntrega:        { label: "Prazo desejado" },
   itens:               { label: "Itens solicitados",          wide: true },
   centroCusto:         { label: "Centro de custo" },
   valorCota:           { label: "Valor da cota" },

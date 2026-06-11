@@ -16,7 +16,7 @@
     <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap" media="print" onload="this.media='all'">
   <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap"></noscript>
-  <link rel="stylesheet" href="style.css?v=20260603">
+  <link rel="stylesheet" href="style.css?v=20260611e">
 </head>
 <body class="page-light">
   <div id="pageContent">
@@ -87,92 +87,17 @@
   
 
   </div>
-  <script src="utils.js?v=20260603"></script>
+  <script src="utils.js?v=20260611e"></script>
   <script src="upload-feedback.js?v=20260603"></script>
-  <script src="config.js?v=20260603"></script>
-  <script src="auth.js?v=20260603"></script>
-  <script src="shell.js?v=20260603"></script>
+  <script src="config.js?v=20260611e"></script>
+  <script src="auth.js?v=20260611e"></script>
+  <script src="shell.js?v=20260611e"></script>
+  <script src="form-core.js?v=20260611e"></script>
   <script>
     const TIPO = 'email-marketing';
-    window.addEventListener('pageshow', function(e) {
-      if (e.persisted) {
-        try { sessionStorage.removeItem('form-' + TIPO); } catch {}
-        window.location.reload();
-      }
-    });
-
-    async function init() {
-      await _configReady;
-      await Auth.init();
-      if (!Auth.isAuthenticated()) { window.location.href = '/auth/login?redirect=/form-email-marketing.html'; return; }
-      Shell.render({ activeRoute: 'nova-solicitacao', contentEl: document.getElementById('pageContent') });
-
-      Auth.aplicarPerfilNoCampo('telefone', Auth.getTelefone());
-      Auth.aplicarPerfilNoCampo('unidade',    Auth.getUnidade());
-      Auth.aplicarPerfilNoCampo('escritorio', Auth.getEscritorio());
-      Auth.aplicarPerfilNoCampo('cargo',      Auth.getCargo());
-      Auth.aplicarPerfilNoCampo('cdAncord',   Auth.getCdAncord());
-      Auth.aplicarPerfilNoCampo('email',      Auth.getUserEmail());
-      Auth.aplicarPerfilNoCampo('nome',       Auth.getUserName());
-
-      const setorSel = document.getElementById('setor');
-      if (setorSel) { SETORES.filter(s => s !== 'Selecione seu setor').forEach(s => { const o = document.createElement('option'); o.value = s; o.textContent = s; setorSel.appendChild(o); }); }
-
-      FileUpload.bind('baseDisparo', 'baseDisparoName');
-    }
-
-    function saveSession() {
-      try {
-        sessionStorage.setItem('form-email-marketing', JSON.stringify({
-          telefone: document.getElementById('telefone')?.value || '',
-          setor: document.getElementById('setor')?.value || '',
-          assunto: document.getElementById('assunto')?.value || '',
-          finalidade: document.getElementById('finalidade')?.value || '',
-          tema: document.getElementById('tema')?.value || '',
-          dataDisparo: document.getElementById('dataDisparo')?.value || '',
-          assinaturaEmail: document.getElementById('assinaturaEmail')?.value || '',
-        }));
-      } catch {}
-    }
-
-    function restoreSession() {
-      try {
-        const data = JSON.parse(sessionStorage.getItem('form-email-marketing'));
-        if (!data) return;
-        if (data.telefone) document.getElementById('telefone').value = data.telefone;
-        if (data.setor) { const el = document.getElementById('setor'); if (el) el.value = data.setor; }
-        if (data.assunto) document.getElementById('assunto').value = data.assunto;
-        if (data.finalidade) document.getElementById('finalidade').value = data.finalidade;
-        if (data.tema) document.getElementById('tema').value = data.tema;
-        if (data.dataDisparo) document.getElementById('dataDisparo').value = data.dataDisparo;
-        if (data.assinaturaEmail) document.getElementById('assinaturaEmail').value = data.assinaturaEmail;
-      } catch {}
-    }
-
-    function validateRequiredFields() {
-      document.querySelectorAll('.field-invalid').forEach(el => el.classList.remove('field-invalid'));
-      const invalidFields = [];
-      document.querySelectorAll('input[required], select[required], textarea[required]').forEach(input => {
-        if (!input.value.trim()) {
-          const fieldWrapper = input.closest('.field');
-          if (fieldWrapper) {
-            fieldWrapper.classList.add('field-invalid');
-            let errorEl = fieldWrapper.querySelector('.field-error');
-            if (!errorEl) { errorEl = document.createElement('div'); errorEl.className = 'field-error'; input.parentElement.appendChild(errorEl); }
-            errorEl.textContent = 'Este campo é obrigatório.';
-            invalidFields.push(fieldWrapper);
-          }
-        }
-      });
-      if (invalidFields.length > 0) { invalidFields[0].scrollIntoView({ behavior: 'smooth', block: 'center' }); return false; }
-      return true;
-    }
 
     async function submitForm() {
-      if (!validateRequiredFields()) return;
-      const btn = document.getElementById('btnSubmit');
-      btn.disabled = true; btn.textContent = 'Enviando...'; if(window.formLockUI)window.formLockUI(btn);
-
+      if (!FormCore.validateRequired()) return;
       const dados = {
         nome: Auth.getUserName(),
         telefone: document.getElementById('telefone').value,
@@ -183,47 +108,16 @@
         dataDisparo: document.getElementById('dataDisparo').value,
         assinaturaEmail: document.getElementById('assinaturaEmail').value,
       };
-
-      const formData = new FormData();
-      formData.append('tipo_solicitacao', TIPO);
-      formData.append('dados', JSON.stringify(dados));
-      const baseInput = document.getElementById('baseDisparo');
-      if (baseInput?.files[0]) formData.append('arquivo', baseInput.files[0]);
-
-      const res = await fetch('/api/solicitacoes', { method: 'POST', body: formData });
-      const d = await res.json().catch(() => ({}));
-      if (res.ok) {
-        sessionStorage.removeItem('form-email-marketing');
-        try {
-          sessionStorage.setItem('svn_ultimo_resumo', JSON.stringify({
-            tipo: TIPO_SOLICITACAO_LABELS[TIPO] || TIPO,
-            solicitante: Auth.getUserName(),
-            setor: dados.setor,
-            data: new Date().toLocaleDateString('pt-BR'),
-            hora: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
-            id: d.id,
-          }));
-        } catch {}
-        window.location.replace('/thankyou.html');
-      } else {
-        const errEl = document.getElementById('submitError');
-        if (errEl) { errEl.style.display = 'block'; errEl.textContent = d.error || 'Erro ao enviar. Tente novamente.'; }
-        if(window.formUnlockUI)window.formUnlockUI(btn); else { btn.disabled = false; btn.textContent = 'Enviar'; }
-      }
+      await FormCore.submit({ tipo: TIPO, dados: dados, files: [{ inputId: 'baseDisparo', field: 'arquivo' }] });
     }
 
-    document.addEventListener('input', function(e) {
-      const field = e.target.closest('.field');
-      if (field && field.classList.contains('field-invalid') && e.target.value.trim()) field.classList.remove('field-invalid');
-      saveSession();
+    FormCore.initForm({
+      tipo: TIPO,
+      redirectPath: '/form-email-marketing.html',
+      activeRoute: 'nova-solicitacao',
+      draft: true,
+      onReady: function () { FileUpload.bind('baseDisparo', 'baseDisparoName'); }
     });
-    document.addEventListener('change', function(e) {
-      const field = e.target.closest('.field');
-      if (field && field.classList.contains('field-invalid') && e.target.value.trim()) field.classList.remove('field-invalid');
-      saveSession();
-    });
-
-    init().then(restoreSession);
   </script>
 </body>
 </html>

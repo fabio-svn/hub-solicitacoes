@@ -25,6 +25,12 @@ PY
 done
 echo "  (sem ⚠ = sintaxe ok em todos os blocos inline)"
 
+echo; echo "### 1b. Sintaxe dos JS externos (public/*.js) ###"
+for jf in "$PUB"/*.js; do
+  node --check "$jf" 2>/tmp/_err || echo "  ⚠ $(basename "$jf"): $(grep -m1 -E 'SyntaxError|Error' /tmp/_err)"
+done
+echo "  (sem ⚠ = ok nos .js externos)"
+
 echo; echo "### 2. Arquivos referenciados que NAO existem (404 em potencial) ###"
 grep -rhoE '(src|href)="[^"]+\.(js|css|png|jpg|jpeg|svg|webp|ico)"' "$PUB"/*.html \
   | sed -E 's/.*="([^"]+)".*/\1/' | grep -vE '^https?:|^//|^data:' | sed 's/?.*//' | sort -u \

@@ -544,7 +544,7 @@ function buildGeneralDescription(
   if (setor) addLine(resumoItems, "Setor", setor);
   addLine(resumoItems, "Título", str(dados.titulo) || str(dados.nome_completo));
   addLine(resumoItems, "Finalidade", str(dados.finalidade));
-  addLine(resumoItems, "Prazo de entrega", str(dados.prazoEntrega));
+  addLine(resumoItems, "Prazo desejado", str(dados.prazoEntrega));
   addLine(resumoItems, "Público-alvo", str(dados.publico as string) || str(dados.publicoAlvo));
   addLine(resumoItems, "Canais", str(dados.canais));
   if (resumoItems.length > 0) blocks.push(`📌 RESUMO\n━━━━━━━━━━━━━━━━━━━━━━\n\n${resumoItems.join("\n")}`);

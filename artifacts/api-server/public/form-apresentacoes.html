@@ -16,7 +16,7 @@
     <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap" media="print" onload="this.media='all'">
   <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap"></noscript>
-  <link rel="stylesheet" href="style.css?v=20260603">
+  <link rel="stylesheet" href="style.css?v=20260611e">
 </head>
 <body class="page-light">
   <div id="pageContent">
@@ -180,11 +180,11 @@
   </div>
 
   </div>
-  <script src="utils.js?v=20260603"></script>
+  <script src="utils.js?v=20260611e"></script>
   <script src="upload-feedback.js?v=20260603"></script>
-  <script src="config.js?v=20260603"></script>
-  <script src="auth.js?v=20260603"></script>
-  <script src="shell.js?v=20260603"></script>
+  <script src="config.js?v=20260611e"></script>
+  <script src="auth.js?v=20260611e"></script>
+  <script src="shell.js?v=20260611e"></script>
   <script>
     const params = new URLSearchParams(window.location.search);
     let subtipo = params.get('subtipo') || '';
@@ -225,46 +225,36 @@
       window.scrollTo(0, 0);
     }
 
-    async function init() {
-      await _configReady;
-      await Auth.init();
-      if (!Auth.isAuthenticated()) { window.location.href = '/auth/login?redirect=/form-apresentacoes.html'; return; }
-      Shell.render({ activeRoute: 'nova-solicitacao', contentEl: document.getElementById('pageContent') });
-      if (subtipo) goToStep2();
+    function init() {
+      FormCore.initForm({
+        tipo: 'apresentacoes',
+        redirectPath: '/form-apresentacoes.html',
+        activeRoute: 'nova-solicitacao',
+        onReady: function () {
+          if (subtipo) goToStep2();
 
-      document.querySelectorAll('input[name="tamanho"]').forEach(r => r.addEventListener('change', () => {
-        const sla = SLA[r.value];
-        const el = document.getElementById('slaPrazo');
-        el.style.display = 'block';
-        el.textContent = `Prazo estimado: ${sla}`;
-      }));
+          document.querySelectorAll('input[name="tamanho"]').forEach(r => r.addEventListener('change', () => {
+            const sla = SLA[r.value];
+            const el = document.getElementById('slaPrazo');
+            el.style.display = 'block';
+            el.textContent = `Prazo estimado: ${sla}`;
+          }));
 
-      document.querySelectorAll('input[name="tipoCriacao"]').forEach(r => r.addEventListener('change', () => {
-        const checked = document.querySelector('input[name="tipoCriacao"]:checked');
-        document.getElementById('uploadBase').style.display = checked?.value === 'base-existente' ? 'block' : 'none';
-      }));
+          document.querySelectorAll('input[name="tipoCriacao"]').forEach(r => r.addEventListener('change', () => {
+            const checked = document.querySelector('input[name="tipoCriacao"]:checked');
+            document.getElementById('uploadBase').style.display = checked?.value === 'base-existente' ? 'block' : 'none';
+          }));
 
-      document.querySelectorAll('#elementos input').forEach(cb => cb.addEventListener('change', () => {
-        const any = [...document.querySelectorAll('#elementos input')].some(c => c.checked);
-        document.getElementById('elementosDesc').style.display = any ? 'block' : 'none';
-      }));
+          document.querySelectorAll('#elementos input').forEach(cb => cb.addEventListener('change', () => {
+            const any = [...document.querySelectorAll('#elementos input')].some(c => c.checked);
+            document.getElementById('elementosDesc').style.display = any ? 'block' : 'none';
+          }));
 
-      ['arquivoBase', 'arquivoBaseNova', 'arquivoApoio'].forEach(id => {
-        FileUpload.bind(id, id + 'Name');
+          ['arquivoBase', 'arquivoBaseNova', 'arquivoApoio'].forEach(id => { FileUpload.bind(id, id + 'Name'); });
+
+          restoreDraft();
+        }
       });
-
-      const setorSel = document.getElementById('setor');
-      if (setorSel) { SETORES.filter(s => s !== 'Selecione seu setor').forEach(s => { const o = document.createElement('option'); o.value = s; o.textContent = s; setorSel.appendChild(o); }); }
-
-      Auth.aplicarPerfilNoCampo('telefone', Auth.getTelefone());
-      Auth.aplicarPerfilNoCampo('unidade',    Auth.getUnidade());
-      Auth.aplicarPerfilNoCampo('escritorio', Auth.getEscritorio());
-      Auth.aplicarPerfilNoCampo('cargo',      Auth.getCargo());
-      Auth.aplicarPerfilNoCampo('cdAncord',   Auth.getCdAncord());
-      Auth.aplicarPerfilNoCampo('email',      Auth.getUserEmail());
-      Auth.aplicarPerfilNoCampo('nome',       Auth.getUserName());
-
-      restoreDraft();
     }
 
     function validateStep2() {
@@ -474,6 +464,6 @@
   </svg>
 </a>
 
-  <script src="form-core.js?v=20260611c"></script>
+  <script src="form-core.js?v=20260611e"></script>
 </body>
 </html>
