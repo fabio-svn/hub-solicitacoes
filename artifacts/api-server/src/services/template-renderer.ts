@@ -219,19 +219,36 @@ async function renderTextBlock(
   const text = substitute(layer.content, data, ctx);
   const font = getFont(layer.font_family);
 
-  // Split by \n: each newline is a forced line break; empty string = blank spacer
-  const userLines = text.split('\n');
-  const allLines: string[] = [];
-  for (const userLine of userLines) {
-    if (userLine === '') {
-      allLines.push(''); // blank spacer — advances yCursor by one lineHeight
-    } else {
-      const wrapped = wrapTextToLines(font, userLine, layer.font_size, layer.w);
-      allLines.push(...wrapped);
+  // Build wrapped lines for a given font size (forced \n breaks + word-wrap within layer.w)
+  const buildLines = (fs: number): string[] => {
+    const result: string[] = [];
+    for (const userLine of text.split('\n')) {
+      if (userLine === '') result.push(''); // blank spacer
+      else result.push(...wrapTextToLines(font, userLine, fs, layer.w));
     }
+    return result;
+  };
+
+  // Auto-fit: shrink fontSize until content fits within layer.w × layer.h, down to minFont floor.
+  // Fields that already fit at layer.font_size are untouched (loop breaks on first iteration).
+  const minFont = layer.auto_fit?.min_font_size ?? Math.round(layer.font_size * 0.6);
+  let fontSize = layer.font_size;
+  let allLines = buildLines(fontSize);
+
+  while (fontSize > minFont) {
+    const lh = layer.line_height * (fontSize / layer.font_size);
+    const ch = allLines.length * lh;
+    const maxW = allLines.reduce(
+      (max, l) => (l ? Math.max(max, measureTextWidth(font, l, fontSize)) : max),
+      0
+    );
+    if (ch <= layer.h && maxW <= layer.w) break;
+    fontSize = Math.max(minFont, fontSize - 2);
+    allLines = buildLines(fontSize);
   }
 
-  const contentHeight = allLines.length * layer.line_height;
+  const lineHeight = layer.line_height * (fontSize / layer.font_size);
+  const contentHeight = allLines.length * lineHeight;
 
   let yCursor = layer.y;
   if (layer.vertical_align === 'middle') {
@@ -242,14 +259,14 @@ async function renderTextBlock(
 
   for (const line of allLines) {
     if (line !== '') {
-      const { buffer, width } = await renderTextBuffer(font, line, layer.font_size, layer.color);
+      const { buffer, width } = await renderTextBuffer(font, line, fontSize, layer.color);
       composites.push({
         input: buffer,
-        top: topForText(font, layer.font_size, yCursor),
+        top: topForText(font, fontSize, yCursor),
         left: alignedLeft(layer.x, layer.w, width, layer.align),
       });
     }
-    yCursor += layer.line_height;
+    yCursor += lineHeight;
   }
 }
 

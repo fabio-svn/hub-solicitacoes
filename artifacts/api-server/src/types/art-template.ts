@@ -56,6 +56,10 @@ export type TextBlockLayer = LayerBase & {
   color: string;
   align: 'left' | 'center' | 'right';
   vertical_align?: 'top' | 'middle' | 'bottom';
+  auto_fit?: {
+    enabled?: boolean;
+    min_font_size?: number;
+  };
 };
 
 export type ImageLayer = LayerBase & {
