@@ -71,7 +71,7 @@ window.FormCore = (function () {
       return false;
     }
     if (typeof Shell !== 'undefined' && Shell.render) {
-      Shell.render({ activeRoute: 'nova-solicitacao', contentEl: document.getElementById('pageContent') });
+      Shell.render({ activeRoute: opts.activeRoute || 'nova-solicitacao', contentEl: document.getElementById('pageContent') });
     }
     _popularSetor();
     _aplicarPerfil();

@@ -135,192 +135,70 @@
   <script src="config.js?v=20260603"></script>
   <script src="auth.js?v=20260603"></script>
   <script src="shell.js?v=20260603"></script>
+  <script src="form-core.js?v=20260611b"></script>
   <script>
-    window.addEventListener('pageshow', function(e) {
-      if (e.persisted) {
-        try { sessionStorage.removeItem('form-artes'); } catch {}
-        window.location.reload();
-      }
-    });
+
+    const TIPO = 'artes-divulgacao';
+
     async function init() {
-      await _configReady;
-      await Auth.init();
-      if (!Auth.isAuthenticated()) { window.location.href = '/auth/login?redirect=/form-artes-divulgacao.html'; return; }
-      Shell.render({ activeRoute: 'nova-solicitacao', contentEl: document.getElementById('pageContent') });
-
-      document.getElementById('canalOutroCheck').addEventListener('change', () => {
-        document.getElementById('canalOutroField').style.display = document.getElementById('canalOutroCheck').checked ? 'block' : 'none';
+      await FormCore.initForm({
+        tipo: TIPO,
+        draft: true,
+        onReady: function() {
+          document.getElementById('canalOutroCheck').addEventListener('change', function() {
+            document.getElementById('canalOutroField').style.display = document.getElementById('canalOutroCheck').checked ? 'block' : 'none';
+          });
+          FileUpload.bind('arquivoApoio', 'arquivoApoioName');
+        },
       });
-      FileUpload.bind('arquivoApoio', 'arquivoApoioName');
-
-      const setorSel = document.getElementById('setor');
-      if (setorSel) { SETORES.filter(s => s !== 'Selecione seu setor').forEach(s => { const o = document.createElement('option'); o.value = s; o.textContent = s; setorSel.appendChild(o); }); }
-
-      Auth.aplicarPerfilNoCampo('telefone', Auth.getTelefone());
-      Auth.aplicarPerfilNoCampo('unidade',    Auth.getUnidade());
-      Auth.aplicarPerfilNoCampo('escritorio', Auth.getEscritorio());
-      Auth.aplicarPerfilNoCampo('cargo',      Auth.getCargo());
-      Auth.aplicarPerfilNoCampo('cdAncord',   Auth.getCdAncord());
-      Auth.aplicarPerfilNoCampo('email',      Auth.getUserEmail());
-      Auth.aplicarPerfilNoCampo('nome',       Auth.getUserName());
-
-      restoreSession();
     }
 
     function validateStep1() {
-      document.querySelectorAll('#step1 .field-invalid').forEach(el => el.classList.remove('field-invalid'));
-      const errors = [];
-
-      ['titulo', 'finalidade', 'conteudo'].forEach(id => {
-        const el = document.getElementById(id);
+      document.querySelectorAll('#step1 .field-invalid').forEach(function(el) { el.classList.remove('field-invalid'); });
+      var errors = [];
+      ['titulo', 'finalidade', 'conteudo'].forEach(function(id) {
+        var el = document.getElementById(id);
         if (el && !el.value.trim()) {
-          const fieldEl = el.closest('.field');
+          var fieldEl = el.closest('.field');
           if (fieldEl) { fieldEl.classList.add('field-invalid'); errors.push(fieldEl); }
         }
       });
-
-      const canaisChecked = [...document.querySelectorAll('#canais input:checked')];
+      var canaisChecked = [...document.querySelectorAll('#canais input:checked')];
       if (canaisChecked.length === 0) {
-        const fieldEl = document.getElementById('canais').closest('.field');
+        var fieldEl = document.getElementById('canais').closest('.field');
         if (fieldEl) { fieldEl.classList.add('field-invalid'); errors.push(fieldEl); }
       }
-
       if (errors.length > 0) { errors[0].scrollIntoView({ behavior: 'smooth', block: 'center' }); return false; }
       return true;
     }
 
     function goStep(step) {
-      document.querySelectorAll('.form-step').forEach(s => s.classList.remove('active'));
+      document.querySelectorAll('.form-step').forEach(function(s) { s.classList.remove('active'); });
       document.getElementById('step' + step).classList.add('active');
       document.getElementById('progressBar').style.width = (step / 2 * 100) + '%';
-      document.getElementById('stepLabel').textContent = `Etapa ${step} de 2`;
-      saveSession();
+      document.getElementById('stepLabel').textContent = 'Etapa ' + step + ' de 2';
       window.scrollTo(0, 0);
     }
 
-    function saveSession() {
-      const data = {
-        telefone: document.getElementById('telefone')?.value || '',
-        setor: document.getElementById('setor')?.value || '',
-        titulo: document.getElementById('titulo')?.value || '',
-        finalidade: document.getElementById('finalidade')?.value || '',
-        conteudo: document.getElementById('conteudo')?.value || '',
-        observacoes: document.getElementById('observacoes')?.value || '',
-      };
-      sessionStorage.setItem('form-artes', JSON.stringify(data));
-    }
-
-    function restoreSession() {
-      try {
-        const data = JSON.parse(sessionStorage.getItem('form-artes'));
-        if (!data) return;
-        if (data.telefone) document.getElementById('telefone').value = data.telefone;
-        if (data.setor) { const el = document.getElementById('setor'); if (el) el.value = data.setor; }
-        if (data.titulo) document.getElementById('titulo').value = data.titulo;
-        if (data.finalidade) document.getElementById('finalidade').value = data.finalidade;
-        if (data.conteudo) document.getElementById('conteudo').value = data.conteudo;
-        if (data.observacoes) document.getElementById('observacoes').value = data.observacoes;
-      } catch {}
-    }
-
-    function validateRequiredFields() {
-      document.querySelectorAll('.field-invalid').forEach(el => el.classList.remove('field-invalid'));
-      const invalidFields = [];
-      document.querySelectorAll('input[required], select[required], textarea[required]').forEach(input => {
-        const step = input.closest('.form-step');
-        if (step && !step.classList.contains('active')) return;
-        const isEmpty = input.type === 'radio' || input.type === 'checkbox'
-          ? !document.querySelector(`input[name="${input.name}"]:checked`)
-          : !input.value.trim();
-        if (isEmpty) {
-          const fieldWrapper = input.closest('.field');
-          if (fieldWrapper) {
-            fieldWrapper.classList.add('field-invalid');
-            let errorEl = fieldWrapper.querySelector('.field-error');
-            if (!errorEl) { errorEl = document.createElement('div'); errorEl.className = 'field-error'; input.parentElement.appendChild(errorEl); }
-            errorEl.textContent = 'Este campo é obrigatório.';
-            invalidFields.push(fieldWrapper);
-          }
-        }
-      });
-      if (invalidFields.length > 0) { invalidFields[0].scrollIntoView({ behavior: 'smooth', block: 'center' }); return false; }
-      return true;
-    }
-
     async function submitForm() {
-      if (!validateRequiredFields()) return;
-      const canais = [...document.querySelectorAll('#canais input:checked')].map(c => c.value);
-      const publico = [...document.querySelectorAll('#publico input:checked')].map(c => c.value);
-
-      const btn = document.getElementById('btnSubmit');
-      btn.disabled = true; btn.textContent = 'Enviando...'; if(window.formLockUI)window.formLockUI(btn);
-
-      const formData = new FormData();
-      formData.append('tipo_solicitacao', 'artes-divulgacao');
-      const dados = {
+      if (!FormCore.validateRequired()) return;
+      var canais = [...document.querySelectorAll('#canais input:checked')].map(function(c) { return c.value; });
+      var publico = [...document.querySelectorAll('#publico input:checked')].map(function(c) { return c.value; });
+      var dados = {
         nome: Auth.getUserName(),
         telefone: document.getElementById('telefone').value,
-        setor: document.getElementById('setor')?.value || '',
+        setor: document.getElementById('setor') ? document.getElementById('setor').value : '',
         titulo: document.getElementById('titulo').value,
         finalidade: document.getElementById('finalidade').value,
         canais: canais.join(', '),
-        canalOutro: document.getElementById('canalOutro')?.value || '',
-        conteudo:    document.getElementById('conteudo').value,
+        canalOutro: document.getElementById('canalOutro') ? document.getElementById('canalOutro').value : '',
+        conteudo: document.getElementById('conteudo').value,
         publicoAlvo: publico.join(', '),
         prazoEntrega: document.getElementById('prazoEntrega').value,
         observacoes: document.getElementById('observacoes').value,
       };
-      formData.append('dados', JSON.stringify(dados));
-
-      const file = document.getElementById('arquivoApoio').files[0];
-      if (file) formData.append('arquivoApoio', file);
-
-      try {
-        const res = await fetch('/api/solicitacoes', { method: 'POST', body: formData });
-        const d = await res.json().catch(() => ({}));
-        if (res.ok) {
-          sessionStorage.removeItem('form-artes');
-          try {
-            const resumo = {
-              tipo: TIPO_SOLICITACAO_LABELS[formData.get('tipo_solicitacao')] || formData.get('tipo_solicitacao'),
-              subtipo: formData.get('subtipo') || '',
-              titulo: dados.titulo || '',
-              solicitante: dados.nome || Auth.getUserName(),
-              data: new Date().toLocaleDateString('pt-BR'),
-              hora: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
-              materiais: [],
-              natureza: '',
-              maturidade: '',
-              id: d.id,
-            };
-            sessionStorage.setItem('svn_ultimo_resumo', JSON.stringify(resumo));
-          } catch {}
-          window.location.replace('/thankyou.html');
-        }
-        else {
-          const errEl = document.getElementById('submitError');
-          if (errEl) { errEl.style.display = 'block'; errEl.textContent = d.error || 'Erro ao enviar. Tente novamente.'; }
-          if(window.formUnlockUI)window.formUnlockUI(btn); else { btn.disabled = false; btn.textContent = 'Enviar'; }
-        }
-      } catch (e) {
-        const errEl = document.getElementById('submitError');
-        if (errEl) { errEl.style.display = 'block'; errEl.textContent = 'Erro de conexão. Verifique sua internet e tente novamente.'; }
-        if(window.formUnlockUI)window.formUnlockUI(btn); else { btn.disabled = false; btn.textContent = 'Enviar'; }
-      }
+      await FormCore.submit({ tipo: TIPO, dados: dados, files: ['arquivoApoio'] });
     }
-
-    document.addEventListener('input', function(e) {
-      const field = e.target.closest('.field');
-      if (field && field.classList.contains('field-invalid') && e.target.value.trim()) {
-        field.classList.remove('field-invalid');
-      }
-    });
-    document.addEventListener('change', function(e) {
-      const field = e.target.closest('.field');
-      if (field && field.classList.contains('field-invalid')) {
-        field.classList.remove('field-invalid');
-      }
-    });
 
     init();
   </script>

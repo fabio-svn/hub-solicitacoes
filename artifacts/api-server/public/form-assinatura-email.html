@@ -91,43 +91,33 @@
   <script src="config.js?v=20260603"></script>
   <script src="auth.js?v=20260603"></script>
   <script src="shell.js?v=20260603"></script>
+  <script src="form-core.js?v=20260611b"></script>
   <script>
+
     const TIPO = 'assinatura-email';
-    window.addEventListener('pageshow', function(e) {
-      if (e.persisted) {
-        try { sessionStorage.removeItem('form-' + TIPO); } catch {}
-        window.location.reload();
-      }
-    });
-    // Subset de marcas que possuem contrato social específico (vs marcas guarda-chuva)
     const MARCAS_CONTRATO = ['svn-investimentos', 'svn-capital', 'svn-connect'];
 
     async function init() {
-      await _configReady;
-      await Auth.init();
-      if (!Auth.isAuthenticated()) { window.location.href = '/auth/login?redirect=/form-assinatura-email.html'; return; }
-      Shell.render({ activeRoute: 'nova-solicitacao', contentEl: document.getElementById('pageContent') });
-
-      const marcaSel = document.getElementById('marca');
-      if (marcaSel) { MARCAS_OPTS_FORM.forEach(m => { const o = document.createElement('option'); o.value = m.value; o.textContent = m.label; marcaSel.appendChild(o); }); }
-
-      Auth.aplicarPerfilNoCampo('telefone', Auth.getTelefone());
-      Auth.aplicarPerfilNoCampo('unidade',    Auth.getUnidade());
-      Auth.aplicarPerfilNoCampo('escritorio', Auth.getEscritorio());
-      Auth.aplicarPerfilNoCampo('cargo',      Auth.getCargo());
-      Auth.aplicarPerfilNoCampo('cdAncord',   Auth.getCdAncord());
-      Auth.aplicarPerfilNoCampo('email',      Auth.getUserEmail());
-      Auth.aplicarPerfilNoCampo('nome',       Auth.getUserName());
-
-      restoreSession();
+      await FormCore.initForm({
+        tipo: TIPO,
+        draft: true,
+        onReady: function() {
+          var marcaSel = document.getElementById('marca');
+          if (marcaSel) {
+            MARCAS_OPTS_FORM.forEach(function(m) {
+              var o = document.createElement('option'); o.value = m.value; o.textContent = m.label; marcaSel.appendChild(o);
+            });
+          }
+        },
+      });
     }
 
     function handleMarcaChange() {
-      const marca = document.getElementById('marca').value;
-      const isContrato = MARCAS_CONTRATO.includes(marca);
-      const campoCargoWrap = document.getElementById('campoCargoWrap');
-      const campoCfpWrap = document.getElementById('campoCfpWrap');
-      const cargoInput = document.getElementById('cargo');
+      var marca = document.getElementById('marca').value;
+      var isContrato = MARCAS_CONTRATO.includes(marca);
+      var campoCargoWrap = document.getElementById('campoCargoWrap');
+      var campoCfpWrap = document.getElementById('campoCfpWrap');
+      var cargoInput = document.getElementById('cargo');
       if (campoCargoWrap) {
         campoCargoWrap.style.display = isContrato ? 'none' : (marca ? 'block' : 'none');
         if (cargoInput) cargoInput.required = !isContrato && !!marca;
@@ -137,110 +127,21 @@
       }
     }
 
-    function saveSession() {
-      try {
-        sessionStorage.setItem('form-assinatura-email', JSON.stringify({
-          nome: document.getElementById('nomeCompleto')?.value || '',
-          cargo: document.getElementById('cargo')?.value || '',
-          telefone: document.getElementById('telefone')?.value || '',
-          email: document.getElementById('emailCorporativo')?.value || '',
-          marca: document.getElementById('marca')?.value || '',
-          tem_cfp: document.querySelector('input[name="cfp"]:checked')?.value || '',
-        }));
-      } catch {}
-    }
-
-    function restoreSession() {
-      try {
-        const data = JSON.parse(sessionStorage.getItem('form-assinatura-email'));
-        if (!data) return;
-        if (data.nome) document.getElementById('nomeCompleto').value = data.nome;
-        if (data.cargo) { const el = document.getElementById('cargo'); if (el) el.value = data.cargo; }
-        if (data.telefone) document.getElementById('telefone').value = data.telefone;
-        if (data.email) document.getElementById('emailCorporativo').value = data.email;
-        if (data.marca) { const el = document.getElementById('marca'); if (el) { el.value = data.marca; handleMarcaChange(); } }
-        if (data.tem_cfp) { const el = document.querySelector(`input[name="cfp"][value="${data.tem_cfp}"]`); if (el) el.checked = true; }
-      } catch {}
-    }
-
-    function validateRequiredFields() {
-      document.querySelectorAll('.field-invalid').forEach(el => el.classList.remove('field-invalid'));
-      const invalidFields = [];
-      document.querySelectorAll('input[required], select[required], textarea[required]').forEach(input => {
-        if (input.closest('.field') && input.closest('.field').style.display === 'none') return;
-        const isEmpty = !input.value.trim();
-        if (isEmpty) {
-          const fieldWrapper = input.closest('.field');
-          if (fieldWrapper) {
-            fieldWrapper.classList.add('field-invalid');
-            let errorEl = fieldWrapper.querySelector('.field-error');
-            if (!errorEl) { errorEl = document.createElement('div'); errorEl.className = 'field-error'; input.parentElement.appendChild(errorEl); }
-            errorEl.textContent = 'Este campo é obrigatório.';
-            invalidFields.push(fieldWrapper);
-          }
-        }
-      });
-      if (invalidFields.length > 0) { invalidFields[0].scrollIntoView({ behavior: 'smooth', block: 'center' }); return false; }
-      return true;
-    }
-
     async function submitForm() {
-      if (!validateRequiredFields()) return;
-      const btn = document.getElementById('btnSubmit');
-      btn.disabled = true; btn.textContent = 'Enviando...'; if(window.formLockUI)window.formLockUI(btn);
-
-      const marca = document.getElementById('marca').value;
-      const isContrato = MARCAS_CONTRATO.includes(marca);
-
-      const dados = {
+      if (!FormCore.validateRequired()) return;
+      var marca = document.getElementById('marca').value;
+      var isContrato = MARCAS_CONTRATO.includes(marca);
+      var cfpEl = document.querySelector('input[name="cfp"]:checked');
+      var dados = {
         nome: document.getElementById('nomeCompleto').value,
-        cargo: isContrato ? '' : (document.getElementById('cargo')?.value || ''),
-        tem_cfp: isContrato ? (document.querySelector('input[name="cfp"]:checked')?.value || '') : '',
+        cargo: isContrato ? '' : (document.getElementById('cargo') ? document.getElementById('cargo').value : ''),
+        tem_cfp: isContrato ? (cfpEl ? cfpEl.value : '') : '',
         telefone: document.getElementById('telefone').value,
         email: document.getElementById('emailCorporativo').value,
         marca: marca,
       };
-
-      const formData = new FormData();
-      formData.append('tipo_solicitacao', TIPO);
-      formData.append('dados', JSON.stringify(dados));
-
-      try {
-        const res = await fetch('/api/solicitacoes', { method: 'POST', body: formData });
-        const d = await res.json().catch(() => ({}));
-        if (res.ok) {
-          sessionStorage.removeItem('form-assinatura-email');
-          try {
-            sessionStorage.setItem('svn_ultimo_resumo', JSON.stringify({
-              tipo_id: TIPO,
-              tipo: TIPO_SOLICITACAO_LABELS[TIPO] || TIPO,
-              solicitante: Auth.getUserName(),
-              data: new Date().toLocaleDateString('pt-BR'),
-              hora: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
-              id: d.id,
-            }));
-          } catch {}
-          window.location.replace('/thankyou.html');
-        } else {
-          throw new Error(d.error || 'submit_failed');
-        }
-      } catch {
-        const errEl = document.getElementById('submitError');
-        if (errEl) { errEl.style.display = 'block'; errEl.textContent = 'Erro de conexão. Verifique sua internet e tente novamente.'; }
-        if(window.formUnlockUI)window.formUnlockUI(btn); else { btn.disabled = false; btn.textContent = 'Enviar'; }
-      }
+      await FormCore.submit({ tipo: TIPO, dados: dados });
     }
-
-    document.addEventListener('input', function(e) {
-      const field = e.target.closest('.field');
-      if (field && field.classList.contains('field-invalid') && e.target.value.trim()) field.classList.remove('field-invalid');
-      saveSession();
-    });
-    document.addEventListener('change', function(e) {
-      const field = e.target.closest('.field');
-      if (field && field.classList.contains('field-invalid')) field.classList.remove('field-invalid');
-      saveSession();
-    });
 
     init();
   </script>

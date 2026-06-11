@@ -1,0 +1,28 @@
+Objetivo: migrar os forms do Hub para usar public/form-core.js (já existe), removendo o boilerplate duplicado de auth/validação/submit. NÃO mexa no backend, no markup dos campos, nem nas chaves/valores do objeto `dados`.
+
+public/form-core.js expõe window.FormCore:
+- FormCore.initForm({ tipo, redirectPath?, draft?, onReady? }) — faz _configReady, Auth.init(), gate de login, Shell.render(), popula #setor com SETORES, aplica perfil (Auth.aplicarPerfilNoCampo nos campos padrão) e chama onReady(). Com draft:true, salva/restaura rascunho em sessionStorage['form-'+tipo] automaticamente.
+- FormCore.validateRequired(extraValidate?) — valida [required], marca .field-invalid + .field-error, rola pro primeiro inválido, retorna boolean. extraValidate(invalidFields) é opcional pra regras extras.
+- FormCore.markInvalid(invalidFields, containerEl, msg) — helper pras regras extras.
+- FormCore.submit({ tipo, dados, files? }) — trava #btnSubmit, monta FormData (tipo_solicitacao + dados JSON + anexos), POST /api/solicitacoes; no ok grava svn_ultimo_resumo e redireciona pra /thankyou.html; no erro mostra #submitError e destrava. files = array de ids de input file (ex.: ['arquivoApoio']).
+
+Use form-brindes.html e form-cartao-comemorativo.html como REFERÊNCIA do padrão final.
+
+Para cada form que eu listar, faça:
+1. Adicione <script src="form-core.js?v=20260611b"></script> imediatamente antes do <script> inline (o que tem `const TIPO`).
+2. Reescreva o <script> inline mantendo:
+   - const TIPO = '...' igual.
+   - async function init(){ await FormCore.initForm({ tipo: TIPO, /* draft:true SE o form tinha saveSession/restoreSession; onReady com FileUpload.bind(...) ou populações de select específicas, se houver */ }); }
+   - Os helpers específicos do form (toggleX, getYSelecionados, etc.) — iguais.
+   - async function submitForm(){ if(!FormCore.validateRequired(/* callback com as regras extras via FormCore.markInvalid, se houver */)) return; const dados = { ...EXATAMENTE as mesmas chaves/valores/getElementById de antes... }; await FormCore.submit({ tipo: TIPO, dados, files: [/* ids de input file, se houver */] }); }
+   - init(); no final.
+   - REMOVA o que o core já faz: handler pageshow, o init antigo (auth/shell/setor/perfil), o validateRequiredFields genérico, os listeners input/change que limpam .field-invalid e/ou salvam rascunho, e o miolo FormData/fetch/thankyou/erro.
+
+NÃO migre (deixe como está e REPORTE) se:
+- O submitForm NÃO seguir o padrão "POST → no ok redireciona pra /thankyou.html → no erro mostra #submitError". Ex.: forms que fazem polling/preview da arte na própria página, redirecionam pra outro lugar, ou têm navegação multi-etapa custom.
+- A lógica de etapas/subtipos for complexa o suficiente pra você precisar adivinhar.
+Em qualquer dúvida, pule e reporte.
+
+CRÍTICO: preserve o objeto `dados` EXATAMENTE (mesmas chaves, mesmos getElementById, mesmos valores). Mudar o dados quebra a geração de arte.
+
+Faça um form por vez. No final, liste: migrados OK, e os pulados + motivo.

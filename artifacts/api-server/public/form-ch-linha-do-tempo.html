@@ -57,33 +57,35 @@
   <script src="auth.js?v=20260603"></script>
   <script src="utils.js?v=20260603"></script>
   <script src="shell.js?v=20260603"></script>
+  <script src="form-core.js?v=20260611b"></script>
   <script src="upload-feedback.js?v=20260603"></script>
   <script>
+
     const TIPO = 'ch-linha-do-tempo';
     const MESES = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
 
     async function init() {
-      try { if (typeof _configReady !== 'undefined') await _configReady; } catch (e) {}
-      await Auth.init();
-      if (!Auth.isAuthenticated()) { window.location.href = '/auth/login?redirect=/form-ch-linha-do-tempo.html'; return; }
-      const role = Auth.getUserRole();
-      if (role !== 'capital_humano' && role !== 'admin') { window.location.href = '/dashboard.html'; return; }
-      if (typeof Shell !== 'undefined' && Shell.render) {
-        Shell.render({ activeRoute: 'capital-humano', contentEl: document.getElementById('pageContent') });
-      }
-      const sel = document.getElementById('mes');
-      const prox = (new Date().getMonth() + 1) % 12;
-      MESES.forEach(function (m, i) {
-        const o = document.createElement('option'); o.value = m; o.textContent = m;
-        if (i === prox) o.selected = true; sel.appendChild(o);
+      await FormCore.initForm({
+        tipo: TIPO,
+        activeRoute: 'capital-humano',
+        onReady: function() {
+          var role = Auth.getUserRole();
+          if (role !== 'capital_humano' && role !== 'admin') { window.location.href = '/dashboard.html'; return; }
+          var sel = document.getElementById('mes');
+          var prox = (new Date().getMonth() + 1) % 12;
+          MESES.forEach(function(m, i) {
+            var o = document.createElement('option'); o.value = m; o.textContent = m;
+            if (i === prox) o.selected = true; sel.appendChild(o);
+          });
+          bindUploads();
+        },
       });
-      bindUploads();
     }
 
     function bindUploads() {
-      document.querySelectorAll('.file-input-wrapper input[type=file]').forEach(function (inp) {
-        inp.addEventListener('change', function () {
-          const nameEl = document.getElementById(inp.id + 'Name');
+      document.querySelectorAll('.file-input-wrapper input[type=file]').forEach(function(inp) {
+        inp.addEventListener('change', function() {
+          var nameEl = document.getElementById(inp.id + 'Name');
           if (!nameEl) return;
           if (inp.files && inp.files[0] && window.FileUpload && FileUpload.success) FileUpload.success(nameEl, inp.files[0]);
           else nameEl.innerHTML = '';
@@ -91,72 +93,20 @@
       });
     }
 
-    function validateRequiredFields() {
-      document.querySelectorAll('.field-invalid').forEach(function (el) { el.classList.remove('field-invalid'); });
-      const invalidFields = [];
-      document.querySelectorAll('input[required], select[required], textarea[required]').forEach(function (input) {
-        if (!input.value.trim()) {
-          const fw = input.closest('.field');
-          if (fw) {
-            fw.classList.add('field-invalid');
-            let e = fw.querySelector('.field-error');
-            if (!e) { e = document.createElement('div'); e.className = 'field-error'; input.parentElement.appendChild(e); }
-            e.textContent = 'Este campo é obrigatório.'; invalidFields.push(fw);
-          }
+    async function submitForm() {
+      var ok = FormCore.validateRequired(function(invalidFields) {
+        var file = document.getElementById('arquivoApoio');
+        if (file && !file.files.length) {
+          FormCore.markInvalid(invalidFields, file.closest('.field'), 'Anexe um arquivo.');
         }
       });
-      const file = document.getElementById('arquivoApoio');
-      if (file && !file.files.length) {
-        const fw = file.closest('.field');
-        fw.classList.add('field-invalid');
-        let e = fw.querySelector('.field-error');
-        if (!e) { e = document.createElement('div'); e.className = 'field-error'; fw.appendChild(e); }
-        e.textContent = 'Anexe um arquivo.'; invalidFields.push(fw);
-      }
-      if (invalidFields.length > 0) { invalidFields[0].scrollIntoView({ behavior: 'smooth', block: 'center' }); return false; }
-      return true;
-    }
-
-    async function submitForm() {
-      if (!validateRequiredFields()) return;
-      const btn = document.getElementById('btnSubmit');
-      btn.disabled = true; btn.textContent = 'Enviando...'; if (window.formLockUI) window.formLockUI(btn);
-
-      const dados = {
+      if (!ok) return;
+      var dados = {
         nome: Auth.getUserName(),
         mes: document.getElementById('mes').value,
         observacoes: document.getElementById('observacoes').value,
       };
-
-      const formData = new FormData();
-      formData.append('tipo_solicitacao', TIPO);
-      formData.append('dados', JSON.stringify(dados));
-      const arq = document.getElementById('arquivoApoio').files[0];
-      if (arq) formData.append('arquivoApoio', arq);
-
-      try {
-        const res = await fetch('/api/solicitacoes', { method: 'POST', body: formData });
-        const d = await res.json().catch(function () { return {}; });
-        if (res.ok) {
-          try {
-            sessionStorage.setItem('svn_ultimo_resumo', JSON.stringify({
-              tipo: 'Linha do Tempo - ' + dados.mes, solicitante: Auth.getUserName(),
-              data: new Date().toLocaleDateString('pt-BR'),
-              hora: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
-              id: d.id,
-            }));
-          } catch (e) {}
-          window.location.replace('/thankyou.html');
-        } else {
-          const errEl = document.getElementById('submitError');
-          errEl.style.display = 'block'; errEl.textContent = d.error || 'Erro ao enviar. Tente novamente.';
-          if (window.formUnlockUI) window.formUnlockUI(btn); else { btn.disabled = false; btn.textContent = 'Enviar'; }
-        }
-      } catch (err) {
-        const errEl = document.getElementById('submitError');
-        errEl.style.display = 'block'; errEl.textContent = 'Erro de rede. Tente novamente.';
-        if (window.formUnlockUI) window.formUnlockUI(btn); else { btn.disabled = false; btn.textContent = 'Enviar'; }
-      }
+      await FormCore.submit({ tipo: TIPO, dados: dados, files: ['arquivoApoio'] });
     }
 
     init();
