@@ -50,9 +50,19 @@ function resolveComputed(
         break;
       }
       case "website_by_value":
-      case "label_by_value":
-        result[c.name] = c.lookup?.[source] ?? "";
+      case "label_by_value": {
+        let key = source;
+        if (c.lookup && !(key in c.lookup)) {
+          // 'source' pode ser o LABEL (ex.: "SVN Capital") em vez do value (slug).
+          const fld = schema.fields?.find(
+            f => f.name === df || camelToSnake(f.name) === camelToSnake(df),
+          );
+          const byLabel = fld?.options?.find(o => o.label === source);
+          if (byLabel) key = byLabel.value;
+        }
+        result[c.name] = c.lookup?.[key] ?? "";
         break;
+      }
     }
   }
   return result;

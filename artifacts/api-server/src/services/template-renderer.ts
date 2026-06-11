@@ -18,6 +18,20 @@ const MARCA_LABELS: Record<string, string> = Object.fromEntries(
   MARCAS_OPTS.map(m => [m.value, m.label])
 );
 
+const CONTRATO_VALUE_BY_LABEL: Record<string, string> = Object.fromEntries(
+  CONTRATOS_OPTS.map(c => [c.label, c.value])
+);
+const MARCA_VALUE_BY_LABEL: Record<string, string> = Object.fromEntries(
+  MARCAS_OPTS.map(m => [m.label, m.value])
+);
+
+// Tolerante: aceita o value (slug) OU o label ("SVN Capital") como chave de variante.
+function variantKeyTolerant(raw: string, variants: Record<string, string>): string {
+  if (!raw || raw in variants) return raw;
+  const mapped = CONTRATO_VALUE_BY_LABEL[raw] ?? MARCA_VALUE_BY_LABEL[raw];
+  return mapped && mapped in variants ? mapped : raw;
+}
+
 function enrichDataWithLabels(data: Record<string, any>): Record<string, any> {
   const enriched = { ...data };
 
@@ -194,11 +208,13 @@ async function renderTextLine(
   const font = getFont(layer.font_family);
 
   let fontSize = layer.font_size;
-  if (layer.auto_fit?.enabled) {
+  {
+    // Auto-fit por padrão: encolhe pra caber na largura mesmo sem auto_fit.enabled.
     const natural = measureTextWidth(font, text, fontSize);
     if (natural > layer.w) {
+      const minFont = layer.auto_fit?.min_font_size ?? Math.round(layer.font_size * 0.5);
       const scaled = Math.floor(fontSize * (layer.w / natural));
-      fontSize = Math.max(scaled, layer.auto_fit.min_font_size);
+      fontSize = Math.max(scaled, minFont);
     }
   }
 
@@ -285,8 +301,8 @@ async function renderImage(
     if (!url) return;
   } else {
     const src = layer.source as { type: 'variant'; variants: Record<string, string>; variant_source: string };
-    const variantKey = data[src.variant_source];
-    if (!variantKey) {
+    const variantKey = variantKeyTolerant(data[src.variant_source], src.variants);
+    if (!data[src.variant_source]) {
       logger.warn(
         `[render] image layer "${layer.id}": variant_source="${src.variant_source}" não encontrado nos dados` +
         ` (chaves disponíveis: ${Object.keys(data).join(', ')})`
@@ -443,7 +459,7 @@ export async function renderFromTemplate(
     if (template.bg.type === 'static') {
       bgUrl = template.bg.url;
     } else {
-      const variantKey = dataStr[template.bg.variant_source];
+      const variantKey = variantKeyTolerant(dataStr[template.bg.variant_source], template.bg.variants ?? {});
       bgUrl = template.bg.variants?.[variantKey] ?? '';
       if (!bgUrl) throw new Error(`Variante de bg não encontrada: ${variantKey}`);
     }
