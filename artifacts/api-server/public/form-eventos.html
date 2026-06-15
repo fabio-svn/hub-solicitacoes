@@ -308,7 +308,7 @@
       'matSorteioDesc',
       'matStandMat',
     ];
-    const COND_MATERIAL_RADIOS = ['flyerTipo','captacao','igTipo','sorteio1'];
+    const COND_MATERIAL_RADIOS = ['flyerTipo','igTipo','sorteio1'];
 
     function saveFormState() {
       const fields = ['nomeEvento','dataEvento','horario','descricao',
@@ -336,6 +336,7 @@
         const checked = document.querySelector(`input[name="${name}"]:checked`);
         if (checked) condVals['_r_' + name] = checked.value;
       });
+      condVals['_cb_captacao'] = [...document.querySelectorAll('input[name="captacao"]:checked')].map(e => e.value);
       data._condMaterial = condVals;
       data._temPalestrante = document.querySelector('input[name="temPalestrante"]:checked')?.value || '';
       data._qtdPalestrante = document.querySelector('input[name="qtdPalestrante"]:checked')?.value || '';
@@ -395,6 +396,12 @@
           if (radio) { radio.checked = true; radio.dispatchEvent(new Event('change')); }
         }
       });
+      if (Array.isArray(vals['_cb_captacao'])) {
+        vals['_cb_captacao'].forEach(v => {
+          const cb = document.querySelector(`input[name="captacao"][value="${v}"]`);
+          if (cb) cb.checked = true;
+        });
+      }
     }
 
     function clearFormStorage() {
@@ -907,7 +914,7 @@
               </div>
             </div>`;
         case 'captacao-audiovisual':
-          return `<div class="field" style="margin-top:8px"><div class="radio-group"><label class="radio-option"><input type="radio" name="captacao" value="fotos"><span class="radio-custom"></span><span>Sessão de fotos</span></label><label class="radio-option"><input type="radio" name="captacao" value="video"><span class="radio-custom"></span><span>Gravação de vídeo</span></label></div></div>`;
+          return `<div class="field" style="margin-top:8px"><div class="checkbox-group"><label class="checkbox-option"><input type="checkbox" name="captacao" value="fotos"><span class="checkbox-custom"></span><span>Sessão de fotos</span></label><label class="checkbox-option"><input type="checkbox" name="captacao" value="video"><span class="checkbox-custom"></span><span>Gravação de vídeo</span></label></div></div>`;
         case 'instagram': case 'instagram-online':
           return `
             <div style="margin-top:12px">
@@ -1243,6 +1250,13 @@
 
     function renderPalestrantes(n) {
       const container = document.getElementById('palestranteBlocos');
+      const _snap = {};
+      for (let i = 1; i <= 4; i++) {
+        const svn = document.querySelector(`input[name="palSvn${i}"]:checked`)?.value;
+        const nome = document.getElementById('palNome' + i)?.value;
+        const cargo = document.getElementById('palCargo' + i)?.value;
+        if (svn || nome || cargo) _snap[i] = { svn: svn || '', nome: nome || '', cargo: cargo || '' };
+      }
       let html = '';
       for (let i = 1; i <= n; i++) {
         html += `
@@ -1256,6 +1270,18 @@
         `;
       }
       container.innerHTML = html;
+      for (let i = 1; i <= n; i++) {
+        const d = _snap[i];
+        if (!d || !d.svn) continue;
+        const radio = document.querySelector(`input[name="palSvn${i}"][value="${d.svn}"]`);
+        if (radio) radio.checked = true;
+        showPalFields(i, d.svn === 'sim');
+        if (d.svn === 'sim') {
+          const nomeEl = document.getElementById('palNome' + i); if (nomeEl) nomeEl.value = d.nome;
+          const cargoEl = document.getElementById('palCargo' + i); if (cargoEl) cargoEl.value = d.cargo;
+          updatePalPreview(i);
+        }
+      }
       updatePreview('pvPalestrantes', n + ' palestrante(s)');
     }
 
@@ -1466,8 +1492,8 @@
           }
           if (formState.materiais.has('captacao-audiovisual')) {
             const d = {};
-            const c = document.querySelector('input[name="captacao"]:checked')?.value;
-            if (c) d.tipo = c === 'fotos' ? 'Sessão de fotos' : 'Gravação de vídeo';
+            const c = [...document.querySelectorAll('input[name="captacao"]:checked')].map(e => e.value);
+            if (c.length) d.tipo = c.map(v => v === 'fotos' ? 'Sessão de fotos' : 'Gravação de vídeo').join(', ');
             if (Object.keys(d).length) det['captacao-audiovisual'] = d;
           }
           if (formState.materiais.has('instagram') || formState.materiais.has('instagram-online')) {

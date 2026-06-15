@@ -1999,8 +1999,14 @@
       let palestrantesBlock = '';
       let hasContent = false;
 
-      for (const [key, value] of Object.entries(dados)) {
+      const FIELD_PRIORITY = ['nomeEvento','tituloEvento','dataEvento','horario','origem','tipoEvento','publico','localEvento','unidadeSVN','localNome','localEndereco','estado','cidade','convidados','descricao','objetivos'];
+      const _entries = Object.entries(dados).sort((a, b) => {
+        const ra = FIELD_PRIORITY.indexOf(a[0]); const rb = FIELD_PRIORITY.indexOf(b[0]);
+        return (ra === -1 ? 999 : ra) - (rb === -1 ? 999 : rb);
+      });
+      for (const [key, value] of _entries) {
         if (value === null || value === undefined || value === '') continue;
+        if (key === 'rateio' && dados.natureza === 'online') continue;
         if (/^palFoto\d$/.test(key)) continue;
         if (typeof DRAWER_FIELD_LABELS !== 'undefined' && DRAWER_FIELD_LABELS[key]?.skip) continue;
 

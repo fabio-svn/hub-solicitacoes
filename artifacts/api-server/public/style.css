@@ -905,6 +905,7 @@ input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
   transition: 0.2s;
 }
 .file-input-btn:hover { border-color: var(--ruby-red); }
+.file-input-btn svg, .file-input-btn img { pointer-events: none; }
 .file-name { font-size: 0.82rem; margin-top: 6px; display: flex; align-items: center; gap: 6px; }
 .file-name .check { color: var(--ruby-red); }
 

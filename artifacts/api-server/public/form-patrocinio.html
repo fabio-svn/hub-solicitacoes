@@ -161,26 +161,8 @@
           <input type="text" id="orcamentoTotal" placeholder="R$ 0,00" oninput="mascaraMoeda(this)" required>
         </div>
         <div class="field">
-          <label>Expectativa de retorno em Delta de Receita <span class="text-ruby">*</span></label>
-          <input type="text" id="expectativaRetorno" placeholder="Ex: R$ 50.000" required>
-        </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-          <div class="field">
-            <label>Orçamento por pessoa para alimentação</label>
-            <input type="text" id="orcAlimentacao" placeholder="R$ 0,00" oninput="mascaraMoeda(this)">
-          </div>
-          <div class="field">
-            <label>Orçamento para material gráfico</label>
-            <input type="text" id="orcGrafico" placeholder="R$ 0,00" oninput="mascaraMoeda(this)">
-          </div>
-          <div class="field">
-            <label>Orçamento para brindes</label>
-            <input type="text" id="orcBrindes" placeholder="R$ 0,00" oninput="mascaraMoeda(this)">
-          </div>
-          <div class="field">
-            <label>Orçamento para equipe staff</label>
-            <input type="text" id="orcStaff" placeholder="R$ 0,00" oninput="mascaraMoeda(this)">
-          </div>
+          <label>Materiais adicionais (opcional)</label>
+          <div id="adicionaisGrid" class="checkbox-group"></div>
         </div>
 
         <div class="section-divider">
@@ -244,6 +226,13 @@
         onReady: async function () {
           FileUpload.bind('midiaKit', 'midiaKitName');
           FileUpload.bind('arquivoApoio', 'arquivoApoioName');
+          (function renderAdicionais() {
+            const grid = document.getElementById('adicionaisGrid');
+            if (!grid || typeof ITENS_MATERIAIS === 'undefined') return;
+            grid.innerHTML = ITENS_MATERIAIS.map(function (m) {
+              return '<label class="checkbox-option"><input type="checkbox" name="adicional" value="' + m.id + '"><span class="checkbox-custom"></span><span>' + m.label + '</span></label>';
+            }).join('');
+          })();
           await loadEstados();
         }
       });
@@ -309,11 +298,7 @@
         centroCusto: document.getElementById('centroCusto').value,
         valorCota: document.getElementById('valorCota').value,
         orcamentoTotal: document.getElementById('orcamentoTotal').value,
-        expectativaRetorno: document.getElementById('expectativaRetorno').value,
-        orcAlimentacao: document.getElementById('orcAlimentacao').value,
-        orcGrafico: document.getElementById('orcGrafico').value,
-        orcBrindes: document.getElementById('orcBrindes').value,
-        orcStaff: document.getElementById('orcStaff').value,
+        materiais: [...document.querySelectorAll('input[name="adicional"]:checked')].map(function (c) { return c.value; }),
       };
 
       const formData = new FormData();
