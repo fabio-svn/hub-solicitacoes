@@ -1299,6 +1299,35 @@ router.put("/cartao-aprovacoes/:solicitacaoId", requireAuth, async (req, res): P
     if (statusAnterior !== valores.status && valores.status === "envio-assessor") {
       notificarMarcoBg(solicitacaoId, "concluida");
     }
+
+    if (statusAnterior !== valores.status) {
+      try {
+        const [solCk] = await db.select({ clickup_task_id: solicitacoesTable.clickup_task_id })
+          .from(solicitacoesTable).where(eq(solicitacoesTable.id, solicitacaoId));
+        const taskId = solCk?.clickup_task_id;
+        if (taskId) {
+          const STATUS_LABELS_CARTAO: Record<string, string> = {
+            "aguardando-validacao": "Aguardando validação",
+            "aguardando-contrato": "Aguardando contrato",
+            "validado": "Validado",
+            "envio-grafica": "Envio gráfica",
+            "envio-assessor": "Envio assessor",
+            "reprovado": "Reprovado",
+          };
+          const de = STATUS_LABELS_CARTAO[statusAnterior || ""] || statusAnterior || "—";
+          const para = STATUS_LABELS_CARTAO[valores.status] || valores.status;
+          const quem = req.session.user!.name || req.session.user!.email || "Validação";
+          const token = process.env.CLICKUP_API_TOKEN || "";
+          await fetch(`https://api.clickup.com/api/v2/task/${taskId}/comment`, {
+            method: "POST",
+            headers: { "Authorization": token, "Content-Type": "application/json" },
+            body: JSON.stringify({ comment_text: `🔄 Status atualizado: ${de} → ${para} (por ${quem})` }),
+          });
+        }
+      } catch (e) {
+        logger.warn({ e, solicitacaoId }, "Falha ao comentar mudança de status no ClickUp");
+      }
+    }
     const camposEditados: Record<string, { antes: any; depois: any }> = {};
     for (const campo of ["status", "observacao", "nome", "whatsapp", "email", "unidade", "contrato_social", "envio_para", "custo"] as const) {
       const antes = (prev as any)?.[campo] ?? null;

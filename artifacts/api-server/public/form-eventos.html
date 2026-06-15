@@ -78,6 +78,11 @@
 
           <!-- STEP 2: Maturidade -->
           <div class="form-step" id="step2">
+        <button type="button" onclick="goStep(1)" style="display:flex;align-items:center;gap:6px;background:none;border:none;cursor:pointer;font-size:0.82rem;opacity:0.6;padding:0;margin-bottom:20px;font-family:inherit">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+          Voltar
+        </button>
+
             <h2 style="font-weight:600;font-size:1.1rem;margin-bottom:20px">Qual o nível de informação que você tem sobre o evento?</h2>
             <div class="radio-cards maturidade-cards" style="margin-bottom:16px">
               <div class="radio-card" onclick="selectMaturidade(1)" id="mat1">
@@ -99,13 +104,18 @@
             <a href="#" onclick="event.preventDefault();openOrientationModal()" style="font-size:0.85rem">Qual opção devo escolher?</a>
             <div id="maturityFields" style="margin-top:24px"></div>
             <div class="form-nav" id="nav2" style="display:none">
-              <button class="btn btn-secondary" onclick="goStep(1)">Voltar</button>
+              
               <button class="btn btn-primary" onclick="validateStep2() && goStep(3)">Próximo</button>
             </div>
           </div>
 
           <!-- STEP 3: Materiais -->
           <div class="form-step" id="step3">
+        <button type="button" onclick="goStep(2)" style="display:flex;align-items:center;gap:6px;background:none;border:none;cursor:pointer;font-size:0.82rem;opacity:0.6;padding:0;margin-bottom:20px;font-family:inherit">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+          Voltar
+        </button>
+
             <div class="alert-card alert-danger">
               <div class="alert-title">Obrigatório</div>
               <div class="alert-text">Clique nas opções que fazem parte da solicitação para esse evento</div>
@@ -119,13 +129,18 @@
             <div id="materiaisCondFields" style="margin-top:16px"></div>
             <div class="field-error" id="materiaisError">Selecione pelo menos um item para continuar.</div>
             <div class="form-nav">
-              <button class="btn btn-secondary" onclick="goStep(2)">Voltar</button>
+              
               <button class="btn btn-primary" onclick="validateMateriais() && goStep(4)">Próximo</button>
             </div>
           </div>
 
           <!-- STEP 4: Palestrantes -->
           <div class="form-step" id="step4">
+        <button type="button" onclick="goStep(3)" style="display:flex;align-items:center;gap:6px;background:none;border:none;cursor:pointer;font-size:0.82rem;opacity:0.6;padding:0;margin-bottom:20px;font-family:inherit">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+          Voltar
+        </button>
+
             <h2 style="font-weight:600;font-size:1.1rem;margin-bottom:20px">Palestrantes</h2>
             <div class="field">
               <label>O evento terá palestrante(s)?</label>
@@ -147,13 +162,18 @@
             </div>
             <div id="palestranteBlocos"></div>
             <div class="form-nav">
-              <button class="btn btn-secondary" onclick="goStep(3)">Voltar</button>
+              
               <button class="btn btn-primary" id="btnNext4" onclick="validateStep4() && goStep(getNextStepFrom4())">Próximo</button>
             </div>
           </div>
 
           <!-- STEP 5: Custos (presencial only) -->
           <div class="form-step" id="step5">
+        <button type="button" onclick="goStep(4)" style="display:flex;align-items:center;gap:6px;background:none;border:none;cursor:pointer;font-size:0.82rem;opacity:0.6;padding:0;margin-bottom:20px;font-family:inherit">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+          Voltar
+        </button>
+
             <h2 style="font-weight:600;font-size:1.1rem;margin-bottom:20px">Custos</h2>
             <div class="field">
               <label>Custo estimado (em R$)</label>
@@ -166,13 +186,18 @@
               </div>
             </div>
             <div class="form-nav">
-              <button class="btn btn-secondary" onclick="goStep(4)">Voltar</button>
+              
               <button class="btn btn-primary" onclick="validateStep5() && goStep(6)">Próximo</button>
             </div>
           </div>
 
           <!-- STEP 6: Anexos e observações -->
           <div class="form-step" id="step6">
+        <button type="button" onclick="goStep(getPrevStepFrom6())" style="display:flex;align-items:center;gap:6px;background:none;border:none;cursor:pointer;font-size:0.82rem;opacity:0.6;padding:0;margin-bottom:20px;font-family:inherit">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+          Voltar
+        </button>
+
             <h2 style="font-weight:600;font-size:1.1rem;margin-bottom:20px">Anexos e observações</h2>
             <div class="field">
               <label>Logo complementar de parceiro (opcional)</label>
@@ -207,7 +232,7 @@
               <div id="submitError" class="alert-card alert-danger" style="display:none;margin-bottom:16px"></div>
         <div id="formStatusArea" style="display:none;margin-top:16px"></div>
               <div class="form-nav">
-                <button class="btn btn-secondary" onclick="goStep(getPrevStepFrom6())">Voltar</button>
+                
                 <button class="btn btn-primary btn-submit-gold" id="btnSubmit" onclick="submitForm()">Enviar</button>
               </div>
             </div>

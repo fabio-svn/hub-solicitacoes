@@ -55,6 +55,11 @@
       </div>
 
       <div class="form-step" id="step2">
+        <button type="button" onclick="voltarDoStep2()" style="display:flex;align-items:center;gap:6px;background:none;border:none;cursor:pointer;font-size:0.82rem;opacity:0.6;padding:0;margin-bottom:20px;font-family:inherit">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+          Voltar
+        </button>
+
         <div id="updateCard" style="display:none" class="alert-card alert-info">
           <div class="alert-title">Atualização</div>
           <div class="alert-text">Preencha apenas os campos que deseja atualizar. Os demais permanecerão como estão no seu perfil atual.</div>
@@ -161,7 +166,7 @@
         <div id="formStatusArea" style="display:none;margin-top:16px"></div>
         <div class="section-divider">
           <div class="form-nav" style="justify-content:space-between">
-            <button class="btn btn-secondary" onclick="voltarDoStep2()">Voltar</button>
+            
             <div style="display:flex;gap:8px">
               <button class="btn btn-dark" id="btnPreview" onclick="openPreview()" style="gap:8px">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>

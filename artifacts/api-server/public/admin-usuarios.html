@@ -61,8 +61,8 @@
       </div>
 
       <!-- Modal: Adicionar usuário -->
-      <div id="novoUsuarioModal" style="display:none;position:fixed;inset:0;background:rgba(34,27,25,0.5);z-index:1000;align-items:center;justify-content:center">
-        <div style="background:white;padding:24px;border-radius:12px;max-width:440px;width:90%;max-height:90vh;overflow:auto">
+      <div class="modal-overlay" id="novoUsuarioModal">
+        <div class="modal-card" style="max-width:440px;padding:24px">
           <h2 style="font-family:'Taviraj',serif;font-size:1.3rem;margin-bottom:6px">Adicionar usuário</h2>
           <p style="font-size:0.82rem;opacity:0.6;margin-bottom:20px">Crie um usuário no banco mesmo antes da pessoa fazer login. Quando ela logar via Microsoft, mantém role e atribuições.</p>
           <div class="field"><label>E-mail <span class="text-ruby">*</span></label>
@@ -92,8 +92,8 @@
       </div>
 
       <!-- Modal: Editar ClickUp ID -->
-      <div id="editClickupModal" style="display:none;position:fixed;inset:0;background:rgba(34,27,25,0.5);z-index:1000;align-items:center;justify-content:center">
-        <div style="background:white;padding:24px;border-radius:12px;max-width:400px;width:90%">
+      <div class="modal-overlay" id="editClickupModal">
+        <div class="modal-card" style="max-width:400px;padding:24px">
           <h2 style="font-family:'Taviraj',serif;font-size:1.2rem;margin-bottom:6px">ClickUp User ID</h2>
           <p style="font-size:0.82rem;opacity:0.6;margin-bottom:20px"><strong id="editClickupUserName"></strong></p>
           <div class="field"><label>ClickUp User ID</label>
@@ -108,8 +108,8 @@
       </div>
 
       <!-- Modal: Editar formulários atribuídos -->
-      <div id="editAssignmentsModal" style="display:none;position:fixed;inset:0;background:rgba(34,27,25,0.5);z-index:1000;align-items:center;justify-content:center">
-        <div style="background:white;padding:24px;border-radius:12px;max-width:520px;width:90%;max-height:90vh;overflow:auto">
+      <div class="modal-overlay" id="editAssignmentsModal">
+        <div class="modal-card" style="max-width:520px;padding:24px">
           <h2 style="font-family:'Taviraj',serif;font-size:1.2rem;margin-bottom:6px">Formulários atribuídos</h2>
           <p style="font-size:0.82rem;opacity:0.6;margin-bottom:16px">Selecione os tipos de solicitação que <strong id="editAssignmentsUserName"></strong> receberá automaticamente no ClickUp.</p>
           <div id="editAssignmentsList" style="max-height:380px;overflow:auto;border:1px solid var(--border-light);border-radius:8px;padding:8px"></div>
@@ -121,8 +121,8 @@
       </div>
 
       <!-- Editar função modal -->
-      <div id="editRoleModal" style="display:none;position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,0.45);align-items:center;justify-content:center">
-        <div style="background:var(--card-white);border-radius:16px;padding:28px 32px;max-width:360px;width:90%;box-shadow:0 8px 40px rgba(0,0,0,0.18)">
+      <div class="modal-overlay" id="editRoleModal">
+        <div class="modal-card" style="max-width:380px;padding:28px 32px">
           <h3 style="font-size:1rem;font-weight:800;margin:0 0 6px">Alterar função</h3>
           <p id="editRoleUserName" style="font-size:0.85rem;opacity:0.6;margin:0 0 16px"></p>
           <div class="field">
@@ -147,7 +147,7 @@
   <script src="config.js?v=20260611f"></script>
   <script src="auth.js?v=20260611f"></script>
   <script src="shell.js?v=20260611f"></script>
-  <script src="utils.js?v=20260611f"></script>
+  <script src="utils.js?v=20260615b"></script>
   <script src="toast.js?v=20260603"></script>
   <script>
     let _allUsers = [];
@@ -272,11 +272,11 @@
       document.getElementById('editRoleUserName').textContent = userName;
       document.getElementById('editRoleSelect').value = currentRole;
       const modal = document.getElementById('editRoleModal');
-      modal.style.display = 'flex';
+      Modal.open('editRoleModal');
     }
 
     function cancelarEditRole() {
-      document.getElementById('editRoleModal').style.display = 'none';
+      Modal.close('editRoleModal');
       _editingUserId = null;
     }
 
@@ -314,11 +314,11 @@
       document.getElementById('novoUsuarioRole').value = 'colaborador';
       document.getElementById('novoUsuarioClickup').value = '';
       document.getElementById('novoUsuarioErro').style.display = 'none';
-      document.getElementById('novoUsuarioModal').style.display = 'flex';
+      Modal.open('novoUsuarioModal');
     }
 
     function cancelarNovoUsuario() {
-      document.getElementById('novoUsuarioModal').style.display = 'none';
+      Modal.close('novoUsuarioModal');
     }
 
     async function salvarNovoUsuario() {
@@ -352,11 +352,11 @@
       _editingClickupUserId = userId;
       document.getElementById('editClickupUserName').textContent = userName;
       document.getElementById('editClickupInput').value = currentClickup;
-      document.getElementById('editClickupModal').style.display = 'flex';
+      Modal.open('editClickupModal');
     }
 
     function cancelarEditClickup() {
-      document.getElementById('editClickupModal').style.display = 'none';
+      Modal.close('editClickupModal');
       _editingClickupUserId = null;
     }
 
@@ -394,11 +394,11 @@
           <span style="font-size:0.86rem">${esc(t.label)}</span>
         </label>
       `).join('');
-      document.getElementById('editAssignmentsModal').style.display = 'flex';
+      Modal.open('editAssignmentsModal');
     }
 
     function cancelarEditAssignments() {
-      document.getElementById('editAssignmentsModal').style.display = 'none';
+      Modal.close('editAssignmentsModal');
       _editingAssignmentsUserId = null;
     }
 

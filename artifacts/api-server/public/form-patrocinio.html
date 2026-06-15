@@ -55,6 +55,10 @@
           <label>Qual ou quais serão as marcas parceiras neste patrocínio? <span class="text-ruby">*</span></label>
           <input type="text" id="marcasParceiras" placeholder="Marcas parceiras" required>
         </div>
+        <div class="field">
+          <label>CPF/CNPJ das marcas parceiras</label>
+          <input type="text" id="cnpjParceiros" placeholder="CPF ou CNPJ">
+        </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
           <div class="field">
             <label>Data do evento <span class="text-ruby">*</span></label>
@@ -287,6 +291,7 @@
         setor: document.getElementById('setor')?.value || '',
         tituloEvento: document.getElementById('tituloEvento').value,
         marcasParceiras: document.getElementById('marcasParceiras').value,
+        cnpjParceiros: document.getElementById('cnpjParceiros').value,
         dataEvento: document.getElementById('dataEvento').value,
         horario: document.getElementById('horario').value,
         horBrasilia: document.querySelector('input[name="horBrasilia"]:checked')?.value || '',

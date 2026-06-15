@@ -3,7 +3,7 @@ import { randomInt } from "crypto";
 import { db, usersTable, userTipoAssignmentsTable, tipoClickupListTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
 import { mapClickUpStatus } from "../config/clickup-status";
-import { FORM_SCHEMAS, SETOR_CODIGO_MAP } from "../config/form-schemas";
+import { FORM_SCHEMAS, SETOR_CODIGO_MAP, TIPOS_COM_CLICKUP } from "../config/form-schemas";
 
 const CLICKUP_API_TOKEN = process.env.CLICKUP_API_TOKEN || "";
 
@@ -273,7 +273,9 @@ function getUserDepartment(user: UserData, dados: FormDados): string {
 }
 
 function humanizeRequestType(tipo: string): string {
-  return FORM_SCHEMAS[tipo]?.label || tipo;
+  return FORM_SCHEMAS[tipo]?.label
+    || TIPOS_COM_CLICKUP.find(t => t.tipo === tipo)?.label
+    || tipo;
 }
 
 // ─────────────────────────────────────────────
@@ -525,7 +527,7 @@ function buildArquivosSection(arquivos: ArquivosMap): string | null {
   const items: string[] = [];
   for (const [campo, url] of Object.entries(arquivos)) {
     if (!url) continue;
-    const label = ARQUIVO_LABELS[campo] || campo;
+    const label = ARQUIVO_LABELS[campo] || campo.replace(/([a-z])([A-Z])/g, "$1 $2").replace(/[_-]+/g, " ").replace(/^./, c => c.toUpperCase());
     items.push(`• ${label}: ${url}`);
   }
   if (items.length === 0) return null;
@@ -594,6 +596,7 @@ function buildPatrocinioDescription(dados: FormDados, user: UserData, arquivos: 
   const resumoItems: string[] = [];
   addLine(resumoItems, "Título do evento", str(dados.tituloEvento));
   addLine(resumoItems, "Marcas parceiras", str(dados.marcasParceiras));
+  addLine(resumoItems, "CPF/CNPJ das marcas", str(dados.cnpjParceiros));
   addLine(resumoItems, "Data do evento", formatDate(dados.dataEvento as string));
   addLine(resumoItems, "Horário", str(dados.horario));
   addLine(resumoItems, "Horário de Brasília?", str(dados.horBrasilia));
@@ -1050,6 +1053,42 @@ function buildEventosCustomFieldsArray(
   return fields;
 }
 
+function buildPatrocinioCustomFieldsArray(
+  dados: FormDados,
+  user: UserData,
+): Array<{ id: string; value: unknown }> {
+  const fields: Array<{ id: string; value: unknown }> = [];
+  const cidadeRaw = str(dados.cidade as string);
+  const estadoRaw = str(dados.estado as string);
+  const sigla = IBGE_SIGLA_MAP[estadoRaw] || estadoRaw;
+  const cidadeFmt = cidadeRaw ? (sigla ? `${cidadeRaw} - ${sigla}` : cidadeRaw) : null;
+
+  const pairs: Array<[string, unknown]> = [
+    ["92db4658-70d1-430e-98ec-5e27029136fd", str(dados.nome as string) || null],
+    ["852c5fcb-c50f-4b46-bba8-8173e19b2810", str(dados.telefone as string) || str(dados.whatsapp as string) || null],
+    ["f0180f5e-1173-4905-8f57-01772a35806e", str(dados.setor as string) || null],
+    ["ae56f16a-8d97-40e0-9032-c357eb0793ca", user.email || null],
+    ["b40d49f5-341d-4671-a4f0-7cef7a643d6b", str(dados.tituloEvento as string) || null],
+    ["751276aa-588f-4f01-a6b1-da298c9d6679", str(dados.marcasParceiras as string) || null],
+    ["a464441b-a308-419b-9342-2b88f2d97fc8", str(dados.cnpjParceiros as string) || null],
+    ["361cb66a-8c99-43ec-a4fa-5a347e9a4fbd", str(dados.dataEvento as string) || null],
+    ["45d8babe-a7dd-4a78-952f-1aa366bf34ed", str(dados.horario as string) || null],
+    ["af7d26c8-f228-4985-941a-20bb6905b6d5", str(dados.horBrasilia as string) || null],
+    ["38ac133a-13b0-4428-98eb-adb5f8cdc23a", str(dados.local as string) || null],
+    ["ded0be23-c50e-4f82-8b81-66a73dcc42a8", cidadeFmt],
+    ["c81a416c-a09d-41f4-a003-5261bf6edce6", str(dados.tipoEvento as string) || null],
+    ["c7585104-7f53-4dcb-95d6-c75d55c4c57b", str(dados.publico as string) || null],
+    ["c3469fb5-7274-4233-8845-8d3762d0682c", str(dados.centroCusto as string) || null],
+    ["8157ba96-658f-4bab-8364-fa443d9d582b", str(dados.valorCota as string) || null],
+    ["de09cf5f-3e69-48de-bb7f-bececcf55f95", str(dados.orcamentoTotal as string) || null],
+  ];
+  for (const [id, value] of pairs) {
+    if (value) fields.push({ id, value });
+  }
+  fields.push({ id: "ea901547-2f65-42ee-ab6c-5fbf0ceaa79b", value: 10 });
+  return fields;
+}
+
 function buildGeneralCustomFieldsArray(
   tipo: string,
   dados: FormDados,
@@ -1302,6 +1341,8 @@ export async function createClickUpTask(
   ];
   const customFieldsSpecific = tipo === "eventos"
     ? buildEventosCustomFieldsArray(dados, safeArquivos, user)
+    : tipo === "patrocinio"
+    ? buildPatrocinioCustomFieldsArray(dados, user)
     : buildGeneralCustomFieldsArray(tipo, dados, safeArquivos);
   taskPayload.custom_fields = [...customFieldsSpecific, ...customFieldsBase];
 

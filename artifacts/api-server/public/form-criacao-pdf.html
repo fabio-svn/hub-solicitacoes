@@ -54,6 +54,11 @@
       </div>
 
       <div class="form-step" id="step2">
+        <button type="button" onclick="goStep(1)" style="display:flex;align-items:center;gap:6px;background:none;border:none;cursor:pointer;font-size:0.82rem;opacity:0.6;padding:0;margin-bottom:20px;font-family:inherit">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+          Voltar
+        </button>
+
         <h2 style="font-weight:600;font-size:1.1rem;margin-bottom:20px">Informações do material</h2>
         <div class="field">
           <label>Telefone <span class="text-ruby">*</span></label>
@@ -103,12 +108,17 @@
           </div>
         </div>
         <div class="form-nav">
-          <button class="btn btn-secondary" onclick="goStep(1)">Voltar</button>
+          
           <button class="btn btn-primary" onclick="validateStep2() && goStep(3)">Próximo</button>
         </div>
       </div>
 
       <div class="form-step" id="step3">
+        <button type="button" onclick="goStep(2)" style="display:flex;align-items:center;gap:6px;background:none;border:none;cursor:pointer;font-size:0.82rem;opacity:0.6;padding:0;margin-bottom:20px;font-family:inherit">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+          Voltar
+        </button>
+
         <h2 style="font-weight:600;font-size:1.1rem;margin-bottom:20px">Informações adicionais</h2>
         <div class="field">
           <label>Público-alvo</label>
@@ -117,7 +127,7 @@
             <label class="checkbox-option"><input type="checkbox" name="publico" value="Parceiros"><span class="checkbox-custom"></span><span>Parceiros</span></label>
             <label class="checkbox-option"><input type="checkbox" name="publico" value="Interno"><span class="checkbox-custom"></span><span>Interno</span></label>
             <label class="checkbox-option"><input type="checkbox" name="publico" value="Leads"><span class="checkbox-custom"></span><span>Leads</span></label>
-            <label class="checkbox-option"><input type="checkbox" name="publico" value="Divulgacao externa em massa"><span class="checkbox-custom"></span><span>Divulgação externa em massa</span></label>
+            <label class="checkbox-option"><input type="checkbox" name="publico" value="Divulgação externa em massa"><span class="checkbox-custom"></span><span>Divulgação externa em massa</span></label>
           </div>
         </div>
         <div class="field">
@@ -131,7 +141,7 @@
         </div>
         <div class="section-divider">
           <div class="form-nav">
-            <button class="btn btn-secondary" onclick="goStep(2)">Voltar</button>
+            
             <button class="btn btn-primary btn-submit-gold" id="btnSubmit" onclick="submitForm()">Enviar</button>
           </div>
         </div>

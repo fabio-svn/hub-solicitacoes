@@ -92,6 +92,11 @@
       </div>
 
       <div class="form-step" id="step2">
+        <button type="button" onclick="goStep(1)" style="display:flex;align-items:center;gap:6px;background:none;border:none;cursor:pointer;font-size:0.82rem;opacity:0.6;padding:0;margin-bottom:20px;font-family:inherit">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+          Voltar
+        </button>
+
         <div class="alert-card alert-danger">
           <div class="alert-title">Atenção</div>
           <div class="alert-text">O prazo de entrega pode variar conforme a complexidade do material.</div>
@@ -120,7 +125,7 @@
           <div id="submitError" class="alert-card alert-danger" style="display:none;margin-bottom:16px"></div>
         <div id="formStatusArea" style="display:none;margin-top:16px"></div>
           <div class="form-nav">
-            <button class="btn btn-secondary" onclick="goStep(1)">Voltar</button>
+            
             <button class="btn btn-primary btn-submit-gold" id="btnSubmit" onclick="submitForm()">Enviar</button>
           </div>
         </div>

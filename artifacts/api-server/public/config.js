@@ -165,6 +165,7 @@ let CARGOS_ASSESSOR = [
 // As 9 chaves camelCase do KEY_MAP (contratoSocial, nomeAssinatura, etc) servem só
 // pra retrocompatibilidade com dados legacy do banco. Forms novos enviam snake_case.
 const DRAWER_FIELD_LABELS = {
+  mes:                 { label: "Mês" },
   objetivo:            { label: "Objetivo da sessão",          wide: true },
   qtdParticipantes:    { label: "Quantidade de participantes" },
   localSessao:         { label: "Local da sessão" },
@@ -292,8 +293,9 @@ const STATUS_SOLICITACAO = [
   { id: "em-espera",              label: "Em espera",                  bg: "#4D545F", text: "#FFFFFF",  cor: "--carbon-black"  },
   { id: "gerando",                label: "Gerando arte",               bg: "#dbeafe", text: "#1e40af" },
   { id: "erro",                   label: "Erro",                       bg: "#fee2e2", text: "#991b1b" },
-  { id: "aguardando-validacao",   label: "Em validação",               bg: "#fee2e2", text: "#b91c1c" },
-  { id: "aguardando-contrato",    label: "Em contrato",                bg: "#f1f5f9", text: "#475569" },
+  { id: "aguardando-validacao",   label: "Aguardando validação",       bg: "#fee2e2", text: "#b91c1c" },
+  { id: "aguardando-contrato",    label: "Aguardando contrato",        bg: "#f1f5f9", text: "#475569" },
+  { id: "validado",               label: "Validado",                   bg: "#d1fae5", text: "#047857" },
   { id: "liberado-design",        label: "Em design",                  bg: "#ede9fe", text: "#6d28d9" },
   { id: "arte-finalizada",        label: "Arte finalizada",            bg: "#fef9c3", text: "#a16207" },
   { id: "envio-grafica",          label: "Envio gráfica",              bg: "#dbeafe", text: "#1d4ed8" },
@@ -492,13 +494,14 @@ const FLUXOS_ETAPAS = {
     { id: "cancelado",              label: "Cancelado",                 visivel: false },
   ],
   "cartao-visita-fisico": [
-    { id: "aguardando-validacao", label: "Em validação",         visivel: true  },
-    { id: "aguardando-contrato",  label: "Em contrato",          visivel: true  },
-    { id: "liberado-design",      label: "Em design",            visivel: true  },
-    { id: "arte-finalizada",      label: "Arte finalizada",      visivel: true  },
+    { id: "aguardando-validacao", label: "Aguardando validação", visivel: true  },
+    { id: "aguardando-contrato",  label: "Aguardando contrato",  visivel: true  },
+    { id: "validado",             label: "Validado",             visivel: true  },
     { id: "envio-grafica",        label: "Envio gráfica",        visivel: true  },
     { id: "envio-assessor",       label: "Envio assessor",       visivel: true  },
     { id: "reprovado",            label: "Reprovado",            visivel: false },
+    { id: "liberado-design",      label: "Em design",            visivel: false },
+    { id: "arte-finalizada",      label: "Arte finalizada",      visivel: false },
   ],
   "_default": [
     { id: "recebido",     label: "Recebido",              visivel: true  },

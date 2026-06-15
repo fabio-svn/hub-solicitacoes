@@ -111,8 +111,7 @@
             <button class="filter-chip active" data-value="" onclick="setChip(this,'status','')">Todos</button>
             <button class="filter-chip" data-value="aguardando-validacao" onclick="setChip(this,'status','aguardando-validacao')">Aguardando validação</button>
             <button class="filter-chip" data-value="aguardando-contrato" onclick="setChip(this,'status','aguardando-contrato')">Aguardando contrato</button>
-            <button class="filter-chip" data-value="liberado-design" onclick="setChip(this,'status','liberado-design')">Liberado para Design</button>
-            <button class="filter-chip" data-value="arte-finalizada" onclick="setChip(this,'status','arte-finalizada')">Arte finalizada</button>
+            <button class="filter-chip" data-value="validado" onclick="setChip(this,'status','validado')">Validado</button>
             <button class="filter-chip" data-value="envio-grafica" onclick="setChip(this,'status','envio-grafica')">Envio gráfica</button>
             <button class="filter-chip" data-value="envio-assessor" onclick="setChip(this,'status','envio-assessor')">Envio assessor</button>
             <button class="filter-chip" data-value="reprovado" onclick="setChip(this,'status','reprovado')">Reprovado</button>
@@ -186,8 +185,7 @@
     const STATUS_OPTS = [
       { v: 'aguardando-validacao', label: 'Aguardando validação' },
       { v: 'aguardando-contrato', label: 'Aguardando contrato' },
-      { v: 'liberado-design', label: 'Liberado para Design' },
-      { v: 'arte-finalizada', label: 'Arte finalizada' },
+      { v: 'validado', label: 'Validado' },
       { v: 'envio-grafica', label: 'Envio gráfica' },
       { v: 'envio-assessor', label: 'Envio assessor' },
       { v: 'reprovado', label: 'Reprovado' },
@@ -195,8 +193,7 @@
     const STATUS_COLORS = {
       'aguardando-validacao': { bg: '#fee2e2', text: '#b91c1c' },
       'aguardando-contrato': { bg: '#f1f5f9', text: '#475569' },
-      'liberado-design': { bg: '#ede9fe', text: '#6d28d9' },
-      'arte-finalizada': { bg: '#fef9c3', text: '#a16207' },
+      'validado': { bg: '#d1fae5', text: '#047857' },
       'envio-grafica': { bg: '#dbeafe', text: '#1d4ed8' },
       'envio-assessor': { bg: '#dcfce7', text: '#15803d' },
       'reprovado': { bg: '#fecaca', text: '#dc2626' },
