@@ -629,7 +629,7 @@
     }
   </style>
 
-  <script src="utils.js?v=20260615c"></script>
+  <script src="utils.js?v=20260615d"></script>
   <script src="toast.js?v=20260603"></script>
   <script src="config.js?v=20260611f"></script>
   <script src="auth.js?v=20260611f"></script>
@@ -1880,6 +1880,8 @@
         <img src="${URL_LOGO_BRANCA}" alt="SVN" />
       </div>`;
 
+    // `html`/`extraHtml` sao injetados via innerHTML. SEMPRE escape dados de usuario/banco
+    // com esc() antes de interpolar (ver callers: esc(nome), esc(l.url), esc(l.label), esc(m)).
     async function mensagemSistema(html, isError = false, extraHtml = '') {
       const wrap = document.getElementById('chatWrap');
       if (!wrap) return;

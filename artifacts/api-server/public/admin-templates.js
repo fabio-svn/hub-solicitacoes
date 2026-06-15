@@ -478,10 +478,6 @@
     }
   }
 
-  function fecharPreviewModal() {
-    Modal.close('previewModalOverlay');
-  }
-
   // ── Unsaved guard ────────────────────────────────────────────
   async function requestBack() {
     if (!isDirty) {

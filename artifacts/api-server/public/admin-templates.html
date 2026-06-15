@@ -229,17 +229,17 @@
 
   <!-- Modal: Unsaved changes — fora do #view-editor para evitar overflow:hidden/stacking context do pai -->
   <div class="modal-overlay" id="unsavedModal">
-    <div class="modal-box">
-      <div class="modal-title">Alterações não salvas</div>
-      <div class="modal-desc">Você tem edições não salvas neste template. O que deseja fazer?</div>
-      <div class="modal-actions">
-        <button class="modal-btn ghost" onclick="closeUnsavedModal()">Cancelar</button>
-        <button class="modal-btn" onclick="exitWithoutSave()">Sair sem salvar</button>
-        <button class="modal-btn primary" onclick="saveAndExit()">Salvar e sair</button>
+    <div class="unsaved-box">
+      <div class="unsaved-title">Alterações não salvas</div>
+      <div class="unsaved-desc">Você tem edições não salvas neste template. O que deseja fazer?</div>
+      <div class="unsaved-actions">
+        <button class="unsaved-btn ghost" onclick="closeUnsavedModal()">Cancelar</button>
+        <button class="unsaved-btn" onclick="exitWithoutSave()">Sair sem salvar</button>
+        <button class="unsaved-btn primary" onclick="saveAndExit()">Salvar e sair</button>
       </div>
     </div>
   </div>
-  <script src="utils.js?v=20260615c"></script>
+  <script src="utils.js?v=20260615d"></script>
   <script src="toast.js?v=20260603"></script>
   <script src="config.js?v=20260611f"></script>
   <script src="auth.js?v=20260611f"></script>

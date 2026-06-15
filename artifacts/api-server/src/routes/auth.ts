@@ -21,9 +21,10 @@ let cca: ConfidentialClientApplication | null = null;
 
 function getMsalClient() {
   if (!cca) {
-    // TODO: implementar ICachePlugin para persistir o token cache do MSAL no PostgreSQL,
-    // evitando re-autenticação desnecessária após reinicializações do servidor.
-    // Ver: https://github.com/AzureAD/microsoft-authentication-library-for-js/blob/dev/lib/msal-node/docs/caching.md
+    // Cache do MSAL fica em memória de propósito: o token cache só é populado durante a
+    // troca do auth code (acquireTokenByCode) e nunca é relido — não há acquireTokenSilent.
+    // A sessão do usuário persiste no Postgres (connect-pg-simple), então reiniciar o
+    // servidor NÃO desloga ninguém. Um ICachePlugin não traria ganho neste fluxo.
     cca = new ConfidentialClientApplication(msalConfig);
   }
   return cca;
