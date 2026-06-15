@@ -108,6 +108,8 @@ interface FieldDef {
 // Horários: dois campos distintos; ambos recebem o mesmo valor de dados.horario.
 const EVENTOS_CUSTOM_FIELDS: FieldDef[] = [
   { label: "Nome do solicitante",              id: "92db4658-70d1-430e-98ec-5e27029136fd", dadosKey: "nome",            clickupType: "short_text" },
+  { label: "Setor",                            id: "f0180f5e-1173-4905-8f57-01772a35806e", dadosKey: "setor",          clickupType: "short_text" },
+  { label: "WhatsApp do Solicitante",          id: "852c5fcb-c50f-4b46-bba8-8173e19b2810", dadosKey: "whatsapp",       clickupType: "short_text" },
   { label: "Data do evento",                   id: "361cb66a-8c99-43ec-a4fa-5a347e9a4fbd", dadosKey: "dataEvento",      clickupType: "short_text" },
   { label: "Origem do evento",                 id: "626bb697-d9eb-4e79-8277-8a7145e4b979", dadosKey: "origem",          clickupType: "short_text" },
   { label: "Horário do Evento",                id: "45d8babe-a7dd-4a78-952f-1aa366bf34ed", dadosKey: "horario",         clickupType: "short_text" },

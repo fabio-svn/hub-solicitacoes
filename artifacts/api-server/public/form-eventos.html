@@ -1412,6 +1412,8 @@
       const dados = {
         nome:           Auth.getUserName(),
         setor:          document.getElementById('setor')?.value || '',
+        telefone:       document.getElementById('telefone')?.value || '',
+        whatsapp:       document.getElementById('telefone')?.value || '',
         natureza:       formState.natureza,
         maturidade:     formState.maturidade === 1 ? 'Tenho a maioria das informações'
                       : formState.maturidade === 2 ? 'Tenho algumas informações'

@@ -461,7 +461,7 @@
     const content = document.getElementById('previewModalContent');
     const title = document.getElementById('previewModalTitle');
     content.innerHTML = '<span style="opacity:0.5;font-size:0.9rem">Carregando…</span>';
-    overlay.style.display = 'flex';
+    Modal.open('previewModalOverlay');
     try {
       const res = await fetch(`/api/admin/art-templates/${id}`);
       if (!res.ok) throw new Error('Erro');
@@ -479,7 +479,7 @@
   }
 
   function fecharPreviewModal() {
-    document.getElementById('previewModalOverlay').style.display = 'none';
+    Modal.close('previewModalOverlay');
   }
 
   // ── Unsaved guard ────────────────────────────────────────────

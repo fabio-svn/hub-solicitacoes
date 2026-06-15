@@ -239,16 +239,16 @@
       </div>
     </div>
   </div>
-  <script src="utils.js?v=20260611f"></script>
+  <script src="utils.js?v=20260615b"></script>
   <script src="toast.js?v=20260603"></script>
   <script src="config.js?v=20260611f"></script>
   <script src="auth.js?v=20260611f"></script>
   <script src="shell.js?v=20260611f"></script>
   <script src="admin-templates.js"></script>
   <!-- Preview Modal -->
-  <div id="previewModalOverlay" style="display:none;position:fixed;inset:0;background:rgba(34,27,25,0.7);z-index:9100;align-items:center;justify-content:center" onclick="if(event.target===this)fecharPreviewModal()">
-    <div style="background:white;padding:20px;border-radius:12px;max-width:90vw;max-height:90vh;overflow:auto;text-align:center;position:relative;min-width:320px">
-      <button onclick="fecharPreviewModal()" style="position:absolute;top:8px;right:8px;background:none;border:none;font-size:1.5rem;cursor:pointer;color:rgba(34,27,25,0.4);padding:4px 10px;line-height:1">×</button>
+  <div class="modal-overlay" id="previewModalOverlay" onclick="Modal.close('previewModalOverlay', event)">
+    <div class="modal-card" style="max-width:90vw;text-align:center">
+      <button class="modal-close" onclick="Modal.close('previewModalOverlay')">×</button>
       <h3 style="font-family:'Taviraj',serif;margin:0 0 14px;font-size:1.1rem;padding-right:32px;text-align:left" id="previewModalTitle">Preview</h3>
       <div id="previewModalContent" style="min-width:300px;min-height:200px;display:flex;align-items:center;justify-content:center;background:#f5f3f0;border-radius:8px">
         <span style="opacity:0.5;font-size:0.9rem">Carregando…</span>

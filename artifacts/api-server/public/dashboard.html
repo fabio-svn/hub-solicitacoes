@@ -176,7 +176,7 @@
   </div>
   </div>
 
-  <script src="utils.js?v=20260611f"></script>
+  <script src="utils.js?v=20260615b"></script>
   <script src="toast.js?v=20260603"></script>
   <script src="config.js?v=20260611f"></script>
   <script src="auth.js?v=20260611f"></script>
@@ -775,13 +775,13 @@
     function confirmarExcluir(id, btn) {
       _deleteTargetId = id;
       _deleteTargetRow = btn.closest('tr');
-      document.getElementById('deleteModal').style.display = 'flex';
+      Modal.open('deleteModal');
     }
 
     function cancelarExclusao() {
       _deleteTargetId = null;
       _deleteTargetRow = null;
-      document.getElementById('deleteModal').style.display = 'none';
+      Modal.close('deleteModal');
       const btn = document.getElementById('btnConfirmarExclusao');
       if (btn) { btn.disabled = false; btn.textContent = 'Excluir permanentemente'; }
     }
@@ -794,7 +794,7 @@
       try {
         const res = await fetch('/api/solicitacoes/' + _deleteTargetId, { method: 'DELETE' });
         if (res.ok) {
-          document.getElementById('deleteModal').style.display = 'none';
+          Modal.close('deleteModal');
           btn.disabled = false;
           btn.textContent = 'Excluir permanentemente';
           if (_deleteTargetRow) {
@@ -926,8 +926,8 @@
   </script>
 
   <!-- Modal de exclusão customizado -->
-  <div id="deleteModal" style="display:none;position:fixed;inset:0;z-index:500;background:rgba(34,27,25,0.6);backdrop-filter:blur(4px);align-items:center;justify-content:center;padding:20px" onclick="cancelarExclusao()">
-    <div style="background:var(--paper-white);border-radius:16px;padding:28px;max-width:400px;width:100%;box-shadow:0 8px 40px rgba(34,27,25,0.2)" onclick="event.stopPropagation()">
+  <div class="modal-overlay" id="deleteModal" onclick="cancelarExclusao()">
+    <div class="modal-card" style="max-width:420px;padding:28px" onclick="event.stopPropagation()">
       <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
         <div style="width:40px;height:40px;border-radius:50%;background:rgba(220,38,38,0.1);display:flex;align-items:center;justify-content:center;flex-shrink:0">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>
