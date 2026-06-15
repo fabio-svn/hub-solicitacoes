@@ -1271,6 +1271,19 @@ export async function createClickUpTask(
   taskPayload.due_date_time = false;
   logger.info({ tipo, prazo: prazoDate.toISOString() }, "ClickUp: prazo calculado");
 
+  // Eventos: prazo (due_date) = data do evento; prioridade pela proximidade
+  if (tipo === "eventos") {
+    const dataEvento = str((dados as Record<string, unknown>).dataEvento);
+    const evDate = dataEvento ? new Date(dataEvento + "T12:00:00-03:00") : null;
+    if (evDate && !isNaN(evDate.getTime())) {
+      taskPayload.due_date = evDate.getTime();
+      taskPayload.due_date_time = false;
+      const diasAteEvento = Math.ceil((evDate.getTime() - hoje.getTime()) / 86400000);
+      taskPayload.priority = diasAteEvento <= 3 ? 1 : diasAteEvento <= 7 ? 2 : 3;
+      logger.info({ dataEvento, diasAteEvento, priority: taskPayload.priority }, "ClickUp: evento — due_date e prioridade definidos");
+    }
+  }
+
   // Responsáveis por tipo (via DB)
   const assignees = await getAssigneesForTipo(tipo);
   if (assignees.length > 0) {

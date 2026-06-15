@@ -139,6 +139,7 @@
       <div class="upload-progress-bar" id="uploadProgressBar" style="width:0%"></div>
     </div>
   </div>
+  <input type="file" id="uploadInput" accept="image/png,image/jpeg,image/webp" multiple style="display:none">
 
   <!-- Stats -->
   <div class="stats-bar" id="statsBar"></div>
@@ -375,6 +376,8 @@
 
   function setupDropZone() {
     const zone = document.getElementById('uploadZone');
+    const input = document.getElementById('uploadInput');
+    if (input) input.addEventListener('change', e => { uploadFiles(e.target.files); });
     zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag-over'); });
     zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
     zone.addEventListener('drop', e => {
