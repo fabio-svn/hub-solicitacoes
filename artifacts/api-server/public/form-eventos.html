@@ -16,7 +16,7 @@
     <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap" media="print" onload="this.media='all'">
   <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap"></noscript>
-  <link rel="stylesheet" href="style.css?v=20260611f">
+  <link rel="stylesheet" href="style.css?v=20260615c">
 </head>
 <body class="page-light">
   <div id="pageContent">
@@ -78,7 +78,7 @@
 
           <!-- STEP 2: Maturidade -->
           <div class="form-step" id="step2">
-        <button type="button" onclick="goStep(1)" style="display:flex;align-items:center;gap:6px;background:none;border:none;cursor:pointer;font-size:0.82rem;opacity:0.6;padding:0;margin-bottom:20px;font-family:inherit">
+        <button type="button" onclick="goStep(1)" class="btn-voltar">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
           Voltar
         </button>
@@ -111,7 +111,7 @@
 
           <!-- STEP 3: Materiais -->
           <div class="form-step" id="step3">
-        <button type="button" onclick="goStep(2)" style="display:flex;align-items:center;gap:6px;background:none;border:none;cursor:pointer;font-size:0.82rem;opacity:0.6;padding:0;margin-bottom:20px;font-family:inherit">
+        <button type="button" onclick="goStep(2)" class="btn-voltar">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
           Voltar
         </button>
@@ -136,7 +136,7 @@
 
           <!-- STEP 4: Palestrantes -->
           <div class="form-step" id="step4">
-        <button type="button" onclick="goStep(3)" style="display:flex;align-items:center;gap:6px;background:none;border:none;cursor:pointer;font-size:0.82rem;opacity:0.6;padding:0;margin-bottom:20px;font-family:inherit">
+        <button type="button" onclick="goStep(3)" class="btn-voltar">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
           Voltar
         </button>
@@ -169,7 +169,7 @@
 
           <!-- STEP 5: Custos (presencial only) -->
           <div class="form-step" id="step5">
-        <button type="button" onclick="goStep(4)" style="display:flex;align-items:center;gap:6px;background:none;border:none;cursor:pointer;font-size:0.82rem;opacity:0.6;padding:0;margin-bottom:20px;font-family:inherit">
+        <button type="button" onclick="goStep(4)" class="btn-voltar">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
           Voltar
         </button>
@@ -193,7 +193,7 @@
 
           <!-- STEP 6: Anexos e observações -->
           <div class="form-step" id="step6">
-        <button type="button" onclick="goStep(getPrevStepFrom6())" style="display:flex;align-items:center;gap:6px;background:none;border:none;cursor:pointer;font-size:0.82rem;opacity:0.6;padding:0;margin-bottom:20px;font-family:inherit">
+        <button type="button" onclick="goStep(getPrevStepFrom6())" class="btn-voltar">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
           Voltar
         </button>
@@ -267,44 +267,62 @@
 
   <!-- Orientation Modal -->
   <div class="modal-overlay" id="orientModal" onclick="closeOrientationModal(event)">
-    <div class="modal-card" style="background:var(--carbon-black);color:var(--paper-white)" onclick="event.stopPropagation()">
-      <button class="modal-close" onclick="closeOrientationModal()">&times;</button>
-      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:16px">
-        <div style="text-align:center;padding:16px">
-          <div style="font-family:'Taviraj',serif;font-size:3rem;font-weight:300;margin-bottom:8px">1</div>
-          <span class="badge" style="background:var(--ruby-red);color:white;margin-bottom:8px">Tenho a maioria das informações</span>
-          <p style="font-size:0.82rem;opacity:0.7;margin-top:8px">Quando as informações mais básicas do evento estiverem pré-definidas.</p>
-          <p style="font-size:0.78rem;font-style:italic;opacity:0.5;margin-top:4px">Ex.: Tenho Nome, Data, Local, Formato, etc</p>
+    <div class="modal-card" style="max-width:720px" onclick="event.stopPropagation()">
+      <div class="modal-header">
+        <div>
+          <h3 class="modal-title">Qual opção escolher?</h3>
+          <p class="modal-subtitle">Escolha o cenário que mais se aproxima da realidade do seu evento.</p>
         </div>
-        <div style="text-align:center;padding:16px">
-          <div style="font-family:'Taviraj',serif;font-size:3rem;font-weight:300;margin-bottom:8px">2</div>
-          <span class="badge" style="background:var(--sage-green);color:white;margin-bottom:8px">Tenho algumas informações</span>
-          <p style="font-size:0.82rem;opacity:0.7;margin-top:8px">Quando algumas informações estiverem definidas, mas você precisa de apoio para fechar outros pontos.</p>
-          <p style="font-size:0.78rem;font-style:italic;opacity:0.5;margin-top:4px">Ex.: Quero realizar uma palestra sobre FIIs no dia 7, mas ainda preciso definir o local.</p>
-        </div>
-        <div style="text-align:center;padding:16px">
-          <div style="font-family:'Taviraj',serif;font-size:3rem;font-weight:300;margin-bottom:8px">3</div>
-          <span class="badge" style="background:var(--leather-brown);color:white;margin-bottom:8px">Ainda estou estruturando</span>
-          <p style="font-size:0.82rem;opacity:0.7;margin-top:8px">Quando você tiver uma ideia para um evento, mas precisa de apoio para estruturar.</p>
-          <p style="font-size:0.78rem;font-style:italic;opacity:0.5;margin-top:4px">Ex.: Gostaria de realizar uma experiencia com clientes, mas preciso de assistência.</p>
-        </div>
+        <button class="modal-close" onclick="closeOrientationModal()">&times;</button>
       </div>
-      <hr style="border-color:rgba(255,248,243,0.1);margin:16px 0">
-      <p style="font-size:0.78rem;opacity:0.5;font-style:italic">Para que o processo ocorra de forma eficiente, escolha a opção que mais se adequa à realidade do seu evento. Quanto mais informações forem preenchidas, mais rápido será o processo.</p>
+      <div class="modal-body">
+        <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px">
+          <div style="text-align:center;padding:16px">
+            <div style="font-family:'Taviraj',serif;font-size:3rem;font-weight:300;margin-bottom:8px;color:var(--carbon-black)">1</div>
+            <span class="badge" style="background:var(--ruby-red);color:white;margin-bottom:8px;white-space:normal;display:inline-block;line-height:1.3">Tenho a maioria das informações</span>
+            <p style="font-size:0.82rem;opacity:0.7;margin-top:8px">Quando as informações mais básicas do evento estiverem pré-definidas.</p>
+            <p style="font-size:0.78rem;font-style:italic;opacity:0.5;margin-top:4px">Ex.: Tenho Nome, Data, Local, Formato, etc</p>
+          </div>
+          <div style="text-align:center;padding:16px">
+            <div style="font-family:'Taviraj',serif;font-size:3rem;font-weight:300;margin-bottom:8px;color:var(--carbon-black)">2</div>
+            <span class="badge" style="background:var(--sage-green);color:white;margin-bottom:8px;white-space:normal;display:inline-block;line-height:1.3">Tenho algumas informações</span>
+            <p style="font-size:0.82rem;opacity:0.7;margin-top:8px">Quando algumas informações estiverem definidas, mas você precisa de apoio para fechar outros pontos.</p>
+            <p style="font-size:0.78rem;font-style:italic;opacity:0.5;margin-top:4px">Ex.: Quero realizar uma palestra sobre FIIs no dia 7, mas ainda preciso definir o local.</p>
+          </div>
+          <div style="text-align:center;padding:16px">
+            <div style="font-family:'Taviraj',serif;font-size:3rem;font-weight:300;margin-bottom:8px;color:var(--carbon-black)">3</div>
+            <span class="badge" style="background:var(--leather-brown);color:white;margin-bottom:8px;white-space:normal;display:inline-block;line-height:1.3">Ainda estou estruturando</span>
+            <p style="font-size:0.82rem;opacity:0.7;margin-top:8px">Quando você tiver uma ideia para um evento, mas precisa de apoio para estruturar.</p>
+            <p style="font-size:0.78rem;font-style:italic;opacity:0.5;margin-top:4px">Ex.: Gostaria de realizar uma experiencia com clientes, mas preciso de assistência.</p>
+          </div>
+        </div>
+        <hr style="border:none;border-top:1px solid rgba(34,27,25,0.1);margin:16px 0">
+        <p style="font-size:0.78rem;opacity:0.5;font-style:italic;margin:0">Para que o processo ocorra de forma eficiente, escolha a opção que mais se adequa à realidade do seu evento. Quanto mais informações forem preenchidas, mais rápido será o processo.</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" onclick="closeOrientationModal()">Entendi</button>
+      </div>
     </div>
   </div>
 
   <!-- Pacote Padrão Preview Modal -->
   <div class="modal-overlay" id="pacoteModal" onclick="closePacoteModal(event)">
-    <div class="modal-card" style="background:var(--carbon-black);color:var(--paper-white)" onclick="event.stopPropagation()">
-      <button class="modal-close" onclick="closePacoteModal()">&times;</button>
-      <h3 style="margin-bottom:16px">Prévia do Pacote Padrão</h3>
-      <div style="display:flex;gap:16px;flex-wrap:wrap;justify-content:center" id="pacoteImgs"></div>
+    <div class="modal-card" onclick="event.stopPropagation()">
+      <div class="modal-header">
+        <h3 class="modal-title">Prévia do Pacote Padrão</h3>
+        <button class="modal-close" onclick="closePacoteModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div style="display:flex;gap:16px;flex-wrap:wrap;justify-content:center" id="pacoteImgs"></div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" onclick="closePacoteModal()">Fechar</button>
+      </div>
     </div>
   </div>
 
   </div>
-  <script src="utils.js?v=20260615a"></script>
+  <script src="utils.js?v=20260615c"></script>
   <script src="upload-feedback.js?v=20260603"></script>
   <script src="config.js?v=20260611f"></script>
   <script src="auth.js?v=20260611f"></script>
@@ -1377,7 +1395,7 @@
         ];
         imgs.innerHTML = pacoteItems.map(item => `
           <div style="flex:1;min-width:200px;max-width:320px">
-            <p style="font-size:0.8rem;font-weight:600;color:var(--paper-white);opacity:0.7;margin-bottom:8px;text-align:center">${item.titulo}</p>
+            <p style="font-size:0.8rem;font-weight:600;color:var(--carbon-black);opacity:0.6;margin-bottom:8px;text-align:center">${item.titulo}</p>
             <img src="${item.url}"
                  style="width:100%;height:auto;border-radius:8px;object-fit:contain;display:block"
                  onerror="this.parentElement.innerHTML='<p style=\\'opacity:0.4;font-size:0.8rem;text-align:center;padding:20px\\'>Imagem não disponível</p>'">
@@ -1647,30 +1665,40 @@
   </script>
 
   <div class="modal-overlay" id="prazosModal" onclick="closePrazosModal(event)">
-    <div class="modal-card" style="background:var(--carbon-black);color:var(--paper-white)" onclick="event.stopPropagation()">
-      <button class="modal-close" onclick="closePrazosModal()">&times;</button>
-      <h2 style="font-weight:600;font-size:1.05rem;margin:0 0 24px;color:var(--paper-white)">Prazos para organização de eventos</h2>
-      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:20px">
-        <div style="background:rgba(255,255,255,0.07);border-radius:10px;padding:18px">
-          <div style="font-size:0.65rem;text-transform:uppercase;letter-spacing:0.07em;opacity:0.45;margin-bottom:8px">Online</div>
-          <div style="font-size:2.2rem;font-weight:700;font-family:'Taviraj',serif;color:var(--paper-white);line-height:1">15</div>
-          <div style="font-size:0.78rem;opacity:0.6;margin-top:2px">dias úteis de antecedência</div>
-          <div style="margin-top:10px;font-size:0.78rem;opacity:0.5;line-height:1.5">Webinars, lives, transmissões internas. Inclui divulgação digital e convite.</div>
+    <div class="modal-card" onclick="event.stopPropagation()">
+      <div class="modal-header">
+        <div>
+          <h2 class="modal-title">Prazos para organização de eventos</h2>
+          <p class="modal-subtitle">Antecedência mínima por tipo de evento.</p>
         </div>
-        <div style="background:rgba(255,255,255,0.07);border-radius:10px;padding:18px">
-          <div style="font-size:0.65rem;text-transform:uppercase;letter-spacing:0.07em;opacity:0.45;margin-bottom:8px">Presencial simples</div>
-          <div style="font-size:2.2rem;font-weight:700;font-family:'Taviraj',serif;color:var(--paper-white);line-height:1">21</div>
-          <div style="font-size:0.78rem;opacity:0.6;margin-top:2px">dias úteis de antecedência</div>
-          <div style="margin-top:10px;font-size:0.78rem;opacity:0.5;line-height:1.5">Coffee, treinamentos e reuniões internas. Inclui logística e divulgação.</div>
-        </div>
-        <div style="background:rgba(255,255,255,0.07);border-radius:10px;padding:18px">
-          <div style="font-size:0.65rem;text-transform:uppercase;letter-spacing:0.07em;opacity:0.45;margin-bottom:8px">Presencial complexo</div>
-          <div style="font-size:2.2rem;font-weight:700;font-family:'Taviraj',serif;color:var(--paper-white);line-height:1">45</div>
-          <div style="font-size:0.78rem;opacity:0.6;margin-top:2px">dias úteis de antecedência</div>
-          <div style="margin-top:10px;font-size:0.78rem;opacity:0.5;line-height:1.5">Eventos externos, com palestrante, buffet, espaços locados ou cobertura jornalística.</div>
-        </div>
+        <button class="modal-close" onclick="closePrazosModal()">&times;</button>
       </div>
-      <p style="font-size:0.78rem;opacity:0.4;line-height:1.6;margin:0">Esses prazos garantem qualidade na entrega e organização adequada. Solicitações fora do prazo mínimo podem não ser atendidas ou terão escopo reduzido.</p>
+      <div class="modal-body">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:16px">
+          <div style="background:rgba(34,27,25,0.04);border:1px solid rgba(34,27,25,0.08);border-radius:10px;padding:16px">
+            <div style="font-size:0.62rem;text-transform:uppercase;letter-spacing:0.07em;color:rgba(34,27,25,0.45);margin-bottom:6px">Online</div>
+            <div style="font-size:2rem;font-weight:500;font-family:'Taviraj',serif;color:var(--carbon-black);line-height:1">15</div>
+            <div style="font-size:0.76rem;color:rgba(34,27,25,0.55);margin-top:3px">dias úteis de antecedência</div>
+            <div style="margin-top:10px;font-size:0.76rem;color:rgba(34,27,25,0.55);line-height:1.5">Webinars, lives, transmissões internas. Inclui divulgação digital e convite.</div>
+          </div>
+          <div style="background:rgba(34,27,25,0.04);border:1px solid rgba(34,27,25,0.08);border-radius:10px;padding:16px">
+            <div style="font-size:0.62rem;text-transform:uppercase;letter-spacing:0.07em;color:rgba(34,27,25,0.45);margin-bottom:6px">Presencial simples</div>
+            <div style="font-size:2rem;font-weight:500;font-family:'Taviraj',serif;color:var(--carbon-black);line-height:1">21</div>
+            <div style="font-size:0.76rem;color:rgba(34,27,25,0.55);margin-top:3px">dias úteis de antecedência</div>
+            <div style="margin-top:10px;font-size:0.76rem;color:rgba(34,27,25,0.55);line-height:1.5">Coffee, treinamentos e reuniões internas. Inclui logística e divulgação.</div>
+          </div>
+          <div style="background:rgba(34,27,25,0.04);border:1px solid rgba(34,27,25,0.08);border-radius:10px;padding:16px">
+            <div style="font-size:0.62rem;text-transform:uppercase;letter-spacing:0.07em;color:rgba(34,27,25,0.45);margin-bottom:6px">Presencial complexo</div>
+            <div style="font-size:2rem;font-weight:500;font-family:'Taviraj',serif;color:var(--carbon-black);line-height:1">45</div>
+            <div style="font-size:0.76rem;color:rgba(34,27,25,0.55);margin-top:3px">dias úteis de antecedência</div>
+            <div style="margin-top:10px;font-size:0.76rem;color:rgba(34,27,25,0.55);line-height:1.5">Eventos externos, com palestrante, buffet, espaços locados ou cobertura jornalística.</div>
+          </div>
+        </div>
+        <p style="font-size:0.78rem;color:rgba(34,27,25,0.5);line-height:1.6;margin:0">Esses prazos garantem qualidade na entrega e organização adequada. Solicitações fora do prazo mínimo podem não ser atendidas ou terão escopo reduzido.</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" onclick="closePrazosModal()">Entendi</button>
+      </div>
     </div>
   </div>
 

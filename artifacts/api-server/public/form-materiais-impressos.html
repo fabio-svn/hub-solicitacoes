@@ -16,7 +16,7 @@
     <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap" media="print" onload="this.media='all'">
   <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap"></noscript>
-  <link rel="stylesheet" href="style.css?v=20260611f">
+  <link rel="stylesheet" href="style.css?v=20260615c">
   <style>
     .tipo-material-btn {
       display:flex;align-items:center;gap:10px;padding:10px 14px;
@@ -91,7 +91,7 @@
   
 
   </div>
-  <script src="utils.js?v=20260611f"></script>
+  <script src="utils.js?v=20260615c"></script>
   <script src="upload-feedback.js?v=20260603"></script>
   <script src="config.js?v=20260611f"></script>
   <script src="auth.js?v=20260611f"></script>
@@ -225,7 +225,7 @@
           container.innerHTML = `
             <div class="alert-card alert-info" style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px">
               <div class="alert-text" style="flex:1">O flyer institucional segue o modelo padrão SVN.</div>
-              <button type="button" onclick="verModeloFlyer()" style="flex-shrink:0;background:none;border:1.5px solid var(--border-light);border-radius:8px;padding:5px 12px;font-size:0.78rem;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap">Ver modelo padrão</button>
+              <button type="button" class="btn btn-secondary" style="font-size:0.8rem;white-space:nowrap" onclick="verModeloFlyer()">Ver modelo padrão</button>
             </div>
             <div class="field">
               <label>Descrição da solicitação <span class="text-ruby">*</span></label>
@@ -554,18 +554,25 @@
 
   <div class="modal-overlay" id="flyerModal" onclick="fecharFlyerModal(event)">
     <div class="modal-card" onclick="event.stopPropagation()">
-      <button class="modal-close" onclick="fecharFlyerModal()">&times;</button>
-      <h3 style="font-family:'Taviraj',serif;margin:0 0 6px;font-size:1.2rem">Modelo padrão — Flyer Institucional</h3>
-      <p style="font-size:0.85rem;opacity:0.65;line-height:1.55;margin:0 0 18px">Os dados do flyer padrão são validados e atualizados antes do envio para produção.</p>
-      <div style="display:flex;gap:16px;flex-wrap:wrap;justify-content:center">
-        <figure style="margin:0;flex:1 1 260px;max-width:320px">
-          <img src="https://solicitacoes.portalsvn.com.br/assets/2026-06/IJoyGwNp-Flyer_Institucional_A5_Frente.jpg" alt="Flyer Institucional — Frente" loading="lazy" style="width:100%;height:auto;display:block;border-radius:8px;border:1px solid var(--border-light)">
-          <figcaption style="text-align:center;font-size:0.78rem;opacity:0.55;margin-top:8px">Frente</figcaption>
-        </figure>
-        <figure style="margin:0;flex:1 1 260px;max-width:320px">
-          <img src="https://solicitacoes.portalsvn.com.br/assets/2026-06/uQfkpsmQ-Flyer_Institucional_A5_Verso.jpg" alt="Flyer Institucional — Verso" loading="lazy" style="width:100%;height:auto;display:block;border-radius:8px;border:1px solid var(--border-light)">
-          <figcaption style="text-align:center;font-size:0.78rem;opacity:0.55;margin-top:8px">Verso</figcaption>
-        </figure>
+      <div class="modal-header">
+        <h3 class="modal-title">Modelo padrão — Flyer Institucional</h3>
+        <button class="modal-close" onclick="fecharFlyerModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p style="opacity:0.7;margin:0 0 18px">Os dados do flyer padrão são validados e atualizados antes do envio para produção.</p>
+        <div style="display:flex;gap:16px;flex-wrap:wrap;justify-content:center">
+          <figure style="margin:0;flex:1 1 260px;max-width:320px">
+            <img src="https://solicitacoes.portalsvn.com.br/assets/2026-06/IJoyGwNp-Flyer_Institucional_A5_Frente.jpg" alt="Flyer Institucional — Frente" loading="lazy" style="width:100%;height:auto;display:block;border-radius:8px;border:1px solid var(--border-light)">
+            <figcaption style="text-align:center;font-size:0.78rem;opacity:0.55;margin-top:8px">Frente</figcaption>
+          </figure>
+          <figure style="margin:0;flex:1 1 260px;max-width:320px">
+            <img src="https://solicitacoes.portalsvn.com.br/assets/2026-06/uQfkpsmQ-Flyer_Institucional_A5_Verso.jpg" alt="Flyer Institucional — Verso" loading="lazy" style="width:100%;height:auto;display:block;border-radius:8px;border:1px solid var(--border-light)">
+            <figcaption style="text-align:center;font-size:0.78rem;opacity:0.55;margin-top:8px">Verso</figcaption>
+          </figure>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" onclick="fecharFlyerModal()">Fechar</button>
       </div>
     </div>
   </div>

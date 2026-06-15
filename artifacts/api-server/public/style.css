@@ -805,6 +805,41 @@ input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
   overflow-y: auto;
   padding: 32px;
 }
+
+.modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+.modal-title {
+  font-family: 'Taviraj', serif;
+  font-weight: 500;
+  font-size: 1.3rem;
+  color: var(--carbon-black);
+  margin: 0;
+  line-height: 1.25;
+}
+.modal-subtitle {
+  font-family: 'Nunito Sans', sans-serif;
+  font-size: 0.84rem;
+  color: rgba(34, 27, 25, 0.6);
+  margin: 4px 0 0;
+  line-height: 1.5;
+}
+.modal-body {
+  font-family: 'Nunito Sans', sans-serif;
+  font-size: 0.9rem;
+  color: var(--carbon-black);
+  line-height: 1.6;
+}
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 24px;
+}
 .modal-close {
   float: right;
   background: none;
@@ -815,6 +850,23 @@ input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
   color: inherit;
 }
 .modal-close:hover { opacity: 1; }
+
+.btn-voltar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 0.82rem;
+  opacity: 0.6;
+  padding: 0;
+  margin-bottom: 20px;
+  font-family: inherit;
+  color: var(--carbon-black);
+  transition: opacity 0.15s;
+}
+.btn-voltar:hover { opacity: 1; }
 
 /* Floating home button */
 

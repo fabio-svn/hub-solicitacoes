@@ -228,22 +228,23 @@ function humanizeValue(key, value) {
 
 // ── Modal: helper compartilhado para modais padrão (.modal-overlay/.modal-card/.modal-close) ──
 window.Modal = (function () {
-  let escHandler = null;
+  const escHandlers = {};
   function open(id) {
     const el = document.getElementById(id);
     if (!el) return;
     el.classList.add('visible');
     document.body.style.overflow = 'hidden';
-    escHandler = function (e) { if (e.key === 'Escape') close(id); };
-    document.addEventListener('keydown', escHandler);
+    const h = function (e) { if (e.key === 'Escape') close(id); };
+    escHandlers[id] = h;
+    document.addEventListener('keydown', h);
   }
   function close(id, event) {
     const el = document.getElementById(id);
     if (!el) return;
     if (event && event.target !== el) return; // clique dentro do card não fecha
     el.classList.remove('visible');
-    document.body.style.overflow = '';
-    if (escHandler) { document.removeEventListener('keydown', escHandler); escHandler = null; }
+    if (escHandlers[id]) { document.removeEventListener('keydown', escHandlers[id]); delete escHandlers[id]; }
+    if (Object.keys(escHandlers).length === 0) document.body.style.overflow = '';
   }
   return { open: open, close: close };
 })();

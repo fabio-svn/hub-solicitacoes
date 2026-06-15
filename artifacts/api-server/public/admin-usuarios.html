@@ -16,7 +16,7 @@
     <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap" media="print" onload="this.media='all'">
   <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap"></noscript>
-  <link rel="stylesheet" href="style.css?v=20260611f">
+  <link rel="stylesheet" href="style.css?v=20260615c">
 </head>
 <body class="page-light">
   <div id="pageContent">
@@ -62,30 +62,37 @@
 
       <!-- Modal: Adicionar usuário -->
       <div class="modal-overlay" id="novoUsuarioModal">
-        <div class="modal-card" style="max-width:440px;padding:24px">
-          <h2 style="font-family:'Taviraj',serif;font-size:1.3rem;margin-bottom:6px">Adicionar usuário</h2>
-          <p style="font-size:0.82rem;opacity:0.6;margin-bottom:20px">Crie um usuário no banco mesmo antes da pessoa fazer login. Quando ela logar via Microsoft, mantém role e atribuições.</p>
-          <div class="field"><label>E-mail <span class="text-ruby">*</span></label>
-            <input type="email" id="novoUsuarioEmail" placeholder="usuario@svninvest.com.br" required>
+        <div class="modal-card" style="max-width:440px">
+          <div class="modal-header">
+            <div>
+              <h2 class="modal-title">Adicionar usuário</h2>
+              <p class="modal-subtitle">Crie um usuário no banco mesmo antes da pessoa fazer login. Quando ela logar via Microsoft, mantém role e atribuições.</p>
+            </div>
+            <button class="modal-close" onclick="cancelarNovoUsuario()">&times;</button>
           </div>
-          <div class="field"><label>Nome completo <span class="text-ruby">*</span></label>
-            <input type="text" id="novoUsuarioNome" placeholder="João Silva" required>
+          <div class="modal-body">
+            <div class="field"><label>E-mail <span class="text-ruby">*</span></label>
+              <input type="email" id="novoUsuarioEmail" placeholder="usuario@svninvest.com.br" required>
+            </div>
+            <div class="field"><label>Nome completo <span class="text-ruby">*</span></label>
+              <input type="text" id="novoUsuarioNome" placeholder="João Silva" required>
+            </div>
+            <div class="field"><label>Função</label>
+              <select id="novoUsuarioRole">
+                <option value="colaborador">Colaborador</option>
+                <option value="gestor">Gestor</option>
+                <option value="capital_humano">Capital Humano</option>
+                <option value="admin">Admin</option>
+              </select>
+            </div>
+            <div class="field"><label>ClickUp User ID (opcional)</label>
+              <input type="text" id="novoUsuarioClickup" placeholder="ex: 55127950">
+              <p style="font-size:0.72rem;opacity:0.5;margin-top:4px">Necessário para receber atribuições automáticas de tasks.</p>
+            </div>
+            <div id="novoUsuarioErro" style="display:none;margin:12px 0;padding:10px;background:rgba(220,38,38,0.08);color:#dc2626;border-radius:6px;font-size:0.82rem"></div>
           </div>
-          <div class="field"><label>Função</label>
-            <select id="novoUsuarioRole">
-              <option value="colaborador">Colaborador</option>
-              <option value="gestor">Gestor</option>
-              <option value="capital_humano">Capital Humano</option>
-              <option value="admin">Admin</option>
-            </select>
-          </div>
-          <div class="field"><label>ClickUp User ID (opcional)</label>
-            <input type="text" id="novoUsuarioClickup" placeholder="ex: 55127950">
-            <p style="font-size:0.72rem;opacity:0.5;margin-top:4px">Necessário para receber atribuições automáticas de tasks.</p>
-          </div>
-          <div id="novoUsuarioErro" style="display:none;margin:12px 0;padding:10px;background:rgba(220,38,38,0.08);color:#dc2626;border-radius:6px;font-size:0.82rem"></div>
-          <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:20px">
-            <button onclick="cancelarNovoUsuario()" class="btn" style="background:transparent;border:1px solid var(--border-light)">Cancelar</button>
+          <div class="modal-footer">
+            <button onclick="cancelarNovoUsuario()" class="btn btn-secondary">Cancelar</button>
             <button onclick="salvarNovoUsuario()" class="btn btn-primary">Adicionar</button>
           </div>
         </div>
@@ -93,15 +100,22 @@
 
       <!-- Modal: Editar ClickUp ID -->
       <div class="modal-overlay" id="editClickupModal">
-        <div class="modal-card" style="max-width:400px;padding:24px">
-          <h2 style="font-family:'Taviraj',serif;font-size:1.2rem;margin-bottom:6px">ClickUp User ID</h2>
-          <p style="font-size:0.82rem;opacity:0.6;margin-bottom:20px"><strong id="editClickupUserName"></strong></p>
-          <div class="field"><label>ClickUp User ID</label>
-            <input type="text" id="editClickupInput" placeholder="ex: 55127950">
-            <p style="font-size:0.72rem;opacity:0.5;margin-top:4px">Deixe em branco para remover.</p>
+        <div class="modal-card" style="max-width:400px">
+          <div class="modal-header">
+            <div>
+              <h2 class="modal-title">ClickUp User ID</h2>
+              <p class="modal-subtitle"><strong id="editClickupUserName"></strong></p>
+            </div>
+            <button class="modal-close" onclick="cancelarEditClickup()">&times;</button>
           </div>
-          <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:20px">
-            <button onclick="cancelarEditClickup()" class="btn" style="background:transparent;border:1px solid var(--border-light)">Cancelar</button>
+          <div class="modal-body">
+            <div class="field"><label>ClickUp User ID</label>
+              <input type="text" id="editClickupInput" placeholder="ex: 55127950">
+              <p style="font-size:0.72rem;opacity:0.5;margin-top:4px">Deixe em branco para remover.</p>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button onclick="cancelarEditClickup()" class="btn btn-secondary">Cancelar</button>
             <button onclick="salvarEditClickup()" class="btn btn-primary">Salvar</button>
           </div>
         </div>
@@ -109,12 +123,19 @@
 
       <!-- Modal: Editar formulários atribuídos -->
       <div class="modal-overlay" id="editAssignmentsModal">
-        <div class="modal-card" style="max-width:520px;padding:24px">
-          <h2 style="font-family:'Taviraj',serif;font-size:1.2rem;margin-bottom:6px">Formulários atribuídos</h2>
-          <p style="font-size:0.82rem;opacity:0.6;margin-bottom:16px">Selecione os tipos de solicitação que <strong id="editAssignmentsUserName"></strong> receberá automaticamente no ClickUp.</p>
-          <div id="editAssignmentsList" style="max-height:380px;overflow:auto;border:1px solid var(--border-light);border-radius:8px;padding:8px"></div>
-          <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:20px">
-            <button onclick="cancelarEditAssignments()" class="btn" style="background:transparent;border:1px solid var(--border-light)">Cancelar</button>
+        <div class="modal-card" style="max-width:520px">
+          <div class="modal-header">
+            <div>
+              <h2 class="modal-title">Formulários atribuídos</h2>
+              <p class="modal-subtitle">Selecione os tipos de solicitação que <strong id="editAssignmentsUserName"></strong> receberá automaticamente no ClickUp.</p>
+            </div>
+            <button class="modal-close" onclick="cancelarEditAssignments()">&times;</button>
+          </div>
+          <div class="modal-body">
+            <div id="editAssignmentsList" style="max-height:380px;overflow:auto;border:1px solid var(--border-light);border-radius:8px;padding:8px"></div>
+          </div>
+          <div class="modal-footer">
+            <button onclick="cancelarEditAssignments()" class="btn btn-secondary">Cancelar</button>
             <button onclick="salvarEditAssignments()" class="btn btn-primary">Salvar</button>
           </div>
         </div>
@@ -122,21 +143,28 @@
 
       <!-- Editar função modal -->
       <div class="modal-overlay" id="editRoleModal">
-        <div class="modal-card" style="max-width:380px;padding:28px 32px">
-          <h3 style="font-size:1rem;font-weight:800;margin:0 0 6px">Alterar função</h3>
-          <p id="editRoleUserName" style="font-size:0.85rem;opacity:0.6;margin:0 0 16px"></p>
-          <div class="field">
-            <label>Função</label>
-            <select id="editRoleSelect" style="width:100%">
-              <option value="colaborador">Colaborador</option>
-              <option value="gestor">Gestor</option>
-              <option value="capital_humano">Capital Humano</option>
-              <option value="admin">Admin</option>
-            </select>
+        <div class="modal-card" style="max-width:380px">
+          <div class="modal-header">
+            <div>
+              <h3 class="modal-title">Alterar função</h3>
+              <p class="modal-subtitle" id="editRoleUserName"></p>
+            </div>
+            <button class="modal-close" onclick="cancelarEditRole()">&times;</button>
           </div>
-          <div style="display:flex;gap:10px;margin-top:20px">
-            <button onclick="cancelarEditRole()" style="flex:1;padding:9px;border-radius:9px;border:1px solid var(--border-light);background:transparent;font-family:'Nunito Sans',sans-serif;font-size:0.85rem;font-weight:600;cursor:pointer">Cancelar</button>
-            <button onclick="salvarRole()" style="flex:1;padding:9px;border-radius:9px;border:none;background:var(--carbon-black);color:white;font-family:'Nunito Sans',sans-serif;font-size:0.85rem;font-weight:700;cursor:pointer">Salvar</button>
+          <div class="modal-body">
+            <div class="field">
+              <label>Função</label>
+              <select id="editRoleSelect" style="width:100%">
+                <option value="colaborador">Colaborador</option>
+                <option value="gestor">Gestor</option>
+                <option value="capital_humano">Capital Humano</option>
+                <option value="admin">Admin</option>
+              </select>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button onclick="cancelarEditRole()" class="btn btn-secondary">Cancelar</button>
+            <button onclick="salvarRole()" class="btn btn-primary">Salvar</button>
           </div>
         </div>
       </div>
@@ -147,7 +175,7 @@
   <script src="config.js?v=20260611f"></script>
   <script src="auth.js?v=20260611f"></script>
   <script src="shell.js?v=20260611f"></script>
-  <script src="utils.js?v=20260615b"></script>
+  <script src="utils.js?v=20260615c"></script>
   <script src="toast.js?v=20260603"></script>
   <script>
     let _allUsers = [];
