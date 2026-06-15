@@ -43,6 +43,7 @@ INCLUDES=(
 )
 # Limpa output anterior
 > "$OUTPUT"
+EMPTY_COUNT=0
 # Cabeçalho do pack
 {
   echo "# Pack do Projeto Hub SVN"
@@ -66,8 +67,17 @@ find "${ROOTS[@]}" -type f \
     echo "Pulando $REL (muito grande: $((SIZE/1024)) KB)" >&2
     continue
   fi
-  # Pula arquivos vazios
+  # ARQUIVOS VAZIOS: não pular em silêncio — incluir como marcador e AVISAR.
+  # (foi assim que o admin-templates.css zerado sumiu do pack sem ninguém ver.)
   if [ "$SIZE" -lt 1 ]; then
+    {
+      echo ""
+      echo "## File: $REL"
+      echo ""
+      echo "_(ARQUIVO VAZIO — 0 bytes — possível regressão, conferir no workspace)_"
+      echo ""
+    } >> "$OUTPUT"
+    echo "⚠ AVISO: $REL está VAZIO (0 bytes) — incluído como marcador" >&2
     continue
   fi
   {
@@ -83,7 +93,9 @@ find "${ROOTS[@]}" -type f \
 done
 # Log de saída
 FINAL_SIZE=$(wc -c < "$OUTPUT")
+EMPTIES=$(grep -c "ARQUIVO VAZIO" "$OUTPUT")
 echo ""
 echo "Pack gerado: $OUTPUT"
 echo "Tamanho final: $((FINAL_SIZE / 1024)) KB"
+[ "$EMPTIES" -gt 0 ] && echo "⚠ $EMPTIES arquivo(s) VAZIO(S) detectado(s) — procure 'ARQUIVO VAZIO' no pack"
 echo ""

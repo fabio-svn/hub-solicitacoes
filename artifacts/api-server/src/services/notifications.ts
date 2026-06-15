@@ -13,7 +13,6 @@ export const TIPOS_AUTOMACAO = new Set([
   "cartao-boas-vindas",
   "divulgacao-nps",
   "convite-fp",
-  "certificado-eventos",
   "cartao-comemorativo",
 ]);
 
