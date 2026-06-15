@@ -68,3 +68,22 @@ const FileUpload = {
     });
   }
 };
+
+/* Safety-net: feedback de upload por delegação no document (à prova de timing).
+   Cobre qualquer input[type=file] com id cujo feedback seja o elemento `<id>Name`.
+   Defere a binds explícitos (FileUpload.bind marca dataset.uploadBound='1') para não duplicar. */
+document.addEventListener('change', function (e) {
+  var input = e.target;
+  if (!input || input.tagName !== 'INPUT' || input.type !== 'file' || !input.id) return;
+  if (input.dataset.uploadBound === '1') return;
+  var nameEl = document.getElementById(input.id + 'Name');
+  if (!nameEl || typeof FileUpload === 'undefined') return;
+  var files = input.files;
+  if (!files || !files.length) { FileUpload.clear(nameEl); return; }
+  if (files.length === 1) { FileUpload.success(nameEl, files[0]); }
+  else {
+    nameEl.innerHTML = '<div class="upload-feedback upload-feedback--success">' +
+      '<span class="upload-feedback__name">' + files.length + ' arquivos selecionados</span></div>';
+  }
+});
+

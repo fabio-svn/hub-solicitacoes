@@ -80,7 +80,7 @@
   <script src="auth.js?v=20260611f"></script>
   <script src="utils.js?v=20260615d"></script>
   <script src="shell.js?v=20260611f"></script>
-  <script src="upload-feedback.js?v=20260603"></script>
+  <script src="upload-feedback.js?v=20260615e"></script>
   <script src="form-core.js?v=20260611f"></script>
   <script>
     const TIPO = 'ch-atualizacao-books';
@@ -99,13 +99,7 @@
     }
 
     function bindUploads() {
-      const inp = document.getElementById('arquivoApoio');
-      const nameEl = document.getElementById('arquivoApoioName');
-      inp.addEventListener('change', function () {
-        if (inp.files.length === 1 && window.FileUpload && FileUpload.success) { FileUpload.success(nameEl, inp.files[0]); }
-        else if (inp.files.length > 1) { nameEl.innerHTML = '<div class="upload-feedback upload-feedback--success"><span class="upload-feedback__name">' + inp.files.length + ' arquivos selecionados</span></div>'; }
-        else { nameEl.innerHTML = ''; }
-      });
+      // Feedback de upload (single/múltiplo) é tratado globalmente por upload-feedback.js (delegação).
     }
 
     function getSelectedBooks() {
