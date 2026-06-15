@@ -279,7 +279,7 @@
   </div>
 
   </div>
-  <script src="utils.js?v=20260611f"></script>
+  <script src="utils.js?v=20260615a"></script>
   <script src="upload-feedback.js?v=20260603"></script>
   <script src="config.js?v=20260611f"></script>
   <script src="auth.js?v=20260611f"></script>
@@ -1587,24 +1587,16 @@
       }
     });
 
-    function openPrazosModal() {
-      document.getElementById('prazosModal').style.display = 'flex';
-      document.body.style.overflow = 'hidden';
-    }
-    function closePrazosModal() {
-      document.getElementById('prazosModal').style.display = 'none';
-      document.body.style.overflow = '';
-    }
+    function openPrazosModal() { Modal.open('prazosModal'); }
+    function closePrazosModal(e) { Modal.close('prazosModal', e); }
 
     init();
   </script>
 
-  <div id="prazosModal" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(34,27,25,0.82);backdrop-filter:blur(4px);align-items:center;justify-content:center" onclick="closePrazosModal()">
-    <div onclick="event.stopPropagation()" style="background:var(--carbon-black);color:var(--paper-white);border-radius:16px;padding:32px;max-width:680px;width:92vw;max-height:85vh;overflow-y:auto;position:relative">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px">
-        <h2 style="font-weight:600;font-size:1.05rem;margin:0;color:var(--paper-white)">Prazos para organização de eventos</h2>
-        <button onclick="closePrazosModal()" style="background:none;border:none;cursor:pointer;color:var(--paper-white);opacity:0.5;font-size:1.6rem;line-height:1;padding:0 4px">×</button>
-      </div>
+  <div class="modal-overlay" id="prazosModal" onclick="closePrazosModal(event)">
+    <div class="modal-card" style="background:var(--carbon-black);color:var(--paper-white)" onclick="event.stopPropagation()">
+      <button class="modal-close" onclick="closePrazosModal()">&times;</button>
+      <h2 style="font-weight:600;font-size:1.05rem;margin:0 0 24px;color:var(--paper-white)">Prazos para organização de eventos</h2>
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:20px">
         <div style="background:rgba(255,255,255,0.07);border-radius:10px;padding:18px">
           <div style="font-size:0.65rem;text-transform:uppercase;letter-spacing:0.07em;opacity:0.45;margin-bottom:8px">Online</div>

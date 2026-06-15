@@ -331,7 +331,12 @@ function buildGeneralTaskName(tipo: string, _subtipo: string, dados: FormDados, 
     }
 
     default: {
-      const tipoHuman = humanizeRequestType(tipo);
+      const PREFIX_OVERRIDE: Record<string, string> = {
+        "conteudo-pdf-informativo": "PDF", "conteudo-pdf-ebook": "PDF",
+        "email-marketing": "E-mail", "email-marketing-online": "E-mail",
+        "atualizacao-material": "Atualização",
+      };
+      const tipoHuman = PREFIX_OVERRIDE[tipo] || humanizeRequestType(tipo);
       const titulo = str(dados.titulo) || str(dados.nome_completo) || "";
       let name = `[${tipoHuman}]`;
       if (setor && setor !== "Geral") name += ` ${setor}`;
@@ -678,6 +683,8 @@ function buildMateriaisImpressosDescription(dados: FormDados, user: UserData, ar
   addLine(items, "Cor", str(dados.corCamiseta));
   addLine(items, "Quantidade/tamanhos", str(dados.qtdTamanhos));
   addLine(items, "Fornecedor", str(dados.fornecedor));
+  addLine(items, "Conteúdo selecionado", str(dados.conteudoSelecionado));
+  addLine(items, "Link do QR Code", str(dados.qrLink));
   if (items.length > 0)
     blocks.push(`🖨️ MATERIAL IMPRESSO\n━━━━━━━━━━━━━━━━━━━━━━\n\n${items.join("\n")}`);
 
@@ -701,6 +708,7 @@ function buildEmailMarketingDescription(dados: FormDados, user: UserData, arquiv
   addLine(items, "Finalidade", str(dados.finalidade));
   addLine(items, "Tema e resumo", str(dados.tema));
   addLine(items, "Data de disparo", formatDate(dados.dataDisparo as string));
+  addLine(items, "Enviar por (remetente)", str(dados.remetente));
   addLine(items, "Assinatura do e-mail", str(dados.assinaturaEmail));
   if (items.length > 0)
     blocks.push(`✉️ E-MAIL MARKETING\n━━━━━━━━━━━━━━━━━━━━━━\n\n${items.join("\n")}`);

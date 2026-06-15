@@ -60,6 +60,10 @@
         <input type="date" id="dataDisparo" required>
       </div>
       <div class="field">
+        <label>Esta mensagem deve ser enviada por meio de qual endereço de e-mail? (opcional)</label>
+        <input type="text" id="remetente" placeholder="Ex: marketing@svninvest.com.br">
+      </div>
+      <div class="field">
         <label>Base para disparo (opcional)</label>
         <div class="file-input-wrapper">
           <label class="file-input-btn" for="baseDisparo">Escolher arquivo (.xlsx, .csv)</label>
@@ -103,6 +107,7 @@
         finalidade: document.getElementById('finalidade').value,
         tema: document.getElementById('tema').value,
         dataDisparo: document.getElementById('dataDisparo').value,
+        remetente: document.getElementById('remetente')?.value || '',
         assinaturaEmail: document.getElementById('assinaturaEmail').value,
       };
       await FormCore.submit({ tipo: TIPO, dados: dados, files: [{ inputId: 'baseDisparo', field: 'arquivo' }] });

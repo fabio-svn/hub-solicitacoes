@@ -6,6 +6,7 @@ import { solicitacoesTable, arquivosTable, activityLogTable, cartaoAprovacoesTab
 import { eq, desc, and, ne, sql, inArray } from "drizzle-orm";
 import { requireAuth, requireRole } from "../middleware/auth.middleware";
 import { createClickUpTask, getClickUpTaskStatus, type ArquivosMap } from "./clickup";
+import { FORM_SCHEMAS } from "../config/form-schemas";
 import { uploadToR2, deleteFromR2 } from "./r2";
 import { gerarArteParaSolicitacao, gerarCartaoFisicoPdf } from "../services/art-generator";
 import { logger } from "../lib/logger";
@@ -72,6 +73,14 @@ async function aplicarStatusAprovacao<T extends { id: number; tipo_solicitacao: 
     r.status = mapa.get(r.id) || STATUS_APROVACAO_DEFAULT;
   }
   return rows;
+}
+
+const STATUS_FINAIS_CANCELAMENTO = ["em-aprovacao", "entregue", "concluido", "concluida", "cancelado"];
+function podeCancelar(sol: { tipo_solicitacao: string; status: string; clickup_task_id: string | null }): boolean {
+  if (!sol.clickup_task_id) return false;
+  if (FORM_SCHEMAS[sol.tipo_solicitacao]?.is_automation) return false;
+  if (STATUS_FINAIS_CANCELAMENTO.includes(sol.status)) return false;
+  return true;
 }
 
 const REQUIRED_FIELDS: Record<string, string[]> = {
@@ -640,7 +649,7 @@ router.get("/solicitacoes/:id", requireAuth, async (req, res): Promise<void> => 
     const arquivos = await db.select().from(arquivosTable).where(eq(arquivosTable.solicitacao_id, id));
 
     const [solComStatus] = await aplicarStatusAprovacao([{ ...solicitacao }]);
-    res.json({ ...solComStatus, arquivos });
+    res.json({ ...solComStatus, arquivos, canCancel: podeCancelar(solComStatus) });
   } catch (err) {
     logger.error({ err }, "Error getting solicitacao");
     res.status(500).json({ error: "Erro ao buscar solicitação" });
@@ -1004,6 +1013,58 @@ router.post("/solicitacoes/:id/aprovacao", requireAuth, async (req, res): Promis
   } catch (err) {
     logger.error({ err }, "Erro ao registrar aprovação");
     res.status(500).json({ error: "Erro ao registrar aprovação" });
+  }
+});
+
+router.post("/solicitacoes/:id/cancelar", requireAuth, async (req, res): Promise<void> => {
+  try {
+    const user = req.session.user!;
+    const id = parseInt(String(req.params.id), 10);
+    if (isNaN(id)) { res.status(400).json({ error: "ID inválido" }); return; }
+
+    const justificativa = String(req.body?.justificativa || "").trim();
+    if (justificativa.length < 3) { res.status(400).json({ error: "Informe uma justificativa para o cancelamento." }); return; }
+
+    const isAdmin = user.role === "admin" || user.role === "gestor";
+    const conditions: ReturnType<typeof eq>[] = [eq(solicitacoesTable.id, id)];
+    if (!isAdmin) conditions.push(eq(solicitacoesTable.user_email, user.email));
+    const [solicitacao] = await db.select().from(solicitacoesTable).where(and(...conditions));
+    if (!solicitacao) { res.status(404).json({ error: "Solicitação não encontrada" }); return; }
+
+    const [solComStatus] = await aplicarStatusAprovacao([{ ...solicitacao }]);
+    if (!podeCancelar(solComStatus)) { res.status(409).json({ error: "Esta solicitação não pode ser cancelada." }); return; }
+
+    const token = process.env.CLICKUP_API_TOKEN || "";
+    const comentario = `\u274c Cancelamento solicitado por ${user.name} em ${new Date().toLocaleDateString('pt-BR')}:\n${justificativa}`;
+    const r = await fetch(`https://api.clickup.com/api/v2/task/${solicitacao.clickup_task_id}/comment`, {
+      method: "POST",
+      headers: { "Authorization": token, "Content-Type": "application/json" },
+      body: JSON.stringify({ comment_text: comentario }),
+    });
+    if (!r.ok) {
+      const t = await r.text();
+      logger.error({ status: r.status, body: t }, "Erro ao postar comentario de cancelamento no ClickUp");
+      res.status(502).json({ error: "Não foi possível registrar o cancelamento no ClickUp." });
+      return;
+    }
+
+    logEventoBg(id, {
+      tipo: "warning",
+      origem: "usuario",
+      mensagem: `Cancelamento solicitado por ${user.name}: ${justificativa}`,
+      user_email: user.email,
+    });
+    await logAtividade({
+      userEmail: user.email, userName: user.name,
+      tipo: "cancelamento_solicitado", nivel: "warning",
+      solicitacaoId: id, tipoSolicitacao: solicitacao.tipo_solicitacao,
+      titulo: solicitacao.titulo || undefined,
+      detalhe: `${user.name} solicitou cancelamento da #${id}: ${justificativa}`,
+    });
+    res.json({ success: true });
+  } catch (err) {
+    logger.error({ err }, "Erro ao registrar cancelamento");
+    res.status(500).json({ error: "Erro ao registrar cancelamento" });
   }
 });
 

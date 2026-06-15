@@ -149,6 +149,8 @@
   <script>
     const params = new URLSearchParams(window.location.search);
     let subtipo = params.get('subtipo') || '';
+    const OGL_EBOOK_URL = 'https://store.portalsvn.com.br/observatorio-da-geracao-de-leads/';
+    if (subtipo === 'ebook') { window.location.replace(OGL_EBOOK_URL); }
     const TIPOS = { informativo: 'conteudo-pdf-informativo', ebook: 'conteudo-pdf-ebook' };
     window.addEventListener('pageshow', function(e) {
       if (e.persisted) {
@@ -158,6 +160,7 @@
     });
 
     function selectSubtipo(tipo) {
+      if (tipo === 'ebook') { window.location.href = OGL_EBOOK_URL; return; }
       subtipo = tipo;
       document.getElementById('cardInformativo').className = 'radio-card' + (tipo === 'informativo' ? ' selected' : '');
       document.getElementById('cardEbook').className = 'radio-card' + (tipo === 'ebook' ? ' selected' : '');

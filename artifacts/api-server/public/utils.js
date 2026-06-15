@@ -225,3 +225,25 @@ function humanizeValue(key, value) {
   }
   return value;
 }
+
+// ── Modal: helper compartilhado para modais padrão (.modal-overlay/.modal-card/.modal-close) ──
+window.Modal = (function () {
+  let escHandler = null;
+  function open(id) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.classList.add('visible');
+    document.body.style.overflow = 'hidden';
+    escHandler = function (e) { if (e.key === 'Escape') close(id); };
+    document.addEventListener('keydown', escHandler);
+  }
+  function close(id, event) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    if (event && event.target !== el) return; // clique dentro do card não fecha
+    el.classList.remove('visible');
+    document.body.style.overflow = '';
+    if (escHandler) { document.removeEventListener('keydown', escHandler); escHandler = null; }
+  }
+  return { open: open, close: close };
+})();

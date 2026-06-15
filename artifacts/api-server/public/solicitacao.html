@@ -629,7 +629,7 @@
     }
   </style>
 
-  <script src="utils.js?v=20260611f"></script>
+  <script src="utils.js?v=20260615a"></script>
   <script src="toast.js?v=20260603"></script>
   <script src="config.js?v=20260611f"></script>
   <script src="auth.js?v=20260611f"></script>
@@ -893,6 +893,16 @@
               </button>
             </div>
           </div>`) : '');
+
+      if (item.canCancel) {
+        headerRight.insertAdjacentHTML('beforeend', `
+          <button id="btnCancelarSol" onclick="abrirCancelarModal()" title="Cancelar solicitação"
+            style="display:inline-flex;align-items:center;gap:5px;height:32px;padding:0 12px;border-radius:8px;border:1px solid rgba(172,54,49,0.35);background:rgba(172,54,49,0.06);color:var(--ruby-red);cursor:pointer;font-family:'Nunito Sans',sans-serif;font-weight:600;font-size:0.82rem;transition:background 0.15s"
+            onmouseover="this.style.background='rgba(172,54,49,0.12)'" onmouseout="this.style.background='rgba(172,54,49,0.06)'">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+            Cancelar
+          </button>`);
+      }
     }
 
     /* ── renderFluxo (horizontal rail) ─────────── */
@@ -1722,6 +1732,41 @@
 
     let _deleteTargetId = null;
 
+    function abrirCancelarModal() {
+      const erro = document.getElementById('cancelarErro'); if (erro) erro.style.display = 'none';
+      const ta = document.getElementById('cancelarJustificativa'); if (ta) ta.value = '';
+      Modal.open('cancelarModal');
+      setTimeout(() => { const t = document.getElementById('cancelarJustificativa'); if (t) t.focus(); }, 60);
+    }
+    function fecharCancelarModal(e) { Modal.close('cancelarModal', e); }
+    async function confirmarCancelamento() {
+      const ta = document.getElementById('cancelarJustificativa');
+      const erro = document.getElementById('cancelarErro');
+      const justificativa = (ta.value || '').trim();
+      if (justificativa.length < 3) { erro.textContent = 'Descreva o motivo do cancelamento.'; erro.style.display = 'block'; return; }
+      const btn = document.getElementById('cancelarConfirmBtn');
+      btn.disabled = true; btn.textContent = 'Cancelando...';
+      try {
+        const res = await fetch('/api/solicitacoes/' + solicitacaoId + '/cancelar', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ justificativa })
+        });
+        const d = await res.json().catch(() => ({}));
+        if (res.ok) {
+          fecharCancelarModal();
+          if (typeof showToast === 'function') showToast('Cancelamento registrado. O time foi avisado no ClickUp.', 'success');
+          const b = document.getElementById('btnCancelarSol');
+          if (b) b.outerHTML = '<span style="display:inline-flex;align-items:center;gap:5px;height:32px;padding:0 11px;border-radius:8px;background:rgba(172,54,49,0.08);color:var(--ruby-red);font-size:0.8rem;font-weight:600">Cancelamento solicitado</span>';
+        } else {
+          erro.textContent = d.error || 'Não foi possível cancelar.'; erro.style.display = 'block';
+          btn.disabled = false; btn.textContent = 'Confirmar cancelamento';
+        }
+      } catch (e) {
+        erro.textContent = 'Erro de conexão. Tente novamente.'; erro.style.display = 'block';
+        btn.disabled = false; btn.textContent = 'Confirmar cancelamento';
+      }
+    }
+
     function abrirModalExcluir(id) {
       _deleteTargetId = id;
       document.getElementById('deleteModal').style.display = 'flex';
@@ -2146,5 +2191,18 @@
     </div>
   </div>
 </div>
+  <div class="modal-overlay" id="cancelarModal" onclick="fecharCancelarModal(event)">
+    <div class="modal-card" style="max-width:480px" onclick="event.stopPropagation()">
+      <button class="modal-close" onclick="fecharCancelarModal()">&times;</button>
+      <h3 style="font-family:'Taviraj',serif;margin:0 0 6px;font-size:1.2rem">Cancelar solicitação</h3>
+      <p style="font-size:0.85rem;opacity:0.65;line-height:1.55;margin:0 0 16px">Explique o motivo do cancelamento. A justificativa será registrada como comentário na tarefa do ClickUp para o time.</p>
+      <textarea id="cancelarJustificativa" placeholder="Motivo do cancelamento..." style="width:100%;min-height:96px;padding:12px;border:1px solid var(--border-light);border-radius:8px;font-family:inherit;font-size:0.9rem;resize:vertical;box-sizing:border-box"></textarea>
+      <div id="cancelarErro" style="display:none;color:var(--ruby-red);font-size:0.8rem;margin-top:8px"></div>
+      <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:18px">
+        <button onclick="fecharCancelarModal()" style="padding:9px 16px;border-radius:8px;border:1px solid var(--border-light);background:none;cursor:pointer;font-family:inherit;font-weight:600;font-size:0.85rem">Voltar</button>
+        <button id="cancelarConfirmBtn" onclick="confirmarCancelamento()" style="padding:9px 16px;border-radius:8px;border:none;background:var(--ruby-red);color:#fff;cursor:pointer;font-family:inherit;font-weight:600;font-size:0.85rem">Confirmar cancelamento</button>
+      </div>
+    </div>
+  </div>
 </body>
 </html>

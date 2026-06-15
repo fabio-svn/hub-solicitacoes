@@ -198,6 +198,20 @@
       }
     });
     const SLA = { menos30: 'até 5 dias úteis', menos100: 'até 10 dias úteis', mais100: 'até 15 dias úteis' };
+    const SLA_DAYS = { menos30: 5, menos100: 10, mais100: 15 };
+    function addBusinessDays(start, n) {
+      const d = new Date(start); let added = 0;
+      while (added < n) { d.setDate(d.getDate() + 1); const w = d.getDay(); if (w !== 0 && w !== 6) added++; }
+      return d;
+    }
+    function toISODate(d) { return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
+    function aplicarPrazoMinimo(tamanho) {
+      const dias = SLA_DAYS[tamanho]; const prazo = document.getElementById('prazoEntrega');
+      if (!dias || !prazo) return;
+      const minIso = toISODate(addBusinessDays(new Date(), dias));
+      prazo.min = minIso;
+      if (prazo.value && prazo.value < minIso) prazo.value = '';
+    }
 
     function selectSubtipo(tipo) {
       subtipo = tipo;
@@ -239,6 +253,7 @@
             const el = document.getElementById('slaPrazo');
             el.style.display = 'block';
             el.textContent = `Prazo estimado: ${sla}`;
+            aplicarPrazoMinimo(r.value);
           }));
 
           document.querySelectorAll('input[name="tipoCriacao"]').forEach(r => r.addEventListener('change', () => {
@@ -334,6 +349,26 @@
 
     async function submitForm() {
       if (!validateRequiredFields()) return;
+      {
+        const _tam = document.querySelector('input[name="tamanho"]:checked')?.value;
+        const _prazo = document.getElementById('prazoEntrega');
+        const _dias = SLA_DAYS[_tam];
+        if (_dias && _prazo && _prazo.value) {
+          const _minIso = toISODate(addBusinessDays(new Date(), _dias));
+          if (_prazo.value < _minIso) {
+            const _fw = _prazo.closest('.field');
+            if (_fw) {
+              _fw.classList.add('field-invalid');
+              let _er = _fw.querySelector('.field-error');
+              if (!_er) { _er = document.createElement('div'); _er.className = 'field-error'; _prazo.parentElement.appendChild(_er); }
+              const [_y,_m,_d] = _minIso.split('-');
+              _er.textContent = `Para esse tamanho, a data mínima de entrega é ${_d}/${_m}/${_y} (prazo do time).`;
+              _fw.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+            return;
+          }
+        }
+      }
 
       const tipoCriacao = document.querySelector('input[name="tipoCriacao"]:checked')?.value;
       if (!isAtualizar && tipoCriacao === 'base-existente' && !document.getElementById('arquivoBaseNova').files[0]) {
