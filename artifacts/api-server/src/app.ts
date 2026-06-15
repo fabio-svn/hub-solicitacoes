@@ -12,6 +12,7 @@ import { randomBytes } from "crypto";
 import router from "./routes";
 import authRouter from "./routes/auth";
 import { MARCAS_OPTS, CONTRATOS_OPTS, SETORES_LIST, CARGOS_OPTS } from "./config/form-schemas";
+import { UNIDADES } from "./config/unidades";
 import { logger } from "./lib/logger";
 import { pool } from "@workspace/db";
 import { ApiError } from "./utils/api-error";
@@ -124,6 +125,7 @@ app.get("/api/config", (_req, res) => {
     contratos: CONTRATOS_OPTS,
     setores: SETORES_LIST,
     cargos: CARGOS_OPTS,
+    unidades: UNIDADES,
   });
 });
 

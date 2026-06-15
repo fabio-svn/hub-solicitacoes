@@ -3,6 +3,7 @@ import { randomInt } from "crypto";
 import { db, usersTable, userTipoAssignmentsTable, tipoClickupListTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
 import { mapClickUpStatus } from "../config/clickup-status";
+import { UNIDADES_ENDERECOS } from "../config/unidades";
 import { FORM_SCHEMAS, SETOR_CODIGO_MAP, TIPOS_COM_CLICKUP } from "../config/form-schemas";
 
 const CLICKUP_API_TOKEN = process.env.CLICKUP_API_TOKEN || "";
@@ -822,23 +823,8 @@ async function setEventosCustomFields(taskId: string, dados: FormDados, arquivos
   }
 
   const localEvento = str(dados.localEvento as string);
-  // UNIDADES_ENDERECOS é definido inline para manter o mapeamento próximo ao uso;
-  // se outros módulos precisarem, extrair para um arquivo de constantes compartilhado.
+  // UNIDADES_ENDERECOS vem de ../config/unidades (fonte única).
   if (localEvento === "unidade") {
-    const UNIDADES_ENDERECOS: Record<string, string> = {
-      "SVN Aracaju":              "R. Francisco Duarte Ramos, 34 - Jardins, Aracaju - SE",
-      "SVN Campo Grande":         "Edifício Atrium - R. Euclides da Cunha, 1039 - Loja 3 - Jardim dos Estados",
-      "SVN Cascavel":             "Av. Piquiri, 17 - Salas 01 e 02 - Centro",
-      "SVN Cuiabá":               "R. Pres. Castelo Branco, 277 - Quilombo",
-      "SVN Curitiba":             "Praça São Paulo da Cruz, 50 - Sala 1605 - Juveve, Curitiba - PR",
-      "SVN Foz do Iguaçu":        "R. Alm. Barroso, 1139 - Centro",
-      "SVN Londrina":             "Av. Higienópolis, 602 - Sala 2 - Centro, Londrina - PR",
-      "SVN Maringá":              "Av. Cerro Azul, 123 - Zona 2, Maringá - PR",
-      "SVN Salvador":             "Torre Nova York, Av. Tancredo Neves, 2539 - Sala 2104, Salvador - BA",
-      "SVN São Paulo":            "Av. Dr. Cardoso de Melo, 1855 - Conjunto 51 - Vila Olímpia, São Paulo - SP",
-      "SVN Toledo":               "Rua Nossa Senhora do Rocio, 2279 - Sala 02 - Jardim La Salle, Toledo - PR",
-      "SVN Vitória da Conquista":  "Av. Jorge Teixeira, 29 - Salas 16 e 17",
-    };
     const unidade = str(dados.unidadeSVN as string);
     const enderecoUnidade = UNIDADES_ENDERECOS[unidade];
     if (enderecoUnidade) {
@@ -1001,20 +987,6 @@ function buildEventosCustomFieldsArray(
 
   const localEvento = str(dados.localEvento as string);
   if (localEvento === "unidade") {
-    const UNIDADES_ENDERECOS: Record<string, string> = {
-      "SVN Aracaju":              "R. Francisco Duarte Ramos, 34 - Jardins, Aracaju - SE",
-      "SVN Campo Grande":         "Edifício Atrium - R. Euclides da Cunha, 1039 - Loja 3 - Jardim dos Estados",
-      "SVN Cascavel":             "Av. Piquiri, 17 - Salas 01 e 02 - Centro",
-      "SVN Cuiabá":               "R. Pres. Castelo Branco, 277 - Quilombo",
-      "SVN Curitiba":             "Praça São Paulo da Cruz, 50 - Sala 1605 - Juveve, Curitiba - PR",
-      "SVN Foz do Iguaçu":        "R. Alm. Barroso, 1139 - Centro",
-      "SVN Londrina":             "Av. Higienópolis, 602 - Sala 2 - Centro, Londrina - PR",
-      "SVN Maringá":              "Av. Cerro Azul, 123 - Zona 2, Maringá - PR",
-      "SVN Salvador":             "Torre Nova York, Av. Tancredo Neves, 2539 - Sala 2104, Salvador - BA",
-      "SVN São Paulo":            "Av. Dr. Cardoso de Melo, 1855 - Conjunto 51 - Vila Olímpia, São Paulo - SP",
-      "SVN Toledo":               "Rua Nossa Senhora do Rocio, 2279 - Sala 02 - Jardim La Salle, Toledo - PR",
-      "SVN Vitória da Conquista":  "Av. Jorge Teixeira, 29 - Salas 16 e 17",
-    };
     const unidade = str(dados.unidadeSVN as string);
     const enderecoUnidade = UNIDADES_ENDERECOS[unidade];
     if (enderecoUnidade) dadosLocal.localEndereco = enderecoUnidade;

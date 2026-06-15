@@ -28,6 +28,7 @@ const _configReady = Promise.all([
   if (cfg.urlLogoBranca) URL_LOGO_BRANCA = cfg.urlLogoBranca;
   if (cfg.urlLogoPreta) URL_LOGO_PRETA = cfg.urlLogoPreta;
   if (cfg.emailUpload) EMAIL_UPLOAD = cfg.emailUpload;
+  if (Array.isArray(cfg.unidades) && cfg.unidades.length) UNIDADES_SVN = cfg.unidades;
   if (cfg.r2PublicUrl) {
     PACOTE_PADRAO_IMAGENS = [
       cfg.r2PublicUrl + '/Convite.png',
@@ -395,7 +396,7 @@ const OPCOES_RATEIO = [
   "Área", "Outros",
 ];
 
-const UNIDADES_SVN = [
+let UNIDADES_SVN = [
   { nome: "SVN Aracaju", endereco: "R. Francisco Duarte Ramos, 34 - Jardins, Aracaju - SE" },
   { nome: "SVN Campo Grande", endereco: "Edifício Atrium - R. Euclides da Cunha, 1039 - Loja 3 - Jardim dos Estados" },
   { nome: "SVN Cascavel", endereco: "Av. Piquiri, 17 - Salas 01 e 02 - Centro" },
