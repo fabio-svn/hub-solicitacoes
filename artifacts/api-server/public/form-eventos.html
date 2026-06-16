@@ -1406,37 +1406,10 @@
     }
     function closePacoteModal(e) { if (!e || e.target === document.getElementById('pacoteModal')) document.getElementById('pacoteModal').classList.remove('visible'); }
 
+    // Validação delegada ao core: escopo = step ativo. O core já pula
+    // .conditional-fields fechado e trata checkbox/radio obrigatório.
     function validateRequiredFields() {
-      document.querySelectorAll('.field-invalid').forEach(el => el.classList.remove('field-invalid'));
-      const invalidFields = [];
-      document.querySelectorAll('input[required], select[required], textarea[required]').forEach(input => {
-        const step = input.closest('.form-step');
-        if (step && !step.classList.contains('active')) return;
-        const conditional = input.closest('.conditional-fields');
-        if (conditional && !conditional.classList.contains('open')) return;
-        const isEmpty = input.type === 'radio' || input.type === 'checkbox'
-          ? !document.querySelector(`input[name="${input.name}"]:checked`)
-          : !input.value.trim();
-        if (isEmpty) {
-          const fieldWrapper = input.closest('.field');
-          if (fieldWrapper) {
-            fieldWrapper.classList.add('field-invalid');
-            let errorEl = fieldWrapper.querySelector('.field-error');
-            if (!errorEl) {
-              errorEl = document.createElement('div');
-              errorEl.className = 'field-error';
-              input.parentElement.appendChild(errorEl);
-            }
-            errorEl.textContent = 'Este campo é obrigatório.';
-            invalidFields.push(fieldWrapper);
-          }
-        }
-      });
-      if (invalidFields.length > 0) {
-        invalidFields[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
-        return false;
-      }
-      return true;
+      return FormCore.validateRequired(null, document.querySelector('.form-step.active'));
     }
 
     async function submitForm() {
@@ -1644,19 +1617,6 @@
         if(window.formUnlockUI)window.formUnlockUI(btn); else { btn.disabled = false; btn.textContent = 'Enviar'; }
       }
     }
-
-    document.addEventListener('input', function(e) {
-      const field = e.target.closest('.field');
-      if (field && field.classList.contains('field-invalid') && e.target.value.trim()) {
-        field.classList.remove('field-invalid');
-      }
-    });
-    document.addEventListener('change', function(e) {
-      const field = e.target.closest('.field');
-      if (field && field.classList.contains('field-invalid')) {
-        field.classList.remove('field-invalid');
-      }
-    });
 
     function openPrazosModal() { Modal.open('prazosModal'); }
     function closePrazosModal(e) { Modal.close('prazosModal', e); }

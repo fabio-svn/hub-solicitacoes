@@ -114,12 +114,15 @@ window.FormCore = (function () {
   // validateRequired(extraValidate?, scopeEl?)
   //  - scopeEl: se passado, valida só dentro dele (ex.: um step). Default: document.
   //  - trata checkbox/radio obrigatório (grupo precisa ter ao menos 1 :checked).
+  //  - ignora campos dentro de .conditional-fields que não estejam .open (campo oculto).
   function validateRequired(extraValidate, scopeEl) {
     const root = scopeEl || document;
     root.querySelectorAll('.field-invalid').forEach(function (el) { el.classList.remove('field-invalid'); });
     const invalidFields = [];
     const gruposVistos = {};
     root.querySelectorAll('input[required], select[required], textarea[required]').forEach(function (input) {
+      const cond = input.closest('.conditional-fields');
+      if (cond && !cond.classList.contains('open')) return;   // bloco condicional fechado: não valida
       let vazio;
       if (input.type === 'checkbox' || input.type === 'radio') {
         if (gruposVistos[input.name]) return;           // valida o grupo uma vez só
