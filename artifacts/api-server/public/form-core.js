@@ -1,5 +1,11 @@
-/* form-core.js — plumbing compartilhado dos forms do Hub SVN. v2 (rascunho opcional)
- * FormCore.initForm({tipo, onReady, draft}); validateRequired(extra); markInvalid(); submit({tipo, dados, files}); */
+/* form-core.js — plumbing compartilhado dos forms do Hub SVN. v3
+ * API:
+ *   FormCore.initForm({tipo, onReady, draft, redirectPath, activeRoute, stepper})
+ *   FormCore.validateRequired(extraValidate, scopeEl)   // scopeEl opcional: limita a um step
+ *   FormCore.markInvalid(invalidFields, containerEl, msg)
+ *   FormCore.submit({tipo, subtipo, maturidade, dados, files, resumo, btnId})
+ *   FormCore.renderStepper(el, steps, current) / attachStepper(el, steps)
+ */
 window.FormCore = (function () {
   function _bindPageshow() {
     window.addEventListener('pageshow', function (e) {
@@ -9,13 +15,21 @@ window.FormCore = (function () {
       }
     });
   }
+  // Limpa o estado .field-invalid assim que o usuário corrige o campo.
+  // Cobre text/select/textarea (via value) e checkbox/radio (via :checked no grupo).
   function _bindClearInvalid() {
     ['input', 'change'].forEach(function (evt) {
       document.addEventListener(evt, function (e) {
-        const field = e.target.closest && e.target.closest('.field');
-        if (field && field.classList.contains('field-invalid') && (e.target.value || '').trim()) {
-          field.classList.remove('field-invalid');
+        const t = e.target;
+        const field = t.closest && t.closest('.field');
+        if (!field || !field.classList.contains('field-invalid')) return;
+        let corrigido;
+        if (t.type === 'checkbox' || t.type === 'radio') {
+          corrigido = !!(t.name && document.querySelector('input[name="' + t.name + '"]:checked'));
+        } else {
+          corrigido = (t.value || '').trim() !== '';
         }
+        if (corrigido) field.classList.remove('field-invalid');
       });
     });
   }
@@ -88,19 +102,35 @@ window.FormCore = (function () {
     return true;
   }
 
-  function validateRequired(extraValidate) {
-    document.querySelectorAll('.field-invalid').forEach(function (el) { el.classList.remove('field-invalid'); });
+  // Helper interno: cria/atualiza o .field-error SEMPRE dentro do wrapper .field (posição única).
+  function _setFieldError(wrap, msg) {
+    if (!wrap) return;
+    wrap.classList.add('field-invalid');
+    let err = wrap.querySelector('.field-error');
+    if (!err) { err = document.createElement('div'); err.className = 'field-error'; wrap.appendChild(err); }
+    err.textContent = msg || 'Este campo é obrigatório.';
+  }
+
+  // validateRequired(extraValidate?, scopeEl?)
+  //  - scopeEl: se passado, valida só dentro dele (ex.: um step). Default: document.
+  //  - trata checkbox/radio obrigatório (grupo precisa ter ao menos 1 :checked).
+  function validateRequired(extraValidate, scopeEl) {
+    const root = scopeEl || document;
+    root.querySelectorAll('.field-invalid').forEach(function (el) { el.classList.remove('field-invalid'); });
     const invalidFields = [];
-    document.querySelectorAll('input[required], select[required], textarea[required]').forEach(function (input) {
-      if (!(input.value || '').trim()) {
+    const gruposVistos = {};
+    root.querySelectorAll('input[required], select[required], textarea[required]').forEach(function (input) {
+      let vazio;
+      if (input.type === 'checkbox' || input.type === 'radio') {
+        if (gruposVistos[input.name]) return;           // valida o grupo uma vez só
+        gruposVistos[input.name] = true;
+        vazio = !root.querySelector('input[name="' + input.name + '"]:checked');
+      } else {
+        vazio = !(input.value || '').trim();
+      }
+      if (vazio) {
         const wrap = input.closest('.field');
-        if (wrap) {
-          wrap.classList.add('field-invalid');
-          let err = wrap.querySelector('.field-error');
-          if (!err) { err = document.createElement('div'); err.className = 'field-error'; input.parentElement.appendChild(err); }
-          err.textContent = 'Este campo é obrigatório.';
-          invalidFields.push(wrap);
-        }
+        if (wrap) { _setFieldError(wrap, 'Este campo é obrigatório.'); invalidFields.push(wrap); }
       }
     });
     if (typeof extraValidate === 'function') { try { extraValidate(invalidFields); } catch (e) { console.error(e); } }
@@ -111,14 +141,16 @@ window.FormCore = (function () {
   function markInvalid(invalidFields, containerEl, msg) {
     const field = containerEl && containerEl.closest('.field');
     if (field && !field.classList.contains('field-invalid')) {
-      field.classList.add('field-invalid');
-      let err = field.querySelector('.field-error');
-      if (!err) { err = document.createElement('div'); err.className = 'field-error'; containerEl.parentElement.appendChild(err); }
-      err.textContent = msg || 'Campo obrigatório.';
+      _setFieldError(field, msg || 'Campo obrigatório.');
       invalidFields.push(field);
     }
   }
 
+  // submit({tipo, subtipo?, maturidade?, dados, files?, resumo?, btnId?, draftTipo?})
+  //  - tipo: tipo_solicitacao enviado ao backend (ex.: 'conteudo-pdf-informativo')
+  //  - draftTipo: namespace do rascunho, igual ao tipo do initForm (ex.: 'criacao-pdf').
+  //               Default = tipo. Usado só pra limpar o rascunho no sucesso.
+  //  - resumo: campos extras mesclados no svn_ultimo_resumo (ex.: titulo, natureza, materiais)
   async function submit(opts) {
     const tipo = opts.tipo;
     const dados = opts.dados || {};
@@ -127,6 +159,8 @@ window.FormCore = (function () {
 
     const fd = new FormData();
     fd.append('tipo_solicitacao', tipo);
+    if (opts.subtipo != null && opts.subtipo !== '') fd.append('subtipo', opts.subtipo);
+    if (opts.maturidade != null && opts.maturidade !== '') fd.append('maturidade', opts.maturidade);
     fd.append('dados', JSON.stringify(dados));
     (opts.files || []).forEach(function (f) {
       const inputId = typeof f === 'string' ? f : f.inputId;
@@ -145,9 +179,9 @@ window.FormCore = (function () {
     } catch (_) {}
 
     if (res.ok) {
-      try { sessionStorage.removeItem('form-' + tipo); } catch (_) {}
+      try { sessionStorage.removeItem('form-' + (opts.draftTipo || tipo)); } catch (_) {}
       try {
-        sessionStorage.setItem('svn_ultimo_resumo', JSON.stringify({
+        const baseResumo = {
           tipo_id: tipo,
           tipo: (typeof TIPO_SOLICITACAO_LABELS !== 'undefined' && TIPO_SOLICITACAO_LABELS[tipo]) || tipo,
           solicitante: Auth.getUserName ? Auth.getUserName() : '',
@@ -155,7 +189,8 @@ window.FormCore = (function () {
           data: new Date().toLocaleDateString('pt-BR'),
           hora: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
           id: d.id,
-        }));
+        };
+        sessionStorage.setItem('svn_ultimo_resumo', JSON.stringify(Object.assign(baseResumo, opts.resumo || {})));
       } catch (_) {}
       window.location.replace('/thankyou.html');
       return true;
