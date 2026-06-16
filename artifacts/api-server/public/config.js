@@ -277,21 +277,21 @@ const SELOS_ASSESSOR = [
 ];
 
 const STATUS_SOLICITACAO = [
-  { id: "recebido",               label: "Recebido",                   bg: "#4D545F", text: "#FFFFFF",  cor: "--carbon-black"  },
-  { id: "alinhamentos",           label: "Alinhamentos",               bg: "#2563C0", text: "#FFFFFF",  cor: "--sage-green"    },
-  { id: "em-analise",             label: "Em análise",                 bg: "#C98A00", text: "#FFFFFF",  cor: "--ruby-red"      },
-  { id: "em-andamento",           label: "Em andamento",               bg: "#C98A00", text: "#FFFFFF",  cor: "--leather-brown" },
-  { id: "em-producao",            label: "Em produção",                bg: "#C85C00", text: "#FFFFFF",  cor: "--ruby-red"      },
-  { id: "em-revisao",             label: "Em revisão",                 bg: "#7438B0", text: "#FFFFFF",  cor: "--leather-brown" },
-  { id: "em-aprovacao",           label: "Em aprovação",               bg: "#2563C0", text: "#FFFFFF",  cor: "--sage-green"    },
-  { id: "cotacao-aprovacao",      label: "Em cotação / aprovação",     bg: "#2563C0", text: "#FFFFFF",  cor: "--leather-brown" },
-  { id: "aguardando",             label: "Aguardando informação",      bg: "#8A6040", text: "#FFFFFF",  cor: "--leather-brown" },
-  { id: "aguardando-rh",          label: "Aguardando aprovação do RH", bg: "#8A6040", text: "#FFFFFF",  cor: "--leather-brown" },
-  { id: "aguardando-pagamento",   label: "Aguardando pagamento",       bg: "#8A6040", text: "#FFFFFF",  cor: "--leather-brown" },
-  { id: "aguardando-finalizacao", label: "Aguardando finalização",     bg: "#7438B0", text: "#FFFFFF",  cor: "--leather-brown" },
-  { id: "concluido",              label: "Concluído",                  bg: "#0A9060", text: "#FFFFFF",  cor: "--sage-green"    },
-  { id: "cancelado",              label: "Cancelado",                  bg: "#C82828", text: "#FFFFFF",  cor: "--carbon-black"  },
-  { id: "em-espera",              label: "Em espera",                  bg: "#4D545F", text: "#FFFFFF",  cor: "--carbon-black"  },
+  { id: "recebido",               label: "Recebido",                   bg: "#4D545F", text: "#FFFFFF"  },
+  { id: "alinhamentos",           label: "Alinhamentos",               bg: "#2563C0", text: "#FFFFFF"    },
+  { id: "em-analise",             label: "Em análise",                 bg: "#C98A00", text: "#FFFFFF"      },
+  { id: "em-andamento",           label: "Em andamento",               bg: "#C98A00", text: "#FFFFFF" },
+  { id: "em-producao",            label: "Em produção",                bg: "#C85C00", text: "#FFFFFF"      },
+  { id: "em-revisao",             label: "Em revisão",                 bg: "#7438B0", text: "#FFFFFF" },
+  { id: "em-aprovacao",           label: "Em aprovação",               bg: "#2563C0", text: "#FFFFFF"    },
+  { id: "cotacao-aprovacao",      label: "Em cotação / aprovação",     bg: "#2563C0", text: "#FFFFFF" },
+  { id: "aguardando",             label: "Aguardando informação",      bg: "#8A6040", text: "#FFFFFF" },
+  { id: "aguardando-rh",          label: "Aguardando aprovação do RH", bg: "#8A6040", text: "#FFFFFF" },
+  { id: "aguardando-pagamento",   label: "Aguardando pagamento",       bg: "#8A6040", text: "#FFFFFF" },
+  { id: "aguardando-finalizacao", label: "Aguardando finalização",     bg: "#7438B0", text: "#FFFFFF" },
+  { id: "concluido",              label: "Concluído",                  bg: "#0A9060", text: "#FFFFFF"    },
+  { id: "cancelado",              label: "Cancelado",                  bg: "#C82828", text: "#FFFFFF"  },
+  { id: "em-espera",              label: "Em espera",                  bg: "#4D545F", text: "#FFFFFF"  },
   { id: "gerando",                label: "Gerando arte",               bg: "#dbeafe", text: "#1e40af" },
   { id: "erro",                   label: "Erro",                       bg: "#fee2e2", text: "#991b1b" },
   { id: "aguardando-validacao",   label: "Aguardando validação",       bg: "#fee2e2", text: "#b91c1c" },
@@ -301,12 +301,12 @@ const STATUS_SOLICITACAO = [
   { id: "arte-finalizada",        label: "Arte finalizada",            bg: "#fef9c3", text: "#a16207" },
   { id: "envio-grafica",          label: "Envio gráfica",              bg: "#dbeafe", text: "#1d4ed8" },
   { id: "envio-assessor",         label: "Envio assessor",             bg: "#dcfce7", text: "#15803d" },
-  { id: "reprovado",              label: "Reprovado",                  bg: "#fecaca", text: "#dc2626", cor: "--ruby-red" },
+  { id: "reprovado",              label: "Reprovado",                  bg: "#fecaca", text: "#dc2626" },
 ];
 
 const STATUS_MAP = Object.fromEntries(STATUS_SOLICITACAO.map(s => [s.id, s]));
 function getStatus(id) {
-  return STATUS_MAP[id] || { label: id, bg: '#f1f5f9', text: '#475569', cor: '--carbon-black' };
+  return STATUS_MAP[id] || { label: id, bg: '#f1f5f9', text: '#475569' };
 }
 
 let SETORES = [
