@@ -191,12 +191,6 @@
   <script src="form-core.js?v=20260611f"></script>
   <script>
     const TIPO = 'patrocinio';
-    window.addEventListener('pageshow', function(e) {
-      if (e.persisted) {
-        try { sessionStorage.removeItem('svn_ultimo_resumo'); } catch {}
-        window.location.reload();
-      }
-    });
 
     let _estados = [];
 
@@ -244,23 +238,7 @@
     }
 
     function validateStep(stepId) {
-      const step = document.getElementById(stepId);
-      step.querySelectorAll('.field-invalid').forEach(el => el.classList.remove('field-invalid'));
-      const invalidFields = [];
-      step.querySelectorAll('input[required], select[required], textarea[required]').forEach(input => {
-        if (!input.value.trim()) {
-          const fieldWrapper = input.closest('.field');
-          if (fieldWrapper) {
-            fieldWrapper.classList.add('field-invalid');
-            let errorEl = fieldWrapper.querySelector('.field-error');
-            if (!errorEl) { errorEl = document.createElement('div'); errorEl.className = 'field-error'; input.parentElement.appendChild(errorEl); }
-            errorEl.textContent = 'Este campo é obrigatório.';
-            invalidFields.push(fieldWrapper);
-          }
-        }
-      });
-      if (invalidFields.length > 0) { invalidFields[0].scrollIntoView({ behavior: 'smooth', block: 'center' }); return false; }
-      return true;
+      return FormCore.validateRequired(null, document.getElementById(stepId));
     }
 
     function goToStep2() {
@@ -280,11 +258,8 @@
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
-    async function submitForm() {
+    function submitForm() {
       if (!validateStep('step2')) return;
-      const btn = document.getElementById('btnSubmit');
-      btn.disabled = true; btn.textContent = 'Enviando...'; if(window.formLockUI)window.formLockUI(btn);
-
       const dados = {
         nome: Auth.getUserName(),
         telefone: document.getElementById('telefone').value,
@@ -306,40 +281,17 @@
         orcamentoTotal: document.getElementById('orcamentoTotal').value,
         materiais: [...document.querySelectorAll('input[name="adicional"]:checked')].map(function (c) { return c.value; }),
       };
-
-      const formData = new FormData();
-      formData.append('tipo_solicitacao', TIPO);
-      formData.append('dados', JSON.stringify(dados));
-      const midiaInput = document.getElementById('midiaKit');
-      if (midiaInput?.files[0]) formData.append('arquivo', midiaInput.files[0]);
-      const apoioInput = document.getElementById('arquivoApoio');
-      if (apoioInput?.files[0]) formData.append('arquivo2', apoioInput.files[0]);
-
-      const res = await fetch('/api/solicitacoes', { method: 'POST', body: formData });
-      const d = await res.json().catch(() => ({}));
-      if (res.ok) {
-        try {
-          sessionStorage.setItem('svn_ultimo_resumo', JSON.stringify({
-            tipo: TIPO_SOLICITACAO_LABELS[TIPO] || TIPO,
-            solicitante: Auth.getUserName(),
-            setor: dados.setor,
-            data: new Date().toLocaleDateString('pt-BR'),
-            hora: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
-            id: d.id,
-          }));
-        } catch {}
-        window.location.replace('/thankyou.html');
-      } else {
-        const errEl = document.getElementById('submitError');
-        if (errEl) { errEl.style.display = 'block'; errEl.textContent = d.error || 'Erro ao enviar. Tente novamente.'; }
-        if(window.formUnlockUI)window.formUnlockUI(btn); else { btn.disabled = false; btn.textContent = 'Enviar'; }
-      }
+      FormCore.submit({
+        tipo: TIPO,
+        dados: dados,
+        files: [
+          { inputId: 'midiaKit', field: 'arquivo' },
+          { inputId: 'arquivoApoio', field: 'arquivo2' },
+        ],
+        resumo: { setor: dados.setor },
+        btnId: 'btnSubmit',
+      });
     }
-
-    document.addEventListener('change', function(e) {
-      const field = e.target.closest('.field');
-      if (field && field.classList.contains('field-invalid') && e.target.value.trim()) field.classList.remove('field-invalid');
-    });
 
     init();
   </script>

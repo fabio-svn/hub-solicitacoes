@@ -244,12 +244,6 @@
     let subtipo = params.get('subtipo') || '';
     let isAtualizacao = subtipo === 'atualizacao';
     const TIPOS = { dados: 'pagina-assessores-dados', atualizacao: 'pagina-assessores-atualizacao' };
-    window.addEventListener('pageshow', function(e) {
-      if (e.persisted) {
-        try { sessionStorage.removeItem('form-assessores'); } catch {}
-        window.location.reload();
-      }
-    });
     let depoimentos = [];
     let selectedSelos = new Set();
 
@@ -340,6 +334,7 @@
     function init() {
       FormCore.initForm({
         tipo: 'pagina-assessores',
+        draft: true,
         redirectPath: '/form-pagina-assessores.html',
         activeRoute: 'nova-solicitacao',
         onReady: function () {
@@ -351,7 +346,6 @@
           Auth.aplicarPerfilNoCampo('unidade', Auth.getUnidade());
           renderSelos();
           FileUpload.bind('fotoPerfil', 'fotoPerfilName', { accept: '.jpg,.jpeg,.png,.webp', maxMB: 50 });
-          restoreDraft();
         }
       });
     }
@@ -479,36 +473,7 @@
     }
 
     function validateRequiredFields() {
-      document.querySelectorAll('.field-invalid').forEach(el => el.classList.remove('field-invalid'));
-      const invalidFields = [];
-      document.querySelectorAll('input[required], select[required], textarea[required]').forEach(input => {
-        const step = input.closest('.form-step');
-        if (step && !step.classList.contains('active')) return;
-        const conditional = input.closest('.conditional-fields');
-        if (conditional && !conditional.classList.contains('open')) return;
-        const isEmpty = input.type === 'radio' || input.type === 'checkbox'
-          ? !document.querySelector(`input[name="${input.name}"]:checked`)
-          : !input.value.trim();
-        if (isEmpty) {
-          const fieldWrapper = input.closest('.field');
-          if (fieldWrapper) {
-            fieldWrapper.classList.add('field-invalid');
-            let errorEl = fieldWrapper.querySelector('.field-error');
-            if (!errorEl) {
-              errorEl = document.createElement('div');
-              errorEl.className = 'field-error';
-              input.parentElement.appendChild(errorEl);
-            }
-            errorEl.textContent = 'Este campo é obrigatório.';
-            invalidFields.push(fieldWrapper);
-          }
-        }
-      });
-      if (invalidFields.length > 0) {
-        invalidFields[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
-        return false;
-      }
-      return true;
+      return FormCore.validateRequired(null, document.querySelector('.form-step.active'));
     }
 
     function showSubmitError(msg) {
@@ -516,7 +481,7 @@
       if (el) { el.style.display = 'block'; el.textContent = msg; el.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
     }
 
-    async function submitForm() {
+    function submitForm() {
       if (isAtualizacao && camposSelecionados.size === 0) {
         document.getElementById('seletorInlineError').style.display = 'block';
         document.getElementById('seletorInline').scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -540,13 +505,7 @@
         return;
       }
 
-      const btn = document.getElementById('btnSubmit');
-      btn.disabled = true; btn.textContent = 'Enviando...'; if(window.formLockUI)window.formLockUI(btn);
-
       const validDepos = depoimentos.filter(d => d.nome && d.texto);
-      const formData = new FormData();
-      formData.append('tipo_solicitacao', TIPOS[subtipo] || TIPOS.dados);
-      formData.append('subtipo', subtipo);
       const dados = {
         nome: Auth.getUserName(),
         telefone: document.getElementById('telefone').value,
@@ -560,81 +519,16 @@
         selos: [...selectedSelos],
         depoimentos: validDepos,
       };
-      formData.append('dados', JSON.stringify(dados));
-
-      const photo = document.getElementById('fotoPerfil').files[0];
-      if (photo) formData.append('fotoPerfil', photo);
-
-      try {
-        const res = await fetch('/api/solicitacoes', { method: 'POST', body: formData });
-        const d = await res.json().catch(() => ({}));
-        if (res.ok) {
-          sessionStorage.removeItem('form-assessores');
-          try {
-            const resumo = {
-              tipo: TIPO_SOLICITACAO_LABELS[formData.get('tipo_solicitacao')] || formData.get('tipo_solicitacao'),
-              subtipo: formData.get('subtipo') || '', titulo: dados.nome_completo || dados.nomeCompleto || '',
-              solicitante: dados.nome || Auth.getUserName(),
-              data: new Date().toLocaleDateString('pt-BR'),
-              hora: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
-              materiais: dados.materiais || [],
-              natureza: dados.natureza || '',
-              maturidade: dados.maturidade || '',
-              id: d.id,
-            };
-            sessionStorage.setItem('svn_ultimo_resumo', JSON.stringify(resumo));
-          } catch {}
-          window.location.replace('/thankyou.html');
-        }
-        else {
-          showSubmitError(d.error || 'Erro ao enviar. Tente novamente.');
-          if(window.formUnlockUI)window.formUnlockUI(btn); else { btn.disabled = false; btn.textContent = 'Enviar'; }
-        }
-      } catch (e) {
-        showSubmitError('Erro de conexão. Verifique sua internet.');
-        if(window.formUnlockUI)window.formUnlockUI(btn); else { btn.disabled = false; btn.textContent = 'Enviar'; }
-      }
+      FormCore.submit({
+        tipo: TIPOS[subtipo] || TIPOS.dados,
+        subtipo: subtipo,
+        draftTipo: 'pagina-assessores',
+        dados: dados,
+        files: [{ inputId: 'fotoPerfil', field: 'fotoPerfil' }],
+        resumo: { titulo: dados.nome_completo },
+        btnId: 'btnSubmit',
+      });
     }
-
-    function saveDraft() {
-      try {
-        sessionStorage.setItem('form-assessores', JSON.stringify({
-          telefone:       document.getElementById('telefone')?.value       || '',
-          nome_completo:   document.getElementById('nomeCompleto')?.value   || '',
-          codigo_assessor: document.getElementById('codigoAssessor')?.value || '',
-          unidade:        document.getElementById('unidade')?.value        || '',
-          contrato_social: document.getElementById('contratoSocial')?.value || '',
-          linkedin:       document.getElementById('linkedin')?.value       || '',
-          instagram:      document.getElementById('instagram')?.value      || '',
-          miniBio:        document.getElementById('miniBio')?.value        || '',
-        }));
-      } catch {}
-    }
-    function restoreDraft() {
-      try {
-        const raw = sessionStorage.getItem('form-assessores');
-        if (!raw) return;
-        const d = JSON.parse(raw);
-        for (const [k, v] of Object.entries(d)) {
-          const el = document.getElementById(k);
-          if (el) el.value = v;
-        }
-      } catch {}
-    }
-    document.querySelectorAll('input,textarea,select').forEach(el => el.addEventListener('change', saveDraft));
-
-    document.addEventListener('input', function(e) {
-      const field = e.target.closest('.field');
-      if (field && field.classList.contains('field-invalid') && e.target.value.trim()) {
-        field.classList.remove('field-invalid');
-      }
-    });
-    document.addEventListener('change', function(e) {
-      const field = e.target.closest('.field');
-      if (field && field.classList.contains('field-invalid')) {
-        field.classList.remove('field-invalid');
-      }
-    });
 
     init();
   </script>

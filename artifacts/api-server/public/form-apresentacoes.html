@@ -201,12 +201,6 @@
     let subtipo = params.get('subtipo') || '';
     let isAtualizar = subtipo === 'atualizar';
     const TIPOS = { nova: 'apresentacao-nova', atualizar: 'apresentacao-atualizar' };
-    window.addEventListener('pageshow', function(e) {
-      if (e.persisted) {
-        try { sessionStorage.removeItem('form-apresentacoes'); } catch {}
-        window.location.reload();
-      }
-    });
     const SLA = { menos30: 'até 5 dias úteis', menos100: 'até 10 dias úteis', mais100: 'até 15 dias úteis' };
     const SLA_DAYS = { menos30: 5, menos100: 10, mais100: 15 };
     function addBusinessDays(start, n) {
@@ -253,6 +247,7 @@
     function init() {
       FormCore.initForm({
         tipo: 'apresentacoes',
+        draft: true,
         redirectPath: '/form-apresentacoes.html',
         activeRoute: 'nova-solicitacao',
         onReady: function () {
@@ -277,51 +272,16 @@
           }));
 
           ['arquivoBase', 'arquivoBaseNova', 'arquivoApoio'].forEach(id => { FileUpload.bind(id, id + 'Name'); });
-
-          restoreDraft();
         }
       });
     }
 
     function validateStep2() {
-      document.querySelectorAll('#step2 .field-invalid').forEach(el => el.classList.remove('field-invalid'));
-      const errors = [];
-
-      function isVisible(el) {
-        let cur = el;
-        while (cur && cur !== document.body) {
-          if (cur.style && cur.style.display === 'none') return false;
-          cur = cur.parentElement;
+      return FormCore.validateRequired(function(inv) {
+        if (isAtualizar && !document.getElementById('arquivoBase').files[0]) {
+          FormCore.markInvalid(inv, document.getElementById('uploadAtualizar').querySelector('.field'), 'Arquivo obrigatório.');
         }
-        return true;
-      }
-
-      function chk(inputEl) {
-        if (!inputEl) return;
-        if (!isVisible(inputEl)) return;
-        const fieldEl = inputEl.closest('.field');
-        if (!fieldEl) return;
-        const label = fieldEl.querySelector('label');
-        if (label && label.textContent.toLowerCase().includes('opcional')) return;
-        let empty = false;
-        if (inputEl.type === 'radio') {
-          if (inputEl !== [...document.querySelectorAll(`input[name="${inputEl.name}"]`)][0]) return;
-          empty = !document.querySelector(`input[name="${inputEl.name}"]:checked`);
-        } else {
-          empty = !inputEl.value.trim();
-        }
-        if (empty) { fieldEl.classList.add('field-invalid'); errors.push(fieldEl); }
-      }
-
-      document.querySelectorAll('#step2 input:not([type="file"]), #step2 textarea').forEach(chk);
-
-      if (isAtualizar && !document.getElementById('arquivoBase').files[0]) {
-        const fieldEl = document.getElementById('uploadAtualizar').querySelector('.field');
-        if (fieldEl) { fieldEl.classList.add('field-invalid'); errors.push(fieldEl); }
-      }
-
-      if (errors.length > 0) { errors[0].scrollIntoView({ behavior: 'smooth', block: 'center' }); return false; }
-      return true;
+      }, document.getElementById('step2'));
     }
 
     function goStep(step) {
@@ -334,30 +294,10 @@
     }
 
     function validateRequiredFields() {
-      document.querySelectorAll('.field-invalid').forEach(el => el.classList.remove('field-invalid'));
-      const invalidFields = [];
-      document.querySelectorAll('input[required], select[required], textarea[required]').forEach(input => {
-        const step = input.closest('.form-step');
-        if (step && !step.classList.contains('active')) return;
-        const isEmpty = input.type === 'radio' || input.type === 'checkbox'
-          ? !document.querySelector(`input[name="${input.name}"]:checked`)
-          : !input.value.trim();
-        if (isEmpty) {
-          const fieldWrapper = input.closest('.field');
-          if (fieldWrapper) {
-            fieldWrapper.classList.add('field-invalid');
-            let errorEl = fieldWrapper.querySelector('.field-error');
-            if (!errorEl) { errorEl = document.createElement('div'); errorEl.className = 'field-error'; input.parentElement.appendChild(errorEl); }
-            errorEl.textContent = 'Este campo é obrigatório.';
-            invalidFields.push(fieldWrapper);
-          }
-        }
-      });
-      if (invalidFields.length > 0) { invalidFields[0].scrollIntoView({ behavior: 'smooth', block: 'center' }); return false; }
-      return true;
+      return FormCore.validateRequired(null, document.querySelector('.form-step.active'));
     }
 
-    async function submitForm() {
+    function submitForm() {
       if (!validateRequiredFields()) return;
       {
         const _tam = document.querySelector('input[name="tamanho"]:checked')?.value;
@@ -400,14 +340,7 @@
         return;
       }
 
-      const btn = document.getElementById('btnSubmit');
-      btn.disabled = true; btn.textContent = 'Enviando...'; if(window.formLockUI)window.formLockUI(btn);
-
       const elementos = [...document.querySelectorAll('#elementos input:checked')].map(c => c.value);
-
-      const formData = new FormData();
-      formData.append('tipo_solicitacao', TIPOS[subtipo] || TIPOS.nova);
-      formData.append('subtipo', subtipo);
       const dados = {
         nome: Auth.getUserName(),
         telefone: document.getElementById('telefone').value,
@@ -422,83 +355,20 @@
         prazoEntrega: document.getElementById('prazoEntrega').value,
         observacoes: document.getElementById('observacoes').value,
       };
-      formData.append('dados', JSON.stringify(dados));
-
-      const base = document.getElementById('arquivoBase').files[0];
-      if (base) formData.append('arquivoBase', base);
-      const baseNova = document.getElementById('arquivoBaseNova')?.files[0];
-      if (baseNova) formData.append('arquivoBase', baseNova);
-      const apoio = document.getElementById('arquivoApoio').files[0];
-      if (apoio) formData.append('arquivoApoio', apoio);
-
-      const res = await fetch('/api/solicitacoes', { method: 'POST', body: formData });
-      const d = await res.json().catch(() => ({}));
-      if (res.ok) {
-        sessionStorage.removeItem('form-apresentacoes');
-        try {
-          const resumo = {
-            tipo: TIPO_SOLICITACAO_LABELS[formData.get('tipo_solicitacao')] || formData.get('tipo_solicitacao'),
-            subtipo: formData.get('subtipo') || '',
-            titulo: dados.titulo || '',
-            solicitante: dados.nome || Auth.getUserName(),
-            setor: dados.setor || '',
-            data: new Date().toLocaleDateString('pt-BR'),
-            hora: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
-            materiais: [],
-            natureza: '',
-            maturidade: '',
-            id: d.id,
-          };
-          sessionStorage.setItem('svn_ultimo_resumo', JSON.stringify(resumo));
-        } catch {}
-        window.location.replace('/thankyou.html');
-      }
-      else { 
-        const errEl = document.getElementById('submitError');
-        if (errEl) { errEl.style.display = 'block'; errEl.textContent = d.error || 'Erro ao enviar. Tente novamente.'; }
-        else { alert(d.error || 'Erro ao enviar. Tente novamente.'); }
-        if(window.formUnlockUI)window.formUnlockUI(btn); else { btn.disabled = false; btn.textContent = 'Enviar'; } 
-      }
+      FormCore.submit({
+        tipo: TIPOS[subtipo] || TIPOS.nova,
+        subtipo: subtipo,
+        draftTipo: 'apresentacoes',
+        dados: dados,
+        files: [
+          { inputId: 'arquivoBase', field: 'arquivoBase' },
+          { inputId: 'arquivoBaseNova', field: 'arquivoBase' },
+          { inputId: 'arquivoApoio', field: 'arquivoApoio' },
+        ],
+        resumo: { titulo: dados.titulo, setor: dados.setor, subtipo: subtipo },
+        btnId: 'btnSubmit',
+      });
     }
-
-    function saveDraft() {
-      try {
-        sessionStorage.setItem('form-apresentacoes', JSON.stringify({
-          telefone: document.getElementById('telefone')?.value || '',
-          setor: document.getElementById('setor')?.value || '',
-          titulo: document.getElementById('titulo')?.value || '',
-          finalidade: document.getElementById('finalidade')?.value || '',
-          prazoEntrega: document.getElementById('prazoEntrega')?.value || '',
-          observacoes: document.getElementById('observacoes')?.value || '',
-        }));
-      } catch {}
-    }
-    function restoreDraft() {
-      try {
-        const raw = sessionStorage.getItem('form-apresentacoes');
-        if (!raw) return;
-        const d = JSON.parse(raw);
-        if (d.telefone) document.getElementById('telefone').value = d.telefone;
-        for (const [k, v] of Object.entries(d)) {
-          const el = document.getElementById(k);
-          if (el) el.value = v;
-        }
-      } catch {}
-    }
-    document.querySelectorAll('input,textarea,select').forEach(el => el.addEventListener('change', saveDraft));
-
-    document.addEventListener('input', function(e) {
-      const field = e.target.closest('.field');
-      if (field && field.classList.contains('field-invalid') && e.target.value.trim()) {
-        field.classList.remove('field-invalid');
-      }
-    });
-    document.addEventListener('change', function(e) {
-      const field = e.target.closest('.field');
-      if (field && field.classList.contains('field-invalid')) {
-        field.classList.remove('field-invalid');
-      }
-    });
 
     init();
   </script>

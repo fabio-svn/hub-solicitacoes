@@ -168,12 +168,6 @@
   <script src="shell.js?v=20260611f"></script>
   <script src="form-core.js?v=20260611f"></script>
   <script>
-    window.addEventListener('pageshow', function(e) {
-      if (e.persisted) {
-        try { sessionStorage.removeItem('svn_ultimo_resumo'); } catch {}
-        window.location.reload();
-      }
-    });
     let _modalidade = null;
 
     function init() {
@@ -247,51 +241,22 @@
     }
 
     function validateStep2() {
-      document.getElementById('step2').querySelectorAll('.field-invalid').forEach(el => el.classList.remove('field-invalid'));
-      const invalidFields = [];
-      document.getElementById('step2').querySelectorAll('input[required], select[required], textarea[required]').forEach(input => {
-        if (!input.value.trim()) {
-          const fieldWrapper = input.closest('.field');
-          if (fieldWrapper) {
-            fieldWrapper.classList.add('field-invalid');
-            let errorEl = fieldWrapper.querySelector('.field-error');
-            if (!errorEl) { errorEl = document.createElement('div'); errorEl.className = 'field-error'; input.parentElement.appendChild(errorEl); }
-            errorEl.textContent = 'Este campo é obrigatório.';
-            invalidFields.push(fieldWrapper);
-          }
+      return FormCore.validateRequired(function(inv) {
+        if (_modalidade === 'video' && !getFormatos()) {
+          FormCore.markInvalid(inv, document.getElementById('formatoVideoGroup'), 'Selecione pelo menos um formato.');
         }
-      });
-
-      if (_modalidade === 'video' && !getFormatos()) {
-        const container = document.getElementById('formatoVideoGroup');
-        const field = container?.closest('.field');
-        if (field && !field.classList.contains('field-invalid')) {
-          field.classList.add('field-invalid');
-          let errorEl = field.querySelector('.field-error');
-          if (!errorEl) { errorEl = document.createElement('div'); errorEl.className = 'field-error'; container.parentElement.appendChild(errorEl); }
-          errorEl.textContent = 'Selecione pelo menos um formato.';
-          invalidFields.push(field);
-        }
-      }
-
-      if (invalidFields.length > 0) { invalidFields[0].scrollIntoView({ behavior: 'smooth', block: 'center' }); return false; }
-      return true;
+      }, document.getElementById('step2'));
     }
 
-    async function submitForm() {
+    function submitForm() {
       if (!validateStep2()) return;
-      const btn = document.getElementById('btnSubmit');
-      btn.disabled = true; btn.textContent = 'Enviando...'; if(window.formLockUI)window.formLockUI(btn);
-
       const tipoSolicitacao = _modalidade === 'video' ? 'producao-video' : 'sessao-fotos';
-
       const dados = {
         nome: Auth.getUserName(),
         telefone: document.getElementById('telefone').value,
         setor: document.getElementById('setor')?.value || '',
         modalidade: _modalidade,
       };
-
       if (_modalidade === 'video') {
         dados.titulo = document.getElementById('titulo').value;
         dados.ideia = document.getElementById('ideia').value;
@@ -302,40 +267,14 @@
         dados.qtdParticipantes = document.getElementById('qtdParticipantes').value;
         dados.localSessao = document.getElementById('localSessao').value;
       }
-
-      const formData = new FormData();
-      formData.append('tipo_solicitacao', tipoSolicitacao);
-      formData.append('dados', JSON.stringify(dados));
-      const arquivoInput = document.getElementById('arquivoApoio');
-      if (arquivoInput?.files[0]) formData.append('arquivo', arquivoInput.files[0]);
-
-      const res = await fetch('/api/solicitacoes', { method: 'POST', body: formData });
-      const d = await res.json().catch(() => ({}));
-      if (res.ok) {
-        try {
-          const labelMap = { 'producao-video': 'Produção de Vídeo', 'sessao-fotos': 'Sessão de Fotos' };
-          sessionStorage.setItem('svn_ultimo_resumo', JSON.stringify({
-            tipo_id: tipoSolicitacao,
-            tipo: (typeof TIPO_SOLICITACAO_LABELS !== 'undefined' && TIPO_SOLICITACAO_LABELS[tipoSolicitacao]) || labelMap[tipoSolicitacao] || tipoSolicitacao,
-            solicitante: Auth.getUserName(),
-            setor: dados.setor,
-            data: new Date().toLocaleDateString('pt-BR'),
-            hora: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
-            id: d.id,
-          }));
-        } catch {}
-        window.location.replace('/thankyou.html');
-      } else {
-        const errEl = document.getElementById('submitError');
-        if (errEl) { errEl.style.display = 'block'; errEl.textContent = d.error || 'Erro ao enviar. Tente novamente.'; }
-        if(window.formUnlockUI)window.formUnlockUI(btn); else { btn.disabled = false; btn.textContent = 'Enviar'; }
-      }
+      FormCore.submit({
+        tipo: tipoSolicitacao,
+        dados: dados,
+        files: [{ inputId: 'arquivoApoio', field: 'arquivo' }],
+        resumo: { setor: dados.setor },
+        btnId: 'btnSubmit',
+      });
     }
-
-    document.addEventListener('change', function(e) {
-      const field = e.target.closest('.field');
-      if (field && field.classList.contains('field-invalid') && e.target.value.trim()) field.classList.remove('field-invalid');
-    });
 
     init();
   </script>
