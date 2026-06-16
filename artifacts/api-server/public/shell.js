@@ -251,9 +251,8 @@ window.Shell = {
   },
 
   _syncNotifBadge() {
-    if (typeof Auth === 'undefined' || !Auth._pendenteIds) return;
-    const lidos = Auth._getLidos ? Auth._getLidos() : new Set();
-    const count = [...Auth._pendenteIds].filter(id => !lidos.has(id)).length;
+    if (typeof Auth === 'undefined' || !Auth.getPendentesCount) return;
+    const count = Auth.getPendentesCount();
 
     const badge = document.getElementById('shellNotifBadge');
     if (badge) {

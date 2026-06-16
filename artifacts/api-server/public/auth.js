@@ -62,30 +62,21 @@ const Auth = {
       try { localStorage.setItem('svn_lidos_aprovacao', JSON.stringify([...lidos])); } catch {}
     }
     this._pendenteIds.delete(id);
-    this._atualizarBadgeHeader();
+    if (window.Shell) Shell._syncNotifBadge?.();   // Shell é o único renderizador do badge
   },
 
   isPendente(id) {
     return !!(this._pendenteIds && this._pendenteIds.has(id));
   },
 
-  temPendencias() {
+  // Fonte de verdade única da contagem de pendências não lidas.
+  getPendentesCount() {
     const lidos = this._getLidos();
-    return [...this._pendenteIds].some(id => !lidos.has(id));
+    return [...this._pendenteIds].filter(id => !lidos.has(id)).length;
   },
 
-  _atualizarBadgeHeader() {
-    const lidos = this._getLidos();
-    const naoLidos = [...this._pendenteIds].filter(id => !lidos.has(id));
-    const count = naoLidos.length;
-    const badge = document.getElementById('notifBadgeAvatar');
-    const badgeMenu = document.getElementById('notifBadgeMenu');
-    if (badge) { badge.style.display = count > 0 ? '' : 'none'; badge.textContent = count > 9 ? '9+' : String(count); }
-    if (badgeMenu) { badgeMenu.style.display = count > 0 ? '' : 'none'; }
-    const shellBadge = document.getElementById('shellNotifBadge');
-    if (shellBadge) { shellBadge.style.display = count > 0 ? '' : 'none'; shellBadge.textContent = count > 9 ? '9+' : String(count); }
-    const shellBadgeMenu = document.getElementById('shellNotifBadgeMenu');
-    if (shellBadgeMenu) { shellBadgeMenu.style.display = count > 0 ? '' : 'none'; }
+  temPendencias() {
+    return this.getPendentesCount() > 0;
   },
 
   async init() {
@@ -342,4 +333,3 @@ window.isCurrentUserAdmin = function() {
 window.isCurrentUserStaff = function() {
   return typeof Auth !== 'undefined' && Auth.isStaff && Auth.isStaff();
 };
-

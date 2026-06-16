@@ -330,7 +330,6 @@ input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
   margin-top: 4px;
   display: none;
 }
-.field-error.visible { display: block; }
 
 /* Campo com erro de validação */
 .field-invalid input,
