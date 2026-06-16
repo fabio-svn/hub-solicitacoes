@@ -307,30 +307,22 @@ router.post("/solicitacoes", requireAuth, upload.any(), async (req, res): Promis
       // Re-normaliza após merge: campos como fotoPerfilDigital agora estão em parsedDados
       // e precisam receber seus aliases snake_case (ex: foto_perfil) antes do generator rodar.
       parsedDados = normalizeFormDados(tipo_solicitacao, parsedDados);
-      await db.update(solicitacoesTable)
-        .set({ dados: parsedDados })
-        .where(eq(solicitacoesTable.id, solicitacao.id));
     }
 
-    // Gera e persiste título imediatamente (tipos sem ClickUp nunca sobrescrevem)
+    // Título base (tipos sem ClickUp usam este; com ClickUp, o nome da task tem prioridade).
     const tituloGerado = gerarTituloSolicitacao(tipo_solicitacao, parsedDados, user.name);
-    await db.update(solicitacoesTable)
-      .set({ titulo: tituloGerado })
-      .where(eq(solicitacoesTable.id, solicitacao.id));
 
     let clickupTaskId: string | null = null;
+    let tituloFinal = tituloGerado;
+    let clickupUrl: string | null = null;
+    let responsavelFinal: string | null = null;
     try {
       const { taskId, taskName, responsavel } = await createClickUpTask(solicitacao, user, parsedDados, arquivosMap);
       clickupTaskId = taskId;
       if (clickupTaskId) {
-        await db.update(solicitacoesTable)
-          .set({
-            clickup_task_id: clickupTaskId,
-            titulo: taskName || null,
-            clickup_url: `https://app.clickup.com/t/${clickupTaskId}`,
-            responsavel: responsavel || null,
-          })
-          .where(eq(solicitacoesTable.id, solicitacao.id));
+        tituloFinal = taskName || tituloGerado;   // nunca apaga o título se a task não tiver nome
+        clickupUrl = `https://app.clickup.com/t/${clickupTaskId}`;
+        responsavelFinal = responsavel || null;
       }
     } catch (clickupErr: any) {
       logger.error({ err: clickupErr }, "ClickUp task creation failed, continuing");
@@ -348,6 +340,17 @@ router.post("/solicitacoes", requireAuth, upload.any(), async (req, res): Promis
         detalhe: `Falha ao criar task no ClickUp para solicitação #${solicitacao.id}`,
       });
     }
+
+    // Update único: dados (com URLs de arquivo), título final e campos do ClickUp num só round-trip.
+    await db.update(solicitacoesTable)
+      .set({
+        dados: parsedDados,
+        titulo: tituloFinal,
+        clickup_task_id: clickupTaskId,
+        clickup_url: clickupUrl,
+        responsavel: responsavelFinal,
+      })
+      .where(eq(solicitacoesTable.id, solicitacao.id));
 
     gerarArteParaSolicitacao(solicitacao.id, tipo_solicitacao, parsedDados).catch(err => {
       req.log.error({ err, tipo: tipo_solicitacao }, "Erro ao gerar arte");
