@@ -76,13 +76,8 @@
         onReady: function() {
           var role = Auth.getUserRole();
           if (role !== 'capital_humano' && role !== 'admin') { window.location.href = '/dashboard.html'; return; }
-          bindUploads();
         },
       });
-    }
-
-    function bindUploads() {
-      if (window.FileUpload) FileUpload.bind('arquivoApoio', 'arquivoApoioName');
     }
 
     async function submitForm() {

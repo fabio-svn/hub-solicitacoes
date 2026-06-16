@@ -181,6 +181,7 @@
   <script src="config.js?v=20260615a"></script>
   <script src="auth.js?v=20260611f"></script>
   <script src="shell.js?v=20260611f"></script>
+  <script src="filters.js?v=20260616a"></script>
   <script>
     const CLICKUP_ICON = getClickupIcon();
 
@@ -192,6 +193,11 @@
     };
     let pages = { eventos: 1, geral: 1 };
     let searchTimeout;
+
+    // Filtros: engine compartilhado (filters.js). Cada aba é uma instância.
+    // filters[tab] é passado como state, então segue sendo alias vivo (loadList lê filters[tab]).
+    FilterPanel.register('Eventos', { state: filters.eventos, onChange: () => { pages.eventos = 1; loadList('eventos'); } });
+    FilterPanel.register('Geral',   { state: filters.geral,   onChange: () => { pages.geral = 1;   loadList('geral'); } });
 
 
     async function init() {
@@ -410,86 +416,12 @@
         if (listEl && !listEl.hasChildNodes()) loadList(tab);
     }
 
-    function toggleFilter(el, tab, filterKey) {
-      const siblings = el.closest('.filter-panel-row').querySelectorAll('.filter-chip');
-      siblings.forEach(s => s.classList.remove('active'));
-      el.classList.add('active');
-      filters[tab][filterKey] = el.dataset.value;
-      pages[tab] = 1;
-      loadList(tab);
-      updateFilterBadges(tab);
-    }
-
-    function toggleFilterPanel(tab) {
-      const panel = document.getElementById('filterPanel' + capitalize(tab));
-      const btn = document.getElementById('filterToggle' + capitalize(tab));
-      const isOpen = panel.classList.contains('open');
-      panel.classList.toggle('open', !isOpen);
-      btn.style.borderColor = (!isOpen || hasActiveFilters(tab)) ? 'var(--ruby-red)' : '';
-      if (!isOpen) {
-        setTimeout(function() {
-          document.addEventListener('click', function handler(e) {
-            if (!panel.parentElement.contains(e.target)) {
-              panel.classList.remove('open');
-              document.removeEventListener('click', handler);
-            }
-          });
-        }, 0);
-      }
-    }
+    function toggleFilterPanel(tab) { FilterPanel.toggle(capitalize(tab)); }
+    function toggleFilter(el, tab, filterKey) { FilterPanel.set(capitalize(tab), el, filterKey); }
+    function clearAllFilters(tab) { FilterPanel.clear(capitalize(tab)); }
 
     function capitalize(str) {
       return str.charAt(0).toUpperCase() + str.slice(1);
-    }
-
-    function hasActiveFilters(tab) {
-      return Object.values(filters[tab]).some(v => v !== '');
-    }
-
-    function updateFilterBadges(tab) {
-      const capTab = capitalize(tab);
-      const badgesContainer = document.getElementById('filterActiveBadges' + capTab);
-      const countBadge = document.getElementById('filterCount' + capTab);
-      const clearBtn = document.getElementById('filterClear' + capTab);
-      const toggleBtn = document.getElementById('filterToggle' + capTab);
-      const activeFilters = Object.entries(filters[tab]).filter(([k, v]) => v !== '');
-      const count = activeFilters.length;
-      countBadge.style.display = count > 0 ? 'inline' : 'none';
-      countBadge.textContent = count;
-      clearBtn.style.display = count > 0 ? 'inline' : 'none';
-      toggleBtn.classList.toggle('has-filters', count > 0);
-      badgesContainer.innerHTML = activeFilters.map(([key, value]) => {
-        const chip = document.querySelector(`#filterPanel${capTab} [data-filter="${key}"][data-value="${value}"]`);
-        const label = chip ? chip.dataset.label || chip.textContent : value;
-        return `<span class="filter-active-badge">${label}<span class="remove-badge" onclick="removeFilter('${tab}','${key}')">×</span></span>`;
-      }).join('');
-    }
-
-    function removeFilter(tab, filterKey) {
-      filters[tab][filterKey] = '';
-      pages[tab] = 1;
-      const capTab = capitalize(tab);
-      const defaultChip = document.querySelector(`#filterPanel${capTab} [data-filter="${filterKey}"][data-value=""]`);
-      if (defaultChip) {
-        const siblings = defaultChip.closest('.filter-panel-row').querySelectorAll('.filter-chip');
-        siblings.forEach(s => s.classList.remove('active'));
-        defaultChip.classList.add('active');
-      }
-      loadList(tab);
-      updateFilterBadges(tab);
-    }
-
-    function clearAllFilters(tab) {
-      filters[tab] = tab === 'eventos'
-        ? { periodo: '', status: '', natureza: '', erros: '' }
-        : { periodo: '', status: '', tipo: '', erros: '' };
-      pages[tab] = 1;
-      const capTab = capitalize(tab);
-      document.querySelectorAll(`#filterPanel${capTab} .filter-chip`).forEach(chip => {
-        chip.classList.toggle('active', chip.dataset.value === '');
-      });
-      loadList(tab);
-      updateFilterBadges(tab);
     }
 
     function debounceSearch(tab) {

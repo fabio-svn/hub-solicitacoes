@@ -77,13 +77,8 @@
             var o = document.createElement('option'); o.value = m; o.textContent = m;
             if (i === prox) o.selected = true; sel.appendChild(o);
           });
-          bindUploads();
         },
       });
-    }
-
-    function bindUploads() {
-      if (window.FileUpload) FileUpload.bind('arquivoApoio', 'arquivoApoioName');
     }
 
     async function submitForm() {

@@ -183,7 +183,8 @@
     function logGoPage(page) { logPage = page; loadLog(); }
 
     // Filtros: engine compartilhado (filters.js). 'Log' = sufixo do DOM (#filterPanelLog etc).
-    FilterPanel.register('Log', { state: { nivel: '' }, onChange: loadLog });
+    // filterState fica como alias vivo do estado do engine (loadLog/export ainda leem .nivel).
+    const filterState = FilterPanel.register('Log', { state: { nivel: '' }, onChange: loadLog }).state;
     function toggleFilterPanel() { FilterPanel.toggle('Log'); }
     function toggleFilter(btn, key) { FilterPanel.set('Log', btn, key); }
     function clearAllFilters() { FilterPanel.clear('Log'); }

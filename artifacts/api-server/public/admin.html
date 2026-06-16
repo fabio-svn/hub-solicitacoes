@@ -221,10 +221,16 @@
   <script src="config.js?v=20260615a"></script>
   <script src="auth.js?v=20260611f"></script>
   <script src="shell.js?v=20260611f"></script>
+  <script src="filters.js?v=20260616a"></script>
   <script>
     let currentTab = 'geral';
     let adminFilters = { eventos: { periodo: '', status: '' }, geral: { periodo: '', status: '' } };
     let adminPages = { eventos: 1, geral: 1 };
+
+    // Filtros: engine compartilhado (filters.js). Cada aba é uma instância; adminFilters[tab]
+    // é passado como state (alias vivo — loadTable lê adminFilters[tab].periodo/.status).
+    FilterPanel.register('Eventos', { state: adminFilters.eventos, onChange: () => { adminPages.eventos = 1; loadTable('eventos'); } });
+    FilterPanel.register('Geral',   { state: adminFilters.geral,   onChange: () => { adminPages.geral = 1;   loadTable('geral'); } });
     let searchTimeout;
     const CLICKUP_ICON = getClickupIcon();
 
@@ -367,79 +373,11 @@
       document.querySelectorAll('.tab-content').forEach(c => c.classList.toggle('active', c.id === 'tab-' + tab));
     }
 
-    function toggleFilterPanel(tab) {
-      const cap = tab.charAt(0).toUpperCase() + tab.slice(1);
-      const panel = document.getElementById('filterPanel' + cap);
-      const btn = document.getElementById('filterToggle' + cap);
-      const isOpen = panel.classList.contains('open');
-      panel.classList.toggle('open', !isOpen);
-      if (!hasActiveFilters(tab) && isOpen) btn.classList.remove('has-filters');
-      if (!isOpen) {
-        setTimeout(function() {
-          document.addEventListener('click', function handler(e) {
-            if (!panel.parentElement.contains(e.target)) {
-              panel.classList.remove('open');
-              document.removeEventListener('click', handler);
-            }
-          });
-        }, 0);
-      }
-    }
+    function capitalize(str) { return str.charAt(0).toUpperCase() + str.slice(1); }
+    function toggleFilterPanel(tab) { FilterPanel.toggle(capitalize(tab)); }
+    function toggleFilter(btn, tab, key) { FilterPanel.set(capitalize(tab), btn, key); }
+    function clearAllFilters(tab) { FilterPanel.clear(capitalize(tab)); }
 
-    function toggleFilter(btn, tab, key) {
-      const cap = tab.charAt(0).toUpperCase() + tab.slice(1);
-      adminFilters[tab][key] = btn.dataset.value;
-      document.querySelectorAll(`#filterPanel${cap} [data-filter="${key}"]`).forEach(b => {
-        b.classList.toggle('active', b.dataset.value === adminFilters[tab][key]);
-      });
-      adminPages[tab] = 1;
-      updateFilterUI(tab);
-      loadTable(tab);
-    }
-
-    function clearAllFilters(tab) {
-      const cap = tab.charAt(0).toUpperCase() + tab.slice(1);
-      Object.keys(adminFilters[tab]).forEach(k => adminFilters[tab][k] = '');
-      document.querySelectorAll(`#filterPanel${cap} .filter-chip`).forEach(b => {
-        b.classList.toggle('active', b.dataset.value === '');
-      });
-      adminPages[tab] = 1;
-      updateFilterUI(tab);
-      loadTable(tab);
-    }
-
-    function hasActiveFilters(tab) {
-      return Object.values(adminFilters[tab]).some(v => v !== '');
-    }
-
-    function updateFilterUI(tab) {
-      const cap = tab.charAt(0).toUpperCase() + tab.slice(1);
-      const count = Object.values(adminFilters[tab]).filter(v => v !== '').length;
-      const countBadge = document.getElementById('filterCount' + cap);
-      const clearBtn = document.getElementById('filterClear' + cap);
-      const btn = document.getElementById('filterToggle' + cap);
-      if (count > 0) {
-        countBadge.textContent = count;
-        countBadge.style.display = 'inline-flex';
-        clearBtn.style.display = 'inline-block';
-        btn.classList.add('has-filters');
-      } else {
-        countBadge.style.display = 'none';
-        clearBtn.style.display = 'none';
-        btn.classList.remove('has-filters');
-      }
-      const badgesContainer = document.getElementById('filterActiveBadges' + cap);
-      badgesContainer.innerHTML = '';
-      Object.entries(adminFilters[tab]).forEach(([key, value]) => {
-        if (!value) return;
-        const btnRef = document.querySelector(`#filterPanel${cap} [data-filter="${key}"][data-value="${value}"]`);
-        if (!btnRef) return;
-        const badge = document.createElement('span');
-        badge.className = 'filter-active-badge';
-        badge.innerHTML = `${btnRef.dataset.label} <span class="remove-badge" onclick="toggleFilter(document.querySelector('#filterPanel${cap} [data-filter=\\'${key}\\'][data-value=\\'\\']'), '${tab}', '${key}')">×</span>`;
-        badgesContainer.appendChild(badge);
-      });
-    }
 
     function debounceLoad(tab) {
       clearTimeout(searchTimeout);

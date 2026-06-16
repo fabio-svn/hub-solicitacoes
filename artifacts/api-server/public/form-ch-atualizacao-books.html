@@ -93,13 +93,8 @@
         onReady: function () {
           const role = Auth.getUserRole();
           if (role !== 'capital_humano' && role !== 'admin') { window.location.href = '/dashboard.html'; return; }
-          bindUploads();
         }
       });
-    }
-
-    function bindUploads() {
-      // Feedback de upload (single/múltiplo) é tratado globalmente por upload-feedback.js (delegação).
     }
 
     function getSelectedBooks() {

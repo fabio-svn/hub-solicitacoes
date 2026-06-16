@@ -1,4 +1,3 @@
-
 let URL_MANUAL = "https://pub-a2132f9b61f940659cc98265acfcf64c.r2.dev/Manual-de-Eventos-SVN.pdf";
 let URL_APRESENTACAO = "https://hub.portalsvn.com.br/solicitacoes.html";
 let URL_STORE = "https://store.portalsvn.com.br/";
@@ -163,8 +162,8 @@ let CARGOS_ASSESSOR = [
 ];
 
 // DRAWER_FIELD_LABELS — labels exibidos no detalhe da solicitação.
-// As 9 chaves camelCase do KEY_MAP (contratoSocial, nomeAssinatura, etc) servem só
-// pra retrocompatibilidade com dados legacy do banco. Forms novos enviam snake_case.
+// Chaves canônicas em snake_case. As chaves camelCase do KEY_MAP foram removidas (8.3)
+// após a migração migrate-drawer-keys normalizar os dados legados do banco.
 const DRAWER_FIELD_LABELS = {
   mes:                 { label: "Mês" },
   objetivo:            { label: "Objetivo da sessão",          wide: true },
@@ -175,24 +174,16 @@ const DRAWER_FIELD_LABELS = {
   whatsapp:            { label: "WhatsApp" },
   emailCorporativo:    { label: "E-mail" },
   marca:               { label: "Marca" },
-  nomeCliente:         { label: "Nome do cliente" },
-  isPrivate:           { label: "Cliente Private?" },
-  nomeAssinatura:      { label: "Nome para assinatura" },
   cargo:               { label: "Cargo" },
   agradecimento:       { label: "Agradecimento",              wide: true },
-  modeloArte:          { label: "Modelo de arte" },
   idEvento:            { label: "ID do evento" },
   cargaHoraria:        { label: "Carga horária" },
   tituloPagina:        { label: "Título da página" },
   cfp:                 { label: "Possui CFP?" },
-  nomeCompleto:        { label: "Nome completo" },
   telefone:            { label: "Telefone" },
   setor:               { label: "Setor",                      skip: true },
-  codigoAssessor:      { label: "Código do assessor" },
-  contratoSocial:      { label: "Contrato social" },
   unidade:             { label: "Unidade" },
   nomeAniversariante:  { label: "Nome do aniversariante" },
-  modeloCartao:        { label: "Modelo do cartão" },
   mensagem:            { label: "Mensagem",                   wide: true },
   assinatura:          { label: "Assinatura",                 wide: true },
   dataEntrega:         { label: "Data de entrega" },

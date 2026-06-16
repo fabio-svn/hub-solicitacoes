@@ -154,38 +154,24 @@ function humanizeValue(key, value) {
     if (formatted !== value) return formatted;
   }
 
-  if (key === 'isPrivate' || key === 'private') {
-    return (value === 'sim' || value === 'Sim') ? 'Sim' : 'Não';
-  }
-  if (key === 'modeloCartao') {
-    const map = { dourado: 'Dourado', vermelho: 'Vermelho' };
-    return map[String(value).toLowerCase()] || humanizeSlug(String(value));
-  }
-  if (key === 'modeloArte') {
-    const map = { 'com-foto': 'Com foto', 'sem-foto': 'Sem foto' };
-    return map[String(value)] || humanizeSlug(String(value));
-  }
+  // isPrivate/modeloCartao/modeloArte: removidos (8.3). Pós-migração os dados são snake_case
+  // (is_private_key/modelo_cartao/modelo_arte) e o schema já resolve via _svnFieldLabels acima.
+
   if (key === 'estado') {
     const ibge = typeof IBGE_ESTADOS !== 'undefined' ? IBGE_ESTADOS : {};
     if (ibge[String(value)]) return ibge[String(value)];
     return String(value);
   }
 
+  // Fallbacks que o schema (window._svnFieldLabels) NÃO cobre — mantidos de propósito:
+  //  - natureza: valor legado 'patrocinio' (schema só tem presencial/online)
+  //  - baseFlyer: campo sem options no schema
+  // Os demais (maturidade, localEvento, modalidade, formatoPapel, orientacao, tamanho,
+  // tipoCriacao, tipoAdesivo, tipoCamiseta, corCamiseta, temPalestrante, horBrasilia) eram
+  // cópia exata do schema e já são resolvidos por _svnFieldLabels acima — removidos (8.2).
   const maps = {
-    natureza:     { presencial:'Presencial', online:'Online', patrocinio:'Patrocínio' },
-    maturidade:   { 1:'Tenho a maioria das informações', 2:'Tenho algumas informações', 3:'Ainda estou estruturando' },
-    localEvento:  { unidade:'Unidade SVN', externo:'Local externo', 'nao-definido':'Não definido' },
-    modalidade:   { video:'Produção de Vídeo', fotos:'Sessão de Fotos' },
-    formatoPapel: { 'A4':'A4', 'A5':'A5', 'outro-papel':'Outro' },
-    orientacao:   { horizontal:'Horizontal', vertical:'Vertical' },
-    tamanho:      { 'menos30':'Menos de 30 páginas', 'menos100':'Menos de 100 páginas', 'mais100':'Mais de 100 páginas' },
-    tipoCriacao:  { 'base-existente':'Já existe uma base', 'do-zero':'Será criada do zero' },
-    tipoAdesivo:  { quadrado:'Quadrado', redondo:'Redondo' },
-    tipoCamiseta: { polo:'Polo', dryfit:'Dry-Fit', tshirt:'T-Shirt' },
-    corCamiseta:  { branco:'Branco', preto:'Preto', azul:'Azul', vermelho:'Vermelho', amarelo:'Amarelo', laranja:'Laranja', roxo:'Roxo', multicolorida:'Multicolorida', outro:'Outro' },
-    temPalestrante: { sim:'Sim', nao:'Não' },
-    horBrasilia:  { sim:'Sim', nao:'Não' },
-    baseFlyer:    { sim:'Sim', nao:'Não' },
+    natureza:  { presencial:'Presencial', online:'Online', patrocinio:'Patrocínio' },
+    baseFlyer: { sim:'Sim', nao:'Não' },
   };
 
   const matMap = {};
