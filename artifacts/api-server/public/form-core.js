@@ -90,6 +90,7 @@ window.FormCore = (function () {
     _popularSetor();
     _aplicarPerfil();
     if (typeof opts.onReady === 'function') { try { await opts.onReady(); } catch (e) { console.error(e); } }
+    syncRequiredMarks();   // garante que todo [required] mostre o asterisco
     if (opts.draft && opts.tipo) {
       _restoreDraft(opts.tipo);
       ['input', 'change'].forEach(function (evt) {
@@ -109,6 +110,32 @@ window.FormCore = (function () {
     let err = wrap.querySelector('.field-error');
     if (!err) { err = document.createElement('div'); err.className = 'field-error'; wrap.appendChild(err); }
     err.textContent = msg || 'Este campo é obrigatório.';
+  }
+
+  // syncRequiredMarks(scopeEl?) — injeta o asterisco ruby no label de todo .field
+  // que contenha um campo [required]. Idempotente (não duplica) e seguro de re-chamar
+  // após renders dinâmicos. Fonte da verdade visual = o atributo `required` do HTML.
+  function syncRequiredMarks(scopeEl) {
+    const root = scopeEl || document;
+    root.querySelectorAll('.field').forEach(function (field) {
+      if (!field.querySelector('input[required], select[required], textarea[required]')) return;
+      // label do próprio campo (filho direto). Fallback: 1º label que não seja de opção.
+      let label = field.querySelector(':scope > label');
+      if (!label) {
+        const labels = field.querySelectorAll('label');
+        for (let i = 0; i < labels.length; i++) {
+          if (!labels[i].classList.contains('checkbox-option') && !labels[i].classList.contains('radio-option')) {
+            label = labels[i]; break;
+          }
+        }
+      }
+      if (!label || label.querySelector('.text-ruby')) return;   // sem label ou já marcado
+      const span = document.createElement('span');
+      span.className = 'text-ruby';
+      span.textContent = '*';
+      label.appendChild(document.createTextNode(' '));
+      label.appendChild(span);
+    });
   }
 
   // validateRequired(extraValidate?, scopeEl?)
@@ -252,5 +279,5 @@ window.FormCore = (function () {
     _autoSteppers();
   }
 
-  return { initForm: initForm, validateRequired: validateRequired, markInvalid: markInvalid, submit: submit, renderStepper: renderStepper, attachStepper: attachStepper };
+  return { initForm: initForm, validateRequired: validateRequired, syncRequiredMarks: syncRequiredMarks, markInvalid: markInvalid, submit: submit, renderStepper: renderStepper, attachStepper: attachStepper };
 })();
