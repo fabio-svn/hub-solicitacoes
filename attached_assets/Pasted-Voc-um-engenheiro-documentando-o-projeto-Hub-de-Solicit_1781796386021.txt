@@ -1,0 +1,46 @@
+Você é um engenheiro documentando o projeto Hub de Solicitações SVN (este repositório).
+Gere uma documentação técnica precisa, em português, destinada a quem vai manter e evoluir o sistema.
+
+ANTES DE ESCREVER, LEIA O CÓDIGO. Explore o repositório de verdade — não assuma nem invente.
+Comece por: package.json (raiz e de cada pacote), a estrutura de pastas, src/routes/,
+src/config/form-schemas.ts, os JS compartilhados em public/ (form-core, filters, auth, shell,
+config, utils, upload-feedback, toast), o schema do banco e os scripts em src/scripts/.
+Baseie cada afirmação no que está no código.
+
+REGRAS (importante):
+- Documente apenas o que existe no código. Onde não tiver certeza, escreva "> TODO:" em vez de inventar.
+- Nunca inclua segredos, tokens ou valores de variáveis de ambiente. Liste só os NOMES das variáveis
+  (a partir do .env.example / do uso no código) e para que servem.
+- Verifique todo comando (instalar, rodar, build, deploy, migrações) contra os "scripts" reais do
+  package.json — não chute.
+- Sem texto de marketing; foque em precisão técnica.
+- Se algum trecho do código contradisser este roteiro, SIGA O CÓDIGO e ajuste a estrutura.
+
+ENTREGA: arquivos em Markdown numa pasta docs/, com docs/README.md servindo de índice.
+Organização sugerida (junte/renomeie conforme fizer sentido):
+
+1. Visão geral — o que é o Hub, que problema resolve, públicos (solicitantes e time de marketing),
+   e a lista dos tipos de solicitação suportados (gere a lista a partir do form-schemas.ts).
+2. Arquitetura — stack e como as camadas se conectam; um diagrama Mermaid do fluxo de uma
+   solicitação (formulário → backend → banco → integrações → painel); estrutura de pastas comentada.
+3. Como rodar — pré-requisitos, instalação (pnpm), variáveis de ambiente (nomes + descrição),
+   comandos de dev/build, como rodar no Replit e fazer deploy no Railway, e como executar scripts
+   one-off (tsx src/scripts/...).
+4. Frontend — papel de cada JS compartilhado (form-core, filters, auth, shell, config, utils,
+   upload-feedback, toast); o padrão das páginas de formulário; como um form novo é montado
+   (campos, validação, required/asterisco, submit).
+5. Backend — rotas principais (src/routes/); o fluxo do POST de criação de solicitação; o
+   normalizeFormDados e o KEY_MAP; geração de artefatos/PDF se houver.
+6. Schema de formulários — como o form-schemas.ts funciona (tipos, campos, options, field_options,
+   REQUIRED_FIELDS); por que é a fonte única; e o passo a passo para adicionar/editar um tipo.
+7. Modelo de dados — tabelas principais; o campo "dados" (JSON); a convenção snake_case; e como os
+   labels de exibição são resolvidos (schema → _svnFieldLabels, com fallbacks no humanizeValue).
+8. Integrações — autenticação (Microsoft Entra/MSAL, perfis/permissões), ClickUp, armazenamento
+   (Cloudflare R2), automações (n8n/webhooks) e outras presentes. Documente só as que existirem.
+9. Admin & Dashboard — painéis de acompanhamento, status das solicitações, filtros.
+10. Scripts & manutenção — scripts em src/scripts/ (ex.: migrações): o que cada um faz e como rodar
+    com segurança (dry-run quando houver).
+11. Convenções — tokens de marca SVN (cores, fontes), padrões de código e nomenclatura.
+
+Antes de gerar os arquivos, liste a estrutura do repo e confirme o stack que você encontrou.
+Mantenha tudo objetivo e navegável.
