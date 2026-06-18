@@ -48,7 +48,7 @@ router.put("/users/:id/role", requireRole("admin"), async (req, res): Promise<vo
     const { role } = req.body as { role: string };
     const currentUser = req.session.user!;
 
-    if (!["colaborador", "gestor", "admin"].includes(role)) {
+    if (!["colaborador", "gestor", "admin", "capital_humano"].includes(role)) {
       res.status(400).json({ error: "Role inválida" });
       return;
     }
@@ -479,7 +479,7 @@ router.post("/users", requireRole("admin"), async (req, res): Promise<void> => {
     if (!name || !name.trim()) {
       res.status(400).json({ error: "name obrigatório" }); return;
     }
-    if (!["colaborador", "gestor", "admin"].includes(role)) {
+    if (!["colaborador", "gestor", "admin", "capital_humano"].includes(role)) {
       res.status(400).json({ error: "Role inválida" }); return;
     }
 
