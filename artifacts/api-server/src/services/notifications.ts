@@ -21,7 +21,6 @@ export const TIPOS_COM_APROVACAO = new Set([
   "artes-divulgacao",
   "atualizacao-material",
   "conteudo-pdf-informativo",
-  "conteudo-pdf-ebook",
   "apresentacao-nova",
   "apresentacao-atualizar",
 ]);

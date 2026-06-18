@@ -88,7 +88,6 @@ const REQUIRED_FIELDS: Record<string, string[]> = {
   "artes-divulgacao": ["nome", "titulo"],
   "atualizacao-material": ["nome", "titulo"],
   "conteudo-pdf-informativo": ["nome", "titulo"],
-  "conteudo-pdf-ebook": ["nome", "titulo"],
   "apresentacao-nova": ["nome", "titulo"],
   "apresentacao-atualizar": ["nome", "titulo"],
   "pagina-assessores-dados": ["nome", "nome_completo"],

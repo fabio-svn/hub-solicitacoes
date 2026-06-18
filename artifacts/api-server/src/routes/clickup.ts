@@ -372,7 +372,7 @@ function buildGeneralTaskName(tipo: string, _subtipo: string, dados: FormDados, 
 
     default: {
       const PREFIX_OVERRIDE: Record<string, string> = {
-        "conteudo-pdf-informativo": "PDF", "conteudo-pdf-ebook": "PDF",
+        "conteudo-pdf-informativo": "PDF",
         "email-marketing": "E-mail", "email-marketing-online": "E-mail",
         "atualizacao-material": "Atualização",
       };
@@ -512,7 +512,7 @@ function buildEventDescription(dados: FormDados, user: UserData, arquivos: Arqui
 function buildDetailsSection(tipo: string, dados: FormDados): string | null {
   const items: string[] = [];
 
-  if (["artes-divulgacao", "conteudo-pdf-informativo", "conteudo-pdf-ebook"].includes(tipo)) {
+  if (["artes-divulgacao", "conteudo-pdf-informativo"].includes(tipo)) {
     const conteudo = str(dados.conteudo);
     if (conteudo) items.push(`• Conteúdo / Briefing:\n${conteudo}`);
     const canalOutro = str(dados.canalOutro);
@@ -937,7 +937,6 @@ const TIPO_DEMANDA_ORDERINDEX: Record<string, number> = {
   "artes-divulgacao":              3,
   "atualizacao-material":          3,
   "conteudo-pdf-informativo":      3,
-  "conteudo-pdf-ebook":            3,
   "apresentacao-nova":             3,
   "apresentacao-atualizar":        3,
   "pagina-assessores-dados":       3,
@@ -1193,7 +1192,6 @@ const PRAZO_DIAS_UTEIS: Record<string, number> = {
   "artes-divulgacao":              3,
   "atualizacao-material":          3,
   "conteudo-pdf-informativo":      4,
-  "conteudo-pdf-ebook":            15,
   "pagina-online":                 5,
   "outro":                         7,
   "email-marketing":               3,
