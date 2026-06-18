@@ -182,6 +182,22 @@ const DB_STATEMENTS = [
   )`,
   `CREATE INDEX IF NOT EXISTS "idx_eventos_sol"     ON "eventos_solicitacao" ("solicitacao_id", "created_at" DESC)`,
   `CREATE INDEX IF NOT EXISTS "idx_eventos_tipo_24h" ON "eventos_solicitacao" ("tipo", "created_at" DESC) WHERE "tipo" IN ('warning','error')`,
+
+  // Tombamentos (geração em massa)
+  `CREATE TABLE IF NOT EXISTS "tombamentos" (
+    "id"                  SERIAL       PRIMARY KEY,
+    "nome"                VARCHAR(255) NOT NULL,
+    "marca"               VARCHAR(60)  NOT NULL,
+    "status"              VARCHAR(30)  NOT NULL DEFAULT 'aberto',
+    "linhas"              JSONB,
+    "assinaturas_zip_url" TEXT,
+    "cartoes_zip_url"     TEXT,
+    "expires_at"          TIMESTAMP,
+    "created_by"          VARCHAR(255),
+    "created_at"          TIMESTAMP    NOT NULL DEFAULT NOW(),
+    "updated_at"          TIMESTAMP    NOT NULL DEFAULT NOW()
+  )`,
+  `CREATE INDEX IF NOT EXISTS "idx_tombamentos_created_at" ON "tombamentos" ("created_at" DESC)`,
 ];
 
 async function start() {

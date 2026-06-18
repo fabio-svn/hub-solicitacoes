@@ -3,44 +3,49 @@
 <head>
   <meta charset="UTF-8">
   <link rel="icon" type="image/x-icon" href="/favicon.ico" />
-  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
-  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
-  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
   <link rel="manifest" href="/site.webmanifest" />
   <meta name="theme-color" content="#AC3631" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <script>(function(){try{const s=JSON.parse(localStorage.getItem('svn_layout_state')||'{}');if(s.isAdmin)document.documentElement.dataset.preShell='admin';}catch(e){}})()</script>
   <title>Tombamentos - Hub SVN</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap" media="print" onload="this.media='all'">
   <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap"></noscript>
   <link rel="stylesheet" href="style.css?v=20260615c">
   <style>
     .page-container--wide { max-width: min(1500px, 96vw); }
-
     .tomb-tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--border-light); margin: 8px 0 24px; }
     .tomb-tab { padding: 10px 18px; border: none; background: transparent; font-family: 'Nunito Sans', sans-serif; font-size: 0.9rem; font-weight: 700; color: rgba(34,27,25,0.5); cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; }
     .tomb-tab.active { color: var(--carbon-black); border-bottom-color: var(--ruby-red); }
-    .tomb-panel { display: none; }
-    .tomb-panel.active { display: block; }
+    .tomb-panel { display: none; } .tomb-panel.active { display: block; }
 
-    .tomb-drop { border: 2px dashed var(--border-light); border-radius: 12px; padding: 28px; text-align: center; transition: border-color .15s, background .15s; }
-    .tomb-drop.dragover { border-color: var(--ruby-red); background: rgba(172,54,49,0.04); }
-    .tomb-drop p { margin: 8px 0 0; font-size: 0.85rem; color: rgba(34,27,25,0.55); }
+    .tomb-create { max-width: 480px; border: 1px solid var(--border-light); border-radius: 12px; padding: 22px; margin-top: 8px; }
+    .tomb-create .field { margin-bottom: 14px; }
+    .tomb-create label { display: block; font-size: 0.8rem; font-weight: 700; margin-bottom: 5px; }
+    .tomb-create input, .tomb-create select { width: 100%; padding: 9px 11px; border: 1px solid var(--border-light); border-radius: 8px; font-family: inherit; font-size: 0.9rem; }
+
+    .tomb-list { display: flex; flex-direction: column; gap: 10px; }
+    .tomb-item { display: flex; align-items: center; justify-content: space-between; gap: 12px; border: 1px solid var(--border-light); border-radius: 10px; padding: 14px 16px; cursor: pointer; transition: background .12s; }
+    .tomb-item:hover { background: var(--icon-bg); }
+    .tomb-item-nome { font-weight: 700; font-size: 0.95rem; }
+    .tomb-item-meta { font-size: 0.78rem; color: rgba(34,27,25,0.55); margin-top: 2px; }
+    .tomb-marca-pill { padding: 3px 11px; border-radius: 999px; font-size: 0.76rem; font-weight: 700; background: rgba(172,54,49,0.1); color: var(--ruby-red); white-space: nowrap; }
+
+    .tomb-ws-header { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin-bottom: 18px; }
+    .tomb-ws-nome { font-family: 'Taviraj', serif; font-weight: 400; font-size: 1.5rem; }
+
+    .tomb-drop { border: 2px dashed var(--border-light); border-radius: 12px; padding: 26px; text-align: center; }
+    .tomb-drop p { margin: 8px 0 0; font-size: 0.84rem; color: rgba(34,27,25,0.55); }
     .tomb-filename { font-size: 0.85rem; font-weight: 700; margin-top: 10px; }
-
-    .tomb-summary { display: flex; gap: 18px; align-items: center; flex-wrap: wrap; margin: 22px 0 12px; font-size: 0.85rem; }
+    .tomb-summary { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; margin: 22px 0 12px; }
     .tomb-pill { padding: 3px 11px; border-radius: 999px; font-weight: 700; font-size: 0.78rem; }
     .tomb-pill--ok { background: #dcfce7; color: #15803d; }
     .tomb-pill--warn { background: #fee2e2; color: #dc2626; }
     .tomb-pill--total { background: #eef2f7; color: #475569; }
-
     #tombTabela td, #tombTabela th { font-size: 0.82rem; }
     .row-status-ok { color: #15803d; font-weight: 700; font-size: 0.78rem; }
     .row-status-warn { color: #dc2626; font-weight: 700; font-size: 0.78rem; }
     tr.tomb-row--warn td { background: #fef2f2; }
-
     .tomb-actions { display: flex; gap: 12px; margin-top: 20px; flex-wrap: wrap; }
     .tomb-note { font-size: 0.78rem; color: rgba(34,27,25,0.5); margin-top: 10px; }
     .tomb-empty { padding: 40px; text-align: center; color: rgba(34,27,25,0.4); }
@@ -49,7 +54,6 @@
 <body class="page-light">
   <div id="pageContent">
     <div class="page-container page-container--wide">
-
       <div class="page-header">
         <div>
           <h1 class="page-title">Tombamentos</h1>
@@ -57,43 +61,73 @@
         </div>
       </div>
 
-      <div class="tomb-tabs">
-        <button class="tomb-tab active" data-tab="criar" onclick="trocarAba('criar')">Criar novo tombamento</button>
-        <button class="tomb-tab" data-tab="realizados" onclick="trocarAba('realizados')">Tombamentos realizados</button>
+      <!-- Visão de abas (lista / criar) -->
+      <div id="viewTabs">
+        <div class="tomb-tabs">
+          <button class="tomb-tab active" data-tab="criar" onclick="trocarAba('criar')">Criar novo tombamento</button>
+          <button class="tomb-tab" data-tab="realizados" onclick="trocarAba('realizados')">Tombamentos realizados</button>
+        </div>
+
+        <div class="tomb-panel active" id="panelCriar">
+          <button class="btn btn-primary" id="btnNovo" onclick="abrirNovoForm()" style="display:inline-flex;align-items:center;gap:6px">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Novo tombamento
+          </button>
+
+          <div class="tomb-create" id="tombCreateForm" style="display:none">
+            <div class="field">
+              <label>Nome do tombamento</label>
+              <input type="text" id="novoNome" placeholder="Ex.: Tombamento Maringá — Junho/2026">
+            </div>
+            <div class="field">
+              <label>Selecione a marca</label>
+              <select id="novoMarca"><option value="">Selecione…</option></select>
+              <p class="tomb-note">A marca vale para todo o tombamento — todas as assinaturas e cartões usarão o logo dela.</p>
+            </div>
+            <div style="display:flex;gap:10px;margin-top:6px">
+              <button class="btn btn-primary" onclick="criarTombamento()">Criar tombamento</button>
+              <button class="btn" style="background:transparent;border:1px solid var(--border-light)" onclick="cancelarNovo()">Cancelar</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="tomb-panel" id="panelRealizados">
+          <div id="tombLista" class="tomb-list"><div class="tomb-empty">Carregando…</div></div>
+        </div>
       </div>
 
-      <!-- Aba: Criar novo -->
-      <div class="tomb-panel active" id="panelCriar">
+      <!-- Workspace de um tombamento aberto -->
+      <div id="tombWorkspace" style="display:none">
+        <button type="button" onclick="voltarLista()" class="btn-voltar" style="margin-bottom:14px">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+          Voltar
+        </button>
+        <div class="tomb-ws-header">
+          <span class="tomb-ws-nome" id="wsNome"></span>
+          <span class="tomb-marca-pill" id="wsMarca"></span>
+        </div>
+
         <div class="tomb-drop" id="tombDrop">
           <label class="btn btn-primary" style="cursor:pointer;display:inline-flex;align-items:center;gap:6px">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
             Escolher planilha
             <input type="file" id="tombFile" accept=".xlsx,.xls,.csv" style="display:none" onchange="aoEscolherArquivo(this)">
           </label>
-          <p>Formatos aceitos: .xlsx, .xls ou .csv. Colunas: nome, e-mail, telefone, marca/contrato, cargo, tem CFP, arquivo da foto.</p>
+          <p>Formatos: .xlsx, .xls ou .csv. Colunas: nome, e-mail, telefone, cargo, tem CFP, arquivo da foto. (A marca não vai na planilha — é a do tombamento.)</p>
           <div class="tomb-filename" id="tombFilename"></div>
         </div>
 
         <div id="tombResultado" style="display:none">
           <div class="tomb-summary" id="tombSummary"></div>
           <div class="admin-userlist-table-wrap" style="border-radius:12px;border:1px solid var(--border-light);overflow-x:auto">
-            <table class="admin-table" id="tombTabela">
-              <thead id="tombThead"></thead>
-              <tbody id="tombTbody"></tbody>
-            </table>
+            <table class="admin-table" id="tombTabela"><thead id="tombThead"></thead><tbody id="tombTbody"></tbody></table>
           </div>
-
           <div class="tomb-actions">
             <button class="btn btn-primary" id="btnGerarAssinaturas" disabled title="Disponível na próxima etapa">Gerar assinaturas (.zip)</button>
             <button class="btn btn-primary" id="btnGerarCartoes" disabled title="Disponível na próxima etapa">Gerar cartões digitais (.zip)</button>
           </div>
-          <p class="tomb-note">A geração de assinaturas e cartões (com o upload das fotos) será habilitada nas próximas etapas. Por enquanto, esta tela já lê a planilha e valida os dados.</p>
+          <p class="tomb-note">A geração de assinaturas e cartões será habilitada nas próximas etapas.</p>
         </div>
-      </div>
-
-      <!-- Aba: Realizados -->
-      <div class="tomb-panel" id="panelRealizados">
-        <div class="tomb-empty">Os tombamentos já realizados aparecerão aqui (em breve).</div>
       </div>
 
     </div>
@@ -105,15 +139,24 @@
   <script src="utils.js?v=20260615d"></script>
   <script src="toast.js?v=20260603"></script>
   <script>
-    const COLS = [
-      { f: 'nome', label: 'Nome' },
-      { f: 'email', label: 'E-mail' },
-      { f: 'telefone', label: 'Telefone' },
-      { f: 'marca', label: 'Marca / Contrato' },
-      { f: 'cargo', label: 'Cargo' },
-      { f: 'tem_cfp', label: 'Tem CFP' },
-      { f: 'arquivo_foto', label: 'Arquivo da foto' },
+    const MARCAS = [
+      { value: 'svn', label: 'SVN' },
+      { value: 'svn-investimentos', label: 'SVN Investimentos' },
+      { value: 'svn-capital', label: 'SVN Capital' },
+      { value: 'svn-connect', label: 'SVN Connect' },
+      { value: 'svn-gestao', label: 'SVN Gestão' },
+      { value: 'svn-global', label: 'SVN Global' },
+      { value: 'svn-imb', label: 'SVN Investment & Merchant Banking' },
+      { value: 'svn-agro-cambio-commodities', label: 'SVN Agro, Câmbio & Commodities' },
+      { value: 'svn-protecao-patrimonial', label: 'SVN Proteção Patrimonial' },
+      { value: 'svn-wealth-planning', label: 'SVN Wealth Planning' },
     ];
+    const marcaLabel = function (v) { const m = MARCAS.find(function (x) { return x.value === v; }); return m ? m.label : (v || '—'); };
+    const COLS = [
+      { f: 'nome', label: 'Nome' }, { f: 'email', label: 'E-mail' }, { f: 'telefone', label: 'Telefone' },
+      { f: 'cargo', label: 'Cargo' }, { f: 'tem_cfp', label: 'Tem CFP' }, { f: 'arquivo_foto', label: 'Arquivo da foto' },
+    ];
+    let currentTomb = null;
 
     async function init() {
       await Auth.init();
@@ -122,44 +165,100 @@
       if (typeof Shell !== 'undefined' && Shell.render) {
         Shell.render({ activeRoute: 'admin-tombamentos', contentEl: document.getElementById('pageContent') });
       }
+      document.getElementById('novoMarca').innerHTML = '<option value="">Selecione…</option>'
+        + MARCAS.map(function (m) { return '<option value="' + m.value + '">' + esc(m.label) + '</option>'; }).join('');
       setupDrop();
+      carregarLista();
     }
 
     function trocarAba(aba) {
       document.querySelectorAll('.tomb-tab').forEach(function (b) { b.classList.toggle('active', b.getAttribute('data-tab') === aba); });
       document.getElementById('panelCriar').classList.toggle('active', aba === 'criar');
       document.getElementById('panelRealizados').classList.toggle('active', aba === 'realizados');
+      if (aba === 'realizados') carregarLista();
+    }
+
+    function abrirNovoForm() { document.getElementById('btnNovo').style.display = 'none'; document.getElementById('tombCreateForm').style.display = 'block'; }
+    function cancelarNovo() { document.getElementById('tombCreateForm').style.display = 'none'; document.getElementById('btnNovo').style.display = 'inline-flex'; document.getElementById('novoNome').value = ''; document.getElementById('novoMarca').value = ''; }
+
+    async function criarTombamento() {
+      const nome = document.getElementById('novoNome').value.trim();
+      const marca = document.getElementById('novoMarca').value;
+      if (!nome) { if (window.showToast) showToast('Dê um nome ao tombamento', 'error'); return; }
+      if (!marca) { if (window.showToast) showToast('Selecione a marca', 'error'); return; }
+      try {
+        const res = await fetch('/api/admin/tombamentos', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ nome: nome, marca: marca }) });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Erro ao criar');
+        cancelarNovo();
+        abrirWorkspace(data);
+      } catch (err) { if (window.showToast) showToast(err.message || 'Erro ao criar tombamento', 'error'); }
+    }
+
+    async function carregarLista() {
+      const el = document.getElementById('tombLista');
+      try {
+        const res = await fetch('/api/admin/tombamentos');
+        const data = await res.json();
+        const lista = data.tombamentos || [];
+        if (!lista.length) { el.innerHTML = '<div class="tomb-empty">Nenhum tombamento ainda. Crie o primeiro na aba "Criar novo tombamento".</div>'; return; }
+        el.innerHTML = lista.map(function (t) {
+          const dt = t.created_at ? new Date(t.created_at).toLocaleDateString('pt-BR') : '';
+          const n = (t.linhas && t.linhas.length) ? (t.linhas.length + ' linha(s)') : 'sem planilha';
+          return '<div class="tomb-item" onclick="abrirTombamento(' + t.id + ')">'
+            + '<div><div class="tomb-item-nome">' + esc(t.nome) + '</div><div class="tomb-item-meta">' + dt + ' · ' + n + '</div></div>'
+            + '<span class="tomb-marca-pill">' + esc(marcaLabel(t.marca)) + '</span></div>';
+        }).join('');
+      } catch (err) { el.innerHTML = '<div class="tomb-empty">Erro ao carregar.</div>'; }
+    }
+
+    async function abrirTombamento(id) {
+      try {
+        const res = await fetch('/api/admin/tombamentos/' + id);
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Erro');
+        abrirWorkspace(data);
+      } catch (err) { if (window.showToast) showToast(err.message || 'Erro ao abrir', 'error'); }
+    }
+
+    function abrirWorkspace(tomb) {
+      currentTomb = tomb;
+      document.getElementById('viewTabs').style.display = 'none';
+      document.getElementById('tombWorkspace').style.display = 'block';
+      document.getElementById('wsNome').textContent = tomb.nome;
+      document.getElementById('wsMarca').textContent = marcaLabel(tomb.marca);
+      document.getElementById('tombFilename').textContent = '';
+      if (tomb.linhas && tomb.linhas.length) { renderTabela(tomb.linhas); }
+      else { document.getElementById('tombResultado').style.display = 'none'; }
+    }
+
+    function voltarLista() {
+      currentTomb = null;
+      document.getElementById('tombWorkspace').style.display = 'none';
+      document.getElementById('viewTabs').style.display = 'block';
+      trocarAba('realizados');
     }
 
     function setupDrop() {
       const drop = document.getElementById('tombDrop');
-      ['dragover', 'dragenter'].forEach(function (ev) {
-        drop.addEventListener(ev, function (e) { e.preventDefault(); drop.classList.add('dragover'); });
-      });
-      ['dragleave', 'drop'].forEach(function (ev) {
-        drop.addEventListener(ev, function (e) { e.preventDefault(); drop.classList.remove('dragover'); });
-      });
-      drop.addEventListener('drop', function (e) {
-        const f = e.dataTransfer.files && e.dataTransfer.files[0];
-        if (f) enviarPlanilha(f);
-      });
+      ['dragover', 'dragenter'].forEach(function (ev) { drop.addEventListener(ev, function (e) { e.preventDefault(); }); });
+      drop.addEventListener('drop', function (e) { e.preventDefault(); const f = e.dataTransfer.files && e.dataTransfer.files[0]; if (f) enviarPlanilha(f); });
     }
-
-    function aoEscolherArquivo(input) {
-      const f = input.files && input.files[0];
-      if (f) enviarPlanilha(f);
-    }
+    function aoEscolherArquivo(input) { const f = input.files && input.files[0]; if (f) enviarPlanilha(f); }
 
     async function enviarPlanilha(file) {
+      if (!currentTomb) return;
       document.getElementById('tombFilename').textContent = 'Lendo: ' + file.name + '…';
-      const fd = new FormData();
-      fd.append('planilha', file);
+      const fd = new FormData(); fd.append('planilha', file);
       try {
         const res = await fetch('/api/admin/tombamentos/parse', { method: 'POST', body: fd });
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || 'Erro ao ler planilha');
         document.getElementById('tombFilename').textContent = file.name + ' — ' + data.rows.length + ' linha(s)';
         renderTabela(data.rows);
+        // salva as linhas no tombamento
+        await fetch('/api/admin/tombamentos/' + currentTomb.id, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ linhas: data.rows }) });
+        currentTomb.linhas = data.rows;
       } catch (err) {
         document.getElementById('tombFilename').textContent = '';
         if (window.showToast) showToast(err.message || 'Erro ao ler a planilha', 'error');
@@ -168,28 +267,17 @@
 
     function renderTabela(rows) {
       const comProblema = rows.filter(function (r) { return r._issues && r._issues.length; }).length;
-      const ok = rows.length - comProblema;
-
       document.getElementById('tombSummary').innerHTML =
         '<span class="tomb-pill tomb-pill--total">' + rows.length + ' linha(s)</span>'
-        + '<span class="tomb-pill tomb-pill--ok">' + ok + ' OK</span>'
+        + '<span class="tomb-pill tomb-pill--ok">' + (rows.length - comProblema) + ' OK</span>'
         + (comProblema ? '<span class="tomb-pill tomb-pill--warn">' + comProblema + ' com problema</span>' : '');
-
-      document.getElementById('tombThead').innerHTML = '<tr>'
-        + COLS.map(function (c) { return '<th>' + esc(c.label) + '</th>'; }).join('')
-        + '<th>Status</th></tr>';
-
+      document.getElementById('tombThead').innerHTML = '<tr>' + COLS.map(function (c) { return '<th>' + esc(c.label) + '</th>'; }).join('') + '<th>Status</th></tr>';
       document.getElementById('tombTbody').innerHTML = rows.map(function (r) {
         const warn = r._issues && r._issues.length;
-        const tds = COLS.map(function (c) {
-          return '<td style="padding:9px 12px">' + esc(r[c.f] || '—') + '</td>';
-        }).join('');
-        const status = warn
-          ? '<span class="row-status-warn">' + esc(r._issues.join(', ')) + '</span>'
-          : '<span class="row-status-ok">OK</span>';
+        const tds = COLS.map(function (c) { return '<td style="padding:9px 12px">' + esc(r[c.f] || '—') + '</td>'; }).join('');
+        const status = warn ? '<span class="row-status-warn">' + esc(r._issues.join(', ')) + '</span>' : '<span class="row-status-ok">OK</span>';
         return '<tr class="' + (warn ? 'tomb-row--warn' : '') + '">' + tds + '<td style="padding:9px 12px">' + status + '</td></tr>';
       }).join('');
-
       document.getElementById('tombResultado').style.display = 'block';
     }
 

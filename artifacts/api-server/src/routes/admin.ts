@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { db } from "@workspace/db";
-import { usersTable, activityLogTable, artTemplatesTable, solicitacoesTable, userTipoAssignmentsTable, tipoClickupListTable, clickupListsTable } from "@workspace/db";
+import { usersTable, activityLogTable, artTemplatesTable, solicitacoesTable, userTipoAssignmentsTable, tipoClickupListTable, clickupListsTable, tombamentosTable } from "@workspace/db";
 import { eq, desc, sql, and, count, isNull, notInArray } from "drizzle-orm";
 import { requireAuth, requireRole } from "../middleware/auth.middleware";
 import { logger } from "../lib/logger";
@@ -68,6 +68,48 @@ router.post("/tombamentos/parse", requireRole("admin"), uploadPlanilha.single("p
     logger.error({ err }, "[tombamentos] erro ao ler planilha");
     res.status(400).json({ error: "Não foi possível ler a planilha. Confira se é um .xlsx, .xls ou .csv válido." });
   }
+});
+
+router.post("/tombamentos", requireRole("admin"), async (req, res): Promise<void> => {
+  try {
+    const { nome, marca } = req.body as { nome?: string; marca?: string };
+    if (!nome || !nome.trim()) { res.status(400).json({ error: "Informe o nome do tombamento." }); return; }
+    if (!marca || !marca.trim()) { res.status(400).json({ error: "Selecione a marca." }); return; }
+    const [row] = await db.insert(tombamentosTable).values({
+      nome: nome.trim(),
+      marca: marca.trim(),
+      created_by: req.session.user?.email ?? null,
+    }).returning();
+    res.json(row);
+  } catch (err) {
+    logger.error({ err }, "[tombamentos] erro ao criar");
+    res.status(500).json({ error: "Erro ao criar tombamento." });
+  }
+});
+
+router.get("/tombamentos", requireRole("admin"), async (_req, res): Promise<void> => {
+  const rows = await db.select().from(tombamentosTable).orderBy(desc(tombamentosTable.created_at));
+  res.json({ tombamentos: rows });
+});
+
+router.get("/tombamentos/:id", requireRole("admin"), async (req, res): Promise<void> => {
+  const id = parseInt(String(req.params.id), 10);
+  if (isNaN(id)) { res.status(400).json({ error: "ID inválido" }); return; }
+  const [row] = await db.select().from(tombamentosTable).where(eq(tombamentosTable.id, id));
+  if (!row) { res.status(404).json({ error: "Tombamento não encontrado" }); return; }
+  res.json(row);
+});
+
+router.patch("/tombamentos/:id", requireRole("admin"), async (req, res): Promise<void> => {
+  const id = parseInt(String(req.params.id), 10);
+  if (isNaN(id)) { res.status(400).json({ error: "ID inválido" }); return; }
+  const { linhas, nome } = req.body as { linhas?: unknown; nome?: string };
+  const patch: Record<string, unknown> = { updated_at: new Date() };
+  if (linhas !== undefined) patch.linhas = linhas;
+  if (nome !== undefined && String(nome).trim()) patch.nome = String(nome).trim();
+  const [row] = await db.update(tombamentosTable).set(patch).where(eq(tombamentosTable.id, id)).returning();
+  if (!row) { res.status(404).json({ error: "Tombamento não encontrado" }); return; }
+  res.json(row);
 });
 
 router.get("/users", requireRole("admin"), async (req, res) => {

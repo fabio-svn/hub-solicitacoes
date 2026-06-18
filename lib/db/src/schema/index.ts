@@ -153,3 +153,19 @@ export const activityLogTable = pgTable("activity_log", {
   detalhe: text("detalhe").notNull(),
   metadata: jsonb("metadata"),
 });
+
+
+export const tombamentosTable = pgTable("tombamentos", {
+  id: serial("id").primaryKey(),
+  nome: varchar("nome", { length: 255 }).notNull(),
+  marca: varchar("marca", { length: 60 }).notNull(),
+  status: varchar("status", { length: 30 }).default("aberto").notNull(),
+  linhas: jsonb("linhas"),
+  assinaturas_zip_url: text("assinaturas_zip_url"),
+  cartoes_zip_url: text("cartoes_zip_url"),
+  expires_at: timestamp("expires_at"),
+  created_by: varchar("created_by", { length: 255 }),
+  created_at: timestamp("created_at").defaultNow().notNull(),
+  updated_at: timestamp("updated_at").defaultNow().notNull(),
+});
+export type Tombamento = typeof tombamentosTable.$inferSelect;
