@@ -19,6 +19,12 @@
     table.vc tbody tr.vc-final td { background: #dcfce7 !important; }
     table.vc tbody tr.vc-final select { background: transparent !important; }
     .cartao-card--final { background: #dcfce7; }
+    /* Toggle "Esconder cartões enviados" */
+    .vc-hide-enviados tr.vc-final { display: none !important; }
+    .vc-hide-enviados .cartao-card--final { display: none !important; }
+    .vc-toggle-btn { font-family: 'Nunito Sans', sans-serif; font-size: 0.78rem; font-weight: 700; padding: 6px 12px; border-radius: 999px; border: 1px solid var(--border-light); background: var(--card-white); color: rgba(34,27,25,0.6); cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: background .15s, color .15s, border-color .15s; white-space: nowrap; }
+    .vc-toggle-btn:hover { background: var(--icon-bg); }
+    .vc-toggle-btn.active { background: var(--carbon-black); color: var(--paper-white); border-color: var(--carbon-black); }
 
     /* Estrela de primeira solicitação (ao lado do nome) + legenda */
     .vc-namecell { display: flex; align-items: center; gap: 5px; }
@@ -158,8 +164,11 @@
       </div>
         </div>
       </div>
-      <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin:4px 0 10px">
-        <span class="vc-legend"><span class="vc-star">★</span> = primeira solicitação</span>
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin:4px 0 10px;flex-wrap:wrap">
+        <span style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+          <span class="vc-legend"><span class="vc-star">★</span> = primeira solicitação</span>
+          <button id="vcHideEnviados" class="vc-toggle-btn" type="button" onclick="toggleHideEnviados()">Esconder cartões enviados</button>
+        </span>
         <span style="display:flex;align-items:center;gap:12px">
           <span class="vc-saved" id="vcSaved">✓ Salvo</span>
           <span class="vc-count" id="vcCount"></span>
@@ -297,6 +306,7 @@
       if (typeof Shell !== 'undefined' && Shell.render) {
         Shell.render({ activeRoute: 'validacao-cartoes', contentEl: document.getElementById('pageContent') });
       }
+      applyHideEnviados();
       carregar();
     }
 
@@ -374,6 +384,26 @@
     }
     window.addEventListener('resize', fitTableHeight);
 
+    /* ── Toggle "Esconder cartões enviados" (status envio-assessor → linhas .vc-final) ── */
+    const VC_HIDE_KEY = 'vc_hide_enviados';
+    function applyHideEnviados() {
+      const on = localStorage.getItem(VC_HIDE_KEY) === '1';
+      const vc = document.getElementById('vcContent');
+      const cards = document.querySelector('.cartoes-cards-mobile');
+      if (vc) vc.classList.toggle('vc-hide-enviados', on);
+      if (cards) cards.classList.toggle('vc-hide-enviados', on);
+      const btn = document.getElementById('vcHideEnviados');
+      if (btn) {
+        btn.classList.toggle('active', on);
+        btn.textContent = on ? 'Mostrar cartões enviados' : 'Esconder cartões enviados';
+      }
+    }
+    function toggleHideEnviados() {
+      const on = localStorage.getItem(VC_HIDE_KEY) === '1';
+      localStorage.setItem(VC_HIDE_KEY, on ? '0' : '1');
+      applyHideEnviados();
+    }
+
     function render() {
       recomputeFirstSeq();
       const view = getView();
@@ -422,6 +452,7 @@
       }).join('');
 
       document.getElementById('vcContent').innerHTML = '<div class="vc-scroll"><table class="vc"><thead>' + head + '</thead><tbody>' + rows + '</tbody></table></div>';
+      applyHideEnviados();
       renderCartoesCards(view);
 
       document.querySelectorAll('table.vc th.sortable').forEach(function (th) {
@@ -525,6 +556,7 @@
           '</div>' +
         '</article>';
       }).join('');
+      applyHideEnviados();
     }
 
     let saveTimer = null;

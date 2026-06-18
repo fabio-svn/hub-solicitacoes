@@ -1165,6 +1165,44 @@ router.get("/admin/stats", requireAuth, async (req, res): Promise<void> => {
   }
 });
 
+router.post("/solicitacoes/bulk-delete", requireRole("admin"), async (req, res): Promise<void> => {
+  try {
+    const user = req.session.user!;
+    const idsRaw = (req.body?.ids ?? []) as unknown[];
+    const ids = Array.from(new Set(
+      (Array.isArray(idsRaw) ? idsRaw : []).map(n => parseInt(String(n), 10)).filter(n => !isNaN(n))
+    ));
+    if (ids.length === 0) { res.status(400).json({ error: "Nenhum id válido informado" }); return; }
+    if (ids.length > 200) { res.status(400).json({ error: "Máximo de 200 solicitações por vez" }); return; }
+
+    const sols = await db.select().from(solicitacoesTable).where(inArray(solicitacoesTable.id, ids));
+    if (sols.length === 0) { res.status(404).json({ error: "Nenhuma solicitação encontrada" }); return; }
+    const foundIds = sols.map(s => s.id);
+
+    const arquivosParaDeletar = await db.select().from(arquivosTable).where(inArray(arquivosTable.solicitacao_id, foundIds));
+    await db.transaction(async (tx) => {
+      await tx.delete(arquivosTable).where(inArray(arquivosTable.solicitacao_id, foundIds));
+      await tx.delete(solicitacoesTable).where(inArray(solicitacoesTable.id, foundIds));
+    });
+    const r2Del = await Promise.allSettled(arquivosParaDeletar.map(a => deleteFromR2(a.url_r2)));
+    r2Del.forEach((r, i) => {
+      if (r.status === "rejected") logger.warn({ url: arquivosParaDeletar[i]?.url_r2, reason: r.reason }, "Falha ao deletar arquivo do R2 (bulk)");
+    });
+
+    await logAtividade({
+      userEmail: user.email, userName: user.name,
+      tipo: "solicitacoes_excluidas_massa", nivel: "warn",
+      detalhe: `${user.email} excluiu ${foundIds.length} solicitações em massa (#${foundIds.join(", #")})`,
+      metadata: { ids: foundIds, count: foundIds.length },
+    });
+    logger.info({ count: foundIds.length, ids: foundIds, deletedBy: user.email }, "Solicitações excluídas em massa por admin");
+    res.json({ success: true, deleted: foundIds.length, ids: foundIds });
+  } catch (err) {
+    logger.error({ err }, "Erro ao excluir solicitações em massa");
+    res.status(500).json({ error: "Erro ao excluir em massa" });
+  }
+});
+
 router.delete("/solicitacoes/:id", requireRole("admin"), async (req, res): Promise<void> => {
   try {
     const user = req.session.user!;

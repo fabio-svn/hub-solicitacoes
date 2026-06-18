@@ -17,6 +17,15 @@
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap" media="print" onload="this.media='all'">
   <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap"></noscript>
   <link rel="stylesheet" href="style.css?v=20260615c">
+  <style>
+    .bulk-bar { display:flex; align-items:center; justify-content:space-between; gap:12px; background:var(--icon-bg); border:1px solid var(--border-light); border-radius:10px; padding:10px 14px; margin-bottom:12px; }
+    .bulk-bar .bulk-count { font-weight:700; font-size:0.85rem; color:var(--carbon-black); }
+    .bulk-bar .bulk-actions { display:flex; gap:8px; }
+    .btn-sm { padding:7px 14px; font-size:0.82rem; }
+    .bulk-del-btn { background:var(--danger); color:#fff; border:1px solid var(--danger); }
+    .bulk-del-btn:hover { background:#b91c1c; border-color:#b91c1c; }
+    .admin-table input[type=checkbox] { width:16px; height:16px; accent-color:var(--ruby-red); cursor:pointer; vertical-align:middle; margin:0; }
+  </style>
 </head>
 <body class="page-light">
   <div id="pageContent">
@@ -305,7 +314,17 @@
         return;
       }
       const isAdmin = Auth.getUserRole() === 'admin';
+      const bulkBar = isAdmin
+        ? `<div class="bulk-bar" id="bulkBar_${tab}" style="display:none">
+             <span class="bulk-count" id="bulkCount_${tab}"></span>
+             <div class="bulk-actions">
+               <button class="btn btn-secondary btn-sm" onclick="bulkClear('${tab}')">Limpar seleção</button>
+               <button class="btn bulk-del-btn btn-sm" onclick="bulkDelete('${tab}')">Excluir selecionadas</button>
+             </div>
+           </div>`
+        : '';
       let html = '<table class="admin-table"><thead><tr>'
+        + (isAdmin ? '<th style="width:34px;text-align:center"><input type="checkbox" class="bulk-all" onclick="bulkToggleAll(\'' + tab + '\', this)" title="Selecionar todos"></th>' : '')
         + '<th>Tipo</th><th>Título</th><th>Solicitante</th><th>Data</th>'
         + '<th style="min-width:140px">Status</th>'
         + (isAdmin ? '<th style="min-width:100px;text-align:center">Ações</th>' : '')
@@ -328,13 +347,14 @@
             </td>`
           : '';
         html += `<tr onclick="openDrawerByKey('item_${item.id}')">
+          ${isAdmin ? `<td style="text-align:center" onclick="event.stopPropagation()"><input type="checkbox" class="bulk-cb" data-id="${item.id}" onchange="bulkUpdate('${tab}')"></td>` : ''}
           <td>${esc(tipoLabel)}</td><td>${esc(titulo)}</td><td>${esc(item.user_email)}</td><td>${esc(date)}</td>
           <td><span class="badge" style="background:${statusObj.bg || '#f1f5f9'};color:${statusObj.text || '#475569'};white-space:nowrap">${esc(statusObj.label)}</span></td>
           ${acoesCell}
         </tr>`;
       });
       html += '</tbody></table>';
-      container.innerHTML = html;
+      container.innerHTML = bulkBar + html;
 
       const pgContainer = document.getElementById(tab === 'eventos' ? 'paginationEventos' : 'paginationGeral');
       if (data.totalPages > 1) {
@@ -346,6 +366,62 @@
     }
 
     function goPage(tab, page) { adminPages[tab] = page; loadTable(tab); }
+
+    /* ── Seleção / exclusão em massa (admin) ── */
+    function bulkScope(tab) { return document.getElementById(tab === 'eventos' ? 'tableEventos' : 'tableGeral'); }
+    function bulkSelectedIds(tab) {
+      const scope = bulkScope(tab); if (!scope) return [];
+      return Array.from(scope.querySelectorAll('.bulk-cb:checked')).map(cb => parseInt(cb.dataset.id, 10)).filter(n => !isNaN(n));
+    }
+    function bulkUpdate(tab) {
+      const scope = bulkScope(tab); if (!scope) return;
+      const all = scope.querySelectorAll('.bulk-cb');
+      const sel = scope.querySelectorAll('.bulk-cb:checked');
+      const bar = document.getElementById('bulkBar_' + tab);
+      if (bar) {
+        bar.style.display = sel.length ? 'flex' : 'none';
+        const c = document.getElementById('bulkCount_' + tab);
+        if (c) c.textContent = sel.length + (sel.length === 1 ? ' solicitação selecionada' : ' solicitações selecionadas');
+      }
+      const master = scope.querySelector('.bulk-all');
+      if (master) {
+        master.checked = all.length > 0 && sel.length === all.length;
+        master.indeterminate = sel.length > 0 && sel.length < all.length;
+      }
+    }
+    function bulkToggleAll(tab, master) {
+      bulkScope(tab).querySelectorAll('.bulk-cb').forEach(cb => { cb.checked = master.checked; });
+      bulkUpdate(tab);
+    }
+    function bulkClear(tab) {
+      bulkScope(tab).querySelectorAll('.bulk-cb').forEach(cb => { cb.checked = false; });
+      bulkUpdate(tab);
+    }
+    async function bulkDelete(tab) {
+      const ids = bulkSelectedIds(tab);
+      if (!ids.length) return;
+      const ok = await showConfirm(
+        `Excluir ${ids.length} ${ids.length === 1 ? 'solicitação selecionada' : 'solicitações selecionadas'}? Esta ação não pode ser desfeita.`,
+        { danger: true, okLabel: 'Excluir' }
+      );
+      if (!ok) return;
+      try {
+        const res = await fetch('/api/solicitacoes/bulk-delete', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ids }),
+        });
+        const d = await res.json().catch(() => ({}));
+        if (!res.ok) { showToast('Erro ao excluir: ' + (d.error || res.statusText), 'error'); return; }
+        showToast((d.deleted || ids.length) + ' solicitação(ões) excluída(s).', 'success');
+        loadTable(currentTab);
+        loadStats();
+        loadAdminStats();
+      } catch (e) {
+        console.error(e);
+        showToast('Erro de rede ao excluir em massa', 'error');
+      }
+    }
 
     async function deleteSol(id, ev) {
       if (ev) ev.stopPropagation();
