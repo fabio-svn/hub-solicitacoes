@@ -90,6 +90,18 @@
           Voltar
         </button>
 
+        <div class="field" id="fisicoGate">
+          <label>Você é Assessor de Investimentos? <span class="text-ruby">*</span></label>
+          <div style="display:flex;gap:18px;margin-top:6px">
+            <label style="display:flex;align-items:center;gap:7px;cursor:pointer;font-size:0.92rem"><input type="radio" name="ehAssessor" value="sim" onchange="onAssessorChange()"> Sim</label>
+            <label style="display:flex;align-items:center;gap:7px;cursor:pointer;font-size:0.92rem"><input type="radio" name="ehAssessor" value="nao" onchange="onAssessorChange()"> Não</label>
+          </div>
+        </div>
+        <div id="fisicoBloqueado" class="alert-card alert-danger" style="display:none;margin-bottom:16px">
+          <div class="alert-text">Este formulário é de uso exclusivo para Assessores de Investimentos.</div>
+        </div>
+
+        <div id="fisicoFormBody" style="display:none">
         <div class="alert-card alert-info">
           <div class="alert-title">Cartão físico</div>
           <div class="alert-text">Preencha os dados exatamente da forma em que devem constar no cartão impresso.</div>
@@ -105,8 +117,8 @@
         </div>
         <div class="field">
           <label>E-mail <span class="text-ruby">*</span></label>
-          <p style="font-size:0.78rem;opacity:0.55;margin:-12px 0 8px">Use o e-mail de assessor (AAI) ou o corporativo (time interno)</p>
-          <input type="email" id="emailCorporativoFisico" placeholder="seu@svninvest.com.br" required>
+          <p style="font-size:0.78rem;opacity:0.55;margin:-12px 0 8px">Use o e-mail de assessor (AAI)</p>
+          <input type="email" id="emailCorporativoFisico" placeholder="seu@svninvestimentos.com.br, seu@svncapital.com.br, seu@svnconnect.com.br" required>
         </div>
         <div class="field">
           <label>Unidade <span class="text-ruby">*</span></label>
@@ -125,6 +137,7 @@
           <div class="form-nav" style="justify-content:flex-end">
             <button class="btn btn-primary btn-submit-gold" id="btnSubmitFisico" onclick="submitFormFisico()">Enviar</button>
           </div>
+        </div>
         </div>
       </div>
 
@@ -256,8 +269,27 @@
       return FormCore.validateRequired(null, document.getElementById(stepId));
     }
 
+    function onAssessorChange() {
+      const val = (document.querySelector('input[name="ehAssessor"]:checked') || {}).value;
+      const body = document.getElementById('fisicoFormBody');
+      const warn = document.getElementById('fisicoBloqueado');
+      body.style.display = (val === 'sim') ? '' : 'none';
+      warn.style.display = (val === 'nao') ? '' : 'none';
+    }
+
     function submitFormFisico() {
+      if ((document.querySelector('input[name="ehAssessor"]:checked') || {}).value !== 'sim') return;
       if (!validateStep('step2Fisico')) return;
+      const errEl = document.getElementById('submitErrorFisico');
+      const email = document.getElementById('emailCorporativoFisico').value.trim().toLowerCase();
+      const dominiosOk = ['@svninvestimentos.com.br', '@svncapital.com.br', '@svnconnect.com.br'];
+      if (!dominiosOk.some(function (d) { return email.endsWith(d); })) {
+        errEl.textContent = 'Use um e-mail terminando em @svninvestimentos.com.br, @svncapital.com.br ou @svnconnect.com.br.';
+        errEl.style.display = '';
+        document.getElementById('emailCorporativoFisico').focus();
+        return;
+      }
+      errEl.style.display = 'none';
       const dados = {
         nome: Auth.getUserName(),
         subTipo: 'físico',

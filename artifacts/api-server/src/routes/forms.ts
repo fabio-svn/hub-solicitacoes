@@ -1257,6 +1257,7 @@ router.get("/cartao-aprovacoes", requireAuth, async (req, res): Promise<void> =>
       const dados: any = s.dados || {};
       return {
         solicitacao_id: s.id,
+        created_at: s.created_at,
         data_pedido: a?.data_pedido ?? new Date(s.created_at).toLocaleDateString("pt-BR"),
         nome: a?.nome ?? (dados.nomeCartao || ""),
         whatsapp: a?.whatsapp ?? (dados.whatsapp || ""),

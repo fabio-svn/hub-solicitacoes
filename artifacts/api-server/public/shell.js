@@ -204,6 +204,13 @@ window.Shell = {
         roles: ['admin'],
       },
       {
+        route: 'admin-tombamentos',
+        href: '/admin-tombamentos.html',
+        icon: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="4" rx="1"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/></svg>',
+        label: 'Tombamentos',
+        roles: ['admin'],
+      },
+      {
         route: 'admin-clickup-lists',
         href: '/admin-clickup-lists.html',
         icon: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>',

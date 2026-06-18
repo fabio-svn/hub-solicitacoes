@@ -9,10 +9,66 @@ import { gerarArteParaSolicitacao } from "../services/art-generator";
 import { AVAILABLE_FONTS } from "../types/art-template";
 import { FORM_SCHEMAS, getFormSchemaList, TIPOS_COM_CLICKUP } from "../config/form-schemas";
 import { validateClickUpList } from "./clickup";
+import multer from "multer";
+import * as XLSX from "xlsx";
 
 const TIPOS_COM_CLICKUP_SET = new Set(TIPOS_COM_CLICKUP.map(t => t.tipo));
 
 const router = Router();
+
+// ───────────── Tombamentos: leitura da planilha (Fase 1) ─────────────
+const uploadPlanilha = multer({ storage: multer.memoryStorage(), limits: { fileSize: 15 * 1024 * 1024 } });
+const TOMB_DOMINIOS = ["@svninvestimentos.com.br", "@svncapital.com.br", "@svnconnect.com.br"];
+const TOMB_SYN: Record<string, string[]> = {
+  nome: ["nome", "nomecompleto"],
+  email: ["email", "e mail"],
+  telefone: ["telefone", "whatsapp", "celular", "fone"],
+  marca: ["marca", "contrato", "contratosocial"],
+  cargo: ["cargo", "funcao"],
+  tem_cfp: ["temcfp", "cfp"],
+  arquivo_foto: ["arquivofoto", "foto", "arquivodafoto", "nomedoarquivo", "imagem"],
+};
+function tombNorm(s: unknown): string {
+  return String(s ?? "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]/g, "");
+}
+function parseTombamentoPlanilha(buf: Buffer): { rows: Array<Record<string, unknown>> } {
+  const wb = XLSX.read(buf, { type: "buffer" });
+  const ws = wb.Sheets[wb.SheetNames[0]];
+  if (!ws) return { rows: [] };
+  const aoa = XLSX.utils.sheet_to_json(ws, { header: 1, blankrows: false, defval: "" }) as any[][];
+  if (!aoa.length) return { rows: [] };
+  const headers = (aoa[0] || []).map((h) => String(h ?? "").trim());
+  const colToField: Record<number, string> = {};
+  headers.forEach((h, i) => {
+    const n = tombNorm(h);
+    for (const [field, syns] of Object.entries(TOMB_SYN)) {
+      if (syns.map(tombNorm).includes(n)) { colToField[i] = field; break; }
+    }
+  });
+  const rows = aoa.slice(1).map((cells, idx) => {
+    const r: Record<string, unknown> = { _linha: idx + 2 };
+    headers.forEach((_, i) => { if (colToField[i]) r[colToField[i]] = String(cells[i] ?? "").trim(); });
+    const issues: string[] = [];
+    if (!r.nome) issues.push("sem nome");
+    const email = String(r.email || "").toLowerCase();
+    if (!email) issues.push("sem e-mail");
+    else if (!TOMB_DOMINIOS.some((d) => email.endsWith(d))) issues.push("e-mail fora dos domínios SVN");
+    r._issues = issues;
+    return r;
+  });
+  return { rows };
+}
+
+router.post("/tombamentos/parse", requireRole("admin"), uploadPlanilha.single("planilha"), (req, res): void => {
+  try {
+    const file = (req as { file?: { buffer: Buffer } }).file;
+    if (!file) { res.status(400).json({ error: "Envie a planilha no campo 'planilha'." }); return; }
+    res.json(parseTombamentoPlanilha(file.buffer));
+  } catch (err) {
+    logger.error({ err }, "[tombamentos] erro ao ler planilha");
+    res.status(400).json({ error: "Não foi possível ler a planilha. Confira se é um .xlsx, .xls ou .csv válido." });
+  }
+});
 
 router.get("/users", requireRole("admin"), async (req, res) => {
   try {
@@ -48,7 +104,7 @@ router.put("/users/:id/role", requireRole("admin"), async (req, res): Promise<vo
     const { role } = req.body as { role: string };
     const currentUser = req.session.user!;
 
-    if (!["colaborador", "gestor", "admin", "capital_humano"].includes(role)) {
+    if (!["colaborador", "gestor", "admin"].includes(role)) {
       res.status(400).json({ error: "Role inválida" });
       return;
     }
@@ -479,7 +535,7 @@ router.post("/users", requireRole("admin"), async (req, res): Promise<void> => {
     if (!name || !name.trim()) {
       res.status(400).json({ error: "name obrigatório" }); return;
     }
-    if (!["colaborador", "gestor", "admin", "capital_humano"].includes(role)) {
+    if (!["colaborador", "gestor", "admin"].includes(role)) {
       res.status(400).json({ error: "Role inválida" }); return;
     }
 

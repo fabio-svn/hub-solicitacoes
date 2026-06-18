@@ -40,7 +40,8 @@
     "svg-to-pdfkit": "^0.1.8",
     "thread-stream": "3.1.0",
     "tsx": "catalog:",
-    "uuid": "^13.0.0"
+    "uuid": "^13.0.0",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@types/compression": "^1.8.1",

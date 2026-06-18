@@ -12,6 +12,29 @@
   <link rel="stylesheet" href="style.css?v=20260615c">
   <style>
 
+    /* Esta página foge do padrão de largura: a tabela tem muitas colunas, então aproveita mais espaço */
+    .page-container--wide { max-width: min(1760px, 96vw); }
+
+    /* Linha inteira verde quando a solicitação chega na etapa final (Envio assessor) */
+    table.vc tbody tr.vc-final td { background: #dcfce7 !important; }
+    table.vc tbody tr.vc-final select { background: transparent !important; }
+    .cartao-card--final { background: #dcfce7; }
+
+    /* Estrela de primeira solicitação (ao lado do nome) + legenda */
+    .vc-namecell { display: flex; align-items: center; gap: 5px; }
+    .vc-namecell input { flex: 1; min-width: 0; }
+    .vc-star { flex: 0 0 13px; text-align: center; color: #ac3631; font-size: 0.82rem; line-height: 1; }
+    .vc-legend { font-size: 0.78rem; color: rgba(34,27,25,0.6); display: inline-flex; align-items: center; gap: 5px; }
+    .vc-legend .vc-star { flex: none; }
+
+    /* Indicador de ordenação: sempre visível (cinza), destacado na coluna ativa */
+    table.vc th .sort-ind { color: rgba(255,255,255,0.4); }
+    table.vc th .sort-ind.active { color: var(--paper-white); }
+
+    /* Alça de redimensionamento de coluna (estilo Excel) */
+    .vc-resizer { position: absolute; top: 0; right: 0; width: 7px; height: 100%; cursor: col-resize; user-select: none; z-index: 3; }
+    .vc-resizer:hover { background: rgba(172,54,49,0.45); }
+
     .vc-count { font-size: 0.85rem; color: rgba(34,27,25,0.5); }
     .vc-saved { font-size: 0.78rem; color: #15803d; opacity: 0; transition: opacity .2s; }
     .vc-saved.show { opacity: 1; }
@@ -135,9 +158,12 @@
       </div>
         </div>
       </div>
-      <div style="display:flex;justify-content:flex-end;align-items:center;gap:12px;margin:4px 0 10px">
-        <span class="vc-saved" id="vcSaved">✓ Salvo</span>
-        <span class="vc-count" id="vcCount"></span>
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin:4px 0 10px">
+        <span class="vc-legend"><span class="vc-star">★</span> = primeira solicitação</span>
+        <span style="display:flex;align-items:center;gap:12px">
+          <span class="vc-saved" id="vcSaved">✓ Salvo</span>
+          <span class="vc-count" id="vcCount"></span>
+        </span>
       </div>
 
       <div id="vcContent"><div class="empty-state"><p>Carregando…</p></div></div>
@@ -192,12 +218,12 @@
       { v: 'reprovado', label: 'Reprovado' },
     ];
     const STATUS_COLORS = {
-      'aguardando-validacao': { bg: '#fee2e2', text: '#b91c1c' },
-      'aguardando-contrato': { bg: '#f1f5f9', text: '#475569' },
-      'validado': { bg: '#d1fae5', text: '#047857' },
+      'aguardando-validacao': { bg: '#eef2f7', text: '#475569' },
+      'aguardando-contrato': { bg: '#ffedd5', text: '#c2410c' },
+      'validado': { bg: '#ede9fe', text: '#6d28d9' },
       'envio-grafica': { bg: '#dbeafe', text: '#1d4ed8' },
       'envio-assessor': { bg: '#dcfce7', text: '#15803d' },
-      'reprovado': { bg: '#fecaca', text: '#dc2626' },
+      'reprovado': { bg: '#fee2e2', text: '#dc2626' },
     };
     const COLS = [
       { f: '_del', label: '', group: 'form', type: 'delete', min: 34 },
@@ -216,8 +242,10 @@
 
     let IS_ADMIN = false;
     let RAW = [];
-    let sortState = { field: null, dir: 1 };
+    let sortState = { field: 'data_pedido', dir: -1 };
     let filters = { status: '', contrato: '', unidade: '' };
+    let colWidths = {};
+    let colResizing = false;
 
       function optionsHtml(opts, sel) { return opts.map(function (o) { return '<option value="' + esc(o.v) + '"' + (o.v === sel ? ' selected' : '') + '>' + esc(o.label) + '</option>'; }).join(''); }
     function colorSelect(el, map) { const c = map && map[el.value]; if (c) { el.style.background = c.bg; el.style.color = c.text; } else { el.style.background = 'transparent'; el.style.color = '#221b19'; } }
@@ -307,28 +335,69 @@
         });
       }
       if (sortState.field) {
+        const f = sortState.field;
         view.sort(function (a, b) {
-          const av = String(a[sortState.field] || ''); const bv = String(b[sortState.field] || '');
+          if (f === 'data_pedido') {
+            return (new Date(a.created_at || 0) - new Date(b.created_at || 0)) * sortState.dir;
+          }
+          const av = String(a[f] || ''); const bv = String(b[f] || '');
           return av.localeCompare(bv, 'pt-BR', { numeric: true, sensitivity: 'base' }) * sortState.dir;
         });
       }
       return view;
     }
 
+    function recomputeFirstSeq() {
+      var groups = {};
+      RAW.forEach(function (r) {
+        r._seq = null;
+        var key = (r.email || '').trim().toLowerCase();
+        if (!key) return;            // sem e-mail: não dá pra identificar a pessoa com segurança → sem selo
+        (groups[key] = groups[key] || []).push(r);
+      });
+      Object.keys(groups).forEach(function (k) {
+        groups[k].sort(function (a, b) { return new Date(a.created_at || 0) - new Date(b.created_at || 0); });
+        groups[k].forEach(function (r, i) { r._seq = i + 1; });
+      });
+    }
+    function firstBadge(seq) {
+      return seq === 1
+        ? '<span class="vc-star" title="Primeira solicitação">★</span>'
+        : '<span class="vc-star"></span>';
+    }
+
+    function fitTableHeight() {
+      const sc = document.querySelector('.vc-scroll');
+      if (!sc) return;
+      const top = sc.getBoundingClientRect().top;
+      sc.style.maxHeight = Math.max(240, window.innerHeight - top - 24) + 'px';
+    }
+    window.addEventListener('resize', fitTableHeight);
+
     function render() {
+      recomputeFirstSeq();
       const view = getView();
       document.getElementById('vcCount').textContent = view.length + (view.length === 1 ? ' cartão' : ' cartões');
       if (!RAW.length) { document.getElementById('vcContent').innerHTML = '<div class="empty-state"><p>Nenhuma solicitação de cartão físico ainda.</p></div>'; return; }
 
       const head = '<tr>' + COLS.map(function (c) {
-        const ind = sortState.field === c.f ? (sortState.dir === 1 ? '▲' : '▼') : '';
-        return '<th class="' + c.group + ' sortable" data-sort="' + c.f + '" style="min-width:' + c.min + 'px">' + esc(c.label) + '<span class="sort-ind">' + ind + '</span></th>';
+        const cw = colWidths[c.f] || c.min;
+        const canSort = c.type !== 'delete' && c.type !== 'pdf';
+        const isActive = sortState.field === c.f;
+        const ind = !canSort ? '' : (isActive ? (sortState.dir === 1 ? '▲' : '▼') : '↕');
+        const cls = c.group + (canSort ? ' sortable' : '');
+        const resizer = c.type !== 'delete' ? '<span class="vc-resizer"></span>' : '';
+        return '<th class="' + cls + '" data-sort="' + c.f + '" style="width:' + cw + 'px;min-width:' + cw + 'px">'
+          + esc(c.label)
+          + (ind ? '<span class="sort-ind' + (isActive ? ' active' : '') + '">' + ind + '</span>' : '')
+          + resizer + '</th>';
       }).join('') + '</tr>';
 
       const rows = view.map(function (l) {
         const tds = COLS.map(function (c) {
           const val = l[c.f];
-          const w = ' style="min-width:' + c.min + 'px"';
+          const cw = colWidths[c.f] || c.min;
+          const w = ' style="width:' + cw + 'px;min-width:' + cw + 'px"';
           if (c.type === 'delete') {
             if (!IS_ADMIN) return '<td' + w + '></td>';
             return '<td' + w + '><button type="button" onclick="deleteCartao(' + l.solicitacao_id + ',this)" title="Excluir permanentemente" aria-label="Excluir" style="border:none;background:transparent;cursor:pointer;padding:4px;color:var(--danger);display:inline-flex;align-items:center;justify-content:center"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg></button></td>';
@@ -343,21 +412,58 @@
           }
           if (c.type === 'select') return '<td' + w + '><select data-f="' + c.f + '">' + optionsHtml(c.opts, val) + '</select></td>';
           if (c.type === 'textarea') return '<td class="col-observacao"' + w + '><textarea data-f="' + c.f + '" rows="1" placeholder="—">' + esc(val) + '</textarea></td>';
+          if (c.f === 'nome') {
+            return '<td' + w + '><div class="vc-namecell">' + firstBadge(l._seq)
+              + '<input data-f="nome" value="' + esc(val) + '" title="' + esc(val) + '"></div></td>';
+          }
           return '<td' + w + '><input data-f="' + c.f + '" value="' + esc(val) + '" title="' + esc(val) + '"' + (c.f === 'envio_para' ? ' placeholder="—"' : '') + '></td>';
         }).join('');
-        return '<tr data-id="' + l.solicitacao_id + '">' + tds + '</tr>';
+        return '<tr data-id="' + l.solicitacao_id + '"' + (l.status === 'envio-assessor' ? ' class="vc-final"' : '') + '>' + tds + '</tr>';
       }).join('');
 
       document.getElementById('vcContent').innerHTML = '<div class="vc-scroll"><table class="vc"><thead>' + head + '</thead><tbody>' + rows + '</tbody></table></div>';
       renderCartoesCards(view);
 
       document.querySelectorAll('table.vc th.sortable').forEach(function (th) {
-        th.addEventListener('click', function () {
+        th.addEventListener('click', function (e) {
+          if (colResizing || (e.target && e.target.classList && e.target.classList.contains('vc-resizer'))) return;
           const f = th.getAttribute('data-sort');
           if (sortState.field === f) sortState.dir *= -1; else { sortState.field = f; sortState.dir = 1; }
           render();
         });
       });
+
+      document.querySelectorAll('table.vc th .vc-resizer').forEach(function (rz) {
+        rz.addEventListener('mousedown', function (e) {
+          e.preventDefault(); e.stopPropagation();
+          const th = rz.parentElement;
+          const table = th.closest('table');
+          const idx = Array.prototype.indexOf.call(th.parentNode.children, th);
+          const f = th.getAttribute('data-sort');
+          const startX = e.clientX; const startW = th.offsetWidth;
+          colResizing = true;
+          document.body.style.cursor = 'col-resize'; document.body.style.userSelect = 'none';
+          function move(ev) {
+            const wpx = Math.max(48, startW + (ev.clientX - startX));
+            colWidths[f] = wpx;
+            th.style.width = wpx + 'px'; th.style.minWidth = wpx + 'px';
+            table.querySelectorAll('tbody tr').forEach(function (tr) {
+              const td = tr.children[idx];
+              if (td) { td.style.width = wpx + 'px'; td.style.minWidth = wpx + 'px'; }
+            });
+          }
+          function up() {
+            document.removeEventListener('mousemove', move);
+            document.removeEventListener('mouseup', up);
+            document.body.style.cursor = ''; document.body.style.userSelect = '';
+            setTimeout(function () { colResizing = false; }, 50);
+          }
+          document.addEventListener('mousemove', move);
+          document.addEventListener('mouseup', up);
+        });
+      });
+
+      fitTableHeight();
 
       document.querySelectorAll('table.vc tbody tr').forEach(function (tr) {
         tr.querySelectorAll('select[data-f]').forEach(function (sel) {
@@ -383,7 +489,7 @@
         var statusColor = STATUS_COLORS[c.status] || { bg: '#f1f5f9', text: '#475569' };
         var statusLabel = (STATUS_OPTS.find(function(s) { return s.v === c.status; }) || {}).label || c.status || '—';
         var dataFmt = c.data_pedido ? new Date(c.data_pedido).toLocaleDateString('pt-BR', { day:'2-digit', month:'short', year:'numeric' }) : '—';
-        return '<article class="card cartao-card" data-id="' + c.solicitacao_id + '">' +
+        return '<article class="card cartao-card' + (c.status === 'envio-assessor' ? ' cartao-card--final' : '') + '" data-id="' + c.solicitacao_id + '">' +
           '<div class="cartao-card-header">' +
             '<div>' +
               '<div class="cartao-card-nome">' + esc(c.nome || '—') + '</div>' +
@@ -452,6 +558,7 @@
           method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload),
         });
         if (res.ok) {
+          tr.classList.toggle('vc-final', payload.status === 'envio-assessor');
           tr.classList.add('flash'); setTimeout(function () { tr.classList.remove('flash'); }, 600);
           const tag = document.getElementById('vcSaved'); tag.classList.add('show');
           clearTimeout(saveTimer); saveTimer = setTimeout(function () { tag.classList.remove('show'); }, 1500);
