@@ -150,6 +150,46 @@ function addOptionLabels(
   return out;
 }
 
+/**
+ * Gera o artefato (PNG ou PDF) de um tipo a partir de `dados`, SEM criar solicitação,
+ * sem subir no R2 e sem tocar no banco de solicitações. Usado pela geração em massa
+ * (Tombamentos). Retorna o buffer + extensão/mimetype, ou null se não houver template ativo.
+ */
+export async function gerarArteBuffer(
+  tipo: string,
+  dados: Record<string, unknown>,
+): Promise<{ buffer: Buffer; ext: string; mimetype: string } | null> {
+  const formSchema = FORM_SCHEMAS[tipo];
+  const resolvedDados = addOptionLabels(resolveComputed(dados, formSchema), formSchema);
+
+  const variantField = formSchema?.template_variant_field;
+  const variantValue = variantField && resolvedDados[variantField] != null
+    ? String(resolvedDados[variantField])
+    : null;
+
+  const templateWhere = variantValue
+    ? and(eq(artTemplatesTable.tipo, tipo), eq(artTemplatesTable.is_active, true), eq(artTemplatesTable.variant_value, variantValue))
+    : and(eq(artTemplatesTable.tipo, tipo), eq(artTemplatesTable.is_active, true), isNull(artTemplatesTable.variant_value));
+
+  const [templateRow] = await db
+    .select()
+    .from(artTemplatesTable)
+    .where(templateWhere)
+    .orderBy(desc(artTemplatesTable.id))
+    .limit(1);
+
+  if (!templateRow) return null;
+
+  const renderData = buildRenderData(resolvedDados);
+  const config = templateRow.config as any;
+  const outputFormat: "png" | "pdf" = config.output_format === "pdf" ? "pdf" : "png";
+
+  if (outputFormat === "pdf") {
+    return { buffer: await renderTemplateToPdf(config, renderData), ext: "pdf", mimetype: "application/pdf" };
+  }
+  return { buffer: await renderFromTemplate(config, renderData), ext: "png", mimetype: "image/png" };
+}
+
 export async function gerarArteParaSolicitacao(
   solicitacaoId: number,
   tipo: string,

@@ -48,6 +48,19 @@
     tr.tomb-row--warn td { background: #fef2f2; }
     .tomb-actions { display: flex; gap: 12px; margin-top: 20px; flex-wrap: wrap; }
     .tomb-note { font-size: 0.78rem; color: rgba(34,27,25,0.5); margin-top: 10px; }
+    .tomb-review { margin-top: 22px; border-top: 1px solid var(--border-light); padding-top: 18px; }
+    .tomb-review-head { display:flex; align-items:center; justify-content:space-between; gap:12px; }
+    .tomb-review-resumo { font-size:0.8rem; color: rgba(34,27,25,0.55); margin-left:10px; }
+    .tomb-review-wrap { max-height: 52vh; overflow:auto; border:1px solid var(--border-light); border-radius:12px; margin-top:10px; }
+    #cartoesRevTabela td { vertical-align: middle; }
+    #cartoesRevTabela select { width:100%; padding:7px 9px; border:1px solid var(--border-light); border-radius:8px; background:#FFF8F3; font:inherit; }
+    .rev-badge { display:inline-block; padding:2px 9px; border-radius:999px; font-size:0.72rem; font-weight:700; text-transform:uppercase; letter-spacing:.02em; }
+    .rev-exato, .rev-forte { background:#dcfce7; color:#15803d; }
+    .rev-manual { background:#dbeafe; color:#1d4ed8; }
+    .rev-revisar { background:#ffedd5; color:#c2410c; }
+    .rev-sem_foto { background:#eef2f7; color:#475569; }
+    tr.rev-row--alert td { background:#fff7ed; }
+    .btn-text { background:transparent; border:none; color:#AC3631; cursor:pointer; font:inherit; padding:6px 8px; }
     .tomb-empty { padding: 40px; text-align: center; color: rgba(34,27,25,0.4); }
   </style>
 </head>
@@ -123,10 +136,28 @@
             <table class="admin-table" id="tombTabela"><thead id="tombThead"></thead><tbody id="tombTbody"></tbody></table>
           </div>
           <div class="tomb-actions">
-            <button class="btn btn-primary" id="btnGerarAssinaturas" disabled title="Disponível na próxima etapa">Gerar assinaturas (.zip)</button>
-            <button class="btn btn-primary" id="btnGerarCartoes" disabled title="Disponível na próxima etapa">Gerar cartões digitais (.zip)</button>
+            <button class="btn btn-primary" id="btnGerarAssinaturas" onclick="gerarAssinaturas()" disabled>Gerar assinaturas (.zip)</button>
+            <button class="btn btn-primary" id="btnGerarCartoes" onclick="document.getElementById('fotosZipInput').click()" disabled>Gerar cartões digitais (.zip de fotos)</button>
+            <input type="file" id="fotosZipInput" accept=".zip,application/zip" style="display:none" onchange="cartoesStep1(this)">
           </div>
-          <p class="tomb-note">A geração de assinaturas e cartões será habilitada nas próximas etapas.</p>
+          <p class="tomb-note">Cartões digitais: suba um <strong>.zip com as fotos</strong> e o sistema casa cada pessoa pelo nome — você confere antes de gerar. A coluna <strong>arquivo_foto</strong> é opcional (se preenchida, tem prioridade). Disponível apenas para marcas com cartão digital (Investimentos, Capital, Connect).</p>
+
+          <div id="cartoesReview" class="tomb-review" style="display:none">
+            <div class="tomb-review-head">
+              <div><strong>Revisão de fotos</strong><span id="cartoesResumo" class="tomb-review-resumo"></span></div>
+              <button class="btn-text" type="button" onclick="cartoesCancelar()">Cancelar</button>
+            </div>
+            <p class="tomb-note" style="margin-top:0">Confira os pares antes de gerar. <span class="rev-badge rev-revisar">revisar</span> = casou só pelo primeiro nome ou está ambíguo, vale conferir.</p>
+            <div class="tomb-review-wrap">
+              <table class="admin-table" id="cartoesRevTabela">
+                <thead><tr><th>Pessoa</th><th style="width:120px">Status</th><th style="width:46%">Foto atribuída</th></tr></thead>
+                <tbody id="cartoesRevTbody"></tbody>
+              </table>
+            </div>
+            <div class="tomb-actions">
+              <button class="btn btn-primary" id="btnCartoesGerar" onclick="cartoesGerar()">Gerar cartões</button>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -279,6 +310,126 @@
         return '<tr class="' + (warn ? 'tomb-row--warn' : '') + '">' + tds + '<td style="padding:9px 12px">' + status + '</td></tr>';
       }).join('');
       document.getElementById('tombResultado').style.display = 'block';
+      document.getElementById('btnGerarAssinaturas').disabled = rows.length === 0;
+      document.getElementById('btnGerarCartoes').disabled = rows.length === 0;
+      document.getElementById('cartoesReview').style.display = 'none';
+    }
+
+    async function gerarAssinaturas() {
+      if (!currentTomb) return;
+      const btn = document.getElementById('btnGerarAssinaturas');
+      const old = btn.textContent;
+      btn.disabled = true; btn.textContent = 'Gerando…';
+      try {
+        const res = await fetch('/api/admin/tombamentos/' + currentTomb.id + '/gerar-assinaturas', { method: 'POST' });
+        if (!res.ok) {
+          const data = await res.json().catch(function () { return {}; });
+          throw new Error(data.error || 'Erro ao gerar assinaturas');
+        }
+        const blob = await res.blob();
+        const geradas = res.headers.get('X-Geradas');
+        const puladas = res.headers.get('X-Puladas');
+        baixarBlob(blob, 'assinaturas-' + (currentTomb.id) + '.zip');
+        if (window.showToast) showToast('✓ ' + (geradas || '?') + ' assinatura(s) gerada(s)' + (puladas && puladas !== '0' ? ' · ' + puladas + ' pulada(s)' : ''), 'success');
+      } catch (err) {
+        if (window.showToast) showToast(err.message || 'Erro ao gerar', 'error');
+      } finally {
+        btn.disabled = false; btn.textContent = old;
+      }
+    }
+    function baixarBlob(blob, nome) {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = nome; document.body.appendChild(a); a.click();
+      setTimeout(function () { URL.revokeObjectURL(url); a.remove(); }, 1000);
+    }
+
+    let cartoesFotosFile = null;
+    let cartoesFotos = [];
+
+    function cartEsc(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+
+    async function cartoesStep1(input) {
+      if (!currentTomb) return;
+      const f = input.files && input.files[0];
+      input.value = '';
+      if (!f) return;
+      cartoesFotosFile = f;
+      const btn = document.getElementById('btnGerarCartoes');
+      const old = btn.textContent;
+      btn.disabled = true; btn.textContent = 'Analisando…';
+      try {
+        const fd = new FormData();
+        fd.append('fotos', f);
+        const res = await fetch('/api/admin/tombamentos/' + currentTomb.id + '/match-fotos', { method: 'POST', body: fd });
+        const data = await res.json().catch(function () { return {}; });
+        if (!res.ok) throw new Error(data.error || 'Erro ao analisar as fotos');
+        cartoesFotos = data.fotos || [];
+        renderRevisao(data);
+      } catch (err) {
+        if (window.showToast) showToast(err.message || 'Erro ao analisar', 'error');
+      } finally {
+        btn.disabled = false; btn.textContent = old;
+      }
+    }
+
+    function renderRevisao(data) {
+      const tbody = document.getElementById('cartoesRevTbody');
+      const opts = ['<option value="">— sem foto —</option>'].concat(
+        cartoesFotos.map(function (n) { return '<option value="' + cartEsc(n) + '">' + cartEsc(n) + '</option>'; })
+      ).join('');
+      const pessoas = data.pessoas || [];
+      tbody.innerHTML = pessoas.map(function (p) {
+        const alerta = (p.status === 'revisar' || p.status === 'sem_foto') ? ' class="rev-row--alert"' : '';
+        const sub = cartEsc(p.email) + (p.obs ? ' · ' + cartEsc(p.obs) : '');
+        return '<tr' + alerta + '>'
+          + '<td>' + cartEsc(p.nome) + '<div style="font-size:.75rem;color:rgba(34,27,25,.5)">' + sub + '</div></td>'
+          + '<td><span class="rev-badge rev-' + p.status + '">' + p.status.replace('_', ' ') + '</span></td>'
+          + '<td><select data-email="' + cartEsc(p.email) + '">' + opts + '</select></td></tr>';
+      }).join('');
+      const selects = tbody.querySelectorAll('select[data-email]');
+      pessoas.forEach(function (p, i) { if (selects[i]) selects[i].value = p.foto || ''; });
+      const r = data.resumo || {};
+      document.getElementById('cartoesResumo').textContent =
+        (r.auto || 0) + ' automáticas · ' + (r.revisar || 0) + ' a revisar · ' + (r.sem_foto || 0) + ' sem foto · ' + (r.fotos || 0) + ' fotos no zip';
+      document.getElementById('cartoesReview').style.display = 'block';
+      document.getElementById('cartoesReview').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    function cartoesCancelar() {
+      document.getElementById('cartoesReview').style.display = 'none';
+      cartoesFotosFile = null; cartoesFotos = [];
+    }
+
+    async function cartoesGerar() {
+      if (!currentTomb || !cartoesFotosFile) { if (window.showToast) showToast('Suba o .zip de fotos novamente', 'error'); return; }
+      const atrib = {};
+      document.querySelectorAll('#cartoesRevTbody select[data-email]').forEach(function (s) {
+        if (s.value) atrib[s.getAttribute('data-email')] = s.value;
+      });
+      if (!Object.keys(atrib).length) { if (window.showToast) showToast('Nenhuma foto atribuída', 'error'); return; }
+      const btn = document.getElementById('btnCartoesGerar');
+      const old = btn.textContent;
+      btn.disabled = true; btn.textContent = 'Gerando…';
+      try {
+        const fd = new FormData();
+        fd.append('fotos', cartoesFotosFile);
+        fd.append('atribuicoes', JSON.stringify(atrib));
+        const res = await fetch('/api/admin/tombamentos/' + currentTomb.id + '/gerar-cartoes', { method: 'POST', body: fd });
+        if (!res.ok) {
+          const data = await res.json().catch(function () { return {}; });
+          throw new Error(data.error || 'Erro ao gerar cartões');
+        }
+        const blob = await res.blob();
+        const geradas = res.headers.get('X-Geradas');
+        const puladas = res.headers.get('X-Puladas');
+        baixarBlob(blob, 'cartoes-' + currentTomb.id + '.zip');
+        if (window.showToast) showToast('✓ ' + (geradas || '?') + ' cartão(ões) gerado(s)' + (puladas && puladas !== '0' ? ' · ' + puladas + ' pulado(s)' : ''), 'success');
+      } catch (err) {
+        if (window.showToast) showToast(err.message || 'Erro ao gerar', 'error');
+      } finally {
+        btn.disabled = false; btn.textContent = old;
+      }
     }
 
     init();

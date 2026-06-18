@@ -5,7 +5,8 @@ import { eq, desc, sql, and, count, isNull, notInArray } from "drizzle-orm";
 import { requireAuth, requireRole } from "../middleware/auth.middleware";
 import { logger } from "../lib/logger";
 import { renderFromTemplate } from "../services/template-renderer";
-import { gerarArteParaSolicitacao } from "../services/art-generator";
+import { gerarArteParaSolicitacao, gerarArteBuffer } from "../services/art-generator";
+import JSZip from "jszip";
 import { AVAILABLE_FONTS } from "../types/art-template";
 import { FORM_SCHEMAS, getFormSchemaList, TIPOS_COM_CLICKUP } from "../config/form-schemas";
 import { validateClickUpList } from "./clickup";
@@ -18,6 +19,7 @@ const router = Router();
 
 // ───────────── Tombamentos: leitura da planilha (Fase 1) ─────────────
 const uploadPlanilha = multer({ storage: multer.memoryStorage(), limits: { fileSize: 15 * 1024 * 1024 } });
+const uploadFotos = multer({ storage: multer.memoryStorage(), limits: { fileSize: 100 * 1024 * 1024 } });
 const TOMB_DOMINIOS = ["@svninvestimentos.com.br", "@svncapital.com.br", "@svnconnect.com.br"];
 const TOMB_SYN: Record<string, string[]> = {
   nome: ["nome", "nomecompleto"],
@@ -110,6 +112,302 @@ router.patch("/tombamentos/:id", requireRole("admin"), async (req, res): Promise
   const [row] = await db.update(tombamentosTable).set(patch).where(eq(tombamentosTable.id, id)).returning();
   if (!row) { res.status(404).json({ error: "Tombamento não encontrado" }); return; }
   res.json(row);
+});
+
+function tombSlug(s: unknown): string {
+  return String(s ?? "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-zA-Z0-9]+/g, "-").replace(/^-+|-+$/g, "").toLowerCase() || "pessoa";
+}
+function tombNormCfp(v: unknown): string {
+  const n = String(v ?? "").toLowerCase().trim();
+  return ["sim", "s", "yes", "y", "1", "true", "x"].includes(n) ? "sim" : "nao";
+}
+
+router.post("/tombamentos/:id/gerar-assinaturas", requireRole("admin"), async (req, res): Promise<void> => {
+  try {
+    const id = parseInt(String(req.params.id), 10);
+    if (isNaN(id)) { res.status(400).json({ error: "ID inválido" }); return; }
+    const [tomb] = await db.select().from(tombamentosTable).where(eq(tombamentosTable.id, id));
+    if (!tomb) { res.status(404).json({ error: "Tombamento não encontrado" }); return; }
+
+    const linhas = Array.isArray(tomb.linhas) ? (tomb.linhas as any[]) : [];
+    if (!linhas.length) { res.status(400).json({ error: "Suba uma planilha neste tombamento primeiro." }); return; }
+    const validas = linhas.filter((r) => !(Array.isArray(r._issues) && r._issues.length));
+    if (!validas.length) { res.status(400).json({ error: "Nenhuma linha válida para gerar (todas têm pendências)." }); return; }
+
+    const zip = new JSZip();
+    const usados: Record<string, number> = {};
+    const gerados: string[] = [];
+    const pulados: string[] = [];
+    let semTemplate = false;
+
+    for (const r of validas) {
+      const dados = {
+        nome: r.nome, telefone: r.telefone, email: r.email,
+        cargo: r.cargo ?? "", tem_cfp: tombNormCfp(r.tem_cfp), marca: tomb.marca,
+      };
+      try {
+        const art = await gerarArteBuffer("assinatura-email", dados);
+        if (!art) { semTemplate = true; pulados.push(`${r.nome || r.email}: sem template para a marca`); continue; }
+        let base = tombSlug(r.nome || r.email);
+        usados[base] = (usados[base] || 0) + 1;
+        if (usados[base] > 1) base = `${base}-${usados[base]}`;
+        zip.file(`assinatura-${base}.${art.ext}`, art.buffer);
+        gerados.push(r.nome || r.email);
+      } catch (e) {
+        pulados.push(`${r.nome || r.email}: erro ao gerar`);
+        logger.warn({ err: e, tombId: id }, "[tombamentos] falha ao gerar assinatura");
+      }
+    }
+
+    if (!gerados.length) {
+      res.status(400).json({ error: semTemplate ? `Não há template de assinatura ativo para a marca "${tomb.marca}".` : "Não foi possível gerar nenhuma assinatura." });
+      return;
+    }
+
+    const relatorio = [
+      `Tombamento: ${tomb.nome}`,
+      `Marca: ${tomb.marca}`,
+      `Assinaturas geradas: ${gerados.length}`,
+      pulados.length ? `\nPuladas (${pulados.length}):\n` + pulados.join("\n") : "",
+    ].join("\n");
+    zip.file("_relatorio.txt", relatorio);
+
+    const zipBuf = await zip.generateAsync({ type: "nodebuffer" });
+    res.setHeader("Content-Type", "application/zip");
+    res.setHeader("Content-Disposition", `attachment; filename="assinaturas-${tombSlug(tomb.nome)}.zip"`);
+    res.setHeader("X-Geradas", String(gerados.length));
+    res.setHeader("X-Puladas", String(pulados.length));
+    res.send(zipBuf);
+  } catch (err) {
+    logger.error({ err }, "[tombamentos] erro ao gerar assinaturas");
+    res.status(500).json({ error: "Erro ao gerar assinaturas." });
+  }
+});
+
+const MARCA_TO_CONTRATO: Record<string, string> = {
+  "svn-investimentos": "svn-investimentos",
+  "svn-capital": "svn-capital",
+  "svn-connect": "svn-connect",
+};
+function tombStripExt(name: string): string {
+  return name.replace(/\.[a-z0-9]+$/i, "");
+}
+function tombMime(name: string): string {
+  const ext = (name.match(/\.([a-z0-9]+)$/i)?.[1] || "").toLowerCase();
+  if (ext === "png") return "image/png";
+  if (ext === "webp") return "image/webp";
+  if (ext === "gif") return "image/gif";
+  return "image/jpeg";
+}
+function tombNorm2(s: unknown): string {
+  return String(s ?? "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+}
+function tombTokens(s: unknown): string[] {
+  return tombNorm2(s).split(" ").filter(Boolean);
+}
+function tombCompact(s: unknown): string {
+  return tombNorm2(s).replace(/ /g, "");
+}
+function tombMatchScore(pTokens: string[], pCompact: string, fTokens: string[], fCompact: string): { score: number; contained: boolean; inter: number } {
+  if (!pTokens.length || !fTokens.length) return { score: 0, contained: false, inter: 0 };
+  if (pCompact && pCompact === fCompact) return { score: 100, contained: true, inter: pTokens.length };
+  const pSet = new Set(pTokens);
+  const fSet = new Set(fTokens);
+  let inter = 0;
+  for (const t of fSet) if (pSet.has(t)) inter++;
+  if (inter === 0) return { score: 0, contained: false, inter: 0 };
+  const allFInP = [...fSet].every((t) => pSet.has(t));
+  const allPInF = [...pSet].every((t) => fSet.has(t));
+  const contained = allFInP || allPInF;
+  if (contained) return { score: 80 + Math.min(inter, 4) * 4, contained: true, inter };
+  const union = pSet.size + fSet.size - inter;
+  return { score: Math.round(55 * (inter / union)), contained: false, inter };
+}
+
+// Lê o .zip de fotos e devolve a lista de imagens válidas (sem ler os bytes).
+function lerNomesFotos(fotosZip: JSZip): { nome: string; tokens: string[]; compact: string }[] {
+  const fotos: { nome: string; tokens: string[]; compact: string }[] = [];
+  const seen = new Set<string>();
+  for (const entryPath of Object.keys(fotosZip.files)) {
+    const entry = fotosZip.files[entryPath];
+    if (entry.dir) continue;
+    const base = entryPath.split(/[\\/]/).pop() || "";
+    if (!base || base.startsWith(".") || entryPath.includes("__MACOSX")) continue;
+    if (!/\.(jpe?g|png|webp|gif)$/i.test(base)) continue;
+    if (seen.has(base.toLowerCase())) continue;
+    seen.add(base.toLowerCase());
+    const noext = tombStripExt(base);
+    fotos.push({ nome: base, tokens: tombTokens(noext), compact: tombCompact(noext) });
+  }
+  return fotos;
+}
+
+// Etapa 1: sobe o .zip, casa as fotos por nome e devolve a tabela de revisão.
+router.post("/tombamentos/:id/match-fotos", requireRole("admin"), uploadFotos.single("fotos"), async (req, res): Promise<void> => {
+  try {
+    const id = parseInt(String(req.params.id), 10);
+    if (isNaN(id)) { res.status(400).json({ error: "ID inválido" }); return; }
+    const [tomb] = await db.select().from(tombamentosTable).where(eq(tombamentosTable.id, id));
+    if (!tomb) { res.status(404).json({ error: "Tombamento não encontrado" }); return; }
+
+    const contrato = MARCA_TO_CONTRATO[String(tomb.marca)];
+    if (!contrato) { res.status(400).json({ error: `Cartão digital existe apenas para SVN Investimentos, SVN Capital e SVN Connect. Este tombamento é da marca "${tomb.marca}".` }); return; }
+
+    const linhas = Array.isArray(tomb.linhas) ? (tomb.linhas as any[]) : [];
+    if (!linhas.length) { res.status(400).json({ error: "Suba uma planilha neste tombamento primeiro." }); return; }
+    const validas = linhas.filter((r) => !(Array.isArray(r._issues) && r._issues.length));
+    if (!validas.length) { res.status(400).json({ error: "Nenhuma linha válida (todas têm pendências)." }); return; }
+
+    const file = (req as { file?: { buffer: Buffer } }).file;
+    if (!file) { res.status(400).json({ error: "Envie o .zip de fotos no campo 'fotos'." }); return; }
+    let fotosZip: JSZip;
+    try { fotosZip = await JSZip.loadAsync(file.buffer); }
+    catch { res.status(400).json({ error: "Não foi possível ler o .zip de fotos. Confira o arquivo." }); return; }
+
+    const fotos = lerNomesFotos(fotosZip);
+    if (!fotos.length) { res.status(400).json({ error: "O .zip não contém imagens (.jpg, .png, .webp)." }); return; }
+
+    const usoAuto: Record<string, number> = {};
+    const pessoas = validas.map((r) => {
+      const pTokens = tombTokens(r.nome);
+      const pCompact = tombCompact(r.nome);
+
+      // override manual via coluna arquivo_foto
+      const ref = String(r.arquivo_foto ?? "").trim();
+      if (ref) {
+        const rk = tombCompact(tombStripExt(ref));
+        const hit = fotos.find((f) => f.nome.toLowerCase() === ref.toLowerCase() || f.compact === rk);
+        if (hit) return { email: r.email, nome: r.nome, status: "manual", foto: hit.nome, obs: "" };
+        return { email: r.email, nome: r.nome, status: "revisar", foto: "", obs: `arquivo_foto "${ref}" não encontrado no .zip` };
+      }
+
+      // auto por nome
+      let best: null | { f: (typeof fotos)[number]; score: number; contained: boolean; inter: number } = null;
+      for (const f of fotos) {
+        const m = tombMatchScore(pTokens, pCompact, f.tokens, f.compact);
+        if (!best || m.score > best.score) best = { f, ...m };
+      }
+      if (!best || (best.score < 35 && !best.contained)) {
+        return { email: r.email, nome: r.nome, status: "sem_foto", foto: "", obs: "" };
+      }
+      let status: string;
+      if (best.score >= 100) status = "exato";
+      else if (best.contained && best.inter >= 2) status = "forte";
+      else status = "revisar";
+      if (status === "exato" || status === "forte") usoAuto[best.f.nome] = (usoAuto[best.f.nome] || 0) + 1;
+      return { email: r.email, nome: r.nome, status, foto: best.f.nome, obs: "" };
+    });
+
+    // conflito: mesma foto auto-escolhida para >1 pessoa -> rebaixa para revisão
+    for (const p of pessoas) {
+      if ((p.status === "exato" || p.status === "forte") && usoAuto[p.foto] > 1) {
+        p.status = "revisar";
+        p.obs = "mesma foto sugerida para outra pessoa";
+      }
+    }
+
+    const resumo = {
+      total: pessoas.length,
+      auto: pessoas.filter((p) => p.status === "exato" || p.status === "forte" || p.status === "manual").length,
+      revisar: pessoas.filter((p) => p.status === "revisar").length,
+      sem_foto: pessoas.filter((p) => p.status === "sem_foto").length,
+      fotos: fotos.length,
+    };
+    res.json({ contrato, fotos: fotos.map((f) => f.nome).sort((a, b) => a.localeCompare(b)), pessoas, resumo });
+  } catch (err) {
+    logger.error({ err }, "[tombamentos] erro ao casar fotos");
+    res.status(400).json({ error: "Erro ao analisar as fotos." });
+  }
+});
+
+// Etapa 2: gera os cartões usando as atribuições confirmadas na revisão.
+router.post("/tombamentos/:id/gerar-cartoes", requireRole("admin"), uploadFotos.single("fotos"), async (req, res): Promise<void> => {
+  try {
+    const id = parseInt(String(req.params.id), 10);
+    if (isNaN(id)) { res.status(400).json({ error: "ID inválido" }); return; }
+    const [tomb] = await db.select().from(tombamentosTable).where(eq(tombamentosTable.id, id));
+    if (!tomb) { res.status(404).json({ error: "Tombamento não encontrado" }); return; }
+
+    const contrato = MARCA_TO_CONTRATO[String(tomb.marca)];
+    if (!contrato) { res.status(400).json({ error: `Cartão digital existe apenas para SVN Investimentos, SVN Capital e SVN Connect. Este tombamento é da marca "${tomb.marca}".` }); return; }
+
+    const linhas = Array.isArray(tomb.linhas) ? (tomb.linhas as any[]) : [];
+    const validas = linhas.filter((r) => !(Array.isArray(r._issues) && r._issues.length));
+    if (!validas.length) { res.status(400).json({ error: "Nenhuma linha válida." }); return; }
+
+    let atrib: Record<string, string> = {};
+    try { atrib = JSON.parse(String((req.body as any)?.atribuicoes ?? "{}")); } catch { atrib = {}; }
+    if (!atrib || typeof atrib !== "object" || !Object.keys(atrib).length) {
+      res.status(400).json({ error: "Nenhuma atribuição de foto recebida." });
+      return;
+    }
+
+    const file = (req as { file?: { buffer: Buffer } }).file;
+    if (!file) { res.status(400).json({ error: "Envie o .zip de fotos no campo 'fotos'." }); return; }
+    let fotosZip: JSZip;
+    try { fotosZip = await JSZip.loadAsync(file.buffer); }
+    catch { res.status(400).json({ error: "Não foi possível ler o .zip de fotos. Confira o arquivo." }); return; }
+
+    const porNome: Record<string, { buffer: Buffer; mime: string }> = {};
+    for (const entryPath of Object.keys(fotosZip.files)) {
+      const entry = fotosZip.files[entryPath];
+      if (entry.dir) continue;
+      const base = entryPath.split(/[\\/]/).pop() || "";
+      if (!base || base.startsWith(".") || entryPath.includes("__MACOSX")) continue;
+      if (!/\.(jpe?g|png|webp|gif)$/i.test(base)) continue;
+      porNome[base.toLowerCase()] = { buffer: Buffer.from(await entry.async("nodebuffer")), mime: tombMime(base) };
+    }
+
+    const zip = new JSZip();
+    const usados: Record<string, number> = {};
+    const gerados: string[] = [];
+    const pulados: string[] = [];
+
+    for (const r of validas) {
+      const pessoa = r.nome || r.email;
+      const fname = atrib[String(r.email)];
+      if (!fname) { pulados.push(`${pessoa}: sem foto atribuída`); continue; }
+      const foto = porNome[String(fname).toLowerCase()];
+      if (!foto) { pulados.push(`${pessoa}: foto "${fname}" não está no .zip`); continue; }
+      const dataUri = `data:${foto.mime};base64,${foto.buffer.toString("base64")}`;
+      const dados = { nome: r.nome, telefone: r.telefone, email: r.email, contrato_social: contrato, foto_perfil: dataUri };
+      try {
+        const art = await gerarArteBuffer("cartao-visita-digital", dados);
+        if (!art) { pulados.push(`${pessoa}: sem template de cartão para "${contrato}"`); continue; }
+        let nb = tombSlug(pessoa);
+        usados[nb] = (usados[nb] || 0) + 1;
+        if (usados[nb] > 1) nb = `${nb}-${usados[nb]}`;
+        zip.file(`cartao-${nb}.${art.ext}`, art.buffer);
+        gerados.push(pessoa);
+      } catch (e) {
+        pulados.push(`${pessoa}: erro ao gerar`);
+        logger.warn({ err: e, tombId: id }, "[tombamentos] falha ao gerar cartão");
+      }
+    }
+
+    if (!gerados.length) {
+      res.status(400).json({ error: "Nenhum cartão gerado. Confira as atribuições de foto na revisão." });
+      return;
+    }
+
+    const relatorio = [
+      `Tombamento: ${tomb.nome}`,
+      `Marca / contrato: ${tomb.marca} -> ${contrato}`,
+      `Cartões gerados: ${gerados.length}`,
+      pulados.length ? `\nPulados (${pulados.length}):\n` + pulados.join("\n") : "",
+    ].join("\n");
+    zip.file("_relatorio.txt", relatorio);
+
+    const zipBuf = await zip.generateAsync({ type: "nodebuffer" });
+    res.setHeader("Content-Type", "application/zip");
+    res.setHeader("Content-Disposition", `attachment; filename="cartoes-${tombSlug(tomb.nome)}.zip"`);
+    res.setHeader("X-Geradas", String(gerados.length));
+    res.setHeader("X-Puladas", String(pulados.length));
+    res.send(zipBuf);
+  } catch (err) {
+    logger.error({ err }, "[tombamentos] erro ao gerar cartões");
+    res.status(500).json({ error: "Erro ao gerar cartões digitais." });
+  }
 });
 
 router.get("/users", requireRole("admin"), async (req, res) => {

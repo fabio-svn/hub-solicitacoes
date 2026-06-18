@@ -89,6 +89,15 @@ const assetCache = new BoundedCache<string, Buffer>(100);
 
 async function getRemoteAsset(url: string): Promise<Buffer> {
   if (!url || url.trim() === '') throw new Error('URL de asset vazia');
+  if (url.startsWith('data:')) {
+    const comma = url.indexOf(',');
+    if (comma === -1) throw new Error('data URI inválida');
+    const meta = url.slice(5, comma);
+    const dataPart = url.slice(comma + 1);
+    return meta.includes('base64')
+      ? Buffer.from(dataPart, 'base64')
+      : Buffer.from(decodeURIComponent(dataPart), 'utf-8');
+  }
   if (url.startsWith('http')) {
     const cached = assetCache.get(url);
     if (cached) {
