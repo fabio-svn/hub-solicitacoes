@@ -5,8 +5,43 @@ import { eq } from "drizzle-orm";
 import { mapClickUpStatus } from "../config/clickup-status";
 import { UNIDADES_ENDERECOS } from "../config/unidades";
 import { FORM_SCHEMAS, SETOR_CODIGO_MAP, TIPOS_COM_CLICKUP } from "../config/form-schemas";
+import { buscarContato } from "../lib/mysqlContatos";
 
 const CLICKUP_API_TOKEN = process.env.CLICKUP_API_TOKEN || "";
+
+// Nomes EXATOS dos status na lista do ClickUp (ajustáveis por env se a lista usar outra grafia).
+export const CLICKUP_STATUS_EM_REVISAO = process.env.CLICKUP_STATUS_EM_REVISAO || "em revisão";
+export const CLICKUP_STATUS_CONCLUIDO = process.env.CLICKUP_STATUS_CONCLUIDO || "concluído";
+
+// Monta link wa.me a partir de um telefone (assume Brasil/55 quando não houver DDI).
+function waLink(phone: string): string | null {
+  let d = String(phone || "").replace(/\D/g, "");
+  if (!d) return null;
+  if (d.length <= 11 && !d.startsWith("55")) d = "55" + d;
+  return `https://wa.me/${d}`;
+}
+
+// Atualiza o status de uma task no ClickUp (usado por aprovar/solicitar alteração).
+export async function setClickUpTaskStatus(taskId: string, status: string): Promise<boolean> {
+  if (!CLICKUP_API_TOKEN || !taskId) return false;
+  try {
+    const r = await fetch(`https://api.clickup.com/api/v2/task/${taskId}`, {
+      method: "PUT",
+      headers: { "Authorization": CLICKUP_API_TOKEN, "Content-Type": "application/json" },
+      body: JSON.stringify({ status }),
+    });
+    if (!r.ok) {
+      const body = await r.text();
+      logger.error({ taskId, status, httpStatus: r.status, body }, "ClickUp: erro ao mudar status");
+      return false;
+    }
+    logger.info({ taskId, status }, "ClickUp: status atualizado");
+    return true;
+  } catch (err) {
+    logger.error({ err, taskId, status }, "ClickUp: falha ao mudar status");
+    return false;
+  }
+}
 
 // Valida um list_id contra o ClickUp usando o token atual.
 // Usado pela tela de admin (botão Validar) e pelo save (PUT).
@@ -360,8 +395,12 @@ function buildRequesterSection(user: UserData, dados?: FormDados): string {
   const items: string[] = [];
   items.push(`• Solicitante: ${user.name}`);
   items.push(`• E-mail: ${user.email}`);
-  if (dados) addLine(items, "Telefone", str(dados.telefone as string));
-  logger.info({ nome: user.name, email: user.email }, "ClickUp: bloco solicitante montado");
+  const tel = str(dados?.telefone as string) || str(dados?.whatsapp as string);
+  if (tel) {
+    const wa = waLink(tel);
+    items.push(wa ? `• Telefone/WhatsApp: ${tel} — ${wa}` : `• Telefone: ${tel}`);
+  }
+  logger.info({ nome: user.name, email: user.email, temTelefone: !!tel }, "ClickUp: bloco solicitante montado");
   return `👤 SOLICITANTE\n━━━━━━━━━━━━━━━━━━━━━━\n\n${items.join("\n")}`;
 }
 
@@ -1214,6 +1253,21 @@ export async function createClickUpTask(
   const subtipo = solicitacao.subtipo || "";
   const safeArquivos = arquivos || {};
   const listId = await getListId(tipo);
+
+  // Telefone do solicitante: usa o do formulário; se não houver, busca nos contatos corporativos pelo e-mail.
+  let telefoneSolic = str(dados.telefone as string) || str(dados.whatsapp as string);
+  if (!telefoneSolic) {
+    try {
+      const contato = await buscarContato(user.email);
+      if (contato?.telefone) telefoneSolic = contato.telefone;
+    } catch (err) {
+      logger.warn({ err, email: user.email }, "ClickUp: falha ao buscar telefone do solicitante nos contatos");
+    }
+  }
+  if (telefoneSolic && !str(dados.telefone as string)) {
+    (dados as Record<string, unknown>).telefone = telefoneSolic;
+  }
+  logger.info({ tipo, temTelefoneSolic: !!telefoneSolic }, "ClickUp: telefone do solicitante resolvido");
 
   let taskName: string;
   let description: string;

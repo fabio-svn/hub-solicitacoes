@@ -5,7 +5,7 @@ import { db } from "@workspace/db";
 import { solicitacoesTable, arquivosTable, activityLogTable, cartaoAprovacoesTable } from "@workspace/db";
 import { eq, desc, and, ne, sql, inArray } from "drizzle-orm";
 import { requireAuth, requireRole } from "../middleware/auth.middleware";
-import { createClickUpTask, getClickUpTaskStatus, type ArquivosMap } from "./clickup";
+import { createClickUpTask, getClickUpTaskStatus, setClickUpTaskStatus, CLICKUP_STATUS_EM_REVISAO, CLICKUP_STATUS_CONCLUIDO, type ArquivosMap } from "./clickup";
 import { FORM_SCHEMAS } from "../config/form-schemas";
 import { uploadToR2, deleteFromR2 } from "./r2";
 import { gerarArteParaSolicitacao, gerarCartaoFisicoPdf } from "../services/art-generator";
@@ -954,6 +954,12 @@ router.post("/solicitacoes/:id/alteracao", requireAuth, async (req, res): Promis
       return;
     }
 
+    // Volta o status para "Em revisão" (ClickUp + Hub)
+    await setClickUpTaskStatus(solicitacao.clickup_task_id, CLICKUP_STATUS_EM_REVISAO);
+    await db.update(solicitacoesTable)
+      .set({ status: "em-revisao", updated_at: new Date() })
+      .where(eq(solicitacoesTable.id, id));
+
     await logAtividade({
       userEmail: user.email, userName: user.name,
       tipo: "alteracao_solicitada", nivel: "info",
@@ -1002,6 +1008,12 @@ router.post("/solicitacoes/:id/aprovacao", requireAuth, async (req, res): Promis
       headers: { "Authorization": token, "Content-Type": "application/json" },
       body: JSON.stringify({ comment_text: comentario }),
     });
+
+    // Conclui a solicitação (ClickUp + Hub)
+    await setClickUpTaskStatus(solicitacao.clickup_task_id, CLICKUP_STATUS_CONCLUIDO);
+    await db.update(solicitacoesTable)
+      .set({ status: "concluido", updated_at: new Date() })
+      .where(eq(solicitacoesTable.id, id));
 
     logEventoBg(id, {
       tipo: "info",

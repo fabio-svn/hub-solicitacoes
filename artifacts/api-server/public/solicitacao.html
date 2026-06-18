@@ -1190,16 +1190,19 @@
         return;
       }
 
-      const statusComAprovacao = ['em-aprovacao', 'concluido', 'reprovado', 'em-revisao'];
       const temHistorico = getRodadas(item.id).length > 0;
+      const isAprovacao = item.status === 'em-aprovacao';
+      // Histórico somente-leitura para decisões finais
+      const isHistoricoLeitura = (item.status === 'concluido' || item.status === 'reprovado') && temHistorico;
 
-      if (!statusComAprovacao.includes(item.status) && !temHistorico) {
+      // Chat só fica disponível em "Em aprovação" (com link de entrega). Em revisão e demais → escondido.
+      if (!isAprovacao && !isHistoricoLeitura) {
         card.style.display = 'none';
         return;
       }
 
-      // Guard duplo: se em-aprovacao, verificar se há links de entrega antes de mostrar
-      if (item.status === 'em-aprovacao') {
+      // Em aprovação exige link no campo "Entrega" antes de liberar o chat
+      if (isAprovacao) {
         let temLinks = false;
         try {
           const res = await fetch('/api/solicitacoes/' + item.id + '/entrega');
