@@ -1,6 +1,7 @@
 import app from "./app";
 import { logger } from "./lib/logger";
 import { pool } from "@workspace/db";
+import { startStuckMonitor } from "./services/stuck-monitor";
 
 const rawPort = process.env["PORT"];
 
@@ -213,6 +214,7 @@ async function start() {
 
   const server = app.listen(port, () => {
     logger.info({ port }, "Server listening");
+    startStuckMonitor();
   });
 
   server.on('error', (err) => {

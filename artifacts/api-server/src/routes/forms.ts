@@ -2,7 +2,7 @@ import { Router } from "express";
 import multer from "multer";
 import os from "os";
 import { db } from "@workspace/db";
-import { solicitacoesTable, arquivosTable, activityLogTable, cartaoAprovacoesTable } from "@workspace/db";
+import { solicitacoesTable, arquivosTable, cartaoAprovacoesTable } from "@workspace/db";
 import { eq, desc, and, ne, sql, inArray } from "drizzle-orm";
 import { requireAuth, requireRole } from "../middleware/auth.middleware";
 import { createClickUpTask, getClickUpTaskStatus, setClickUpTaskStatus, CLICKUP_STATUS_EM_REVISAO, CLICKUP_STATUS_CONCLUIDO, type ArquivosMap } from "./clickup";
@@ -12,7 +12,7 @@ import { gerarArteParaSolicitacao, gerarCartaoFisicoPdf } from "../services/art-
 import { logger } from "../lib/logger";
 import { CONTRATOS_OPTS, MARCAS_OPTS, CARGOS_OPTS, SETORES_LIST, getFormSchemaList, VALID_TIPOS } from "../config/form-schemas";
 import { notificarMarcoBg } from "../services/notifications";
-import { logEventoBg } from "../services/activity-log";
+import { logEventoBg, logAtividade, logAtividadeBg } from "../services/activity-log";
 import { eventosSolicitacaoTable } from "@workspace/db";
 
 const router = Router();
@@ -30,28 +30,6 @@ router.get("/form-schemas", (_req, res) => {
     labels,
   });
 });
-
-async function logAtividade(params: {
-  userEmail?: string; userName?: string;
-  tipo: string; nivel?: string;
-  solicitacaoId?: number; tipoSolicitacao?: string; titulo?: string;
-  detalhe: string; metadata?: Record<string, unknown>;
-}): Promise<void> {
-  try {
-    await db.insert(activityLogTable).values({
-      user_email: params.userEmail,
-      user_name: params.userName,
-      tipo: params.tipo,
-      nivel: (params.nivel || "info") as any,
-      solicitacao_id: params.solicitacaoId,
-      tipo_solicitacao: params.tipoSolicitacao,
-      titulo: params.titulo,
-      detalhe: params.detalhe,
-      metadata: params.metadata as any,
-    });
-  } catch { /* não bloquear fluxo */ }
-}
-
 
 const VALID_STATUSES = [
   "recebido", "em-analise", "em-producao", "aguardando",
@@ -753,6 +731,14 @@ router.post("/solicitacoes/:id/entrega", requireAuth, async (req, res): Promise<
       .where(eq(solicitacoesTable.id, id));
 
     logger.info({ id, count: links.length }, "Links de entrega salvos");
+    logAtividade({
+      userEmail: user?.email, userName: user?.name,
+      tipo: "entrega_registrada", nivel: "info",
+      solicitacaoId: id, tipoSolicitacao: solicitacao.tipo_solicitacao,
+      titulo: solicitacao.titulo || undefined,
+      detalhe: `Entrega registrada na solicitação #${id} (${links.length} link${links.length === 1 ? "" : "s"}) — status: ${novoStatus}.`,
+      metadata: { count: links.length, status: novoStatus, isInternal: !!isInternal },
+    }).catch(() => {});
     res.json({ success: true });
   } catch (err) {
     logger.error({ err }, "Erro ao salvar entrega");
@@ -954,7 +940,15 @@ router.post("/solicitacoes/:id/alteracao", requireAuth, async (req, res): Promis
     }
 
     // Volta o status para "Em revisão" (ClickUp + Hub)
-    await setClickUpTaskStatus(solicitacao.clickup_task_id, CLICKUP_STATUS_EM_REVISAO);
+    const okStatusRev = await setClickUpTaskStatus(solicitacao.clickup_task_id, CLICKUP_STATUS_EM_REVISAO);
+    if (!okStatusRev) {
+      logAtividade({
+        tipo: "clickup_status_falha", nivel: "warn",
+        solicitacaoId: id, tipoSolicitacao: solicitacao.tipo_solicitacao,
+        detalhe: `Não foi possível mudar o status no ClickUp para "${CLICKUP_STATUS_EM_REVISAO}" (solicitação #${id}).`,
+        metadata: { statusAlvo: CLICKUP_STATUS_EM_REVISAO, taskId: solicitacao.clickup_task_id },
+      }).catch(() => {});
+    }
     await db.update(solicitacoesTable)
       .set({ status: "em-revisao", updated_at: new Date() })
       .where(eq(solicitacoesTable.id, id));
@@ -1009,7 +1003,15 @@ router.post("/solicitacoes/:id/aprovacao", requireAuth, async (req, res): Promis
     });
 
     // Conclui a solicitação (ClickUp + Hub)
-    await setClickUpTaskStatus(solicitacao.clickup_task_id, CLICKUP_STATUS_CONCLUIDO);
+    const okStatusConcl = await setClickUpTaskStatus(solicitacao.clickup_task_id, CLICKUP_STATUS_CONCLUIDO);
+    if (!okStatusConcl) {
+      logAtividade({
+        tipo: "clickup_status_falha", nivel: "warn",
+        solicitacaoId: id, tipoSolicitacao: solicitacao.tipo_solicitacao,
+        detalhe: `Não foi possível mudar o status no ClickUp para "${CLICKUP_STATUS_CONCLUIDO}" (solicitação #${id}).`,
+        metadata: { statusAlvo: CLICKUP_STATUS_CONCLUIDO, taskId: solicitacao.clickup_task_id },
+      }).catch(() => {});
+    }
     await db.update(solicitacoesTable)
       .set({ status: "concluido", updated_at: new Date() })
       .where(eq(solicitacoesTable.id, id));
@@ -1383,6 +1385,12 @@ router.put("/cartao-aprovacoes/:solicitacaoId", requireAuth, async (req, res): P
         }
       } catch (e) {
         logger.warn({ e, solicitacaoId }, "Falha ao comentar mudança de status no ClickUp");
+        logAtividadeBg({
+          tipo: "clickup_status_falha", nivel: "warn",
+          solicitacaoId, tipoSolicitacao: "cartao-visita-fisico",
+          detalhe: `Falha ao comentar a mudança de status no ClickUp (cartão #${solicitacaoId}).`,
+          metadata: { err: String(e) },
+        });
       }
     }
     const camposEditados: Record<string, { antes: any; depois: any }> = {};
@@ -1398,6 +1406,18 @@ router.put("/cartao-aprovacoes/:solicitacaoId", requireAuth, async (req, res): P
         mensagem: "Validação de cartão editada",
         user_email: req.session.user!.email,
         detalhes: { campos: camposEditados },
+      });
+      const quem = req.session.user!.name || req.session.user!.email;
+      const resumo = Object.entries(camposEditados)
+        .map(([c, v]) => `${c}: "${v.antes ?? "—"}" → "${v.depois ?? "—"}"`)
+        .join("; ");
+      logAtividadeBg({
+        userEmail: req.session.user!.email, userName: req.session.user!.name,
+        tipo: "cartao_validacao_editada",
+        nivel: camposEditados.status ? "warn" : "info",
+        solicitacaoId, tipoSolicitacao: "cartao-visita-fisico",
+        detalhe: `${quem} editou a validação do cartão #${solicitacaoId} — ${resumo}`,
+        metadata: { campos: camposEditados },
       });
     }
     res.json({ ok: true });

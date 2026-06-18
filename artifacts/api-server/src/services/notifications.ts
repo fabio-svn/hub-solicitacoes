@@ -2,7 +2,7 @@ import { db, solicitacoesTable } from "@workspace/db";
 import { eq, sql } from "drizzle-orm";
 import { logger } from "../lib/logger";
 import { FORM_SCHEMAS } from "../config/form-schemas";
-import { logEventoBg } from "./activity-log";
+import { logEventoBg, logAtividadeBg } from "./activity-log";
 
 const WEBHOOK_URL = process.env.N8N_NOTIFICATIONS_WEBHOOK_URL;
 const HUB_URL = process.env.HUB_PUBLIC_URL || "https://hub.portalsvn.com.br";
@@ -30,6 +30,12 @@ export type Marco = "recebida" | "aprovacao" | "concluida";
 export async function notificarMarco(solicitacaoId: number, marco: Marco): Promise<void> {
   if (!WEBHOOK_URL) {
     logger.warn({ solicitacaoId, marco }, "N8N_NOTIFICATIONS_WEBHOOK_URL ausente — pulando");
+    logAtividadeBg({
+      tipo: "email_falha", nivel: "error",
+      solicitacaoId,
+      detalhe: `E-mail "${marco}" não enviado: webhook de notificações (N8N_NOTIFICATIONS_WEBHOOK_URL) não configurado.`,
+      metadata: { marco, motivo: "webhook_ausente" },
+    });
     return;
   }
   try {
@@ -79,6 +85,12 @@ export async function notificarMarco(solicitacaoId: number, marco: Marco): Promi
         mensagem: `Falha ao disparar e-mail "${marco}"`,
         detalhes: { marco, status: res.status },
       });
+      logAtividadeBg({
+        tipo: "email_falha", nivel: "error",
+        solicitacaoId, tipoSolicitacao: tipo,
+        detalhe: `Falha ao disparar e-mail "${marco}" da solicitação #${solicitacaoId} (n8n respondeu ${res.status}).`,
+        metadata: { marco, n8n_status: res.status },
+      });
       return;
     }
 
@@ -104,6 +116,12 @@ export async function notificarMarco(solicitacaoId: number, marco: Marco): Promi
       origem: "n8n",
       mensagem: `Falha ao disparar e-mail "${marco}"`,
       detalhes: { marco, err: String(err) },
+    });
+    logAtividadeBg({
+      tipo: "email_falha", nivel: "error",
+      solicitacaoId,
+      detalhe: `Erro ao disparar e-mail "${marco}" da solicitação #${solicitacaoId}: ${String(err)}`,
+      metadata: { marco, err: String(err) },
     });
   }
 }

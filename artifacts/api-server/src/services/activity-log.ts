@@ -1,4 +1,4 @@
-import { db, eventosSolicitacaoTable } from "@workspace/db";
+import { db, eventosSolicitacaoTable, activityLogTable } from "@workspace/db";
 import { logger } from "../lib/logger";
 
 export type TipoEvento = "info" | "warning" | "error";
@@ -37,4 +37,41 @@ export async function logEvento(solicitacaoId: number, evento: EventoInput): Pro
 
 export function logEventoBg(solicitacaoId: number, evento: EventoInput): void {
   logEvento(solicitacaoId, evento).catch(() => {});
+}
+
+// ─────────────────────────────────────────────────────────────
+// Log de Atividades global (activityLogTable) — alimenta admin-log.html
+// ─────────────────────────────────────────────────────────────
+export interface AtividadeInput {
+  userEmail?: string;
+  userName?: string;
+  tipo: string;
+  nivel?: "info" | "warn" | "error" | string;
+  solicitacaoId?: number;
+  tipoSolicitacao?: string;
+  titulo?: string;
+  detalhe: string;
+  metadata?: Record<string, unknown>;
+}
+
+export async function logAtividade(params: AtividadeInput): Promise<void> {
+  try {
+    await db.insert(activityLogTable).values({
+      user_email: params.userEmail,
+      user_name: params.userName,
+      tipo: params.tipo,
+      nivel: (params.nivel || "info") as any,
+      solicitacao_id: params.solicitacaoId,
+      tipo_solicitacao: params.tipoSolicitacao,
+      titulo: params.titulo,
+      detalhe: params.detalhe,
+      metadata: params.metadata as any,
+    });
+  } catch (err) {
+    logger.error({ err, tipo: params.tipo }, "logAtividade falhou ao gravar");
+  }
+}
+
+export function logAtividadeBg(params: AtividadeInput): void {
+  logAtividade(params).catch(() => {});
 }

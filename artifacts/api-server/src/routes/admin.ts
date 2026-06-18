@@ -10,6 +10,7 @@ import JSZip from "jszip";
 import { AVAILABLE_FONTS } from "../types/art-template";
 import { FORM_SCHEMAS, getFormSchemaList, TIPOS_COM_CLICKUP } from "../config/form-schemas";
 import { validateClickUpList } from "./clickup";
+import { logAtividadeBg } from "../services/activity-log";
 import multer from "multer";
 import * as XLSX from "xlsx";
 
@@ -527,6 +528,13 @@ router.put("/users/:id/role", requireRole("admin"), async (req, res): Promise<vo
 
     await db.update(usersTable).set({ role }).where(eq(usersTable.id, userId));
 
+    logAtividadeBg({
+      userEmail: currentUser.email, userName: currentUser.name,
+      tipo: "usuario_papel_alterado", nivel: "warn",
+      detalhe: `${currentUser.email} alterou o papel de ${targetUser.email}: "${targetUser.role || "colaborador"}" → "${role}"`,
+      metadata: { targetEmail: targetUser.email, de: targetUser.role || "colaborador", para: role },
+    });
+
     res.json({ success: true });
   } catch (err: any) {
     req.log.error({ err, body: req.body }, "Erro ao alterar role");
@@ -955,6 +963,13 @@ router.post("/users", requireRole("admin"), async (req, res): Promise<void> => {
       role,
       clickup_user_id: clickup_user_id?.trim() || null,
     }).returning();
+
+    logAtividadeBg({
+      userEmail: req.session.user!.email, userName: req.session.user!.name,
+      tipo: "usuario_criado", nivel: "warn",
+      detalhe: `${req.session.user!.email} criou o usuário ${emailNormalized} com papel "${role}"`,
+      metadata: { novoUsuario: emailNormalized, papel: role },
+    });
 
     res.json({ success: true, user: inserted });
   } catch (err: any) {

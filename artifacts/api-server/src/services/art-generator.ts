@@ -11,6 +11,7 @@ import { renderTemplateToPdf } from "./pdf-renderer";
 import { FORM_SCHEMAS, FormSchema } from "../config/form-schemas";
 import { notificarMarcoBg } from "./notifications";
 import { logEventoBg } from "./activity-log";
+import { logAtividadeBg } from "./activity-log";
 import { gerarPdf as gerarCartaoPdf } from "../cartao/gerar-cartao";
 
 function camelToSnake(str: string): string {
@@ -295,6 +296,12 @@ export async function gerarArteParaSolicitacao(
       origem: "art-generator",
       mensagem: "Falha na geração",
       detalhes: { err: String(error) },
+    });
+    logAtividadeBg({
+      tipo: "automacao_erro", nivel: "error",
+      solicitacaoId, tipoSolicitacao: tipo,
+      detalhe: `Falha na geração automática (${tipo}) da solicitação #${solicitacaoId}: ${error instanceof Error ? error.message : String(error)}`,
+      metadata: { erro: error instanceof Error ? error.message : String(error) },
     });
 
     await db.update(solicitacoesTable)
