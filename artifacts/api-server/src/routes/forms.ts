@@ -1251,8 +1251,8 @@ router.post("/solicitacoes/:id/avaliacao", requireAuth, async (req, res): Promis
 
     const { nota, comentario } = req.body as { nota: number; comentario?: string };
     const notaNum = Number(nota);
-    if (!notaNum || !Number.isInteger(notaNum) || notaNum < 1 || notaNum > 10) {
-      res.status(400).json({ error: "Nota deve ser um inteiro entre 1 e 10" });
+    if (!notaNum || !Number.isInteger(notaNum) || notaNum < 1 || notaNum > 5) {
+      res.status(400).json({ error: "Nota deve ser um inteiro entre 1 e 5" });
       return;
     }
 

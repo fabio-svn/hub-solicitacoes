@@ -152,10 +152,9 @@
       box-shadow: 0 1px 4px rgba(34,27,25,0.18);
     }
     .chat-avatar img {
-      width: 16px;
-      height: 16px;
+      width: 17px;
+      height: 17px;
       object-fit: contain;
-      filter: invert(1);
     }
 
     .chat-msg-col {
@@ -508,7 +507,8 @@
     /* ─── Dados da solicitação ─── */
     .dados-grid {
       display: grid;
-      grid-template-columns: repeat(2, 1fr);
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      grid-auto-flow: row dense;
       gap: 16px 24px;
     }
     .dados-grid-wide {
@@ -562,19 +562,14 @@
       <div class="sol-header">
         <div class="sol-header-left">
           <h1 class="sol-titulo" id="solTitulo"></h1>
-          <details class="sol-detalhes" id="solDetalhes">
-            <summary>Detalhes</summary>
-            <div class="sol-detalhes-conteudo">
-              <div class="sol-meta" id="solMeta"></div>
-              <div id="solResponsavel" style="display:none;margin-top:8px">
-                <span style="display:inline-flex;align-items:center;gap:6px;padding:5px 12px 5px 10px;background:rgba(34,27,25,0.07);border:1px solid rgba(34,27,25,0.15);border-radius:999px;font-size:0.8rem;color:var(--carbon-black)">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="opacity:0.45;flex-shrink:0"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                  <span style="opacity:0.5;font-weight:500;font-size:0.78rem">Responsável:</span>
-                  <span class="resp-nome" style="font-weight:700;font-size:0.82rem"></span>
-                </span>
-              </div>
-            </div>
-          </details>
+          <div class="sol-meta" id="solMeta"></div>
+          <div id="solResponsavel" style="display:none;margin-top:8px">
+            <span style="display:inline-flex;align-items:center;gap:6px;padding:5px 12px 5px 10px;background:rgba(34,27,25,0.07);border:1px solid rgba(34,27,25,0.15);border-radius:999px;font-size:0.8rem;color:var(--carbon-black)">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="opacity:0.45;flex-shrink:0"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+              <span style="opacity:0.5;font-weight:500;font-size:0.78rem">Responsável:</span>
+              <span class="resp-nome" style="font-weight:700;font-size:0.82rem"></span>
+            </span>
+          </div>
         </div>
         <div class="sol-header-right" id="solHeaderRight">
           <span class="sol-status-badge" id="solStatus"></span>
@@ -779,7 +774,7 @@
               <div class="kebab-menu" id="solKebabMenu" hidden>
                 <button class="kebab-item kebab-danger" onclick="abrirModalExcluir(${item.id})">
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>
-                  Excluir solicitação
+                  Deletar solicitação
                 </button>
               </div>
             </div>` : ''}
@@ -815,7 +810,7 @@
       }
       if (dados.setor) metaParts.push(`<span class="sol-meta-sep"></span><span>${esc(dados.setor)}</span>`);
       if (dados.natureza) metaParts.push(`<span class="sol-meta-sep"></span><span>${dados.natureza === 'presencial' ? 'Presencial' : 'Online'}</span>`);
-      metaParts.push(`<span class="sol-meta-sep"></span><span title="${dtStr}">Solicitado ${dtRel}</span>`);
+      metaParts.push(`<span class="sol-meta-sep"></span><span title="${dtRel}">Solicitado em ${dtStr}</span>`);
       document.getElementById('solMeta').innerHTML = metaParts.join('');
       const respEl = document.getElementById('solResponsavel');
       if (respEl) {
@@ -857,18 +852,18 @@
         (isAdm ? ((() => {
           const nota = item.avaliacao && item.avaliacao.nota;
           if (nota) {
-            const cor = nota >= 8 ? '#16a34a' : nota >= 5 ? '#ea580c' : '#dc2626';
-            const corBg = nota >= 8 ? 'rgba(22,163,74,0.12)' : nota >= 5 ? 'rgba(234,88,12,0.12)' : 'rgba(220,38,38,0.12)';
+            const cor = nota >= 4 ? '#16a34a' : nota >= 3 ? '#ea580c' : '#dc2626';
+            const corBg = nota >= 4 ? 'rgba(22,163,74,0.12)' : nota >= 3 ? 'rgba(234,88,12,0.12)' : 'rgba(220,38,38,0.12)';
             return `<button
               onclick="verAvaliacao(${item.id})"
               id="btnVerAvaliacao"
-              title="Ver avaliação: ${nota}/10"
+              title="Ver avaliação: ${nota}/5"
               style="display:inline-flex;align-items:center;gap:5px;height:32px;padding:0 11px;border-radius:8px;border:none;background:${corBg};color:${cor};cursor:pointer;transition:filter 0.15s"
               onmouseover="this.style.filter='brightness(0.94)'" onmouseout="this.style.filter='none'">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="${cor}" stroke="${cor}" stroke-width="2">
                 <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
               </svg>
-              <span style="font-size:13px;font-weight:600;line-height:1">${nota}<span style="font-size:11px;font-weight:400;opacity:0.65">/10</span></span>
+              <span style="font-size:13px;font-weight:600;line-height:1">${nota}<span style="font-size:11px;font-weight:400;opacity:0.65">/5</span></span>
             </button>`;
           }
           if (item.status === 'concluido') {
@@ -888,7 +883,7 @@
             <div class="kebab-menu" id="solKebabMenu" hidden>
               <button class="kebab-item kebab-danger" onclick="abrirModalExcluir(${item.id})">
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>
-                Excluir solicitação
+                Deletar solicitação
               </button>
             </div>
           </div>`) : '');
@@ -1322,6 +1317,11 @@
       if (jaDecidido) {
         renderTranscript(rodadaAtual, nomeUsuario);
         document.getElementById('chatInputArea').style.display = 'none';
+        // Se foi aprovado e ainda não há avaliação registrada, reexibe a pesquisa para avaliar quando quiser.
+        const jaAvaliado = !!(item.avaliacao && item.avaliacao.nota);
+        if (rodadaAtual.decisao === 'aprovado' && !jaAvaliado) {
+          renderPesquisaSatisfacao(item.id);
+        }
         return;
       }
 
@@ -1600,7 +1600,8 @@
 
     /* ── Pesquisa de Satisfação ── */
     async function renderPesquisaSatisfacao(solId) {
-      const notas = [1,2,3,4,5,6,7,8,9,10];
+      if (document.getElementById('pesquisaSatisfacao')) return;
+      const notas = [1,2,3,4,5];
       const html = `
         <div id="pesquisaSatisfacao" style="
           background: rgba(255,255,255,0.7);
@@ -1611,7 +1612,7 @@
           font-family: inherit;
         ">
           <p style="font-size:0.9rem;font-weight:600;color:var(--carbon-black);margin:0 0 10px">
-            Em uma escala de 1 a 10, como você avalia o material entregue?
+            Em uma escala de 1 a 5, como você avalia o material entregue?
           </p>
           <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">
             ${notas.map(n => `
@@ -1712,9 +1713,9 @@
           const dataAv = av.data;
           const dataFmt = dataAv ? new Date(dataAv).toLocaleDateString('pt-BR', { day:'2-digit', month:'long', year:'numeric' }) : '';
           const horaFmt = dataAv ? new Date(dataAv).toLocaleTimeString('pt-BR', { hour:'2-digit', minute:'2-digit' }) : '';
-          const notaCor = nota >= 8 ? '#16a34a' : nota >= 5 ? '#ea580c' : '#dc2626';
-          const notaLabel = nota >= 8 ? 'Excelente' : nota >= 5 ? 'Regular' : 'Precisa melhorar';
-          const estrelas = Array.from({length: 10}, (_, i) =>
+          const notaCor = nota >= 4 ? '#16a34a' : nota >= 3 ? '#ea580c' : '#dc2626';
+          const notaLabel = nota >= 4 ? 'Excelente' : nota >= 3 ? 'Regular' : 'Precisa melhorar';
+          const estrelas = Array.from({length: 5}, (_, i) =>
             `<svg width="18" height="18" viewBox="0 0 24 24" fill="${i < nota ? '#f59e0b' : 'none'}" stroke="${i < nota ? '#f59e0b' : 'rgba(34,27,25,0.2)'}" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`
           ).join('');
 
@@ -2076,14 +2077,16 @@
             }
           } else {
             const val = value.map(v => humanizeValue(key, v)).join(', ');
-            gridFields += `<div class="dados-field${wideClass}"><div class="dados-label">${esc(label)}</div><div class="dados-value">${esc(val)}</div></div>`;
+            const wideAuto = (val.length > 70 || /\n/.test(val)) ? ' dados-grid-wide' : '';
+            gridFields += `<div class="dados-field${wideAuto}"><div class="dados-label">${esc(label)}</div><div class="dados-value">${esc(val)}</div></div>`;
             hasContent = true;
           }
           continue;
         }
         if (typeof value === 'object') continue;
         const val = String(humanizeValue(key, value));
-        gridFields += `<div class="dados-field${wideClass}"><div class="dados-label">${esc(label)}</div><div class="dados-value">${esc(val)}</div></div>`;
+        const wideAuto = (val.length > 70 || /\n/.test(val)) ? ' dados-grid-wide' : '';
+        gridFields += `<div class="dados-field${wideAuto}"><div class="dados-label">${esc(label)}</div><div class="dados-value">${esc(val)}</div></div>`;
         hasContent = true;
       }
 
