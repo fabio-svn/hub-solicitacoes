@@ -399,6 +399,10 @@ router.get("/solicitacoes", requireAuth, async (req, res) => {
 
     const conditions: ReturnType<typeof eq>[] = [];
 
+    // Registros importados da planilha histórica de cartões aparecem APENAS na página de
+    // Validação de Cartões — ficam ocultos da lista geral, do "minhas solicitações" e contadores.
+    conditions.push(sql`(${solicitacoesTable.dados} ->> '_importado_planilha') IS NULL`);
+
     if (!isAdmin || req.query.escopo === 'proprias') {
       conditions.push(eq(solicitacoesTable.user_email, user.email));
     }
