@@ -1,0 +1,43 @@
+Você vai criar o MANUAL DO USUÁRIO do Hub de Solicitações SVN (este repositório).
+O público é o COLABORADOR que usa o Hub para pedir materiais ao marketing (o solicitante) —
+não desenvolvedores. Escreva em português, de forma clara, acolhedora e direta, em segunda
+pessoa ("você"), sem jargão técnico.
+
+LEIA O CÓDIGO PARA ACERTAR OS FLUXOS, MAS TRADUZA PARA O USUÁRIO. Antes de escrever, explore o
+repo para entender de verdade: como é o login, como é a tela inicial/navegação, quais são os
+tipos de solicitação (a partir de src/config/form-schemas.ts), como é preencher e enviar um
+formulário, quais são os STATUS reais de uma solicitação, como funciona a aprovação do material
+e como o usuário reencontra pedidos e materiais anteriores. Baseie tudo no comportamento real.
+
+REGRAS (importante):
+- Descreva APENAS o que o usuário vê e faz na tela. NÃO mencione nada de bastidor: ClickUp, n8n,
+  webhooks, Cloudflare R2, banco de dados, código, endpoints, nomes de variáveis. Isso é interno
+  do time de marketing e não interessa ao solicitante.
+- Use os STATUS e nomes de telas/botões EXATAMENTE como aparecem no sistema (pegue do código),
+  não invente rótulos.
+- Não prometa funcionalidades que não existem no código. Onde não tiver certeza de um passo,
+  escreva "> TODO: confirmar".
+- Onde um print ajudaria, deixe um marcador "> [Screenshot: descrição do que mostrar]" para a
+  equipe inserir depois.
+- Tom de manual amigável, com passos numerados e títulos no formato "Como [fazer algo]".
+
+ENTREGA: um arquivo docs/guia-do-usuario.md (ou uma pasta docs/usuario/ com um índice, se preferir
+quebrar em páginas). Estrutura sugerida:
+
+1. Primeiros passos — como acessar o Hub e fazer login (com a conta da empresa), e o que fazer se
+   não conseguir entrar.
+2. A tela inicial — o que aparece quando você entra e como encontrar o que precisa.
+3. Como abrir uma solicitação — passo a passo geral (escolher o tipo, preencher os campos,
+   anexar arquivos quando houver, revisar e enviar). Liste os tipos de solicitação disponíveis
+   (a partir do form-schemas) e destaque particularidades de preenchimento quando relevantes.
+4. Acompanhar o andamento — explique cada status pelo qual um pedido passa (use os status reais),
+   o que cada um significa e onde ver isso.
+5. Aprovar o material — quando e como aprovar diretamente pelo Hub, e o que acontece depois.
+6. Reencontrar pedidos e materiais — como achar uma solicitação antiga e baixar/acessar de novo o
+   material entregue (e, quando aplicável, gerar de novo).
+7. Dúvidas frequentes — perguntas curtas e objetivas (ex.: "esqueci de anexar um arquivo",
+   "quanto tempo demora", "quem aprova", "não achei o tipo de pedido que preciso").
+
+Antes de escrever, confirme: o método de login, a lista real de tipos de solicitação e os status
+reais do sistema. Mantenha o texto enxuto e fácil de seguir — alguém deve conseguir abrir o
+primeiro pedido só lendo isso.
