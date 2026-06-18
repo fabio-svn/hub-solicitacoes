@@ -62,6 +62,24 @@
     tr.rev-row--alert td { background:#fff7ed; }
     .btn-text { background:transparent; border:none; color:#AC3631; cursor:pointer; font:inherit; padding:6px 8px; }
     .tomb-empty { padding: 40px; text-align: center; color: rgba(34,27,25,0.4); }
+    .spin { display:inline-block; width:13px; height:13px; border:2px solid rgba(255,255,255,.45); border-top-color:#fff; border-radius:50%; vertical-align:-2px; animation: tombspin .7s linear infinite; }
+    .spin--dark { border-color: rgba(34,27,25,.2); border-top-color:#221B19; }
+    @keyframes tombspin { to { transform: rotate(360deg); } }
+    .btn-upload { background:#221B19; color:#FFF8F3; border:none; display:inline-flex; align-items:center; gap:7px; }
+    .btn-upload:hover:not(:disabled) { background:#3a2f2b; }
+    .btn-upload:disabled { opacity:.5; cursor:default; }
+    .rev-foto-cell { display:flex; gap:8px; align-items:center; }
+    .rev-foto-cell select { flex:1; }
+    .rev-eye { background:transparent; border:1px solid var(--border-light); border-radius:8px; cursor:pointer; padding:6px 8px; display:inline-flex; align-items:center; color:#221B19; flex:none; }
+    .rev-eye:hover { background:#FFF8F3; }
+    .tomb-item-actions { display:flex; align-items:center; gap:10px; }
+    .tomb-del { background:transparent; border:none; cursor:pointer; color:#dc2626; padding:6px; border-radius:8px; display:inline-flex; }
+    .tomb-del:hover { background:#fee2e2; }
+    .foto-modal { position:fixed; inset:0; background:rgba(34,27,25,.6); display:flex; align-items:center; justify-content:center; z-index:9999; padding:20px; }
+    .foto-modal-inner { background:#FFF8F3; border-radius:14px; padding:14px; max-width:min(90vw,520px); position:relative; }
+    .foto-modal-inner img { max-width:100%; max-height:70vh; border-radius:10px; display:block; }
+    .foto-modal-close { position:absolute; top:6px; right:10px; background:none; border:none; font-size:1.7rem; line-height:1; cursor:pointer; color:#221B19; }
+    .foto-modal-nome { margin-top:8px; font-size:.8rem; color:rgba(34,27,25,.6); text-align:center; word-break:break-all; }
   </style>
 </head>
 <body class="page-light">
@@ -126,7 +144,7 @@
             Escolher planilha
             <input type="file" id="tombFile" accept=".xlsx,.xls,.csv" style="display:none" onchange="aoEscolherArquivo(this)">
           </label>
-          <p>Formatos: .xlsx, .xls ou .csv. Colunas: nome, e-mail, telefone, cargo, tem CFP, arquivo da foto. (A marca não vai na planilha — é a do tombamento.)</p>
+          <p>Formatos: .xlsx, .xls ou .csv (máx. 15 MB). Colunas: nome, e-mail, telefone, cargo, tem CFP, arquivo da foto. (A marca não vai na planilha — é a do tombamento.) A coluna <strong>arquivo da foto</strong> é opcional: sem ela, o sistema casa as fotos pelo nome.</p>
           <div class="tomb-filename" id="tombFilename"></div>
         </div>
 
@@ -137,10 +155,10 @@
           </div>
           <div class="tomb-actions">
             <button class="btn btn-primary" id="btnGerarAssinaturas" onclick="gerarAssinaturas()" disabled>Gerar assinaturas (.zip)</button>
-            <button class="btn btn-primary" id="btnGerarCartoes" onclick="document.getElementById('fotosZipInput').click()" disabled>Gerar cartões digitais (.zip de fotos)</button>
+            <button class="btn btn-upload" id="btnGerarCartoes" onclick="document.getElementById('fotosZipInput').click()" disabled><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>Upload de .zip com fotos para cartões</button>
             <input type="file" id="fotosZipInput" accept=".zip,application/zip" style="display:none" onchange="cartoesStep1(this)">
           </div>
-          <p class="tomb-note">Cartões digitais: suba um <strong>.zip com as fotos</strong> e o sistema casa cada pessoa pelo nome — você confere antes de gerar. A coluna <strong>arquivo_foto</strong> é opcional (se preenchida, tem prioridade). Disponível apenas para marcas com cartão digital (Investimentos, Capital, Connect).</p>
+          <p class="tomb-note">Cartões digitais: suba um <strong>.zip com as fotos</strong> (máx. 100 MB) e o sistema casa cada pessoa pelo nome — você confere antes de gerar. A coluna <strong>arquivo_foto</strong> é opcional (se preenchida, tem prioridade). Disponível apenas para marcas com cartão digital (Investimentos, Capital, Connect).</p>
 
           <div id="cartoesReview" class="tomb-review" style="display:none">
             <div class="tomb-review-head">
@@ -161,6 +179,14 @@
         </div>
       </div>
 
+    </div>
+  </div>
+
+  <div id="fotoModal" class="foto-modal" style="display:none" onclick="fecharFotoModal()">
+    <div class="foto-modal-inner" onclick="event.stopPropagation()">
+      <button class="foto-modal-close" type="button" onclick="fecharFotoModal()" aria-label="Fechar">&times;</button>
+      <img id="fotoModalImg" alt="">
+      <div id="fotoModalNome" class="foto-modal-nome"></div>
     </div>
   </div>
 
@@ -188,6 +214,12 @@
       { f: 'cargo', label: 'Cargo' }, { f: 'tem_cfp', label: 'Tem CFP' }, { f: 'arquivo_foto', label: 'Arquivo da foto' },
     ];
     let currentTomb = null;
+
+    const SPIN = '<span class="spin" aria-hidden="true"></span>';
+    function setBtnLoading(btn, label) { if (!btn) return; btn.dataset.old = btn.innerHTML; btn.disabled = true; btn.innerHTML = SPIN + ' ' + label; }
+    function clearBtnLoading(btn) { if (!btn) return; btn.disabled = false; if (btn.dataset.old != null) { btn.innerHTML = btn.dataset.old; delete btn.dataset.old; } }
+    const MAX_PLANILHA = 15 * 1024 * 1024;
+    const MAX_FOTOS = 100 * 1024 * 1024;
 
     async function init() {
       await Auth.init();
@@ -238,7 +270,8 @@
           const n = (t.linhas && t.linhas.length) ? (t.linhas.length + ' linha(s)') : 'sem planilha';
           return '<div class="tomb-item" onclick="abrirTombamento(' + t.id + ')">'
             + '<div><div class="tomb-item-nome">' + esc(t.nome) + '</div><div class="tomb-item-meta">' + dt + ' · ' + n + '</div></div>'
-            + '<span class="tomb-marca-pill">' + esc(marcaLabel(t.marca)) + '</span></div>';
+            + '<div class="tomb-item-actions"><span class="tomb-marca-pill">' + esc(marcaLabel(t.marca)) + '</span>'
+            + '<button type="button" class="tomb-del" title="Excluir tombamento" onclick="event.stopPropagation(); deletarTombamento(' + t.id + ')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg></button></div></div>';
         }).join('');
       } catch (err) { el.innerHTML = '<div class="tomb-empty">Erro ao carregar.</div>'; }
     }
@@ -279,7 +312,8 @@
 
     async function enviarPlanilha(file) {
       if (!currentTomb) return;
-      document.getElementById('tombFilename').textContent = 'Lendo: ' + file.name + '…';
+      if (file.size > MAX_PLANILHA) { if (window.showToast) showToast('Planilha acima de 15 MB. Reduza o arquivo.', 'error'); return; }
+      document.getElementById('tombFilename').innerHTML = '<span class="spin spin--dark"></span> Lendo: ' + esc(file.name) + '…';
       const fd = new FormData(); fd.append('planilha', file);
       try {
         const res = await fetch('/api/admin/tombamentos/parse', { method: 'POST', body: fd });
@@ -318,8 +352,7 @@
     async function gerarAssinaturas() {
       if (!currentTomb) return;
       const btn = document.getElementById('btnGerarAssinaturas');
-      const old = btn.textContent;
-      btn.disabled = true; btn.textContent = 'Gerando…';
+      setBtnLoading(btn, 'Gerando…');
       try {
         const res = await fetch('/api/admin/tombamentos/' + currentTomb.id + '/gerar-assinaturas', { method: 'POST' });
         if (!res.ok) {
@@ -334,7 +367,7 @@
       } catch (err) {
         if (window.showToast) showToast(err.message || 'Erro ao gerar', 'error');
       } finally {
-        btn.disabled = false; btn.textContent = old;
+        clearBtnLoading(btn);
       }
     }
     function baixarBlob(blob, nome) {
@@ -354,10 +387,10 @@
       const f = input.files && input.files[0];
       input.value = '';
       if (!f) return;
+      if (f.size > MAX_FOTOS) { if (window.showToast) showToast('O .zip está acima de 100 MB. Reduza as fotos ou divida em partes.', 'error'); return; }
       cartoesFotosFile = f;
       const btn = document.getElementById('btnGerarCartoes');
-      const old = btn.textContent;
-      btn.disabled = true; btn.textContent = 'Analisando…';
+      setBtnLoading(btn, 'Analisando…');
       try {
         const fd = new FormData();
         fd.append('fotos', f);
@@ -369,7 +402,7 @@
       } catch (err) {
         if (window.showToast) showToast(err.message || 'Erro ao analisar', 'error');
       } finally {
-        btn.disabled = false; btn.textContent = old;
+        clearBtnLoading(btn);
       }
     }
 
@@ -385,7 +418,8 @@
         return '<tr' + alerta + '>'
           + '<td>' + cartEsc(p.nome) + '<div style="font-size:.75rem;color:rgba(34,27,25,.5)">' + sub + '</div></td>'
           + '<td><span class="rev-badge rev-' + p.status + '">' + p.status.replace('_', ' ') + '</span></td>'
-          + '<td><select data-email="' + cartEsc(p.email) + '">' + opts + '</select></td></tr>';
+          + '<td><div class="rev-foto-cell"><select data-email="' + cartEsc(p.email) + '">' + opts + '</select>'
+          + '<button type="button" class="rev-eye" title="Ver foto" onclick="cartoesPreview(this)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button></div></td></tr>';
       }).join('');
       const selects = tbody.querySelectorAll('select[data-email]');
       pessoas.forEach(function (p, i) { if (selects[i]) selects[i].value = p.foto || ''; });
@@ -409,13 +443,16 @@
       });
       if (!Object.keys(atrib).length) { if (window.showToast) showToast('Nenhuma foto atribuída', 'error'); return; }
       const btn = document.getElementById('btnCartoesGerar');
-      const old = btn.textContent;
-      btn.disabled = true; btn.textContent = 'Gerando…';
+      setBtnLoading(btn, 'Gerando…');
       try {
-        const fd = new FormData();
-        fd.append('fotos', cartoesFotosFile);
-        fd.append('atribuicoes', JSON.stringify(atrib));
-        const res = await fetch('/api/admin/tombamentos/' + currentTomb.id + '/gerar-cartoes', { method: 'POST', body: fd });
+        async function postGerar(comArquivo) {
+          const fd = new FormData();
+          fd.append('atribuicoes', JSON.stringify(atrib));
+          if (comArquivo) fd.append('fotos', cartoesFotosFile);
+          return fetch('/api/admin/tombamentos/' + currentTomb.id + '/gerar-cartoes', { method: 'POST', body: fd });
+        }
+        let res = await postGerar(false);
+        if (res.status === 410) res = await postGerar(true);
         if (!res.ok) {
           const data = await res.json().catch(function () { return {}; });
           throw new Error(data.error || 'Erro ao gerar cartões');
@@ -428,8 +465,47 @@
       } catch (err) {
         if (window.showToast) showToast(err.message || 'Erro ao gerar', 'error');
       } finally {
-        btn.disabled = false; btn.textContent = old;
+        clearBtnLoading(btn);
       }
+    }
+
+    async function cartoesPreview(btn) {
+      if (!currentTomb) return;
+      const sel = btn.parentElement.querySelector('select');
+      const nome = sel && sel.value;
+      if (!nome) { if (window.showToast) showToast('Selecione uma foto primeiro', 'error'); return; }
+      try {
+        const res = await fetch('/api/admin/tombamentos/' + currentTomb.id + '/foto?nome=' + encodeURIComponent(nome));
+        if (!res.ok) {
+          if (res.status === 410) throw new Error('Prévia expirou. Clique de novo em "Upload de .zip…" para recarregar.');
+          throw new Error('Não foi possível carregar a foto.');
+        }
+        const blob = await res.blob();
+        abrirFotoModal(URL.createObjectURL(blob), nome);
+      } catch (err) { if (window.showToast) showToast(err.message, 'error'); }
+    }
+    let _fotoUrl = null;
+    function abrirFotoModal(url, nome) {
+      _fotoUrl = url;
+      document.getElementById('fotoModalImg').src = url;
+      document.getElementById('fotoModalNome').textContent = nome || '';
+      document.getElementById('fotoModal').style.display = 'flex';
+    }
+    function fecharFotoModal() {
+      document.getElementById('fotoModal').style.display = 'none';
+      document.getElementById('fotoModalImg').src = '';
+      if (_fotoUrl) { URL.revokeObjectURL(_fotoUrl); _fotoUrl = null; }
+    }
+
+    async function deletarTombamento(id) {
+      if (!confirm('Excluir este tombamento? Esta ação não pode ser desfeita. (As linhas salvas serão perdidas; os .zip já baixados não são afetados.)')) return;
+      try {
+        const res = await fetch('/api/admin/tombamentos/' + id, { method: 'DELETE' });
+        const data = await res.json().catch(function () { return {}; });
+        if (!res.ok) throw new Error(data.error || 'Erro ao excluir');
+        if (window.showToast) showToast('Tombamento excluído', 'success');
+        carregarLista();
+      } catch (err) { if (window.showToast) showToast(err.message || 'Erro ao excluir', 'error'); }
     }
 
     init();

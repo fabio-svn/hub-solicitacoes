@@ -224,6 +224,27 @@ function tombMatchScore(pTokens: string[], pCompact: string, fTokens: string[], 
   return { score: Math.round(55 * (inter / union)), contained: false, inter };
 }
 
+// Cache em memória do .zip de fotos durante a revisão (evita re-upload + permite prévia).
+const tombZipCache = new Map<number, { buffer: Buffer; expires: number }>();
+const TOMB_ZIP_TTL_MS = 30 * 60 * 1000;
+function tombZipCacheSet(id: number, buffer: Buffer): void {
+  const now = Date.now();
+  for (const [k, v] of tombZipCache) if (v.expires < now) tombZipCache.delete(k);
+  tombZipCache.set(id, { buffer, expires: now + TOMB_ZIP_TTL_MS });
+  while (tombZipCache.size > 3) {
+    let oldestK: number | null = null; let oldestE = Infinity;
+    for (const [k, v] of tombZipCache) { if (k !== id && v.expires < oldestE) { oldestE = v.expires; oldestK = k; } }
+    if (oldestK == null) break;
+    tombZipCache.delete(oldestK);
+  }
+}
+function tombZipCacheGet(id: number): Buffer | null {
+  const v = tombZipCache.get(id);
+  if (!v) return null;
+  if (v.expires < Date.now()) { tombZipCache.delete(id); return null; }
+  return v.buffer;
+}
+
 // Lê o .zip de fotos e devolve a lista de imagens válidas (sem ler os bytes).
 function lerNomesFotos(fotosZip: JSZip): { nome: string; tokens: string[]; compact: string }[] {
   const fotos: { nome: string; tokens: string[]; compact: string }[] = [];
@@ -263,6 +284,7 @@ router.post("/tombamentos/:id/match-fotos", requireRole("admin"), uploadFotos.si
     let fotosZip: JSZip;
     try { fotosZip = await JSZip.loadAsync(file.buffer); }
     catch { res.status(400).json({ error: "Não foi possível ler o .zip de fotos. Confira o arquivo." }); return; }
+    tombZipCacheSet(id, file.buffer);
 
     const fotos = lerNomesFotos(fotosZip);
     if (!fotos.length) { res.status(400).json({ error: "O .zip não contém imagens (.jpg, .png, .webp)." }); return; }
@@ -343,9 +365,10 @@ router.post("/tombamentos/:id/gerar-cartoes", requireRole("admin"), uploadFotos.
     }
 
     const file = (req as { file?: { buffer: Buffer } }).file;
-    if (!file) { res.status(400).json({ error: "Envie o .zip de fotos no campo 'fotos'." }); return; }
+    const srcZipBuf = file ? file.buffer : tombZipCacheGet(id);
+    if (!srcZipBuf) { res.status(410).json({ error: "Sessão expirada — reenvie o .zip de fotos.", expired: true }); return; }
     let fotosZip: JSZip;
-    try { fotosZip = await JSZip.loadAsync(file.buffer); }
+    try { fotosZip = await JSZip.loadAsync(srcZipBuf); }
     catch { res.status(400).json({ error: "Não foi possível ler o .zip de fotos. Confira o arquivo." }); return; }
 
     const porNome: Record<string, { buffer: Buffer; mime: string }> = {};
@@ -407,6 +430,48 @@ router.post("/tombamentos/:id/gerar-cartoes", requireRole("admin"), uploadFotos.
   } catch (err) {
     logger.error({ err }, "[tombamentos] erro ao gerar cartões");
     res.status(500).json({ error: "Erro ao gerar cartões digitais." });
+  }
+});
+
+// Prévia de uma foto do .zip em cache (usada pelo ícone de olho na revisão).
+router.get("/tombamentos/:id/foto", requireRole("admin"), async (req, res): Promise<void> => {
+  try {
+    const id = parseInt(String(req.params.id), 10);
+    const nome = String(req.query.nome ?? "");
+    if (isNaN(id) || !nome) { res.status(400).end(); return; }
+    const buf = tombZipCacheGet(id);
+    if (!buf) { res.status(410).json({ error: "Prévia expirada. Reenvie o .zip." }); return; }
+    const zip = await JSZip.loadAsync(buf);
+    const target = nome.toLowerCase();
+    let hit: any = null; let hitName = "";
+    for (const entryPath of Object.keys(zip.files)) {
+      const entry = zip.files[entryPath];
+      if (entry.dir) continue;
+      const base = entryPath.split(/[\\/]/).pop() || "";
+      if (base.toLowerCase() === target) { hit = entry; hitName = base; break; }
+    }
+    if (!hit) { res.status(404).json({ error: "Foto não encontrada" }); return; }
+    res.setHeader("Content-Type", tombMime(hitName));
+    res.setHeader("Cache-Control", "private, max-age=300");
+    res.send(await hit.async("nodebuffer"));
+  } catch (err) {
+    logger.error({ err }, "[tombamentos] erro na prévia de foto");
+    res.status(500).end();
+  }
+});
+
+// Exclui um tombamento.
+router.delete("/tombamentos/:id", requireRole("admin"), async (req, res): Promise<void> => {
+  try {
+    const id = parseInt(String(req.params.id), 10);
+    if (isNaN(id)) { res.status(400).json({ error: "ID inválido" }); return; }
+    const [row] = await db.delete(tombamentosTable).where(eq(tombamentosTable.id, id)).returning();
+    if (!row) { res.status(404).json({ error: "Tombamento não encontrado" }); return; }
+    tombZipCache.delete(id);
+    res.json({ ok: true });
+  } catch (err) {
+    logger.error({ err }, "[tombamentos] erro ao deletar tombamento");
+    res.status(500).json({ error: "Erro ao deletar tombamento." });
   }
 });
 
