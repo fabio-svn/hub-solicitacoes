@@ -2018,3 +2018,15 @@ input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
 .svn-stepper--compact .svn-step-label { display: none; }
 .svn-stepper--compact .svn-step.is-active .svn-step-label,
 .svn-stepper--compact .svn-step:last-child .svn-step-label { display: inline; }
+
+/* Link de solicitação no Log de Atividade */
+.log-sol-link {
+  display: inline-block;
+  margin-top: 3px;
+  font-size: 0.70rem;
+  font-weight: 700;
+  color: var(--ruby-red);
+  text-decoration: none;
+  letter-spacing: 0.01em;
+}
+.log-sol-link:hover { text-decoration: underline; }
