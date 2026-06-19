@@ -307,9 +307,9 @@ window._impersonar = async function() {
       try { sessionStorage.removeItem('svn_auth_cache'); localStorage.removeItem('svn_layout_state'); } catch {}
       window.location.reload();
     } else {
-      alert('Não foi possível entrar como esse usuário.');
+      window.showToast ? showToast('Não foi possível entrar como esse usuário.', 'error') : alert('Não foi possível entrar como esse usuário.');
     }
-  } catch (err) { console.error('[auth/impersonate]', err); alert('Erro de conexão.'); }
+  } catch (err) { console.error('[auth/impersonate]', err); window.showToast ? showToast('Erro de conexão.', 'error') : alert('Erro de conexão.'); }
 };
 
 window._sairImpersonar = async function() {

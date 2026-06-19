@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { fetchWithTimeout } from "../lib/http";
 import { ConfidentialClientApplication } from "@azure/msal-node";
 import { randomBytes } from "crypto";
 import { db } from "@workspace/db";
@@ -183,7 +184,7 @@ router.get("/me-graph", async (req, res): Promise<void> => {
       "onPremisesExtensionAttributes",
     ].join(",");
 
-    const graphRes = await fetch(
+    const graphRes = await fetchWithTimeout(
       `https://graph.microsoft.com/v1.0/me?$select=${fields}`,
       { headers: { Authorization: `Bearer ${token}` } }
     );

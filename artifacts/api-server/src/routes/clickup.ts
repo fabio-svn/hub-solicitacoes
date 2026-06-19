@@ -1,4 +1,5 @@
 import { logger } from "../lib/logger";
+import { fetchWithTimeout } from "../lib/http";
 import { randomInt } from "crypto";
 import { db, usersTable, userTipoAssignmentsTable, tipoClickupListTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
@@ -26,7 +27,7 @@ function waLink(phone: string): string | null {
 export async function setClickUpTaskStatus(taskId: string, status: string): Promise<boolean> {
   if (!CLICKUP_API_TOKEN || !taskId) return false;
   try {
-    const r = await fetch(`https://api.clickup.com/api/v2/task/${taskId}`, {
+    const r = await fetchWithTimeout(`https://api.clickup.com/api/v2/task/${taskId}`, {
       method: "PUT",
       headers: { "Authorization": CLICKUP_API_TOKEN, "Content-Type": "application/json" },
       body: JSON.stringify({ status }),
@@ -37,6 +38,7 @@ export async function setClickUpTaskStatus(taskId: string, status: string): Prom
       return false;
     }
     logger.info({ taskId, status }, "ClickUp: status atualizado");
+    invalidateSnapshot(taskId);
     return true;
   } catch (err) {
     logger.error({ err, taskId, status }, "ClickUp: falha ao mudar status");
@@ -52,7 +54,7 @@ export async function validateClickUpList(
   if (!CLICKUP_API_TOKEN) return { ok: false, error: "Token do ClickUp não configurado no servidor." };
   if (!/^\d+$/.test(listId)) return { ok: false, error: "O ID da lista deve conter apenas números." };
   try {
-    const r = await fetch(`https://api.clickup.com/api/v2/list/${listId}`, {
+    const r = await fetchWithTimeout(`https://api.clickup.com/api/v2/list/${listId}`, {
       headers: { Authorization: CLICKUP_API_TOKEN },
     });
     if (!r.ok) {
@@ -832,7 +834,7 @@ async function setClickUpCustomField(
     convertedValue: value,
   }, "ClickUp: enviando custom field");
   try {
-    const response = await fetch(`https://api.clickup.com/api/v2/task/${taskId}/field/${fieldId}`, {
+    const response = await fetchWithTimeout(`https://api.clickup.com/api/v2/task/${taskId}/field/${fieldId}`, {
       method: "POST",
       headers: { "Authorization": CLICKUP_API_TOKEN, "Content-Type": "application/json" },
       body: JSON.stringify({ value }),
@@ -1378,7 +1380,7 @@ export async function createClickUpTask(
   let taskId: string | null = null;
 
   try {
-    const response = await fetch(`https://api.clickup.com/api/v2/list/${listId}/task`, {
+    const response = await fetchWithTimeout(`https://api.clickup.com/api/v2/list/${listId}/task`, {
       method: "POST",
       headers: { "Authorization": CLICKUP_API_TOKEN, "Content-Type": "application/json" },
       body: JSON.stringify(taskPayload),
@@ -1406,7 +1408,7 @@ export async function createClickUpTask(
 export async function getClickUpTaskStatus(taskId: string): Promise<string | null> {
   if (!CLICKUP_API_TOKEN) return null;
   try {
-    const response = await fetch(`https://api.clickup.com/api/v2/task/${taskId}`, {
+    const response = await fetchWithTimeout(`https://api.clickup.com/api/v2/task/${taskId}`, {
       headers: { "Authorization": CLICKUP_API_TOKEN },
     });
     if (!response.ok) return null;
@@ -1428,10 +1430,24 @@ export interface ClickUpSnapshot {
 }
 
 // Lê status + prazo (due_date) + motivo do prazo de uma task numa única chamada.
+// Cache curto do snapshot do ClickUp: evita rajadas de chamadas quando vários
+// refreshes/abas leem a mesma task em sequência. TTL curto porque a sincronização
+// de status tolera alguns segundos de defasagem. Só cacheia respostas válidas —
+// erros não entram no cache, então a próxima chamada tenta de novo.
+const SNAPSHOT_TTL_MS = Number(process.env.CLICKUP_SNAPSHOT_TTL_MS) || 30000;
+const snapshotCache = new Map<string, { value: ClickUpSnapshot; expiresAt: number }>();
+
+/** Invalida o snapshot em cache de uma task. Chamado após o app escrever na task. */
+export function invalidateSnapshot(taskId: string): void {
+  snapshotCache.delete(taskId);
+}
+
 export async function getClickUpTaskSnapshot(taskId: string): Promise<ClickUpSnapshot | null> {
   if (!CLICKUP_API_TOKEN || !taskId) return null;
+  const cached = snapshotCache.get(taskId);
+  if (cached && cached.expiresAt > Date.now()) return cached.value;
   try {
-    const response = await fetch(`https://api.clickup.com/api/v2/task/${taskId}`, {
+    const response = await fetchWithTimeout(`https://api.clickup.com/api/v2/task/${taskId}`, {
       headers: { "Authorization": CLICKUP_API_TOKEN },
     });
     if (!response.ok) return null;
@@ -1454,7 +1470,9 @@ export async function getClickUpTaskSnapshot(taskId: string): Promise<ClickUpSna
         : ((f.name || "").toLowerCase().includes("motivo") && (f.name || "").toLowerCase().includes("prazo"))
     );
     if (mf && mf.value != null && String(mf.value).trim()) motivoPrazo = String(mf.value).trim();
-    return { status, dueDate, motivoPrazo };
+    const snap: ClickUpSnapshot = { status, dueDate, motivoPrazo };
+    snapshotCache.set(taskId, { value: snap, expiresAt: Date.now() + SNAPSHOT_TTL_MS });
+    return snap;
   } catch {
     return null;
   }

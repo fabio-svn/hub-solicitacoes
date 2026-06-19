@@ -70,4 +70,47 @@ rm -rf lib/db/dist lib/api-zod/dist 2>/dev/null
 pnpm exec tsc -b lib/db lib/api-zod >/tmp/_libbuild 2>&1 || { echo "  ⚠ falha ao buildar libs:"; cat /tmp/_libbuild; }
 ( cd "$API" && pnpm exec tsc -p tsconfig.json --noEmit ) && echo "  ✓ tsc verde" || echo "  ⚠ erros de tsc acima (esses sim sao reais)"
 
+### 8. Drift schema Drizzle x DDL (DB_STATEMENTS) ###
+python3 - << 'PY'
+import re, sys
+SCHEMA="lib/db/src/schema/index.ts"
+DDL="artifacts/api-server/src/index.ts"
+try:
+    schema=open(SCHEMA,encoding="utf-8").read(); ddl=open(DDL,encoding="utf-8").read()
+except FileNotFoundError as e:
+    print(f"  (pulado: {e.filename} não encontrado)"); sys.exit(0)
+
+sch={}; cur=None
+for line in schema.split("\n"):
+    mt=re.search(r'=\s*pgTable\(\s*"([^"]+)"', line)
+    if mt: cur=mt.group(1); sch[cur]=set(); continue
+    if cur and re.match(r'^\s*\}\)\s*;?\s*$', line): cur=None; continue
+    if cur:
+        cm=re.match(r'\s*([a-zA-Z_][a-zA-Z0-9_]*)\s*:\s*[a-zA-Z]+\(', line)
+        if cm:
+            q=re.search(r'\(\s*"([^"]+)"', line)
+            sch[cur].add(q.group(1) if q else cm.group(1))
+
+dd={}
+for m in re.finditer(r'CREATE TABLE IF NOT EXISTS\s+"([^"]+)"\s*\((.*?)\)\s*`', ddl, re.S):
+    t,body=m.group(1),m.group(2); cols=set()
+    for ln in body.split("\n"):
+        cm=re.match(r'\s*"?([a-zA-Z_][a-zA-Z0-9_]*)"?\s+\S', ln)
+        if cm and cm.group(1).upper() not in ("CONSTRAINT","PRIMARY","UNIQUE","FOREIGN","CHECK"):
+            cols.add(cm.group(1))
+    dd[t]=cols
+for m in re.finditer(r'ALTER TABLE\s+"?([a-zA-Z_]+)"?\s+ADD COLUMN IF NOT EXISTS\s+"?([a-zA-Z_]+)"?', ddl):
+    dd.setdefault(m.group(1),set()).add(m.group(2))
+
+prob=0
+for t in sorted(sch):
+    miss=sch[t]-dd.get(t,set())
+    if t not in dd:
+        print(f"  \u26a0 tabela '{t}' no schema mas SEM CREATE/ALTER no DDL"); prob+=1
+    elif miss:
+        print(f"  \u26a0 '{t}': colunas no schema e FALTANDO no DDL: {sorted(miss)}"); prob+=1
+if prob==0:
+    print("  (sem \u26a0 = schema e DDL batem coluna-a-coluna)")
+PY
+
 echo; echo "==================== FIM ===================="

@@ -1,4 +1,5 @@
 import { db, solicitacoesTable } from "@workspace/db";
+import { fetchWithTimeout } from "../lib/http";
 import { eq, sql } from "drizzle-orm";
 import { logger } from "../lib/logger";
 import { FORM_SCHEMAS } from "../config/form-schemas";
@@ -74,7 +75,7 @@ export async function notificarMarco(solicitacaoId: number, marco: Marco): Promi
       created_at: sol.created_at,
     };
 
-    const res = await fetch(WEBHOOK_URL, {
+    const res = await fetchWithTimeout(WEBHOOK_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),

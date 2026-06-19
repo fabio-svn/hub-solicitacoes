@@ -611,7 +611,7 @@
         if (g('email') != null) email = g('email');
       }
       if (!String(nome).trim() || !String(email).trim()) {
-        alert('Preencha Nome e E-mail antes de gerar o cartão.');
+        window.showToast ? showToast('Preencha Nome e E-mail antes de gerar o cartão.', 'error') : alert('Preencha Nome e E-mail antes de gerar o cartão.');
         return;
       }
       const orig = btn.textContent; btn.disabled = true; btn.textContent = 'Gerando…';
@@ -625,11 +625,11 @@
           if (raw) raw.pdf_url = d.url;
           render();
         } else {
-          alert(d.error || 'Erro ao gerar o PDF.');
+          window.showToast ? showToast(d.error || 'Erro ao gerar o PDF.', 'error') : alert(d.error || 'Erro ao gerar o PDF.');
           btn.disabled = false; btn.textContent = orig;
         }
       } catch (e) {
-        alert('Erro de rede ao gerar o PDF.');
+        window.showToast ? showToast('Erro de rede ao gerar o PDF.', 'error') : alert('Erro de rede ao gerar o PDF.');
         btn.disabled = false; btn.textContent = orig;
       }
     }
@@ -645,11 +645,11 @@
           render();
         } else {
           const d = await res.json().catch(function () { return {}; });
-          alert(d.error || 'Erro ao excluir.');
+          window.showToast ? showToast(d.error || 'Erro ao excluir.', 'error') : alert(d.error || 'Erro ao excluir.');
           btn.disabled = false;
         }
       } catch (e) {
-        alert('Erro de rede ao excluir.');
+        window.showToast ? showToast('Erro de rede ao excluir.', 'error') : alert('Erro de rede ao excluir.');
         btn.disabled = false;
       }
     }

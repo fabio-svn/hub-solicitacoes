@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { fetchWithTimeout } from "../lib/http";
 import multer from "multer";
 import os from "os";
 import { db } from "@workspace/db";
@@ -903,7 +904,7 @@ router.get("/solicitacoes/:id/entrega", requireAuth, async (req, res): Promise<v
 
     if (!solicitacao.clickup_task_id) { res.json({ links: [], status: solicitacao.status }); return; }
 
-    const response = await fetch(`https://api.clickup.com/api/v2/task/${solicitacao.clickup_task_id}`, {
+    const response = await fetchWithTimeout(`https://api.clickup.com/api/v2/task/${solicitacao.clickup_task_id}`, {
       headers: { "Authorization": process.env.CLICKUP_API_TOKEN || "" },
     });
     if (!response.ok) { res.json({ links: [], status: solicitacao.status }); return; }
@@ -1004,7 +1005,7 @@ router.post("/solicitacoes/:id/alteracao", requireAuth, async (req, res): Promis
 
     let mentionText = "";
     try {
-      const taskRes = await fetch(`https://api.clickup.com/api/v2/task/${solicitacao.clickup_task_id}`, {
+      const taskRes = await fetchWithTimeout(`https://api.clickup.com/api/v2/task/${solicitacao.clickup_task_id}`, {
         headers: { "Authorization": token },
       });
       if (taskRes.ok) {
@@ -1021,7 +1022,7 @@ router.post("/solicitacoes/:id/alteracao", requireAuth, async (req, res): Promis
       ? `${mentionText}✏️ Alterações solicitadas por ${user.name}:\n\n${mensagem.trim()}`
       : `${mentionText}✏️ Alteração solicitada por ${user.name}:\n\n${mensagem.trim()}`;
 
-    const commentRes = await fetch(`https://api.clickup.com/api/v2/task/${solicitacao.clickup_task_id}/comment`, {
+    const commentRes = await fetchWithTimeout(`https://api.clickup.com/api/v2/task/${solicitacao.clickup_task_id}/comment`, {
       method: "POST",
       headers: { "Authorization": token, "Content-Type": "application/json" },
       body: JSON.stringify({ comment_text: comentario }),
@@ -1075,7 +1076,7 @@ router.post("/solicitacoes/:id/aprovacao", requireAuth, async (req, res): Promis
 
     const token = process.env.CLICKUP_API_TOKEN || "";
 
-    const existingComments = await fetch(
+    const existingComments = await fetchWithTimeout(
       `https://api.clickup.com/api/v2/task/${solicitacao.clickup_task_id}/comment`,
       { headers: { "Authorization": token } }
     );
@@ -1091,7 +1092,7 @@ router.post("/solicitacoes/:id/aprovacao", requireAuth, async (req, res): Promis
     }
 
     const comentario = `✅ Aprovado por ${user.name} em ${new Date().toLocaleDateString('pt-BR')}`;
-    await fetch(`https://api.clickup.com/api/v2/task/${solicitacao.clickup_task_id}/comment`, {
+    await fetchWithTimeout(`https://api.clickup.com/api/v2/task/${solicitacao.clickup_task_id}/comment`, {
       method: "POST",
       headers: { "Authorization": token, "Content-Type": "application/json" },
       body: JSON.stringify({ comment_text: comentario }),
@@ -1151,7 +1152,7 @@ router.post("/solicitacoes/:id/cancelar", requireAuth, async (req, res): Promise
 
     const token = process.env.CLICKUP_API_TOKEN || "";
     const comentario = `\u274c Cancelamento solicitado por ${user.name} em ${new Date().toLocaleDateString('pt-BR')}:\n${justificativa}`;
-    const r = await fetch(`https://api.clickup.com/api/v2/task/${solicitacao.clickup_task_id}/comment`, {
+    const r = await fetchWithTimeout(`https://api.clickup.com/api/v2/task/${solicitacao.clickup_task_id}/comment`, {
       method: "POST",
       headers: { "Authorization": token, "Content-Type": "application/json" },
       body: JSON.stringify({ comment_text: comentario }),
@@ -1472,7 +1473,7 @@ router.put("/cartao-aprovacoes/:solicitacaoId", requireAuth, async (req, res): P
           const para = STATUS_LABELS_CARTAO[valores.status] || valores.status;
           const quem = req.session.user!.name || req.session.user!.email || "Validação";
           const token = process.env.CLICKUP_API_TOKEN || "";
-          await fetch(`https://api.clickup.com/api/v2/task/${taskId}/comment`, {
+          await fetchWithTimeout(`https://api.clickup.com/api/v2/task/${taskId}/comment`, {
             method: "POST",
             headers: { "Authorization": token, "Content-Type": "application/json" },
             body: JSON.stringify({ comment_text: `🔄 Status atualizado: ${de} → ${para} (por ${quem})` }),
