@@ -205,7 +205,9 @@ function humanizeValue(key, value) {
     const found = window.MARCAS_OPTS_FORM.find(m => m.value === value || m.label === value);
     if (found) return found.label;
   }
-  if (typeof value === 'string' && (value.includes('-') || value.includes('_'))) return humanizeSlug(value);
+  const _phoneKeys = ['telefone', 'whatsapp', 'phone', 'tel'];
+  const _looksLikePhone = typeof value === 'string' && /^\(\d{2}\)\s*\d/.test(value);
+  if (typeof value === 'string' && (value.includes('-') || value.includes('_')) && !_phoneKeys.includes(key) && !_looksLikePhone) return humanizeSlug(value);
   // Ultimo recurso: token unico minusculo (so letras, sem espaco/digito) -> capitaliza inicial.
   // Ex.: "fisico" -> "Fisico", "online" -> "Online". Nao toca nome/email/telefone/multi-palavra.
   if (typeof value === 'string' && /^\p{L}{2,}$/u.test(value) && value === value.toLowerCase()) {
