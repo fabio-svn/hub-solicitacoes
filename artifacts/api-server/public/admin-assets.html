@@ -31,10 +31,6 @@
     .user-name { font-size: 0.82rem; font-weight: 600; }
     .notif-badge { position: absolute; top: -3px; right: -3px; background: var(--danger); color: #fff; border-radius: 50%; width: 16px; height: 16px; font-size: 0.6rem; display: flex; align-items: center; justify-content: center; font-weight: 700; }
     .notif-badge-menu { background: var(--danger); color: #fff; border-radius: 4px; padding: 1px 5px; font-size: 0.65rem; font-weight: 700; margin-left: auto; }
-    .filter-chip-mini { padding: 5px 12px; border-radius: 7px; border: 1px solid var(--border-light); background: var(--card-white); font-family: 'Nunito Sans',sans-serif; font-size: 0.78rem; font-weight: 600; cursor: pointer; color: rgba(34,27,25,0.65); transition: all 0.12s; }
-    .filter-chip-mini:hover { background: var(--icon-bg); }
-    .filter-chip-mini.active { background: var(--carbon-black); color: var(--paper-white); border-color: var(--carbon-black); }
-    .toolbar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
     .stats-bar { display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
     .stat-pill { background: var(--card-white); border: 1px solid var(--border-light); border-radius: 8px; padding: 8px 14px; font-size: 0.78rem; font-weight: 600; color: rgba(34,27,25,0.6); }
     .stat-pill strong { color: var(--carbon-black); }
@@ -156,9 +152,7 @@
     try {
       const r = await fetch('/api/admin/assets?');
       if (!r.ok) { document.getElementById('assetsContainer').innerHTML = '<div class="empty-state"><h3>Erro ao carregar assets.</h3></div>'; return; }
-      allAssets = ((await r.json()).assets || []).map(function (a) {
-        return Object.assign({}, a, { usage_count: (a.used_in_template_ids || []).length });
-      });
+      allAssets = (await r.json()).assets || [];
       applySearch();
     } catch(e) {
       console.error('Erro em loadAssets():', e);
