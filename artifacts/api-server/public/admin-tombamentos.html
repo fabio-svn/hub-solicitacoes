@@ -39,12 +39,12 @@
     .tomb-filename { font-size: 0.85rem; font-weight: 700; margin-top: 10px; }
     .tomb-summary { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; margin: 22px 0 12px; }
     .tomb-pill { padding: 3px 11px; border-radius: 999px; font-weight: 700; font-size: 0.78rem; }
-    .tomb-pill--ok { background: #dcfce7; color: #15803d; }
-    .tomb-pill--warn { background: #fee2e2; color: #dc2626; }
+    .tomb-pill--ok { background: #dcfce7; color: var(--success); }
+    .tomb-pill--warn { background: #fee2e2; color: var(--danger); }
     .tomb-pill--total { background: #eef2f7; color: #475569; }
     #tombTabela td, #tombTabela th { font-size: 0.82rem; }
-    .row-status-ok { color: #15803d; font-weight: 700; font-size: 0.78rem; }
-    .row-status-warn { color: #dc2626; font-weight: 700; font-size: 0.78rem; }
+    .row-status-ok { color: var(--success); font-weight: 700; font-size: 0.78rem; }
+    .row-status-warn { color: var(--danger); font-weight: 700; font-size: 0.78rem; }
     tr.tomb-row--warn td { background: #fef2f2; }
     .tomb-actions { display: flex; gap: 12px; margin-top: 20px; flex-wrap: wrap; }
     .tomb-note { font-size: 0.78rem; color: rgba(34,27,25,0.5); margin-top: 10px; }
@@ -55,9 +55,9 @@
     #cartoesRevTabela td { vertical-align: middle; }
     #cartoesRevTabela select { width:100%; padding:7px 9px; border:1px solid var(--border-light); border-radius:8px; background:var(--card-white); font:inherit; }
     .rev-badge { display:inline-block; padding:2px 9px; border-radius:999px; font-size:0.72rem; font-weight:700; text-transform:uppercase; letter-spacing:.02em; }
-    .rev-exato, .rev-forte { background:#dcfce7; color:#15803d; }
+    .rev-exato, .rev-forte { background:#dcfce7; color:var(--success); }
     .rev-manual { background:#dbeafe; color:#1d4ed8; }
-    .rev-revisar { background:#ffedd5; color:#c2410c; }
+    .rev-revisar { background:#ffedd5; color:var(--warning); }
     .rev-sem_foto { background:#eef2f7; color:#475569; }
     tr.rev-row--alert td { background:#fff7ed; }
     .btn-text { background:transparent; border:none; color:var(--ruby-red); cursor:pointer; font:inherit; padding:6px 8px; }

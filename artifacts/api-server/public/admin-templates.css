@@ -53,7 +53,7 @@ body { margin: 0; font-family: 'Nunito Sans', sans-serif; background: var(--bg-l
   color: rgba(34,27,25,0.7); transition: background 0.15s, border-color 0.15s;
 }
 .row-btn:hover { background: #f5f3f0; border-color: #c8c4c0; }
-.row-btn.danger { color: #dc2626; }
+.row-btn.danger { color: var(--danger); }
 .row-btn.danger:hover { background: #fef2f2; border-color: #fecaca; }
 .row-btn.primary { background: var(--ruby-red); color: #fff; border-color: var(--ruby-red); }
 .row-btn.primary:hover { background: #b44b42; border-color: #b44b42; }

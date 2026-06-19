@@ -1,4 +1,5 @@
 import { db, solicitacoesTable } from "@workspace/db";
+import { TIPOS_AUTOMACAO_SET } from "../config/tipos";
 import { fetchWithTimeout } from "../lib/http";
 import { eq, sql } from "drizzle-orm";
 import { logger } from "../lib/logger";
@@ -8,14 +9,6 @@ import { logEventoBg, logAtividadeBg } from "./activity-log";
 const WEBHOOK_URL = process.env.N8N_NOTIFICATIONS_WEBHOOK_URL;
 const HUB_URL = process.env.HUB_PUBLIC_URL || "https://hub.portalsvn.com.br";
 
-export const TIPOS_AUTOMACAO = new Set([
-  "assinatura-email",
-  "cartao-visita-digital",
-  "cartao-boas-vindas",
-  "divulgacao-nps",
-  "convite-fp",
-  "cartao-comemorativo",
-]);
 
 export const TIPOS_COM_APROVACAO = new Set([
   "eventos",
@@ -44,7 +37,7 @@ export async function notificarMarco(solicitacaoId: number, marco: Marco): Promi
     if (!sol) return;
 
     const tipo = sol.tipo_solicitacao;
-    const isAutomacao = TIPOS_AUTOMACAO.has(tipo);
+    const isAutomacao = TIPOS_AUTOMACAO_SET.has(tipo);
     const isFisico = tipo === "cartao-visita-fisico";
 
     if (marco === "recebida" && isAutomacao) return;

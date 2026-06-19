@@ -42,7 +42,7 @@
     .vc-resizer:hover { background: rgba(172,54,49,0.45); }
 
     .vc-count { font-size: 0.85rem; color: rgba(34,27,25,0.5); }
-    .vc-saved { font-size: 0.78rem; color: #15803d; opacity: 0; transition: opacity .2s; }
+    .vc-saved { font-size: 0.78rem; color: var(--success); opacity: 0; transition: opacity .2s; }
     .vc-saved.show { opacity: 1; }
 
     .vc-scroll { overflow: auto; max-height: 70vh; border: 1px solid #e8edf2; border-radius: 12px; scrollbar-width: thin; scrollbar-color: #e6e0d8 transparent; }
@@ -228,11 +228,11 @@
     ];
     const STATUS_COLORS = {
       'aguardando-validacao': { bg: '#eef2f7', text: '#475569' },
-      'aguardando-contrato': { bg: '#ffedd5', text: '#c2410c' },
+      'aguardando-contrato': { bg: '#ffedd5', text: 'var(--warning)' },
       'validado': { bg: '#ede9fe', text: '#6d28d9' },
       'envio-grafica': { bg: '#dbeafe', text: '#1d4ed8' },
-      'envio-assessor': { bg: '#dcfce7', text: '#15803d' },
-      'reprovado': { bg: '#fee2e2', text: '#dc2626' },
+      'envio-assessor': { bg: '#dcfce7', text: 'var(--success)' },
+      'reprovado': { bg: '#fee2e2', text: 'var(--danger)' },
     };
     const COLS = [
       { f: '_del', label: '', group: 'form', type: 'delete', min: 34 },

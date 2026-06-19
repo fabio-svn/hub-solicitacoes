@@ -16,6 +16,8 @@ let EMAIL_UPLOAD = "gabriela.franca@svninvest.com.br";
 // FALLBACK só pra evitar tela em branco se /api/form-schemas falhar.
 // FONTE DA VERDADE: src/config/form-schemas.ts (MARCAS_OPTS) — não editar aqui.
 window.MARCAS_OPTS_FORM = [];
+// FALLBACK dos tipos automatizados. FONTE DA VERDADE: src/config/tipos.ts (servido em /api/config).
+window.TIPOS_AUTOMACAO = ['assinatura-email','cartao-visita-digital','cartao-boas-vindas','divulgacao-nps','convite-fp','cartao-comemorativo'];
 
 const _configReady = Promise.all([
   fetch('/api/config').then(r => r.json()).catch(() => ({})),
@@ -28,6 +30,7 @@ const _configReady = Promise.all([
   if (cfg.urlLogoPreta) URL_LOGO_PRETA = cfg.urlLogoPreta;
   if (cfg.emailUpload) EMAIL_UPLOAD = cfg.emailUpload;
   if (Array.isArray(cfg.unidades) && cfg.unidades.length) UNIDADES_SVN = cfg.unidades;
+  if (Array.isArray(cfg.tiposAutomacao) && cfg.tiposAutomacao.length) window.TIPOS_AUTOMACAO = cfg.tiposAutomacao;
   if (cfg.r2PublicUrl) {
     PACOTE_PADRAO_IMAGENS = [
       cfg.r2PublicUrl + '/Convite.png',
@@ -357,14 +360,14 @@ const STATUS_SOLICITACAO = [
   { id: "em-espera",              label: "Em espera",                  bg: "#4D545F", text: "#FFFFFF"  },
   { id: "gerando",                label: "Gerando arte",               bg: "#dbeafe", text: "#1e40af" },
   { id: "erro",                   label: "Erro",                       bg: "#fee2e2", text: "#991b1b" },
-  { id: "aguardando-validacao",   label: "Aguardando validação",       bg: "#fee2e2", text: "#b91c1c" },
+  { id: "aguardando-validacao",   label: "Aguardando validação",       bg: "#fee2e2", text: "var(--danger-strong)" },
   { id: "aguardando-contrato",    label: "Aguardando contrato",        bg: "#f1f5f9", text: "#475569" },
   { id: "validado",               label: "Validado",                   bg: "#d1fae5", text: "#047857" },
   { id: "liberado-design",        label: "Em design",                  bg: "#ede9fe", text: "#6d28d9" },
   { id: "arte-finalizada",        label: "Arte finalizada",            bg: "#fef9c3", text: "#a16207" },
   { id: "envio-grafica",          label: "Envio gráfica",              bg: "#dbeafe", text: "#1d4ed8" },
-  { id: "envio-assessor",         label: "Envio assessor",             bg: "#dcfce7", text: "#15803d" },
-  { id: "reprovado",              label: "Reprovado",                  bg: "#fecaca", text: "#dc2626" },
+  { id: "envio-assessor",         label: "Envio assessor",             bg: "#dcfce7", text: "var(--success)" },
+  { id: "reprovado",              label: "Reprovado",                  bg: "#fecaca", text: "var(--danger)" },
 ];
 
 const STATUS_MAP = Object.fromEntries(STATUS_SOLICITACAO.map(s => [s.id, s]));

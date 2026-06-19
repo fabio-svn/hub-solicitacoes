@@ -23,7 +23,7 @@
     .bulk-bar .bulk-actions { display:flex; gap:8px; }
     .btn-sm { padding:7px 14px; font-size:0.82rem; }
     .bulk-del-btn { background:var(--danger); color:#fff; border:1px solid var(--danger); }
-    .bulk-del-btn:hover { background:#b91c1c; border-color:#b91c1c; }
+    .bulk-del-btn:hover { background:var(--danger-strong); border-color:var(--danger-strong); }
     .admin-table input[type=checkbox] { width:16px; height:16px; accent-color:var(--ruby-red); cursor:pointer; vertical-align:middle; margin:0; }
   </style>
 </head>
@@ -597,7 +597,7 @@
         const deltaEl = document.getElementById('adminDelta');
         if (data.delta !== undefined) {
           const sinal = data.deltaPositivo ? '+' : '';
-          const cor = data.delta === 0 ? 'rgba(34,27,25,0.4)' : data.deltaPositivo ? '#16a34a' : '#dc2626';
+          const cor = data.delta === 0 ? 'rgba(34,27,25,0.4)' : data.deltaPositivo ? '#16a34a' : 'var(--danger)';
           deltaEl.innerHTML = '<span style="color:' + cor + '">' + sinal + data.delta + '% vs período anterior</span>';
         }
 

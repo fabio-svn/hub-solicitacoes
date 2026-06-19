@@ -64,15 +64,6 @@
 
   <script src="config.js?v=20260615a"></script>
   <script>
-    const TIPOS_AUTOMACAO = [
-      'assinatura-email',
-      'cartao-visita-digital',
-      'cartao-boas-vindas',
-      'divulgacao-nps',
-      'convite-fp',
-      'cartao-comemorativo',
-    ];
-
     function isTipoComArtefato(tipoId) {
       if (window._svnFormSchemas?.tipos) {
         return window._svnFormSchemas.tipos.some(t => t.id === tipoId && t.is_automation);
@@ -100,7 +91,7 @@
               const readyEl = document.getElementById('artefatoReady');
               if (readyEl) {
                 readyEl.innerHTML = `
-                  <div style="color:#dc2626;padding:16px;background:rgba(220,38,38,0.08);border-radius:8px;text-align:center">
+                  <div style="color:var(--danger);padding:16px;background:rgba(220,38,38,0.08);border-radius:8px;text-align:center">
                     <strong>Erro na geração</strong>
                     <p style="margin-top:8px;font-size:0.85rem;opacity:0.8">
                       Houve um problema ao gerar seu material. Entre em contato com o time de Marketing.

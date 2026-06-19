@@ -334,7 +334,7 @@
         const temErros = (item.erros_24h || 0) > 0;
         const isAdmin = isCurrentUserAdmin();
         const erroBadgeHtml = (temErros && isAdmin)
-          ? `<span title="${item.erros_24h} erro(s) nas últimas 24h" style="display:inline-flex;align-items:center;gap:3px;font-size:0.62rem;font-weight:800;background:#fee2e2;color:#b91c1c;padding:2px 7px;border-radius:999px;vertical-align:middle;margin-left:4px;flex-shrink:0">
+          ? `<span title="${item.erros_24h} erro(s) nas últimas 24h" style="display:inline-flex;align-items:center;gap:3px;font-size:0.62rem;font-weight:800;background:#fee2e2;color:var(--danger-strong);padding:2px 7px;border-radius:999px;vertical-align:middle;margin-left:4px;flex-shrink:0">
               <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
               ${item.erros_24h}
              </span>` : '';

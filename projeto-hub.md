@@ -1,6 +1,6 @@
 # Pack do Projeto Hub SVN
 
-Gerado em: 2026-06-19 18:22:36
+Gerado em: 2026-06-19 19:13:08
 
 Roots: artifacts/api-server lib
 
@@ -7172,7 +7172,7 @@ body { margin: 0; font-family: 'Nunito Sans', sans-serif; background: var(--bg-l
         <div id="tombResultado" style="display:none">
           <div class="tomb-summary" id="tombSummary"></div>
           <div class="admin-userlist-table-wrap" style="border-radius:12px;border:1px solid var(--border-light);overflow-x:auto">
-            <table class="admin-table hub-table" id="tombTabela" data-resizable><thead id="tombThead"></thead><tbody id="tombTbody"></tbody></table>
+            <table class="admin-table" id="tombTabela"><thead id="tombThead"></thead><tbody id="tombTbody"></tbody></table>
           </div>
           <div class="tomb-actions">
             <button class="btn btn-primary" id="btnGerarAssinaturas" onclick="gerarAssinaturas()" disabled>Gerar assinaturas (.zip)</button>
@@ -7216,7 +7216,6 @@ body { margin: 0; font-family: 'Nunito Sans', sans-serif; background: var(--bg-l
   <script src="shell.js?v=20260611f"></script>
   <script src="utils.js?v=20260615d"></script>
   <script src="toast.js?v=20260603"></script>
-  <script src="tables.js?v=20260619a"></script>
   <script>
     const MARCAS = [
       { value: 'svn-investimentos', label: 'SVN Investimentos' },
@@ -7390,12 +7389,12 @@ body { margin: 0; font-family: 'Nunito Sans', sans-serif; background: var(--bg-l
         '<span class="tomb-pill tomb-pill--total">' + rows.length + ' linha(s)</span>'
         + '<span class="tomb-pill tomb-pill--ok">' + (rows.length - comProblema) + ' OK</span>'
         + (comProblema ? '<span class="tomb-pill tomb-pill--warn">' + comProblema + ' com problema</span>' : '');
-      document.getElementById('tombThead').innerHTML = '<tr>' + COLS.map(function (c) { return '<th data-sort>' + esc(c.label) + '</th>'; }).join('') + '<th data-sort>Status</th></tr>';
+      document.getElementById('tombThead').innerHTML = '<tr>' + COLS.map(function (c) { return '<th>' + esc(c.label) + '</th>'; }).join('') + '<th>Status</th></tr>';
       document.getElementById('tombTbody').innerHTML = rows.map(function (r) {
         const warn = r._issues && r._issues.length;
         const tds = COLS.map(function (c) { return '<td style="padding:9px 12px">' + esc(r[c.f] || '—') + '</td>'; }).join('');
         const status = warn ? '<span class="row-status-warn">' + esc(r._issues.join(', ')) + '</span>' : '<span class="row-status-ok">OK</span>';
-        return '<tr class="' + (warn ? 'tomb-row--warn' : '') + '">' + tds + '<td style="padding:9px 12px" data-sort-value="' + (warn ? 1 : 0) + '">' + status + '</td></tr>';
+        return '<tr class="' + (warn ? 'tomb-row--warn' : '') + '">' + tds + '<td style="padding:9px 12px">' + status + '</td></tr>';
       }).join('');
       document.getElementById('tombResultado').style.display = 'block';
       document.getElementById('btnGerarAssinaturas').disabled = rows.length === 0;
@@ -8488,9 +8487,9 @@ window._impersonar = async function() {
       try { sessionStorage.removeItem('svn_auth_cache'); localStorage.removeItem('svn_layout_state'); } catch {}
       window.location.reload();
     } else {
-      alert('Não foi possível entrar como esse usuário.');
+      window.showToast ? showToast('Não foi possível entrar como esse usuário.', 'error') : alert('Não foi possível entrar como esse usuário.');
     }
-  } catch (err) { console.error('[auth/impersonate]', err); alert('Erro de conexão.'); }
+  } catch (err) { console.error('[auth/impersonate]', err); window.showToast ? showToast('Erro de conexão.', 'error') : alert('Erro de conexão.'); }
 };
 
 window._sairImpersonar = async function() {
@@ -19807,7 +19806,7 @@ window.Shell = {
   --bg-light: #f5f3f0;
   --text-dark: var(--carbon-black);
   --text-muted: rgba(34,27,25,.5);
-  --paper-white: #fef8f4;
+  --paper-white: #FFF8F3;
   --icon-bg: #f8f4f1;
   --card-white: #ffffff;
   --carbon-black: #221B19;
@@ -19818,6 +19817,12 @@ window.Shell = {
   --border: rgba(255, 248, 243, 0.1);
   --border-light: rgba(34, 27, 25, 0.12);
   --danger: #dc2626;
+  --danger-strong: #b91c1c;
+  --danger-soft: rgba(220, 38, 38, 0.08);
+  --success: #15803d;
+  --success-soft: rgba(22, 163, 74, 0.10);
+  --warning: #c2410c;
+  --warning-soft: rgba(234, 88, 12, 0.10);
   --dark-bg-from: #221B19;
   --dark-bg-to: #0d0a09;
   --container-padding: 32px;
@@ -23085,7 +23090,7 @@ window.Modal = (function () {
         if (g('email') != null) email = g('email');
       }
       if (!String(nome).trim() || !String(email).trim()) {
-        alert('Preencha Nome e E-mail antes de gerar o cartão.');
+        window.showToast ? showToast('Preencha Nome e E-mail antes de gerar o cartão.', 'error') : alert('Preencha Nome e E-mail antes de gerar o cartão.');
         return;
       }
       const orig = btn.textContent; btn.disabled = true; btn.textContent = 'Gerando…';
@@ -23099,18 +23104,18 @@ window.Modal = (function () {
           if (raw) raw.pdf_url = d.url;
           render();
         } else {
-          alert(d.error || 'Erro ao gerar o PDF.');
+          window.showToast ? showToast(d.error || 'Erro ao gerar o PDF.', 'error') : alert(d.error || 'Erro ao gerar o PDF.');
           btn.disabled = false; btn.textContent = orig;
         }
       } catch (e) {
-        alert('Erro de rede ao gerar o PDF.');
+        window.showToast ? showToast('Erro de rede ao gerar o PDF.', 'error') : alert('Erro de rede ao gerar o PDF.');
         btn.disabled = false; btn.textContent = orig;
       }
     }
 
     async function deleteCartao(id, btn) {
       if (!IS_ADMIN) return;
-      if (!confirm('Excluir permanentemente este cartão?\n\nIsso remove a solicitação, a validação, o arquivo gerado e o histórico. Esta ação NÃO pode ser desfeita.')) return;
+      if (!(await window.showConfirm('Excluir permanentemente este cartão? Isso remove a solicitação, a validação, o arquivo gerado e o histórico. Esta ação não pode ser desfeita.', { danger: true, okLabel: 'Excluir' }))) return;
       btn.disabled = true;
       try {
         const res = await fetch('/api/cartao-aprovacoes/' + id, { method: 'DELETE' });
@@ -23119,11 +23124,11 @@ window.Modal = (function () {
           render();
         } else {
           const d = await res.json().catch(function () { return {}; });
-          alert(d.error || 'Erro ao excluir.');
+          window.showToast ? showToast(d.error || 'Erro ao excluir.', 'error') : alert(d.error || 'Erro ao excluir.');
           btn.disabled = false;
         }
       } catch (e) {
-        alert('Erro de rede ao excluir.');
+        window.showToast ? showToast('Erro de rede ao excluir.', 'error') : alert('Erro de rede ao excluir.');
         btn.disabled = false;
       }
     }
@@ -24649,6 +24654,46 @@ export function holidaysList(baseYear: number = new Date().getFullYear()): strin
     for (const h of holidaysForYear(y)) out.push(h);
   }
   return out.sort();
+}
+
+```
+
+
+## File: artifacts/api-server/src/lib/http.ts
+
+```
+// Timeout padrão das chamadas HTTP externas. Sobrescrevível por env sem mexer no código.
+const DEFAULT_TIMEOUT_MS = Number(process.env.HTTP_TIMEOUT_MS) || 12000;
+
+/**
+ * fetch com timeout via AbortController.
+ *
+ * Impede que um upstream lento ou travado (ClickUp, n8n/Brevo, Microsoft Graph)
+ * pendure o request indefinidamente — inclusive o submit da solicitação, que
+ * espera o ClickUp. Em timeout, aborta a conexão e lança um Error com
+ * name = "TimeoutError", para o try/catch já existente do chamador tratar.
+ *
+ * Uso: troca direta por fetch() — a mesma assinatura, com 3º arg opcional de ms.
+ */
+export async function fetchWithTimeout(
+  url: string | URL,
+  init: RequestInit = {},
+  timeoutMs: number = DEFAULT_TIMEOUT_MS,
+): Promise<Response> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetch(url, { ...init, signal: controller.signal });
+  } catch (err) {
+    if (err instanceof Error && err.name === "AbortError") {
+      const e = new Error(`Timeout de ${timeoutMs}ms ao chamar ${String(url)}`);
+      e.name = "TimeoutError";
+      throw e;
+    }
+    throw err;
+  } finally {
+    clearTimeout(timer);
+  }
 }
 
 ```
@@ -26235,6 +26280,7 @@ export default router;
 
 ```
 import { Router } from "express";
+import { fetchWithTimeout } from "../lib/http";
 import { ConfidentialClientApplication } from "@azure/msal-node";
 import { randomBytes } from "crypto";
 import { db } from "@workspace/db";
@@ -26419,7 +26465,7 @@ router.get("/me-graph", async (req, res): Promise<void> => {
       "onPremisesExtensionAttributes",
     ].join(",");
 
-    const graphRes = await fetch(
+    const graphRes = await fetchWithTimeout(
       `https://graph.microsoft.com/v1.0/me?$select=${fields}`,
       { headers: { Authorization: `Bearer ${token}` } }
     );
@@ -26514,7 +26560,6 @@ router.post("/me-profile/refresh", async (req, res): Promise<void> => {
 });
 
 export default router;
-
 ```
 
 
@@ -26522,6 +26567,7 @@ export default router;
 
 ```
 import { logger } from "../lib/logger";
+import { fetchWithTimeout } from "../lib/http";
 import { randomInt } from "crypto";
 import { db, usersTable, userTipoAssignmentsTable, tipoClickupListTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
@@ -26549,7 +26595,7 @@ function waLink(phone: string): string | null {
 export async function setClickUpTaskStatus(taskId: string, status: string): Promise<boolean> {
   if (!CLICKUP_API_TOKEN || !taskId) return false;
   try {
-    const r = await fetch(`https://api.clickup.com/api/v2/task/${taskId}`, {
+    const r = await fetchWithTimeout(`https://api.clickup.com/api/v2/task/${taskId}`, {
       method: "PUT",
       headers: { "Authorization": CLICKUP_API_TOKEN, "Content-Type": "application/json" },
       body: JSON.stringify({ status }),
@@ -26560,6 +26606,7 @@ export async function setClickUpTaskStatus(taskId: string, status: string): Prom
       return false;
     }
     logger.info({ taskId, status }, "ClickUp: status atualizado");
+    invalidateSnapshot(taskId);
     return true;
   } catch (err) {
     logger.error({ err, taskId, status }, "ClickUp: falha ao mudar status");
@@ -26575,7 +26622,7 @@ export async function validateClickUpList(
   if (!CLICKUP_API_TOKEN) return { ok: false, error: "Token do ClickUp não configurado no servidor." };
   if (!/^\d+$/.test(listId)) return { ok: false, error: "O ID da lista deve conter apenas números." };
   try {
-    const r = await fetch(`https://api.clickup.com/api/v2/list/${listId}`, {
+    const r = await fetchWithTimeout(`https://api.clickup.com/api/v2/list/${listId}`, {
       headers: { Authorization: CLICKUP_API_TOKEN },
     });
     if (!r.ok) {
@@ -27355,7 +27402,7 @@ async function setClickUpCustomField(
     convertedValue: value,
   }, "ClickUp: enviando custom field");
   try {
-    const response = await fetch(`https://api.clickup.com/api/v2/task/${taskId}/field/${fieldId}`, {
+    const response = await fetchWithTimeout(`https://api.clickup.com/api/v2/task/${taskId}/field/${fieldId}`, {
       method: "POST",
       headers: { "Authorization": CLICKUP_API_TOKEN, "Content-Type": "application/json" },
       body: JSON.stringify({ value }),
@@ -27901,7 +27948,7 @@ export async function createClickUpTask(
   let taskId: string | null = null;
 
   try {
-    const response = await fetch(`https://api.clickup.com/api/v2/list/${listId}/task`, {
+    const response = await fetchWithTimeout(`https://api.clickup.com/api/v2/list/${listId}/task`, {
       method: "POST",
       headers: { "Authorization": CLICKUP_API_TOKEN, "Content-Type": "application/json" },
       body: JSON.stringify(taskPayload),
@@ -27929,7 +27976,7 @@ export async function createClickUpTask(
 export async function getClickUpTaskStatus(taskId: string): Promise<string | null> {
   if (!CLICKUP_API_TOKEN) return null;
   try {
-    const response = await fetch(`https://api.clickup.com/api/v2/task/${taskId}`, {
+    const response = await fetchWithTimeout(`https://api.clickup.com/api/v2/task/${taskId}`, {
       headers: { "Authorization": CLICKUP_API_TOKEN },
     });
     if (!response.ok) return null;
@@ -27951,10 +27998,24 @@ export interface ClickUpSnapshot {
 }
 
 // Lê status + prazo (due_date) + motivo do prazo de uma task numa única chamada.
+// Cache curto do snapshot do ClickUp: evita rajadas de chamadas quando vários
+// refreshes/abas leem a mesma task em sequência. TTL curto porque a sincronização
+// de status tolera alguns segundos de defasagem. Só cacheia respostas válidas —
+// erros não entram no cache, então a próxima chamada tenta de novo.
+const SNAPSHOT_TTL_MS = Number(process.env.CLICKUP_SNAPSHOT_TTL_MS) || 30000;
+const snapshotCache = new Map<string, { value: ClickUpSnapshot; expiresAt: number }>();
+
+/** Invalida o snapshot em cache de uma task. Chamado após o app escrever na task. */
+export function invalidateSnapshot(taskId: string): void {
+  snapshotCache.delete(taskId);
+}
+
 export async function getClickUpTaskSnapshot(taskId: string): Promise<ClickUpSnapshot | null> {
   if (!CLICKUP_API_TOKEN || !taskId) return null;
+  const cached = snapshotCache.get(taskId);
+  if (cached && cached.expiresAt > Date.now()) return cached.value;
   try {
-    const response = await fetch(`https://api.clickup.com/api/v2/task/${taskId}`, {
+    const response = await fetchWithTimeout(`https://api.clickup.com/api/v2/task/${taskId}`, {
       headers: { "Authorization": CLICKUP_API_TOKEN },
     });
     if (!response.ok) return null;
@@ -27977,7 +28038,9 @@ export async function getClickUpTaskSnapshot(taskId: string): Promise<ClickUpSna
         : ((f.name || "").toLowerCase().includes("motivo") && (f.name || "").toLowerCase().includes("prazo"))
     );
     if (mf && mf.value != null && String(mf.value).trim()) motivoPrazo = String(mf.value).trim();
-    return { status, dueDate, motivoPrazo };
+    const snap: ClickUpSnapshot = { status, dueDate, motivoPrazo };
+    snapshotCache.set(taskId, { value: snap, expiresAt: Date.now() + SNAPSHOT_TTL_MS });
+    return snap;
   } catch {
     return null;
   }
@@ -27989,6 +28052,7 @@ export async function getClickUpTaskSnapshot(taskId: string): Promise<ClickUpSna
 
 ```
 import { Router } from "express";
+import { fetchWithTimeout } from "../lib/http";
 import multer from "multer";
 import os from "os";
 import { db } from "@workspace/db";
@@ -28893,7 +28957,7 @@ router.get("/solicitacoes/:id/entrega", requireAuth, async (req, res): Promise<v
 
     if (!solicitacao.clickup_task_id) { res.json({ links: [], status: solicitacao.status }); return; }
 
-    const response = await fetch(`https://api.clickup.com/api/v2/task/${solicitacao.clickup_task_id}`, {
+    const response = await fetchWithTimeout(`https://api.clickup.com/api/v2/task/${solicitacao.clickup_task_id}`, {
       headers: { "Authorization": process.env.CLICKUP_API_TOKEN || "" },
     });
     if (!response.ok) { res.json({ links: [], status: solicitacao.status }); return; }
@@ -28994,7 +29058,7 @@ router.post("/solicitacoes/:id/alteracao", requireAuth, async (req, res): Promis
 
     let mentionText = "";
     try {
-      const taskRes = await fetch(`https://api.clickup.com/api/v2/task/${solicitacao.clickup_task_id}`, {
+      const taskRes = await fetchWithTimeout(`https://api.clickup.com/api/v2/task/${solicitacao.clickup_task_id}`, {
         headers: { "Authorization": token },
       });
       if (taskRes.ok) {
@@ -29011,7 +29075,7 @@ router.post("/solicitacoes/:id/alteracao", requireAuth, async (req, res): Promis
       ? `${mentionText}✏️ Alterações solicitadas por ${user.name}:\n\n${mensagem.trim()}`
       : `${mentionText}✏️ Alteração solicitada por ${user.name}:\n\n${mensagem.trim()}`;
 
-    const commentRes = await fetch(`https://api.clickup.com/api/v2/task/${solicitacao.clickup_task_id}/comment`, {
+    const commentRes = await fetchWithTimeout(`https://api.clickup.com/api/v2/task/${solicitacao.clickup_task_id}/comment`, {
       method: "POST",
       headers: { "Authorization": token, "Content-Type": "application/json" },
       body: JSON.stringify({ comment_text: comentario }),
@@ -29065,7 +29129,7 @@ router.post("/solicitacoes/:id/aprovacao", requireAuth, async (req, res): Promis
 
     const token = process.env.CLICKUP_API_TOKEN || "";
 
-    const existingComments = await fetch(
+    const existingComments = await fetchWithTimeout(
       `https://api.clickup.com/api/v2/task/${solicitacao.clickup_task_id}/comment`,
       { headers: { "Authorization": token } }
     );
@@ -29081,7 +29145,7 @@ router.post("/solicitacoes/:id/aprovacao", requireAuth, async (req, res): Promis
     }
 
     const comentario = `✅ Aprovado por ${user.name} em ${new Date().toLocaleDateString('pt-BR')}`;
-    await fetch(`https://api.clickup.com/api/v2/task/${solicitacao.clickup_task_id}/comment`, {
+    await fetchWithTimeout(`https://api.clickup.com/api/v2/task/${solicitacao.clickup_task_id}/comment`, {
       method: "POST",
       headers: { "Authorization": token, "Content-Type": "application/json" },
       body: JSON.stringify({ comment_text: comentario }),
@@ -29141,7 +29205,7 @@ router.post("/solicitacoes/:id/cancelar", requireAuth, async (req, res): Promise
 
     const token = process.env.CLICKUP_API_TOKEN || "";
     const comentario = `\u274c Cancelamento solicitado por ${user.name} em ${new Date().toLocaleDateString('pt-BR')}:\n${justificativa}`;
-    const r = await fetch(`https://api.clickup.com/api/v2/task/${solicitacao.clickup_task_id}/comment`, {
+    const r = await fetchWithTimeout(`https://api.clickup.com/api/v2/task/${solicitacao.clickup_task_id}/comment`, {
       method: "POST",
       headers: { "Authorization": token, "Content-Type": "application/json" },
       body: JSON.stringify({ comment_text: comentario }),
@@ -29462,7 +29526,7 @@ router.put("/cartao-aprovacoes/:solicitacaoId", requireAuth, async (req, res): P
           const para = STATUS_LABELS_CARTAO[valores.status] || valores.status;
           const quem = req.session.user!.name || req.session.user!.email || "Validação";
           const token = process.env.CLICKUP_API_TOKEN || "";
-          await fetch(`https://api.clickup.com/api/v2/task/${taskId}/comment`, {
+          await fetchWithTimeout(`https://api.clickup.com/api/v2/task/${taskId}/comment`, {
             method: "POST",
             headers: { "Authorization": token, "Content-Type": "application/json" },
             body: JSON.stringify({ comment_text: `🔄 Status atualizado: ${de} → ${para} (por ${quem})` }),
@@ -30765,6 +30829,7 @@ export async function gerarArteParaSolicitacao(
 
 ```
 import { db, solicitacoesTable } from "@workspace/db";
+import { fetchWithTimeout } from "../lib/http";
 import { eq, sql } from "drizzle-orm";
 import { logger } from "../lib/logger";
 import { FORM_SCHEMAS } from "../config/form-schemas";
@@ -30840,7 +30905,7 @@ export async function notificarMarco(solicitacaoId: number, marco: Marco): Promi
       created_at: sol.created_at,
     };
 
-    const res = await fetch(WEBHOOK_URL, {
+    const res = await fetchWithTimeout(WEBHOOK_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),

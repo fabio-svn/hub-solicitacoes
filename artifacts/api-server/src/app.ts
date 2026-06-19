@@ -13,6 +13,7 @@ import router from "./routes";
 import authRouter from "./routes/auth";
 import { MARCAS_OPTS, CONTRATOS_OPTS, SETORES_LIST, CARGOS_OPTS } from "./config/form-schemas";
 import { UNIDADES } from "./config/unidades";
+import { TIPOS_AUTOMACAO } from "./config/tipos";
 import { logger } from "./lib/logger";
 import { pool } from "@workspace/db";
 import { ApiError } from "./utils/api-error";
@@ -126,6 +127,7 @@ app.get("/api/config", (_req, res) => {
     setores: SETORES_LIST,
     cargos: CARGOS_OPTS,
     unidades: UNIDADES,
+    tiposAutomacao: TIPOS_AUTOMACAO,
   });
 });
 
