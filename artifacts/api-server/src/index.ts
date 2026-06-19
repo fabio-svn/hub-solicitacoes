@@ -152,6 +152,9 @@ const DB_STATEMENTS = [
   `CREATE INDEX IF NOT EXISTS "IDX_art_assets_used_template"  ON "art_assets" USING GIN ("used_in_template_ids")`,
   `ALTER TABLE "solicitacoes" ADD COLUMN IF NOT EXISTS "erro_geracao" text`,
   `ALTER TABLE "solicitacoes" ADD COLUMN IF NOT EXISTS "prazo" TIMESTAMP`,
+  `ALTER TABLE "solicitacoes" ADD COLUMN IF NOT EXISTS "prazo_anterior" TIMESTAMP`,
+  `ALTER TABLE "solicitacoes" ADD COLUMN IF NOT EXISTS "prazo_motivo" text`,
+  `ALTER TABLE "solicitacoes" ADD COLUMN IF NOT EXISTS "prazo_alterado_em" TIMESTAMP`,
 
   // Aprovação de cartões físicos
   `CREATE TABLE IF NOT EXISTS "cartao_aprovacoes" (

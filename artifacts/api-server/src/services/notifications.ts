@@ -25,7 +25,7 @@ export const TIPOS_COM_APROVACAO = new Set([
   "apresentacao-atualizar",
 ]);
 
-export type Marco = "recebida" | "aprovacao" | "concluida";
+export type Marco = "recebida" | "aprovacao" | "concluida" | "prazo_alterado";
 
 export async function notificarMarco(solicitacaoId: number, marco: Marco): Promise<void> {
   if (!WEBHOOK_URL) {
@@ -50,7 +50,7 @@ export async function notificarMarco(solicitacaoId: number, marco: Marco): Promi
     if (marco === "aprovacao" && !TIPOS_COM_APROVACAO.has(tipo)) return;
 
     const sent = (sol.notifications_sent as Record<string, string>) || {};
-    if (sent[marco]) return;
+    if (marco !== "prazo_alterado" && sent[marco]) return;
 
     const dados: any = sol.dados || {};
     const userName = String(dados.nome || sol.user_email?.split("@")[0] || "").trim();
@@ -67,6 +67,9 @@ export async function notificarMarco(solicitacaoId: number, marco: Marco): Promi
       user_name: userName,
       first_name: userName.split(" ")[0] || userName,
       status_atual: sol.status,
+      prazo: sol.prazo,
+      prazo_anterior: sol.prazo_anterior,
+      prazo_motivo: sol.prazo_motivo,
       link: `${HUB_URL}/solicitacao.html?id=${sol.id}`,
       created_at: sol.created_at,
     };
@@ -101,12 +104,14 @@ export async function notificarMarco(solicitacaoId: number, marco: Marco): Promi
       detalhes: { marco, n8n_status: res.status, destinatario: sol.user_email },
     });
 
-    await db.update(solicitacoesTable)
-      .set({
-        notifications_sent: sql`COALESCE(${solicitacoesTable.notifications_sent}, '{}'::jsonb)
-          || ${JSON.stringify({ [marco]: new Date().toISOString() })}::jsonb`,
-      })
-      .where(eq(solicitacoesTable.id, solicitacaoId));
+    if (marco !== "prazo_alterado") {
+      await db.update(solicitacoesTable)
+        .set({
+          notifications_sent: sql`COALESCE(${solicitacoesTable.notifications_sent}, '{}'::jsonb)
+            || ${JSON.stringify({ [marco]: new Date().toISOString() })}::jsonb`,
+        })
+        .where(eq(solicitacoesTable.id, solicitacaoId));
+    }
 
     logger.info({ solicitacaoId, marco }, "Notificação enviada");
   } catch (err: any) {

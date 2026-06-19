@@ -5,7 +5,7 @@ import { db } from "@workspace/db";
 import { solicitacoesTable, arquivosTable, cartaoAprovacoesTable } from "@workspace/db";
 import { eq, desc, and, ne, sql, inArray } from "drizzle-orm";
 import { requireAuth, requireRole } from "../middleware/auth.middleware";
-import { createClickUpTask, getClickUpTaskStatus, setClickUpTaskStatus, calcularPrazo, getPrazoDiasUteis, PRAZO_DIAS_UTEIS, APRESENTACAO_TIERS, CLICKUP_STATUS_EM_REVISAO, CLICKUP_STATUS_CONCLUIDO, type ArquivosMap } from "./clickup";
+import { createClickUpTask, getClickUpTaskStatus, getClickUpTaskSnapshot, setClickUpTaskStatus, calcularPrazo, getPrazoDiasUteis, PRAZO_DIAS_UTEIS, APRESENTACAO_TIERS, CLICKUP_STATUS_EM_REVISAO, CLICKUP_STATUS_CONCLUIDO, type ArquivosMap } from "./clickup";
 import { holidaysList } from "../lib/holidays";
 import { FORM_SCHEMAS } from "../config/form-schemas";
 import { uploadToR2, deleteFromR2 } from "./r2";
@@ -673,6 +673,15 @@ router.get("/solicitacoes/:id", requireAuth, async (req, res): Promise<void> => 
   }
 });
 
+// Compara/exibe datas no fuso de Brasília (prazo é dia, sem hora).
+function ymdBR(d: Date): string {
+  return new Intl.DateTimeFormat("en-CA", { timeZone: "America/Sao_Paulo", year: "numeric", month: "2-digit", day: "2-digit" }).format(d);
+}
+function fmtBR(d: Date | null): string {
+  if (!d) return "—";
+  return new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Sao_Paulo", day: "2-digit", month: "2-digit", year: "numeric" }).format(d);
+}
+
 router.get("/solicitacoes/:id/status", requireAuth, async (req, res): Promise<void> => {
   try {
     const user = req.session.user!;
@@ -703,22 +712,66 @@ router.get("/solicitacoes/:id/status", requireAuth, async (req, res): Promise<vo
       return;
     }
 
+    let statusOut = solicitacao.status;
+    let updated = false;
+    let prazoOut: Date | null = solicitacao.prazo ? new Date(solicitacao.prazo) : null;
+    let prazoAnteriorOut: Date | null = solicitacao.prazo_anterior ? new Date(solicitacao.prazo_anterior) : null;
+    let prazoMotivoOut: string | null = solicitacao.prazo_motivo || null;
+    let prazoAlteradoEmOut: Date | null = solicitacao.prazo_alterado_em ? new Date(solicitacao.prazo_alterado_em) : null;
+
     if (solicitacao.clickup_task_id) {
       try {
-        const clickupStatus = await getClickUpTaskStatus(solicitacao.clickup_task_id);
-        if (clickupStatus && clickupStatus !== solicitacao.status) {
-          await db.update(solicitacoesTable)
-            .set({ status: clickupStatus, updated_at: new Date() })
-            .where(eq(solicitacoesTable.id, id));
-          res.json({ status: clickupStatus, updated: true });
-          return;
+        const snap = await getClickUpTaskSnapshot(solicitacao.clickup_task_id);
+        if (snap) {
+          const patch: Record<string, unknown> = {};
+          if (snap.status && snap.status !== solicitacao.status) {
+            patch.status = snap.status; statusOut = snap.status; updated = true;
+          }
+          if (snap.dueDate) {
+            const old = solicitacao.prazo ? new Date(solicitacao.prazo) : null;
+            const mudou = !old || ymdBR(snap.dueDate) !== ymdBR(old);
+            if (mudou && old) {
+              // Alteração real do prazo (já havia um prazo): registra, sinaliza e notifica
+              patch.prazo = snap.dueDate;
+              patch.prazo_anterior = old;
+              patch.prazo_motivo = snap.motivoPrazo || null;
+              patch.prazo_alterado_em = new Date();
+              prazoOut = snap.dueDate; prazoAnteriorOut = old; prazoMotivoOut = snap.motivoPrazo || null;
+              prazoAlteradoEmOut = patch.prazo_alterado_em as Date;
+              updated = true;
+            } else if (mudou && !old) {
+              // Primeira sincronização (sem prazo salvo) — apenas preenche
+              patch.prazo = snap.dueDate; prazoOut = snap.dueDate;
+            }
+          }
+          if (Object.keys(patch).length) {
+            patch.updated_at = new Date();
+            await db.update(solicitacoesTable).set(patch).where(eq(solicitacoesTable.id, id));
+          }
+          if (patch.prazo_alterado_em) {
+            logAtividade({
+              tipo: "prazo_alterado", nivel: "warn",
+              solicitacaoId: id, tipoSolicitacao: solicitacao.tipo_solicitacao,
+              titulo: solicitacao.titulo || undefined,
+              detalhe: `Prazo alterado no ClickUp: ${fmtBR(prazoAnteriorOut)} → ${fmtBR(prazoOut)}${prazoMotivoOut ? ` · motivo: ${prazoMotivoOut}` : ""} (solicitação #${id})`,
+              metadata: { de: prazoAnteriorOut, para: prazoOut, motivo: prazoMotivoOut },
+            }).catch(() => {});
+            notificarMarcoBg(id, "prazo_alterado");
+          }
         }
       } catch (e) {
-        logger.error({ err: e }, "ClickUp status check failed");
+        logger.error({ err: e }, "ClickUp snapshot check failed");
       }
     }
 
-    res.json({ status: solicitacao.status, updated: false });
+    res.json({
+      status: statusOut,
+      updated,
+      prazo: prazoOut ? prazoOut.toISOString() : null,
+      prazo_anterior: prazoAnteriorOut ? prazoAnteriorOut.toISOString() : null,
+      prazo_motivo: prazoMotivoOut,
+      prazo_alterado_em: prazoAlteradoEmOut ? prazoAlteradoEmOut.toISOString() : null,
+    });
   } catch (err) {
     logger.error({ err }, "Error checking status");
     res.status(500).json({ error: "Erro ao verificar status" });

@@ -424,6 +424,10 @@
     .sol-resp .sol-resp-label { opacity: 0.5; font-weight: 500; }
     .sol-resp .sol-resp-label::after { content: ':'; }
     .sol-resp .resp-nome { font-weight: 700; }
+    .prazo-badge { display: inline-flex; align-items: center; gap: 7px; padding: 7px 14px; border-radius: 10px; font-size: 0.85rem; font-weight: 700; white-space: nowrap; border: 1px solid transparent; }
+    .prazo-badge .prazo-badge-rel { font-weight: 500; opacity: 0.85; font-size: 0.78rem; }
+    .prazo-alterado { display: inline-flex; align-items: center; gap: 6px; max-width: 340px; padding: 5px 11px; border-radius: 8px; font-size: 0.76rem; font-weight: 600; background: rgba(234,88,12,0.1); color: #c2410c; border: 1px solid rgba(234,88,12,0.25); }
+    .prazo-alterado .prazo-alterado-txt { font-weight: 500; white-space: normal; }
     @media (max-width: 480px) {
       .sol-header { flex-direction: column; gap: 10px; }
       .sol-titulo { font-size: 1.5rem; }
@@ -588,6 +592,15 @@
           <div class="sol-header-right" id="solHeaderRight">
             <span class="sol-status-badge" id="solStatus"></span>
           </div>
+          <div id="prazoBadge" class="prazo-badge" style="display:none">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="flex-shrink:0"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            <span class="prazo-badge-data"></span>
+            <span class="prazo-badge-rel"></span>
+          </div>
+          <div id="prazoAlterado" class="prazo-alterado" style="display:none">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="flex-shrink:0"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            <span class="prazo-alterado-txt"></span>
+          </div>
           <div id="solResponsavel" class="sol-resp" style="display:none">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="opacity:0.4;flex-shrink:0"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
             <span class="sol-resp-label">Responsável</span>
@@ -737,12 +750,70 @@
         const r = await fetch('/api/solicitacoes/' + solicitacaoId + '/status');
         if (!r.ok) return;
         const d = await r.json();
-        if (d.updated && d.status !== item.status) {
-          item.status = d.status;
+        const prazoMudou = d.prazo_alterado_em && d.prazo_alterado_em !== item.prazo_alterado_em;
+        const statusMudou = d.updated && d.status && d.status !== item.status;
+        // sincroniza os campos de prazo silenciosamente
+        if (d.prazo) item.prazo = d.prazo;
+        if (d.prazo_anterior) item.prazo_anterior = d.prazo_anterior;
+        if (d.prazo_motivo !== undefined) item.prazo_motivo = d.prazo_motivo;
+        if (d.prazo_alterado_em) item.prazo_alterado_em = d.prazo_alterado_em;
+        if (statusMudou) item.status = d.status;
+        if (statusMudou || prazoMudou) {
           renderPage(item);
+          if (prazoMudou && window.showToast) showToast('O prazo desta solicitação foi atualizado.', 'info');
         }
       } catch {}
       finally { _syncing = false; }
+    }
+
+    function renderPrazoBadge(item) {
+      const badge = document.getElementById('prazoBadge');
+      const alterado = document.getElementById('prazoAlterado');
+      if (!badge) return;
+      if (isTipoAutomacao(item.tipo_solicitacao) || !item.prazo) {
+        badge.style.display = 'none';
+        if (alterado) alterado.style.display = 'none';
+        return;
+      }
+      const DIAS_SEM = ['domingo','segunda','terça','quarta','quinta','sexta','sábado'];
+      const pd = new Date(item.prazo);
+      const fmt = String(pd.getDate()).padStart(2,'0') + '/' + String(pd.getMonth()+1).padStart(2,'0') + '/' + pd.getFullYear();
+
+      const finalizado = ['concluido','cancelado','reprovado'].includes(item.status);
+      // dias corridos até o prazo (data, sem hora)
+      const hoje = new Date(); hoje.setHours(0,0,0,0);
+      const alvo = new Date(pd); alvo.setHours(0,0,0,0);
+      const diff = Math.round((alvo - hoje) / 86400000);
+
+      let bg, fg, br, rel;
+      if (finalizado) {
+        bg = 'rgba(34,27,25,0.06)'; fg = 'rgba(34,27,25,0.6)'; br = 'rgba(34,27,25,0.12)'; rel = '';
+      } else if (diff < 0) {
+        bg = 'rgba(220,38,38,0.1)'; fg = '#b91c1c'; br = 'rgba(220,38,38,0.28)'; rel = 'atrasado há ' + Math.abs(diff) + (Math.abs(diff)===1?' dia':' dias');
+      } else if (diff === 0) {
+        bg = 'rgba(220,38,38,0.1)'; fg = '#b91c1c'; br = 'rgba(220,38,38,0.28)'; rel = 'é hoje';
+      } else if (diff <= 2) {
+        bg = 'rgba(234,88,12,0.1)'; fg = '#c2410c'; br = 'rgba(234,88,12,0.28)'; rel = 'em ' + diff + (diff===1?' dia':' dias');
+      } else {
+        bg = 'rgba(22,163,74,0.1)'; fg = '#15803d'; br = 'rgba(22,163,74,0.25)'; rel = 'em ' + diff + ' dias';
+      }
+      badge.style.background = bg; badge.style.color = fg; badge.style.borderColor = br;
+      badge.querySelector('.prazo-badge-data').textContent = 'Prazo: ' + fmt + ' · ' + DIAS_SEM[pd.getDay()];
+      badge.querySelector('.prazo-badge-rel').textContent = rel ? '(' + rel + ')' : '';
+      badge.style.display = 'inline-flex';
+
+      // Indicador de prazo alterado
+      if (alterado) {
+        if (item.prazo_alterado_em) {
+          const antes = item.prazo_anterior ? new Date(item.prazo_anterior) : null;
+          const antesFmt = antes ? (String(antes.getDate()).padStart(2,'0') + '/' + String(antes.getMonth()+1).padStart(2,'0') + '/' + antes.getFullYear()) : '';
+          const motivo = (item.prazo_motivo && String(item.prazo_motivo).trim()) ? String(item.prazo_motivo).trim() : 'sem justificativa informada';
+          alterado.querySelector('.prazo-alterado-txt').textContent = 'Prazo alterado' + (antesFmt ? ' (antes: ' + antesFmt + ')' : '') + ' · ' + motivo;
+          alterado.style.display = 'inline-flex';
+        } else {
+          alterado.style.display = 'none';
+        }
+      }
     }
 
     /* ── renderPage ───────────────────────────── */
@@ -840,6 +911,7 @@
           respEl.style.display = 'none';
         }
       }
+      renderPrazoBadge(item);
 
       renderFluxo(item);
       if (isTipoAutomacao(item.tipo_solicitacao)) {
@@ -2036,17 +2108,6 @@
       let gridFields = '';
       let palestrantesBlock = '';
       let hasContent = false;
-
-      // Prazo de entrega (SLA calculado na criação, considerando feriados)
-      if (item.prazo) {
-        const pd = new Date(item.prazo);
-        if (!isNaN(pd.getTime())) {
-          const DIAS_SEM = ['domingo','segunda-feira','terça-feira','quarta-feira','quinta-feira','sexta-feira','sábado'];
-          const fmtPrazo = String(pd.getDate()).padStart(2,'0') + '/' + String(pd.getMonth()+1).padStart(2,'0') + '/' + pd.getFullYear();
-          gridFields += `<div class="dados-field"><div class="dados-label">Prazo de entrega</div><div class="dados-value" style="font-weight:700">${fmtPrazo} · ${DIAS_SEM[pd.getDay()]}</div></div>`;
-          hasContent = true;
-        }
-      }
 
       const FIELD_PRIORITY = ['nomeEvento','tituloEvento','dataEvento','horario','origem','tipoEvento','publico','localEvento','unidadeSVN','localNome','localEndereco','estado','cidade','convidados','descricao','objetivos'];
       const _entries = Object.entries(dados).sort((a, b) => {

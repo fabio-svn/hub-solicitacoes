@@ -1416,3 +1416,45 @@ export async function getClickUpTaskStatus(taskId: string): Promise<string | nul
     return null;
   }
 }
+
+// Campo personalizado do ClickUp com o motivo da mudança de prazo (configurável por env).
+const CLICKUP_FIELD_MOTIVO_PRAZO = process.env.CLICKUP_FIELD_MOTIVO_PRAZO || "";
+
+export interface ClickUpSnapshot {
+  status: string | null;
+  dueDate: Date | null;
+  motivoPrazo: string | null;
+}
+
+// Lê status + prazo (due_date) + motivo do prazo de uma task numa única chamada.
+export async function getClickUpTaskSnapshot(taskId: string): Promise<ClickUpSnapshot | null> {
+  if (!CLICKUP_API_TOKEN || !taskId) return null;
+  try {
+    const response = await fetch(`https://api.clickup.com/api/v2/task/${taskId}`, {
+      headers: { "Authorization": CLICKUP_API_TOKEN },
+    });
+    if (!response.ok) return null;
+    const data = await response.json() as {
+      status?: { status?: string };
+      due_date?: string | number | null;
+      custom_fields?: Array<{ id: string; name?: string; value?: unknown }>;
+    };
+    const status = mapClickUpStatus(data.status?.status || "");
+    let dueDate: Date | null = null;
+    if (data.due_date) {
+      const ms = typeof data.due_date === "string" ? parseInt(data.due_date, 10) : data.due_date;
+      if (ms && !isNaN(ms)) dueDate = new Date(ms);
+    }
+    let motivoPrazo: string | null = null;
+    const fields = data.custom_fields || [];
+    const mf = fields.find((f) =>
+      CLICKUP_FIELD_MOTIVO_PRAZO
+        ? f.id === CLICKUP_FIELD_MOTIVO_PRAZO
+        : ((f.name || "").toLowerCase().includes("motivo") && (f.name || "").toLowerCase().includes("prazo"))
+    );
+    if (mf && mf.value != null && String(mf.value).trim()) motivoPrazo = String(mf.value).trim();
+    return { status, dueDate, motivoPrazo };
+  } catch {
+    return null;
+  }
+}
