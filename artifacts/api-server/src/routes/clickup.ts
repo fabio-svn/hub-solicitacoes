@@ -1417,8 +1417,9 @@ export async function getClickUpTaskStatus(taskId: string): Promise<string | nul
   }
 }
 
-// Campo personalizado do ClickUp com o motivo da mudança de prazo (configurável por env).
-const CLICKUP_FIELD_MOTIVO_PRAZO = process.env.CLICKUP_FIELD_MOTIVO_PRAZO || "";
+// Campo personalizado do ClickUp com o motivo da mudança de prazo ("⚠️ Mudança de prazo").
+// ID padrão já configurado; pode ser sobrescrito por env se o campo mudar.
+const CLICKUP_FIELD_MOTIVO_PRAZO = process.env.CLICKUP_FIELD_MOTIVO_PRAZO || "2457c37b-5920-445f-a83a-857d36620c98";
 
 export interface ClickUpSnapshot {
   status: string | null;
