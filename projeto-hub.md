@@ -1,6 +1,6 @@
 # Pack do Projeto Hub SVN
 
-Gerado em: 2026-06-16 15:52:35
+Gerado em: 2026-06-19 15:35:26
 
 Roots: artifacts/api-server lib
 
@@ -145,6 +145,2037 @@ buildAll().catch((err) => {
   console.error(err);
   process.exit(1);
 });
+
+```
+
+
+## File: artifacts/api-server/docs/admin-dashboard.md
+
+```
+# Admin & Dashboard
+
+## Páginas de acompanhamento
+
+| Página | Arquivo | Acesso | Descrição |
+|---|---|---|---|
+| Minhas solicitações | `dashboard.html` | Todos os usuários autenticados | Lista as próprias solicitações (ou todas, se gestor/admin) |
+| Painel admin | `admin.html` | `admin`, `gestor` | Visão geral de todas as solicitações |
+| Usuários | `admin-usuarios.html` | `admin` | Gerencia usuários e roles |
+| ClickUp Listas | `admin-clickup-lists.html` | `admin` | Configura qual lista ClickUp recebe cada tipo |
+| Templates de Arte | `admin-templates.html` | `admin` | Gerencia templates de geração automática |
+| Assets | `admin-assets.html` | `admin` | Biblioteca de imagens/logos usados nos templates |
+| Log de atividades | `admin-log.html` | `admin`, `gestor` | Histórico de eventos do sistema |
+| Tombamentos | `admin-tombamentos.html` | `admin` | Geração em massa de assinaturas e cartões digitais |
+| Capital Humano | `capital-humano.html` | `capital_humano`, `admin` | Seleção de formulários exclusivos do setor |
+
+---
+
+## Dashboard (`dashboard.html`)
+
+### Contadores no topo
+
+- **Em andamento** — solicitações com status diferente de `concluido` e `cancelado`
+- **Concluídas** — solicitações com status `concluido`
+
+### Abas
+
+| Aba | Conteúdo |
+|---|---|
+| **Solicitações gerais** | Todos os tipos exceto `eventos` |
+| **Eventos** | Apenas tipo `eventos` |
+
+### Filtros disponíveis
+
+- **Período:** Hoje / 7 dias / 30 dias / Todos
+- **Tipo:** lista de tipos de solicitação
+- **Status:** lista dos status (`STATUS_SOLICITACAO`)
+- **Alertas:** solicitações com pendência de aprovação
+
+Implementados via `filters.js` com estado local e callback de re-renderização.
+
+### Cards de solicitação
+
+Cada card exibe:
+- Título da solicitação
+- Tipo (label amigável)
+- Data de criação
+- Badge de status (cor conforme `STATUS_SOLICITACAO`)
+- Badge **"APROVAÇÃO"** em vermelho se status for `em-aprovacao` e não lido
+- Botão **"Baixar"** se houver `entrega_links`
+
+---
+
+## Status das solicitações
+
+Lista completa de status com seus slugs internos:
+
+| Slug | Label | Cor de fundo |
+|---|---|---|
+| `recebido` | Recebido | Cinza escuro |
+| `alinhamentos` | Alinhamentos | Azul |
+| `em-analise` | Em análise | Amarelo |
+| `em-andamento` | Em andamento | Amarelo |
+| `em-producao` | Em produção | Laranja |
+| `em-revisao` | Em revisão | Roxo |
+| `em-aprovacao` | Em aprovação | Azul |
+| `cotacao-aprovacao` | Em cotação / aprovação | Azul |
+| `aguardando` | Aguardando informação | Marrom |
+| `aguardando-rh` | Aguardando aprovação do RH | Marrom |
+| `aguardando-pagamento` | Aguardando pagamento | Marrom |
+| `aguardando-finalizacao` | Aguardando finalização | Roxo |
+| `concluido` | Concluído | Verde |
+| `cancelado` | Cancelado | Vermelho |
+| `em-espera` | Em espera | Cinza escuro |
+| `gerando` | Gerando arte | Azul claro |
+| `erro` | Erro | Vermelho claro |
+| `aguardando-validacao` | Aguardando validação | Vermelho claro |
+| `aguardando-contrato` | Aguardando contrato | Cinza claro |
+| `validado` | Validado | Verde claro |
+| `liberado-design` | Em design | Roxo claro |
+| `arte-finalizada` | Arte finalizada | Amarelo claro |
+| `envio-grafica` | Envio gráfica | Azul claro |
+| `envio-assessor` | Envio assessor | Verde claro |
+| `reprovado` | Reprovado | Vermelho claro |
+
+---
+
+## Gerenciamento de usuários (`admin-usuarios.html`)
+
+- **Listagem** com busca por nome/e-mail
+- **Criar usuário:** formulário com e-mail, nome, role e ClickUp user ID opcional
+- **Alterar role:** dropdown inline para cada usuário (roles: Colaborador, Capital Humano, Gestor, Admin)
+- **Impersonation:** admins e gestores podem logar como outro usuário via `POST /api/admin/impersonate`
+
+> Não é possível alterar a própria role.
+
+---
+
+## Tombamentos (`admin-tombamentos.html`)
+
+Funcionalidade para geração em lote de assinaturas de e-mail e cartões digitais a partir de uma planilha.
+
+**Fluxo:**
+1. Admin faz upload de Excel/CSV com lista de colaboradores
+2. Opcionalmente, faz upload de um ZIP com fotos de perfil (nomes de arquivo correspondendo aos nomes da planilha)
+3. O sistema processa cada linha e gera assinatura de e-mail e/ou cartão digital para cada pessoa
+4. Resultado disponível como ZIPs para download (`assinaturas_zip_url`, `cartoes_zip_url`)
+5. Links expiram conforme `expires_at`
+
+**Rotas de API envolvidas:**
+- `POST /api/admin/tombamentos` — cria um novo lote
+- `GET /api/admin/tombamentos` — lista lotes
+- `PATCH /api/admin/tombamentos/:id` — atualiza status e URLs de entrega
+- `POST /api/admin/tombamentos/parse` — valida e interpreta o arquivo de planilha
+
+---
+
+## Templates de Arte (`admin-templates.html`)
+
+Interface para criação e edição dos templates usados pela geração automática.
+
+- Templates são armazenados na tabela `art_templates`
+- Cada template tem `tipo` (tipo de solicitação) e `variant_value` (ex.: slug de marca)
+- A configuração (`config` JSONB) define camadas: imagem de fundo, textos, posições, fontes, cores
+- Templates com `is_active = false` são ignorados pela geração
+- Assets (imagens) são gerenciados separadamente em `admin-assets.html`
+
+---
+
+## Log de Atividades (`admin-log.html`)
+
+Exibe registros da tabela `activity_log` com:
+- Filtro por tipo de evento, nível, período
+- Busca por e-mail de usuário ou título de solicitação
+- Detalhes expandíveis por entrada
+
+---
+
+## Fluxo de aprovação de arte (detalhe da solicitação)
+
+Para tipos com aprovação (`solicitacao.html`):
+
+1. Quando status muda para `em-aprovacao`, a seção "Materiais para aprovação" aparece com badge **NOVO** (destacada com borda vermelha no primeiro acesso).
+2. O usuário expande o acordeão e vê links para os arquivos.
+3. Escolhe **"Aprovado"** → `POST /api/solicitacoes/:id/aprovacao` → notificação ao time.
+4. Ou escolhe **"Solicitar alterações"** → digita observações → enviadas ao time → status muda para `reprovado`.
+5. Quando o time revisa, uma nova rodada começa (novo conjunto de links na mesma solicitação).
+6. Após aprovação final, pesquisa de satisfação opcional aparece.
+
+O histórico de rodadas é armazenado localmente no `localStorage` do navegador (chave `svn_rodadas_<id>`).
+
+```
+
+
+## File: artifacts/api-server/docs/arquitetura.md
+
+```
+# Arquitetura
+
+## Stack e camadas
+
+```
+┌─────────────────────────────────────────────┐
+│  Navegador (HTML/CSS/JS vanilla)             │
+│  auth.js · shell.js · form-core.js · etc.   │
+└──────────────────┬──────────────────────────┘
+                   │ HTTP (fetch)
+┌──────────────────▼──────────────────────────┐
+│  Express 5 (Node.js ESM / TypeScript)        │
+│  src/app.ts  ←  src/routes/index.ts          │
+│  ┌──────────┐ ┌────────┐ ┌────────────────┐ │
+│  │ forms.ts │ │auth.ts │ │   admin.ts     │ │
+│  └──────────┘ └────────┘ └────────────────┘ │
+│  ┌──────────┐ ┌─────────┐ ┌─────────────┐  │
+│  │clickup.ts│ │webhook  │ │  assets.ts  │  │
+│  └──────────┘ └─────────┘ └─────────────┘  │
+└──┬──────────────────────────────────────────┘
+   │
+   ├── PostgreSQL (Drizzle ORM)  — sessions, users, solicitacoes, …
+   ├── Cloudflare R2              — arquivos de upload, artes geradas
+   ├── ClickUp API                — cria e consulta tarefas
+   ├── n8n Webhooks               — dispara automações de geração
+   └── MySQL Contatos (legado)    — perfil do usuário (telefone, unidade)
+```
+
+## Fluxo de uma solicitação (Mermaid)
+
+```mermaid
+sequenceDiagram
+    participant U as Usuário (browser)
+    participant E as Express /api/solicitacoes
+    participant DB as PostgreSQL
+    participant R2 as Cloudflare R2
+    participant CU as ClickUp API
+    participant N8N as n8n Webhook
+    participant WH as POST /webhook/clickup
+
+    U->>E: POST /api/solicitacoes (FormData)
+    E->>E: requireAuth, normalizeFormDados
+    E->>DB: INSERT solicitacoes (status=recebido)
+    E->>R2: upload arquivos anexados
+    E->>DB: INSERT arquivos (urls R2)
+    E->>CU: createTask (lista por tipo)
+    E->>DB: UPDATE clickup_task_id
+    E-->>U: 201 { id, clickup_task_id }
+
+    Note over E,N8N: Em background (não bloqueia resposta)
+    E->>N8N: POST webhook (geração automática, se tipo automação)
+
+    Note over CU,WH: Time de Marketing atualiza status no ClickUp
+    CU-->>WH: POST /webhook/clickup (status update)
+    WH->>WH: valida HMAC x-signature
+    WH->>DB: UPDATE solicitacoes.status
+    WH->>N8N: dispara notificação (se em-aprovacao ou concluido)
+
+    U->>E: GET /api/solicitacoes/:id
+    E->>DB: SELECT
+    E-->>U: { status, dados, entrega_links, … }
+```
+
+## Estrutura de pastas comentada
+
+```
+artifacts/api-server/
+├── build.mjs                   # script de build com esbuild (ESM)
+├── package.json                # dependências e scripts npm
+├── tsconfig.json               # TypeScript (compilação)
+├── tsconfig.typecheck.json     # TypeScript (type-check sem emit)
+│
+├── public/                     # arquivos estáticos servidos pelo Express
+│   ├── *.html                  # páginas (uma por tela)
+│   ├── auth.js                 # client de sessão/perfil
+│   ├── config.js               # constantes de UI (categorias, status, labels)
+│   ├── form-core.js            # engine de formulários (init/validate/submit)
+│   ├── filters.js              # painéis de filtro reutilizáveis
+│   ├── shell.js                # navbar/sidebar global
+│   ├── utils.js                # helpers (esc, humanizeValue, masks, Modal)
+│   ├── upload-feedback.js      # feedback visual em inputs de arquivo
+│   ├── toast.js                # notificações não-bloqueantes e confirmações
+│   └── ibge-loader.js          # estados/cidades via API IBGE (cache 24h)
+│
+└── src/
+    ├── app.ts                  # monta o Express (middleware, rotas, erros)
+    ├── index.ts                # entry-point: inicializa DB, sobe o servidor
+    │
+    ├── assets/                 # recursos estáticos embarcados no servidor
+    │   ├── fonts/              # IvyJournal-Light.ttf, RoobertPRO-Regular.otf
+    │   └── imagens/            # assets base para geração de assinaturas
+    │
+    ├── cartao/
+    │   └── gerar-cartao.ts     # gerador de cartão físico (PDF com fontes vetorizadas)
+    │
+    ├── config/
+    │   ├── clickup-status.ts   # mapa ClickUp status → Hub status interno
+    │   ├── form-schemas.ts     # fonte única de tipos de formulário e campos
+    │   └── unidades.ts         # endereços das unidades SVN
+    │
+    ├── lib/
+    │   ├── logger.ts           # configuração do pino
+    │   ├── mysqlContatos.ts    # pool MySQL para busca de perfil por email
+    │   └── r2-client.ts        # singleton S3Client para o R2
+    │
+    ├── middleware/
+    │   └── auth.middleware.ts  # requireAuth, requireRole
+    │
+    ├── routes/
+    │   ├── index.ts            # agrega sub-routers e define prefixos
+    │   ├── forms.ts            # CRUD de solicitações, /form-schemas
+    │   ├── admin.ts            # usuários, tombamentos, ClickUp config
+    │   ├── auth.ts             # login MSAL, callback, /me, logout
+    │   ├── clickup.ts          # criação de tarefas e consultas ClickUp
+    │   ├── webhook.ts          # recebe updates do ClickUp via HMAC
+    │   ├── r2.ts               # upload/delete no R2
+    │   ├── assets.ts           # biblioteca de assets para templates
+    │   └── health.ts           # GET /healthz
+    │
+    ├── scripts/
+    │   ├── import-cartoes.ts   # importa histórico CSV de cartões físicos
+    │   ├── migrate-assignments.ts  # migra assignees do env para o banco
+    │   └── seed-art-templates.ts   # semeie templates de arte padrão
+    │
+    ├── services/
+    │   ├── activity-log.ts     # registra eventos em eventos_solicitacao
+    │   ├── art-generator.ts    # orquestra geração automática de artes
+    │   ├── notifications.ts    # dispara webhooks n8n nos marcos do fluxo
+    │   ├── pdf-renderer.ts     # converte template para PDF via pdf-lib
+    │   └── template-renderer.ts # motor de renderização de imagem via sharp
+    │
+    ├── types/
+    │   ├── art-template.ts     # tipos do sistema de templates
+    │   ├── express.d.ts        # extensão de tipos do Express (session.user)
+    │   └── vendor-shims.d.ts   # shims de módulos sem @types
+    │
+    └── utils/
+        └── api-error.ts        # classe ApiError com factories estáticas
+```
+
+```
+
+
+## File: artifacts/api-server/docs/backend.md
+
+```
+# Backend
+
+## Montagem do servidor (`src/app.ts` / `src/index.ts`)
+
+`src/index.ts` é o entry-point: inicializa o schema do banco (tabelas `CREATE TABLE IF NOT EXISTS`) e sobe o Express. `src/app.ts` monta os middlewares e rotas.
+
+**Middlewares (em ordem):**
+
+| Middleware | Finalidade |
+|---|---|
+| `helmet` | Headers de segurança HTTP |
+| `compression` | GZIP |
+| `cors` | Restringe origens a `ALLOWED_ORIGIN` |
+| `express-rate-limit` | Limite separado para `/auth` e `/api` |
+| `pino-http` | Logging estruturado de requisições |
+| `express.json()` + `express.urlencoded()` | Parsers de body |
+| `cookie-parser` | Parsing de cookies |
+| `express-session` + `connect-pg-simple` | Sessões persistidas no PostgreSQL |
+| `multer` | Upload de arquivos multipart (configurado em `forms.ts`) |
+
+## Rotas
+
+### `POST /api/solicitacoes` — criar solicitação
+
+Fluxo completo:
+
+1. **`requireAuth`** — verifica sessão ativa.
+2. **Parse do FormData** — `multer` extrai arquivos; body JSON é parseado.
+3. **`normalizeFormDados(tipo, dados)`** — normaliza chaves para snake_case via `KEY_MAP`, remove campos vazios, aplica transformações por tipo (ex.: `cd_ancord` do perfil, contagem de selos).
+4. **`validateFormDados(tipo, dados)`** — verifica `REQUIRED_FIELDS[tipo]`; retorna 400 se faltarem campos.
+5. **INSERT em `solicitacoes`** — status inicial `recebido`.
+6. **Upload de arquivos para R2** — cada arquivo vai para `r2/<uuid>.<ext>`; URLs salvas em `arquivos`.
+7. **`createClickUpTask(tipo, dados, solicitacaoId)`** — monta descrição estruturada e cria tarefa na lista ClickUp correta (configurada em `tipo_clickup_list` ou fallback para env vars).
+8. **UPDATE `clickup_task_id`** no banco.
+9. **Resposta 201** com `{ id, clickup_task_id }`.
+10. **Background:** dispara `triggerArtGeneration(id, tipo, dados)` se for tipo de automação — não bloqueia a resposta.
+
+### `GET /api/solicitacoes` — listar
+
+- Colaboradores veem apenas as próprias. Admins/gestores veem todas.
+- Filtros: `status`, `tipo`, `search` (título), `from`/`to` (data), `page`/`limit`.
+- Retorna paginação + array de solicitações com status formatado.
+
+### `GET /api/solicitacoes/:id` — detalhe
+
+- Colaboradores só acessam as próprias (403 caso contrário).
+- Retorna todos os campos, arquivos, `entrega_links` e `avaliacao`.
+
+### `PATCH /api/solicitacoes/:id/aprovacao` — aprovar arte
+
+- Disponível para o dono da solicitação.
+- Marca a solicitação como aprovada e notifica o time via n8n.
+
+### `GET /api/solicitacoes/:id/entrega` — links de entrega
+
+- Retorna `{ links, status }` para que o frontend exiba o botão de download.
+
+### `GET /api/form-schemas` — metadados dos formulários
+
+- Não requer autenticação.
+- Retorna `{ marcas, contratos, cargos, setores, tipos, labels }`.
+- Usado pelo `config.js` do frontend na inicialização.
+
+### `GET /api/config` — configuração de UI
+
+- Não requer autenticação.
+- Retorna URLs de recursos (logo, manual, vídeo hero, email de upload, lista de unidades).
+
+---
+
+## `normalizeFormDados` e `KEY_MAP`
+
+`normalizeFormDados(tipo, dados)` é responsável por garantir que os dados cheguem ao banco e ao ClickUp sempre no formato canônico **snake_case**.
+
+```
+KEY_MAP = {
+  // camelCase legado → snake_case canônico
+  nomeCartao     → nome_cartao
+  emailCorporativo → email_corporativo
+  contratoSocial   → contrato_social
+  isPrivateKey     → is_private_key
+  modeloCartao     → modelo_cartao
+  // ... (~20 mapeamentos)
+}
+```
+
+A função percorre todas as chaves do objeto `dados`, renomeia via `KEY_MAP`, remove valores `null`/`undefined`/`""`, e aplica transformações específicas por tipo (ex.: injeta `cd_ancord` do perfil do usuário para tipos de assessor).
+
+> O campo `dados` é armazenado como `jsonb` no PostgreSQL. A convenção snake_case é a forma canônica. Dados enviados antes da migração 8.3 usavam camelCase — o script `migrate-assignments.ts` e o `normalizeFormDados` tratam ambas as formas.
+
+---
+
+## Geração de artefatos
+
+A geração automática ocorre após o `POST /api/solicitacoes` em background:
+
+```
+art-generator.ts
+  └─ busca art_templates ativos para tipo + variant (marca/contrato)
+  └─ template-renderer.ts (sharp)
+       └─ baixa assets (logos, fotos) via fetch
+       └─ compõe imagem PNG
+  └─ pdf-renderer.ts (pdf-lib)        ← se o template gera PDF
+  └─ gerar-cartao.ts (pdfkit)         ← para cartão físico (vetorizado)
+  └─ uploadToR2()
+  └─ UPDATE solicitacoes.entrega_links + status → concluido
+       └─ notifications.ts dispara webhook n8n (notificação ao usuário)
+```
+
+Se a geração falhar, `status` é atualizado para `erro` e `erro_geracao` recebe a mensagem.
+
+---
+
+## Webhook do ClickUp (`POST /webhook/clickup`)
+
+1. Valida assinatura HMAC-SHA256 no header `x-signature` usando `CLICKUP_WEBHOOK_SECRET`.
+2. Extrai `task_id` e `status` do payload.
+3. Busca `solicitacao` por `clickup_task_id`.
+4. Mapeia o status ClickUp para status interno via `CLICKUP_STATUS_MAP`.
+5. Atualiza `solicitacoes.status` no banco.
+6. Se novo status for `em-aprovacao` ou `concluido`, dispara notificação via `notifications.ts`.
+
+---
+
+## Autenticação (`src/routes/auth.ts`)
+
+Fluxo Microsoft MSAL (OAuth 2.0 Authorization Code + PKCE):
+
+```
+GET /auth/login
+  └─ MSAL gera authorization URL → redireciona para Microsoft
+
+GET /auth/callback
+  └─ MSAL troca code por token
+  └─ extrai email (@svninvest.com.br obrigatório)
+  └─ busca/cria usuário em usersTable
+  └─ busca perfil em MySQL Contatos (telefone, unidade, cargo, cd_ancord)
+  └─ popula req.session.user e req.session.userProfile
+  └─ redireciona para ?redirect= ou /
+
+GET /auth/me          → { authenticated, user, profile, pendentes }
+GET /auth/me-profile  → { profile }
+GET /auth/logout      → destrói sessão, redireciona para /
+```
+
+---
+
+## Middleware de autorização
+
+```ts
+// Verifica apenas autenticação
+requireAuth
+
+// Verifica autenticação + role
+requireRole("admin")
+requireRole("admin", "gestor")
+requireRole("capital_humano", "gestor", "admin")
+```
+
+Roles disponíveis: `colaborador` (padrão), `gestor`, `admin`, `capital_humano`.
+
+```
+
+
+## File: artifacts/api-server/docs/como-rodar.md
+
+```
+# Como Rodar
+
+## Pré-requisitos
+
+- **Node.js** 20+ (use `.nvmrc` ou o runtime configurado no Replit/Railway)
+- **pnpm** 9+ (gerenciador de pacotes do monorepo)
+- **PostgreSQL** 15+ acessível via `DATABASE_URL`
+
+## Instalação
+
+```bash
+# Na raiz do monorepo
+pnpm install
+```
+
+Isso instala as dependências de todos os pacotes do workspace (`api-server`, `db`, `api-zod`, `mockup-sandbox`).
+
+## Variáveis de ambiente
+
+Copie `.env.example` para `.env` e preencha os valores. Nunca commite `.env`.
+
+| Variável | Obrigatória | Descrição |
+|---|---|---|
+| `PORT` | Opcional | Porta Express (Railway injeta automaticamente) |
+| `NODE_ENV` | Sim | `development` ou `production` |
+| `LOG_LEVEL` | Opcional | `trace`/`debug`/`info`/`warn`/`error`/`fatal` (padrão: `info`) |
+| `ALLOWED_ORIGIN` | Sim | URL pública do app para CORS (sem barra final) |
+| `DATABASE_URL` | Sim | Connection string PostgreSQL |
+| `SESSION_SECRET` | Sim | Chave para assinar cookies de sessão (gere com `openssl rand -base64 48`) |
+| `MSAL_TENANT_ID` | Sim | Tenant ID do Azure AD |
+| `MSAL_CLIENT_ID` | Sim | Client ID do App Registration |
+| `MSAL_CLIENT_SECRET` | Sim | Client Secret do App Registration |
+| `MSAL_REDIRECT_URI` | Sim | URI de callback cadastrada no Azure (deve bater exatamente) |
+| `R2_ACCOUNT_ID` | Sim | ID da conta Cloudflare |
+| `R2_BUCKET` | Sim | Nome do bucket R2 |
+| `R2_ACCESS_KEY` | Sim | Access Key do R2 |
+| `R2_SECRET_KEY` | Sim | Secret Key do R2 |
+| `R2_PUBLIC_URL` | Sim | URL pública base do bucket (sem barra final) |
+| `CLICKUP_API_TOKEN` | Sim | Token de acesso do ClickUp |
+| `CLICKUP_WEBHOOK_SECRET` | Opcional | HMAC secret do webhook ClickUp |
+| `CLICKUP_LIST_GERAL` | Sim | ID da lista ClickUp para solicitações gerais |
+| `CLICKUP_LIST_EVENTOS` | Sim | ID da lista ClickUp para eventos |
+| `CLICKUP_LIST_BRINDES` | Sim | ID da lista ClickUp para brindes |
+| `CLICKUP_LIST_PATROCINIO` | Sim | ID da lista ClickUp para patrocínio |
+| `CLICKUP_ASSIGNEE_GERAL` | Sim | ID do usuário ClickUp responsável padrão |
+| `CLICKUP_ASSIGNEE_EVENTOS` | Sim | ID do usuário ClickUp para eventos |
+| `CLICKUP_ASSIGNEE_BRINDES` | Sim | ID do usuário ClickUp para brindes |
+| `CLICKUP_ASSIGNEE_PATROCINIO` | Sim | ID do usuário ClickUp para patrocínio |
+| `WEBHOOK_CARTAO_FISICO` | Sim | URL n8n para geração de cartão físico |
+| `WEBHOOK_CARTAO_DIGITAL` | Sim | URL n8n para geração de cartão digital |
+| `WEBHOOK_BOAS_VINDAS` | Sim | URL n8n para cartão de boas-vindas |
+| `WEBHOOK_NPS` | Sim | URL n8n para arte NPS |
+| `WEBHOOK_CONVITE_FP` | Sim | URL n8n para convite Financial Planning |
+| `WEBHOOK_CERTIFICADO` | Sim | URL n8n para certificado |
+| `WEBHOOK_COMEMORATIVO` | Sim | URL n8n para cartão comemorativo |
+| `INTERNAL_API_SECRET` | Sim | Chave HMAC para chamadas internas (n8n → API) |
+| `MYSQL_CONTATOS` | Opcional | `mysql://user:pass@host:3306/db` para perfis de assessores |
+| `URL_LOGO_BRANCA` | Opcional | URL SVG do logo branco (fallback para CDN R2) |
+| `URL_LOGO_PRETA` | Opcional | URL SVG do logo preto |
+| `URL_MANUAL` | Opcional | URL do PDF do manual de eventos |
+| `URL_TUTORIAL_TRANSMISSAO` | Opcional | URL do tutorial de transmissão |
+| `URL_VIDEO_HERO` | Opcional | URL do vídeo de fundo da tela de eventos |
+| `EMAIL_UPLOAD` | Opcional | E-mail de notificação de upload |
+
+## Comandos de desenvolvimento
+
+```bash
+# Roda o build e sobe o servidor em modo desenvolvimento
+pnpm --filter @workspace/api-server run dev
+
+# Somente build (esbuild → dist/)
+pnpm --filter @workspace/api-server run build
+
+# Somente start (precisa que dist/ já exista)
+pnpm --filter @workspace/api-server run start
+
+# Type-check sem emit
+pnpm --filter @workspace/api-server run typecheck
+```
+
+> O comando `dev` executa **build + start** em sequência. Não há watch mode — para recarregar, reinicie o processo manualmente (ou use o botão "Run" no Replit).
+
+## Rodar no Replit
+
+O Replit gerencia o processo via Workflow configurado:
+
+```
+pnpm --filter @workspace/api-server run dev
+```
+
+- O servidor escuta na porta injetada pela variável `PORT`.
+- As variáveis de ambiente são configuradas em **Secrets** no painel do Replit.
+- Para reiniciar: clique em **Run** na barra superior ou use o painel de Workflows.
+
+## Deploy no Railway
+
+1. Crie um projeto Railway e adicione um serviço **PostgreSQL** e um serviço **Node**.
+2. Conecte o repositório Git ao serviço Node.
+3. Configure o **Start Command**:
+   ```
+   pnpm --filter @workspace/api-server run start
+   ```
+4. Configure o **Build Command** (ou use o Nixpacks do Railway):
+   ```
+   pnpm install && pnpm --filter @workspace/api-server run build
+   ```
+5. Adicione todas as variáveis de ambiente em **Settings → Variables**.
+6. O Railway injeta `DATABASE_URL` automaticamente quando o banco é vinculado ao serviço.
+
+## Migrações de banco
+
+O `src/index.ts` chama `db.execute(sql`CREATE TABLE IF NOT EXISTS ...`)` na inicialização — o schema é criado automaticamente na primeira subida. Para alterações de schema, edite `packages/db/src/schema/index.ts` e suba o servidor (Drizzle não executa migrações automáticas destrutivas).
+
+> TODO: verificar se existe script de migração Drizzle (`drizzle-kit push` ou `migrate`) configurado no monorepo.
+
+## Scripts one-off
+
+```bash
+# Migrar assignees de env vars para o banco (seguro re-rodar)
+pnpm --filter @workspace/api-server run migrate-assignments
+
+# Semear templates de arte padrão (idempotente)
+pnpm --filter @workspace/api-server run seed-art-templates
+
+# Importar histórico CSV de cartões físicos (dry-run por padrão)
+pnpm tsx artifacts/api-server/src/scripts/import-cartoes.ts --csv caminho/arquivo.csv
+# Para aplicar de verdade:
+pnpm tsx artifacts/api-server/src/scripts/import-cartoes.ts --csv caminho/arquivo.csv --apply
+```
+
+Veja detalhes sobre cada script em [scripts.md](scripts.md).
+
+```
+
+
+## File: artifacts/api-server/docs/convencoes.md
+
+```
+# Convenções
+
+## Tokens de marca SVN
+
+Definidos como variáveis CSS globais no CSS compartilhado das páginas. Os valores abaixo refletem o uso no código.
+
+### Cores principais
+
+| Token CSS | Valor | Uso |
+|---|---|---|
+| `--carbon-black` | `#221b19` | Texto principal |
+| `--ruby-red` | `#AC3631` | Cor de destaque/brand (botões primários, bordas de aprovação) |
+| `--gold` | `#C98A00` (aprox.) | Status em andamento/análise; botões dourados |
+| `--icon-bg` | `rgba(34,27,25,0.06)` | Fundo de ícones e badges neutros |
+
+### Status e cores de badge
+
+Os status têm suas cores definidas em `STATUS_SOLICITACAO` no `config.js`. A convenção é sempre usar `bg` (background) e `text` (cor do texto) do objeto de status, nunca cores hardcoded por slug.
+
+```js
+const s = getStatus('em-aprovacao');
+// s.bg  = "#2563C0"
+// s.text = "#FFFFFF"
+badge.style.background = s.bg;
+badge.style.color = s.text;
+```
+
+### Tipografia
+
+- **Fonte de texto:** `RoobertPRO-Regular` (usada nos artefatos gerados; não carregada no frontend web)
+- **Fonte de títulos em artes:** `IvyJournal-Light` (usada nos artefatos gerados)
+- No frontend web: `system-ui` / stack de fontes do navegador
+
+### Classes CSS utilitárias recorrentes
+
+| Classe | Uso |
+|---|---|
+| `.page-container` | Wrapper central das páginas |
+| `.page-container--narrow` | Versão estreita para formulários |
+| `.form-card` | Card com sombra para seções do formulário |
+| `.field` | Wrapper de campo (label + input + error) |
+| `.field-error` | Mensagem de erro de validação |
+| `.required-star` | Asterisco vermelho em campos obrigatórios |
+| `.btn` | Base de botão |
+| `.btn-submit-gold` | Botão primário dourado |
+| `.btn-download-page` | Botão de download em página de detalhe |
+| `.svn-stepper` | Indicador de progresso multi-step |
+| `.form-step` | Container de uma etapa do formulário |
+| `.search-bar` | Input de busca padronizado |
+
+---
+
+## Padrões de código
+
+### TypeScript / Node.js
+
+- **Módulos:** ESM (`"type": "module"` no package.json). Use `import`/`export`, nunca `require`.
+- **Build:** esbuild via `build.mjs`. O output vai para `dist/index.mjs`. Não é necessário `tsc` para rodar — apenas para type-check.
+- **Type-check:** `pnpm typecheck` (não faz emit). Rode antes de commitar em mudanças de tipos.
+- **Async:** use `async/await`. Evite callbacks encadeados.
+- **Erros:** lance `ApiError` (de `src/utils/api-error.ts`) para erros esperados. O handler central em `app.ts` os serializa corretamente.
+- **Logging:** use `req.log` (pino injetado pelo `pino-http`) dentro de rotas. Nunca use `console.log` em produção.
+
+### Rotas Express
+
+- Todas as rotas definem o tipo de retorno explicitamente: `async (req, res): Promise<void>`.
+- O middleware de autenticação (`requireAuth` / `requireRole`) vem sempre antes da lógica de negócio.
+- Resposta de erro segue o padrão: `res.status(NNN).json({ error: "Mensagem legível" })`.
+
+### JavaScript frontend
+
+- Vanilla JS (sem framework). Módulos não são usados — os scripts são carregados via `<script>` em ordem.
+- Escaping HTML: sempre use `window.esc(str)` ao injetar conteúdo dinâmico no DOM (evita XSS).
+- Não use `innerHTML` com dados do usuário sem `esc()`.
+
+### Nomenclatura
+
+| Contexto | Convenção |
+|---|---|
+| Tipos de solicitação (`tipo_solicitacao`) | kebab-case (`assinatura-email`, `cartao-visita-digital`) |
+| Campos de formulário no banco (`dados` JSONB) | snake_case (`nome_assinatura`, `contrato_social`) |
+| Variáveis JS no frontend | camelCase |
+| Variáveis TypeScript | camelCase (objetos) / UPPER_SNAKE_CASE (constantes de módulo) |
+| IDs de elementos HTML | kebab-case |
+| Classes CSS | kebab-case |
+| Variáveis de ambiente | UPPER_SNAKE_CASE |
+
+### Banco de dados
+
+- Todas as tabelas têm `id serial PRIMARY KEY` e `created_at timestamp`.
+- Dados de formulário vão no campo `dados jsonb` — não crie colunas por campo.
+- Novos campos que precisem de indexação devem ser colunas explícitas (ex.: `status`, `tipo_solicitacao`).
+- Migrações: atualmente feitas com `CREATE TABLE IF NOT EXISTS` na inicialização. Para alterações destrutivas ou adição de índices, crie um script em `src/scripts/`.
+
+### Variáveis de ambiente
+
+- Nunca acesse `process.env` diretamente no código de rota — centralize a leitura em `src/config/` ou no topo do arquivo de inicialização.
+- Variáveis sem valor padrão razoável são `[obrigatório]` — o servidor não deve subir silenciosamente sem elas.
+- Documente toda nova variável no `.env.example` com comentário explicativo.
+
+---
+
+## Estrutura de uma nova integração
+
+Se precisar adicionar uma nova integração externa:
+
+1. Crie o cliente em `src/lib/<servico>.ts`
+2. Exponha funções nomeadas (não o cliente bruto) para os consumers
+3. Trate ausência de credenciais graciosamente (retorne `null` ou logue aviso, não lance exceção no boot)
+4. Documente as variáveis de ambiente necessárias no `.env.example`
+5. Adicione a integração em [integracoes.md](integracoes.md)
+
+```
+
+
+## File: artifacts/api-server/docs/form-schemas.md
+
+```
+# Schema de Formulários
+
+## O que é `form-schemas.ts`
+
+`src/config/form-schemas.ts` é a **fonte única de verdade** para metadados de formulários. Ele define:
+
+- Quais tipos de formulário existem
+- Quais campos cada tipo tem (nome, label, tipo de input, required, options)
+- Quais opções aparecem em selects/radios (marcas, contratos, cargos, setores)
+- Os `REQUIRED_FIELDS` validados no backend
+- Os `field_options` usados para resolver labels de valores no detalhe da solicitação
+
+O endpoint `GET /api/form-schemas` expõe esses dados ao frontend. O `config.js` faz fetch desse endpoint na inicialização e popula `window._svnFormSchemas` e `window._svnFieldLabels`.
+
+> **Não edite os fallbacks em `config.js`** — eles existem apenas para evitar tela em branco se o endpoint falhar. A fonte real é `form-schemas.ts`.
+
+---
+
+## Estrutura de um schema de tipo
+
+```ts
+// Exemplo simplificado
+const FORM_SCHEMAS: Record<string, FormSchema> = {
+  "assinatura-email": {
+    tipo: "assinatura-email",
+    label: "Assinatura de E-mail",
+    fields: [
+      {
+        name: "nome_assinatura",
+        label: "Nome para assinatura",
+        type: "text",         // text | email | tel | select | radio | textarea | file
+        required: true,
+        options: null,
+      },
+      {
+        name: "cargo",
+        label: "Cargo",
+        type: "select",
+        required: true,
+        options: CARGOS_OPTS,   // array de { value, label }
+      },
+      {
+        name: "marca",
+        label: "Marca",
+        type: "radio",
+        required: true,
+        options: MARCAS_OPTS,
+      },
+    ],
+    field_options: {
+      // Mapa valor → label usado no detalhe da solicitação
+      // Chave = nome do campo, valor = { [opcao]: label_legível }
+      marca: {
+        "svn-investimentos": "SVN Investimentos",
+        "svn-gestao": "SVN Gestão",
+        // ...
+      }
+    }
+  }
+};
+```
+
+---
+
+## `REQUIRED_FIELDS`
+
+```ts
+const REQUIRED_FIELDS: Record<string, string[]> = {
+  "assinatura-email": ["nome_assinatura", "cargo", "marca", "contrato_social"],
+  "cartao-visita-digital": ["nome_cartao", "cargo", "whatsapp", "email_corporativo", "marca"],
+  // ...
+};
+```
+
+A função `validateFormDados(tipo, dados)` em `forms.ts` itera sobre `REQUIRED_FIELDS[tipo]` e retorna erro 400 se algum campo estiver ausente ou vazio no payload.
+
+> Os campos em `REQUIRED_FIELDS` são os validados **no servidor**. O atributo `required: true` nos schemas é informativo para o frontend (asterisco visual, validação client-side via `FormCore.validateRequired`).
+
+---
+
+## Listas compartilhadas
+
+| Constante | Conteúdo | Usado em |
+|---|---|---|
+| `CONTRATOS_OPTS` | Contratos sociais SVN (Investimentos, Capital, Connect…) | Cartão de Visita, Assinatura, Arte NPS… |
+| `MARCAS_OPTS` | Marcas SVN (Investimentos, Gestão, Global, Corporate…) | Maioria dos formulários de identidade |
+| `CARGOS_OPTS` | Cargos de assessores | Cartão de Visita, Assinatura |
+| `SETORES_LIST` | Lista de strings de setores | Formulários internos |
+| `SETOR_CODIGO_MAP` | `{ setor: código }` para montar IDs no ClickUp | `createClickUpTask` |
+
+---
+
+## Endpoint `/api/form-schemas`
+
+Resposta:
+
+```json
+{
+  "marcas":    [{ "value": "svn-investimentos", "label": "SVN Investimentos" }, ...],
+  "contratos": [{ "value": "svn-investimentos", "label": "SVN Investimentos" }, ...],
+  "cargos":    [{ "value": "assessor", "label": "Assessor de Investimentos" }, ...],
+  "setores":   ["Administração", "Alocação", ...],
+  "tipos":     [{ "tipo": "assinatura-email", "label": "Assinatura de E-mail", "fields": [...], "field_options": {...} }, ...],
+  "labels":    { "assinatura-email": "Assinatura de E-mail", ... }
+}
+```
+
+---
+
+## Passo a passo para adicionar um novo tipo de formulário
+
+### 1. Definir o schema em `form-schemas.ts`
+
+```ts
+// Adicione a chave no objeto FORM_SCHEMAS
+"novo-tipo": {
+  tipo: "novo-tipo",
+  label: "Meu Novo Tipo",
+  fields: [
+    { name: "titulo", label: "Título", type: "text", required: true },
+    { name: "descricao", label: "Descrição", type: "textarea", required: true },
+  ],
+  field_options: {},
+},
+```
+
+### 2. Definir campos obrigatórios em `REQUIRED_FIELDS`
+
+```ts
+"novo-tipo": ["titulo", "descricao"],
+```
+
+### 3. Adicionar label em `TIPO_SOLICITACAO_LABELS` no `config.js`
+
+```js
+"novo-tipo": "Meu Novo Tipo",
+```
+
+> Isso é fallback do frontend. O backend também envia via `/api/form-schemas`.
+
+### 4. Adicionar à categoria em `CATEGORIAS_SOLICITACAO` no `config.js`
+
+```js
+{
+  categoria: "Marketing e conteúdo",
+  itens: [
+    // ... itens existentes ...
+    { id: "novo-tipo", label: "Meu Novo Tipo", icon: "icon-file-text", ativo: true },
+  ]
+}
+```
+
+### 5. Criar a página HTML do formulário
+
+Crie `public/form-novo-tipo.html` seguindo o padrão das páginas existentes (veja [frontend.md](frontend.md)). O `FORM_ROUTES` em `solicitacoes.html` (ou equivalente) precisa mapear `"novo-tipo"` para a URL `"/form-novo-tipo.html"`.
+
+### 6. Configurar rota ClickUp (opcional)
+
+Se o tipo deve ir para uma lista ClickUp dedicada, adicione via painel admin em `/admin-clickup-lists.html` ou configure as variáveis `CLICKUP_LIST_*` no `.env`.
+
+### 7. Configurar geração automática (se aplicável)
+
+Se o tipo gera material automaticamente, adicione-o à lista `TIPOS_AUTOMACAO` em `forms.ts` e configure a URL do webhook n8n correspondente (`WEBHOOK_NOVO_TIPO` no `.env`).
+
+---
+
+## Editar um tipo existente
+
+- Para **adicionar campo**: adicione em `fields` e em `REQUIRED_FIELDS` se obrigatório. Dados antigos não terão o campo — `humanizeValue` trata ausências graciosamente.
+- Para **remover campo**: remova de `fields` e `REQUIRED_FIELDS`. Dados antigos que tiverem o campo continuam exibidos via fallback em `humanizeValue`.
+- Para **alterar opções de select/radio**: atualize `options` e `field_options`. Dados antigos com valores removidos aparecem como o próprio slug (fallback em `humanizeValue`).
+
+```
+
+
+## File: artifacts/api-server/docs/frontend.md
+
+```
+# Frontend
+
+O frontend é construído em HTML/CSS/JS vanilla, sem framework. Cada tela é um arquivo `.html` independente em `public/`. Arquivos JS compartilhados são carregados via `<script>` em ordem específica.
+
+## Arquivos JS compartilhados
+
+### `auth.js`
+
+Gerencia a sessão do usuário no lado cliente.
+
+- **`Auth.init()`** — busca `/auth/me` e popula `Auth.user` (nome, email, role). Usa cache de sessionStorage de 5 minutos para evitar requisições repetidas.
+- **`Auth.isAuthenticated()`** — retorna `true` se há usuário na sessão.
+- **`Auth.getRole()`** / **`Auth.getUserName()`** — acessores do perfil.
+- **`Auth.getProfile()`** — retorna dados estendidos (telefone, unidade, cargo, cd_ancord), vindos do MySQL Contatos via `/auth/me-profile`.
+- **`Auth.aplicarPerfilNoCampo(fieldId, valor)`** — preenche automaticamente um campo do formulário com dados do cadastro e exibe hint "Pré-preenchido do seu cadastro".
+- **`Auth.marcarComoLido(id)`** / **`Auth.isPendente(id)`** — controla o badge de notificação de aprovações pendentes não lidas (localStorage).
+- **`Auth.temPendencias()`** / **`Auth.getPendentesCount()`** — usados pelo `Shell` para renderizar o badge numérico no ícone de sino.
+
+### `config.js`
+
+Constantes de UI e configuração carregadas do servidor na inicialização.
+
+- Define `CATEGORIAS_SOLICITACAO` (categorias e itens do menu de seleção de formulário).
+- Define `TIPO_SOLICITACAO_LABELS` (mapa `tipo → label` para exibição).
+- Define `STATUS_SOLICITACAO` (lista de status com `id`, `label`, `bg`, `text`) e `getStatus(id)`.
+- Na inicialização, faz `fetch('/api/config')` e `fetch('/api/form-schemas')` para sobrescrever os fallbacks locais com dados do servidor (marcas, contratos, cargos, setores, labels).
+- Expõe `window._svnFormSchemas` e `window._svnFieldLabels` para formulários que precisam de options dinâmicas.
+
+### `form-core.js`
+
+Motor de formulários. Todas as páginas de formulário dependem deste arquivo.
+
+| Função | Descrição |
+|---|---|
+| `FormCore.initForm({ tipo, onReady, draft, ... })` | Inicializa o formulário: verifica autenticação, restaura rascunho do localStorage, injeta dados do perfil, chama `onReady`. |
+| `FormCore.validateRequired(extraValidate?, scopeEl?)` | Valida campos obrigatórios no escopo (ou em todo o form). Suporta grupos radio/checkbox e visibilidade condicional. Retorna `true` se ok. |
+| `FormCore.submit({ tipo, dados, files, ... })` | Monta `FormData`, faz `POST /api/solicitacoes` e redireciona para `thankyou.html`. |
+| `FormCore.renderStepper(el, steps, current)` | Renderiza o indicador de progresso de etapas no elemento `el`. |
+| `FormCore.saveDraft(tipo, dados)` | Salva rascunho no localStorage com chave `svn_draft_<tipo>`. |
+| `FormCore.clearDraft(tipo)` | Remove rascunho após submit bem-sucedido. |
+
+### `filters.js`
+
+Engine de painéis de filtro para listagens (admin, dashboard).
+
+| Função | Descrição |
+|---|---|
+| `FilterPanel.register(id, { state, onChange })` | Vincula um DOM ID a um objeto de estado e callback de mudança. |
+| `FilterPanel.set(id, btn, key)` | Ativa um filtro e chama `onChange`. |
+| `FilterPanel.clear(id)` | Reseta todos os filtros do painel. |
+| `FilterPanel.toggle(id)` | Abre/fecha o dropdown de filtros. |
+
+### `shell.js`
+
+Layout global (header + sidebar).
+
+| Função | Descrição |
+|---|---|
+| `Shell.render({ activeRoute, contentEl })` | Injeta header e sidebar no DOM com a rota ativa destacada. |
+| `Shell.toggleSidebar()` | Controla o estado aberto/fechado da sidebar no mobile. |
+
+A sidebar exibe itens diferentes conforme a role do usuário (ex.: "Capital Humano" só aparece para `capital_humano` e `admin`; "Admin" só para `admin` e `gestor`).
+
+### `utils.js`
+
+Funções utilitárias globais.
+
+| Função | Descrição |
+|---|---|
+| `window.esc(str)` | Escapa HTML para evitar XSS. |
+| `humanizeValue(key, value)` | Converte valores de banco (slugs, booleans, IDs) em texto legível em português. Usa `_svnFieldLabels` como primeira fonte, com fallbacks para strings comuns. |
+| `mascaraTelefone(el)` | Aplica máscara `(XX) XXXXX-XXXX` ao input. |
+| `mascaraMoeda(el)` | Aplica máscara monetária `R$ X.XXX,XX`. |
+| `Modal.open(id)` / `Modal.close(id)` | Controla modais por ID de elemento. |
+| `autoResizeTextarea(el)` | Expande textareas conforme o conteúdo. |
+
+### `upload-feedback.js`
+
+Feedback visual para inputs de arquivo.
+
+- **`FileUpload.bind(inputId, nameElId, options)`** — ao selecionar arquivo: exibe nome, tamanho, ícone de sucesso/erro. Valida extensões permitidas e tamanho máximo (em MB). Não faz upload — isso é responsabilidade do `FormCore.submit`.
+
+### `toast.js`
+
+Notificações e confirmações.
+
+| Função | Descrição |
+|---|---|
+| `showToast(message, type)` | Exibe notificação não-bloqueante no canto da tela (`success`, `error`, `info`). |
+| `showConfirm(message, options)` | Abre modal de confirmação com callbacks `onConfirm`/`onCancel`. |
+
+### `ibge-loader.js`
+
+Carrega estados e cidades do Brasil via API do IBGE, com cache no localStorage (TTL de 24h). Usado em formulários com seleção geográfica.
+
+---
+
+## Padrão das páginas de formulário
+
+Toda página de formulário segue a mesma estrutura:
+
+### Ordem de carregamento dos scripts
+
+```html
+<script src="/utils.js"></script>
+<script src="/upload-feedback.js"></script>
+<script src="/config.js"></script>
+<script src="/auth.js"></script>
+<script src="/shell.js"></script>
+<script src="/form-core.js"></script>
+```
+
+### Estrutura HTML
+
+```html
+<div class="page-container page-container--narrow">
+  <!-- Indicador de etapas (multi-step) -->
+  <div class="svn-stepper" id="stepper"></div>
+
+  <!-- Etapa 1 -->
+  <div class="form-step" id="step1">
+    <div class="field">
+      <label for="nome">Nome <span class="required-star">*</span></label>
+      <input type="text" id="nome" required>
+      <div class="field-error" id="nome-error"></div>
+    </div>
+    <!-- ... mais campos ... -->
+    <button class="btn btn-submit-gold" onclick="irParaStep2()">Próximo</button>
+  </div>
+
+  <!-- Etapa 2 -->
+  <div class="form-step" id="step2" style="display:none">
+    <!-- ... campos ... -->
+    <button class="btn btn-submit-gold" onclick="submitForm()">Enviar solicitação</button>
+  </div>
+</div>
+```
+
+### Inicialização
+
+```js
+FormCore.initForm({
+  tipo: 'apresentacao-nova',    // tipo_solicitacao
+  draft: true,                  // habilita salvamento de rascunho
+  onReady: (user, profile) => {
+    // pré-preencher campos com dados do perfil
+    Auth.aplicarPerfilNoCampo('telefone', profile?.telefone);
+    // vincular upload
+    FileUpload.bind('arquivo', 'arquivo-nome', { accept: ['.pdf', '.pptx'], maxMb: 20 });
+    // renderizar stepper
+    FormCore.renderStepper(document.getElementById('stepper'), ['Dados', 'Detalhes', 'Revisão'], 0);
+    // inicializar Shell
+    Shell.render({ activeRoute: 'solicitacoes', contentEl: document.getElementById('pageContent') });
+  }
+});
+```
+
+### Validação por etapa
+
+```js
+function irParaStep2() {
+  if (!FormCore.validateRequired(null, document.getElementById('step1'))) return;
+  document.getElementById('step1').style.display = 'none';
+  document.getElementById('step2').style.display = 'block';
+  FormCore.renderStepper(document.getElementById('stepper'), ['Dados', 'Detalhes'], 1);
+}
+```
+
+### Submit
+
+```js
+function submitForm() {
+  if (!FormCore.validateRequired(null, document.getElementById('step2'))) return;
+
+  const dados = {
+    nome:       document.getElementById('nome').value,
+    telefone:   document.getElementById('telefone').value,
+    // ... demais campos
+  };
+
+  FormCore.submit({
+    tipo: 'apresentacao-nova',
+    dados,
+    files: ['arquivo'],   // IDs dos inputs de arquivo a incluir no FormData
+  });
+}
+```
+
+O `FormCore.submit` monta o `FormData`, faz `POST /api/solicitacoes`, limpa o rascunho e redireciona para `thankyou.html?id=<id>`.
+
+---
+
+## Campos pré-preenchidos do cadastro
+
+Campos com dados vindos do MySQL Contatos (via `Auth.getProfile()`) exibem o hint:
+
+> ✓ Pré-preenchido do seu cadastro — pode editar se quiser
+
+Isso é feito por `Auth.aplicarPerfilNoCampo(fieldId, valor)`, que também suporta `<select>` criando a opção dinamicamente se não existir.
+
+```
+
+
+## File: artifacts/api-server/docs/guia-do-usuario.md
+
+```
+# Manual do Usuário — Hub de Solicitações SVN
+
+> Versão para o **colaborador solicitante**. Este guia explica como fazer um pedido ao time de Marketing, acompanhar o andamento e baixar o material quando estiver pronto.
+
+---
+
+## Sumário
+
+1. [Primeiros passos — como acessar e fazer login](#1-primeiros-passos)
+2. [A tela inicial — o que aparece quando você entra](#2-a-tela-inicial)
+3. [Como abrir uma solicitação](#3-como-abrir-uma-solicitação)
+4. [Acompanhar o andamento](#4-acompanhar-o-andamento)
+5. [Aprovar o material](#5-aprovar-o-material)
+6. [Reencontrar pedidos e materiais anteriores](#6-reencontrar-pedidos-e-materiais-anteriores)
+7. [Dúvidas frequentes](#7-dúvidas-frequentes)
+
+---
+
+## 1. Primeiros passos
+
+### Como acessar o Hub
+
+Abra o navegador e acesse o endereço do Hub de Solicitações SVN fornecido pelo time de Marketing.
+
+> [Screenshot: tela de carregamento do Hub com o logo SVN ao centro]
+
+### Como fazer login
+
+1. Ao entrar, você verá dois botões grandes. Clique em qualquer um deles.
+2. O Hub vai verificar se você já está logado. Se não estiver, você será direcionado para a tela de login com sua conta Google.
+3. Use sua **conta corporativa** (`@svninvest.com.br`). Contas pessoais não têm acesso.
+4. Após autenticar, você será levado de volta para onde queria ir.
+
+> [Screenshot: página inicial com os dois botões — "Quero fazer uma solicitação" e "Quero acompanhar uma solicitação"]
+
+### E se não conseguir entrar?
+
+- **"Apenas contas @svninvest.com.br são aceitas"** — você tentou logar com um e-mail pessoal ou de outro domínio. Use sua conta corporativa.
+- **"Falha na autenticação"** — tente novamente. Se o erro persistir, fale com o time de Marketing pelo ícone do WhatsApp que aparece no canto da tela.
+- **Tela em branco ou sem resposta** — tente recarregar a página (F5 ou Ctrl+R).
+
+---
+
+## 2. A tela inicial
+
+Ao entrar no Hub, você vê uma tela escura com dois botões:
+
+| Botão | O que faz |
+|---|---|
+| **Quero fazer uma solicitação** | Abre a lista de todos os tipos de pedido disponíveis |
+| **Quero acompanhar uma solicitação** | Leva para **Minhas solicitações**, onde você vê tudo que já pediu |
+
+Depois de logado, o sistema também mostra uma barra de navegação no topo com acesso rápido a essas duas seções.
+
+---
+
+## 3. Como abrir uma solicitação
+
+### Passo 1 — Escolher o tipo de pedido
+
+Clique em **Quero fazer uma solicitação**. Você verá uma página chamada **"Que tipo de solicitação você gostaria de realizar?"**, organizada em categorias:
+
+**Identidade e materiais pessoais**
+- Página de Assessores
+- Assinatura de E-mail
+- Cartão de Visita
+- Cartão de Boas-vindas
+- Cartão Comemorativo
+- Divulgação NPS
+- Convite Financial Planning
+
+**Eventos e relacionamento**
+- Eventos
+- Patrocínio
+- Brindes
+- Página Online
+
+**Marketing e conteúdo**
+- Artes de Divulgação
+- Apresentação
+- Conteúdo em PDF
+- E-mail Marketing
+- Atualização de material
+- Materiais Impressos
+
+**Audiovisual**
+- Produção Audiovisual
+
+**Outros**
+- Outro (para pedidos que não se encaixam nas categorias acima)
+
+> [Screenshot: página de seleção com os cartões organizados por categoria]
+
+Clique no tipo desejado para abrir o formulário correspondente.
+
+### Passo 2 — Preencher o formulário
+
+Cada tipo de pedido tem seus próprios campos. Algumas dicas gerais:
+
+- Campos com **\*** ou borda vermelha são obrigatórios. O sistema avisa se você tentar enviar sem preenchê-los.
+- Alguns campos já vêm **pré-preenchidos com os dados do seu cadastro** (nome, telefone, unidade etc.). Você pode editar se precisar.
+- Formulários com mais de uma etapa mostram um indicador como **"Etapa 1 de 3"** — avance clicando em **Próximo** e volte com **Voltar** sem perder o que preencheu.
+- Os formulários de **Apresentação** e **Página de Assessores** salvam seu progresso automaticamente. Se fechar a aba e voltar, os dados estarão lá.
+
+### Passo 3 — Anexar arquivos (quando houver)
+
+Formulários como Apresentação, Cartão de Visita (Digital), Arte NPS e Página de Assessores permitem o envio de arquivos (foto de perfil, arquivo base etc.). Clique na área de upload, selecione o arquivo do seu computador e aguarde a confirmação de envio.
+
+### Passo 4 — Revisar e enviar
+
+Revise os dados e clique em **Enviar** (ou **Enviar solicitação**). O botão fica desabilitado durante o envio para evitar envio duplicado.
+
+### O que acontece depois de enviar?
+
+Após o envio, você é levado para uma **tela de confirmação** que exibe:
+
+- Um resumo da sua solicitação (tipo, data, identificação)
+- Dois botões: **Ver solicitação** e **Nova solicitação**
+- Um botão flutuante do WhatsApp para falar com o time de Marketing
+
+**Para tipos com geração automática** (Assinatura de E-mail, Cartão de Visita Digital, Cartão de Boas-vindas, Arte NPS, Convite Financial Planning, Cartão Comemorativo), a tela mostra um spinner "Gerando seu material…" e, em alguns instantes, um botão de **download** aparece automaticamente. Você não precisa esperar — pode fechar e baixar depois pela tela de detalhe da solicitação.
+
+> [Screenshot: tela de confirmação com o resumo e o botão de download apareecendo]
+
+---
+
+## 4. Acompanhar o andamento
+
+### Como acessar
+
+Clique em **Quero acompanhar uma solicitação** na tela inicial, ou em **Minhas solicitações** na barra de navegação.
+
+### O que você vê na tela "Minhas solicitações"
+
+No topo, dois contadores:
+- **Em andamento** — pedidos ainda em processamento
+- **Concluídas** — pedidos finalizados
+
+A lista é dividida em duas abas:
+
+| Aba | Conteúdo |
+|---|---|
+| **Solicitações gerais** | Todos os seus pedidos, exceto Eventos |
+| **Eventos** | Apenas solicitações do tipo Evento |
+
+Você pode filtrar por **Período**, **Tipo**, **Status**, e **Alertas**, além de buscar pelo nome da solicitação no campo de pesquisa.
+
+> [Screenshot: dashboard com a lista de solicitações e os filtros abertos]
+
+### Abrindo o detalhe de uma solicitação
+
+Clique em qualquer card da lista para abrir a página de detalhe. Lá você encontra:
+
+- **Status atual** — exibido como uma etiqueta colorida no topo
+- **Trilha de status** — barra visual mostrando por onde o pedido já passou e onde está agora
+- **Dados da solicitação** — todos os campos que você preencheu
+- **Materiais para aprovação** — aparece quando o material está pronto para você revisar (ver seção 5)
+- **Atividade** — log cronológico dos eventos da solicitação (clique para expandir)
+
+### O que cada status significa
+
+| Status | O que significa |
+|---|---|
+| **Recebido** | Seu pedido chegou ao time de Marketing |
+| **Em análise** | O time está avaliando os detalhes |
+| **Alinhamentos** | O time está alinhando informações internamente |
+| **Em andamento** | O pedido está sendo trabalhado |
+| **Em produção** | O material está sendo criado |
+| **Em revisão** | O time está revisando o material antes de enviar para você |
+| **Em aprovação** | O material está pronto — **sua aprovação é necessária** |
+| **Em cotação / aprovação** | O pedido está em processo de cotação e aprovação financeira |
+| **Aguardando informação** | O time precisa de mais dados seus para continuar |
+| **Aguardando aprovação do RH** | O pedido aguarda o aval do setor de Capital Humano |
+| **Aguardando pagamento** | Aguardando confirmação de pagamento |
+| **Aguardando finalização** | Etapas finais sendo concluídas |
+| **Em design** | Material em fase de criação visual |
+| **Arte finalizada** | Arte pronta, aguardando próxima etapa |
+| **Envio gráfica** | Material enviado à gráfica para impressão |
+| **Envio assessor** | Material sendo entregue a você |
+| **Gerando arte** | Arte sendo gerada automaticamente pelo sistema |
+| **Concluído** | Processo finalizado |
+| **Reprovado** | Você solicitou alterações — o time está revisando |
+| **Cancelado** | Solicitação cancelada |
+| **Em espera** | Pedido pausado temporariamente |
+
+> Quando o status for **Aguardando informação**, fique atento: o time provavelmente vai entrar em contato por outro canal para pedir os dados que faltam.
+
+---
+
+## 5. Aprovar o material
+
+Alguns tipos de pedido passam por uma etapa de aprovação: **Eventos**, **Artes de Divulgação**, **Atualização de Material**, **Conteúdo em PDF** e **Apresentações**. Quando o material está pronto, o status muda para **Em aprovação** e você recebe uma notificação visual.
+
+### Como saber que tem algo para aprovar
+
+- Na lista de **Minhas solicitações**, o card aparece com a etiqueta **APROVAÇÃO** em vermelho e uma borda lateral destacada.
+- Ao abrir o detalhe, uma seção **"Materiais para aprovação"** aparece com o badge **NOVO**.
+
+> [Screenshot: card na lista com a etiqueta "APROVAÇÃO" e a borda vermelha]
+
+### Como aprovar
+
+1. Abra a solicitação clicando no card.
+2. Clique na seção **"Materiais para aprovação"** para expandi-la.
+3. O sistema exibirá uma mensagem com os links para o(s) material(is). Clique nos links para visualizar ou baixar e analisar.
+4. Escolha uma das duas opções:
+
+   - **Aprovado** — confirma que o material está ok. O time de Marketing é notificado automaticamente.
+   - **Solicitar alterações** — abre um campo de texto para você descrever o que precisa ser mudado. Digite as observações e envie. O time receberá seu pedido e, quando a nova versão estiver pronta, o processo se repete.
+
+> [Screenshot: interface de aprovação com os botões "Aprovado" e "Solicitar alterações"]
+
+### O que acontece depois da aprovação
+
+- O status da solicitação muda para **Concluído**.
+- Uma pesquisa de satisfação rápida pode aparecer — é opcional, mas ajuda o time a melhorar.
+- O material fica disponível para download na própria tela de detalhe.
+
+### E se eu solicitar alterações?
+
+O status muda para **Reprovado** enquanto o time trabalha na revisão. Quando a nova versão ficar pronta, o status volta para **Em aprovação** e você verá uma nova rodada de aprovação na tela.
+
+---
+
+## 6. Reencontrar pedidos e materiais anteriores
+
+### Como achar uma solicitação antiga
+
+1. Acesse **Minhas solicitações**.
+2. Use os filtros de **Período** (Hoje / 7 dias / 30 dias / Todos) ou **Status** para restringir a busca.
+3. Use a barra de **busca** para digitar o nome da solicitação.
+4. Clique no card para abrir o detalhe completo.
+
+> [Screenshot: barra de busca e filtros ativos na tela de Minhas Solicitações]
+
+### Como baixar um material já entregue
+
+Há duas formas:
+
+**Direto pela lista:** se o material estiver disponível, o card mostra um botão **Baixar** — clique nele diretamente, sem precisar abrir o detalhe.
+
+**Pelo detalhe da solicitação:** abra a solicitação e o material aparece na área de entrega (logo acima dos dados do formulário). Clique em **Fazer download** ou no link do arquivo.
+
+> [Screenshot: card com botão "Baixar" destacado e tela de detalhe com área de download]
+
+### Geração de material automático (Assinatura de E-mail, Cartão Digital etc.)
+
+Para os tipos que geram material automaticamente, o arquivo fica sempre disponível na tela de detalhe da solicitação. Se precisar de uma nova versão (por exemplo, mudou de cargo), abra um novo pedido.
+
+---
+
+## 7. Dúvidas frequentes
+
+**Esqueci de anexar um arquivo. O que faço?**
+Não é possível editar uma solicitação já enviada. Abra a solicitação, clique no botão de menu (⋯) e veja se há a opção de cancelar — se ainda estiver com status **Recebido**, fale com o time de Marketing pelo WhatsApp para combinar. Caso contrário, peça via canal direto para o time.
+
+**Preciso incluir uma informação que esqueci de colocar. O que faço?**
+Entre em contato diretamente com o time de Marketing informando o número da solicitação (visível na tela de detalhe). Eles orientarão sobre o melhor caminho.
+
+**Quanto tempo demora para meu pedido ser atendido?**
+Depende do tipo de solicitação e da demanda do time. Pedidos de **geração automática** (Assinatura de E-mail, Cartão Digital, Arte NPS etc.) ficam prontos em segundos. Demais pedidos variam — o time de Marketing informa os prazos para cada tipo.
+
+**Quem aprova o material?**
+Você, o próprio solicitante. Quando o material estiver pronto, o Hub manda um aviso visual e você aprova (ou pede alterações) diretamente pela plataforma.
+
+**O status está "Aguardando informação" há dias. O que acontece?**
+O time de Marketing deve estar aguardando algum dado necessário para continuar. Verifique se recebeu algum contato por WhatsApp, e-mail ou outro canal. Se não, entre em contato proativamente.
+
+**Não achei o tipo de pedido que preciso.**
+Use a opção **Outro**, na categoria "Outros", e descreva o que precisa no campo de texto. O time avalia e encaminha para o fluxo correto.
+
+**Posso refazer o download de um material que já peguei antes?**
+Sim. Acesse **Minhas solicitações**, encontre a solicitação e baixe novamente pelo botão **Baixar** no card ou na tela de detalhe.
+
+**Não consigo fazer login mesmo com o e-mail corporativo.**
+Feche todas as abas, limpe os cookies do navegador para o domínio do Hub e tente novamente. Se o problema persistir, fale com o time de Marketing.
+
+**Preciso de ajuda urgente.**
+Use o ícone do **WhatsApp** que aparece no canto inferior da tela logo após enviar uma solicitação, ou fale diretamente com o time de Marketing pelos canais internos da empresa.
+
+---
+
+*Dúvidas sobre o Hub? Fale com o time de Marketing da SVN.*
+
+```
+
+
+## File: artifacts/api-server/docs/integracoes.md
+
+```
+# Integrações
+
+## Autenticação — Microsoft MSAL (Azure AD)
+
+**Biblioteca:** `@azure/msal-node`
+
+O Hub usa OAuth 2.0 Authorization Code com PKCE via Microsoft Azure AD. Apenas contas do domínio `@svninvest.com.br` são aceitas.
+
+**Configuração necessária:**
+- App Registration no Azure AD com redirect URI `<APP_URL>/auth/callback`
+- Variáveis: `MSAL_TENANT_ID`, `MSAL_CLIENT_ID`, `MSAL_CLIENT_SECRET`, `MSAL_REDIRECT_URI`
+
+**Fluxo:**
+```
+Usuário → GET /auth/login
+  → MSAL gera authorization URL → Microsoft login
+  → GET /auth/callback (code troca por token)
+  → valida domínio @svninvest.com.br
+  → upsert em usersTable (cria se não existe, role padrão: colaborador)
+  → busca perfil em MySQL Contatos
+  → popula req.session.user + req.session.userProfile
+  → redireciona para destino original
+```
+
+**Sessão:**
+- Sessão armazenada no PostgreSQL via `connect-pg-simple`
+- Cookie `connect.sid` assinado com `SESSION_SECRET`
+- Expiração da sessão: configurada no `express-session`
+
+**Perfis e permissões:**
+- Role é armazenada em `users.role` e lida em cada requisição via `req.session.user.role`
+- Roles: `colaborador`, `gestor`, `admin`, `capital_humano`
+- Middleware `requireRole(...roles)` verifica a role antes de cada rota protegida
+
+---
+
+## ClickUp
+
+**Biblioteca:** chamadas HTTP diretas via `fetch` (sem SDK)
+
+**Token:** `CLICKUP_API_TOKEN` (personal ou service token)
+
+### Criação de tarefas
+
+Ao criar uma solicitação, `createClickUpTask` em `src/routes/clickup.ts`:
+1. Determina a lista destino: consulta `tipo_clickup_list` no banco; fallback para variáveis `CLICKUP_LIST_*`.
+2. Monta descrição estruturada em markdown com os dados do formulário.
+3. Cria a tarefa via `POST https://api.clickup.com/api/v2/list/<list_id>/task`.
+4. Define assignees conforme `user_tipo_assignments` ou variáveis `CLICKUP_ASSIGNEE_*`.
+
+### Recebimento de status (webhook)
+
+```
+POST /webhook/clickup
+  ← ClickUp dispara ao alterar status de uma tarefa
+  → valida HMAC-SHA256 no header x-signature
+  → mapeia status ClickUp → status interno via CLICKUP_STATUS_MAP
+  → UPDATE solicitacoes.status
+```
+
+**`CLICKUP_STATUS_MAP`** em `src/config/clickup-status.ts` normaliza variações de capitalização e nomes alternativos para os slugs canônicos do Hub (ex.: `"in progress"` → `"em-andamento"`, `"waiting on rh"` → `"aguardando-rh"`).
+
+### Configuração de listas via admin
+
+Admins podem configurar qual lista ClickUp recebe cada tipo de solicitação pelo painel `/admin-clickup-lists.html`. Isso salva em `tipo_clickup_list` e sobrepõe as variáveis de ambiente.
+
+---
+
+## Cloudflare R2 (armazenamento de arquivos)
+
+**Biblioteca:** `@aws-sdk/client-s3` (R2 é compatível com S3)
+
+**Credenciais:** `R2_ACCOUNT_ID`, `R2_ACCESS_KEY`, `R2_SECRET_KEY`, `R2_BUCKET`
+
+**Endpoint:** `https://<R2_ACCOUNT_ID>.r2.cloudflarestorage.com`
+
+**`src/lib/r2-client.ts`** exporta um singleton `S3Client`. Retorna `null` se as credenciais não estiverem configuradas (funcionalidade de upload degradada graciosamente).
+
+### Uso
+
+| Onde | Operação | Chave no R2 |
+|---|---|---|
+| Upload de anexos de formulário | PUT | `uploads/<uuid>.<ext>` |
+| Artes geradas automaticamente | PUT | `artes/<uuid>.<ext>` |
+| Assets de templates (admin) | PUT | `assets/<uuid>.<ext>` |
+| Tombamentos (ZIPs) | PUT | `tombamentos/<uuid>.zip` |
+
+Todas as URLs públicas têm base `R2_PUBLIC_URL`. Arquivos são servidos diretamente pelo CDN da Cloudflare.
+
+---
+
+## n8n / Webhooks
+
+**Chamadas HTTP diretas** para URLs configuradas em variáveis de ambiente.
+
+`src/services/notifications.ts` é o ponto central de disparo.
+
+| Evento | Webhook disparado |
+|---|---|
+| Cartão de visita físico criado | `WEBHOOK_CARTAO_FISICO` |
+| Cartão de visita digital criado | `WEBHOOK_CARTAO_DIGITAL` |
+| Cartão de boas-vindas criado | `WEBHOOK_BOAS_VINDAS` |
+| Arte NPS criada | `WEBHOOK_NPS` |
+| Convite FP criado | `WEBHOOK_CONVITE_FP` |
+| Cartão comemorativo criado | `WEBHOOK_COMEMORATIVO` |
+| Certificado criado | `WEBHOOK_CERTIFICADO` |
+
+O payload enviado ao n8n contém o `id` da solicitação e os `dados` do formulário. O n8n processa (gera arte, envia notificação, aciona gráfica etc.) e pode chamar de volta a API do Hub via `INTERNAL_API_SECRET` para atualizar `entrega_links`.
+
+### Chamadas internas (n8n → Hub)
+
+Rotas que recebem chamadas do n8n exigem o header `Authorization: Bearer <INTERNAL_API_SECRET>` verificado por middleware.
+
+---
+
+## MySQL Contatos (integração legada)
+
+**Biblioteca:** `mysql2`
+
+**Conexão:** pool configurado por `MYSQL_CONTATOS` (string de conexão MySQL). Se a variável estiver ausente ou vazia, a integração é desativada silenciosamente — o login ainda funciona, mas os campos de perfil (telefone, unidade, cargo, cd_ancord) chegam vazios.
+
+**Uso:** em `/auth/callback` e `GET /auth/me-profile`, o sistema busca o contato pelo e-mail via `buscarContato(email)` em `src/lib/mysqlContatos.ts` e popula `req.session.userProfile`.
+
+Campos retornados: `telefone`, `unidade`, `cargo`, `cd_ancord`, `encontrado` (boolean).
+
+---
+
+## Chamadas internas entre serviços
+
+Chamadas de serviços externos (n8n, scripts) para a API interna usam:
+```
+Authorization: Bearer <INTERNAL_API_SECRET>
+```
+
+Esse header é verificado por middleware nas rotas internas. Gere a chave com `openssl rand -hex 32`.
+
+```
+
+
+## File: artifacts/api-server/docs/modelo-dados.md
+
+```
+# Modelo de Dados
+
+## Tabelas principais
+
+### `users`
+
+| Coluna | Tipo | Descrição |
+|---|---|---|
+| `id` | `serial PK` | ID interno |
+| `email` | `varchar(255)` | E-mail corporativo (@svninvest.com.br) — único |
+| `name` | `varchar(255)` | Nome completo |
+| `role` | `varchar(20)` | Role: `colaborador` (padrão), `gestor`, `admin`, `capital_humano` |
+| `telefone` | `varchar(30)` | Telefone sincronizado do MySQL Contatos |
+| `clickup_user_id` | `varchar(100)` | ID do usuário correspondente no ClickUp |
+| `created_at` | `timestamp` | Data de criação |
+
+---
+
+### `solicitacoes`
+
+Tabela central. Cada linha representa um pedido.
+
+| Coluna | Tipo | Descrição |
+|---|---|---|
+| `id` | `serial PK` | ID do pedido |
+| `user_email` | `varchar(255)` | E-mail do solicitante |
+| `tipo_solicitacao` | `varchar(50)` | Slug do tipo (ex.: `assinatura-email`) |
+| `subtipo` | `varchar(50)` | Sub-tipo opcional (ex.: `fisico`, `digital`) |
+| `maturidade` | `integer` | Nível de maturidade (uso específico por tipo) |
+| `dados` | `jsonb` | **Todos os campos do formulário preenchidos** (chaves snake_case) |
+| `clickup_task_id` | `varchar(100)` | ID da tarefa correspondente no ClickUp |
+| `titulo` | `text` | Título gerado automaticamente para exibição |
+| `clickup_url` | `text` | URL da tarefa no ClickUp |
+| `avaliacao` | `jsonb` | Avaliação de satisfação do solicitante (opcional) |
+| `entrega_links` | `jsonb` | Array `[{ label, url }]` dos materiais entregues |
+| `status` | `varchar(30)` | Status atual (slugs de `STATUS_SOLICITACAO`) |
+| `responsavel` | `text` | Nome do responsável atribuído no ClickUp |
+| `erro_geracao` | `text` | Mensagem de erro se a geração automática falhou |
+| `notifications_sent` | `jsonb` | Controle de quais notificações já foram disparadas |
+| `created_at` | `timestamp` | Data de criação |
+| `updated_at` | `timestamp` | Última atualização |
+
+---
+
+### `arquivos`
+
+| Coluna | Tipo | Descrição |
+|---|---|---|
+| `id` | `serial PK` | ID do arquivo |
+| `solicitacao_id` | `integer FK → solicitacoes.id` | Solicitação à qual pertence |
+| `campo` | `varchar(100)` | Nome do campo de upload (ex.: `foto_perfil`) |
+| `url_r2` | `text` | URL pública no Cloudflare R2 |
+| `nome_original` | `varchar(255)` | Nome original do arquivo enviado pelo usuário |
+| `created_at` | `timestamp` | Data de upload |
+
+---
+
+### `eventos_solicitacao`
+
+Log detalhado de eventos por solicitação (trilha de auditoria).
+
+| Coluna | Tipo | Descrição |
+|---|---|---|
+| `id` | `serial PK` | ID do evento |
+| `solicitacao_id` | `integer FK → solicitacoes.id` | Solicitação relacionada |
+| `tipo` | `varchar(16)` | Tipo de evento (ex.: `status`, `aprovacao`, `entrega`) |
+| `origem` | `varchar(32)` | Origem (ex.: `webhook`, `usuario`, `sistema`) |
+| `mensagem` | `text` | Descrição legível do evento |
+| `detalhes` | `jsonb` | Dados adicionais do evento |
+| `user_email` | `varchar(255)` | Usuário que gerou o evento (se aplicável) |
+| `created_at` | `timestamp` | Data do evento |
+
+---
+
+### `activity_log`
+
+Log de alto nível do sistema (menos granular que `eventos_solicitacao`).
+
+| Coluna | Tipo | Descrição |
+|---|---|---|
+| `id` | `serial PK` | |
+| `created_at` | `timestamp` | |
+| `user_email` / `user_name` | `text` | Usuário envolvido |
+| `tipo` | `text` | Categoria do evento |
+| `nivel` | `varchar(10)` | `info`, `warn`, `error` |
+| `solicitacao_id` | `integer` | Referência à solicitação (se aplicável) |
+| `tipo_solicitacao` | `text` | Tipo da solicitação (desnormalizado) |
+| `titulo` | `text` | Título da solicitação (desnormalizado) |
+| `detalhe` | `text` | Mensagem descritiva |
+| `metadata` | `jsonb` | Dados extras |
+
+---
+
+### `art_templates`
+
+Templates dinâmicos para geração de arte.
+
+| Coluna | Tipo | Descrição |
+|---|---|---|
+| `id` | `serial PK` | |
+| `tipo` | `varchar(100)` | Tipo de solicitação ao qual o template se aplica |
+| `variant_value` | `varchar(100)` | Valor de variante (ex.: slug de marca) |
+| `name` | `varchar(200)` | Nome descritivo do template |
+| `config` | `jsonb` | Configuração completa do template (camadas, fontes, posições) |
+| `is_active` | `boolean` | Se `false`, ignorado pela geração |
+| `created_at` / `updated_at` | `timestamp` | |
+| `updated_by` | `integer FK → users.id` | |
+
+---
+
+### `art_assets`
+
+Imagens/logos reutilizáveis nos templates.
+
+| Coluna | Tipo | Descrição |
+|---|---|---|
+| `id` | `serial PK` | |
+| `filename` | `varchar(300)` | Nome original do arquivo |
+| `storage_key` | `varchar(500)` | Chave no R2 |
+| `url` | `varchar(500)` | URL pública |
+| `mime_type` | `varchar(100)` | |
+| `size_bytes` | `bigint` | |
+| `width` / `height` | `integer` | Dimensões da imagem |
+| `uploaded_by` | `integer FK → users.id` | |
+| `used_in_template_ids` | `integer[]` | IDs de templates que usam este asset |
+
+---
+
+### `cartao_aprovacoes`
+
+Workflow de aprovação e impressão de cartão de visita físico.
+
+| Coluna | Tipo | Descrição |
+|---|---|---|
+| `id` | `serial PK` | |
+| `solicitacao_id` | `integer FK → solicitacoes.id` | |
+| `data_pedido` | `varchar(20)` | Data do pedido (legado: string formatada) |
+| `nome` / `whatsapp` / `email` | `varchar` | Dados do solicitante |
+| `unidade` | `varchar(120)` | Unidade SVN de entrega |
+| `contrato_social` | `varchar(60)` | Entidade jurídica |
+| `envio_para` | `varchar(255)` | Endereço de entrega |
+| `custo` | `varchar(20)` | Custo estimado |
+| `status` | `varchar(40)` | Status específico do cartão físico |
+| `observacao` | `text` | Observações do time |
+
+---
+
+### `tombamentos`
+
+Geração em massa de assets digitais (onboarding / migração).
+
+| Coluna | Tipo | Descrição |
+|---|---|---|
+| `id` | `serial PK` | |
+| `nome` | `varchar(255)` | Nome do lote |
+| `marca` | `varchar(60)` | Marca SVN alvo |
+| `status` | `varchar(30)` | Status do processamento |
+| `linhas` | `jsonb` | Array de registros do spreadsheet |
+| `assinaturas_zip_url` | `text` | URL do ZIP com assinaturas geradas |
+| `cartoes_zip_url` | `text` | URL do ZIP com cartões gerados |
+| `expires_at` | `timestamp` | Expiração dos arquivos gerados |
+| `created_by` | `varchar(255)` | Email do admin que criou |
+
+---
+
+### Demais tabelas de configuração
+
+| Tabela | Propósito |
+|---|---|
+| `user_tipo_assignments` | RBAC: mapeia usuário → tipo de solicitação permitido |
+| `tipo_clickup_list` | Mapeia tipo de solicitação → lista ClickUp configurada |
+| `clickup_lists` | Cache das listas ClickUp disponíveis |
+
+---
+
+## O campo `dados` (JSONB)
+
+`solicitacoes.dados` armazena **todos os campos do formulário** como um objeto JSON livre. Não há colunas separadas por campo — a estrutura varia por `tipo_solicitacao`.
+
+**Convenção de chaves:** snake_case canônico, conforme `KEY_MAP` em `forms.ts`.
+
+Exemplo para `assinatura-email`:
+```json
+{
+  "nome_assinatura": "João Silva",
+  "cargo": "Assessor de Investimentos",
+  "marca": "svn-investimentos",
+  "contrato_social": "svn-investimentos",
+  "whatsapp": "(41) 99999-0000",
+  "email_corporativo": "joao.silva@svninvest.com.br",
+  "selos": ["ancord", "cfp"],
+  "is_private_key": false
+}
+```
+
+---
+
+## Resolução de labels para exibição
+
+Quando o detalhe de uma solicitação é exibido, os valores brutos do campo `dados` precisam ser convertidos para texto legível. O fluxo é:
+
+1. **`window._svnFieldLabels`** (populado por `/api/form-schemas`) — primeiro lookup: `_svnFieldLabels[campo][valor]`.
+2. **`humanizeValue(key, value)`** em `utils.js` — fallback geral: trata booleanos, slugs comuns, datas, listas.
+3. **`DRAWER_FIELD_LABELS`** em `config.js` — define o label do **nome** do campo (ex.: `nome_assinatura` → "Nome para assinatura"). Campos com `skip: true` são omitidos na exibição.
+
+Labels de nomes de campos: `DRAWER_FIELD_LABELS_FLAT` é o mapa plano `{ chave: label }` derivado de `DRAWER_FIELD_LABELS`.
+
+```
+
+
+## File: artifacts/api-server/docs/README.md
+
+```
+# Documentação Técnica — Hub de Solicitações SVN
+
+Documentação para quem mantém e evolui o sistema. Toda afirmação está baseada no código do repositório.
+
+## Índice
+
+| Arquivo | Conteúdo |
+|---|---|
+| [visao-geral.md](visao-geral.md) | O que é o Hub, públicos, lista completa de tipos de solicitação |
+| [arquitetura.md](arquitetura.md) | Stack, camadas, diagrama de fluxo, estrutura de pastas |
+| [como-rodar.md](como-rodar.md) | Pré-requisitos, instalação, variáveis de ambiente, dev/build, Replit, Railway, scripts one-off |
+| [frontend.md](frontend.md) | JS compartilhados, padrão das páginas de formulário, validação, submit |
+| [backend.md](backend.md) | Rotas, fluxo do POST de criação, normalizeFormDados, geração de artefatos |
+| [form-schemas.md](form-schemas.md) | Como o form-schemas.ts funciona, passo a passo para adicionar/editar tipo |
+| [modelo-dados.md](modelo-dados.md) | Tabelas, campo `dados` (JSONB), convenção snake_case, resolução de labels |
+| [integracoes.md](integracoes.md) | MSAL/Azure AD, ClickUp, Cloudflare R2, n8n/webhooks, MySQL Contatos |
+| [admin-dashboard.md](admin-dashboard.md) | Painéis de acompanhamento, status, filtros, tombamentos |
+| [scripts.md](scripts.md) | Scripts em src/scripts/, o que fazem, como rodar com segurança |
+| [convencoes.md](convencoes.md) | Tokens de marca SVN, padrões de código, nomenclatura |
+
+## Stack resumida
+
+- **Runtime:** Node.js (ESM) + TypeScript, compilado com esbuild
+- **Framework:** Express 5
+- **Banco de dados:** PostgreSQL + Drizzle ORM
+- **Sessão:** `express-session` persistida via `connect-pg-simple`
+- **Autenticação:** Microsoft MSAL (Azure AD) — domínio `@svninvest.com.br`
+- **Armazenamento de arquivos:** Cloudflare R2 (S3-compatible)
+- **Gerenciamento de tarefas:** ClickUp (API)
+- **Automações:** n8n via webhooks HTTP
+- **Geração de arte:** `sharp`, `fontkit`, `pdf-lib`, `pdfkit`, `opentype.js`
+- **Frontend:** HTML/CSS/JS vanilla (sem framework)
+- **Logging:** `pino` + `pino-http`
+
+```
+
+
+## File: artifacts/api-server/docs/scripts.md
+
+```
+# Scripts & Manutenção
+
+Scripts one-off em `src/scripts/`. Todos são executados diretamente com `tsx` sem necessidade de build prévio.
+
+---
+
+## `migrate-assignments.ts`
+
+**O que faz:** Migra os assignees de solicitações das variáveis de ambiente (`CLICKUP_ASSIGNEE_*`) para a tabela `user_tipo_assignments` no banco de dados. Cria usuários "stub" para IDs do ClickUp que ainda não existam em `usersTable`.
+
+**Tabelas afetadas:** `usersTable`, `userTipoAssignmentsTable`
+
+**Dry-run:** Não possui modo dry-run. Usa `onConflictDoNothing`, portanto é **seguro re-rodar** — não duplica dados.
+
+**Pré-requisitos:** Variáveis `CLICKUP_ASSIGNEE_GERAL`, `CLICKUP_ASSIGNEE_EVENTOS`, `CLICKUP_ASSIGNEE_BRINDES`, `CLICKUP_ASSIGNEE_PATROCINIO` devem estar definidas no ambiente.
+
+**Como rodar:**
+
+```bash
+pnpm --filter @workspace/api-server run migrate-assignments
+# ou diretamente:
+pnpm tsx artifacts/api-server/src/scripts/migrate-assignments.ts
+```
+
+**Quando usar:** Uma única vez após configurar os assignees iniciais, ou quando adicionar novos tipos com assignees via variáveis de ambiente.
+
+---
+
+## `import-cartoes.ts`
+
+**O que faz:** Importa um histórico de pedidos de cartão de visita físico a partir de um arquivo CSV para as tabelas `solicitacoes` e `cartao_aprovacoes`. Útil para migrar dados de sistemas legados.
+
+**Tabelas afetadas:** `solicitacoesTable` (INSERT), `cartaoAprovacoesTable` (INSERT), `usersTable` (SELECT para vincular e-mails)
+
+**Dry-run:** **Sim — modo padrão é dry-run.** Sem `--apply`, apenas imprime o que seria importado e os erros de validação. Isso permite verificar o CSV antes de qualquer escrita.
+
+**Parâmetros:**
+
+| Flag | Descrição |
+|---|---|
+| `--csv <caminho>` | Caminho para o arquivo CSV de entrada |
+| `--apply` | Executa a importação de verdade (sem essa flag, só faz dry-run) |
+
+**Como rodar com segurança:**
+
+```bash
+# 1. Primeiro: inspecione sem modificar nada
+pnpm tsx artifacts/api-server/src/scripts/import-cartoes.ts --csv /caminho/para/arquivo.csv
+
+# 2. Verifique os erros e o preview no output
+
+# 3. Quando tudo estiver ok, aplique:
+pnpm tsx artifacts/api-server/src/scripts/import-cartoes.ts --csv /caminho/para/arquivo.csv --apply
+```
+
+**Quando usar:** Migração única de dados históricos. Não é um script de uso rotineiro.
+
+---
+
+## `seed-art-templates.ts`
+
+**O que faz:** Semeia templates padrão de arte na tabela `art_templates` — especificamente para os tipos `cartao-boas-vindas` e `assinatura-email`, com variantes por marca.
+
+**Tabelas afetadas:** `artTemplatesTable` (INSERT)
+
+**Dry-run:** Não possui flag, mas é **idempotente** — verifica se já existe um template para o `tipo` antes de inserir. Re-rodar não duplica dados.
+
+**Como rodar:**
+
+```bash
+pnpm --filter @workspace/api-server run seed-art-templates
+# ou diretamente:
+pnpm tsx artifacts/api-server/src/scripts/seed-art-templates.ts
+```
+
+**Quando usar:** Após limpar a tabela `art_templates` em ambiente de desenvolvimento, ou ao configurar um ambiente novo do zero.
+
+---
+
+## Checklist de manutenção rotineira
+
+### Adicionar um novo usuário admin
+
+1. Acesse `/admin-usuarios.html`
+2. Clique em **Novo usuário**
+3. Preencha e-mail, nome e selecione role **Admin**
+4. Na primeira vez que o usuário logar via Microsoft, a sessão usará a role cadastrada
+
+### Adicionar nova lista ClickUp
+
+1. Acesse `/admin-clickup-lists.html`
+2. Cole o ID da lista ClickUp (visível na URL da lista no ClickUp)
+3. Vincule o tipo de solicitação desejado
+
+### Verificar erros de geração automática
+
+1. Acesse `/admin-log.html` e filtre por nível **error**
+2. Ou consulte diretamente:
+   ```sql
+   SELECT id, tipo_solicitacao, titulo, erro_geracao, created_at
+   FROM solicitacoes
+   WHERE erro_geracao IS NOT NULL
+   ORDER BY created_at DESC;
+   ```
+
+### Reprocessar uma arte com erro
+
+> TODO: verificar se existe endpoint de reprocessamento manual ou se é necessário atualizar `status` direto no banco e re-disparar o webhook n8n.
+
+### Limpar sessões expiradas
+
+O `connect-pg-simple` cria a tabela `session` e faz limpeza automática de sessões expiradas. Não requer manutenção manual.
+
+### Backup do banco
+
+Configure backup automático no Railway (Settings → Backups) ou use `pg_dump` manualmente:
+
+```bash
+pg_dump $DATABASE_URL > backup-$(date +%Y%m%d).sql
+```
+
+```
+
+
+## File: artifacts/api-server/docs/visao-geral.md
+
+```
+# Visão Geral
+
+## O que é o Hub
+
+O Hub de Solicitações SVN é um sistema web interno que centraliza os pedidos de materiais de marketing feitos por colaboradores e pelo time de Capital Humano à equipe de Marketing da SVN Invest. Substitui fluxos informais (WhatsApp, e-mail) por um processo rastreável com status em tempo real, integração com ClickUp e geração automática de alguns materiais digitais.
+
+## Problema que resolve
+
+- Eliminar pedidos perdidos ou sem histórico
+- Dar visibilidade de status para quem pediu e para quem executa
+- Automatizar geração de artefatos simples (assinaturas de e-mail, cartões digitais, artes NPS etc.)
+- Unificar briefings em formulários estruturados, reduzindo idas e vindas
+
+## Públicos
+
+| Público | O que faz no Hub |
+|---|---|
+| **Colaborador / Assessor** (`colaborador`) | Abre solicitações, acompanha status, baixa materiais prontos, aprova artes |
+| **Capital Humano** (`capital_humano`) | Acessa formulários exclusivos da área (onboarding, books, linha do tempo etc.) |
+| **Gestor** (`gestor`) | Visualiza todas as solicitações, gerencia impersonation |
+| **Admin** (`admin`) | Acesso completo: usuários, templates de arte, ClickUp config, tombamentos |
+| **Time de Marketing** | Atualiza status via ClickUp; o webhook sincroniza o Hub automaticamente |
+
+## Tipos de solicitação suportados
+
+### Identidade e materiais pessoais
+| Tipo (`tipo_solicitacao`) | Label |
+|---|---|
+| `assinatura-email` | Assinatura de E-mail |
+| `cartao-visita-fisico` | Cartão de Visita — Físico |
+| `cartao-visita-digital` | Cartão de Visita — Digital |
+| `cartao-boas-vindas` | Cartão de Boas-vindas |
+| `cartao-comemorativo` | Cartão Comemorativo |
+| `divulgacao-nps` | Arte NPS |
+| `convite-fp` | Convite Financial Planning |
+| `pagina-assessores` | Página de Assessores |
+
+### Eventos e relacionamento
+| Tipo | Label |
+|---|---|
+| `eventos` | Eventos |
+| `patrocinio` | Patrocínio |
+| `brindes` | Brindes |
+| `pagina-online` | Página Online |
+
+### Marketing e conteúdo
+| Tipo | Label |
+|---|---|
+| `artes-divulgacao` | Arte de Divulgação |
+| `apresentacao-nova` | Apresentação — Nova |
+| `apresentacao-atualizar` | Apresentação — Atualização |
+| `conteudo-pdf-informativo` | PDF — Informativo |
+| `conteudo-pdf-ebook` | PDF — Ebook |
+| `email-marketing` | E-mail Marketing |
+| `atualizacao-material` | Atualização de Material |
+| `materiais-impressos` | Materiais Impressos |
+
+### Audiovisual
+| Tipo | Label |
+|---|---|
+| `producao-video` | Produção de Vídeo |
+| `sessao-fotos` | Sessão de Fotos |
+| `producao-audiovisual` | Produção Audiovisual |
+
+### Capital Humano (acesso restrito à role `capital_humano` / `admin`)
+| Tipo | Label |
+|---|---|
+| `ch-kit-onboarding` | Kit Onboarding |
+| `ch-atualizacao-pessoas` | Atualização de Pessoas nos Sites |
+| `ch-conteudo-pdf` | Conteúdo em PDF (CH) |
+| `ch-arte-divulgacao` | Arte de Divulgação (CH) |
+| `ch-atualizacao-books` | Atualização de Books |
+| `ch-linha-do-tempo` | Linha do Tempo |
+| `ch-aniversariantes` | Aniversariantes do Mês |
+
+### Outros
+| Tipo | Label |
+|---|---|
+| `outro` | Outro |
+
+## Geração automática de artefatos
+
+Os tipos a seguir geram o material instantaneamente via `art-generator.ts` + n8n, sem intervenção manual do time de Marketing:
+
+- `assinatura-email`
+- `cartao-visita-digital`
+- `cartao-boas-vindas`
+- `divulgacao-nps`
+- `convite-fp`
+- `cartao-comemorativo`
+
+## Fluxo de aprovação
+
+Tipos que passam por um ciclo de aprovação pelo solicitante (chat na página de detalhe da solicitação):
+
+- `eventos`
+- `artes-divulgacao`
+- `atualizacao-material`
+- `conteudo-pdf-informativo`
+- `conteudo-pdf-ebook`
+- `apresentacao-nova`
+- `apresentacao-atualizar`
 
 ```
 
@@ -315,6 +2346,7 @@ MYSQL_CONTATOS=                                              # [opcional]
     "esbuild": "^0.27.3",
     "esbuild-plugin-pino": "^2.3.3",
     "express": "^5",
+    "jszip": "^3.10.1",
     "express-rate-limit": "^8.5.2",
     "express-session": "^1.19.0",
     "fontkit": "^2.0.4",
@@ -331,7 +2363,8 @@ MYSQL_CONTATOS=                                              # [opcional]
     "svg-to-pdfkit": "^0.1.8",
     "thread-stream": "3.1.0",
     "tsx": "catalog:",
-    "uuid": "^13.0.0"
+    "uuid": "^13.0.0",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@types/compression": "^1.8.1",
@@ -349,7 +2382,6 @@ MYSQL_CONTATOS=                                              # [opcional]
     "@types/uuid": "^11.0.0"
   }
 }
-
 ```
 
 
@@ -1261,6 +3293,15 @@ MYSQL_CONTATOS=                                              # [opcional]
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap" media="print" onload="this.media='all'">
   <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap"></noscript>
   <link rel="stylesheet" href="style.css?v=20260615c">
+  <style>
+    .bulk-bar { display:flex; align-items:center; justify-content:space-between; gap:12px; background:var(--icon-bg); border:1px solid var(--border-light); border-radius:10px; padding:10px 14px; margin-bottom:12px; }
+    .bulk-bar .bulk-count { font-weight:700; font-size:0.85rem; color:var(--carbon-black); }
+    .bulk-bar .bulk-actions { display:flex; gap:8px; }
+    .btn-sm { padding:7px 14px; font-size:0.82rem; }
+    .bulk-del-btn { background:var(--danger); color:#fff; border:1px solid var(--danger); }
+    .bulk-del-btn:hover { background:#b91c1c; border-color:#b91c1c; }
+    .admin-table input[type=checkbox] { width:16px; height:16px; accent-color:var(--ruby-red); cursor:pointer; vertical-align:middle; margin:0; }
+  </style>
 </head>
 <body class="page-light">
   <div id="pageContent">
@@ -1549,7 +3590,17 @@ MYSQL_CONTATOS=                                              # [opcional]
         return;
       }
       const isAdmin = Auth.getUserRole() === 'admin';
+      const bulkBar = isAdmin
+        ? `<div class="bulk-bar" id="bulkBar_${tab}" style="display:none">
+             <span class="bulk-count" id="bulkCount_${tab}"></span>
+             <div class="bulk-actions">
+               <button class="btn btn-secondary btn-sm" onclick="bulkClear('${tab}')">Limpar seleção</button>
+               <button class="btn bulk-del-btn btn-sm" onclick="bulkDelete('${tab}')">Excluir selecionadas</button>
+             </div>
+           </div>`
+        : '';
       let html = '<table class="admin-table"><thead><tr>'
+        + (isAdmin ? '<th style="width:34px;text-align:center"><input type="checkbox" class="bulk-all" onclick="bulkToggleAll(\'' + tab + '\', this)" title="Selecionar todos"></th>' : '')
         + '<th>Tipo</th><th>Título</th><th>Solicitante</th><th>Data</th>'
         + '<th style="min-width:140px">Status</th>'
         + (isAdmin ? '<th style="min-width:100px;text-align:center">Ações</th>' : '')
@@ -1572,13 +3623,14 @@ MYSQL_CONTATOS=                                              # [opcional]
             </td>`
           : '';
         html += `<tr onclick="openDrawerByKey('item_${item.id}')">
+          ${isAdmin ? `<td style="text-align:center" onclick="event.stopPropagation()"><input type="checkbox" class="bulk-cb" data-id="${item.id}" onchange="bulkUpdate('${tab}')"></td>` : ''}
           <td>${esc(tipoLabel)}</td><td>${esc(titulo)}</td><td>${esc(item.user_email)}</td><td>${esc(date)}</td>
           <td><span class="badge" style="background:${statusObj.bg || '#f1f5f9'};color:${statusObj.text || '#475569'};white-space:nowrap">${esc(statusObj.label)}</span></td>
           ${acoesCell}
         </tr>`;
       });
       html += '</tbody></table>';
-      container.innerHTML = html;
+      container.innerHTML = bulkBar + html;
 
       const pgContainer = document.getElementById(tab === 'eventos' ? 'paginationEventos' : 'paginationGeral');
       if (data.totalPages > 1) {
@@ -1590,6 +3642,62 @@ MYSQL_CONTATOS=                                              # [opcional]
     }
 
     function goPage(tab, page) { adminPages[tab] = page; loadTable(tab); }
+
+    /* ── Seleção / exclusão em massa (admin) ── */
+    function bulkScope(tab) { return document.getElementById(tab === 'eventos' ? 'tableEventos' : 'tableGeral'); }
+    function bulkSelectedIds(tab) {
+      const scope = bulkScope(tab); if (!scope) return [];
+      return Array.from(scope.querySelectorAll('.bulk-cb:checked')).map(cb => parseInt(cb.dataset.id, 10)).filter(n => !isNaN(n));
+    }
+    function bulkUpdate(tab) {
+      const scope = bulkScope(tab); if (!scope) return;
+      const all = scope.querySelectorAll('.bulk-cb');
+      const sel = scope.querySelectorAll('.bulk-cb:checked');
+      const bar = document.getElementById('bulkBar_' + tab);
+      if (bar) {
+        bar.style.display = sel.length ? 'flex' : 'none';
+        const c = document.getElementById('bulkCount_' + tab);
+        if (c) c.textContent = sel.length + (sel.length === 1 ? ' solicitação selecionada' : ' solicitações selecionadas');
+      }
+      const master = scope.querySelector('.bulk-all');
+      if (master) {
+        master.checked = all.length > 0 && sel.length === all.length;
+        master.indeterminate = sel.length > 0 && sel.length < all.length;
+      }
+    }
+    function bulkToggleAll(tab, master) {
+      bulkScope(tab).querySelectorAll('.bulk-cb').forEach(cb => { cb.checked = master.checked; });
+      bulkUpdate(tab);
+    }
+    function bulkClear(tab) {
+      bulkScope(tab).querySelectorAll('.bulk-cb').forEach(cb => { cb.checked = false; });
+      bulkUpdate(tab);
+    }
+    async function bulkDelete(tab) {
+      const ids = bulkSelectedIds(tab);
+      if (!ids.length) return;
+      const ok = await showConfirm(
+        `Excluir ${ids.length} ${ids.length === 1 ? 'solicitação selecionada' : 'solicitações selecionadas'}? Esta ação não pode ser desfeita.`,
+        { danger: true, okLabel: 'Excluir' }
+      );
+      if (!ok) return;
+      try {
+        const res = await fetch('/api/solicitacoes/bulk-delete', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ids }),
+        });
+        const d = await res.json().catch(() => ({}));
+        if (!res.ok) { showToast('Erro ao excluir: ' + (d.error || res.statusText), 'error'); return; }
+        showToast((d.deleted || ids.length) + ' solicitação(ões) excluída(s).', 'success');
+        loadTable(currentTab);
+        loadStats();
+        loadAdminStats();
+      } catch (e) {
+        console.error(e);
+        showToast('Erro de rede ao excluir em massa', 'error');
+      }
+    }
 
     async function deleteSol(id, ev) {
       if (ev) ev.stopPropagation();
@@ -2148,12 +4256,24 @@ MYSQL_CONTATOS=                                              # [opcional]
     };
 
     const LOG_TIPO_LABEL = {
-      solicitacao_criada:    'Solicitação criada',
-      solicitacao_excluida:  'Excluída',
-      massa_excluida:        'Excl. em massa',
-      alteracao_solicitada:  'Alteração solicitada',
-      aprovacao_registrada:  'Aprovada',
-      clickup_erro:          'Erro ClickUp',
+      solicitacao_criada:          'Solicitação criada',
+      solicitacao_excluida:        'Excluída',
+      solicitacoes_excluidas_massa:'Excl. em massa',
+      alteracao_solicitada:        'Alteração solicitada',
+      aprovacao_registrada:        'Aprovada',
+      cancelamento_solicitado:     'Cancelamento',
+      entrega_registrada:          'Entrega registrada',
+      automacao_erro:              'Erro de automação',
+      email_falha:                 'Falha de e-mail',
+      clickup_erro:                'Erro ClickUp',
+      clickup_status_falha:        'Falha status ClickUp',
+      prazo_alterado:              'Prazo alterado',
+      cartao_validacao_editada:    'Validação editada',
+      solicitacao_travada:         'Parada / travada',
+      usuario_criado:              'Usuário criado',
+      usuario_papel_alterado:      'Papel alterado',
+      impersonate_inicio:          'Impersonate (início)',
+      impersonate_fim:             'Impersonate (fim)',
     };
 
     async function loadLog() {
@@ -4889,6 +7009,566 @@ body { margin: 0; font-family: 'Nunito Sans', sans-serif; background: var(--bg-l
 ```
 
 
+## File: artifacts/api-server/public/admin-tombamentos.html
+
+```
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+  <link rel="manifest" href="/site.webmanifest" />
+  <meta name="theme-color" content="#AC3631" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script>(function(){try{const s=JSON.parse(localStorage.getItem('svn_layout_state')||'{}');if(s.isAdmin)document.documentElement.dataset.preShell='admin';}catch(e){}})()</script>
+  <title>Tombamentos - Hub SVN</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap" media="print" onload="this.media='all'">
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap"></noscript>
+  <link rel="stylesheet" href="style.css?v=20260615c">
+  <style>
+    .page-container--wide { max-width: min(1500px, 96vw); }
+    .tomb-tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--border-light); margin: 8px 0 24px; }
+    .tomb-tab { padding: 10px 18px; border: none; background: transparent; font-family: 'Nunito Sans', sans-serif; font-size: 0.9rem; font-weight: 700; color: rgba(34,27,25,0.5); cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; }
+    .tomb-tab.active { color: var(--carbon-black); border-bottom-color: var(--ruby-red); }
+    .tomb-panel { display: none; } .tomb-panel.active { display: block; }
+
+    .tomb-create { max-width: 480px; border: 1px solid var(--border-light); border-radius: 12px; padding: 22px; margin-top: 8px; }
+    .tomb-create .field { margin-bottom: 14px; }
+    .tomb-create label { display: block; font-size: 0.8rem; font-weight: 700; margin-bottom: 5px; }
+    .tomb-create input, .tomb-create select { width: 100%; padding: 9px 11px; border: 1px solid var(--border-light); border-radius: 8px; font-family: inherit; font-size: 0.9rem; }
+
+    .tomb-list { display: flex; flex-direction: column; gap: 10px; }
+    .tomb-item { display: flex; align-items: center; justify-content: space-between; gap: 12px; border: 1px solid var(--border-light); border-radius: 10px; padding: 14px 16px; cursor: pointer; transition: background .12s; }
+    .tomb-item:hover { background: var(--icon-bg); }
+    .tomb-item-nome { font-weight: 700; font-size: 0.95rem; }
+    .tomb-item-meta { font-size: 0.78rem; color: rgba(34,27,25,0.55); margin-top: 2px; }
+    .tomb-marca-pill { padding: 3px 11px; border-radius: 999px; font-size: 0.76rem; font-weight: 700; background: rgba(172,54,49,0.1); color: var(--ruby-red); white-space: nowrap; }
+
+    .tomb-ws-header { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin-bottom: 18px; }
+    .tomb-ws-nome { font-family: 'Taviraj', serif; font-weight: 400; font-size: 1.5rem; }
+
+    .tomb-drop { border: 2px dashed var(--border-light); border-radius: 12px; padding: 26px; text-align: center; }
+    .tomb-drop p { margin: 8px 0 0; font-size: 0.84rem; color: rgba(34,27,25,0.55); }
+    .tomb-filename { font-size: 0.85rem; font-weight: 700; margin-top: 10px; }
+    .tomb-summary { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; margin: 22px 0 12px; }
+    .tomb-pill { padding: 3px 11px; border-radius: 999px; font-weight: 700; font-size: 0.78rem; }
+    .tomb-pill--ok { background: #dcfce7; color: #15803d; }
+    .tomb-pill--warn { background: #fee2e2; color: #dc2626; }
+    .tomb-pill--total { background: #eef2f7; color: #475569; }
+    #tombTabela td, #tombTabela th { font-size: 0.82rem; }
+    .row-status-ok { color: #15803d; font-weight: 700; font-size: 0.78rem; }
+    .row-status-warn { color: #dc2626; font-weight: 700; font-size: 0.78rem; }
+    tr.tomb-row--warn td { background: #fef2f2; }
+    .tomb-actions { display: flex; gap: 12px; margin-top: 20px; flex-wrap: wrap; }
+    .tomb-note { font-size: 0.78rem; color: rgba(34,27,25,0.5); margin-top: 10px; }
+    .tomb-review { margin-top: 22px; border-top: 1px solid var(--border-light); padding-top: 18px; }
+    .tomb-review-head { display:flex; align-items:center; justify-content:space-between; gap:12px; }
+    .tomb-review-resumo { font-size:0.8rem; color: rgba(34,27,25,0.55); margin-left:10px; }
+    .tomb-review-wrap { max-height: 52vh; overflow:auto; border:1px solid var(--border-light); border-radius:12px; margin-top:10px; }
+    #cartoesRevTabela td { vertical-align: middle; }
+    #cartoesRevTabela select { width:100%; padding:7px 9px; border:1px solid var(--border-light); border-radius:8px; background:var(--card-white); font:inherit; }
+    .rev-badge { display:inline-block; padding:2px 9px; border-radius:999px; font-size:0.72rem; font-weight:700; text-transform:uppercase; letter-spacing:.02em; }
+    .rev-exato, .rev-forte { background:#dcfce7; color:#15803d; }
+    .rev-manual { background:#dbeafe; color:#1d4ed8; }
+    .rev-revisar { background:#ffedd5; color:#c2410c; }
+    .rev-sem_foto { background:#eef2f7; color:#475569; }
+    tr.rev-row--alert td { background:#fff7ed; }
+    .btn-text { background:transparent; border:none; color:var(--ruby-red); cursor:pointer; font:inherit; padding:6px 8px; }
+    .tomb-empty { padding: 40px; text-align: center; color: rgba(34,27,25,0.4); }
+    .spin { display:inline-block; width:13px; height:13px; border:2px solid rgba(255,255,255,.45); border-top-color:#fff; border-radius:50%; vertical-align:-2px; animation: tombspin .7s linear infinite; }
+    .spin--dark { border-color: rgba(34,27,25,.2); border-top-color:var(--carbon-black); }
+    @keyframes tombspin { to { transform: rotate(360deg); } }
+    .rev-foto-cell { display:flex; gap:8px; align-items:center; }
+    .rev-foto-cell select { flex:1; }
+    .rev-eye { background:transparent; border:1px solid var(--border-light); border-radius:8px; cursor:pointer; padding:6px 8px; display:inline-flex; align-items:center; color:var(--carbon-black); flex:none; }
+    .rev-eye:hover { background:var(--icon-bg); }
+    .tomb-item-actions { display:flex; align-items:center; gap:10px; }
+    .tomb-del { width:32px; height:32px; border-radius:8px; border:1px solid transparent; background:transparent; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; color:rgba(34,27,25,0.45); transition:background .15s,color .15s,border-color .15s; flex-shrink:0; }
+    .tomb-del:hover { background:#fef2f2; color:var(--danger); border-color:#fecaca; }
+    .foto-modal { position:fixed; inset:0; background:rgba(34,27,25,.6); display:flex; align-items:center; justify-content:center; z-index:9999; padding:20px; }
+    .foto-modal-inner { background:var(--card-white); border-radius:14px; padding:14px; max-width:min(90vw,520px); position:relative; }
+    .foto-modal-inner img { max-width:100%; max-height:70vh; border-radius:10px; display:block; }
+    .foto-modal-close { position:absolute; top:6px; right:10px; background:none; border:none; font-size:1.7rem; line-height:1; cursor:pointer; color:var(--carbon-black); }
+    .foto-modal-nome { margin-top:8px; font-size:.8rem; color:rgba(34,27,25,.6); text-align:center; word-break:break-all; }
+    .req-star { color: var(--danger); font-weight: 700; }
+    .tomb-erro { color: var(--danger); font-size: 0.78rem; margin-top: 5px; }
+    .field input.erro, .field select.erro { border-color: var(--danger) !important; box-shadow: 0 0 0 3px rgba(220,38,38,0.12); }
+    /* Logo da marca no topo (tela de edição) */
+    .tomb-brand-logo { display: none; align-items: center; justify-content: center; background: var(--carbon-black); border-radius: 12px; padding: 14px 26px; box-shadow: 0 2px 8px rgba(34,27,25,0.12); }
+    .tomb-brand-logo img { height: 34px; max-width: 240px; object-fit: contain; display: block; }
+    @media (max-width: 640px) { .tomb-brand-logo { padding: 10px 18px; } .tomb-brand-logo img { height: 26px; } }
+  </style>
+</head>
+<body class="page-light">
+  <div id="pageContent">
+    <div class="page-container page-container--wide">
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Tombamentos</h1>
+          <p class="page-subtitle" style="margin-top:4px">Geração em massa de assinaturas e cartões digitais a partir de uma planilha.</p>
+        </div>
+        <div class="tomb-brand-logo" id="tombBrandLogo"><img id="tombBrandLogoImg" src="" alt=""></div>
+      </div>
+
+      <!-- Visão de abas (lista / criar) -->
+      <div id="viewTabs">
+        <div class="tomb-tabs">
+          <button class="tomb-tab active" data-tab="criar" onclick="trocarAba('criar')">Criar novo tombamento</button>
+          <button class="tomb-tab" data-tab="realizados" onclick="trocarAba('realizados')">Tombamentos realizados</button>
+        </div>
+
+        <div class="tomb-panel active" id="panelCriar">
+          <button class="btn btn-primary" id="btnNovo" onclick="abrirNovoForm()" style="display:inline-flex;align-items:center;gap:6px">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Novo tombamento
+          </button>
+
+          <div class="tomb-create" id="tombCreateForm" style="display:none">
+            <div class="field">
+              <label>Nome do tombamento <span class="req-star">*</span></label>
+              <input type="text" id="novoNome" placeholder="Ex.: Tombamento Maringá — Junho/2026" oninput="limparErroNome()">
+              <p id="novoNomeErro" class="tomb-erro" style="display:none">Dê um nome ao tombamento para continuar.</p>
+            </div>
+            <div class="field">
+              <label>Selecione a marca <span class="req-star">*</span></label>
+              <select id="novoMarca" onchange="limparErroMarca()"><option value="">Selecione…</option></select>
+              <p id="novoMarcaErro" class="tomb-erro" style="display:none">Selecione a marca do tombamento.</p>
+              <p class="tomb-note">A marca vale para todo o tombamento — todas as assinaturas e cartões usarão o logo dela.</p>
+            </div>
+            <div style="display:flex;gap:10px;margin-top:6px">
+              <button class="btn btn-primary" onclick="criarTombamento()">Criar tombamento</button>
+              <button class="btn" style="background:transparent;border:1px solid var(--border-light)" onclick="cancelarNovo()">Cancelar</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="tomb-panel" id="panelRealizados">
+          <div id="tombLista" class="tomb-list"><div class="tomb-empty">Carregando…</div></div>
+        </div>
+      </div>
+
+      <!-- Workspace de um tombamento aberto -->
+      <div id="tombWorkspace" style="display:none">
+        <button type="button" onclick="voltarLista()" class="btn-voltar" style="margin-bottom:14px">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+          Voltar
+        </button>
+        <div class="tomb-ws-header">
+          <span class="tomb-ws-nome" id="wsNome"></span>
+          <span class="tomb-marca-pill" id="wsMarca"></span>
+        </div>
+
+        <div class="tomb-drop" id="tombDrop">
+          <label class="btn btn-primary" style="cursor:pointer;display:inline-flex;align-items:center;gap:6px">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            Escolher planilha
+            <input type="file" id="tombFile" accept=".xlsx,.xls,.csv" style="display:none" onchange="aoEscolherArquivo(this)">
+          </label>
+          <p>Formatos: .xlsx, .xls ou .csv (máx. 15 MB). Colunas: nome, e-mail, telefone, cargo, tem CFP, arquivo da foto. (A marca não vai na planilha — é a do tombamento.) A coluna <strong>arquivo da foto</strong> é opcional: sem ela, o sistema casa as fotos pelo nome.</p>
+          <div class="tomb-filename" id="tombFilename"></div>
+        </div>
+
+        <div id="tombResultado" style="display:none">
+          <div class="tomb-summary" id="tombSummary"></div>
+          <div class="admin-userlist-table-wrap" style="border-radius:12px;border:1px solid var(--border-light);overflow-x:auto">
+            <table class="admin-table" id="tombTabela"><thead id="tombThead"></thead><tbody id="tombTbody"></tbody></table>
+          </div>
+          <div class="tomb-actions">
+            <button class="btn btn-primary" id="btnGerarAssinaturas" onclick="gerarAssinaturas()" disabled>Gerar assinaturas (.zip)</button>
+            <button class="btn btn-dark" id="btnGerarCartoes" style="display:inline-flex;align-items:center;gap:7px" onclick="document.getElementById('fotosZipInput').click()" disabled><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>Upload de .zip com fotos para cartões</button>
+            <input type="file" id="fotosZipInput" accept=".zip,application/zip" style="display:none" onchange="cartoesStep1(this)">
+          </div>
+          <p class="tomb-note">Cartões digitais: suba um <strong>.zip com as fotos</strong> (máx. 100 MB) e o sistema casa cada pessoa pelo nome — você confere antes de gerar. A coluna <strong>arquivo_foto</strong> é opcional (se preenchida, tem prioridade). Disponível apenas para marcas com cartão digital (Investimentos, Capital, Connect).</p>
+
+          <div id="cartoesReview" class="tomb-review" style="display:none">
+            <div class="tomb-review-head">
+              <div><strong>Revisão de fotos</strong><span id="cartoesResumo" class="tomb-review-resumo"></span></div>
+              <button class="btn-text" type="button" onclick="cartoesCancelar()">Cancelar</button>
+            </div>
+            <p class="tomb-note" style="margin-top:0">Confira os pares antes de gerar. <span class="rev-badge rev-revisar">revisar</span> = casou só pelo primeiro nome ou está ambíguo, vale conferir.</p>
+            <div class="tomb-review-wrap">
+              <table class="admin-table" id="cartoesRevTabela">
+                <thead><tr><th>Pessoa</th><th style="width:120px">Status</th><th style="width:46%">Foto atribuída</th></tr></thead>
+                <tbody id="cartoesRevTbody"></tbody>
+              </table>
+            </div>
+            <div class="tomb-actions">
+              <button class="btn btn-primary" id="btnCartoesGerar" onclick="cartoesGerar()">Gerar cartões</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div id="fotoModal" class="foto-modal" style="display:none" onclick="fecharFotoModal()">
+    <div class="foto-modal-inner" onclick="event.stopPropagation()">
+      <button class="foto-modal-close" type="button" onclick="fecharFotoModal()" aria-label="Fechar">&times;</button>
+      <img id="fotoModalImg" alt="">
+      <div id="fotoModalNome" class="foto-modal-nome"></div>
+    </div>
+  </div>
+
+  <script src="config.js?v=20260615a"></script>
+  <script src="auth.js?v=20260611f"></script>
+  <script src="shell.js?v=20260611f"></script>
+  <script src="utils.js?v=20260615d"></script>
+  <script src="toast.js?v=20260603"></script>
+  <script>
+    const MARCAS = [
+      { value: 'svn-investimentos', label: 'SVN Investimentos' },
+      { value: 'svn-capital', label: 'SVN Capital' },
+      { value: 'svn-connect', label: 'SVN Connect' },
+    ];
+    const ASSETS_BASE_TOMB = 'https://solicitacoes.portalsvn.com.br/assinatura_email';
+    const MARCA_LOGO = {
+      'svn-investimentos': ASSETS_BASE_TOMB + '/assinaturas_assinatura_svn.png',
+      'svn-capital':       ASSETS_BASE_TOMB + '/assinaturas_assinatura_logo_svn_capital.png',
+      'svn-connect':       ASSETS_BASE_TOMB + '/assinaturas_assinatura_logo_svn_connect.png',
+    };
+    const marcaLabel = function (v) { const m = MARCAS.find(function (x) { return x.value === v; }); return m ? m.label : (v || '—'); };
+    const COLS = [
+      { f: 'nome', label: 'Nome' }, { f: 'email', label: 'E-mail' }, { f: 'telefone', label: 'Telefone' },
+      { f: 'cargo', label: 'Cargo' }, { f: 'tem_cfp', label: 'Tem CFP' }, { f: 'arquivo_foto', label: 'Arquivo da foto' },
+    ];
+    let currentTomb = null;
+
+    const SPIN = '<span class="spin" aria-hidden="true"></span>';
+    function setBtnLoading(btn, label) { if (!btn) return; btn.dataset.old = btn.innerHTML; btn.disabled = true; btn.innerHTML = SPIN + ' ' + label; }
+    function clearBtnLoading(btn) { if (!btn) return; btn.disabled = false; if (btn.dataset.old != null) { btn.innerHTML = btn.dataset.old; delete btn.dataset.old; } }
+    const MAX_PLANILHA = 15 * 1024 * 1024;
+    const MAX_FOTOS = 100 * 1024 * 1024;
+
+    async function init() {
+      await Auth.init();
+      if (!Auth.isAuthenticated()) { window.location.href = '/auth/login?redirect=/admin-tombamentos.html'; return; }
+      if (Auth.getUserRole() !== 'admin') { window.location.href = '/dashboard.html'; return; }
+      if (typeof Shell !== 'undefined' && Shell.render) {
+        Shell.render({ activeRoute: 'admin-tombamentos', contentEl: document.getElementById('pageContent') });
+      }
+      document.getElementById('novoMarca').innerHTML = '<option value="">Selecione…</option>'
+        + MARCAS.map(function (m) { return '<option value="' + m.value + '">' + esc(m.label) + '</option>'; }).join('');
+      setupDrop();
+      carregarLista();
+    }
+
+    function trocarAba(aba) {
+      document.querySelectorAll('.tomb-tab').forEach(function (b) { b.classList.toggle('active', b.getAttribute('data-tab') === aba); });
+      document.getElementById('panelCriar').classList.toggle('active', aba === 'criar');
+      document.getElementById('panelRealizados').classList.toggle('active', aba === 'realizados');
+      if (aba === 'realizados') carregarLista();
+    }
+
+    function abrirNovoForm() { document.getElementById('btnNovo').style.display = 'none'; document.getElementById('tombCreateForm').style.display = 'block'; }
+    function limparErroNome() {
+      const i = document.getElementById('novoNome'); if (i) i.classList.remove('erro');
+      const e = document.getElementById('novoNomeErro'); if (e) e.style.display = 'none';
+    }
+    function limparErroMarca() {
+      const s = document.getElementById('novoMarca'); if (s) s.classList.remove('erro');
+      const e = document.getElementById('novoMarcaErro'); if (e) e.style.display = 'none';
+    }
+    function cancelarNovo() { document.getElementById('tombCreateForm').style.display = 'none'; document.getElementById('btnNovo').style.display = 'inline-flex'; document.getElementById('novoNome').value = ''; document.getElementById('novoMarca').value = ''; limparErroNome(); limparErroMarca(); }
+
+    async function criarTombamento() {
+      const nome = document.getElementById('novoNome').value.trim();
+      const marca = document.getElementById('novoMarca').value;
+      if (!nome) {
+        const i = document.getElementById('novoNome');
+        i.classList.add('erro'); i.focus();
+        const e = document.getElementById('novoNomeErro'); if (e) e.style.display = 'block';
+        return;
+      }
+      if (!marca) {
+        const s = document.getElementById('novoMarca');
+        s.classList.add('erro'); s.focus();
+        const e = document.getElementById('novoMarcaErro'); if (e) e.style.display = 'block';
+        return;
+      }
+      try {
+        const res = await fetch('/api/admin/tombamentos', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ nome: nome, marca: marca }) });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Erro ao criar');
+        cancelarNovo();
+        abrirWorkspace(data);
+      } catch (err) { if (window.showToast) showToast(err.message || 'Erro ao criar tombamento', 'error'); }
+    }
+
+    async function carregarLista() {
+      const el = document.getElementById('tombLista');
+      try {
+        const res = await fetch('/api/admin/tombamentos');
+        const data = await res.json();
+        const lista = data.tombamentos || [];
+        if (!lista.length) { el.innerHTML = '<div class="tomb-empty">Nenhum tombamento ainda. Crie o primeiro na aba "Criar novo tombamento".</div>'; return; }
+        el.innerHTML = lista.map(function (t) {
+          const dt = t.created_at ? new Date(t.created_at).toLocaleDateString('pt-BR') : '';
+          const n = (t.linhas && t.linhas.length) ? (t.linhas.length + ' linha(s)') : 'sem planilha';
+          return '<div class="tomb-item" onclick="abrirTombamento(' + t.id + ')">'
+            + '<div><div class="tomb-item-nome">' + esc(t.nome) + '</div><div class="tomb-item-meta">' + dt + ' · ' + n + '</div></div>'
+            + '<div class="tomb-item-actions"><span class="tomb-marca-pill">' + esc(marcaLabel(t.marca)) + '</span>'
+            + '<button type="button" class="tomb-del" title="Excluir tombamento" aria-label="Excluir tombamento" onclick="event.stopPropagation(); deletarTombamento(' + t.id + ')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-2 14a2 2 0 01-2 2H9a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg></button></div></div>';
+        }).join('');
+      } catch (err) { el.innerHTML = '<div class="tomb-empty">Erro ao carregar.</div>'; }
+    }
+
+    async function abrirTombamento(id) {
+      try {
+        const res = await fetch('/api/admin/tombamentos/' + id);
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Erro');
+        abrirWorkspace(data);
+      } catch (err) { if (window.showToast) showToast(err.message || 'Erro ao abrir', 'error'); }
+    }
+
+    function abrirWorkspace(tomb) {
+      currentTomb = tomb;
+      document.getElementById('viewTabs').style.display = 'none';
+      document.getElementById('tombWorkspace').style.display = 'block';
+      document.getElementById('wsNome').textContent = tomb.nome;
+      document.getElementById('wsMarca').textContent = marcaLabel(tomb.marca);
+      setBrandLogo(tomb.marca);
+      document.getElementById('tombFilename').textContent = '';
+      if (tomb.linhas && tomb.linhas.length) { renderTabela(tomb.linhas); }
+      else { document.getElementById('tombResultado').style.display = 'none'; }
+    }
+
+    function setBrandLogo(marca) {
+      const box = document.getElementById('tombBrandLogo');
+      const img = document.getElementById('tombBrandLogoImg');
+      const url = MARCA_LOGO[marca];
+      if (box && img && url) {
+        img.src = url;
+        img.alt = marcaLabel(marca);
+        box.style.display = 'flex';
+      } else if (box) {
+        box.style.display = 'none';
+      }
+    }
+
+    function voltarLista() {
+      currentTomb = null;
+      document.getElementById('tombWorkspace').style.display = 'none';
+      document.getElementById('viewTabs').style.display = 'block';
+      const box = document.getElementById('tombBrandLogo'); if (box) box.style.display = 'none';
+      trocarAba('realizados');
+    }
+
+    function setupDrop() {
+      const drop = document.getElementById('tombDrop');
+      ['dragover', 'dragenter'].forEach(function (ev) { drop.addEventListener(ev, function (e) { e.preventDefault(); }); });
+      drop.addEventListener('drop', function (e) { e.preventDefault(); const f = e.dataTransfer.files && e.dataTransfer.files[0]; if (f) enviarPlanilha(f); });
+    }
+    function aoEscolherArquivo(input) { const f = input.files && input.files[0]; if (f) enviarPlanilha(f); }
+
+    async function enviarPlanilha(file) {
+      if (!currentTomb) return;
+      if (file.size > MAX_PLANILHA) { if (window.showToast) showToast('Planilha acima de 15 MB. Reduza o arquivo.', 'error'); return; }
+      document.getElementById('tombFilename').innerHTML = '<span class="spin spin--dark"></span> Lendo: ' + esc(file.name) + '…';
+      const fd = new FormData(); fd.append('planilha', file);
+      try {
+        const res = await fetch('/api/admin/tombamentos/parse', { method: 'POST', body: fd });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Erro ao ler planilha');
+        document.getElementById('tombFilename').textContent = file.name + ' — ' + data.rows.length + ' linha(s)';
+        renderTabela(data.rows);
+        // salva as linhas no tombamento
+        await fetch('/api/admin/tombamentos/' + currentTomb.id, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ linhas: data.rows }) });
+        currentTomb.linhas = data.rows;
+      } catch (err) {
+        document.getElementById('tombFilename').textContent = '';
+        if (window.showToast) showToast(err.message || 'Erro ao ler a planilha', 'error');
+      }
+    }
+
+    function renderTabela(rows) {
+      const comProblema = rows.filter(function (r) { return r._issues && r._issues.length; }).length;
+      document.getElementById('tombSummary').innerHTML =
+        '<span class="tomb-pill tomb-pill--total">' + rows.length + ' linha(s)</span>'
+        + '<span class="tomb-pill tomb-pill--ok">' + (rows.length - comProblema) + ' OK</span>'
+        + (comProblema ? '<span class="tomb-pill tomb-pill--warn">' + comProblema + ' com problema</span>' : '');
+      document.getElementById('tombThead').innerHTML = '<tr>' + COLS.map(function (c) { return '<th>' + esc(c.label) + '</th>'; }).join('') + '<th>Status</th></tr>';
+      document.getElementById('tombTbody').innerHTML = rows.map(function (r) {
+        const warn = r._issues && r._issues.length;
+        const tds = COLS.map(function (c) { return '<td style="padding:9px 12px">' + esc(r[c.f] || '—') + '</td>'; }).join('');
+        const status = warn ? '<span class="row-status-warn">' + esc(r._issues.join(', ')) + '</span>' : '<span class="row-status-ok">OK</span>';
+        return '<tr class="' + (warn ? 'tomb-row--warn' : '') + '">' + tds + '<td style="padding:9px 12px">' + status + '</td></tr>';
+      }).join('');
+      document.getElementById('tombResultado').style.display = 'block';
+      document.getElementById('btnGerarAssinaturas').disabled = rows.length === 0;
+      document.getElementById('btnGerarCartoes').disabled = rows.length === 0;
+      document.getElementById('cartoesReview').style.display = 'none';
+    }
+
+    async function gerarAssinaturas() {
+      if (!currentTomb) return;
+      const btn = document.getElementById('btnGerarAssinaturas');
+      setBtnLoading(btn, 'Gerando…');
+      try {
+        const res = await fetch('/api/admin/tombamentos/' + currentTomb.id + '/gerar-assinaturas', { method: 'POST' });
+        if (!res.ok) {
+          const data = await res.json().catch(function () { return {}; });
+          throw new Error(data.error || 'Erro ao gerar assinaturas');
+        }
+        const blob = await res.blob();
+        const geradas = res.headers.get('X-Geradas');
+        const puladas = res.headers.get('X-Puladas');
+        baixarBlob(blob, 'assinaturas-' + (currentTomb.id) + '.zip');
+        if (window.showToast) showToast('✓ ' + (geradas || '?') + ' assinatura(s) gerada(s)' + (puladas && puladas !== '0' ? ' · ' + puladas + ' pulada(s)' : ''), 'success');
+      } catch (err) {
+        if (window.showToast) showToast(err.message || 'Erro ao gerar', 'error');
+      } finally {
+        clearBtnLoading(btn);
+      }
+    }
+    function baixarBlob(blob, nome) {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = nome; document.body.appendChild(a); a.click();
+      setTimeout(function () { URL.revokeObjectURL(url); a.remove(); }, 1000);
+    }
+
+    let cartoesFotosFile = null;
+    let cartoesFotos = [];
+
+    function cartEsc(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+
+    async function cartoesStep1(input) {
+      if (!currentTomb) return;
+      const f = input.files && input.files[0];
+      input.value = '';
+      if (!f) return;
+      if (f.size > MAX_FOTOS) { if (window.showToast) showToast('O .zip está acima de 100 MB. Reduza as fotos ou divida em partes.', 'error'); return; }
+      cartoesFotosFile = f;
+      const btn = document.getElementById('btnGerarCartoes');
+      setBtnLoading(btn, 'Analisando…');
+      try {
+        const fd = new FormData();
+        fd.append('fotos', f);
+        const res = await fetch('/api/admin/tombamentos/' + currentTomb.id + '/match-fotos', { method: 'POST', body: fd });
+        const data = await res.json().catch(function () { return {}; });
+        if (!res.ok) throw new Error(data.error || 'Erro ao analisar as fotos');
+        cartoesFotos = data.fotos || [];
+        renderRevisao(data);
+      } catch (err) {
+        if (window.showToast) showToast(err.message || 'Erro ao analisar', 'error');
+      } finally {
+        clearBtnLoading(btn);
+      }
+    }
+
+    function renderRevisao(data) {
+      const tbody = document.getElementById('cartoesRevTbody');
+      const opts = ['<option value="">— sem foto —</option>'].concat(
+        cartoesFotos.map(function (n) { return '<option value="' + cartEsc(n) + '">' + cartEsc(n) + '</option>'; })
+      ).join('');
+      const pessoas = data.pessoas || [];
+      tbody.innerHTML = pessoas.map(function (p) {
+        const alerta = (p.status === 'revisar' || p.status === 'sem_foto') ? ' class="rev-row--alert"' : '';
+        const sub = cartEsc(p.email) + (p.obs ? ' · ' + cartEsc(p.obs) : '');
+        return '<tr' + alerta + '>'
+          + '<td>' + cartEsc(p.nome) + '<div style="font-size:.75rem;color:rgba(34,27,25,.5)">' + sub + '</div></td>'
+          + '<td><span class="rev-badge rev-' + p.status + '">' + p.status.replace('_', ' ') + '</span></td>'
+          + '<td><div class="rev-foto-cell"><select data-email="' + cartEsc(p.email) + '">' + opts + '</select>'
+          + '<button type="button" class="rev-eye" title="Ver foto" onclick="cartoesPreview(this)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button></div></td></tr>';
+      }).join('');
+      const selects = tbody.querySelectorAll('select[data-email]');
+      pessoas.forEach(function (p, i) { if (selects[i]) selects[i].value = p.foto || ''; });
+      const r = data.resumo || {};
+      document.getElementById('cartoesResumo').textContent =
+        (r.auto || 0) + ' automáticas · ' + (r.revisar || 0) + ' a revisar · ' + (r.sem_foto || 0) + ' sem foto · ' + (r.fotos || 0) + ' fotos no zip';
+      document.getElementById('cartoesReview').style.display = 'block';
+      document.getElementById('cartoesReview').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    function cartoesCancelar() {
+      document.getElementById('cartoesReview').style.display = 'none';
+      cartoesFotosFile = null; cartoesFotos = [];
+    }
+
+    async function cartoesGerar() {
+      if (!currentTomb || !cartoesFotosFile) { if (window.showToast) showToast('Suba o .zip de fotos novamente', 'error'); return; }
+      const atrib = {};
+      document.querySelectorAll('#cartoesRevTbody select[data-email]').forEach(function (s) {
+        if (s.value) atrib[s.getAttribute('data-email')] = s.value;
+      });
+      if (!Object.keys(atrib).length) { if (window.showToast) showToast('Nenhuma foto atribuída', 'error'); return; }
+      const btn = document.getElementById('btnCartoesGerar');
+      setBtnLoading(btn, 'Gerando…');
+      try {
+        async function postGerar(comArquivo) {
+          const fd = new FormData();
+          fd.append('atribuicoes', JSON.stringify(atrib));
+          if (comArquivo) fd.append('fotos', cartoesFotosFile);
+          return fetch('/api/admin/tombamentos/' + currentTomb.id + '/gerar-cartoes', { method: 'POST', body: fd });
+        }
+        let res = await postGerar(false);
+        if (res.status === 410) res = await postGerar(true);
+        if (!res.ok) {
+          const data = await res.json().catch(function () { return {}; });
+          throw new Error(data.error || 'Erro ao gerar cartões');
+        }
+        const blob = await res.blob();
+        const geradas = res.headers.get('X-Geradas');
+        const puladas = res.headers.get('X-Puladas');
+        baixarBlob(blob, 'cartoes-' + currentTomb.id + '.zip');
+        if (window.showToast) showToast('✓ ' + (geradas || '?') + ' cartão(ões) gerado(s)' + (puladas && puladas !== '0' ? ' · ' + puladas + ' pulado(s)' : ''), 'success');
+      } catch (err) {
+        if (window.showToast) showToast(err.message || 'Erro ao gerar', 'error');
+      } finally {
+        clearBtnLoading(btn);
+      }
+    }
+
+    async function cartoesPreview(btn) {
+      if (!currentTomb) return;
+      const sel = btn.parentElement.querySelector('select');
+      const nome = sel && sel.value;
+      if (!nome) { if (window.showToast) showToast('Selecione uma foto primeiro', 'error'); return; }
+      try {
+        const res = await fetch('/api/admin/tombamentos/' + currentTomb.id + '/foto?nome=' + encodeURIComponent(nome));
+        if (!res.ok) {
+          if (res.status === 410) throw new Error('Prévia expirou. Clique de novo em "Upload de .zip…" para recarregar.');
+          throw new Error('Não foi possível carregar a foto.');
+        }
+        const blob = await res.blob();
+        abrirFotoModal(URL.createObjectURL(blob), nome);
+      } catch (err) { if (window.showToast) showToast(err.message, 'error'); }
+    }
+    let _fotoUrl = null;
+    function abrirFotoModal(url, nome) {
+      _fotoUrl = url;
+      document.getElementById('fotoModalImg').src = url;
+      document.getElementById('fotoModalNome').textContent = nome || '';
+      document.getElementById('fotoModal').style.display = 'flex';
+    }
+    function fecharFotoModal() {
+      document.getElementById('fotoModal').style.display = 'none';
+      document.getElementById('fotoModalImg').src = '';
+      if (_fotoUrl) { URL.revokeObjectURL(_fotoUrl); _fotoUrl = null; }
+    }
+
+    async function deletarTombamento(id) {
+      const ok = await showConfirm('Excluir este tombamento? Esta ação não pode ser desfeita. As linhas salvas serão perdidas (os .zip já baixados não são afetados).', { danger: true, okLabel: 'Excluir' });
+      if (!ok) return;
+      try {
+        const res = await fetch('/api/admin/tombamentos/' + id, { method: 'DELETE' });
+        const data = await res.json().catch(function () { return {}; });
+        if (!res.ok) throw new Error(data.error || 'Erro ao excluir');
+        if (window.showToast) showToast('Tombamento excluído', 'success');
+        carregarLista();
+      } catch (err) { if (window.showToast) showToast(err.message || 'Erro ao excluir', 'error'); }
+    }
+
+    init();
+  </script>
+</body>
+</html>
+```
+
+
 ## File: artifacts/api-server/public/admin-usuarios.html
 
 ```
@@ -4911,6 +7591,29 @@ body { margin: 0; font-family: 'Nunito Sans', sans-serif; background: var(--bg-l
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap" media="print" onload="this.media='all'">
   <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap"></noscript>
   <link rel="stylesheet" href="style.css?v=20260615c">
+  <style>
+    .page-container--wide { max-width: min(1500px, 96vw); }
+    .role-group-row td { cursor: pointer; user-select: none; }
+    .rg-chevron { display: inline-block; width: 14px; color: rgba(34,27,25,0.5); font-size: 0.7rem; }
+    #usuariosTabela { table-layout: fixed; }
+    #usuariosTabela th { position: relative; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    #usuariosTabela th.sortable { cursor: pointer; }
+    #usuariosTabela th .sort-ind { margin-left: 5px; font-size: 0.7rem; color: rgba(255,255,255,0.4); }
+    #usuariosTabela th .sort-ind.active { color: var(--paper-white); }
+    #usuariosTabela td { overflow: hidden; }
+    #usuariosTabela td > div { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .col-resizer { position: absolute; top: 0; right: 0; width: 7px; height: 100%; cursor: col-resize; user-select: none; z-index: 3; }
+    .col-resizer:hover { background: rgba(172,54,49,0.5); }
+    .role-group-row td { background: #f4ece1; border-top: 1px solid var(--border-light); border-bottom: 1px solid var(--border-light); padding: 7px 14px !important; }
+    .rg-pill { padding: 3px 10px; border-radius: 999px; font-size: 0.78rem; font-weight: 700; font-family: 'Nunito Sans', sans-serif; }
+    .rg-count { margin-left: 8px; font-size: 0.78rem; opacity: 0.55; }
+    @media (max-width: 600px) {
+      #usuariosTabela { table-layout: auto !important; width: 100% !important; }
+      #usuariosTabela th, #usuariosTabela td { width: auto !important; }
+      #usuariosTabela td { overflow: visible !important; }
+      .col-resizer { display: none; }
+    }
+  </style>
 </head>
 <body class="page-light">
   <div id="pageContent">
@@ -4937,17 +7640,7 @@ body { margin: 0; font-family: 'Nunito Sans', sans-serif; background: var(--bg-l
 
       <div class="admin-userlist-table-wrap" style="border-radius:12px;border:1px solid var(--border-light);overflow-x:auto">
         <table class="admin-table" id="usuariosTabela">
-          <thead>
-            <tr>
-              <th>Nome</th>
-              <th>E-mail</th>
-              <th>Função</th>
-              <th>ClickUp ID</th>
-              <th>Formulários</th>
-              <th>Cadastro</th>
-              <th style="text-align:center">Ações</th>
-            </tr>
-          </thead>
+          <thead id="usuariosThead"></thead>
           <tbody id="usuariosTabelaBody">
             <tr><td colspan="7" style="padding:24px;text-align:center;opacity:0.4">Carregando...</td></tr>
           </tbody>
@@ -5106,8 +7799,93 @@ body { margin: 0; font-family: 'Nunito Sans', sans-serif; background: var(--bg-l
       }
     }
 
+    const UCOLS = [
+      { f: 'name', label: 'Nome', w: 230, sort: true },
+      { f: 'email', label: 'E-mail', w: 320, sort: true },
+      { f: 'role', label: 'Função', w: 140, sort: false },
+      { f: 'clickup_user_id', label: 'ClickUp ID', w: 180, sort: true },
+      { f: 'tipos', label: 'Formulários', w: 180, sort: true },
+      { f: 'created_at', label: 'Cadastro', w: 130, sort: true },
+      { f: '_acoes', label: 'Ações', w: 160, sort: false, center: true },
+    ];
+    const ROLE_ORDER = ['admin', 'gestor', 'capital_humano'];
+    let uSort = { field: 'name', dir: 1 };
+    let uColWidths = {};
+    let uResizing = false;
+    let collapsedRoles = {};
+
+    function uBuildHead() {
+      return '<tr>' + UCOLS.map(function (c) {
+        const cw = uColWidths[c.f] || c.w;
+        const active = uSort.field === c.f;
+        const ind = c.sort ? (active ? (uSort.dir === 1 ? '▲' : '▼') : '↕') : '';
+        return '<th data-col="' + c.f + '"' + (c.sort ? ' class="sortable"' : '')
+          + ' style="width:' + cw + 'px' + (c.center ? ';text-align:center' : '') + '">'
+          + esc(c.label)
+          + (ind ? '<span class="sort-ind' + (active ? ' active' : '') + '">' + ind + '</span>' : '')
+          + '<span class="col-resizer"></span></th>';
+      }).join('') + '</tr>';
+    }
+    function uApplyWidth() {
+      const total = UCOLS.reduce(function (s, c) { return s + (uColWidths[c.f] || c.w); }, 0);
+      const tbl = document.getElementById('usuariosTabela');
+      if (tbl) tbl.style.width = total + 'px';
+    }
+    function uSortCmp(a, b) {
+      const f = uSort.field;
+      if (f === 'tipos') return ((a.tipos_assigned || []).length - (b.tipos_assigned || []).length) * uSort.dir;
+      if (f === 'created_at') return (new Date(a.created_at || 0) - new Date(b.created_at || 0)) * uSort.dir;
+      return String(a[f] || '').localeCompare(String(b[f] || ''), 'pt-BR', { numeric: true, sensitivity: 'base' }) * uSort.dir;
+    }
+    function uSectionHeader(role, count) {
+      const style = ROLE_COLORS[role] || ROLE_COLORS.colaborador;
+      const label = ROLE_LABELS[role] || role;
+      const collapsed = !!collapsedRoles[role];
+      return '<tr class="role-group-row" data-rolehdr="' + esc(role) + '"><td colspan="' + UCOLS.length + '">'
+        + '<span class="rg-chevron">' + (collapsed ? '▸' : '▾') + '</span>'
+        + '<span class="rg-pill" style="background:' + style + '">' + esc(label) + '</span>'
+        + '<span class="rg-count">' + count + (count === 1 ? ' usuário' : ' usuários') + '</span>'
+        + '</td></tr>';
+    }
+    function uAttachHandlers() {
+      document.querySelectorAll('#usuariosTabela thead th.sortable').forEach(function (th) {
+        th.addEventListener('click', function (e) {
+          if (uResizing || (e.target && e.target.classList && e.target.classList.contains('col-resizer'))) return;
+          const f = th.getAttribute('data-col');
+          if (uSort.field === f) uSort.dir *= -1; else { uSort.field = f; uSort.dir = 1; }
+          renderUsuarios(_allUsers);
+        });
+      });
+      document.querySelectorAll('#usuariosTabela thead th .col-resizer').forEach(function (rz) {
+        rz.addEventListener('mousedown', function (e) {
+          e.preventDefault(); e.stopPropagation();
+          const th = rz.parentElement; const f = th.getAttribute('data-col');
+          const startX = e.clientX, startW = th.offsetWidth;
+          uResizing = true; document.body.style.cursor = 'col-resize'; document.body.style.userSelect = 'none';
+          function move(ev) { const w = Math.max(60, startW + (ev.clientX - startX)); uColWidths[f] = w; th.style.width = w + 'px'; uApplyWidth(); }
+          function up() { document.removeEventListener('mousemove', move); document.removeEventListener('mouseup', up); document.body.style.cursor = ''; document.body.style.userSelect = ''; setTimeout(function () { uResizing = false; }, 50); }
+          document.addEventListener('mousemove', move); document.addEventListener('mouseup', up);
+        });
+      });
+      document.querySelectorAll('#usuariosTabelaBody tr[data-rolehdr]').forEach(function (hdr) {
+        hdr.addEventListener('click', function () {
+          const role = hdr.getAttribute('data-rolehdr');
+          const wasCollapsed = !!collapsedRoles[role];
+          if (wasCollapsed) delete collapsedRoles[role]; else collapsedRoles[role] = true;
+          document.querySelectorAll('#usuariosTabelaBody tr[data-rolegroup="' + role + '"]').forEach(function (r) {
+            r.style.display = wasCollapsed ? '' : 'none';
+          });
+          const ch = hdr.querySelector('.rg-chevron');
+          if (ch) ch.textContent = wasCollapsed ? '▾' : '▸';
+        });
+      });
+    }
+
     function renderUsuarios(users) {
       const tbody = document.getElementById('usuariosTabelaBody');
+      const thead = document.getElementById('usuariosThead');
+      if (thead) thead.innerHTML = uBuildHead();
+      uApplyWidth();
       const busca = (document.getElementById('userBusca')?.value || '').trim().toLowerCase();
       const filtered = busca
         ? users.filter(u => (u.name || '').toLowerCase().includes(busca) || (u.email || '').toLowerCase().includes(busca))
@@ -5120,12 +7898,17 @@ body { margin: 0; font-family: 'Nunito Sans', sans-serif; background: var(--bg-l
 
       const meEmail = typeof Auth !== 'undefined' ? Auth.getUserEmail() : '';
 
-      tbody.innerHTML = filtered.map(u => {
+      const groups = {};
+      filtered.forEach(function (uu) { (groups[uu.role] = groups[uu.role] || []).push(uu); });
+      const rest = Object.keys(groups).filter(function (r) { return ROLE_ORDER.indexOf(r) < 0; })
+        .sort(function (a, b) { return (ROLE_LABELS[a] || a).localeCompare(ROLE_LABELS[b] || b, 'pt-BR'); });
+      const roleOrder = ROLE_ORDER.concat(rest);
+      const userRow = function (u) {
         const dt = u.created_at ? new Date(u.created_at).toLocaleDateString('pt-BR') : '—';
         const roleStyle = ROLE_COLORS[u.role] || ROLE_COLORS.colaborador;
         const roleLabel = ROLE_LABELS[u.role] || u.role;
         const isMe = u.email === meEmail;
-        return `<tr style="border-top:1px solid var(--border-light);transition:background 0.12s" onmouseover="this.style.background='var(--icon-bg)'" onmouseout="this.style.background=''">
+        return `<tr data-rolegroup="${esc(u.role)}" style="border-top:1px solid var(--border-light);transition:background 0.12s" onmouseover="this.style.background='var(--icon-bg)'" onmouseout="this.style.background=''">
           <td style="padding:10px 14px">
             <div style="font-weight:600;font-size:0.85rem">${esc(u.name || '—')}</div>
           </td>
@@ -5163,7 +7946,20 @@ body { margin: 0; font-family: 'Nunito Sans', sans-serif; background: var(--bg-l
             </button>` : `<span style="font-size:0.75rem;opacity:0.35">Você</span>`}
           </td>
         </tr>`;
-      }).join('');
+      };
+      let html = '';
+      roleOrder.forEach(function (role) {
+        const arr = groups[role];
+        if (!arr || !arr.length) return;
+        arr.sort(uSortCmp);
+        html += uSectionHeader(role, arr.length);
+        html += arr.map(userRow).join('');
+      });
+      tbody.innerHTML = html;
+      Object.keys(collapsedRoles).forEach(function (role) {
+        document.querySelectorAll('#usuariosTabelaBody tr[data-rolegroup="' + role + '"]').forEach(function (r) { r.style.display = 'none'; });
+      });
+      uAttachHandlers();
     }
 
     function debounceUserSearch() {
@@ -5376,7 +8172,6 @@ body { margin: 0; font-family: 'Nunito Sans', sans-serif; background: var(--bg-l
   </script>
 </body>
 </html>
-
 ```
 
 
@@ -5993,12 +8788,19 @@ const DRAWER_FIELD_LABELS = {
   conteudoMaterial:    { label: "Conteúdo do material",       wide: true },
   finalidade:          { label: "Finalidade",                 wide: true },
   descricao:           { label: "Descrição",                  wide: true },
+  nomeEvento:          { label: "Nome do evento" },
   tituloEvento:        { label: "Título do evento" },
   dataEvento:          { label: "Data do evento" },
   horario:             { label: "Horário" },
   local:               { label: "Local" },
+  localEvento:         { label: "Local do evento" },
+  localNome:           { label: "Nome do local" },
+  localEndereco:       { label: "Endereço do local",          wide: true },
+  unidadeSVN:          { label: "Unidade SVN" },
   tipoEvento:          { label: "Tipo de evento" },
   publico:             { label: "Público",                    wide: true },
+  publicoAlvo:         { label: "Público-Alvo",               wide: true },
+  tipoCriacao:         { label: "Tipo de criação" },
   explicacao:          { label: "Explicação / justificativa", wide: true },
   conteudo:            { label: "Conteúdo",                   wide: true },
   observacoes:         { label: "Observações",                wide: true },
@@ -6021,6 +8823,71 @@ const DRAWER_FIELD_LABELS = {
   linkTransmissao:     { label: "Link da transmissão",        wide: true },
   personalizacao:      { label: "Personalização",             wide: true },
   textoCartaoPresente: { label: "Texto do cartão presente",   wide: true },
+  // Campos de contato / rede social
+  email:               { label: "E-mail" },
+  linkedin:            { label: "LinkedIn" },
+  instagram:           { label: "Instagram" },
+  // Campos de localização e evento
+  canal:               { label: "Canal" },
+  canalOutro:          { label: "Canal (outro)" },
+  convidados:          { label: "Convidados" },
+  cidade:              { label: "Cidade" },
+  hora:                { label: "Hora" },
+  origem:              { label: "Origem" },
+  rateio:              { label: "Rateio" },
+  tamanho:             { label: "Tamanho" },
+  // Campos de conteúdo e briefing
+  titulo:              { label: "Título",                     wide: true },
+  alteracoes:          { label: "Alterações",                 wide: true },
+  oQueAtualizar:       { label: "O que atualizar",            wide: true },
+  elementos:           { label: "Elementos",                  wide: true },
+  elementosDescricao:  { label: "Descrição dos elementos",    wide: true },
+  depoimentos:         { label: "Depoimentos",                wide: true },
+  miniBio:             { label: "Mini bio",                   wide: true },
+  // Campos financeiros e parceiros
+  custoEstimado:       { label: "Custo estimado" },
+  marcasParceiras:     { label: "Marcas parceiras" },
+  cnpjParceiros:       { label: "CNPJ dos parceiros" },
+  // Campos de links e arquivos
+  linkFotos:           { label: "Link das fotos" },
+  quantidade:          { label: "Quantidade" },
+  remetente:           { label: "Remetente" },
+  dataPronto:          { label: "Data de entrega" },
+  // Campos de eventos
+  horBrasilia:         { label: "Horário de Brasília?" },
+  temPalestrante:      { label: "Tem palestrante?" },
+  palNome1:            { label: "Palestrante 1 — Nome" },
+  palCargo1:           { label: "Palestrante 1 — Cargo" },
+  palSvn1:             { label: "Palestrante 1 — da SVN?" },
+  palNome2:            { label: "Palestrante 2 — Nome" },
+  palCargo2:           { label: "Palestrante 2 — Cargo" },
+  palSvn2:             { label: "Palestrante 2 — da SVN?" },
+  palNome3:            { label: "Palestrante 3 — Nome" },
+  palCargo3:           { label: "Palestrante 3 — Cargo" },
+  palSvn3:             { label: "Palestrante 3 — da SVN?" },
+  palNome4:            { label: "Palestrante 4 — Nome" },
+  palCargo4:           { label: "Palestrante 4 — Cargo" },
+  palSvn4:             { label: "Palestrante 4 — da SVN?" },
+  // Campos de materiais impressos
+  descricaoSolicitacao: { label: "Descrição da solicitação",  wide: true },
+  conteudoSelecionado: { label: "Conteúdo selecionado",       wide: true },
+  tipoAdesivo:         { label: "Tipo de adesivo" },
+  tipoCamiseta:        { label: "Tipo de camiseta" },
+  corCamiseta:         { label: "Cor da camiseta" },
+  qtdTamanhos:         { label: "Quantidade de tamanhos" },
+  qrLink:              { label: "Link do QR Code" },
+  fornecedor:          { label: "Fornecedor" },
+  // Campos de produção audiovisual
+  restricoes:          { label: "Restrições",                 wide: true },
+  // Campos internos / a pular
+  tipo:                { label: "Tipo",                       skip: true },
+  solicitante:         { label: "Solicitante",                skip: true },
+  draftTipo:           { label: "Tipo de rascunho",           skip: true },
+  tem_cfp:             { label: "Tem CFP?",                   skip: true },
+  tipoAprox:           { label: "Tipo de abordagem",          skip: true },
+  _tipoAprox:          { label: "Tipo de abordagem",          skip: true },
+  email_destinatario:  { label: "E-mail do destinatário",     skip: true },
+  subtipo:             { label: "Subtipo",                    skip: true },
   idSolicitacao:       { label: "ID",                         skip: true },
   natureza:            { label: "Natureza",                   skip: true },
   nome:                { label: "Nome",                       skip: true },
@@ -7108,6 +9975,7 @@ window.FilterPanel = (function () {
   <script src="utils.js?v=20260615d"></script>
   <script src="upload-feedback.js?v=20260615e"></script>
   <script src="config.js?v=20260615a"></script>
+  <script src="prazo.js?v=20260619a"></script>
   <script src="auth.js?v=20260611f"></script>
   <script src="shell.js?v=20260611f"></script>
   <script src="form-core.js?v=20260611f"></script>
@@ -7116,18 +9984,12 @@ window.FilterPanel = (function () {
     let subtipo = params.get('subtipo') || '';
     let isAtualizar = subtipo === 'atualizar';
     const TIPOS = { nova: 'apresentacao-nova', atualizar: 'apresentacao-atualizar' };
-    const SLA = { menos30: 'até 5 dias úteis', menos100: 'até 10 dias úteis', mais100: 'até 15 dias úteis' };
-    const SLA_DAYS = { menos30: 5, menos100: 10, mais100: 15 };
-    function addBusinessDays(start, n) {
-      const d = new Date(start); let added = 0;
-      while (added < n) { d.setDate(d.getDate() + 1); const w = d.getDay(); if (w !== 0 && w !== 6) added++; }
-      return d;
-    }
-    function toISODate(d) { return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
+    function tipoAtual() { return TIPOS[subtipo] || TIPOS.nova; }
     function aplicarPrazoMinimo(tamanho) {
-      const dias = SLA_DAYS[tamanho]; const prazo = document.getElementById('prazoEntrega');
-      if (!dias || !prazo) return;
-      const minIso = toISODate(addBusinessDays(new Date(), dias));
+      const prazo = document.getElementById('prazoEntrega');
+      if (!prazo || !window.Prazo) return;
+      const minIso = Prazo.minISO(tipoAtual(), { tamanho: tamanho });
+      if (!minIso) return;
       prazo.min = minIso;
       if (prazo.value && prazo.value < minIso) prazo.value = '';
     }
@@ -7168,11 +10030,16 @@ window.FilterPanel = (function () {
         onReady: function () {
           if (subtipo) goToStep2();
 
+          if (window.Prazo) Prazo.ready.then(function () {
+            const sel = document.querySelector('input[name="tamanho"]:checked');
+            const el = document.getElementById('slaPrazo');
+            if (sel && el) { el.style.display = 'block'; el.textContent = 'Prazo estimado: ' + Prazo.labelDias(tipoAtual(), { tamanho: sel.value }); aplicarPrazoMinimo(sel.value); }
+          });
+
           document.querySelectorAll('input[name="tamanho"]').forEach(r => r.addEventListener('change', () => {
-            const sla = SLA[r.value];
             const el = document.getElementById('slaPrazo');
             el.style.display = 'block';
-            el.textContent = `Prazo estimado: ${sla}`;
+            el.textContent = 'Prazo estimado: ' + (window.Prazo ? Prazo.labelDias(tipoAtual(), { tamanho: r.value }) : '');
             aplicarPrazoMinimo(r.value);
           }));
 
@@ -7217,9 +10084,8 @@ window.FilterPanel = (function () {
       {
         const _tam = document.querySelector('input[name="tamanho"]:checked')?.value;
         const _prazo = document.getElementById('prazoEntrega');
-        const _dias = SLA_DAYS[_tam];
-        if (_dias && _prazo && _prazo.value) {
-          const _minIso = toISODate(addBusinessDays(new Date(), _dias));
+        const _minIso = (window.Prazo && _tam) ? Prazo.minISO(tipoAtual(), { tamanho: _tam }) : '';
+        if (_minIso && _prazo && _prazo.value) {
           if (_prazo.value < _minIso) {
             const _fw = _prazo.closest('.field');
             if (_fw) {
@@ -7290,7 +10156,6 @@ window.FilterPanel = (function () {
 
 </body>
 </html>
-
 ```
 
 
@@ -7333,7 +10198,7 @@ window.FilterPanel = (function () {
       </div>
       <div class="alert-card alert-warning">
         <div class="alert-title">Prazos de entrega</div>
-        <div class="alert-text">Simples (stories, posts, banners): <strong>2 dias úteis</strong>. Complexas (apresentações, kits, flyers): <strong>5 dias úteis</strong>. Urgência? Alinhe com o marketing antes de enviar.</div>
+        <div class="alert-text">Prazo de produção: <strong id="prazoHintDias">3 dias úteis</strong>. Urgência? Alinhe com o marketing antes de enviar.</div>
       </div>
 
       <div class="form-step active" id="step1">
@@ -7414,7 +10279,7 @@ window.FilterPanel = (function () {
         <div class="field">
           <label>Prazo desejado para entrega <span class="text-ruby">*</span></label>
           <input type="date" id="prazoEntrega" required>
-          <div class="field-hint">Prazo mínimo: <strong>2 dias úteis</strong> (simples) · <strong>5 dias úteis</strong> (complexas)</div>
+          <div class="field-hint">Prazo mínimo: <span id="prazoHintDias2">3 dias úteis</span></div>
         </div>
         <div class="field">
           <label>Observações finais (opcional)</label>
@@ -7508,9 +10373,20 @@ window.FilterPanel = (function () {
     init();
   </script>
 
+  <script src="prazo.js?v=20260619a"></script>
+  <script>
+    (function(){ if(!window.Prazo) return; var TIPO="artes-divulgacao";
+      Prazo.ready.then(function(){
+        var dias = Prazo.diasUteis(TIPO);
+        var txt = dias!=null ? (dias + (dias===1?" dia útil":" dias úteis")) : "";
+        ["prazoHintDias","prazoHintDias2"].forEach(function(id){ var e=document.getElementById(id); if(e&&txt) e.textContent=txt; });
+        document.querySelectorAll(".prazoHintAV").forEach(function(e){ if(txt) e.textContent=txt; });
+        var p=document.getElementById("prazoEntrega"); if(p){ var m=Prazo.minISO(TIPO); if(m){ p.min=m; if(p.value&&p.value<m)p.value=""; } }
+      });
+    })();
+  </script>
 </body>
 </html>
-
 ```
 
 
@@ -8332,6 +11208,18 @@ window.FilterPanel = (function () {
           Voltar
         </button>
 
+        <div class="field" id="fisicoGate">
+          <label>Você é Assessor de Investimentos? <span class="text-ruby">*</span></label>
+          <div style="display:flex;gap:18px;margin-top:6px">
+            <label style="display:flex;align-items:center;gap:7px;cursor:pointer;font-size:0.92rem"><input type="radio" name="ehAssessor" value="sim" onchange="onAssessorChange()"> Sim</label>
+            <label style="display:flex;align-items:center;gap:7px;cursor:pointer;font-size:0.92rem"><input type="radio" name="ehAssessor" value="nao" onchange="onAssessorChange()"> Não</label>
+          </div>
+        </div>
+        <div id="fisicoBloqueado" class="alert-card alert-danger" style="display:none;margin-bottom:16px">
+          <div class="alert-text">Este formulário é de uso exclusivo para Assessores de Investimentos.</div>
+        </div>
+
+        <div id="fisicoFormBody" style="display:none">
         <div class="alert-card alert-info">
           <div class="alert-title">Cartão físico</div>
           <div class="alert-text">Preencha os dados exatamente da forma em que devem constar no cartão impresso.</div>
@@ -8347,8 +11235,8 @@ window.FilterPanel = (function () {
         </div>
         <div class="field">
           <label>E-mail <span class="text-ruby">*</span></label>
-          <p style="font-size:0.78rem;opacity:0.55;margin:-12px 0 8px">Use o e-mail de assessor (AAI) ou o corporativo (time interno)</p>
-          <input type="email" id="emailCorporativoFisico" placeholder="seu@svninvest.com.br" required>
+          <p style="font-size:0.78rem;opacity:0.55;margin:-12px 0 8px">Use o e-mail de assessor (AAI)</p>
+          <input type="email" id="emailCorporativoFisico" placeholder="seu@svninvestimentos.com.br, seu@svncapital.com.br, seu@svnconnect.com.br" required>
         </div>
         <div class="field">
           <label>Unidade <span class="text-ruby">*</span></label>
@@ -8367,6 +11255,7 @@ window.FilterPanel = (function () {
           <div class="form-nav" style="justify-content:flex-end">
             <button class="btn btn-primary btn-submit-gold" id="btnSubmitFisico" onclick="submitFormFisico()">Enviar</button>
           </div>
+        </div>
         </div>
       </div>
 
@@ -8498,8 +11387,27 @@ window.FilterPanel = (function () {
       return FormCore.validateRequired(null, document.getElementById(stepId));
     }
 
+    function onAssessorChange() {
+      const val = (document.querySelector('input[name="ehAssessor"]:checked') || {}).value;
+      const body = document.getElementById('fisicoFormBody');
+      const warn = document.getElementById('fisicoBloqueado');
+      body.style.display = (val === 'sim') ? '' : 'none';
+      warn.style.display = (val === 'nao') ? '' : 'none';
+    }
+
     function submitFormFisico() {
+      if ((document.querySelector('input[name="ehAssessor"]:checked') || {}).value !== 'sim') return;
       if (!validateStep('step2Fisico')) return;
+      const errEl = document.getElementById('submitErrorFisico');
+      const email = document.getElementById('emailCorporativoFisico').value.trim().toLowerCase();
+      const dominiosOk = ['@svninvestimentos.com.br', '@svncapital.com.br', '@svnconnect.com.br'];
+      if (!dominiosOk.some(function (d) { return email.endsWith(d); })) {
+        errEl.textContent = 'Use um e-mail terminando em @svninvestimentos.com.br, @svncapital.com.br ou @svnconnect.com.br.';
+        errEl.style.display = '';
+        document.getElementById('emailCorporativoFisico').focus();
+        return;
+      }
+      errEl.style.display = 'none';
       const dados = {
         nome: Auth.getUserName(),
         subTipo: 'físico',
@@ -8532,7 +11440,6 @@ window.FilterPanel = (function () {
   </script>
 </body>
 </html>
-
 ```
 
 
@@ -9655,7 +12562,7 @@ window.FormCore = (function () {
         <div class="field">
           <label>Prazo desejado para entrega</label>
           <input type="date" id="prazoEntrega" required>
-          <div class="field-hint">Prazo mínimo de produção: 3 dias úteis</div>
+          <div class="field-hint">Prazo mínimo de produção: <span id="prazoHintDias">4 dias úteis</span></div>
         </div>
         <div class="field">
           <label>Observações finais (opcional)</label>
@@ -9768,6 +12675,18 @@ window.FormCore = (function () {
     init();
   </script>
 
+  <script src="prazo.js?v=20260619a"></script>
+  <script>
+    (function(){ if(!window.Prazo) return; var TIPO="conteudo-pdf-informativo";
+      Prazo.ready.then(function(){
+        var dias = Prazo.diasUteis(TIPO);
+        var txt = dias!=null ? (dias + (dias===1?" dia útil":" dias úteis")) : "";
+        ["prazoHintDias","prazoHintDias2"].forEach(function(id){ var e=document.getElementById(id); if(e&&txt) e.textContent=txt; });
+        document.querySelectorAll(".prazoHintAV").forEach(function(e){ if(txt) e.textContent=txt; });
+        var p=document.getElementById("prazoEntrega"); if(p){ var m=Prazo.minISO(TIPO); if(m){ p.min=m; if(p.value&&p.value<m)p.value=""; } }
+      });
+    })();
+  </script>
 </body>
 </html>
 ```
@@ -9944,7 +12863,7 @@ Muito obrigado(a), e conte sempre comigo!</textarea>
 
       <div class="alert-card alert-warning">
         <div class="alert-title">Prazo de entrega</div>
-        <div class="alert-text">Produção de e-mail marketing: no mínimo <strong>3 dias úteis</strong>.</div>
+        <div class="alert-text">Produção de e-mail marketing: no mínimo <strong id="prazoHintDias">5 dias úteis</strong>.</div>
       </div>
 
       <div class="field">
@@ -10035,9 +12954,20 @@ Muito obrigado(a), e conte sempre comigo!</textarea>
       onReady: function () { FileUpload.bind('baseDisparo', 'baseDisparoName'); }
     });
   </script>
+  <script src="prazo.js?v=20260619a"></script>
+  <script>
+    (function(){ if(!window.Prazo) return; var TIPO="email-marketing";
+      Prazo.ready.then(function(){
+        var dias = Prazo.diasUteis(TIPO);
+        var txt = dias!=null ? (dias + (dias===1?" dia útil":" dias úteis")) : "";
+        ["prazoHintDias","prazoHintDias2"].forEach(function(id){ var e=document.getElementById(id); if(e&&txt) e.textContent=txt; });
+        document.querySelectorAll(".prazoHintAV").forEach(function(e){ if(txt) e.textContent=txt; });
+        var p=document.getElementById("prazoEntrega"); if(p){ var m=Prazo.minISO(TIPO); if(m){ p.min=m; if(p.value&&p.value<m)p.value=""; } }
+      });
+    })();
+  </script>
 </body>
 </html>
-
 ```
 
 
@@ -12936,7 +15866,7 @@ Muito obrigado(a), e conte sempre comigo!</textarea>
 
       <div class="alert-card alert-info">
         <div class="alert-title">Solicitação de página online</div>
-        <div class="alert-text">Use este formulário para solicitar a criação ou publicação de uma página online (landing page, formulário, etc.). Prazo estimado: <strong>5 dias úteis</strong>.</div>
+        <div class="alert-text">Use este formulário para solicitar a criação ou publicação de uma página online (landing page, formulário, etc.). Prazo estimado: <strong id="prazoHintDias">7 dias úteis</strong>.</div>
       </div>
 
       <div class="field">
@@ -13006,9 +15936,20 @@ Muito obrigado(a), e conte sempre comigo!</textarea>
 
     init();
   </script>
+  <script src="prazo.js?v=20260619a"></script>
+  <script>
+    (function(){ if(!window.Prazo) return; var TIPO="pagina-online";
+      Prazo.ready.then(function(){
+        var dias = Prazo.diasUteis(TIPO);
+        var txt = dias!=null ? (dias + (dias===1?" dia útil":" dias úteis")) : "";
+        ["prazoHintDias","prazoHintDias2"].forEach(function(id){ var e=document.getElementById(id); if(e&&txt) e.textContent=txt; });
+        document.querySelectorAll(".prazoHintAV").forEach(function(e){ if(txt) e.textContent=txt; });
+        var p=document.getElementById("prazoEntrega"); if(p){ var m=Prazo.minISO(TIPO); if(m){ p.min=m; if(p.value&&p.value<m)p.value=""; } }
+      });
+    })();
+  </script>
 </body>
 </html>
-
 ```
 
 
@@ -13374,7 +16315,7 @@ Muito obrigado(a), e conte sempre comigo!</textarea>
               </svg>
             </div>
             <div class="card-label">Produção de Vídeo</div>
-            <div class="card-desc">Prazo mínimo: 30 dias úteis</div>
+            <div class="card-desc">Prazo mínimo: <span class="prazoHintAV">15 dias úteis</span></div>
           </div>
           <div class="radio-card" onclick="selectModalidade('fotos')" id="cardFotos">
             <div class="card-icon">
@@ -13385,7 +16326,7 @@ Muito obrigado(a), e conte sempre comigo!</textarea>
               </svg>
             </div>
             <div class="card-label">Sessão de Fotos</div>
-            <div class="card-desc">Prazo mínimo: 30 dias úteis</div>
+            <div class="card-desc">Prazo mínimo: <span class="prazoHintAV">15 dias úteis</span></div>
           </div>
         </div>
 
@@ -13602,9 +16543,19 @@ Muito obrigado(a), e conte sempre comigo!</textarea>
 
     init();
   </script>
+  <script src="prazo.js?v=20260619a"></script>
+  <script>
+    (function(){ if(!window.Prazo) return;
+      Prazo.ready.then(function(){
+        var dias = Prazo.diasUteis("producao-video");
+        var txt = dias!=null ? (dias + " dias úteis") : "";
+        document.querySelectorAll(".prazoHintAV").forEach(function(e){ if(txt) e.textContent=txt; });
+        var p=document.getElementById("prazoEntrega"); if(p){ var m=Prazo.minISO("producao-video"); if(m){ p.min=m; if(p.value&&p.value<m)p.value=""; } }
+      });
+    })();
+  </script>
 </body>
 </html>
-
 ```
 
 
@@ -13784,6 +16735,96 @@ const IBGELoader = {
 ```
 
 
+## File: artifacts/api-server/public/prazo.js
+
+```
+/* Helper único de prazo no front. Consome /api/prazo/config (mesma tabela + feriados do back). */
+(function () {
+  let CONFIG = null;
+  const FERIADOS = new Set();
+
+  function ymd(d) {
+    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  }
+  function isFeriado(d) { return FERIADOS.has(ymd(d)); }
+  function isDiaUtil(d) { const w = d.getDay(); return w !== 0 && w !== 6 && !isFeriado(d); }
+
+  function addBusinessDays(start, n) {
+    const d = new Date(start); let added = 0;
+    while (added < n) { d.setDate(d.getDate() + 1); if (isDiaUtil(d)) added++; }
+    return d;
+  }
+  function proximaQuarta(from) {
+    const d = new Date(from || new Date());
+    do { d.setDate(d.getDate() + 1); } while (d.getDay() !== 3 || isFeriado(d));
+    return d;
+  }
+
+  function diasUteis(tipo, dados) {
+    dados = dados || {};
+    if (!CONFIG) return null;
+    if (tipo === 'apresentacao-nova') {
+      const t = CONFIG.apresentacaoTiers || {};
+      return t[dados.tamanho] != null ? t[dados.tamanho] : 10;
+    }
+    const tbl = CONFIG.diasUteis || {};
+    return tbl[tipo] != null ? tbl[tipo] : 3;
+  }
+
+  // Date do prazo a partir de hoje. cartao→próxima quarta; eventos→null (depende da data do evento).
+  function dataPrazo(tipo, dados) {
+    if (tipo === 'cartao-visita-fisico') return proximaQuarta(new Date());
+    if (tipo === 'eventos') return null;
+    const dias = diasUteis(tipo, dados);
+    if (dias == null) return null;
+    return addBusinessDays(new Date(), dias);
+  }
+
+  function minISO(tipo, dados) {
+    const d = dataPrazo(tipo, dados);
+    return d ? ymd(d) : '';
+  }
+
+  function labelDias(tipo, dados) {
+    if (tipo === 'cartao-visita-fisico') return 'próxima quarta-feira';
+    if (tipo === 'eventos') return 'conforme a data do evento';
+    const dias = diasUteis(tipo, dados);
+    return dias != null ? ('até ' + dias + (dias === 1 ? ' dia útil' : ' dias úteis')) : '';
+  }
+
+  function dataBR(tipo, dados) {
+    const d = dataPrazo(tipo, dados);
+    if (!d) return '';
+    return String(d.getDate()).padStart(2, '0') + '/' + String(d.getMonth() + 1).padStart(2, '0') + '/' + d.getFullYear();
+  }
+
+  const ready = fetch('/api/prazo/config')
+    .then(function (r) { return r.ok ? r.json() : null; })
+    .then(function (cfg) {
+      if (cfg) {
+        CONFIG = cfg;
+        (cfg.feriados || []).forEach(function (f) { FERIADOS.add(f); });
+      }
+      return CONFIG;
+    })
+    .catch(function () { return null; });
+
+  window.Prazo = {
+    ready: ready,
+    addBusinessDays: addBusinessDays,
+    proximaQuarta: proximaQuarta,
+    diasUteis: diasUteis,
+    dataPrazo: dataPrazo,
+    minISO: minISO,
+    labelDias: labelDias,
+    dataBR: dataBR,
+    get config() { return CONFIG; },
+  };
+})();
+
+```
+
+
 ## File: artifacts/api-server/public/shell.js
 
 ```
@@ -13953,6 +16994,13 @@ window.Shell = {
         icon: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/><line x1="6" y1="15" x2="12" y2="15"/></svg>',
         label: 'Validação de Cartões',
         roles: ['admin', 'capital_humano', 'gestor'],
+      },
+      {
+        route: 'admin-tombamentos',
+        href: '/admin-tombamentos.html',
+        icon: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="4" rx="1"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/></svg>',
+        label: 'Tombamentos',
+        roles: ['admin'],
       },
     ];
 
@@ -14306,10 +17354,9 @@ window.Shell = {
       box-shadow: 0 1px 4px rgba(34,27,25,0.18);
     }
     .chat-avatar img {
-      width: 16px;
-      height: 16px;
+      width: 17px;
+      height: 17px;
       object-fit: contain;
-      filter: invert(1);
     }
 
     .chat-msg-col {
@@ -14560,10 +17607,34 @@ window.Shell = {
       white-space: nowrap;
       box-shadow: 0 1px 3px rgba(0,0,0,0.12);
     }
+    .sol-header-right-col {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 10px;
+      flex-shrink: 0;
+      padding-top: 4px;
+    }
+    .sol-resp {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.82rem;
+      color: var(--carbon-black);
+      max-width: 320px;
+    }
+    .sol-resp .sol-resp-label { opacity: 0.5; font-weight: 500; }
+    .sol-resp .sol-resp-label::after { content: ':'; }
+    .sol-resp .resp-nome { font-weight: 700; }
+    .prazo-badge { display: inline-flex; align-items: center; gap: 7px; padding: 7px 14px; border-radius: 10px; font-size: 0.85rem; font-weight: 700; white-space: nowrap; border: 1px solid transparent; }
+    .prazo-badge .prazo-badge-rel { font-weight: 500; opacity: 0.85; font-size: 0.78rem; }
+    .prazo-alterado { display: inline-flex; align-items: center; gap: 6px; max-width: 340px; padding: 5px 11px; border-radius: 8px; font-size: 0.76rem; font-weight: 600; background: rgba(234,88,12,0.1); color: #c2410c; border: 1px solid rgba(234,88,12,0.25); }
+    .prazo-alterado .prazo-alterado-txt { font-weight: 500; white-space: normal; }
     @media (max-width: 480px) {
       .sol-header { flex-direction: column; gap: 10px; }
       .sol-titulo { font-size: 1.5rem; }
       .sol-header-right { align-self: flex-start; }
+      .sol-header-right-col { align-items: flex-start; width: 100%; }
     }
 
     /* 4a — Bandeja de detalhes (mobile recolhida, desktop sempre visível) */
@@ -14662,7 +17733,8 @@ window.Shell = {
     /* ─── Dados da solicitação ─── */
     .dados-grid {
       display: grid;
-      grid-template-columns: repeat(2, 1fr);
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      grid-auto-flow: row dense;
       gap: 16px 24px;
     }
     .dados-grid-wide {
@@ -14716,22 +17788,26 @@ window.Shell = {
       <div class="sol-header">
         <div class="sol-header-left">
           <h1 class="sol-titulo" id="solTitulo"></h1>
-          <details class="sol-detalhes" id="solDetalhes">
-            <summary>Detalhes</summary>
-            <div class="sol-detalhes-conteudo">
-              <div class="sol-meta" id="solMeta"></div>
-              <div id="solResponsavel" style="display:none;margin-top:8px">
-                <span style="display:inline-flex;align-items:center;gap:6px;padding:5px 12px 5px 10px;background:rgba(34,27,25,0.07);border:1px solid rgba(34,27,25,0.15);border-radius:999px;font-size:0.8rem;color:var(--carbon-black)">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="opacity:0.45;flex-shrink:0"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                  <span style="opacity:0.5;font-weight:500;font-size:0.78rem">Responsável:</span>
-                  <span class="resp-nome" style="font-weight:700;font-size:0.82rem"></span>
-                </span>
-              </div>
-            </div>
-          </details>
+          <div class="sol-meta" id="solMeta"></div>
         </div>
-        <div class="sol-header-right" id="solHeaderRight">
-          <span class="sol-status-badge" id="solStatus"></span>
+        <div class="sol-header-right-col">
+          <div class="sol-header-right" id="solHeaderRight">
+            <span class="sol-status-badge" id="solStatus"></span>
+          </div>
+          <div id="prazoBadge" class="prazo-badge" style="display:none">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="flex-shrink:0"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            <span class="prazo-badge-data"></span>
+            <span class="prazo-badge-rel"></span>
+          </div>
+          <div id="prazoAlterado" class="prazo-alterado" style="display:none">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="flex-shrink:0"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            <span class="prazo-alterado-txt"></span>
+          </div>
+          <div id="solResponsavel" class="sol-resp" style="display:none">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="opacity:0.4;flex-shrink:0"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            <span class="sol-resp-label">Responsável</span>
+            <span class="resp-nome"></span>
+          </div>
         </div>
       </div>
 
@@ -14876,12 +17952,70 @@ window.Shell = {
         const r = await fetch('/api/solicitacoes/' + solicitacaoId + '/status');
         if (!r.ok) return;
         const d = await r.json();
-        if (d.updated && d.status !== item.status) {
-          item.status = d.status;
+        const prazoMudou = d.prazo_alterado_em && d.prazo_alterado_em !== item.prazo_alterado_em;
+        const statusMudou = d.updated && d.status && d.status !== item.status;
+        // sincroniza os campos de prazo silenciosamente
+        if (d.prazo) item.prazo = d.prazo;
+        if (d.prazo_anterior) item.prazo_anterior = d.prazo_anterior;
+        if (d.prazo_motivo !== undefined) item.prazo_motivo = d.prazo_motivo;
+        if (d.prazo_alterado_em) item.prazo_alterado_em = d.prazo_alterado_em;
+        if (statusMudou) item.status = d.status;
+        if (statusMudou || prazoMudou) {
           renderPage(item);
+          if (prazoMudou && window.showToast) showToast('O prazo desta solicitação foi atualizado.', 'info');
         }
       } catch {}
       finally { _syncing = false; }
+    }
+
+    function renderPrazoBadge(item) {
+      const badge = document.getElementById('prazoBadge');
+      const alterado = document.getElementById('prazoAlterado');
+      if (!badge) return;
+      if (isTipoAutomacao(item.tipo_solicitacao) || !item.prazo) {
+        badge.style.display = 'none';
+        if (alterado) alterado.style.display = 'none';
+        return;
+      }
+      const DIAS_SEM = ['domingo','segunda','terça','quarta','quinta','sexta','sábado'];
+      const pd = new Date(item.prazo);
+      const fmt = String(pd.getDate()).padStart(2,'0') + '/' + String(pd.getMonth()+1).padStart(2,'0') + '/' + pd.getFullYear();
+
+      const finalizado = ['concluido','cancelado','reprovado'].includes(item.status);
+      // dias corridos até o prazo (data, sem hora)
+      const hoje = new Date(); hoje.setHours(0,0,0,0);
+      const alvo = new Date(pd); alvo.setHours(0,0,0,0);
+      const diff = Math.round((alvo - hoje) / 86400000);
+
+      let bg, fg, br, rel;
+      if (finalizado) {
+        bg = 'rgba(34,27,25,0.06)'; fg = 'rgba(34,27,25,0.6)'; br = 'rgba(34,27,25,0.12)'; rel = '';
+      } else if (diff < 0) {
+        bg = 'rgba(220,38,38,0.1)'; fg = '#b91c1c'; br = 'rgba(220,38,38,0.28)'; rel = 'atrasado há ' + Math.abs(diff) + (Math.abs(diff)===1?' dia':' dias');
+      } else if (diff === 0) {
+        bg = 'rgba(220,38,38,0.1)'; fg = '#b91c1c'; br = 'rgba(220,38,38,0.28)'; rel = 'é hoje';
+      } else if (diff <= 2) {
+        bg = 'rgba(234,88,12,0.1)'; fg = '#c2410c'; br = 'rgba(234,88,12,0.28)'; rel = 'em ' + diff + (diff===1?' dia':' dias');
+      } else {
+        bg = 'rgba(22,163,74,0.1)'; fg = '#15803d'; br = 'rgba(22,163,74,0.25)'; rel = 'em ' + diff + ' dias';
+      }
+      badge.style.background = bg; badge.style.color = fg; badge.style.borderColor = br;
+      badge.querySelector('.prazo-badge-data').textContent = 'Prazo: ' + fmt + ' · ' + DIAS_SEM[pd.getDay()];
+      badge.querySelector('.prazo-badge-rel').textContent = rel ? '(' + rel + ')' : '';
+      badge.style.display = 'inline-flex';
+
+      // Indicador de prazo alterado
+      if (alterado) {
+        if (item.prazo_alterado_em) {
+          const antes = item.prazo_anterior ? new Date(item.prazo_anterior) : null;
+          const antesFmt = antes ? (String(antes.getDate()).padStart(2,'0') + '/' + String(antes.getMonth()+1).padStart(2,'0') + '/' + antes.getFullYear()) : '';
+          const motivo = (item.prazo_motivo && String(item.prazo_motivo).trim()) ? String(item.prazo_motivo).trim() : 'sem justificativa informada';
+          alterado.querySelector('.prazo-alterado-txt').textContent = 'Prazo alterado' + (antesFmt ? ' (antes: ' + antesFmt + ')' : '') + ' · ' + motivo;
+          alterado.style.display = 'inline-flex';
+        } else {
+          alterado.style.display = 'none';
+        }
+      }
     }
 
     /* ── renderPage ───────────────────────────── */
@@ -14964,22 +18098,22 @@ window.Shell = {
       const metaParts = [];
       metaParts.push(`<span>${esc(tipoLabel)}</span>`);
       if (item.user_email) {
-        const nomeUser = item.user_email.split('@')[0];
-        metaParts.push(`<span class="sol-meta-sep"></span><span style="display:inline-flex;align-items:center;gap:3px"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="opacity:0.45;flex-shrink:0"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>${esc(nomeUser)}</span><span class="sol-meta-sep"></span><span style="opacity:0.5" title="${esc(item.user_email)}">${esc(item.user_email)}</span>`);
+        metaParts.push(`<span class="sol-meta-sep"></span><span style="display:inline-flex;align-items:center;gap:4px"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="opacity:0.45;flex-shrink:0"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span title="${esc(item.user_email)}">${esc(item.user_email)}</span></span>`);
       }
       if (dados.setor) metaParts.push(`<span class="sol-meta-sep"></span><span>${esc(dados.setor)}</span>`);
       if (dados.natureza) metaParts.push(`<span class="sol-meta-sep"></span><span>${dados.natureza === 'presencial' ? 'Presencial' : 'Online'}</span>`);
-      metaParts.push(`<span class="sol-meta-sep"></span><span title="${dtStr}">Solicitado ${dtRel}</span>`);
+      metaParts.push(`<span class="sol-meta-sep"></span><span title="${dtRel}">Solicitado em ${dtStr}</span>`);
       document.getElementById('solMeta').innerHTML = metaParts.join('');
       const respEl = document.getElementById('solResponsavel');
       if (respEl) {
         if (item.responsavel) {
-          respEl.style.display = 'inline-flex';
+          respEl.style.display = 'flex';
           respEl.querySelector('.resp-nome').textContent = item.responsavel;
         } else {
           respEl.style.display = 'none';
         }
       }
+      renderPrazoBadge(item);
 
       renderFluxo(item);
       if (isTipoAutomacao(item.tipo_solicitacao)) {
@@ -15011,18 +18145,18 @@ window.Shell = {
         (isAdm ? ((() => {
           const nota = item.avaliacao && item.avaliacao.nota;
           if (nota) {
-            const cor = nota >= 8 ? '#16a34a' : nota >= 5 ? '#ea580c' : '#dc2626';
-            const corBg = nota >= 8 ? 'rgba(22,163,74,0.12)' : nota >= 5 ? 'rgba(234,88,12,0.12)' : 'rgba(220,38,38,0.12)';
+            const cor = nota >= 4 ? '#16a34a' : nota >= 3 ? '#ea580c' : '#dc2626';
+            const corBg = nota >= 4 ? 'rgba(22,163,74,0.12)' : nota >= 3 ? 'rgba(234,88,12,0.12)' : 'rgba(220,38,38,0.12)';
             return `<button
               onclick="verAvaliacao(${item.id})"
               id="btnVerAvaliacao"
-              title="Ver avaliação: ${nota}/10"
+              title="Ver avaliação: ${nota}/5"
               style="display:inline-flex;align-items:center;gap:5px;height:32px;padding:0 11px;border-radius:8px;border:none;background:${corBg};color:${cor};cursor:pointer;transition:filter 0.15s"
               onmouseover="this.style.filter='brightness(0.94)'" onmouseout="this.style.filter='none'">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="${cor}" stroke="${cor}" stroke-width="2">
                 <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
               </svg>
-              <span style="font-size:13px;font-weight:600;line-height:1">${nota}<span style="font-size:11px;font-weight:400;opacity:0.65">/10</span></span>
+              <span style="font-size:13px;font-weight:600;line-height:1">${nota}<span style="font-size:11px;font-weight:400;opacity:0.65">/5</span></span>
             </button>`;
           }
           if (item.status === 'concluido') {
@@ -15336,7 +18470,7 @@ window.Shell = {
 
       const tiposComAprovacao = [
         'eventos', 'artes-divulgacao', 'atualizacao-material',
-        'conteudo-pdf-informativo', 'conteudo-pdf-ebook',
+        'conteudo-pdf-informativo',
         'apresentacao-nova', 'apresentacao-atualizar',
       ];
       if (!tiposComAprovacao.includes(item.tipo_solicitacao)) {
@@ -15344,16 +18478,19 @@ window.Shell = {
         return;
       }
 
-      const statusComAprovacao = ['em-aprovacao', 'concluido', 'reprovado', 'em-revisao'];
       const temHistorico = getRodadas(item.id).length > 0;
+      const isAprovacao = item.status === 'em-aprovacao';
+      // Histórico somente-leitura para decisões finais
+      const isHistoricoLeitura = (item.status === 'concluido' || item.status === 'reprovado') && temHistorico;
 
-      if (!statusComAprovacao.includes(item.status) && !temHistorico) {
+      // Chat só fica disponível em "Em aprovação" (com link de entrega). Em revisão e demais → escondido.
+      if (!isAprovacao && !isHistoricoLeitura) {
         card.style.display = 'none';
         return;
       }
 
-      // Guard duplo: se em-aprovacao, verificar se há links de entrega antes de mostrar
-      if (item.status === 'em-aprovacao') {
+      // Em aprovação exige link no campo "Entrega" antes de liberar o chat
+      if (isAprovacao) {
         let temLinks = false;
         try {
           const res = await fetch('/api/solicitacoes/' + item.id + '/entrega');
@@ -15473,6 +18610,11 @@ window.Shell = {
       if (jaDecidido) {
         renderTranscript(rodadaAtual, nomeUsuario);
         document.getElementById('chatInputArea').style.display = 'none';
+        // Se foi aprovado e ainda não há avaliação registrada, reexibe a pesquisa para avaliar quando quiser.
+        const jaAvaliado = !!(item.avaliacao && item.avaliacao.nota);
+        if (rodadaAtual.decisao === 'aprovado' && !jaAvaliado) {
+          renderPesquisaSatisfacao(item.id);
+        }
         return;
       }
 
@@ -15751,7 +18893,8 @@ window.Shell = {
 
     /* ── Pesquisa de Satisfação ── */
     async function renderPesquisaSatisfacao(solId) {
-      const notas = [1,2,3,4,5,6,7,8,9,10];
+      if (document.getElementById('pesquisaSatisfacao')) return;
+      const notas = [1,2,3,4,5];
       const html = `
         <div id="pesquisaSatisfacao" style="
           background: rgba(255,255,255,0.7);
@@ -15762,7 +18905,7 @@ window.Shell = {
           font-family: inherit;
         ">
           <p style="font-size:0.9rem;font-weight:600;color:var(--carbon-black);margin:0 0 10px">
-            Em uma escala de 1 a 10, como você avalia o material entregue?
+            Em uma escala de 1 a 5, como você avalia o material entregue?
           </p>
           <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">
             ${notas.map(n => `
@@ -15863,9 +19006,9 @@ window.Shell = {
           const dataAv = av.data;
           const dataFmt = dataAv ? new Date(dataAv).toLocaleDateString('pt-BR', { day:'2-digit', month:'long', year:'numeric' }) : '';
           const horaFmt = dataAv ? new Date(dataAv).toLocaleTimeString('pt-BR', { hour:'2-digit', minute:'2-digit' }) : '';
-          const notaCor = nota >= 8 ? '#16a34a' : nota >= 5 ? '#ea580c' : '#dc2626';
-          const notaLabel = nota >= 8 ? 'Excelente' : nota >= 5 ? 'Regular' : 'Precisa melhorar';
-          const estrelas = Array.from({length: 10}, (_, i) =>
+          const notaCor = nota >= 4 ? '#16a34a' : nota >= 3 ? '#ea580c' : '#dc2626';
+          const notaLabel = nota >= 4 ? 'Excelente' : nota >= 3 ? 'Regular' : 'Precisa melhorar';
+          const estrelas = Array.from({length: 5}, (_, i) =>
             `<svg width="18" height="18" viewBox="0 0 24 24" fill="${i < nota ? '#f59e0b' : 'none'}" stroke="${i < nota ? '#f59e0b' : 'rgba(34,27,25,0.2)'}" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`
           ).join('');
 
@@ -16227,14 +19370,16 @@ window.Shell = {
             }
           } else {
             const val = value.map(v => humanizeValue(key, v)).join(', ');
-            gridFields += `<div class="dados-field${wideClass}"><div class="dados-label">${esc(label)}</div><div class="dados-value">${esc(val)}</div></div>`;
+            const wideAuto = (val.length > 70 || /\n/.test(val)) ? ' dados-grid-wide' : '';
+            gridFields += `<div class="dados-field${wideAuto}"><div class="dados-label">${esc(label)}</div><div class="dados-value">${esc(val)}</div></div>`;
             hasContent = true;
           }
           continue;
         }
         if (typeof value === 'object') continue;
         const val = String(humanizeValue(key, value));
-        gridFields += `<div class="dados-field${wideClass}"><div class="dados-label">${esc(label)}</div><div class="dados-value">${esc(val)}</div></div>`;
+        const wideAuto = (val.length > 70 || /\n/.test(val)) ? ' dados-grid-wide' : '';
+        gridFields += `<div class="dados-field${wideAuto}"><div class="dados-label">${esc(label)}</div><div class="dados-value">${esc(val)}</div></div>`;
         hasContent = true;
       }
 
@@ -16385,7 +19530,6 @@ window.Shell = {
   </div>
 </body>
 </html>
-
 ```
 
 
@@ -19295,6 +22439,35 @@ window.Modal = (function () {
   <link rel="stylesheet" href="style.css?v=20260615c">
   <style>
 
+    /* Esta página foge do padrão de largura: a tabela tem muitas colunas, então aproveita mais espaço */
+    .page-container--wide { max-width: min(1760px, 96vw); }
+
+    /* Linha inteira verde quando a solicitação chega na etapa final (Envio assessor) */
+    table.vc tbody tr.vc-final td { background: #dcfce7 !important; }
+    table.vc tbody tr.vc-final select { background: transparent !important; }
+    .cartao-card--final { background: #dcfce7; }
+    /* Toggle "Esconder cartões enviados" */
+    .vc-hide-enviados tr.vc-final { display: none !important; }
+    .vc-hide-enviados .cartao-card--final { display: none !important; }
+    .vc-toggle-btn { font-family: 'Nunito Sans', sans-serif; font-size: 0.78rem; font-weight: 700; padding: 6px 12px; border-radius: 999px; border: 1px solid var(--border-light); background: var(--card-white); color: rgba(34,27,25,0.6); cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: background .15s, color .15s, border-color .15s; white-space: nowrap; }
+    .vc-toggle-btn:hover { background: var(--icon-bg); }
+    .vc-toggle-btn.active { background: var(--carbon-black); color: var(--paper-white); border-color: var(--carbon-black); }
+
+    /* Estrela de primeira solicitação (ao lado do nome) + legenda */
+    .vc-namecell { display: flex; align-items: center; gap: 5px; }
+    .vc-namecell input { flex: 1; min-width: 0; }
+    .vc-star { flex: 0 0 13px; text-align: center; color: #ac3631; font-size: 0.82rem; line-height: 1; }
+    .vc-legend { font-size: 0.78rem; color: rgba(34,27,25,0.6); display: inline-flex; align-items: center; gap: 5px; }
+    .vc-legend .vc-star { flex: none; }
+
+    /* Indicador de ordenação: sempre visível (cinza), destacado na coluna ativa */
+    table.vc th .sort-ind { color: rgba(255,255,255,0.4); }
+    table.vc th .sort-ind.active { color: var(--paper-white); }
+
+    /* Alça de redimensionamento de coluna (estilo Excel) */
+    .vc-resizer { position: absolute; top: 0; right: 0; width: 7px; height: 100%; cursor: col-resize; user-select: none; z-index: 3; }
+    .vc-resizer:hover { background: rgba(172,54,49,0.45); }
+
     .vc-count { font-size: 0.85rem; color: rgba(34,27,25,0.5); }
     .vc-saved { font-size: 0.78rem; color: #15803d; opacity: 0; transition: opacity .2s; }
     .vc-saved.show { opacity: 1; }
@@ -19418,9 +22591,15 @@ window.Modal = (function () {
       </div>
         </div>
       </div>
-      <div style="display:flex;justify-content:flex-end;align-items:center;gap:12px;margin:4px 0 10px">
-        <span class="vc-saved" id="vcSaved">✓ Salvo</span>
-        <span class="vc-count" id="vcCount"></span>
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin:4px 0 10px;flex-wrap:wrap">
+        <span style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+          <span class="vc-legend"><span class="vc-star">★</span> = primeira solicitação</span>
+          <button id="vcHideEnviados" class="vc-toggle-btn" type="button" onclick="toggleHideEnviados()">Esconder cartões enviados</button>
+        </span>
+        <span style="display:flex;align-items:center;gap:12px">
+          <span class="vc-saved" id="vcSaved">✓ Salvo</span>
+          <span class="vc-count" id="vcCount"></span>
+        </span>
       </div>
 
       <div id="vcContent"><div class="empty-state"><p>Carregando…</p></div></div>
@@ -19455,6 +22634,7 @@ window.Modal = (function () {
       { v: 'Salvador', label: 'Salvador' },
       { v: 'São Paulo - Digital', label: 'São Paulo - Digital' },
       { v: 'São Paulo - Relacionamento', label: 'São Paulo - Relacionamento' },
+      { v: 'Toledo', label: 'Toledo' },
     ];
     const CUSTO_OPTS = [
       { v: '', label: 'Selecione…' },
@@ -19474,12 +22654,12 @@ window.Modal = (function () {
       { v: 'reprovado', label: 'Reprovado' },
     ];
     const STATUS_COLORS = {
-      'aguardando-validacao': { bg: '#fee2e2', text: '#b91c1c' },
-      'aguardando-contrato': { bg: '#f1f5f9', text: '#475569' },
-      'validado': { bg: '#d1fae5', text: '#047857' },
+      'aguardando-validacao': { bg: '#eef2f7', text: '#475569' },
+      'aguardando-contrato': { bg: '#ffedd5', text: '#c2410c' },
+      'validado': { bg: '#ede9fe', text: '#6d28d9' },
       'envio-grafica': { bg: '#dbeafe', text: '#1d4ed8' },
       'envio-assessor': { bg: '#dcfce7', text: '#15803d' },
-      'reprovado': { bg: '#fecaca', text: '#dc2626' },
+      'reprovado': { bg: '#fee2e2', text: '#dc2626' },
     };
     const COLS = [
       { f: '_del', label: '', group: 'form', type: 'delete', min: 34 },
@@ -19498,8 +22678,10 @@ window.Modal = (function () {
 
     let IS_ADMIN = false;
     let RAW = [];
-    let sortState = { field: null, dir: 1 };
+    let sortState = { field: 'data_pedido', dir: -1 };
     let filters = { status: '', contrato: '', unidade: '' };
+    let colWidths = {};
+    let colResizing = false;
 
       function optionsHtml(opts, sel) { return opts.map(function (o) { return '<option value="' + esc(o.v) + '"' + (o.v === sel ? ' selected' : '') + '>' + esc(o.label) + '</option>'; }).join(''); }
     function colorSelect(el, map) { const c = map && map[el.value]; if (c) { el.style.background = c.bg; el.style.color = c.text; } else { el.style.background = 'transparent'; el.style.color = '#221b19'; } }
@@ -19551,6 +22733,7 @@ window.Modal = (function () {
       if (typeof Shell !== 'undefined' && Shell.render) {
         Shell.render({ activeRoute: 'validacao-cartoes', contentEl: document.getElementById('pageContent') });
       }
+      applyHideEnviados();
       carregar();
     }
 
@@ -19589,28 +22772,89 @@ window.Modal = (function () {
         });
       }
       if (sortState.field) {
+        const f = sortState.field;
         view.sort(function (a, b) {
-          const av = String(a[sortState.field] || ''); const bv = String(b[sortState.field] || '');
+          if (f === 'data_pedido') {
+            return (new Date(a.created_at || 0) - new Date(b.created_at || 0)) * sortState.dir;
+          }
+          const av = String(a[f] || ''); const bv = String(b[f] || '');
           return av.localeCompare(bv, 'pt-BR', { numeric: true, sensitivity: 'base' }) * sortState.dir;
         });
       }
       return view;
     }
 
+    function recomputeFirstSeq() {
+      var groups = {};
+      RAW.forEach(function (r) {
+        r._seq = null;
+        var key = (r.email || '').trim().toLowerCase();
+        if (!key) return;            // sem e-mail: não dá pra identificar a pessoa com segurança → sem selo
+        (groups[key] = groups[key] || []).push(r);
+      });
+      Object.keys(groups).forEach(function (k) {
+        groups[k].sort(function (a, b) { return new Date(a.created_at || 0) - new Date(b.created_at || 0); });
+        groups[k].forEach(function (r, i) { r._seq = i + 1; });
+      });
+    }
+    function firstBadge(seq) {
+      return seq === 1
+        ? '<span class="vc-star" title="Primeira solicitação">★</span>'
+        : '<span class="vc-star"></span>';
+    }
+
+    function fitTableHeight() {
+      const sc = document.querySelector('.vc-scroll');
+      if (!sc) return;
+      const top = sc.getBoundingClientRect().top;
+      sc.style.maxHeight = Math.max(240, window.innerHeight - top - 24) + 'px';
+    }
+    window.addEventListener('resize', fitTableHeight);
+
+    /* ── Toggle "Esconder cartões enviados" (status envio-assessor → linhas .vc-final) ── */
+    const VC_HIDE_KEY = 'vc_hide_enviados';
+    function applyHideEnviados() {
+      const on = localStorage.getItem(VC_HIDE_KEY) === '1';
+      const vc = document.getElementById('vcContent');
+      const cards = document.querySelector('.cartoes-cards-mobile');
+      if (vc) vc.classList.toggle('vc-hide-enviados', on);
+      if (cards) cards.classList.toggle('vc-hide-enviados', on);
+      const btn = document.getElementById('vcHideEnviados');
+      if (btn) {
+        btn.classList.toggle('active', on);
+        btn.textContent = on ? 'Mostrar cartões enviados' : 'Esconder cartões enviados';
+      }
+    }
+    function toggleHideEnviados() {
+      const on = localStorage.getItem(VC_HIDE_KEY) === '1';
+      localStorage.setItem(VC_HIDE_KEY, on ? '0' : '1');
+      applyHideEnviados();
+    }
+
     function render() {
+      recomputeFirstSeq();
       const view = getView();
       document.getElementById('vcCount').textContent = view.length + (view.length === 1 ? ' cartão' : ' cartões');
       if (!RAW.length) { document.getElementById('vcContent').innerHTML = '<div class="empty-state"><p>Nenhuma solicitação de cartão físico ainda.</p></div>'; return; }
 
       const head = '<tr>' + COLS.map(function (c) {
-        const ind = sortState.field === c.f ? (sortState.dir === 1 ? '▲' : '▼') : '';
-        return '<th class="' + c.group + ' sortable" data-sort="' + c.f + '" style="min-width:' + c.min + 'px">' + esc(c.label) + '<span class="sort-ind">' + ind + '</span></th>';
+        const cw = colWidths[c.f] || c.min;
+        const canSort = c.type !== 'delete' && c.type !== 'pdf';
+        const isActive = sortState.field === c.f;
+        const ind = !canSort ? '' : (isActive ? (sortState.dir === 1 ? '▲' : '▼') : '↕');
+        const cls = c.group + (canSort ? ' sortable' : '');
+        const resizer = c.type !== 'delete' ? '<span class="vc-resizer"></span>' : '';
+        return '<th class="' + cls + '" data-sort="' + c.f + '" style="width:' + cw + 'px;min-width:' + cw + 'px">'
+          + esc(c.label)
+          + (ind ? '<span class="sort-ind' + (isActive ? ' active' : '') + '">' + ind + '</span>' : '')
+          + resizer + '</th>';
       }).join('') + '</tr>';
 
       const rows = view.map(function (l) {
         const tds = COLS.map(function (c) {
           const val = l[c.f];
-          const w = ' style="min-width:' + c.min + 'px"';
+          const cw = colWidths[c.f] || c.min;
+          const w = ' style="width:' + cw + 'px;min-width:' + cw + 'px"';
           if (c.type === 'delete') {
             if (!IS_ADMIN) return '<td' + w + '></td>';
             return '<td' + w + '><button type="button" onclick="deleteCartao(' + l.solicitacao_id + ',this)" title="Excluir permanentemente" aria-label="Excluir" style="border:none;background:transparent;cursor:pointer;padding:4px;color:var(--danger);display:inline-flex;align-items:center;justify-content:center"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg></button></td>';
@@ -19625,21 +22869,59 @@ window.Modal = (function () {
           }
           if (c.type === 'select') return '<td' + w + '><select data-f="' + c.f + '">' + optionsHtml(c.opts, val) + '</select></td>';
           if (c.type === 'textarea') return '<td class="col-observacao"' + w + '><textarea data-f="' + c.f + '" rows="1" placeholder="—">' + esc(val) + '</textarea></td>';
+          if (c.f === 'nome') {
+            return '<td' + w + '><div class="vc-namecell">' + firstBadge(l._seq)
+              + '<input data-f="nome" value="' + esc(val) + '" title="' + esc(val) + '"></div></td>';
+          }
           return '<td' + w + '><input data-f="' + c.f + '" value="' + esc(val) + '" title="' + esc(val) + '"' + (c.f === 'envio_para' ? ' placeholder="—"' : '') + '></td>';
         }).join('');
-        return '<tr data-id="' + l.solicitacao_id + '">' + tds + '</tr>';
+        return '<tr data-id="' + l.solicitacao_id + '"' + (l.status === 'envio-assessor' ? ' class="vc-final"' : '') + '>' + tds + '</tr>';
       }).join('');
 
       document.getElementById('vcContent').innerHTML = '<div class="vc-scroll"><table class="vc"><thead>' + head + '</thead><tbody>' + rows + '</tbody></table></div>';
+      applyHideEnviados();
       renderCartoesCards(view);
 
       document.querySelectorAll('table.vc th.sortable').forEach(function (th) {
-        th.addEventListener('click', function () {
+        th.addEventListener('click', function (e) {
+          if (colResizing || (e.target && e.target.classList && e.target.classList.contains('vc-resizer'))) return;
           const f = th.getAttribute('data-sort');
           if (sortState.field === f) sortState.dir *= -1; else { sortState.field = f; sortState.dir = 1; }
           render();
         });
       });
+
+      document.querySelectorAll('table.vc th .vc-resizer').forEach(function (rz) {
+        rz.addEventListener('mousedown', function (e) {
+          e.preventDefault(); e.stopPropagation();
+          const th = rz.parentElement;
+          const table = th.closest('table');
+          const idx = Array.prototype.indexOf.call(th.parentNode.children, th);
+          const f = th.getAttribute('data-sort');
+          const startX = e.clientX; const startW = th.offsetWidth;
+          colResizing = true;
+          document.body.style.cursor = 'col-resize'; document.body.style.userSelect = 'none';
+          function move(ev) {
+            const wpx = Math.max(48, startW + (ev.clientX - startX));
+            colWidths[f] = wpx;
+            th.style.width = wpx + 'px'; th.style.minWidth = wpx + 'px';
+            table.querySelectorAll('tbody tr').forEach(function (tr) {
+              const td = tr.children[idx];
+              if (td) { td.style.width = wpx + 'px'; td.style.minWidth = wpx + 'px'; }
+            });
+          }
+          function up() {
+            document.removeEventListener('mousemove', move);
+            document.removeEventListener('mouseup', up);
+            document.body.style.cursor = ''; document.body.style.userSelect = '';
+            setTimeout(function () { colResizing = false; }, 50);
+          }
+          document.addEventListener('mousemove', move);
+          document.addEventListener('mouseup', up);
+        });
+      });
+
+      fitTableHeight();
 
       document.querySelectorAll('table.vc tbody tr').forEach(function (tr) {
         tr.querySelectorAll('select[data-f]').forEach(function (sel) {
@@ -19665,7 +22947,7 @@ window.Modal = (function () {
         var statusColor = STATUS_COLORS[c.status] || { bg: '#f1f5f9', text: '#475569' };
         var statusLabel = (STATUS_OPTS.find(function(s) { return s.v === c.status; }) || {}).label || c.status || '—';
         var dataFmt = c.data_pedido ? new Date(c.data_pedido).toLocaleDateString('pt-BR', { day:'2-digit', month:'short', year:'numeric' }) : '—';
-        return '<article class="card cartao-card" data-id="' + c.solicitacao_id + '">' +
+        return '<article class="card cartao-card' + (c.status === 'envio-assessor' ? ' cartao-card--final' : '') + '" data-id="' + c.solicitacao_id + '">' +
           '<div class="cartao-card-header">' +
             '<div>' +
               '<div class="cartao-card-nome">' + esc(c.nome || '—') + '</div>' +
@@ -19701,6 +22983,7 @@ window.Modal = (function () {
           '</div>' +
         '</article>';
       }).join('');
+      applyHideEnviados();
     }
 
     let saveTimer = null;
@@ -19734,6 +23017,7 @@ window.Modal = (function () {
           method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload),
         });
         if (res.ok) {
+          tr.classList.toggle('vc-final', payload.status === 'envio-assessor');
           tr.classList.add('flash'); setTimeout(function () { tr.classList.remove('flash'); }, 600);
           const tag = document.getElementById('vcSaved'); tag.classList.add('show');
           clearTimeout(saveTimer); saveTimer = setTimeout(function () { tag.classList.remove('show'); }, 1500);
@@ -20865,7 +24149,6 @@ export const VALID_TIPOS: string[] = [
   "artes-divulgacao",
   "atualizacao-material",
   "conteudo-pdf-informativo",
-  "conteudo-pdf-ebook",
   "apresentacao-nova",
   "apresentacao-atualizar",
   "pagina-assessores-dados",
@@ -20902,7 +24185,6 @@ export const TIPOS_COM_CLICKUP: Array<{ tipo: string; label: string }> = [
   { tipo: "artes-divulgacao",              label: "Artes de Divulgação" },
   { tipo: "atualizacao-material",          label: "Atualização de Material" },
   { tipo: "conteudo-pdf-informativo",      label: "PDF — Informativo" },
-  { tipo: "conteudo-pdf-ebook",            label: "PDF — Ebook" },
   { tipo: "apresentacao-nova",             label: "Apresentação — Nova" },
   { tipo: "apresentacao-atualizar",        label: "Apresentação — Atualização" },
   { tipo: "pagina-assessores-dados",       label: "Página de Assessores — Dados" },
@@ -20946,7 +24228,6 @@ export function getFormSchemaList() {
     };
   });
 }
-
 ```
 
 
@@ -20989,6 +24270,7 @@ export const UNIDADES_ENDERECOS: Record<string, string> =
 import app from "./app";
 import { logger } from "./lib/logger";
 import { pool } from "@workspace/db";
+import { startStuckMonitor } from "./services/stuck-monitor";
 
 const rawPort = process.env["PORT"];
 
@@ -21138,6 +24420,10 @@ const DB_STATEMENTS = [
   `CREATE INDEX IF NOT EXISTS "IDX_art_assets_uploaded_at"    ON "art_assets" ("uploaded_at" DESC)`,
   `CREATE INDEX IF NOT EXISTS "IDX_art_assets_used_template"  ON "art_assets" USING GIN ("used_in_template_ids")`,
   `ALTER TABLE "solicitacoes" ADD COLUMN IF NOT EXISTS "erro_geracao" text`,
+  `ALTER TABLE "solicitacoes" ADD COLUMN IF NOT EXISTS "prazo" TIMESTAMP`,
+  `ALTER TABLE "solicitacoes" ADD COLUMN IF NOT EXISTS "prazo_anterior" TIMESTAMP`,
+  `ALTER TABLE "solicitacoes" ADD COLUMN IF NOT EXISTS "prazo_motivo" text`,
+  `ALTER TABLE "solicitacoes" ADD COLUMN IF NOT EXISTS "prazo_alterado_em" TIMESTAMP`,
 
   // Aprovação de cartões físicos
   `CREATE TABLE IF NOT EXISTS "cartao_aprovacoes" (
@@ -21170,6 +24456,22 @@ const DB_STATEMENTS = [
   )`,
   `CREATE INDEX IF NOT EXISTS "idx_eventos_sol"     ON "eventos_solicitacao" ("solicitacao_id", "created_at" DESC)`,
   `CREATE INDEX IF NOT EXISTS "idx_eventos_tipo_24h" ON "eventos_solicitacao" ("tipo", "created_at" DESC) WHERE "tipo" IN ('warning','error')`,
+
+  // Tombamentos (geração em massa)
+  `CREATE TABLE IF NOT EXISTS "tombamentos" (
+    "id"                  SERIAL       PRIMARY KEY,
+    "nome"                VARCHAR(255) NOT NULL,
+    "marca"               VARCHAR(60)  NOT NULL,
+    "status"              VARCHAR(30)  NOT NULL DEFAULT 'aberto',
+    "linhas"              JSONB,
+    "assinaturas_zip_url" TEXT,
+    "cartoes_zip_url"     TEXT,
+    "expires_at"          TIMESTAMP,
+    "created_by"          VARCHAR(255),
+    "created_at"          TIMESTAMP    NOT NULL DEFAULT NOW(),
+    "updated_at"          TIMESTAMP    NOT NULL DEFAULT NOW()
+  )`,
+  `CREATE INDEX IF NOT EXISTS "idx_tombamentos_created_at" ON "tombamentos" ("created_at" DESC)`,
 ];
 
 async function start() {
@@ -21185,6 +24487,7 @@ async function start() {
 
   const server = app.listen(port, () => {
     logger.info({ port }, "Server listening");
+    startStuckMonitor();
   });
 
   server.on('error', (err) => {
@@ -21194,6 +24497,112 @@ async function start() {
 }
 
 start();
+```
+
+
+## File: artifacts/api-server/src/lib/holidays.ts
+
+```
+// Feriados nacionais brasileiros (fixos + móveis baseados na Páscoa) para cálculo de dias úteis.
+// Inclui os feriados nacionais + os móveis amplamente observados (Carnaval, Sexta-feira Santa, Corpus Christi).
+
+// Algoritmo de Meeus/Jones/Butcher para a Páscoa (domingo de Páscoa) de um ano.
+function easterSunday(year: number): Date {
+  const a = year % 19;
+  const b = Math.floor(year / 100);
+  const c = year % 100;
+  const d = Math.floor(b / 4);
+  const e = b % 4;
+  const f = Math.floor((b + 8) / 25);
+  const g = Math.floor((b - f + 1) / 3);
+  const h = (19 * a + b - d - g + 15) % 30;
+  const i = Math.floor(c / 4);
+  const k = c % 4;
+  const l = (32 + 2 * e + 2 * i - h - k) % 7;
+  const m = Math.floor((a + 11 * h + 22 * l) / 451);
+  const month = Math.floor((h + l - 7 * m + 114) / 31); // 3 = março, 4 = abril
+  const day = ((h + l - 7 * m + 114) % 31) + 1;
+  return new Date(year, month - 1, day);
+}
+
+function ymd(d: Date): string {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
+function addDays(d: Date, n: number): Date {
+  const r = new Date(d);
+  r.setDate(r.getDate() + n);
+  return r;
+}
+
+// Cache por ano: Set de strings 'YYYY-MM-DD'
+const cache = new Map<number, Set<string>>();
+
+export function holidaysForYear(year: number): Set<string> {
+  const cached = cache.get(year);
+  if (cached) return cached;
+
+  const set = new Set<string>();
+  // Fixos nacionais
+  set.add(`${year}-01-01`); // Confraternização Universal
+  set.add(`${year}-04-21`); // Tiradentes
+  set.add(`${year}-05-01`); // Dia do Trabalho
+  set.add(`${year}-09-07`); // Independência
+  set.add(`${year}-10-12`); // Nossa Senhora Aparecida
+  set.add(`${year}-11-02`); // Finados
+  set.add(`${year}-11-15`); // Proclamação da República
+  set.add(`${year}-11-20`); // Consciência Negra (nacional desde 2024)
+  set.add(`${year}-12-25`); // Natal
+
+  // Móveis (relativos à Páscoa)
+  const easter = easterSunday(year);
+  set.add(ymd(addDays(easter, -48))); // Carnaval (segunda)
+  set.add(ymd(addDays(easter, -47))); // Carnaval (terça)
+  set.add(ymd(addDays(easter, -2)));  // Sexta-feira Santa
+  set.add(ymd(addDays(easter, 60)));  // Corpus Christi
+
+  cache.set(year, set);
+  return set;
+}
+
+export function isHoliday(date: Date): boolean {
+  return holidaysForYear(date.getFullYear()).has(ymd(date));
+}
+
+export function isBusinessDay(date: Date): boolean {
+  const w = date.getDay();
+  if (w === 0 || w === 6) return false; // domingo/sábado
+  return !isHoliday(date);
+}
+
+// Soma `days` dias úteis (pulando fins de semana e feriados nacionais).
+export function addBusinessDays(start: Date, days: number): Date {
+  const d = new Date(start);
+  let added = 0;
+  while (added < days) {
+    d.setDate(d.getDate() + 1);
+    if (isBusinessDay(d)) added++;
+  }
+  return d;
+}
+
+// Próxima quarta-feira útil (>= hoje+1) que não seja feriado.
+export function proximaQuarta(from: Date = new Date()): Date {
+  const d = new Date(from);
+  do {
+    d.setDate(d.getDate() + 1);
+  } while (d.getDay() !== 3 || isHoliday(d));
+  return d;
+}
+
+// Lista de feriados (YYYY-MM-DD) cobrindo de (ano-1) a (ano+2), para o front.
+export function holidaysList(baseYear: number = new Date().getFullYear()): string[] {
+  const out: string[] = [];
+  for (let y = baseYear - 1; y <= baseYear + 2; y++) {
+    for (const h of holidaysForYear(y)) out.push(h);
+  }
+  return out.sort();
+}
 
 ```
 
@@ -21414,19 +24823,481 @@ export function requireRole(...roles: string[]) {
 ```
 import { Router } from "express";
 import { db } from "@workspace/db";
-import { usersTable, activityLogTable, artTemplatesTable, solicitacoesTable, userTipoAssignmentsTable, tipoClickupListTable, clickupListsTable } from "@workspace/db";
+import { usersTable, activityLogTable, artTemplatesTable, solicitacoesTable, userTipoAssignmentsTable, tipoClickupListTable, clickupListsTable, tombamentosTable } from "@workspace/db";
 import { eq, desc, sql, and, count, isNull, notInArray } from "drizzle-orm";
 import { requireAuth, requireRole } from "../middleware/auth.middleware";
 import { logger } from "../lib/logger";
 import { renderFromTemplate } from "../services/template-renderer";
-import { gerarArteParaSolicitacao } from "../services/art-generator";
+import { gerarArteParaSolicitacao, gerarArteBuffer } from "../services/art-generator";
+import JSZip from "jszip";
 import { AVAILABLE_FONTS } from "../types/art-template";
 import { FORM_SCHEMAS, getFormSchemaList, TIPOS_COM_CLICKUP } from "../config/form-schemas";
 import { validateClickUpList } from "./clickup";
+import { logAtividadeBg } from "../services/activity-log";
+import multer from "multer";
+import * as XLSX from "xlsx";
 
 const TIPOS_COM_CLICKUP_SET = new Set(TIPOS_COM_CLICKUP.map(t => t.tipo));
 
 const router = Router();
+
+// ───────────── Tombamentos: leitura da planilha (Fase 1) ─────────────
+const uploadPlanilha = multer({ storage: multer.memoryStorage(), limits: { fileSize: 15 * 1024 * 1024 } });
+const uploadFotos = multer({ storage: multer.memoryStorage(), limits: { fileSize: 100 * 1024 * 1024 } });
+const TOMB_DOMINIOS = ["@svninvestimentos.com.br", "@svncapital.com.br", "@svnconnect.com.br"];
+const TOMB_SYN: Record<string, string[]> = {
+  nome: ["nome", "nomecompleto"],
+  email: ["email", "e mail"],
+  telefone: ["telefone", "whatsapp", "celular", "fone"],
+  marca: ["marca", "contrato", "contratosocial"],
+  cargo: ["cargo", "funcao"],
+  tem_cfp: ["temcfp", "cfp"],
+  arquivo_foto: ["arquivofoto", "foto", "arquivodafoto", "nomedoarquivo", "imagem"],
+};
+function tombNorm(s: unknown): string {
+  return String(s ?? "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]/g, "");
+}
+function parseTombamentoPlanilha(buf: Buffer): { rows: Array<Record<string, unknown>> } {
+  const wb = XLSX.read(buf, { type: "buffer" });
+  const ws = wb.Sheets[wb.SheetNames[0]];
+  if (!ws) return { rows: [] };
+  const aoa = XLSX.utils.sheet_to_json(ws, { header: 1, blankrows: false, defval: "" }) as any[][];
+  if (!aoa.length) return { rows: [] };
+  const headers = (aoa[0] || []).map((h) => String(h ?? "").trim());
+  const colToField: Record<number, string> = {};
+  headers.forEach((h, i) => {
+    const n = tombNorm(h);
+    for (const [field, syns] of Object.entries(TOMB_SYN)) {
+      if (syns.map(tombNorm).includes(n)) { colToField[i] = field; break; }
+    }
+  });
+  const rows = aoa.slice(1).map((cells, idx) => {
+    const r: Record<string, unknown> = { _linha: idx + 2 };
+    headers.forEach((_, i) => { if (colToField[i]) r[colToField[i]] = String(cells[i] ?? "").trim(); });
+    const issues: string[] = [];
+    if (!r.nome) issues.push("sem nome");
+    const email = String(r.email || "").toLowerCase();
+    if (!email) issues.push("sem e-mail");
+    else if (!TOMB_DOMINIOS.some((d) => email.endsWith(d))) issues.push("e-mail fora dos domínios SVN");
+    r._issues = issues;
+    return r;
+  });
+  return { rows };
+}
+
+router.post("/tombamentos/parse", requireRole("admin"), uploadPlanilha.single("planilha"), (req, res): void => {
+  try {
+    const file = (req as { file?: { buffer: Buffer } }).file;
+    if (!file) { res.status(400).json({ error: "Envie a planilha no campo 'planilha'." }); return; }
+    res.json(parseTombamentoPlanilha(file.buffer));
+  } catch (err) {
+    logger.error({ err }, "[tombamentos] erro ao ler planilha");
+    res.status(400).json({ error: "Não foi possível ler a planilha. Confira se é um .xlsx, .xls ou .csv válido." });
+  }
+});
+
+router.post("/tombamentos", requireRole("admin"), async (req, res): Promise<void> => {
+  try {
+    const { nome, marca } = req.body as { nome?: string; marca?: string };
+    if (!nome || !nome.trim()) { res.status(400).json({ error: "Informe o nome do tombamento." }); return; }
+    if (!marca || !marca.trim()) { res.status(400).json({ error: "Selecione a marca." }); return; }
+    const [row] = await db.insert(tombamentosTable).values({
+      nome: nome.trim(),
+      marca: marca.trim(),
+      created_by: req.session.user?.email ?? null,
+    }).returning();
+    res.json(row);
+  } catch (err) {
+    logger.error({ err }, "[tombamentos] erro ao criar");
+    res.status(500).json({ error: "Erro ao criar tombamento." });
+  }
+});
+
+router.get("/tombamentos", requireRole("admin"), async (_req, res): Promise<void> => {
+  const rows = await db.select().from(tombamentosTable).orderBy(desc(tombamentosTable.created_at));
+  res.json({ tombamentos: rows });
+});
+
+router.get("/tombamentos/:id", requireRole("admin"), async (req, res): Promise<void> => {
+  const id = parseInt(String(req.params.id), 10);
+  if (isNaN(id)) { res.status(400).json({ error: "ID inválido" }); return; }
+  const [row] = await db.select().from(tombamentosTable).where(eq(tombamentosTable.id, id));
+  if (!row) { res.status(404).json({ error: "Tombamento não encontrado" }); return; }
+  res.json(row);
+});
+
+router.patch("/tombamentos/:id", requireRole("admin"), async (req, res): Promise<void> => {
+  const id = parseInt(String(req.params.id), 10);
+  if (isNaN(id)) { res.status(400).json({ error: "ID inválido" }); return; }
+  const { linhas, nome } = req.body as { linhas?: unknown; nome?: string };
+  const patch: Record<string, unknown> = { updated_at: new Date() };
+  if (linhas !== undefined) patch.linhas = linhas;
+  if (nome !== undefined && String(nome).trim()) patch.nome = String(nome).trim();
+  const [row] = await db.update(tombamentosTable).set(patch).where(eq(tombamentosTable.id, id)).returning();
+  if (!row) { res.status(404).json({ error: "Tombamento não encontrado" }); return; }
+  res.json(row);
+});
+
+function tombSlug(s: unknown): string {
+  return String(s ?? "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-zA-Z0-9]+/g, "-").replace(/^-+|-+$/g, "").toLowerCase() || "pessoa";
+}
+function tombNormCfp(v: unknown): string {
+  const n = String(v ?? "").toLowerCase().trim();
+  return ["sim", "s", "yes", "y", "1", "true", "x"].includes(n) ? "sim" : "nao";
+}
+
+router.post("/tombamentos/:id/gerar-assinaturas", requireRole("admin"), async (req, res): Promise<void> => {
+  try {
+    const id = parseInt(String(req.params.id), 10);
+    if (isNaN(id)) { res.status(400).json({ error: "ID inválido" }); return; }
+    const [tomb] = await db.select().from(tombamentosTable).where(eq(tombamentosTable.id, id));
+    if (!tomb) { res.status(404).json({ error: "Tombamento não encontrado" }); return; }
+
+    const linhas = Array.isArray(tomb.linhas) ? (tomb.linhas as any[]) : [];
+    if (!linhas.length) { res.status(400).json({ error: "Suba uma planilha neste tombamento primeiro." }); return; }
+    const validas = linhas.filter((r) => !(Array.isArray(r._issues) && r._issues.length));
+    if (!validas.length) { res.status(400).json({ error: "Nenhuma linha válida para gerar (todas têm pendências)." }); return; }
+
+    const zip = new JSZip();
+    const usados: Record<string, number> = {};
+    const gerados: string[] = [];
+    const pulados: string[] = [];
+    let semTemplate = false;
+
+    for (const r of validas) {
+      const dados = {
+        nome: r.nome, telefone: r.telefone, email: r.email,
+        cargo: r.cargo ?? "", tem_cfp: tombNormCfp(r.tem_cfp), marca: tomb.marca,
+      };
+      try {
+        const art = await gerarArteBuffer("assinatura-email", dados);
+        if (!art) { semTemplate = true; pulados.push(`${r.nome || r.email}: sem template para a marca`); continue; }
+        let base = tombSlug(r.nome || r.email);
+        usados[base] = (usados[base] || 0) + 1;
+        if (usados[base] > 1) base = `${base}-${usados[base]}`;
+        zip.file(`assinatura-${base}.${art.ext}`, art.buffer);
+        gerados.push(r.nome || r.email);
+      } catch (e) {
+        pulados.push(`${r.nome || r.email}: erro ao gerar`);
+        logger.warn({ err: e, tombId: id }, "[tombamentos] falha ao gerar assinatura");
+      }
+    }
+
+    if (!gerados.length) {
+      res.status(400).json({ error: semTemplate ? `Não há template de assinatura ativo para a marca "${tomb.marca}".` : "Não foi possível gerar nenhuma assinatura." });
+      return;
+    }
+
+    const relatorio = [
+      `Tombamento: ${tomb.nome}`,
+      `Marca: ${tomb.marca}`,
+      `Assinaturas geradas: ${gerados.length}`,
+      pulados.length ? `\nPuladas (${pulados.length}):\n` + pulados.join("\n") : "",
+    ].join("\n");
+    zip.file("_relatorio.txt", relatorio);
+
+    const zipBuf = await zip.generateAsync({ type: "nodebuffer" });
+    res.setHeader("Content-Type", "application/zip");
+    res.setHeader("Content-Disposition", `attachment; filename="assinaturas-${tombSlug(tomb.nome)}.zip"`);
+    res.setHeader("X-Geradas", String(gerados.length));
+    res.setHeader("X-Puladas", String(pulados.length));
+    res.send(zipBuf);
+  } catch (err) {
+    logger.error({ err }, "[tombamentos] erro ao gerar assinaturas");
+    res.status(500).json({ error: "Erro ao gerar assinaturas." });
+  }
+});
+
+const MARCA_TO_CONTRATO: Record<string, string> = {
+  "svn-investimentos": "svn-investimentos",
+  "svn-capital": "svn-capital",
+  "svn-connect": "svn-connect",
+};
+function tombStripExt(name: string): string {
+  return name.replace(/\.[a-z0-9]+$/i, "");
+}
+function tombMime(name: string): string {
+  const ext = (name.match(/\.([a-z0-9]+)$/i)?.[1] || "").toLowerCase();
+  if (ext === "png") return "image/png";
+  if (ext === "webp") return "image/webp";
+  if (ext === "gif") return "image/gif";
+  return "image/jpeg";
+}
+function tombNorm2(s: unknown): string {
+  return String(s ?? "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+}
+function tombTokens(s: unknown): string[] {
+  return tombNorm2(s).split(" ").filter(Boolean);
+}
+function tombCompact(s: unknown): string {
+  return tombNorm2(s).replace(/ /g, "");
+}
+function tombMatchScore(pTokens: string[], pCompact: string, fTokens: string[], fCompact: string): { score: number; contained: boolean; inter: number } {
+  if (!pTokens.length || !fTokens.length) return { score: 0, contained: false, inter: 0 };
+  if (pCompact && pCompact === fCompact) return { score: 100, contained: true, inter: pTokens.length };
+  const pSet = new Set(pTokens);
+  const fSet = new Set(fTokens);
+  let inter = 0;
+  for (const t of fSet) if (pSet.has(t)) inter++;
+  if (inter === 0) return { score: 0, contained: false, inter: 0 };
+  const allFInP = [...fSet].every((t) => pSet.has(t));
+  const allPInF = [...pSet].every((t) => fSet.has(t));
+  const contained = allFInP || allPInF;
+  if (contained) return { score: 80 + Math.min(inter, 4) * 4, contained: true, inter };
+  const union = pSet.size + fSet.size - inter;
+  return { score: Math.round(55 * (inter / union)), contained: false, inter };
+}
+
+// Cache em memória do .zip de fotos durante a revisão (evita re-upload + permite prévia).
+const tombZipCache = new Map<number, { buffer: Buffer; expires: number }>();
+const TOMB_ZIP_TTL_MS = 30 * 60 * 1000;
+function tombZipCacheSet(id: number, buffer: Buffer): void {
+  const now = Date.now();
+  for (const [k, v] of tombZipCache) if (v.expires < now) tombZipCache.delete(k);
+  tombZipCache.set(id, { buffer, expires: now + TOMB_ZIP_TTL_MS });
+  while (tombZipCache.size > 3) {
+    let oldestK: number | null = null; let oldestE = Infinity;
+    for (const [k, v] of tombZipCache) { if (k !== id && v.expires < oldestE) { oldestE = v.expires; oldestK = k; } }
+    if (oldestK == null) break;
+    tombZipCache.delete(oldestK);
+  }
+}
+function tombZipCacheGet(id: number): Buffer | null {
+  const v = tombZipCache.get(id);
+  if (!v) return null;
+  if (v.expires < Date.now()) { tombZipCache.delete(id); return null; }
+  return v.buffer;
+}
+
+// Lê o .zip de fotos e devolve a lista de imagens válidas (sem ler os bytes).
+function lerNomesFotos(fotosZip: JSZip): { nome: string; tokens: string[]; compact: string }[] {
+  const fotos: { nome: string; tokens: string[]; compact: string }[] = [];
+  const seen = new Set<string>();
+  for (const entryPath of Object.keys(fotosZip.files)) {
+    const entry = fotosZip.files[entryPath];
+    if (entry.dir) continue;
+    const base = entryPath.split(/[\\/]/).pop() || "";
+    if (!base || base.startsWith(".") || entryPath.includes("__MACOSX")) continue;
+    if (!/\.(jpe?g|png|webp|gif)$/i.test(base)) continue;
+    if (seen.has(base.toLowerCase())) continue;
+    seen.add(base.toLowerCase());
+    const noext = tombStripExt(base);
+    fotos.push({ nome: base, tokens: tombTokens(noext), compact: tombCompact(noext) });
+  }
+  return fotos;
+}
+
+// Etapa 1: sobe o .zip, casa as fotos por nome e devolve a tabela de revisão.
+router.post("/tombamentos/:id/match-fotos", requireRole("admin"), uploadFotos.single("fotos"), async (req, res): Promise<void> => {
+  try {
+    const id = parseInt(String(req.params.id), 10);
+    if (isNaN(id)) { res.status(400).json({ error: "ID inválido" }); return; }
+    const [tomb] = await db.select().from(tombamentosTable).where(eq(tombamentosTable.id, id));
+    if (!tomb) { res.status(404).json({ error: "Tombamento não encontrado" }); return; }
+
+    const contrato = MARCA_TO_CONTRATO[String(tomb.marca)];
+    if (!contrato) { res.status(400).json({ error: `Cartão digital existe apenas para SVN Investimentos, SVN Capital e SVN Connect. Este tombamento é da marca "${tomb.marca}".` }); return; }
+
+    const linhas = Array.isArray(tomb.linhas) ? (tomb.linhas as any[]) : [];
+    if (!linhas.length) { res.status(400).json({ error: "Suba uma planilha neste tombamento primeiro." }); return; }
+    const validas = linhas.filter((r) => !(Array.isArray(r._issues) && r._issues.length));
+    if (!validas.length) { res.status(400).json({ error: "Nenhuma linha válida (todas têm pendências)." }); return; }
+
+    const file = (req as { file?: { buffer: Buffer } }).file;
+    if (!file) { res.status(400).json({ error: "Envie o .zip de fotos no campo 'fotos'." }); return; }
+    let fotosZip: JSZip;
+    try { fotosZip = await JSZip.loadAsync(file.buffer); }
+    catch { res.status(400).json({ error: "Não foi possível ler o .zip de fotos. Confira o arquivo." }); return; }
+    tombZipCacheSet(id, file.buffer);
+
+    const fotos = lerNomesFotos(fotosZip);
+    if (!fotos.length) { res.status(400).json({ error: "O .zip não contém imagens (.jpg, .png, .webp)." }); return; }
+
+    const usoAuto: Record<string, number> = {};
+    const pessoas = validas.map((r) => {
+      const pTokens = tombTokens(r.nome);
+      const pCompact = tombCompact(r.nome);
+
+      // override manual via coluna arquivo_foto
+      const ref = String(r.arquivo_foto ?? "").trim();
+      if (ref) {
+        const rk = tombCompact(tombStripExt(ref));
+        const hit = fotos.find((f) => f.nome.toLowerCase() === ref.toLowerCase() || f.compact === rk);
+        if (hit) return { email: r.email, nome: r.nome, status: "manual", foto: hit.nome, obs: "" };
+        return { email: r.email, nome: r.nome, status: "revisar", foto: "", obs: `arquivo_foto "${ref}" não encontrado no .zip` };
+      }
+
+      // auto por nome
+      let best: null | { f: (typeof fotos)[number]; score: number; contained: boolean; inter: number } = null;
+      for (const f of fotos) {
+        const m = tombMatchScore(pTokens, pCompact, f.tokens, f.compact);
+        if (!best || m.score > best.score) best = { f, ...m };
+      }
+      if (!best || (best.score < 35 && !best.contained)) {
+        return { email: r.email, nome: r.nome, status: "sem_foto", foto: "", obs: "" };
+      }
+      let status: string;
+      if (best.score >= 100) status = "exato";
+      else if (best.contained && best.inter >= 2) status = "forte";
+      else status = "revisar";
+      if (status === "exato" || status === "forte") usoAuto[best.f.nome] = (usoAuto[best.f.nome] || 0) + 1;
+      return { email: r.email, nome: r.nome, status, foto: best.f.nome, obs: "" };
+    });
+
+    // conflito: mesma foto auto-escolhida para >1 pessoa -> rebaixa para revisão
+    for (const p of pessoas) {
+      if ((p.status === "exato" || p.status === "forte") && usoAuto[p.foto] > 1) {
+        p.status = "revisar";
+        p.obs = "mesma foto sugerida para outra pessoa";
+      }
+    }
+
+    const resumo = {
+      total: pessoas.length,
+      auto: pessoas.filter((p) => p.status === "exato" || p.status === "forte" || p.status === "manual").length,
+      revisar: pessoas.filter((p) => p.status === "revisar").length,
+      sem_foto: pessoas.filter((p) => p.status === "sem_foto").length,
+      fotos: fotos.length,
+    };
+    res.json({ contrato, fotos: fotos.map((f) => f.nome).sort((a, b) => a.localeCompare(b)), pessoas, resumo });
+  } catch (err) {
+    logger.error({ err }, "[tombamentos] erro ao casar fotos");
+    res.status(400).json({ error: "Erro ao analisar as fotos." });
+  }
+});
+
+// Etapa 2: gera os cartões usando as atribuições confirmadas na revisão.
+router.post("/tombamentos/:id/gerar-cartoes", requireRole("admin"), uploadFotos.single("fotos"), async (req, res): Promise<void> => {
+  try {
+    const id = parseInt(String(req.params.id), 10);
+    if (isNaN(id)) { res.status(400).json({ error: "ID inválido" }); return; }
+    const [tomb] = await db.select().from(tombamentosTable).where(eq(tombamentosTable.id, id));
+    if (!tomb) { res.status(404).json({ error: "Tombamento não encontrado" }); return; }
+
+    const contrato = MARCA_TO_CONTRATO[String(tomb.marca)];
+    if (!contrato) { res.status(400).json({ error: `Cartão digital existe apenas para SVN Investimentos, SVN Capital e SVN Connect. Este tombamento é da marca "${tomb.marca}".` }); return; }
+
+    const linhas = Array.isArray(tomb.linhas) ? (tomb.linhas as any[]) : [];
+    const validas = linhas.filter((r) => !(Array.isArray(r._issues) && r._issues.length));
+    if (!validas.length) { res.status(400).json({ error: "Nenhuma linha válida." }); return; }
+
+    let atrib: Record<string, string> = {};
+    try { atrib = JSON.parse(String((req.body as any)?.atribuicoes ?? "{}")); } catch { atrib = {}; }
+    if (!atrib || typeof atrib !== "object" || !Object.keys(atrib).length) {
+      res.status(400).json({ error: "Nenhuma atribuição de foto recebida." });
+      return;
+    }
+
+    const file = (req as { file?: { buffer: Buffer } }).file;
+    const srcZipBuf = file ? file.buffer : tombZipCacheGet(id);
+    if (!srcZipBuf) { res.status(410).json({ error: "Sessão expirada — reenvie o .zip de fotos.", expired: true }); return; }
+    let fotosZip: JSZip;
+    try { fotosZip = await JSZip.loadAsync(srcZipBuf); }
+    catch { res.status(400).json({ error: "Não foi possível ler o .zip de fotos. Confira o arquivo." }); return; }
+
+    const porNome: Record<string, { buffer: Buffer; mime: string }> = {};
+    for (const entryPath of Object.keys(fotosZip.files)) {
+      const entry = fotosZip.files[entryPath];
+      if (entry.dir) continue;
+      const base = entryPath.split(/[\\/]/).pop() || "";
+      if (!base || base.startsWith(".") || entryPath.includes("__MACOSX")) continue;
+      if (!/\.(jpe?g|png|webp|gif)$/i.test(base)) continue;
+      porNome[base.toLowerCase()] = { buffer: Buffer.from(await entry.async("nodebuffer")), mime: tombMime(base) };
+    }
+
+    const zip = new JSZip();
+    const usados: Record<string, number> = {};
+    const gerados: string[] = [];
+    const pulados: string[] = [];
+
+    for (const r of validas) {
+      const pessoa = r.nome || r.email;
+      const fname = atrib[String(r.email)];
+      if (!fname) { pulados.push(`${pessoa}: sem foto atribuída`); continue; }
+      const foto = porNome[String(fname).toLowerCase()];
+      if (!foto) { pulados.push(`${pessoa}: foto "${fname}" não está no .zip`); continue; }
+      const dataUri = `data:${foto.mime};base64,${foto.buffer.toString("base64")}`;
+      const dados = { nome: r.nome, telefone: r.telefone, email: r.email, contrato_social: contrato, foto_perfil: dataUri };
+      try {
+        const art = await gerarArteBuffer("cartao-visita-digital", dados);
+        if (!art) { pulados.push(`${pessoa}: sem template de cartão para "${contrato}"`); continue; }
+        let nb = tombSlug(pessoa);
+        usados[nb] = (usados[nb] || 0) + 1;
+        if (usados[nb] > 1) nb = `${nb}-${usados[nb]}`;
+        zip.file(`cartao-${nb}.${art.ext}`, art.buffer);
+        gerados.push(pessoa);
+      } catch (e) {
+        pulados.push(`${pessoa}: erro ao gerar`);
+        logger.warn({ err: e, tombId: id }, "[tombamentos] falha ao gerar cartão");
+      }
+    }
+
+    if (!gerados.length) {
+      res.status(400).json({ error: "Nenhum cartão gerado. Confira as atribuições de foto na revisão." });
+      return;
+    }
+
+    const relatorio = [
+      `Tombamento: ${tomb.nome}`,
+      `Marca / contrato: ${tomb.marca} -> ${contrato}`,
+      `Cartões gerados: ${gerados.length}`,
+      pulados.length ? `\nPulados (${pulados.length}):\n` + pulados.join("\n") : "",
+    ].join("\n");
+    zip.file("_relatorio.txt", relatorio);
+
+    const zipBuf = await zip.generateAsync({ type: "nodebuffer" });
+    res.setHeader("Content-Type", "application/zip");
+    res.setHeader("Content-Disposition", `attachment; filename="cartoes-${tombSlug(tomb.nome)}.zip"`);
+    res.setHeader("X-Geradas", String(gerados.length));
+    res.setHeader("X-Puladas", String(pulados.length));
+    res.send(zipBuf);
+  } catch (err) {
+    logger.error({ err }, "[tombamentos] erro ao gerar cartões");
+    res.status(500).json({ error: "Erro ao gerar cartões digitais." });
+  }
+});
+
+// Prévia de uma foto do .zip em cache (usada pelo ícone de olho na revisão).
+router.get("/tombamentos/:id/foto", requireRole("admin"), async (req, res): Promise<void> => {
+  try {
+    const id = parseInt(String(req.params.id), 10);
+    const nome = String(req.query.nome ?? "");
+    if (isNaN(id) || !nome) { res.status(400).end(); return; }
+    const buf = tombZipCacheGet(id);
+    if (!buf) { res.status(410).json({ error: "Prévia expirada. Reenvie o .zip." }); return; }
+    const zip = await JSZip.loadAsync(buf);
+    const target = nome.toLowerCase();
+    let hit: any = null; let hitName = "";
+    for (const entryPath of Object.keys(zip.files)) {
+      const entry = zip.files[entryPath];
+      if (entry.dir) continue;
+      const base = entryPath.split(/[\\/]/).pop() || "";
+      if (base.toLowerCase() === target) { hit = entry; hitName = base; break; }
+    }
+    if (!hit) { res.status(404).json({ error: "Foto não encontrada" }); return; }
+    res.setHeader("Content-Type", tombMime(hitName));
+    res.setHeader("Cache-Control", "private, max-age=300");
+    res.send(await hit.async("nodebuffer"));
+  } catch (err) {
+    logger.error({ err }, "[tombamentos] erro na prévia de foto");
+    res.status(500).end();
+  }
+});
+
+// Exclui um tombamento.
+router.delete("/tombamentos/:id", requireRole("admin"), async (req, res): Promise<void> => {
+  try {
+    const id = parseInt(String(req.params.id), 10);
+    if (isNaN(id)) { res.status(400).json({ error: "ID inválido" }); return; }
+    const [row] = await db.delete(tombamentosTable).where(eq(tombamentosTable.id, id)).returning();
+    if (!row) { res.status(404).json({ error: "Tombamento não encontrado" }); return; }
+    tombZipCache.delete(id);
+    res.json({ ok: true });
+  } catch (err) {
+    logger.error({ err }, "[tombamentos] erro ao deletar tombamento");
+    res.status(500).json({ error: "Erro ao deletar tombamento." });
+  }
+});
 
 router.get("/users", requireRole("admin"), async (req, res) => {
   try {
@@ -21479,6 +25350,13 @@ router.put("/users/:id/role", requireRole("admin"), async (req, res): Promise<vo
     }
 
     await db.update(usersTable).set({ role }).where(eq(usersTable.id, userId));
+
+    logAtividadeBg({
+      userEmail: currentUser.email, userName: currentUser.name,
+      tipo: "usuario_papel_alterado", nivel: "warn",
+      detalhe: `${currentUser.email} alterou o papel de ${targetUser.email}: "${targetUser.role || "colaborador"}" → "${role}"`,
+      metadata: { targetEmail: targetUser.email, de: targetUser.role || "colaborador", para: role },
+    });
 
     res.json({ success: true });
   } catch (err: any) {
@@ -21909,6 +25787,13 @@ router.post("/users", requireRole("admin"), async (req, res): Promise<void> => {
       clickup_user_id: clickup_user_id?.trim() || null,
     }).returning();
 
+    logAtividadeBg({
+      userEmail: req.session.user!.email, userName: req.session.user!.name,
+      tipo: "usuario_criado", nivel: "warn",
+      detalhe: `${req.session.user!.email} criou o usuário ${emailNormalized} com papel "${role}"`,
+      metadata: { novoUsuario: emailNormalized, papel: role },
+    });
+
     res.json({ success: true, user: inserted });
   } catch (err: any) {
     req.log.error({ err, body: req.body }, "Erro ao criar usuário");
@@ -22048,7 +25933,6 @@ router.delete("/clickup-lists/:id", requireRole("admin"), async (req, res): Prom
 });
 
 export default router;
-
 ```
 
 
@@ -22597,8 +26481,44 @@ import { eq } from "drizzle-orm";
 import { mapClickUpStatus } from "../config/clickup-status";
 import { UNIDADES_ENDERECOS } from "../config/unidades";
 import { FORM_SCHEMAS, SETOR_CODIGO_MAP, TIPOS_COM_CLICKUP } from "../config/form-schemas";
+import { buscarContato } from "../lib/mysqlContatos";
+import { addBusinessDays, proximaQuarta as proximaQuartaUtil } from "../lib/holidays";
 
 const CLICKUP_API_TOKEN = process.env.CLICKUP_API_TOKEN || "";
+
+// Nomes EXATOS dos status na lista do ClickUp (ajustáveis por env se a lista usar outra grafia).
+export const CLICKUP_STATUS_EM_REVISAO = process.env.CLICKUP_STATUS_EM_REVISAO || "em revisão";
+export const CLICKUP_STATUS_CONCLUIDO = process.env.CLICKUP_STATUS_CONCLUIDO || "concluído";
+
+// Monta link wa.me a partir de um telefone (assume Brasil/55 quando não houver DDI).
+function waLink(phone: string): string | null {
+  let d = String(phone || "").replace(/\D/g, "");
+  if (!d) return null;
+  if (d.length <= 11 && !d.startsWith("55")) d = "55" + d;
+  return `https://wa.me/${d}`;
+}
+
+// Atualiza o status de uma task no ClickUp (usado por aprovar/solicitar alteração).
+export async function setClickUpTaskStatus(taskId: string, status: string): Promise<boolean> {
+  if (!CLICKUP_API_TOKEN || !taskId) return false;
+  try {
+    const r = await fetch(`https://api.clickup.com/api/v2/task/${taskId}`, {
+      method: "PUT",
+      headers: { "Authorization": CLICKUP_API_TOKEN, "Content-Type": "application/json" },
+      body: JSON.stringify({ status }),
+    });
+    if (!r.ok) {
+      const body = await r.text();
+      logger.error({ taskId, status, httpStatus: r.status, body }, "ClickUp: erro ao mudar status");
+      return false;
+    }
+    logger.info({ taskId, status }, "ClickUp: status atualizado");
+    return true;
+  } catch (err) {
+    logger.error({ err, taskId, status }, "ClickUp: falha ao mudar status");
+    return false;
+  }
+}
 
 // Valida um list_id contra o ClickUp usando o token atual.
 // Usado pela tela de admin (botão Validar) e pelo save (PUT).
@@ -22929,7 +26849,7 @@ function buildGeneralTaskName(tipo: string, _subtipo: string, dados: FormDados, 
 
     default: {
       const PREFIX_OVERRIDE: Record<string, string> = {
-        "conteudo-pdf-informativo": "PDF", "conteudo-pdf-ebook": "PDF",
+        "conteudo-pdf-informativo": "PDF",
         "email-marketing": "E-mail", "email-marketing-online": "E-mail",
         "atualizacao-material": "Atualização",
       };
@@ -22952,8 +26872,12 @@ function buildRequesterSection(user: UserData, dados?: FormDados): string {
   const items: string[] = [];
   items.push(`• Solicitante: ${user.name}`);
   items.push(`• E-mail: ${user.email}`);
-  if (dados) addLine(items, "Telefone", str(dados.telefone as string));
-  logger.info({ nome: user.name, email: user.email }, "ClickUp: bloco solicitante montado");
+  const tel = str(dados?.telefone as string) || str(dados?.whatsapp as string);
+  if (tel) {
+    const wa = waLink(tel);
+    items.push(wa ? `• Telefone/WhatsApp: ${tel} — ${wa}` : `• Telefone: ${tel}`);
+  }
+  logger.info({ nome: user.name, email: user.email, temTelefone: !!tel }, "ClickUp: bloco solicitante montado");
   return `👤 SOLICITANTE\n━━━━━━━━━━━━━━━━━━━━━━\n\n${items.join("\n")}`;
 }
 
@@ -23065,7 +26989,7 @@ function buildEventDescription(dados: FormDados, user: UserData, arquivos: Arqui
 function buildDetailsSection(tipo: string, dados: FormDados): string | null {
   const items: string[] = [];
 
-  if (["artes-divulgacao", "conteudo-pdf-informativo", "conteudo-pdf-ebook"].includes(tipo)) {
+  if (["artes-divulgacao", "conteudo-pdf-informativo"].includes(tipo)) {
     const conteudo = str(dados.conteudo);
     if (conteudo) items.push(`• Conteúdo / Briefing:\n${conteudo}`);
     const canalOutro = str(dados.canalOutro);
@@ -23490,7 +27414,6 @@ const TIPO_DEMANDA_ORDERINDEX: Record<string, number> = {
   "artes-divulgacao":              3,
   "atualizacao-material":          3,
   "conteudo-pdf-informativo":      3,
-  "conteudo-pdf-ebook":            3,
   "apresentacao-nova":             3,
   "apresentacao-atualizar":        3,
   "pagina-assessores-dados":       3,
@@ -23727,44 +27650,61 @@ async function getListId(tipoSolicitacao: string): Promise<string> {
   return CLICKUP_LIST_GERAL;
 }
 
-function addBusinessDays(date: Date, days: number): Date {
-  const result = new Date(date);
-  let added = 0;
-  while (added < days) {
-    result.setDate(result.getDate() + 1);
-    const dow = result.getDay();
-    if (dow !== 0 && dow !== 6) added++;
-  }
-  return result;
-}
-
-const PRAZO_DIAS_UTEIS: Record<string, number> = {
+export const PRAZO_DIAS_UTEIS: Record<string, number> = {
   "pagina-assessores-dados":       3,
   "pagina-assessores-atualizacao": 2,
-  "apresentacao-nova":             5,
+  "apresentacao-nova":             10,
   "apresentacao-atualizar":        5,
   "artes-divulgacao":              3,
   "atualizacao-material":          3,
   "conteudo-pdf-informativo":      4,
-  "conteudo-pdf-ebook":            15,
-  "pagina-online":                 5,
-  "outro":                         7,
-  "email-marketing":               3,
-  "producao-video":                7,
-  "sessao-fotos":                  7,
+  "pagina-online":                 7,
+  "outro":                         5,
+  "email-marketing":               5,
+  "producao-video":                15,
+  "sessao-fotos":                  15,
   "materiais-impressos":           5,
   "brindes":                       15,
   "patrocinio":                    30,
 };
 
+// Faixas por nº de páginas (campo "tamanho") — apresentação nova.
+export const APRESENTACAO_TIERS: Record<string, number> = {
+  "mais100":  15,
+  "menos100": 10,
+  "menos30":  7,
+};
 
-function proximaQuarta(): Date {
-  const d = new Date();
-  d.setHours(12, 0, 0, 0);
-  const dow = d.getDay();
-  const diasAte = (3 - dow + 7) % 7 || 7;
-  d.setDate(d.getDate() + diasAte);
-  return d;
+// Quantos dias úteis para um tipo (já considera a faixa de páginas da apresentação nova).
+export function getPrazoDiasUteis(tipo: string, dados?: Record<string, unknown>): number {
+  if (tipo === "apresentacao-nova") {
+    const tam = String((dados || {}).tamanho || "");
+    return APRESENTACAO_TIERS[tam] ?? 10;
+  }
+  return PRAZO_DIAS_UTEIS[tipo] ?? 3;
+}
+
+export interface PrazoCalc {
+  modo: "dias" | "data" | "evento";
+  dias?: number;
+  date: Date | null;
+  regra: string;
+}
+
+// Fonte única do cálculo de prazo (usada na criação da task e no endpoint /api/prazo).
+export function calcularPrazo(tipo: string, dados?: Record<string, unknown>, from: Date = new Date()): PrazoCalc {
+  if (tipo === "cartao-visita-fisico") {
+    const d = proximaQuartaUtil(from); d.setHours(12, 0, 0, 0);
+    return { modo: "data", date: d, regra: "Próxima quarta-feira útil" };
+  }
+  if (tipo === "eventos") {
+    const dataEvento = String((dados || {}).dataEvento || "");
+    const evDate = dataEvento ? new Date(dataEvento + "T12:00:00-03:00") : null;
+    return { modo: "evento", date: evDate && !isNaN(evDate.getTime()) ? evDate : null, regra: "Data do evento" };
+  }
+  const dias = getPrazoDiasUteis(tipo, dados);
+  const d = addBusinessDays(from, dias); d.setHours(12, 0, 0, 0);
+  return { modo: "dias", dias, date: d, regra: `${dias} dias úteis` };
 }
 
 async function getAssigneesForTipo(tipo: string): Promise<Array<{ id: number; name: string }>> {
@@ -23806,6 +27746,21 @@ export async function createClickUpTask(
   const subtipo = solicitacao.subtipo || "";
   const safeArquivos = arquivos || {};
   const listId = await getListId(tipo);
+
+  // Telefone do solicitante: usa o do formulário; se não houver, busca nos contatos corporativos pelo e-mail.
+  let telefoneSolic = str(dados.telefone as string) || str(dados.whatsapp as string);
+  if (!telefoneSolic) {
+    try {
+      const contato = await buscarContato(user.email);
+      if (contato?.telefone) telefoneSolic = contato.telefone;
+    } catch (err) {
+      logger.warn({ err, email: user.email }, "ClickUp: falha ao buscar telefone do solicitante nos contatos");
+    }
+  }
+  if (telefoneSolic && !str(dados.telefone as string)) {
+    (dados as Record<string, unknown>).telefone = telefoneSolic;
+  }
+  logger.info({ tipo, temTelefoneSolic: !!telefoneSolic }, "ClickUp: telefone do solicitante resolvido");
 
   let taskName: string;
   let description: string;
@@ -23860,33 +27815,17 @@ export async function createClickUpTask(
   taskPayload.start_date = hoje.getTime();
   taskPayload.start_date_time = false;
 
-  let prazoDate: Date;
-  if (tipo === "cartao-visita-fisico") {
-    prazoDate = proximaQuarta();
-  } else {
-    let diasUteis = PRAZO_DIAS_UTEIS[tipo] ?? 3;
-    if (tipo === "apresentacao-nova" || tipo === "apresentacao-atualizar") {
-      const qtd = parseInt(String((dados as Record<string, unknown>).qtdPaginas || "0"), 10);
-      if (qtd > 20) diasUteis = 15;
-    }
-    prazoDate = addBusinessDays(new Date(), diasUteis);
-    prazoDate.setHours(12, 0, 0, 0);
-  }
+  const prazoCalc = calcularPrazo(tipo, dados as Record<string, unknown>, hoje);
+  let prazoDate: Date = prazoCalc.date || addBusinessDays(hoje, getPrazoDiasUteis(tipo, dados as Record<string, unknown>));
   taskPayload.due_date = prazoDate.getTime();
   taskPayload.due_date_time = false;
-  logger.info({ tipo, prazo: prazoDate.toISOString() }, "ClickUp: prazo calculado");
+  logger.info({ tipo, prazo: prazoDate.toISOString(), regra: prazoCalc.regra }, "ClickUp: prazo calculado");
 
-  // Eventos: prazo (due_date) = data do evento; prioridade pela proximidade
-  if (tipo === "eventos") {
-    const dataEvento = str((dados as Record<string, unknown>).dataEvento);
-    const evDate = dataEvento ? new Date(dataEvento + "T12:00:00-03:00") : null;
-    if (evDate && !isNaN(evDate.getTime())) {
-      taskPayload.due_date = evDate.getTime();
-      taskPayload.due_date_time = false;
-      const diasAteEvento = Math.ceil((evDate.getTime() - hoje.getTime()) / 86400000);
-      taskPayload.priority = diasAteEvento <= 3 ? 1 : diasAteEvento <= 7 ? 2 : 3;
-      logger.info({ dataEvento, diasAteEvento, priority: taskPayload.priority }, "ClickUp: evento — due_date e prioridade definidos");
-    }
+  // Eventos: prioridade pela proximidade (due_date já é a data do evento via calcularPrazo)
+  if (tipo === "eventos" && prazoCalc.date) {
+    const diasAteEvento = Math.ceil((prazoCalc.date.getTime() - hoje.getTime()) / 86400000);
+    taskPayload.priority = diasAteEvento <= 3 ? 1 : diasAteEvento <= 7 ? 2 : 3;
+    logger.info({ diasAteEvento, priority: taskPayload.priority }, "ClickUp: evento — prioridade definida");
   }
 
   // Responsáveis por tipo (via DB)
@@ -23954,6 +27893,48 @@ export async function getClickUpTaskStatus(taskId: string): Promise<string | nul
   }
 }
 
+// Campo personalizado do ClickUp com o motivo da mudança de prazo ("⚠️ Mudança de prazo").
+// ID padrão já configurado; pode ser sobrescrito por env se o campo mudar.
+const CLICKUP_FIELD_MOTIVO_PRAZO = process.env.CLICKUP_FIELD_MOTIVO_PRAZO || "2457c37b-5920-445f-a83a-857d36620c98";
+
+export interface ClickUpSnapshot {
+  status: string | null;
+  dueDate: Date | null;
+  motivoPrazo: string | null;
+}
+
+// Lê status + prazo (due_date) + motivo do prazo de uma task numa única chamada.
+export async function getClickUpTaskSnapshot(taskId: string): Promise<ClickUpSnapshot | null> {
+  if (!CLICKUP_API_TOKEN || !taskId) return null;
+  try {
+    const response = await fetch(`https://api.clickup.com/api/v2/task/${taskId}`, {
+      headers: { "Authorization": CLICKUP_API_TOKEN },
+    });
+    if (!response.ok) return null;
+    const data = await response.json() as {
+      status?: { status?: string };
+      due_date?: string | number | null;
+      custom_fields?: Array<{ id: string; name?: string; value?: unknown }>;
+    };
+    const status = mapClickUpStatus(data.status?.status || "");
+    let dueDate: Date | null = null;
+    if (data.due_date) {
+      const ms = typeof data.due_date === "string" ? parseInt(data.due_date, 10) : data.due_date;
+      if (ms && !isNaN(ms)) dueDate = new Date(ms);
+    }
+    let motivoPrazo: string | null = null;
+    const fields = data.custom_fields || [];
+    const mf = fields.find((f) =>
+      CLICKUP_FIELD_MOTIVO_PRAZO
+        ? f.id === CLICKUP_FIELD_MOTIVO_PRAZO
+        : ((f.name || "").toLowerCase().includes("motivo") && (f.name || "").toLowerCase().includes("prazo"))
+    );
+    if (mf && mf.value != null && String(mf.value).trim()) motivoPrazo = String(mf.value).trim();
+    return { status, dueDate, motivoPrazo };
+  } catch {
+    return null;
+  }
+}
 ```
 
 
@@ -23964,20 +27945,51 @@ import { Router } from "express";
 import multer from "multer";
 import os from "os";
 import { db } from "@workspace/db";
-import { solicitacoesTable, arquivosTable, activityLogTable, cartaoAprovacoesTable } from "@workspace/db";
+import { solicitacoesTable, arquivosTable, cartaoAprovacoesTable } from "@workspace/db";
 import { eq, desc, and, ne, sql, inArray } from "drizzle-orm";
 import { requireAuth, requireRole } from "../middleware/auth.middleware";
-import { createClickUpTask, getClickUpTaskStatus, type ArquivosMap } from "./clickup";
+import { createClickUpTask, getClickUpTaskStatus, getClickUpTaskSnapshot, setClickUpTaskStatus, calcularPrazo, getPrazoDiasUteis, PRAZO_DIAS_UTEIS, APRESENTACAO_TIERS, CLICKUP_STATUS_EM_REVISAO, CLICKUP_STATUS_CONCLUIDO, type ArquivosMap } from "./clickup";
+import { holidaysList } from "../lib/holidays";
 import { FORM_SCHEMAS } from "../config/form-schemas";
 import { uploadToR2, deleteFromR2 } from "./r2";
 import { gerarArteParaSolicitacao, gerarCartaoFisicoPdf } from "../services/art-generator";
 import { logger } from "../lib/logger";
 import { CONTRATOS_OPTS, MARCAS_OPTS, CARGOS_OPTS, SETORES_LIST, getFormSchemaList, VALID_TIPOS } from "../config/form-schemas";
 import { notificarMarcoBg } from "../services/notifications";
-import { logEventoBg } from "../services/activity-log";
+import { logEventoBg, logAtividade, logAtividadeBg } from "../services/activity-log";
 import { eventosSolicitacaoTable } from "@workspace/db";
 
 const router = Router();
+
+// Config de prazos (tabela + faixas + feriados) — fonte única para o front exibir o mesmo que o back calcula.
+router.get("/prazo/config", requireAuth, (_req, res): void => {
+  res.json({
+    diasUteis: PRAZO_DIAS_UTEIS,
+    apresentacaoTiers: APRESENTACAO_TIERS,
+    especiais: {
+      "cartao-visita-fisico": "proxima-quarta",
+      "eventos": "data-evento",
+    },
+    feriados: holidaysList(),
+  });
+});
+
+// Cálculo de prazo para um tipo (usado por forms/resumo, idêntico ao da criação da task).
+router.get("/prazo/info", requireAuth, (req, res): void => {
+  const tipo = String(req.query.tipo || "");
+  const dados: Record<string, unknown> = {};
+  if (req.query.tamanho) dados.tamanho = String(req.query.tamanho);
+  if (req.query.dataEvento) dados.dataEvento = String(req.query.dataEvento);
+  const calc = calcularPrazo(tipo, dados);
+  res.json({
+    tipo,
+    modo: calc.modo,
+    dias: calc.dias ?? null,
+    regra: calc.regra,
+    dataISO: calc.date ? calc.date.toISOString() : null,
+  });
+});
+
 const upload = multer({ dest: os.tmpdir(), limits: { fileSize: 50 * 1024 * 1024, files: 10, fields: 20 } });
 
 router.get("/form-schemas", (_req, res) => {
@@ -23992,28 +28004,6 @@ router.get("/form-schemas", (_req, res) => {
     labels,
   });
 });
-
-async function logAtividade(params: {
-  userEmail?: string; userName?: string;
-  tipo: string; nivel?: string;
-  solicitacaoId?: number; tipoSolicitacao?: string; titulo?: string;
-  detalhe: string; metadata?: Record<string, unknown>;
-}): Promise<void> {
-  try {
-    await db.insert(activityLogTable).values({
-      user_email: params.userEmail,
-      user_name: params.userName,
-      tipo: params.tipo,
-      nivel: (params.nivel || "info") as any,
-      solicitacao_id: params.solicitacaoId,
-      tipo_solicitacao: params.tipoSolicitacao,
-      titulo: params.titulo,
-      detalhe: params.detalhe,
-      metadata: params.metadata as any,
-    });
-  } catch { /* não bloquear fluxo */ }
-}
-
 
 const VALID_STATUSES = [
   "recebido", "em-analise", "em-producao", "aguardando",
@@ -24050,7 +28040,6 @@ const REQUIRED_FIELDS: Record<string, string[]> = {
   "artes-divulgacao": ["nome", "titulo"],
   "atualizacao-material": ["nome", "titulo"],
   "conteudo-pdf-informativo": ["nome", "titulo"],
-  "conteudo-pdf-ebook": ["nome", "titulo"],
   "apresentacao-nova": ["nome", "titulo"],
   "apresentacao-atualizar": ["nome", "titulo"],
   "pagina-assessores-dados": ["nome", "nome_completo"],
@@ -24227,6 +28216,7 @@ router.post("/solicitacoes", requireAuth, upload.any(), async (req, res): Promis
       return;
     }
 
+    const prazoInicial = calcularPrazo(tipo_solicitacao, parsedDados).date;
     const [solicitacao] = await db.insert(solicitacoesTable).values({
       user_email: user.email,
       tipo_solicitacao,
@@ -24234,6 +28224,7 @@ router.post("/solicitacoes", requireAuth, upload.any(), async (req, res): Promis
       maturidade: maturidade ? parseInt(maturidade, 10) : null,
       dados: parsedDados,
       status: "recebido",
+      prazo: prazoInicial || undefined,
     }).returning();
 
     const files = req.files as Express.Multer.File[];
@@ -24360,6 +28351,10 @@ router.get("/solicitacoes", requireAuth, async (req, res) => {
     const isAdmin = user.role === "admin" || user.role === "gestor";
 
     const conditions: ReturnType<typeof eq>[] = [];
+
+    // Registros importados da planilha histórica de cartões aparecem APENAS na página de
+    // Validação de Cartões — ficam ocultos da lista geral, do "minhas solicitações" e contadores.
+    conditions.push(sql`(${solicitacoesTable.dados} ->> '_importado_planilha') IS NULL`);
 
     if (!isAdmin || req.query.escopo === 'proprias') {
       conditions.push(eq(solicitacoesTable.user_email, user.email));
@@ -24621,6 +28616,15 @@ router.get("/solicitacoes/:id", requireAuth, async (req, res): Promise<void> => 
   }
 });
 
+// Compara/exibe datas no fuso de Brasília (prazo é dia, sem hora).
+function ymdBR(d: Date): string {
+  return new Intl.DateTimeFormat("en-CA", { timeZone: "America/Sao_Paulo", year: "numeric", month: "2-digit", day: "2-digit" }).format(d);
+}
+function fmtBR(d: Date | null): string {
+  if (!d) return "—";
+  return new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Sao_Paulo", day: "2-digit", month: "2-digit", year: "numeric" }).format(d);
+}
+
 router.get("/solicitacoes/:id/status", requireAuth, async (req, res): Promise<void> => {
   try {
     const user = req.session.user!;
@@ -24651,22 +28655,66 @@ router.get("/solicitacoes/:id/status", requireAuth, async (req, res): Promise<vo
       return;
     }
 
+    let statusOut = solicitacao.status;
+    let updated = false;
+    let prazoOut: Date | null = solicitacao.prazo ? new Date(solicitacao.prazo) : null;
+    let prazoAnteriorOut: Date | null = solicitacao.prazo_anterior ? new Date(solicitacao.prazo_anterior) : null;
+    let prazoMotivoOut: string | null = solicitacao.prazo_motivo || null;
+    let prazoAlteradoEmOut: Date | null = solicitacao.prazo_alterado_em ? new Date(solicitacao.prazo_alterado_em) : null;
+
     if (solicitacao.clickup_task_id) {
       try {
-        const clickupStatus = await getClickUpTaskStatus(solicitacao.clickup_task_id);
-        if (clickupStatus && clickupStatus !== solicitacao.status) {
-          await db.update(solicitacoesTable)
-            .set({ status: clickupStatus, updated_at: new Date() })
-            .where(eq(solicitacoesTable.id, id));
-          res.json({ status: clickupStatus, updated: true });
-          return;
+        const snap = await getClickUpTaskSnapshot(solicitacao.clickup_task_id);
+        if (snap) {
+          const patch: Record<string, unknown> = {};
+          if (snap.status && snap.status !== solicitacao.status) {
+            patch.status = snap.status; statusOut = snap.status; updated = true;
+          }
+          if (snap.dueDate) {
+            const old = solicitacao.prazo ? new Date(solicitacao.prazo) : null;
+            const mudou = !old || ymdBR(snap.dueDate) !== ymdBR(old);
+            if (mudou && old) {
+              // Alteração real do prazo (já havia um prazo): registra, sinaliza e notifica
+              patch.prazo = snap.dueDate;
+              patch.prazo_anterior = old;
+              patch.prazo_motivo = snap.motivoPrazo || null;
+              patch.prazo_alterado_em = new Date();
+              prazoOut = snap.dueDate; prazoAnteriorOut = old; prazoMotivoOut = snap.motivoPrazo || null;
+              prazoAlteradoEmOut = patch.prazo_alterado_em as Date;
+              updated = true;
+            } else if (mudou && !old) {
+              // Primeira sincronização (sem prazo salvo) — apenas preenche
+              patch.prazo = snap.dueDate; prazoOut = snap.dueDate;
+            }
+          }
+          if (Object.keys(patch).length) {
+            patch.updated_at = new Date();
+            await db.update(solicitacoesTable).set(patch).where(eq(solicitacoesTable.id, id));
+          }
+          if (patch.prazo_alterado_em) {
+            logAtividade({
+              tipo: "prazo_alterado", nivel: "warn",
+              solicitacaoId: id, tipoSolicitacao: solicitacao.tipo_solicitacao,
+              titulo: solicitacao.titulo || undefined,
+              detalhe: `Prazo alterado no ClickUp: ${fmtBR(prazoAnteriorOut)} → ${fmtBR(prazoOut)}${prazoMotivoOut ? ` · motivo: ${prazoMotivoOut}` : ""} (solicitação #${id})`,
+              metadata: { de: prazoAnteriorOut, para: prazoOut, motivo: prazoMotivoOut },
+            }).catch(() => {});
+            notificarMarcoBg(id, "prazo_alterado");
+          }
         }
       } catch (e) {
-        logger.error({ err: e }, "ClickUp status check failed");
+        logger.error({ err: e }, "ClickUp snapshot check failed");
       }
     }
 
-    res.json({ status: solicitacao.status, updated: false });
+    res.json({
+      status: statusOut,
+      updated,
+      prazo: prazoOut ? prazoOut.toISOString() : null,
+      prazo_anterior: prazoAnteriorOut ? prazoAnteriorOut.toISOString() : null,
+      prazo_motivo: prazoMotivoOut,
+      prazo_alterado_em: prazoAlteradoEmOut ? prazoAlteradoEmOut.toISOString() : null,
+    });
   } catch (err) {
     logger.error({ err }, "Error checking status");
     res.status(500).json({ error: "Erro ao verificar status" });
@@ -24712,6 +28760,14 @@ router.post("/solicitacoes/:id/entrega", requireAuth, async (req, res): Promise<
       .where(eq(solicitacoesTable.id, id));
 
     logger.info({ id, count: links.length }, "Links de entrega salvos");
+    logAtividade({
+      userEmail: user?.email, userName: user?.name,
+      tipo: "entrega_registrada", nivel: "info",
+      solicitacaoId: id, tipoSolicitacao: solicitacao.tipo_solicitacao,
+      titulo: solicitacao.titulo || undefined,
+      detalhe: `Entrega registrada na solicitação #${id} (${links.length} link${links.length === 1 ? "" : "s"}) — status: ${novoStatus}.`,
+      metadata: { count: links.length, status: novoStatus, isInternal: !!isInternal },
+    }).catch(() => {});
     res.json({ success: true });
   } catch (err) {
     logger.error({ err }, "Erro ao salvar entrega");
@@ -24912,6 +28968,20 @@ router.post("/solicitacoes/:id/alteracao", requireAuth, async (req, res): Promis
       return;
     }
 
+    // Volta o status para "Em revisão" (ClickUp + Hub)
+    const okStatusRev = await setClickUpTaskStatus(solicitacao.clickup_task_id, CLICKUP_STATUS_EM_REVISAO);
+    if (!okStatusRev) {
+      logAtividade({
+        tipo: "clickup_status_falha", nivel: "warn",
+        solicitacaoId: id, tipoSolicitacao: solicitacao.tipo_solicitacao,
+        detalhe: `Não foi possível mudar o status no ClickUp para "${CLICKUP_STATUS_EM_REVISAO}" (solicitação #${id}).`,
+        metadata: { statusAlvo: CLICKUP_STATUS_EM_REVISAO, taskId: solicitacao.clickup_task_id },
+      }).catch(() => {});
+    }
+    await db.update(solicitacoesTable)
+      .set({ status: "em-revisao", updated_at: new Date() })
+      .where(eq(solicitacoesTable.id, id));
+
     await logAtividade({
       userEmail: user.email, userName: user.name,
       tipo: "alteracao_solicitada", nivel: "info",
@@ -24960,6 +29030,20 @@ router.post("/solicitacoes/:id/aprovacao", requireAuth, async (req, res): Promis
       headers: { "Authorization": token, "Content-Type": "application/json" },
       body: JSON.stringify({ comment_text: comentario }),
     });
+
+    // Conclui a solicitação (ClickUp + Hub)
+    const okStatusConcl = await setClickUpTaskStatus(solicitacao.clickup_task_id, CLICKUP_STATUS_CONCLUIDO);
+    if (!okStatusConcl) {
+      logAtividade({
+        tipo: "clickup_status_falha", nivel: "warn",
+        solicitacaoId: id, tipoSolicitacao: solicitacao.tipo_solicitacao,
+        detalhe: `Não foi possível mudar o status no ClickUp para "${CLICKUP_STATUS_CONCLUIDO}" (solicitação #${id}).`,
+        metadata: { statusAlvo: CLICKUP_STATUS_CONCLUIDO, taskId: solicitacao.clickup_task_id },
+      }).catch(() => {});
+    }
+    await db.update(solicitacoesTable)
+      .set({ status: "concluido", updated_at: new Date() })
+      .where(eq(solicitacoesTable.id, id));
 
     logEventoBg(id, {
       tipo: "info",
@@ -25112,6 +29196,44 @@ router.get("/admin/stats", requireAuth, async (req, res): Promise<void> => {
   }
 });
 
+router.post("/solicitacoes/bulk-delete", requireRole("admin"), async (req, res): Promise<void> => {
+  try {
+    const user = req.session.user!;
+    const idsRaw = (req.body?.ids ?? []) as unknown[];
+    const ids = Array.from(new Set(
+      (Array.isArray(idsRaw) ? idsRaw : []).map(n => parseInt(String(n), 10)).filter(n => !isNaN(n))
+    ));
+    if (ids.length === 0) { res.status(400).json({ error: "Nenhum id válido informado" }); return; }
+    if (ids.length > 200) { res.status(400).json({ error: "Máximo de 200 solicitações por vez" }); return; }
+
+    const sols = await db.select().from(solicitacoesTable).where(inArray(solicitacoesTable.id, ids));
+    if (sols.length === 0) { res.status(404).json({ error: "Nenhuma solicitação encontrada" }); return; }
+    const foundIds = sols.map(s => s.id);
+
+    const arquivosParaDeletar = await db.select().from(arquivosTable).where(inArray(arquivosTable.solicitacao_id, foundIds));
+    await db.transaction(async (tx) => {
+      await tx.delete(arquivosTable).where(inArray(arquivosTable.solicitacao_id, foundIds));
+      await tx.delete(solicitacoesTable).where(inArray(solicitacoesTable.id, foundIds));
+    });
+    const r2Del = await Promise.allSettled(arquivosParaDeletar.map(a => deleteFromR2(a.url_r2)));
+    r2Del.forEach((r, i) => {
+      if (r.status === "rejected") logger.warn({ url: arquivosParaDeletar[i]?.url_r2, reason: r.reason }, "Falha ao deletar arquivo do R2 (bulk)");
+    });
+
+    await logAtividade({
+      userEmail: user.email, userName: user.name,
+      tipo: "solicitacoes_excluidas_massa", nivel: "warn",
+      detalhe: `${user.email} excluiu ${foundIds.length} solicitações em massa (#${foundIds.join(", #")})`,
+      metadata: { ids: foundIds, count: foundIds.length },
+    });
+    logger.info({ count: foundIds.length, ids: foundIds, deletedBy: user.email }, "Solicitações excluídas em massa por admin");
+    res.json({ success: true, deleted: foundIds.length, ids: foundIds });
+  } catch (err) {
+    logger.error({ err }, "Erro ao excluir solicitações em massa");
+    res.status(500).json({ error: "Erro ao excluir em massa" });
+  }
+});
+
 router.delete("/solicitacoes/:id", requireRole("admin"), async (req, res): Promise<void> => {
   try {
     const user = req.session.user!;
@@ -25158,8 +29280,8 @@ router.post("/solicitacoes/:id/avaliacao", requireAuth, async (req, res): Promis
 
     const { nota, comentario } = req.body as { nota: number; comentario?: string };
     const notaNum = Number(nota);
-    if (!notaNum || !Number.isInteger(notaNum) || notaNum < 1 || notaNum > 10) {
-      res.status(400).json({ error: "Nota deve ser um inteiro entre 1 e 10" });
+    if (!notaNum || !Number.isInteger(notaNum) || notaNum < 1 || notaNum > 5) {
+      res.status(400).json({ error: "Nota deve ser um inteiro entre 1 e 5" });
       return;
     }
 
@@ -25215,6 +29337,7 @@ router.get("/cartao-aprovacoes", requireAuth, async (req, res): Promise<void> =>
       const dados: any = s.dados || {};
       return {
         solicitacao_id: s.id,
+        created_at: s.created_at,
         data_pedido: a?.data_pedido ?? new Date(s.created_at).toLocaleDateString("pt-BR"),
         nome: a?.nome ?? (dados.nomeCartao || ""),
         whatsapp: a?.whatsapp ?? (dados.whatsapp || ""),
@@ -25291,6 +29414,12 @@ router.put("/cartao-aprovacoes/:solicitacaoId", requireAuth, async (req, res): P
         }
       } catch (e) {
         logger.warn({ e, solicitacaoId }, "Falha ao comentar mudança de status no ClickUp");
+        logAtividadeBg({
+          tipo: "clickup_status_falha", nivel: "warn",
+          solicitacaoId, tipoSolicitacao: "cartao-visita-fisico",
+          detalhe: `Falha ao comentar a mudança de status no ClickUp (cartão #${solicitacaoId}).`,
+          metadata: { err: String(e) },
+        });
       }
     }
     const camposEditados: Record<string, { antes: any; depois: any }> = {};
@@ -25306,6 +29435,18 @@ router.put("/cartao-aprovacoes/:solicitacaoId", requireAuth, async (req, res): P
         mensagem: "Validação de cartão editada",
         user_email: req.session.user!.email,
         detalhes: { campos: camposEditados },
+      });
+      const quem = req.session.user!.name || req.session.user!.email;
+      const resumo = Object.entries(camposEditados)
+        .map(([c, v]) => `${c}: "${v.antes ?? "—"}" → "${v.depois ?? "—"}"`)
+        .join("; ");
+      logAtividadeBg({
+        userEmail: req.session.user!.email, userName: req.session.user!.name,
+        tipo: "cartao_validacao_editada",
+        nivel: camposEditados.status ? "warn" : "info",
+        solicitacaoId, tipoSolicitacao: "cartao-visita-fisico",
+        detalhe: `${quem} editou a validação do cartão #${solicitacaoId} — ${resumo}`,
+        metadata: { campos: camposEditados },
       });
     }
     res.json({ ok: true });
@@ -25659,6 +29800,212 @@ export default router;
 ```
 
 
+## File: artifacts/api-server/src/scripts/import-cartoes.ts
+
+```
+import { db, solicitacoesTable, cartaoAprovacoesTable, usersTable } from "@workspace/db";
+import { eq } from "drizzle-orm";
+import fs from "fs";
+
+/**
+ * Importação one-off: registros históricos da planilha de Cartões de Visita Físico para o Hub,
+ * para que apareçam na página de Validação de Cartões junto com os pedidos novos.
+ *
+ * Por linha cria: 1 solicitação (tipo cartao-visita-fisico) + 1 linha de cartao_aprovacoes.
+ * Escreve direto no banco — NÃO dispara o fluxo de submissão (sem ClickUp, sem geração de arte).
+ *
+ * Uso:
+ *   pnpm tsx src/scripts/import-cartoes.ts                 # DRY-RUN (não escreve)
+ *   pnpm tsx src/scripts/import-cartoes.ts --apply         # aplica
+ *   pnpm tsx src/scripts/import-cartoes.ts --csv caminho/cartoes.csv
+ *
+ * Idempotente: cada linha recebe uma chave de importação; rodar de novo não duplica.
+ */
+
+// ============== CONFIG ==============
+// E-mail de um usuário JÁ EXISTENTE no Hub a quem os registros importados serão atribuídos
+// (campo de dono/auditoria; o nome do solicitante real é preservado em cartao_aprovacoes.nome).
+const IMPORT_USER_EMAIL = "joao.sardeto@svninvest.com.br"; // <-- EDITE antes de rodar
+const DEFAULT_CSV = "cartoes.csv";
+const LEGACY_DATE = new Date("2024-01-01T12:00:00"); // created_at para linhas sem data
+
+// ============== DE-PARA (travado com o cliente) ==============
+const CONTRATO_MAP: Record<string, string> = {
+  "SVN CAPITAL": "svn-capital",
+  "BP": "svn-capital",
+  "SVN INVESTIMENTOS": "svn-investimentos",
+  "SVN": "svn-investimentos",
+  "CONNECT": "svn-connect",
+  "SVN CONNECT": "svn-connect",
+  "": "",
+};
+const CUSTO_MAP: Record<string, string> = { "Interno": "interno", "Colaborador": "colaborador", "": "" };
+const STATUS_MAP: Record<string, string> = {
+  "Envio Assessor": "envio-assessor",
+  "Envio gráfica": "envio-grafica",
+  "Aguardando Contrato": "aguardando-contrato",
+  "Arte Finalizada": "aguardando-validacao",
+  "Liberado para design": "aguardando-validacao",
+  "": "aguardando-validacao",
+};
+const ENVIO_MAP: Record<string, string> = {
+  "Aracaju": "Aracaju", "Campo Grande": "Campo Grande", "Cascavel": "Cascavel", "Cuiabá": "Cuiabá",
+  "Curitiba - Digital": "Curitiba - Digital", "Curitiba - Relacionamento": "Curitiba - Relacionamento",
+  "Digital - Curitiba": "Curitiba - Digital", "Relacionamento - Curitiba": "Curitiba - Relacionamento",
+  "Digital - Maringá": "Maringá - Digital", "Digital Maringa": "Maringá - Digital",
+  "Maringá - Digital": "Maringá - Digital",
+  "Maringá - Relacionamento": "Maringá - Relacionamento", "Maringá - Relacinamento": "Maringá - Relacionamento",
+  "Relacionamento - Maringa": "Maringá - Relacionamento",
+  "Digital - Sp": "São Paulo - Digital", "São Paulo - Digital": "São Paulo - Digital",
+  "Relacionamento - Sp": "São Paulo - Relacionamento", "São Paulo - Relacionamento": "São Paulo - Relacionamento",
+  "São Paulo": "São Paulo - Relacionamento",
+  "Foz do Iguaçu": "Foz do Iguaçu", "Londrina": "Londrina", "Salvador": "Salvador", "Toledo": "Toledo",
+  "": "",
+};
+
+// ============== Helpers ==============
+function readRows(csvPath: string): Record<string, string>[] {
+  const text = new TextDecoder("macintosh").decode(fs.readFileSync(csvPath)); // planilha exportada do Excel (Mac)
+  const lines = text.split(/\r\n|\r|\n/).filter(l => l.trim() !== "");
+  const header = lines[0].split(";").map(h => h.trim());
+  return lines.slice(1).map(line => {
+    const cells = line.split(";");
+    const row: Record<string, string> = {};
+    header.forEach((h, i) => { if (h) row[h] = (cells[i] ?? "").trim(); });
+    return row;
+  });
+}
+
+function parseData(raw: string): { iso: Date | null; br: string } {
+  // aceita "11-04-2024 18:12:14" (DD-MM-YYYY) e "9/2/25 9:45" (D/M/YY) — sempre dia primeiro
+  const m = raw.match(/^(\d{1,2})[-/](\d{1,2})[-/](\d{2,4})(?:\s+(\d{1,2}):(\d{2})(?::(\d{2}))?)?/);
+  if (!m) return { iso: null, br: "" };
+  const [, d, mo, y, h = "12", mi = "00", se = "00"] = m;
+  const year = +y < 100 ? 2000 + +y : +y;
+  const dt = new Date(year, +mo - 1, +d, +h, +mi, +se);
+  return { iso: dt, br: `${d.padStart(2, "0")}/${mo.padStart(2, "0")}/${year}` };
+}
+
+function mapOrFail(map: Record<string, string>, value: string, field: string, errors: string[]): string {
+  if (value in map) return map[value];
+  errors.push(`${field}: valor não mapeado → "${value}"`);
+  return "";
+}
+
+const importKey = (nome: string, email: string, dataRaw: string) =>
+  `${nome}|${email}|${dataRaw}`.toLowerCase();
+
+// ============== Main ==============
+async function run() {
+  const apply = process.argv.includes("--apply");
+  const csvIdx = process.argv.indexOf("--csv");
+  const csvPath = csvIdx >= 0 ? process.argv[csvIdx + 1] : DEFAULT_CSV;
+
+  console.log(apply ? "▶ MODO APPLY — vai escrever no banco.\n" : "▶ DRY-RUN — nada será escrito (use --apply).\n");
+
+  if (!fs.existsSync(csvPath)) { console.error(`CSV não encontrado: ${csvPath}`); process.exit(1); }
+
+  // 1) usuário de importação precisa existir (FK)
+  const [u] = await db.select().from(usersTable).where(eq(usersTable.email, IMPORT_USER_EMAIL));
+  if (!u) {
+    console.error(`IMPORT_USER_EMAIL "${IMPORT_USER_EMAIL}" não existe na tabela de usuários.`);
+    console.error(`Edite a constante no topo do script para um e-mail de usuário já existente no Hub.`);
+    process.exit(1);
+  }
+
+  const rows = readRows(csvPath);
+  console.log(`Linhas no CSV: ${rows.length}`);
+
+  // 2) valida TODO o de-para antes de escrever nada (falha de propósito se houver valor novo)
+  const errors: string[] = [];
+  const prepared = rows.map((r, idx) => {
+    const nome = r["Nome"] || "";
+    const dataRaw = r["Data"] || "";
+    const { iso, br } = parseData(dataRaw);
+    return {
+      idx: idx + 2, // linha no arquivo (1 = header)
+      nome,
+      whatsapp: r["WhatsApp"] || "",
+      email: r["E-Mail"] || "",
+      unidade: r["Unidade"] || "",
+      contrato_social: mapOrFail(CONTRATO_MAP, r["Contrato Social"] || "", "Contrato Social", errors),
+      envio_para: mapOrFail(ENVIO_MAP, r["Envio para"] || "", "Envio para", errors),
+      custo: mapOrFail(CUSTO_MAP, r["Custo"] || "", "Custo", errors),
+      status: mapOrFail(STATUS_MAP, r["Andamento"] || "", "Andamento", errors),
+      created_at: iso ?? LEGACY_DATE,
+      data_pedido: br,
+      key: importKey(nome, r["E-Mail"] || "", dataRaw),
+    };
+  });
+
+  if (errors.length) {
+    console.error(`\n✗ ${errors.length} valor(es) não previsto(s) no de-para. NADA foi importado.`);
+    [...new Set(errors)].forEach(e => console.error("   " + e));
+    process.exit(1);
+  }
+
+  // 3) idempotência: pula linhas já importadas (por chave em dados._import_key)
+  const existentes = await db.select().from(solicitacoesTable)
+    .where(eq(solicitacoesTable.tipo_solicitacao, "cartao-visita-fisico"));
+  const jaImportadas = new Set(
+    existentes.map(s => (s.dados as any)?._import_key).filter(Boolean) as string[]
+  );
+
+  const aImportar = prepared.filter(p => !jaImportadas.has(p.key));
+  const puladas = prepared.length - aImportar.length;
+
+  console.log(`A importar: ${aImportar.length}  |  já importadas (puladas): ${puladas}\n`);
+  if (!apply) {
+    console.log("Amostra (5 primeiras a importar):");
+    aImportar.slice(0, 5).forEach(p =>
+      console.log(`  ${p.nome} | ${p.data_pedido || "(sem data)"} | ${p.envio_para || "-"} | ${p.status}`));
+    console.log("\n(Rode com --apply para gravar.)");
+    process.exit(0);
+  }
+
+  // 4) grava: solicitação + aprovação, por linha, em transação
+  let ok = 0;
+  for (const p of aImportar) {
+    await db.transaction(async (tx) => {
+      const [sol] = await tx.insert(solicitacoesTable).values({
+        user_email: IMPORT_USER_EMAIL,
+        tipo_solicitacao: "cartao-visita-fisico",
+        dados: {
+          nome: p.nome, whatsapp: p.whatsapp, email: p.email,
+          unidade: p.unidade, contrato_social: p.contrato_social,
+          _importado_planilha: true, _import_key: p.key,
+        },
+        status: "concluido",
+        created_at: p.created_at,
+      }).returning();
+
+      await tx.insert(cartaoAprovacoesTable).values({
+        solicitacao_id: sol.id,
+        data_pedido: p.data_pedido || null,
+        nome: p.nome || null,
+        whatsapp: p.whatsapp || null,
+        email: p.email || null,
+        unidade: p.unidade || null,
+        contrato_social: p.contrato_social || null,
+        envio_para: p.envio_para || null,
+        custo: p.custo || null,
+        status: p.status,
+        observacao: null,
+      });
+    });
+    ok++;
+  }
+  console.log(`\n✓ Importadas ${ok} solicitação(ões) de cartão.`);
+}
+
+run().then(() => process.exit(0)).catch(err => {
+  console.error("Erro na importação:", err);
+  process.exit(1);
+});
+
+```
+
+
 ## File: artifacts/api-server/src/scripts/migrate-assignments.ts
 
 ```
@@ -25955,7 +30302,7 @@ seed().catch((err) => {
 ## File: artifacts/api-server/src/services/activity-log.ts
 
 ```
-import { db, eventosSolicitacaoTable } from "@workspace/db";
+import { db, eventosSolicitacaoTable, activityLogTable } from "@workspace/db";
 import { logger } from "../lib/logger";
 
 export type TipoEvento = "info" | "warning" | "error";
@@ -25996,6 +30343,42 @@ export function logEventoBg(solicitacaoId: number, evento: EventoInput): void {
   logEvento(solicitacaoId, evento).catch(() => {});
 }
 
+// ─────────────────────────────────────────────────────────────
+// Log de Atividades global (activityLogTable) — alimenta admin-log.html
+// ─────────────────────────────────────────────────────────────
+export interface AtividadeInput {
+  userEmail?: string;
+  userName?: string;
+  tipo: string;
+  nivel?: "info" | "warn" | "error" | string;
+  solicitacaoId?: number;
+  tipoSolicitacao?: string;
+  titulo?: string;
+  detalhe: string;
+  metadata?: Record<string, unknown>;
+}
+
+export async function logAtividade(params: AtividadeInput): Promise<void> {
+  try {
+    await db.insert(activityLogTable).values({
+      user_email: params.userEmail,
+      user_name: params.userName,
+      tipo: params.tipo,
+      nivel: (params.nivel || "info") as any,
+      solicitacao_id: params.solicitacaoId,
+      tipo_solicitacao: params.tipoSolicitacao,
+      titulo: params.titulo,
+      detalhe: params.detalhe,
+      metadata: params.metadata as any,
+    });
+  } catch (err) {
+    logger.error({ err, tipo: params.tipo }, "logAtividade falhou ao gravar");
+  }
+}
+
+export function logAtividadeBg(params: AtividadeInput): void {
+  logAtividade(params).catch(() => {});
+}
 ```
 
 
@@ -26015,6 +30398,7 @@ import { renderTemplateToPdf } from "./pdf-renderer";
 import { FORM_SCHEMAS, FormSchema } from "../config/form-schemas";
 import { notificarMarcoBg } from "./notifications";
 import { logEventoBg } from "./activity-log";
+import { logAtividadeBg } from "./activity-log";
 import { gerarPdf as gerarCartaoPdf } from "../cartao/gerar-cartao";
 
 function camelToSnake(str: string): string {
@@ -26154,6 +30538,46 @@ function addOptionLabels(
   return out;
 }
 
+/**
+ * Gera o artefato (PNG ou PDF) de um tipo a partir de `dados`, SEM criar solicitação,
+ * sem subir no R2 e sem tocar no banco de solicitações. Usado pela geração em massa
+ * (Tombamentos). Retorna o buffer + extensão/mimetype, ou null se não houver template ativo.
+ */
+export async function gerarArteBuffer(
+  tipo: string,
+  dados: Record<string, unknown>,
+): Promise<{ buffer: Buffer; ext: string; mimetype: string } | null> {
+  const formSchema = FORM_SCHEMAS[tipo];
+  const resolvedDados = addOptionLabels(resolveComputed(dados, formSchema), formSchema);
+
+  const variantField = formSchema?.template_variant_field;
+  const variantValue = variantField && resolvedDados[variantField] != null
+    ? String(resolvedDados[variantField])
+    : null;
+
+  const templateWhere = variantValue
+    ? and(eq(artTemplatesTable.tipo, tipo), eq(artTemplatesTable.is_active, true), eq(artTemplatesTable.variant_value, variantValue))
+    : and(eq(artTemplatesTable.tipo, tipo), eq(artTemplatesTable.is_active, true), isNull(artTemplatesTable.variant_value));
+
+  const [templateRow] = await db
+    .select()
+    .from(artTemplatesTable)
+    .where(templateWhere)
+    .orderBy(desc(artTemplatesTable.id))
+    .limit(1);
+
+  if (!templateRow) return null;
+
+  const renderData = buildRenderData(resolvedDados);
+  const config = templateRow.config as any;
+  const outputFormat: "png" | "pdf" = config.output_format === "pdf" ? "pdf" : "png";
+
+  if (outputFormat === "pdf") {
+    return { buffer: await renderTemplateToPdf(config, renderData), ext: "pdf", mimetype: "application/pdf" };
+  }
+  return { buffer: await renderFromTemplate(config, renderData), ext: "png", mimetype: "image/png" };
+}
+
 export async function gerarArteParaSolicitacao(
   solicitacaoId: number,
   tipo: string,
@@ -26260,6 +30684,12 @@ export async function gerarArteParaSolicitacao(
       mensagem: "Falha na geração",
       detalhes: { err: String(error) },
     });
+    logAtividadeBg({
+      tipo: "automacao_erro", nivel: "error",
+      solicitacaoId, tipoSolicitacao: tipo,
+      detalhe: `Falha na geração automática (${tipo}) da solicitação #${solicitacaoId}: ${error instanceof Error ? error.message : String(error)}`,
+      metadata: { erro: error instanceof Error ? error.message : String(error) },
+    });
 
     await db.update(solicitacoesTable)
       .set({
@@ -26272,7 +30702,6 @@ export async function gerarArteParaSolicitacao(
     throw error;
   }
 }
-
 ```
 
 
@@ -26283,7 +30712,7 @@ import { db, solicitacoesTable } from "@workspace/db";
 import { eq, sql } from "drizzle-orm";
 import { logger } from "../lib/logger";
 import { FORM_SCHEMAS } from "../config/form-schemas";
-import { logEventoBg } from "./activity-log";
+import { logEventoBg, logAtividadeBg } from "./activity-log";
 
 const WEBHOOK_URL = process.env.N8N_NOTIFICATIONS_WEBHOOK_URL;
 const HUB_URL = process.env.HUB_PUBLIC_URL || "https://hub.portalsvn.com.br";
@@ -26302,16 +30731,21 @@ export const TIPOS_COM_APROVACAO = new Set([
   "artes-divulgacao",
   "atualizacao-material",
   "conteudo-pdf-informativo",
-  "conteudo-pdf-ebook",
   "apresentacao-nova",
   "apresentacao-atualizar",
 ]);
 
-export type Marco = "recebida" | "aprovacao" | "concluida";
+export type Marco = "recebida" | "aprovacao" | "concluida" | "prazo_alterado";
 
 export async function notificarMarco(solicitacaoId: number, marco: Marco): Promise<void> {
   if (!WEBHOOK_URL) {
     logger.warn({ solicitacaoId, marco }, "N8N_NOTIFICATIONS_WEBHOOK_URL ausente — pulando");
+    logAtividadeBg({
+      tipo: "email_falha", nivel: "error",
+      solicitacaoId,
+      detalhe: `E-mail "${marco}" não enviado: webhook de notificações (N8N_NOTIFICATIONS_WEBHOOK_URL) não configurado.`,
+      metadata: { marco, motivo: "webhook_ausente" },
+    });
     return;
   }
   try {
@@ -26326,7 +30760,7 @@ export async function notificarMarco(solicitacaoId: number, marco: Marco): Promi
     if (marco === "aprovacao" && !TIPOS_COM_APROVACAO.has(tipo)) return;
 
     const sent = (sol.notifications_sent as Record<string, string>) || {};
-    if (sent[marco]) return;
+    if (marco !== "prazo_alterado" && sent[marco]) return;
 
     const dados: any = sol.dados || {};
     const userName = String(dados.nome || sol.user_email?.split("@")[0] || "").trim();
@@ -26343,6 +30777,9 @@ export async function notificarMarco(solicitacaoId: number, marco: Marco): Promi
       user_name: userName,
       first_name: userName.split(" ")[0] || userName,
       status_atual: sol.status,
+      prazo: sol.prazo,
+      prazo_anterior: sol.prazo_anterior,
+      prazo_motivo: sol.prazo_motivo,
       link: `${HUB_URL}/solicitacao.html?id=${sol.id}`,
       created_at: sol.created_at,
     };
@@ -26361,6 +30798,12 @@ export async function notificarMarco(solicitacaoId: number, marco: Marco): Promi
         mensagem: `Falha ao disparar e-mail "${marco}"`,
         detalhes: { marco, status: res.status },
       });
+      logAtividadeBg({
+        tipo: "email_falha", nivel: "error",
+        solicitacaoId, tipoSolicitacao: tipo,
+        detalhe: `Falha ao disparar e-mail "${marco}" da solicitação #${solicitacaoId} (n8n respondeu ${res.status}).`,
+        metadata: { marco, n8n_status: res.status },
+      });
       return;
     }
 
@@ -26371,12 +30814,14 @@ export async function notificarMarco(solicitacaoId: number, marco: Marco): Promi
       detalhes: { marco, n8n_status: res.status, destinatario: sol.user_email },
     });
 
-    await db.update(solicitacoesTable)
-      .set({
-        notifications_sent: sql`COALESCE(${solicitacoesTable.notifications_sent}, '{}'::jsonb)
-          || ${JSON.stringify({ [marco]: new Date().toISOString() })}::jsonb`,
-      })
-      .where(eq(solicitacoesTable.id, solicitacaoId));
+    if (marco !== "prazo_alterado") {
+      await db.update(solicitacoesTable)
+        .set({
+          notifications_sent: sql`COALESCE(${solicitacoesTable.notifications_sent}, '{}'::jsonb)
+            || ${JSON.stringify({ [marco]: new Date().toISOString() })}::jsonb`,
+        })
+        .where(eq(solicitacoesTable.id, solicitacaoId));
+    }
 
     logger.info({ solicitacaoId, marco }, "Notificação enviada");
   } catch (err: any) {
@@ -26387,6 +30832,12 @@ export async function notificarMarco(solicitacaoId: number, marco: Marco): Promi
       mensagem: `Falha ao disparar e-mail "${marco}"`,
       detalhes: { marco, err: String(err) },
     });
+    logAtividadeBg({
+      tipo: "email_falha", nivel: "error",
+      solicitacaoId,
+      detalhe: `Erro ao disparar e-mail "${marco}" da solicitação #${solicitacaoId}: ${String(err)}`,
+      metadata: { marco, err: String(err) },
+    });
   }
 }
 
@@ -26395,7 +30846,6 @@ export function notificarMarcoBg(solicitacaoId: number, marco: Marco): void {
     logger.error({ err, solicitacaoId, marco }, "notificarMarcoBg engoliu erro")
   );
 }
-
 ```
 
 
@@ -26470,6 +30920,80 @@ export async function renderTemplateToPdf(
 
   const bytes = await pdf.save();
   return Buffer.from(bytes);
+}
+
+```
+
+
+## File: artifacts/api-server/src/services/stuck-monitor.ts
+
+```
+import { db, solicitacoesTable, activityLogTable } from "@workspace/db";
+import { and, eq, gte, lt, notInArray } from "drizzle-orm";
+import { logger } from "../lib/logger";
+import { logAtividade } from "./activity-log";
+
+// Status terminais — não contam como "travado".
+const STATUS_FINAIS = ["concluido", "cancelado", "reprovado", "erro", "envio-assessor"];
+
+// Dias (corridos) sem atualização para considerar uma solicitação parada.
+const STUCK_DAYS = parseInt(process.env.STUCK_DAYS || "5", 10);
+// Janela de deduplicação: não re-sinalizar a mesma solicitação dentro desse período.
+const DEDUP_DAYS = parseInt(process.env.STUCK_DEDUP_DAYS || "7", 10);
+// Intervalo entre verificações (default 6h).
+const CHECK_INTERVAL_MS = parseInt(process.env.STUCK_CHECK_INTERVAL_MS || String(6 * 60 * 60 * 1000), 10);
+
+export async function checkStuckRequests(): Promise<void> {
+  try {
+    const cutoff = new Date(Date.now() - STUCK_DAYS * 86400000);
+
+    const candidatos = await db
+      .select({
+        id: solicitacoesTable.id,
+        status: solicitacoesTable.status,
+        tipo: solicitacoesTable.tipo_solicitacao,
+        titulo: solicitacoesTable.titulo,
+        updated_at: solicitacoesTable.updated_at,
+      })
+      .from(solicitacoesTable)
+      .where(and(notInArray(solicitacoesTable.status, STATUS_FINAIS), lt(solicitacoesTable.updated_at, cutoff)));
+
+    if (candidatos.length === 0) return;
+
+    // Dedup: ids já sinalizados como travados na janela recente.
+    const since = new Date(Date.now() - DEDUP_DAYS * 86400000);
+    const jaSinalizados = await db
+      .select({ sid: activityLogTable.solicitacao_id })
+      .from(activityLogTable)
+      .where(and(eq(activityLogTable.tipo, "solicitacao_travada"), gte(activityLogTable.created_at, since)));
+    const skip = new Set(jaSinalizados.map((r) => r.sid));
+
+    let n = 0;
+    for (const c of candidatos) {
+      if (skip.has(c.id)) continue;
+      const dias = Math.floor((Date.now() - new Date(c.updated_at).getTime()) / 86400000);
+      await logAtividade({
+        tipo: "solicitacao_travada",
+        nivel: "warn",
+        solicitacaoId: c.id,
+        tipoSolicitacao: c.tipo,
+        titulo: c.titulo || undefined,
+        detalhe: `Solicitação #${c.id} parada há ${dias} dias no status "${c.status}".`,
+        metadata: { dias, status: c.status },
+      });
+      n++;
+    }
+    if (n > 0) logger.info({ sinalizadas: n, candidatos: candidatos.length }, "stuck-monitor: solicitações travadas registradas");
+  } catch (err) {
+    logger.error({ err }, "stuck-monitor falhou");
+  }
+}
+
+export function startStuckMonitor(): void {
+  // primeira verificação 1 min após o boot, depois a cada CHECK_INTERVAL_MS
+  setTimeout(() => { checkStuckRequests().catch(() => {}); }, 60 * 1000);
+  setInterval(() => { checkStuckRequests().catch(() => {}); }, CHECK_INTERVAL_MS);
+  logger.info({ stuckDays: STUCK_DAYS, intervalMs: CHECK_INTERVAL_MS }, "stuck-monitor iniciado");
 }
 
 ```
@@ -26569,6 +31093,15 @@ const assetCache = new BoundedCache<string, Buffer>(100);
 
 async function getRemoteAsset(url: string): Promise<Buffer> {
   if (!url || url.trim() === '') throw new Error('URL de asset vazia');
+  if (url.startsWith('data:')) {
+    const comma = url.indexOf(',');
+    if (comma === -1) throw new Error('data URI inválida');
+    const meta = url.slice(5, comma);
+    const dataPart = url.slice(comma + 1);
+    return meta.includes('base64')
+      ? Buffer.from(dataPart, 'base64')
+      : Buffer.from(decodeURIComponent(dataPart), 'utf-8');
+  }
   if (url.startsWith('http')) {
     const cached = assetCache.get(url);
     if (cached) {
@@ -26992,7 +31525,6 @@ export async function renderFromTemplate(
   if (DEBUG_RENDER) logger.info({ tipo: template.tipo, layoutId: template.id, ms: Date.now() - t0 }, 'render: concluído');
   return result;
 }
-
 ```
 
 
@@ -28154,6 +32686,10 @@ export const solicitacoesTable = pgTable("solicitacoes", {
   entrega_links: jsonb("entrega_links"),
   status: varchar("status", { length: 30 }).default("recebido").notNull(),
   responsavel: text("responsavel"),
+  prazo: timestamp("prazo"),
+  prazo_anterior: timestamp("prazo_anterior"),
+  prazo_motivo: text("prazo_motivo"),
+  prazo_alterado_em: timestamp("prazo_alterado_em"),
   erro_geracao: text("erro_geracao"),
   notifications_sent: jsonb("notifications_sent").$type<Record<string, string>>().notNull().default({}),
   created_at: timestamp("created_at").defaultNow().notNull(),
@@ -28278,6 +32814,21 @@ export const activityLogTable = pgTable("activity_log", {
   metadata: jsonb("metadata"),
 });
 
+
+export const tombamentosTable = pgTable("tombamentos", {
+  id: serial("id").primaryKey(),
+  nome: varchar("nome", { length: 255 }).notNull(),
+  marca: varchar("marca", { length: 60 }).notNull(),
+  status: varchar("status", { length: 30 }).default("aberto").notNull(),
+  linhas: jsonb("linhas"),
+  assinaturas_zip_url: text("assinaturas_zip_url"),
+  cartoes_zip_url: text("cartoes_zip_url"),
+  expires_at: timestamp("expires_at"),
+  created_by: varchar("created_by", { length: 255 }),
+  created_at: timestamp("created_at").defaultNow().notNull(),
+  updated_at: timestamp("updated_at").defaultNow().notNull(),
+});
+export type Tombamento = typeof tombamentosTable.$inferSelect;
 ```
 
 

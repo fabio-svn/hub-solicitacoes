@@ -2,7 +2,7 @@ import { Router } from "express";
 import multer from "multer";
 import os from "os";
 import { db } from "@workspace/db";
-import { solicitacoesTable, arquivosTable, cartaoAprovacoesTable } from "@workspace/db";
+import { solicitacoesTable, arquivosTable, cartaoAprovacoesTable, usersTable } from "@workspace/db";
 import { eq, desc, and, ne, sql, inArray } from "drizzle-orm";
 import { requireAuth, requireRole } from "../middleware/auth.middleware";
 import { createClickUpTask, getClickUpTaskStatus, getClickUpTaskSnapshot, setClickUpTaskStatus, calcularPrazo, getPrazoDiasUteis, PRAZO_DIAS_UTEIS, APRESENTACAO_TIERS, CLICKUP_STATUS_EM_REVISAO, CLICKUP_STATUS_CONCLUIDO, type ArquivosMap } from "./clickup";
@@ -665,8 +665,17 @@ router.get("/solicitacoes/:id", requireAuth, async (req, res): Promise<void> => 
 
     const arquivos = await db.select().from(arquivosTable).where(eq(arquivosTable.solicitacao_id, id));
 
+    // Nome do solicitante (a partir do cadastro de usuários, pelo e-mail)
+    let solicitanteNome: string | null = null;
+    if (solicitacao.user_email) {
+      try {
+        const [u] = await db.select({ name: usersTable.name }).from(usersTable).where(eq(usersTable.email, solicitacao.user_email));
+        if (u?.name && u.name.trim()) solicitanteNome = u.name.trim();
+      } catch { /* segue sem o nome */ }
+    }
+
     const [solComStatus] = await aplicarStatusAprovacao([{ ...solicitacao }]);
-    res.json({ ...solComStatus, arquivos, canCancel: podeCancelar(solComStatus) });
+    res.json({ ...solComStatus, solicitante_nome: solicitanteNome, arquivos, canCancel: podeCancelar(solComStatus) });
   } catch (err) {
     logger.error({ err }, "Error getting solicitacao");
     res.status(500).json({ error: "Erro ao buscar solicitação" });
