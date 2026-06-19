@@ -636,7 +636,7 @@
 
     async function deleteCartao(id, btn) {
       if (!IS_ADMIN) return;
-      if (!confirm('Excluir permanentemente este cartão?\n\nIsso remove a solicitação, a validação, o arquivo gerado e o histórico. Esta ação NÃO pode ser desfeita.')) return;
+      if (!(await window.showConfirm('Excluir permanentemente este cartão? Isso remove a solicitação, a validação, o arquivo gerado e o histórico. Esta ação não pode ser desfeita.', { danger: true, okLabel: 'Excluir' }))) return;
       btn.disabled = true;
       try {
         const res = await fetch('/api/cartao-aprovacoes/' + id, { method: 'DELETE' });

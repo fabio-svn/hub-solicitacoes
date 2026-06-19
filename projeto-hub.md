@@ -1,6 +1,6 @@
 # Pack do Projeto Hub SVN
 
-Gerado em: 2026-06-19 15:35:26
+Gerado em: 2026-06-19 18:22:36
 
 Roots: artifacts/api-server lib
 
@@ -7172,7 +7172,7 @@ body { margin: 0; font-family: 'Nunito Sans', sans-serif; background: var(--bg-l
         <div id="tombResultado" style="display:none">
           <div class="tomb-summary" id="tombSummary"></div>
           <div class="admin-userlist-table-wrap" style="border-radius:12px;border:1px solid var(--border-light);overflow-x:auto">
-            <table class="admin-table" id="tombTabela"><thead id="tombThead"></thead><tbody id="tombTbody"></tbody></table>
+            <table class="admin-table hub-table" id="tombTabela" data-resizable><thead id="tombThead"></thead><tbody id="tombTbody"></tbody></table>
           </div>
           <div class="tomb-actions">
             <button class="btn btn-primary" id="btnGerarAssinaturas" onclick="gerarAssinaturas()" disabled>Gerar assinaturas (.zip)</button>
@@ -7216,6 +7216,7 @@ body { margin: 0; font-family: 'Nunito Sans', sans-serif; background: var(--bg-l
   <script src="shell.js?v=20260611f"></script>
   <script src="utils.js?v=20260615d"></script>
   <script src="toast.js?v=20260603"></script>
+  <script src="tables.js?v=20260619a"></script>
   <script>
     const MARCAS = [
       { value: 'svn-investimentos', label: 'SVN Investimentos' },
@@ -7389,12 +7390,12 @@ body { margin: 0; font-family: 'Nunito Sans', sans-serif; background: var(--bg-l
         '<span class="tomb-pill tomb-pill--total">' + rows.length + ' linha(s)</span>'
         + '<span class="tomb-pill tomb-pill--ok">' + (rows.length - comProblema) + ' OK</span>'
         + (comProblema ? '<span class="tomb-pill tomb-pill--warn">' + comProblema + ' com problema</span>' : '');
-      document.getElementById('tombThead').innerHTML = '<tr>' + COLS.map(function (c) { return '<th>' + esc(c.label) + '</th>'; }).join('') + '<th>Status</th></tr>';
+      document.getElementById('tombThead').innerHTML = '<tr>' + COLS.map(function (c) { return '<th data-sort>' + esc(c.label) + '</th>'; }).join('') + '<th data-sort>Status</th></tr>';
       document.getElementById('tombTbody').innerHTML = rows.map(function (r) {
         const warn = r._issues && r._issues.length;
         const tds = COLS.map(function (c) { return '<td style="padding:9px 12px">' + esc(r[c.f] || '—') + '</td>'; }).join('');
         const status = warn ? '<span class="row-status-warn">' + esc(r._issues.join(', ')) + '</span>' : '<span class="row-status-ok">OK</span>';
-        return '<tr class="' + (warn ? 'tomb-row--warn' : '') + '">' + tds + '<td style="padding:9px 12px">' + status + '</td></tr>';
+        return '<tr class="' + (warn ? 'tomb-row--warn' : '') + '">' + tds + '<td style="padding:9px 12px" data-sort-value="' + (warn ? 1 : 0) + '">' + status + '</td></tr>';
       }).join('');
       document.getElementById('tombResultado').style.display = 'block';
       document.getElementById('btnGerarAssinaturas').disabled = rows.length === 0;
@@ -17561,15 +17562,26 @@ window.Shell = {
     }
 
     /* ─── Header da solicitação ─── */
-    .sol-header {
+    .sol-header { margin-bottom: 20px; }
+    .sol-header-top {
       display: flex;
       align-items: flex-start;
       justify-content: space-between;
       gap: 20px;
-      margin-bottom: 20px;
+      flex-wrap: wrap;
     }
     .sol-header-left { flex: 1; min-width: 0; }
-    .sol-header-right { flex-shrink: 0; padding-top: 4px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .sol-actions { flex-shrink: 0; padding-top: 4px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .sol-eyebrow {
+      font-family: 'Nunito Sans', sans-serif;
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--ruby-red);
+      opacity: 0.85;
+      margin-bottom: 5px;
+    }
     .sol-titulo {
       font-family: 'Taviraj', serif;
       font-weight: 300;
@@ -17588,13 +17600,10 @@ window.Shell = {
       color: var(--carbon-black);
       opacity: 0.5;
     }
+    .sol-meta:empty { display: none; }
     .sol-meta-sep {
-      width: 3px;
-      height: 3px;
-      border-radius: 50%;
-      background: currentColor;
-      opacity: 0.5;
-      flex-shrink: 0;
+      width: 3px; height: 3px; border-radius: 50%;
+      background: currentColor; opacity: 0.5; flex-shrink: 0;
     }
     .sol-status-badge {
       display: inline-flex;
@@ -17607,34 +17616,44 @@ window.Shell = {
       white-space: nowrap;
       box-shadow: 0 1px 3px rgba(0,0,0,0.12);
     }
-    .sol-header-right-col {
-      display: flex;
-      flex-direction: column;
-      align-items: flex-end;
+    /* Barra de fatos-chave */
+    .sol-facts {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(155px, 1fr));
       gap: 10px;
-      flex-shrink: 0;
-      padding-top: 4px;
+      margin-top: 18px;
     }
-    .sol-resp {
+    .fact {
+      background: var(--card-white, #fff);
+      border: 1px solid var(--border-light, rgba(34,27,25,0.1));
+      border-radius: 10px;
+      padding: 11px 13px;
+      min-width: 0;
+    }
+    .fact-label {
       display: flex;
       align-items: center;
-      gap: 6px;
-      font-size: 0.82rem;
-      color: var(--carbon-black);
-      max-width: 320px;
+      gap: 5px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      color: rgba(34,27,25,0.5);
+      margin-bottom: 5px;
     }
-    .sol-resp .sol-resp-label { opacity: 0.5; font-weight: 500; }
-    .sol-resp .sol-resp-label::after { content: ':'; }
-    .sol-resp .resp-nome { font-weight: 700; }
-    .prazo-badge { display: inline-flex; align-items: center; gap: 7px; padding: 7px 14px; border-radius: 10px; font-size: 0.85rem; font-weight: 700; white-space: nowrap; border: 1px solid transparent; }
-    .prazo-badge .prazo-badge-rel { font-weight: 500; opacity: 0.85; font-size: 0.78rem; }
-    .prazo-alterado { display: inline-flex; align-items: center; gap: 6px; max-width: 340px; padding: 5px 11px; border-radius: 8px; font-size: 0.76rem; font-weight: 600; background: rgba(234,88,12,0.1); color: #c2410c; border: 1px solid rgba(234,88,12,0.25); }
-    .prazo-alterado .prazo-alterado-txt { font-weight: 500; white-space: normal; }
+    .fact-label svg { flex-shrink: 0; opacity: 0.7; }
+    .fact-value { font-size: 0.92rem; font-weight: 700; color: var(--carbon-black); word-break: normal; overflow-wrap: break-word; line-height: 1.25; }
+    .fact-rel-sub { font-size: 0.74rem; font-weight: 600; margin-top: 3px; }
+    .fact-alt-block { margin-top: 9px; padding-top: 9px; border-top: 1px solid rgba(34,27,25,0.1); }
+    .fact-alt-head { display: flex; align-items: center; gap: 4px; font-size: 0.7rem; font-weight: 700; letter-spacing: 0.02em; color: #c2410c; margin-bottom: 4px; }
+    .fact-alt-head svg { flex-shrink: 0; }
+    .fact-alt-line { font-size: 0.78rem; font-weight: 500; color: #c2410c; line-height: 1.3; word-break: normal; overflow-wrap: break-word; }
+    .fact-alt-line + .fact-alt-line { margin-top: 1px; }
+    .fact-sub { font-size: 0.74rem; font-weight: 600; margin-top: 5px; display: flex; align-items: flex-start; gap: 4px; }
+    .fact-sub svg { flex-shrink: 0; margin-top: 2px; }
     @media (max-width: 480px) {
-      .sol-header { flex-direction: column; gap: 10px; }
+      .sol-header-top { flex-direction: column; gap: 12px; }
       .sol-titulo { font-size: 1.5rem; }
-      .sol-header-right { align-self: flex-start; }
-      .sol-header-right-col { align-items: flex-start; width: 100%; }
+      .sol-actions { align-self: flex-start; }
     }
 
     /* 4a — Bandeja de detalhes (mobile recolhida, desktop sempre visível) */
@@ -17786,27 +17805,38 @@ window.Shell = {
 
       <!-- Header -->
       <div class="sol-header">
-        <div class="sol-header-left">
-          <h1 class="sol-titulo" id="solTitulo"></h1>
-          <div class="sol-meta" id="solMeta"></div>
-        </div>
-        <div class="sol-header-right-col">
-          <div class="sol-header-right" id="solHeaderRight">
+        <div class="sol-header-top">
+          <div class="sol-header-left">
+            <div class="sol-eyebrow" id="solEyebrow" style="display:none"></div>
+            <h1 class="sol-titulo" id="solTitulo"></h1>
+            <div class="sol-meta" id="solMeta"></div>
+          </div>
+          <div class="sol-actions" id="solHeaderRight">
             <span class="sol-status-badge" id="solStatus"></span>
           </div>
-          <div id="prazoBadge" class="prazo-badge" style="display:none">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="flex-shrink:0"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-            <span class="prazo-badge-data"></span>
-            <span class="prazo-badge-rel"></span>
+        </div>
+        <div class="sol-facts" id="solFacts" style="display:none">
+          <div class="fact fact-prazo" id="factPrazo" style="display:none">
+            <div class="fact-label"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Prazo de entrega</div>
+            <div class="fact-value" id="factPrazoValue"></div>
+            <div class="fact-rel-sub" id="factPrazoRel" style="display:none"></div>
+            <div class="fact-alt-block" id="factPrazoAlterado" style="display:none">
+              <div class="fact-alt-head"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>Prazo alterado</div>
+              <div class="fact-alt-line" id="factPrazoAltData"></div>
+              <div class="fact-alt-line" id="factPrazoAltMotivo"></div>
+            </div>
           </div>
-          <div id="prazoAlterado" class="prazo-alterado" style="display:none">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="flex-shrink:0"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-            <span class="prazo-alterado-txt"></span>
+          <div class="fact" id="factResp" style="display:none">
+            <div class="fact-label"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Responsável</div>
+            <div class="fact-value" id="factRespValue"></div>
           </div>
-          <div id="solResponsavel" class="sol-resp" style="display:none">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="opacity:0.4;flex-shrink:0"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-            <span class="sol-resp-label">Responsável</span>
-            <span class="resp-nome"></span>
+          <div class="fact" id="factSolic">
+            <div class="fact-label"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>Solicitante</div>
+            <div class="fact-value" id="factSolicValue"></div>
+          </div>
+          <div class="fact" id="factAberto">
+            <div class="fact-label"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Aberto em</div>
+            <div class="fact-value" id="factAbertoValue"></div>
           </div>
         </div>
       </div>
@@ -17968,54 +17998,91 @@ window.Shell = {
       finally { _syncing = false; }
     }
 
-    function renderPrazoBadge(item) {
-      const badge = document.getElementById('prazoBadge');
-      const alterado = document.getElementById('prazoAlterado');
-      if (!badge) return;
-      if (isTipoAutomacao(item.tipo_solicitacao) || !item.prazo) {
-        badge.style.display = 'none';
-        if (alterado) alterado.style.display = 'none';
-        return;
-      }
-      const DIAS_SEM = ['domingo','segunda','terça','quarta','quinta','sexta','sábado'];
-      const pd = new Date(item.prazo);
-      const fmt = String(pd.getDate()).padStart(2,'0') + '/' + String(pd.getMonth()+1).padStart(2,'0') + '/' + pd.getFullYear();
+    function cleanResponsavel(nome) {
+      if (!nome) return '';
+      const t = String(nome).trim();
+      if (/^assignee\s+clickup\b/i.test(t)) return '';
+      return t;
+    }
 
-      const finalizado = ['concluido','cancelado','reprovado'].includes(item.status);
-      // dias corridos até o prazo (data, sem hora)
-      const hoje = new Date(); hoje.setHours(0,0,0,0);
-      const alvo = new Date(pd); alvo.setHours(0,0,0,0);
-      const diff = Math.round((alvo - hoje) / 86400000);
+    function nomeFromEmail(email) {
+      if (!email) return '';
+      const lp = String(email).split('@')[0];
+      return lp.split(/[._-]+/).filter(Boolean)
+        .map(w => w.charAt(0).toUpperCase() + w.slice(1))
+        .join(' ');
+    }
 
-      let bg, fg, br, rel;
-      if (finalizado) {
-        bg = 'rgba(34,27,25,0.06)'; fg = 'rgba(34,27,25,0.6)'; br = 'rgba(34,27,25,0.12)'; rel = '';
-      } else if (diff < 0) {
-        bg = 'rgba(220,38,38,0.1)'; fg = '#b91c1c'; br = 'rgba(220,38,38,0.28)'; rel = 'atrasado há ' + Math.abs(diff) + (Math.abs(diff)===1?' dia':' dias');
-      } else if (diff === 0) {
-        bg = 'rgba(220,38,38,0.1)'; fg = '#b91c1c'; br = 'rgba(220,38,38,0.28)'; rel = 'é hoje';
-      } else if (diff <= 2) {
-        bg = 'rgba(234,88,12,0.1)'; fg = '#c2410c'; br = 'rgba(234,88,12,0.28)'; rel = 'em ' + diff + (diff===1?' dia':' dias');
-      } else {
-        bg = 'rgba(22,163,74,0.1)'; fg = '#15803d'; br = 'rgba(22,163,74,0.25)'; rel = 'em ' + diff + ' dias';
-      }
-      badge.style.background = bg; badge.style.color = fg; badge.style.borderColor = br;
-      badge.querySelector('.prazo-badge-data').textContent = 'Prazo: ' + fmt + ' · ' + DIAS_SEM[pd.getDay()];
-      badge.querySelector('.prazo-badge-rel').textContent = rel ? '(' + rel + ')' : '';
-      badge.style.display = 'inline-flex';
+    function renderFacts(item, dados) {
+      const facts = document.getElementById('solFacts');
+      if (!facts) return;
+      if (isTipoAutomacao(item.tipo_solicitacao)) { facts.style.display = 'none'; return; }
+      facts.style.display = 'grid';
 
-      // Indicador de prazo alterado
-      if (alterado) {
+      const DIAS_ABBR = ['dom','seg','ter','qua','qui','sex','sáb'];
+
+      // ── Prazo ──
+      const cellPrazo = document.getElementById('factPrazo');
+      const cellPrazoRel = document.getElementById('factPrazoRel');
+      const cellPrazoAlt = document.getElementById('factPrazoAlterado');
+      if (item.prazo) {
+        const pd = new Date(item.prazo);
+        const fmt = String(pd.getDate()).padStart(2,'0') + '/' + String(pd.getMonth()+1).padStart(2,'0') + '/' + pd.getFullYear();
+        const finalizado = ['concluido','cancelado','reprovado'].includes(item.status);
+        const hoje = new Date(); hoje.setHours(0,0,0,0);
+        const alvo = new Date(pd); alvo.setHours(0,0,0,0);
+        const diff = Math.round((alvo - hoje) / 86400000);
+        let bg, fg, br, rel;
+        if (finalizado) { bg='rgba(34,27,25,0.05)'; fg='rgba(34,27,25,0.65)'; br='rgba(34,27,25,0.12)'; rel=''; }
+        else if (diff < 0) { bg='rgba(220,38,38,0.08)'; fg='#b91c1c'; br='rgba(220,38,38,0.25)'; rel='atrasado há ' + Math.abs(diff) + (Math.abs(diff)===1?' dia':' dias'); }
+        else if (diff === 0) { bg='rgba(220,38,38,0.08)'; fg='#b91c1c'; br='rgba(220,38,38,0.25)'; rel='é hoje'; }
+        else if (diff <= 2) { bg='rgba(234,88,12,0.08)'; fg='#c2410c'; br='rgba(234,88,12,0.25)'; rel='em ' + diff + (diff===1?' dia':' dias'); }
+        else { bg='rgba(22,163,74,0.08)'; fg='#15803d'; br='rgba(22,163,74,0.22)'; rel='em ' + diff + ' dias'; }
+        cellPrazo.style.background = bg; cellPrazo.style.borderColor = br;
+        cellPrazo.querySelector('.fact-label').style.color = fg;
+        const val = cellPrazo.querySelector('.fact-value');
+        val.style.color = fg;
+        val.textContent = fmt + ' · ' + DIAS_ABBR[pd.getDay()];
+        if (rel) { cellPrazoRel.textContent = rel; cellPrazoRel.style.color = fg; cellPrazoRel.style.display = 'block'; }
+        else { cellPrazoRel.style.display = 'none'; }
         if (item.prazo_alterado_em) {
           const antes = item.prazo_anterior ? new Date(item.prazo_anterior) : null;
           const antesFmt = antes ? (String(antes.getDate()).padStart(2,'0') + '/' + String(antes.getMonth()+1).padStart(2,'0') + '/' + antes.getFullYear()) : '';
-          const motivo = (item.prazo_motivo && String(item.prazo_motivo).trim()) ? String(item.prazo_motivo).trim() : 'sem justificativa informada';
-          alterado.querySelector('.prazo-alterado-txt').textContent = 'Prazo alterado' + (antesFmt ? ' (antes: ' + antesFmt + ')' : '') + ' · ' + motivo;
-          alterado.style.display = 'inline-flex';
-        } else {
-          alterado.style.display = 'none';
-        }
+          const motivo = (item.prazo_motivo && String(item.prazo_motivo).trim()) ? String(item.prazo_motivo).trim() : 'Sem justificativa informada';
+          const altData = document.getElementById('factPrazoAltData');
+          if (antesFmt) { altData.textContent = 'Prazo anterior: ' + antesFmt; altData.style.display = 'block'; }
+          else { altData.style.display = 'none'; }
+          document.getElementById('factPrazoAltMotivo').textContent = motivo;
+          cellPrazoAlt.style.display = 'block';
+        } else { cellPrazoAlt.style.display = 'none'; }
+        cellPrazo.style.display = 'block';
+      } else {
+        cellPrazo.style.display = 'none';
       }
+
+      // ── Responsável ──
+      const cellResp = document.getElementById('factResp');
+      const respNome = cleanResponsavel(item.responsavel);
+      if (respNome) {
+        document.getElementById('factRespValue').textContent = respNome;
+        cellResp.style.display = 'block';
+      } else {
+        cellResp.style.display = 'none';
+      }
+
+      // ── Solicitante (nome, com fallback derivado do e-mail) ──
+      const elSolic = document.getElementById('factSolicValue');
+      const nomeSolic = (item.solicitante_nome && String(item.solicitante_nome).trim())
+        || nomeFromEmail(item.user_email)
+        || (item.user_email || '—');
+      elSolic.textContent = nomeSolic;
+      if (item.user_email) elSolic.title = item.user_email;
+
+      // ── Aberto em ──
+      const dt = new Date(item.created_at);
+      document.getElementById('factAbertoValue').textContent =
+        String(dt.getDate()).padStart(2,'0') + '/' + String(dt.getMonth()+1).padStart(2,'0') + '/' + dt.getFullYear() +
+        ' · ' + dt.toLocaleTimeString('pt-BR', { hour:'2-digit', minute:'2-digit' });
     }
 
     /* ── renderPage ───────────────────────────── */
@@ -18023,7 +18090,7 @@ window.Shell = {
       const isAutomation = isTipoAutomacao(item.tipo_solicitacao);
       if (isAutomation) {
         document.getElementById('solMeta').style.display = 'none';
-        document.getElementById('solResponsavel').style.display = 'none';
+        const f = document.getElementById('solFacts'); if (f) f.style.display = 'none';
         document.getElementById('dadosCard').style.display = 'none';
       }
       document.getElementById('skeletonLoader').style.display = 'none';
@@ -18047,7 +18114,7 @@ window.Shell = {
         document.title = tipoLabel + ' — Hub SVN';
 
         document.getElementById('solMeta').style.display = 'none';
-        document.getElementById('solResponsavel').style.display = 'none';
+        const _fAut = document.getElementById('solFacts'); if (_fAut) _fAut.style.display = 'none';
 
         const isConcluido = item.status === 'concluido';
         const dtAut = new Date(item.updated_at || item.created_at);
@@ -18084,36 +18151,21 @@ window.Shell = {
 
       document.getElementById('solTitulo').textContent = titulo;
       document.title = titulo + ' — Hub SVN';
+      const elEye = document.getElementById('solEyebrow');
+      if (elEye) {
+        if (titulo !== tipoLabel) { elEye.textContent = tipoLabel; elEye.style.display = 'block'; }
+        else { elEye.style.display = 'none'; }
+      }
 
-      const sEl = document.getElementById('solStatus');
-      sEl.textContent = statusObj.label;
-      sEl.style.background = statusObj.bg;
-      sEl.style.color = statusObj.text;
-
-      const dt = new Date(item.created_at);
-      const dtStr = dt.toLocaleDateString('pt-BR', { day:'2-digit', month:'short', year:'numeric' }) +
-        ' às ' + dt.toLocaleTimeString('pt-BR', { hour:'2-digit', minute:'2-digit' });
-      const dtRel = dataRelativa(item.created_at);
-
+      // Meta enxuta: setor / natureza (sem repetir o tipo; solicitante e data vão na barra de fatos)
       const metaParts = [];
-      metaParts.push(`<span>${esc(tipoLabel)}</span>`);
-      if (item.user_email) {
-        metaParts.push(`<span class="sol-meta-sep"></span><span style="display:inline-flex;align-items:center;gap:4px"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="opacity:0.45;flex-shrink:0"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span title="${esc(item.user_email)}">${esc(item.user_email)}</span></span>`);
-      }
-      if (dados.setor) metaParts.push(`<span class="sol-meta-sep"></span><span>${esc(dados.setor)}</span>`);
-      if (dados.natureza) metaParts.push(`<span class="sol-meta-sep"></span><span>${dados.natureza === 'presencial' ? 'Presencial' : 'Online'}</span>`);
-      metaParts.push(`<span class="sol-meta-sep"></span><span title="${dtRel}">Solicitado em ${dtStr}</span>`);
-      document.getElementById('solMeta').innerHTML = metaParts.join('');
-      const respEl = document.getElementById('solResponsavel');
-      if (respEl) {
-        if (item.responsavel) {
-          respEl.style.display = 'flex';
-          respEl.querySelector('.resp-nome').textContent = item.responsavel;
-        } else {
-          respEl.style.display = 'none';
-        }
-      }
-      renderPrazoBadge(item);
+      if (dados.setor) metaParts.push(esc(dados.setor));
+      if (dados.natureza) metaParts.push(dados.natureza === 'presencial' ? 'Presencial' : 'Online');
+      document.getElementById('solMeta').innerHTML = metaParts
+        .map((p, i) => (i ? '<span class="sol-meta-sep"></span>' : '') + '<span>' + p + '</span>')
+        .join('');
+
+      renderFacts(item, dados);
 
       renderFluxo(item);
       if (isTipoAutomacao(item.tipo_solicitacao)) {
@@ -18132,64 +18184,58 @@ window.Shell = {
         (!isStaff && item.clickup_task_id ? `<span>ClickUp: ${esc(item.clickup_task_id)}</span>` : '');
 
       const headerRight = document.getElementById('solHeaderRight');
-      headerRight.innerHTML =
-        '<span class="sol-status-badge" id="solStatus" style="background:' + (statusObj.bg||'#f1f5f9') + ';color:' + (statusObj.text||'#475569') + '">' + esc(statusObj.label) + '</span>' +
-        (isStaff && item.clickup_url ? `
-          <a href="${esc(item.clickup_url)}" target="_blank" rel="noopener"
-             title="Abrir no ClickUp"
+
+      const statusBadge = '<span class="sol-status-badge" id="solStatus" style="background:' + (statusObj.bg||'#f1f5f9') + ';color:' + (statusObj.text||'#475569') + '">' + esc(statusObj.label) + '</span>';
+
+      const clickupBtn = (isStaff && item.clickup_url ? `
+          <a href="${esc(item.clickup_url)}" target="_blank" rel="noopener" title="Abrir no ClickUp"
              style="display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:8px;background:rgba(137,48,253,0.08);text-decoration:none;transition:background 0.15s"
-             onmouseover="this.style.background='rgba(137,48,253,0.15)'"
-             onmouseout="this.style.background='rgba(137,48,253,0.08)'">
+             onmouseover="this.style.background='rgba(137,48,253,0.15)'" onmouseout="this.style.background='rgba(137,48,253,0.08)'">
             ${CLICKUP_ICON}
-          </a>` : '') +
-        (isAdm ? ((() => {
-          const nota = item.avaliacao && item.avaliacao.nota;
-          if (nota) {
-            const cor = nota >= 4 ? '#16a34a' : nota >= 3 ? '#ea580c' : '#dc2626';
-            const corBg = nota >= 4 ? 'rgba(22,163,74,0.12)' : nota >= 3 ? 'rgba(234,88,12,0.12)' : 'rgba(220,38,38,0.12)';
-            return `<button
-              onclick="verAvaliacao(${item.id})"
-              id="btnVerAvaliacao"
-              title="Ver avaliação: ${nota}/5"
+          </a>` : '');
+
+      const avaliacaoBtn = (isAdm ? (() => {
+        const nota = item.avaliacao && item.avaliacao.nota;
+        if (nota) {
+          const cor = nota >= 4 ? '#16a34a' : nota >= 3 ? '#ea580c' : '#dc2626';
+          const corBg = nota >= 4 ? 'rgba(22,163,74,0.12)' : nota >= 3 ? 'rgba(234,88,12,0.12)' : 'rgba(220,38,38,0.12)';
+          return `<button onclick="verAvaliacao(${item.id})" id="btnVerAvaliacao" title="Ver avaliação: ${nota}/5"
               style="display:inline-flex;align-items:center;gap:5px;height:32px;padding:0 11px;border-radius:8px;border:none;background:${corBg};color:${cor};cursor:pointer;transition:filter 0.15s"
               onmouseover="this.style.filter='brightness(0.94)'" onmouseout="this.style.filter='none'">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="${cor}" stroke="${cor}" stroke-width="2">
-                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
-              </svg>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="${cor}" stroke="${cor}" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
               <span style="font-size:13px;font-weight:600;line-height:1">${nota}<span style="font-size:11px;font-weight:400;opacity:0.65">/5</span></span>
             </button>`;
-          }
-          if (item.status === 'concluido') {
-            return `<span
-              title="Concluída — aguardando avaliação do solicitante"
+        }
+        if (item.status === 'concluido') {
+          return `<span title="Concluída — aguardando avaliação do solicitante"
               style="display:inline-flex;align-items:center;gap:5px;height:32px;padding:0 10px;border-radius:8px;background:transparent;opacity:0.4;cursor:default">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
-              </svg>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
               <span style="font-size:12px">Sem nota</span>
             </span>`;
-          }
-          return ''
-        })() + `
-          <div class="sol-actions-kebab">
-            <button class="kebab-btn" onclick="toggleKebabMenu()" aria-label="Mais ações">⋯</button>
-            <div class="kebab-menu" id="solKebabMenu" hidden>
-              <button class="kebab-item kebab-danger" onclick="abrirModalExcluir(${item.id})">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>
-                Deletar solicitação
-              </button>
-            </div>
-          </div>`) : '');
+        }
+        return '';
+      })() : '');
 
-      if (item.canCancel && item.status !== 'cancelado' && item.status !== 'reprovado') {
-        headerRight.insertAdjacentHTML('beforeend', `
-          <button id="btnCancelarSol" onclick="abrirCancelarModal()" title="Cancelar solicitação"
-            style="display:inline-flex;align-items:center;gap:5px;height:32px;padding:0 12px;border-radius:8px;border:1px solid rgba(172,54,49,0.35);background:rgba(172,54,49,0.06);color:var(--ruby-red);cursor:pointer;font-family:'Nunito Sans',sans-serif;font-weight:600;font-size:0.82rem;transition:background 0.15s"
-            onmouseover="this.style.background='rgba(172,54,49,0.12)'" onmouseout="this.style.background='rgba(172,54,49,0.06)'">
+      // Menu ⋯ : Cancelar (solicitante) + Deletar (admin)
+      const podeCancelar = item.canCancel && item.status !== 'cancelado' && item.status !== 'reprovado';
+      let kebabItems = '';
+      if (podeCancelar) {
+        kebabItems += `<button class="kebab-item kebab-danger" onclick="abrirCancelarModal()">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
-            Cancelar
-          </button>`);
+            Cancelar solicitação
+          </button>`;
       }
+      if (isAdm) {
+        kebabItems += `<button class="kebab-item kebab-danger" onclick="abrirModalExcluir(${item.id})">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>
+            Deletar solicitação
+          </button>`;
+      }
+      const kebabHtml = kebabItems
+        ? `<div class="sol-actions-kebab"><button class="kebab-btn" onclick="toggleKebabMenu()" aria-label="Mais ações">⋯</button><div class="kebab-menu" id="solKebabMenu" hidden>${kebabItems}</div></div>`
+        : '';
+
+      headerRight.innerHTML = statusBadge + clickupBtn + avaliacaoBtn + kebabHtml;
     }
 
     /* ── renderFluxo (horizontal rail) ─────────── */
@@ -19065,8 +19111,7 @@ window.Shell = {
         if (res.ok) {
           fecharCancelarModal();
           if (typeof showToast === 'function') showToast('Cancelamento registrado. O time foi avisado no ClickUp.', 'success');
-          const b = document.getElementById('btnCancelarSol');
-          if (b) b.outerHTML = '<span style="display:inline-flex;align-items:center;gap:5px;height:32px;padding:0 11px;border-radius:8px;background:rgba(172,54,49,0.08);color:var(--ruby-red);font-size:0.8rem;font-weight:600">Cancelamento solicitado</span>';
+          setTimeout(() => location.reload(), 900);
         } else {
           erro.textContent = d.error || 'Não foi possível cancelar.'; erro.style.display = 'block';
           btn.disabled = false; btn.textContent = 'Confirmar cancelamento';
@@ -22388,7 +22433,9 @@ function humanizeValue(key, value) {
     const found = window.MARCAS_OPTS_FORM.find(m => m.value === value || m.label === value);
     if (found) return found.label;
   }
-  if (typeof value === 'string' && (value.includes('-') || value.includes('_'))) return humanizeSlug(value);
+  const _phoneKeys = ['telefone', 'whatsapp', 'phone', 'tel'];
+  const _looksLikePhone = typeof value === 'string' && /^\(\d{2}\)\s*\d/.test(value);
+  if (typeof value === 'string' && (value.includes('-') || value.includes('_')) && !_phoneKeys.includes(key) && !_looksLikePhone) return humanizeSlug(value);
   // Ultimo recurso: token unico minusculo (so letras, sem espaco/digito) -> capitaliza inicial.
   // Ex.: "fisico" -> "Fisico", "online" -> "Online". Nao toca nome/email/telefone/multi-palavra.
   if (typeof value === 'string' && /^\p{L}{2,}$/u.test(value) && value === value.toLowerCase()) {
@@ -27945,7 +27992,7 @@ import { Router } from "express";
 import multer from "multer";
 import os from "os";
 import { db } from "@workspace/db";
-import { solicitacoesTable, arquivosTable, cartaoAprovacoesTable } from "@workspace/db";
+import { solicitacoesTable, arquivosTable, cartaoAprovacoesTable, usersTable, activityLogTable } from "@workspace/db";
 import { eq, desc, and, ne, sql, inArray } from "drizzle-orm";
 import { requireAuth, requireRole } from "../middleware/auth.middleware";
 import { createClickUpTask, getClickUpTaskStatus, getClickUpTaskSnapshot, setClickUpTaskStatus, calcularPrazo, getPrazoDiasUteis, PRAZO_DIAS_UTEIS, APRESENTACAO_TIERS, CLICKUP_STATUS_EM_REVISAO, CLICKUP_STATUS_CONCLUIDO, type ArquivosMap } from "./clickup";
@@ -28608,8 +28655,17 @@ router.get("/solicitacoes/:id", requireAuth, async (req, res): Promise<void> => 
 
     const arquivos = await db.select().from(arquivosTable).where(eq(arquivosTable.solicitacao_id, id));
 
+    // Nome do solicitante (a partir do cadastro de usuários, pelo e-mail)
+    let solicitanteNome: string | null = null;
+    if (solicitacao.user_email) {
+      try {
+        const [u] = await db.select({ name: usersTable.name }).from(usersTable).where(eq(usersTable.email, solicitacao.user_email));
+        if (u?.name && u.name.trim()) solicitanteNome = u.name.trim();
+      } catch { /* segue sem o nome */ }
+    }
+
     const [solComStatus] = await aplicarStatusAprovacao([{ ...solicitacao }]);
-    res.json({ ...solComStatus, arquivos, canCancel: podeCancelar(solComStatus) });
+    res.json({ ...solComStatus, solicitante_nome: solicitanteNome, arquivos, canCancel: podeCancelar(solComStatus) });
   } catch (err) {
     logger.error({ err }, "Error getting solicitacao");
     res.status(500).json({ error: "Erro ao buscar solicitação" });

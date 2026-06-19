@@ -4,7 +4,7 @@
   --bg-light: #f5f3f0;
   --text-dark: var(--carbon-black);
   --text-muted: rgba(34,27,25,.5);
-  --paper-white: #fef8f4;
+  --paper-white: #FFF8F3;
   --icon-bg: #f8f4f1;
   --card-white: #ffffff;
   --carbon-black: #221B19;
@@ -15,6 +15,12 @@
   --border: rgba(255, 248, 243, 0.1);
   --border-light: rgba(34, 27, 25, 0.12);
   --danger: #dc2626;
+  --danger-strong: #b91c1c;
+  --danger-soft: rgba(220, 38, 38, 0.08);
+  --success: #15803d;
+  --success-soft: rgba(22, 163, 74, 0.10);
+  --warning: #c2410c;
+  --warning-soft: rgba(234, 88, 12, 0.10);
   --dark-bg-from: #221B19;
   --dark-bg-to: #0d0a09;
   --container-padding: 32px;
