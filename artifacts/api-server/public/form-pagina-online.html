@@ -31,7 +31,7 @@
 
       <div class="alert-card alert-info">
         <div class="alert-title">Solicitação de página online</div>
-        <div class="alert-text">Use este formulário para solicitar a criação ou publicação de uma página online (landing page, formulário, etc.). Prazo estimado: <strong>5 dias úteis</strong>.</div>
+        <div class="alert-text">Use este formulário para solicitar a criação ou publicação de uma página online (landing page, formulário, etc.). Prazo estimado: <strong id="prazoHintDias">7 dias úteis</strong>.</div>
       </div>
 
       <div class="field">
@@ -100,6 +100,18 @@
     }
 
     init();
+  </script>
+  <script src="prazo.js?v=20260619a"></script>
+  <script>
+    (function(){ if(!window.Prazo) return; var TIPO="pagina-online";
+      Prazo.ready.then(function(){
+        var dias = Prazo.diasUteis(TIPO);
+        var txt = dias!=null ? (dias + (dias===1?" dia útil":" dias úteis")) : "";
+        ["prazoHintDias","prazoHintDias2"].forEach(function(id){ var e=document.getElementById(id); if(e&&txt) e.textContent=txt; });
+        document.querySelectorAll(".prazoHintAV").forEach(function(e){ if(txt) e.textContent=txt; });
+        var p=document.getElementById("prazoEntrega"); if(p){ var m=Prazo.minISO(TIPO); if(m){ p.min=m; if(p.value&&p.value<m)p.value=""; } }
+      });
+    })();
   </script>
 </body>
 </html>

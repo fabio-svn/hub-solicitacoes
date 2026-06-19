@@ -5,7 +5,8 @@ import { db } from "@workspace/db";
 import { solicitacoesTable, arquivosTable, cartaoAprovacoesTable } from "@workspace/db";
 import { eq, desc, and, ne, sql, inArray } from "drizzle-orm";
 import { requireAuth, requireRole } from "../middleware/auth.middleware";
-import { createClickUpTask, getClickUpTaskStatus, setClickUpTaskStatus, CLICKUP_STATUS_EM_REVISAO, CLICKUP_STATUS_CONCLUIDO, type ArquivosMap } from "./clickup";
+import { createClickUpTask, getClickUpTaskStatus, setClickUpTaskStatus, calcularPrazo, getPrazoDiasUteis, PRAZO_DIAS_UTEIS, APRESENTACAO_TIERS, CLICKUP_STATUS_EM_REVISAO, CLICKUP_STATUS_CONCLUIDO, type ArquivosMap } from "./clickup";
+import { holidaysList } from "../lib/holidays";
 import { FORM_SCHEMAS } from "../config/form-schemas";
 import { uploadToR2, deleteFromR2 } from "./r2";
 import { gerarArteParaSolicitacao, gerarCartaoFisicoPdf } from "../services/art-generator";
@@ -16,6 +17,36 @@ import { logEventoBg, logAtividade, logAtividadeBg } from "../services/activity-
 import { eventosSolicitacaoTable } from "@workspace/db";
 
 const router = Router();
+
+// Config de prazos (tabela + faixas + feriados) — fonte única para o front exibir o mesmo que o back calcula.
+router.get("/prazo/config", requireAuth, (_req, res): void => {
+  res.json({
+    diasUteis: PRAZO_DIAS_UTEIS,
+    apresentacaoTiers: APRESENTACAO_TIERS,
+    especiais: {
+      "cartao-visita-fisico": "proxima-quarta",
+      "eventos": "data-evento",
+    },
+    feriados: holidaysList(),
+  });
+});
+
+// Cálculo de prazo para um tipo (usado por forms/resumo, idêntico ao da criação da task).
+router.get("/prazo/info", requireAuth, (req, res): void => {
+  const tipo = String(req.query.tipo || "");
+  const dados: Record<string, unknown> = {};
+  if (req.query.tamanho) dados.tamanho = String(req.query.tamanho);
+  if (req.query.dataEvento) dados.dataEvento = String(req.query.dataEvento);
+  const calc = calcularPrazo(tipo, dados);
+  res.json({
+    tipo,
+    modo: calc.modo,
+    dias: calc.dias ?? null,
+    regra: calc.regra,
+    dataISO: calc.date ? calc.date.toISOString() : null,
+  });
+});
+
 const upload = multer({ dest: os.tmpdir(), limits: { fileSize: 50 * 1024 * 1024, files: 10, fields: 20 } });
 
 router.get("/form-schemas", (_req, res) => {
@@ -242,6 +273,7 @@ router.post("/solicitacoes", requireAuth, upload.any(), async (req, res): Promis
       return;
     }
 
+    const prazoInicial = calcularPrazo(tipo_solicitacao, parsedDados).date;
     const [solicitacao] = await db.insert(solicitacoesTable).values({
       user_email: user.email,
       tipo_solicitacao,
@@ -249,6 +281,7 @@ router.post("/solicitacoes", requireAuth, upload.any(), async (req, res): Promis
       maturidade: maturidade ? parseInt(maturidade, 10) : null,
       dados: parsedDados,
       status: "recebido",
+      prazo: prazoInicial || undefined,
     }).returning();
 
     const files = req.files as Express.Multer.File[];

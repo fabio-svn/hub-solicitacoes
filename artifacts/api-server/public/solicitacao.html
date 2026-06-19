@@ -405,10 +405,30 @@
       white-space: nowrap;
       box-shadow: 0 1px 3px rgba(0,0,0,0.12);
     }
+    .sol-header-right-col {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 10px;
+      flex-shrink: 0;
+      padding-top: 4px;
+    }
+    .sol-resp {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.82rem;
+      color: var(--carbon-black);
+      max-width: 320px;
+    }
+    .sol-resp .sol-resp-label { opacity: 0.5; font-weight: 500; }
+    .sol-resp .sol-resp-label::after { content: ':'; }
+    .sol-resp .resp-nome { font-weight: 700; }
     @media (max-width: 480px) {
       .sol-header { flex-direction: column; gap: 10px; }
       .sol-titulo { font-size: 1.5rem; }
       .sol-header-right { align-self: flex-start; }
+      .sol-header-right-col { align-items: flex-start; width: 100%; }
     }
 
     /* 4a — Bandeja de detalhes (mobile recolhida, desktop sempre visível) */
@@ -563,16 +583,16 @@
         <div class="sol-header-left">
           <h1 class="sol-titulo" id="solTitulo"></h1>
           <div class="sol-meta" id="solMeta"></div>
-          <div id="solResponsavel" style="display:none;margin-top:8px">
-            <span style="display:inline-flex;align-items:center;gap:6px;padding:5px 12px 5px 10px;background:rgba(34,27,25,0.07);border:1px solid rgba(34,27,25,0.15);border-radius:999px;font-size:0.8rem;color:var(--carbon-black)">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="opacity:0.45;flex-shrink:0"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-              <span style="opacity:0.5;font-weight:500;font-size:0.78rem">Responsável:</span>
-              <span class="resp-nome" style="font-weight:700;font-size:0.82rem"></span>
-            </span>
-          </div>
         </div>
-        <div class="sol-header-right" id="solHeaderRight">
-          <span class="sol-status-badge" id="solStatus"></span>
+        <div class="sol-header-right-col">
+          <div class="sol-header-right" id="solHeaderRight">
+            <span class="sol-status-badge" id="solStatus"></span>
+          </div>
+          <div id="solResponsavel" class="sol-resp" style="display:none">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="opacity:0.4;flex-shrink:0"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            <span class="sol-resp-label">Responsável</span>
+            <span class="resp-nome"></span>
+          </div>
         </div>
       </div>
 
@@ -805,8 +825,7 @@
       const metaParts = [];
       metaParts.push(`<span>${esc(tipoLabel)}</span>`);
       if (item.user_email) {
-        const nomeUser = item.user_email.split('@')[0];
-        metaParts.push(`<span class="sol-meta-sep"></span><span style="display:inline-flex;align-items:center;gap:3px"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="opacity:0.45;flex-shrink:0"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>${esc(nomeUser)}</span><span class="sol-meta-sep"></span><span style="opacity:0.5" title="${esc(item.user_email)}">${esc(item.user_email)}</span>`);
+        metaParts.push(`<span class="sol-meta-sep"></span><span style="display:inline-flex;align-items:center;gap:4px"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="opacity:0.45;flex-shrink:0"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span title="${esc(item.user_email)}">${esc(item.user_email)}</span></span>`);
       }
       if (dados.setor) metaParts.push(`<span class="sol-meta-sep"></span><span>${esc(dados.setor)}</span>`);
       if (dados.natureza) metaParts.push(`<span class="sol-meta-sep"></span><span>${dados.natureza === 'presencial' ? 'Presencial' : 'Online'}</span>`);
@@ -815,7 +834,7 @@
       const respEl = document.getElementById('solResponsavel');
       if (respEl) {
         if (item.responsavel) {
-          respEl.style.display = 'inline-flex';
+          respEl.style.display = 'flex';
           respEl.querySelector('.resp-nome').textContent = item.responsavel;
         } else {
           respEl.style.display = 'none';
@@ -2017,6 +2036,17 @@
       let gridFields = '';
       let palestrantesBlock = '';
       let hasContent = false;
+
+      // Prazo de entrega (SLA calculado na criação, considerando feriados)
+      if (item.prazo) {
+        const pd = new Date(item.prazo);
+        if (!isNaN(pd.getTime())) {
+          const DIAS_SEM = ['domingo','segunda-feira','terça-feira','quarta-feira','quinta-feira','sexta-feira','sábado'];
+          const fmtPrazo = String(pd.getDate()).padStart(2,'0') + '/' + String(pd.getMonth()+1).padStart(2,'0') + '/' + pd.getFullYear();
+          gridFields += `<div class="dados-field"><div class="dados-label">Prazo de entrega</div><div class="dados-value" style="font-weight:700">${fmtPrazo} · ${DIAS_SEM[pd.getDay()]}</div></div>`;
+          hasContent = true;
+        }
+      }
 
       const FIELD_PRIORITY = ['nomeEvento','tituloEvento','dataEvento','horario','origem','tipoEvento','publico','localEvento','unidadeSVN','localNome','localEndereco','estado','cidade','convidados','descricao','objetivos'];
       const _entries = Object.entries(dados).sort((a, b) => {

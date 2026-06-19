@@ -6,6 +6,7 @@ import { mapClickUpStatus } from "../config/clickup-status";
 import { UNIDADES_ENDERECOS } from "../config/unidades";
 import { FORM_SCHEMAS, SETOR_CODIGO_MAP, TIPOS_COM_CLICKUP } from "../config/form-schemas";
 import { buscarContato } from "../lib/mysqlContatos";
+import { addBusinessDays, proximaQuarta as proximaQuartaUtil } from "../lib/holidays";
 
 const CLICKUP_API_TOKEN = process.env.CLICKUP_API_TOKEN || "";
 
@@ -1173,43 +1174,61 @@ async function getListId(tipoSolicitacao: string): Promise<string> {
   return CLICKUP_LIST_GERAL;
 }
 
-function addBusinessDays(date: Date, days: number): Date {
-  const result = new Date(date);
-  let added = 0;
-  while (added < days) {
-    result.setDate(result.getDate() + 1);
-    const dow = result.getDay();
-    if (dow !== 0 && dow !== 6) added++;
-  }
-  return result;
-}
-
-const PRAZO_DIAS_UTEIS: Record<string, number> = {
+export const PRAZO_DIAS_UTEIS: Record<string, number> = {
   "pagina-assessores-dados":       3,
   "pagina-assessores-atualizacao": 2,
-  "apresentacao-nova":             5,
+  "apresentacao-nova":             10,
   "apresentacao-atualizar":        5,
   "artes-divulgacao":              3,
   "atualizacao-material":          3,
   "conteudo-pdf-informativo":      4,
-  "pagina-online":                 5,
-  "outro":                         7,
-  "email-marketing":               3,
-  "producao-video":                7,
-  "sessao-fotos":                  7,
+  "pagina-online":                 7,
+  "outro":                         5,
+  "email-marketing":               5,
+  "producao-video":                15,
+  "sessao-fotos":                  15,
   "materiais-impressos":           5,
   "brindes":                       15,
   "patrocinio":                    30,
 };
 
+// Faixas por nº de páginas (campo "tamanho") — apresentação nova.
+export const APRESENTACAO_TIERS: Record<string, number> = {
+  "mais100":  15,
+  "menos100": 10,
+  "menos30":  7,
+};
 
-function proximaQuarta(): Date {
-  const d = new Date();
-  d.setHours(12, 0, 0, 0);
-  const dow = d.getDay();
-  const diasAte = (3 - dow + 7) % 7 || 7;
-  d.setDate(d.getDate() + diasAte);
-  return d;
+// Quantos dias úteis para um tipo (já considera a faixa de páginas da apresentação nova).
+export function getPrazoDiasUteis(tipo: string, dados?: Record<string, unknown>): number {
+  if (tipo === "apresentacao-nova") {
+    const tam = String((dados || {}).tamanho || "");
+    return APRESENTACAO_TIERS[tam] ?? 10;
+  }
+  return PRAZO_DIAS_UTEIS[tipo] ?? 3;
+}
+
+export interface PrazoCalc {
+  modo: "dias" | "data" | "evento";
+  dias?: number;
+  date: Date | null;
+  regra: string;
+}
+
+// Fonte única do cálculo de prazo (usada na criação da task e no endpoint /api/prazo).
+export function calcularPrazo(tipo: string, dados?: Record<string, unknown>, from: Date = new Date()): PrazoCalc {
+  if (tipo === "cartao-visita-fisico") {
+    const d = proximaQuartaUtil(from); d.setHours(12, 0, 0, 0);
+    return { modo: "data", date: d, regra: "Próxima quarta-feira útil" };
+  }
+  if (tipo === "eventos") {
+    const dataEvento = String((dados || {}).dataEvento || "");
+    const evDate = dataEvento ? new Date(dataEvento + "T12:00:00-03:00") : null;
+    return { modo: "evento", date: evDate && !isNaN(evDate.getTime()) ? evDate : null, regra: "Data do evento" };
+  }
+  const dias = getPrazoDiasUteis(tipo, dados);
+  const d = addBusinessDays(from, dias); d.setHours(12, 0, 0, 0);
+  return { modo: "dias", dias, date: d, regra: `${dias} dias úteis` };
 }
 
 async function getAssigneesForTipo(tipo: string): Promise<Array<{ id: number; name: string }>> {
@@ -1320,33 +1339,17 @@ export async function createClickUpTask(
   taskPayload.start_date = hoje.getTime();
   taskPayload.start_date_time = false;
 
-  let prazoDate: Date;
-  if (tipo === "cartao-visita-fisico") {
-    prazoDate = proximaQuarta();
-  } else {
-    let diasUteis = PRAZO_DIAS_UTEIS[tipo] ?? 3;
-    if (tipo === "apresentacao-nova" || tipo === "apresentacao-atualizar") {
-      const qtd = parseInt(String((dados as Record<string, unknown>).qtdPaginas || "0"), 10);
-      if (qtd > 20) diasUteis = 15;
-    }
-    prazoDate = addBusinessDays(new Date(), diasUteis);
-    prazoDate.setHours(12, 0, 0, 0);
-  }
+  const prazoCalc = calcularPrazo(tipo, dados as Record<string, unknown>, hoje);
+  let prazoDate: Date = prazoCalc.date || addBusinessDays(hoje, getPrazoDiasUteis(tipo, dados as Record<string, unknown>));
   taskPayload.due_date = prazoDate.getTime();
   taskPayload.due_date_time = false;
-  logger.info({ tipo, prazo: prazoDate.toISOString() }, "ClickUp: prazo calculado");
+  logger.info({ tipo, prazo: prazoDate.toISOString(), regra: prazoCalc.regra }, "ClickUp: prazo calculado");
 
-  // Eventos: prazo (due_date) = data do evento; prioridade pela proximidade
-  if (tipo === "eventos") {
-    const dataEvento = str((dados as Record<string, unknown>).dataEvento);
-    const evDate = dataEvento ? new Date(dataEvento + "T12:00:00-03:00") : null;
-    if (evDate && !isNaN(evDate.getTime())) {
-      taskPayload.due_date = evDate.getTime();
-      taskPayload.due_date_time = false;
-      const diasAteEvento = Math.ceil((evDate.getTime() - hoje.getTime()) / 86400000);
-      taskPayload.priority = diasAteEvento <= 3 ? 1 : diasAteEvento <= 7 ? 2 : 3;
-      logger.info({ dataEvento, diasAteEvento, priority: taskPayload.priority }, "ClickUp: evento — due_date e prioridade definidos");
-    }
+  // Eventos: prioridade pela proximidade (due_date já é a data do evento via calcularPrazo)
+  if (tipo === "eventos" && prazoCalc.date) {
+    const diasAteEvento = Math.ceil((prazoCalc.date.getTime() - hoje.getTime()) / 86400000);
+    taskPayload.priority = diasAteEvento <= 3 ? 1 : diasAteEvento <= 7 ? 2 : 3;
+    logger.info({ diasAteEvento, priority: taskPayload.priority }, "ClickUp: evento — prioridade definida");
   }
 
   // Responsáveis por tipo (via DB)

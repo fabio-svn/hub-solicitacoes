@@ -77,6 +77,13 @@
     .foto-modal-inner img { max-width:100%; max-height:70vh; border-radius:10px; display:block; }
     .foto-modal-close { position:absolute; top:6px; right:10px; background:none; border:none; font-size:1.7rem; line-height:1; cursor:pointer; color:var(--carbon-black); }
     .foto-modal-nome { margin-top:8px; font-size:.8rem; color:rgba(34,27,25,.6); text-align:center; word-break:break-all; }
+    .req-star { color: var(--danger); font-weight: 700; }
+    .tomb-erro { color: var(--danger); font-size: 0.78rem; margin-top: 5px; }
+    .field input.erro, .field select.erro { border-color: var(--danger) !important; box-shadow: 0 0 0 3px rgba(220,38,38,0.12); }
+    /* Logo da marca no topo (tela de edição) */
+    .tomb-brand-logo { display: none; align-items: center; justify-content: center; background: var(--carbon-black); border-radius: 12px; padding: 14px 26px; box-shadow: 0 2px 8px rgba(34,27,25,0.12); }
+    .tomb-brand-logo img { height: 34px; max-width: 240px; object-fit: contain; display: block; }
+    @media (max-width: 640px) { .tomb-brand-logo { padding: 10px 18px; } .tomb-brand-logo img { height: 26px; } }
   </style>
 </head>
 <body class="page-light">
@@ -87,6 +94,7 @@
           <h1 class="page-title">Tombamentos</h1>
           <p class="page-subtitle" style="margin-top:4px">Geração em massa de assinaturas e cartões digitais a partir de uma planilha.</p>
         </div>
+        <div class="tomb-brand-logo" id="tombBrandLogo"><img id="tombBrandLogoImg" src="" alt=""></div>
       </div>
 
       <!-- Visão de abas (lista / criar) -->
@@ -104,12 +112,14 @@
 
           <div class="tomb-create" id="tombCreateForm" style="display:none">
             <div class="field">
-              <label>Nome do tombamento</label>
-              <input type="text" id="novoNome" placeholder="Ex.: Tombamento Maringá — Junho/2026">
+              <label>Nome do tombamento <span class="req-star">*</span></label>
+              <input type="text" id="novoNome" placeholder="Ex.: Tombamento Maringá — Junho/2026" oninput="limparErroNome()">
+              <p id="novoNomeErro" class="tomb-erro" style="display:none">Dê um nome ao tombamento para continuar.</p>
             </div>
             <div class="field">
-              <label>Selecione a marca</label>
-              <select id="novoMarca"><option value="">Selecione…</option></select>
+              <label>Selecione a marca <span class="req-star">*</span></label>
+              <select id="novoMarca" onchange="limparErroMarca()"><option value="">Selecione…</option></select>
+              <p id="novoMarcaErro" class="tomb-erro" style="display:none">Selecione a marca do tombamento.</p>
               <p class="tomb-note">A marca vale para todo o tombamento — todas as assinaturas e cartões usarão o logo dela.</p>
             </div>
             <div style="display:flex;gap:10px;margin-top:6px">
@@ -194,17 +204,16 @@
   <script src="toast.js?v=20260603"></script>
   <script>
     const MARCAS = [
-      { value: 'svn', label: 'SVN' },
       { value: 'svn-investimentos', label: 'SVN Investimentos' },
       { value: 'svn-capital', label: 'SVN Capital' },
       { value: 'svn-connect', label: 'SVN Connect' },
-      { value: 'svn-gestao', label: 'SVN Gestão' },
-      { value: 'svn-global', label: 'SVN Global' },
-      { value: 'svn-imb', label: 'SVN Investment & Merchant Banking' },
-      { value: 'svn-agro-cambio-commodities', label: 'SVN Agro, Câmbio & Commodities' },
-      { value: 'svn-protecao-patrimonial', label: 'SVN Proteção Patrimonial' },
-      { value: 'svn-wealth-planning', label: 'SVN Wealth Planning' },
     ];
+    const ASSETS_BASE_TOMB = 'https://solicitacoes.portalsvn.com.br/assinatura_email';
+    const MARCA_LOGO = {
+      'svn-investimentos': ASSETS_BASE_TOMB + '/assinaturas_assinatura_svn.png',
+      'svn-capital':       ASSETS_BASE_TOMB + '/assinaturas_assinatura_logo_svn_capital.png',
+      'svn-connect':       ASSETS_BASE_TOMB + '/assinaturas_assinatura_logo_svn_connect.png',
+    };
     const marcaLabel = function (v) { const m = MARCAS.find(function (x) { return x.value === v; }); return m ? m.label : (v || '—'); };
     const COLS = [
       { f: 'nome', label: 'Nome' }, { f: 'email', label: 'E-mail' }, { f: 'telefone', label: 'Telefone' },
@@ -239,13 +248,31 @@
     }
 
     function abrirNovoForm() { document.getElementById('btnNovo').style.display = 'none'; document.getElementById('tombCreateForm').style.display = 'block'; }
-    function cancelarNovo() { document.getElementById('tombCreateForm').style.display = 'none'; document.getElementById('btnNovo').style.display = 'inline-flex'; document.getElementById('novoNome').value = ''; document.getElementById('novoMarca').value = ''; }
+    function limparErroNome() {
+      const i = document.getElementById('novoNome'); if (i) i.classList.remove('erro');
+      const e = document.getElementById('novoNomeErro'); if (e) e.style.display = 'none';
+    }
+    function limparErroMarca() {
+      const s = document.getElementById('novoMarca'); if (s) s.classList.remove('erro');
+      const e = document.getElementById('novoMarcaErro'); if (e) e.style.display = 'none';
+    }
+    function cancelarNovo() { document.getElementById('tombCreateForm').style.display = 'none'; document.getElementById('btnNovo').style.display = 'inline-flex'; document.getElementById('novoNome').value = ''; document.getElementById('novoMarca').value = ''; limparErroNome(); limparErroMarca(); }
 
     async function criarTombamento() {
       const nome = document.getElementById('novoNome').value.trim();
       const marca = document.getElementById('novoMarca').value;
-      if (!nome) { if (window.showToast) showToast('Dê um nome ao tombamento', 'error'); return; }
-      if (!marca) { if (window.showToast) showToast('Selecione a marca', 'error'); return; }
+      if (!nome) {
+        const i = document.getElementById('novoNome');
+        i.classList.add('erro'); i.focus();
+        const e = document.getElementById('novoNomeErro'); if (e) e.style.display = 'block';
+        return;
+      }
+      if (!marca) {
+        const s = document.getElementById('novoMarca');
+        s.classList.add('erro'); s.focus();
+        const e = document.getElementById('novoMarcaErro'); if (e) e.style.display = 'block';
+        return;
+      }
       try {
         const res = await fetch('/api/admin/tombamentos', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ nome: nome, marca: marca }) });
         const data = await res.json();
@@ -288,15 +315,30 @@
       document.getElementById('tombWorkspace').style.display = 'block';
       document.getElementById('wsNome').textContent = tomb.nome;
       document.getElementById('wsMarca').textContent = marcaLabel(tomb.marca);
+      setBrandLogo(tomb.marca);
       document.getElementById('tombFilename').textContent = '';
       if (tomb.linhas && tomb.linhas.length) { renderTabela(tomb.linhas); }
       else { document.getElementById('tombResultado').style.display = 'none'; }
+    }
+
+    function setBrandLogo(marca) {
+      const box = document.getElementById('tombBrandLogo');
+      const img = document.getElementById('tombBrandLogoImg');
+      const url = MARCA_LOGO[marca];
+      if (box && img && url) {
+        img.src = url;
+        img.alt = marcaLabel(marca);
+        box.style.display = 'flex';
+      } else if (box) {
+        box.style.display = 'none';
+      }
     }
 
     function voltarLista() {
       currentTomb = null;
       document.getElementById('tombWorkspace').style.display = 'none';
       document.getElementById('viewTabs').style.display = 'block';
+      const box = document.getElementById('tombBrandLogo'); if (box) box.style.display = 'none';
       trocarAba('realizados');
     }
 

@@ -193,6 +193,7 @@
   <script src="utils.js?v=20260615d"></script>
   <script src="upload-feedback.js?v=20260615e"></script>
   <script src="config.js?v=20260615a"></script>
+  <script src="prazo.js?v=20260619a"></script>
   <script src="auth.js?v=20260611f"></script>
   <script src="shell.js?v=20260611f"></script>
   <script src="form-core.js?v=20260611f"></script>
@@ -201,18 +202,12 @@
     let subtipo = params.get('subtipo') || '';
     let isAtualizar = subtipo === 'atualizar';
     const TIPOS = { nova: 'apresentacao-nova', atualizar: 'apresentacao-atualizar' };
-    const SLA = { menos30: 'até 5 dias úteis', menos100: 'até 10 dias úteis', mais100: 'até 15 dias úteis' };
-    const SLA_DAYS = { menos30: 5, menos100: 10, mais100: 15 };
-    function addBusinessDays(start, n) {
-      const d = new Date(start); let added = 0;
-      while (added < n) { d.setDate(d.getDate() + 1); const w = d.getDay(); if (w !== 0 && w !== 6) added++; }
-      return d;
-    }
-    function toISODate(d) { return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
+    function tipoAtual() { return TIPOS[subtipo] || TIPOS.nova; }
     function aplicarPrazoMinimo(tamanho) {
-      const dias = SLA_DAYS[tamanho]; const prazo = document.getElementById('prazoEntrega');
-      if (!dias || !prazo) return;
-      const minIso = toISODate(addBusinessDays(new Date(), dias));
+      const prazo = document.getElementById('prazoEntrega');
+      if (!prazo || !window.Prazo) return;
+      const minIso = Prazo.minISO(tipoAtual(), { tamanho: tamanho });
+      if (!minIso) return;
       prazo.min = minIso;
       if (prazo.value && prazo.value < minIso) prazo.value = '';
     }
@@ -253,11 +248,16 @@
         onReady: function () {
           if (subtipo) goToStep2();
 
+          if (window.Prazo) Prazo.ready.then(function () {
+            const sel = document.querySelector('input[name="tamanho"]:checked');
+            const el = document.getElementById('slaPrazo');
+            if (sel && el) { el.style.display = 'block'; el.textContent = 'Prazo estimado: ' + Prazo.labelDias(tipoAtual(), { tamanho: sel.value }); aplicarPrazoMinimo(sel.value); }
+          });
+
           document.querySelectorAll('input[name="tamanho"]').forEach(r => r.addEventListener('change', () => {
-            const sla = SLA[r.value];
             const el = document.getElementById('slaPrazo');
             el.style.display = 'block';
-            el.textContent = `Prazo estimado: ${sla}`;
+            el.textContent = 'Prazo estimado: ' + (window.Prazo ? Prazo.labelDias(tipoAtual(), { tamanho: r.value }) : '');
             aplicarPrazoMinimo(r.value);
           }));
 
@@ -302,9 +302,8 @@
       {
         const _tam = document.querySelector('input[name="tamanho"]:checked')?.value;
         const _prazo = document.getElementById('prazoEntrega');
-        const _dias = SLA_DAYS[_tam];
-        if (_dias && _prazo && _prazo.value) {
-          const _minIso = toISODate(addBusinessDays(new Date(), _dias));
+        const _minIso = (window.Prazo && _tam) ? Prazo.minISO(tipoAtual(), { tamanho: _tam }) : '';
+        if (_minIso && _prazo && _prazo.value) {
           if (_prazo.value < _minIso) {
             const _fw = _prazo.closest('.field');
             if (_fw) {

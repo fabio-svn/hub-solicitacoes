@@ -50,7 +50,7 @@
               </svg>
             </div>
             <div class="card-label">Produção de Vídeo</div>
-            <div class="card-desc">Prazo mínimo: 30 dias úteis</div>
+            <div class="card-desc">Prazo mínimo: <span class="prazoHintAV">15 dias úteis</span></div>
           </div>
           <div class="radio-card" onclick="selectModalidade('fotos')" id="cardFotos">
             <div class="card-icon">
@@ -61,7 +61,7 @@
               </svg>
             </div>
             <div class="card-label">Sessão de Fotos</div>
-            <div class="card-desc">Prazo mínimo: 30 dias úteis</div>
+            <div class="card-desc">Prazo mínimo: <span class="prazoHintAV">15 dias úteis</span></div>
           </div>
         </div>
 
@@ -277,6 +277,17 @@
     }
 
     init();
+  </script>
+  <script src="prazo.js?v=20260619a"></script>
+  <script>
+    (function(){ if(!window.Prazo) return;
+      Prazo.ready.then(function(){
+        var dias = Prazo.diasUteis("producao-video");
+        var txt = dias!=null ? (dias + " dias úteis") : "";
+        document.querySelectorAll(".prazoHintAV").forEach(function(e){ if(txt) e.textContent=txt; });
+        var p=document.getElementById("prazoEntrega"); if(p){ var m=Prazo.minISO("producao-video"); if(m){ p.min=m; if(p.value&&p.value<m)p.value=""; } }
+      });
+    })();
   </script>
 </body>
 </html>
