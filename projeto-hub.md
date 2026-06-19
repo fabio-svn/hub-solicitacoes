@@ -1,6 +1,6 @@
 # Pack do Projeto Hub SVN
 
-Gerado em: 2026-06-19 19:13:08
+Gerado em: 2026-06-19 19:55:59
 
 Roots: artifacts/api-server lib
 
@@ -3299,7 +3299,7 @@ MYSQL_CONTATOS=                                              # [opcional]
     .bulk-bar .bulk-actions { display:flex; gap:8px; }
     .btn-sm { padding:7px 14px; font-size:0.82rem; }
     .bulk-del-btn { background:var(--danger); color:#fff; border:1px solid var(--danger); }
-    .bulk-del-btn:hover { background:#b91c1c; border-color:#b91c1c; }
+    .bulk-del-btn:hover { background:var(--danger-strong); border-color:var(--danger-strong); }
     .admin-table input[type=checkbox] { width:16px; height:16px; accent-color:var(--ruby-red); cursor:pointer; vertical-align:middle; margin:0; }
   </style>
 </head>
@@ -3873,7 +3873,7 @@ MYSQL_CONTATOS=                                              # [opcional]
         const deltaEl = document.getElementById('adminDelta');
         if (data.delta !== undefined) {
           const sinal = data.deltaPositivo ? '+' : '';
-          const cor = data.delta === 0 ? 'rgba(34,27,25,0.4)' : data.deltaPositivo ? '#16a34a' : '#dc2626';
+          const cor = data.delta === 0 ? 'rgba(34,27,25,0.4)' : data.deltaPositivo ? '#16a34a' : 'var(--danger)';
           deltaEl.innerHTML = '<span style="color:' + cor + '">' + sinal + data.delta + '% vs período anterior</span>';
         }
 
@@ -4252,7 +4252,7 @@ MYSQL_CONTATOS=                                              # [opcional]
     const LOG_NIVEL_STYLE = {
       info:  { bg: 'rgba(37,99,235,0.1)',  text: '#2563eb', label: 'INFO'  },
       warn:  { bg: 'rgba(234,88,12,0.1)',  text: '#ea580c', label: 'WARN'  },
-      error: { bg: 'rgba(220,38,38,0.1)',  text: '#dc2626', label: 'ERROR' },
+      error: { bg: 'rgba(220,38,38,0.1)',  text: 'var(--danger)', label: 'ERROR' },
     };
 
     const LOG_TIPO_LABEL = {
@@ -4467,7 +4467,7 @@ body { margin: 0; font-family: 'Nunito Sans', sans-serif; background: var(--bg-l
   color: rgba(34,27,25,0.7); transition: background 0.15s, border-color 0.15s;
 }
 .row-btn:hover { background: #f5f3f0; border-color: #c8c4c0; }
-.row-btn.danger { color: #dc2626; }
+.row-btn.danger { color: var(--danger); }
 .row-btn.danger:hover { background: #fef2f2; border-color: #fecaca; }
 .row-btn.primary { background: var(--ruby-red); color: #fff; border-color: var(--ruby-red); }
 .row-btn.primary:hover { background: #b44b42; border-color: #b44b42; }
@@ -4870,7 +4870,7 @@ body { margin: 0; font-family: 'Nunito Sans', sans-serif; background: var(--bg-l
             <option value="">Selecione um template…</option>
           </select>
         </div>
-        <div id="createError" style="display:none;color:#dc2626;font-size:0.82rem;margin-bottom:12px;padding:8px 12px;background:#fef2f2;border-radius:8px;border:1px solid #fecaca"></div>
+        <div id="createError" style="display:none;color:var(--danger);font-size:0.82rem;margin-bottom:12px;padding:8px 12px;background:#fef2f2;border-radius:8px;border:1px solid #fecaca"></div>
         <div class="form-actions">
           <button class="btn" onclick="showView('list')">Cancelar</button>
           <button class="btn btn--primary" id="createBtn" onclick="submitCreate()" disabled>Criar e abrir</button>
@@ -7053,12 +7053,12 @@ body { margin: 0; font-family: 'Nunito Sans', sans-serif; background: var(--bg-l
     .tomb-filename { font-size: 0.85rem; font-weight: 700; margin-top: 10px; }
     .tomb-summary { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; margin: 22px 0 12px; }
     .tomb-pill { padding: 3px 11px; border-radius: 999px; font-weight: 700; font-size: 0.78rem; }
-    .tomb-pill--ok { background: #dcfce7; color: #15803d; }
-    .tomb-pill--warn { background: #fee2e2; color: #dc2626; }
+    .tomb-pill--ok { background: #dcfce7; color: var(--success); }
+    .tomb-pill--warn { background: #fee2e2; color: var(--danger); }
     .tomb-pill--total { background: #eef2f7; color: #475569; }
     #tombTabela td, #tombTabela th { font-size: 0.82rem; }
-    .row-status-ok { color: #15803d; font-weight: 700; font-size: 0.78rem; }
-    .row-status-warn { color: #dc2626; font-weight: 700; font-size: 0.78rem; }
+    .row-status-ok { color: var(--success); font-weight: 700; font-size: 0.78rem; }
+    .row-status-warn { color: var(--danger); font-weight: 700; font-size: 0.78rem; }
     tr.tomb-row--warn td { background: #fef2f2; }
     .tomb-actions { display: flex; gap: 12px; margin-top: 20px; flex-wrap: wrap; }
     .tomb-note { font-size: 0.78rem; color: rgba(34,27,25,0.5); margin-top: 10px; }
@@ -7069,9 +7069,9 @@ body { margin: 0; font-family: 'Nunito Sans', sans-serif; background: var(--bg-l
     #cartoesRevTabela td { vertical-align: middle; }
     #cartoesRevTabela select { width:100%; padding:7px 9px; border:1px solid var(--border-light); border-radius:8px; background:var(--card-white); font:inherit; }
     .rev-badge { display:inline-block; padding:2px 9px; border-radius:999px; font-size:0.72rem; font-weight:700; text-transform:uppercase; letter-spacing:.02em; }
-    .rev-exato, .rev-forte { background:#dcfce7; color:#15803d; }
+    .rev-exato, .rev-forte { background:#dcfce7; color:var(--success); }
     .rev-manual { background:#dbeafe; color:#1d4ed8; }
-    .rev-revisar { background:#ffedd5; color:#c2410c; }
+    .rev-revisar { background:#ffedd5; color:var(--warning); }
     .rev-sem_foto { background:#eef2f7; color:#475569; }
     tr.rev-row--alert td { background:#fff7ed; }
     .btn-text { background:transparent; border:none; color:var(--ruby-red); cursor:pointer; font:inherit; padding:6px 8px; }
@@ -7676,7 +7676,7 @@ body { margin: 0; font-family: 'Nunito Sans', sans-serif; background: var(--bg-l
               <input type="text" id="novoUsuarioClickup" placeholder="ex: 55127950">
               <p style="font-size:0.72rem;opacity:0.5;margin-top:4px">Necessário para receber atribuições automáticas de tasks.</p>
             </div>
-            <div id="novoUsuarioErro" style="display:none;margin:12px 0;padding:10px;background:rgba(220,38,38,0.08);color:#dc2626;border-radius:6px;font-size:0.82rem"></div>
+            <div id="novoUsuarioErro" style="display:none;margin:12px 0;padding:10px;background:rgba(220,38,38,0.08);color:var(--danger);border-radius:6px;font-size:0.82rem"></div>
           </div>
           <div class="modal-footer">
             <button onclick="cancelarNovoUsuario()" class="btn btn-secondary">Cancelar</button>
@@ -8599,6 +8599,8 @@ let EMAIL_UPLOAD = "gabriela.franca@svninvest.com.br";
 // FALLBACK só pra evitar tela em branco se /api/form-schemas falhar.
 // FONTE DA VERDADE: src/config/form-schemas.ts (MARCAS_OPTS) — não editar aqui.
 window.MARCAS_OPTS_FORM = [];
+// FALLBACK dos tipos automatizados. FONTE DA VERDADE: src/config/tipos.ts (servido em /api/config).
+window.TIPOS_AUTOMACAO = ['assinatura-email','cartao-visita-digital','cartao-boas-vindas','divulgacao-nps','convite-fp','cartao-comemorativo'];
 
 const _configReady = Promise.all([
   fetch('/api/config').then(r => r.json()).catch(() => ({})),
@@ -8611,6 +8613,7 @@ const _configReady = Promise.all([
   if (cfg.urlLogoPreta) URL_LOGO_PRETA = cfg.urlLogoPreta;
   if (cfg.emailUpload) EMAIL_UPLOAD = cfg.emailUpload;
   if (Array.isArray(cfg.unidades) && cfg.unidades.length) UNIDADES_SVN = cfg.unidades;
+  if (Array.isArray(cfg.tiposAutomacao) && cfg.tiposAutomacao.length) window.TIPOS_AUTOMACAO = cfg.tiposAutomacao;
   if (cfg.r2PublicUrl) {
     PACOTE_PADRAO_IMAGENS = [
       cfg.r2PublicUrl + '/Convite.png',
@@ -8940,14 +8943,14 @@ const STATUS_SOLICITACAO = [
   { id: "em-espera",              label: "Em espera",                  bg: "#4D545F", text: "#FFFFFF"  },
   { id: "gerando",                label: "Gerando arte",               bg: "#dbeafe", text: "#1e40af" },
   { id: "erro",                   label: "Erro",                       bg: "#fee2e2", text: "#991b1b" },
-  { id: "aguardando-validacao",   label: "Aguardando validação",       bg: "#fee2e2", text: "#b91c1c" },
+  { id: "aguardando-validacao",   label: "Aguardando validação",       bg: "#fee2e2", text: "var(--danger-strong)" },
   { id: "aguardando-contrato",    label: "Aguardando contrato",        bg: "#f1f5f9", text: "#475569" },
   { id: "validado",               label: "Validado",                   bg: "#d1fae5", text: "#047857" },
   { id: "liberado-design",        label: "Em design",                  bg: "#ede9fe", text: "#6d28d9" },
   { id: "arte-finalizada",        label: "Arte finalizada",            bg: "#fef9c3", text: "#a16207" },
   { id: "envio-grafica",          label: "Envio gráfica",              bg: "#dbeafe", text: "#1d4ed8" },
-  { id: "envio-assessor",         label: "Envio assessor",             bg: "#dcfce7", text: "#15803d" },
-  { id: "reprovado",              label: "Reprovado",                  bg: "#fecaca", text: "#dc2626" },
+  { id: "envio-assessor",         label: "Envio assessor",             bg: "#dcfce7", text: "var(--success)" },
+  { id: "reprovado",              label: "Reprovado",                  bg: "#fecaca", text: "var(--danger)" },
 ];
 
 const STATUS_MAP = Object.fromEntries(STATUS_SOLICITACAO.map(s => [s.id, s]));
@@ -9504,7 +9507,7 @@ const FLUXOS_ETAPAS = {
         const temErros = (item.erros_24h || 0) > 0;
         const isAdmin = isCurrentUserAdmin();
         const erroBadgeHtml = (temErros && isAdmin)
-          ? `<span title="${item.erros_24h} erro(s) nas últimas 24h" style="display:inline-flex;align-items:center;gap:3px;font-size:0.62rem;font-weight:800;background:#fee2e2;color:#b91c1c;padding:2px 7px;border-radius:999px;vertical-align:middle;margin-left:4px;flex-shrink:0">
+          ? `<span title="${item.erros_24h} erro(s) nas últimas 24h" style="display:inline-flex;align-items:center;gap:3px;font-size:0.62rem;font-weight:800;background:#fee2e2;color:var(--danger-strong);padding:2px 7px;border-radius:999px;vertical-align:middle;margin-left:4px;flex-shrink:0">
               <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
               ${item.erros_24h}
              </span>` : '';
@@ -14774,7 +14777,7 @@ Muito obrigado(a), e conte sempre comigo!</textarea>
     };
 
     const CORES_CAMISETA = {
-      'branco':'#FFFFFF','preto':'#221B19','azul':'#1e40af','vermelho':'#dc2626',
+      'branco':'#FFFFFF','preto':'#221B19','azul':'#1e40af','vermelho':'var(--danger)',
       'amarelo':'#eab308','laranja':'#ea580c','roxo':'#7c3aed','multicolorida':'url(#gradMulti)','outro':'#9ca3af',
     };
 
@@ -17502,7 +17505,7 @@ window.Shell = {
       font-size: 0.875rem;
       box-shadow: 0 2px 6px rgba(22,163,74,0.3);
     }
-    .btn-aprovar:hover { background: #15803d; }
+    .btn-aprovar:hover { background: var(--success); }
     .btn-link-admin {
       background: none;
       border: none;
@@ -17525,7 +17528,7 @@ window.Shell = {
       font-size: 0.875rem;
       box-shadow: 0 2px 6px rgba(220,38,38,0.3);
     }
-    .btn-alterar:hover { background: #b91c1c; }
+    .btn-alterar:hover { background: var(--danger-strong); }
 
     .rodada-historico {
       border: 1px solid rgba(34,27,25,0.08);
@@ -17643,9 +17646,9 @@ window.Shell = {
     .fact-value { font-size: 0.92rem; font-weight: 700; color: var(--carbon-black); word-break: normal; overflow-wrap: break-word; line-height: 1.25; }
     .fact-rel-sub { font-size: 0.74rem; font-weight: 600; margin-top: 3px; }
     .fact-alt-block { margin-top: 9px; padding-top: 9px; border-top: 1px solid rgba(34,27,25,0.1); }
-    .fact-alt-head { display: flex; align-items: center; gap: 4px; font-size: 0.7rem; font-weight: 700; letter-spacing: 0.02em; color: #c2410c; margin-bottom: 4px; }
+    .fact-alt-head { display: flex; align-items: center; gap: 4px; font-size: 0.7rem; font-weight: 700; letter-spacing: 0.02em; color: var(--warning); margin-bottom: 4px; }
     .fact-alt-head svg { flex-shrink: 0; }
-    .fact-alt-line { font-size: 0.78rem; font-weight: 500; color: #c2410c; line-height: 1.3; word-break: normal; overflow-wrap: break-word; }
+    .fact-alt-line { font-size: 0.78rem; font-weight: 500; color: var(--warning); line-height: 1.3; word-break: normal; overflow-wrap: break-word; }
     .fact-alt-line + .fact-alt-line { margin-top: 1px; }
     .fact-sub { font-size: 0.74rem; font-weight: 600; margin-top: 5px; display: flex; align-items: flex-start; gap: 4px; }
     .fact-sub svg { flex-shrink: 0; margin-top: 2px; }
@@ -17896,15 +17899,6 @@ window.Shell = {
   <script>
     const CLICKUP_ICON = getClickupIcon();
 
-    const TIPOS_AUTOMACAO = [
-      'assinatura-email',
-      'cartao-visita-digital',
-      'cartao-boas-vindas',
-      'divulgacao-nps',
-      'convite-fp',
-      'cartao-comemorativo',
-    ];
-
     function isTipoAutomacao(tipo) {
       return TIPOS_AUTOMACAO.includes(tipo);
     }
@@ -18033,10 +18027,10 @@ window.Shell = {
         const diff = Math.round((alvo - hoje) / 86400000);
         let bg, fg, br, rel;
         if (finalizado) { bg='rgba(34,27,25,0.05)'; fg='rgba(34,27,25,0.65)'; br='rgba(34,27,25,0.12)'; rel=''; }
-        else if (diff < 0) { bg='rgba(220,38,38,0.08)'; fg='#b91c1c'; br='rgba(220,38,38,0.25)'; rel='atrasado há ' + Math.abs(diff) + (Math.abs(diff)===1?' dia':' dias'); }
-        else if (diff === 0) { bg='rgba(220,38,38,0.08)'; fg='#b91c1c'; br='rgba(220,38,38,0.25)'; rel='é hoje'; }
-        else if (diff <= 2) { bg='rgba(234,88,12,0.08)'; fg='#c2410c'; br='rgba(234,88,12,0.25)'; rel='em ' + diff + (diff===1?' dia':' dias'); }
-        else { bg='rgba(22,163,74,0.08)'; fg='#15803d'; br='rgba(22,163,74,0.22)'; rel='em ' + diff + ' dias'; }
+        else if (diff < 0) { bg='rgba(220,38,38,0.08)'; fg='var(--danger-strong)'; br='rgba(220,38,38,0.25)'; rel='atrasado há ' + Math.abs(diff) + (Math.abs(diff)===1?' dia':' dias'); }
+        else if (diff === 0) { bg='rgba(220,38,38,0.08)'; fg='var(--danger-strong)'; br='rgba(220,38,38,0.25)'; rel='é hoje'; }
+        else if (diff <= 2) { bg='rgba(234,88,12,0.08)'; fg='var(--warning)'; br='rgba(234,88,12,0.25)'; rel='em ' + diff + (diff===1?' dia':' dias'); }
+        else { bg='rgba(22,163,74,0.08)'; fg='var(--success)'; br='rgba(22,163,74,0.22)'; rel='em ' + diff + ' dias'; }
         cellPrazo.style.background = bg; cellPrazo.style.borderColor = br;
         cellPrazo.querySelector('.fact-label').style.color = fg;
         const val = cellPrazo.querySelector('.fact-value');
@@ -18196,7 +18190,7 @@ window.Shell = {
       const avaliacaoBtn = (isAdm ? (() => {
         const nota = item.avaliacao && item.avaliacao.nota;
         if (nota) {
-          const cor = nota >= 4 ? '#16a34a' : nota >= 3 ? '#ea580c' : '#dc2626';
+          const cor = nota >= 4 ? '#16a34a' : nota >= 3 ? '#ea580c' : 'var(--danger)';
           const corBg = nota >= 4 ? 'rgba(22,163,74,0.12)' : nota >= 3 ? 'rgba(234,88,12,0.12)' : 'rgba(220,38,38,0.12)';
           return `<button onclick="verAvaliacao(${item.id})" id="btnVerAvaliacao" title="Ver avaliação: ${nota}/5"
               style="display:inline-flex;align-items:center;gap:5px;height:32px;padding:0 11px;border-radius:8px;border:none;background:${corBg};color:${cor};cursor:pointer;transition:filter 0.15s"
@@ -18269,8 +18263,8 @@ window.Shell = {
         }
         card.innerHTML = `
           <div style="display:flex;align-items:center;gap:8px;padding:8px 0">
-            <div style="width:10px;height:10px;border-radius:50%;background:${sObj.text || '#dc2626'};flex-shrink:0"></div>
-            <span style="font-size:0.875rem;font-weight:700;color:${sObj.text || '#dc2626'}">${excepcional.label}</span>
+            <div style="width:10px;height:10px;border-radius:50%;background:${sObj.text || 'var(--danger)'};flex-shrink:0"></div>
+            <span style="font-size:0.875rem;font-weight:700;color:${sObj.text || 'var(--danger)'}">${excepcional.label}</span>
           </div>`;
         return;
       }
@@ -18385,12 +18379,12 @@ window.Shell = {
             <div class="form-card" style="padding:20px 24px">
               <div style="display:flex;align-items:center;gap:12px">
                 <div style="width:36px;height:36px;border-radius:50%;background:rgba(220,38,38,0.08);display:flex;align-items:center;justify-content:center;flex-shrink:0">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--danger)" stroke-width="2">
                     <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
                   </svg>
                 </div>
                 <div>
-                  <div style="font-weight:700;font-size:0.92rem;color:#dc2626">Erro na geração</div>
+                  <div style="font-weight:700;font-size:0.92rem;color:var(--danger)">Erro na geração</div>
                   <div style="font-size:0.78rem;opacity:0.55;margin-top:2px">
                     Houve um problema ao gerar o material. Entre em contato com o time de Marketing.
                   </div>
@@ -19051,7 +19045,7 @@ window.Shell = {
           const dataAv = av.data;
           const dataFmt = dataAv ? new Date(dataAv).toLocaleDateString('pt-BR', { day:'2-digit', month:'long', year:'numeric' }) : '';
           const horaFmt = dataAv ? new Date(dataAv).toLocaleTimeString('pt-BR', { hour:'2-digit', minute:'2-digit' }) : '';
-          const notaCor = nota >= 4 ? '#16a34a' : nota >= 3 ? '#ea580c' : '#dc2626';
+          const notaCor = nota >= 4 ? '#16a34a' : nota >= 3 ? '#ea580c' : 'var(--danger)';
           const notaLabel = nota >= 4 ? 'Excelente' : nota >= 3 ? 'Regular' : 'Precisa melhorar';
           const estrelas = Array.from({length: 5}, (_, i) =>
             `<svg width="18" height="18" viewBox="0 0 24 24" fill="${i < nota ? '#f59e0b' : 'none'}" stroke="${i < nota ? '#f59e0b' : 'rgba(34,27,25,0.2)'}" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`
@@ -19483,7 +19477,7 @@ window.Shell = {
     const ATIVIDADE_TIPO_COLOR = {
       info: { bg: 'rgba(34,197,94,0.1)', dot: '#16a34a' },
       warning: { bg: 'rgba(251,191,36,0.12)', dot: '#d97706' },
-      error: { bg: 'rgba(220,38,38,0.1)', dot: '#dc2626' },
+      error: { bg: 'rgba(220,38,38,0.1)', dot: 'var(--danger)' },
     };
 
     function renderAtividade(eventos) {
@@ -21893,15 +21887,6 @@ input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
 
   <script src="config.js?v=20260615a"></script>
   <script>
-    const TIPOS_AUTOMACAO = [
-      'assinatura-email',
-      'cartao-visita-digital',
-      'cartao-boas-vindas',
-      'divulgacao-nps',
-      'convite-fp',
-      'cartao-comemorativo',
-    ];
-
     function isTipoComArtefato(tipoId) {
       if (window._svnFormSchemas?.tipos) {
         return window._svnFormSchemas.tipos.some(t => t.id === tipoId && t.is_automation);
@@ -21929,7 +21914,7 @@ input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
               const readyEl = document.getElementById('artefatoReady');
               if (readyEl) {
                 readyEl.innerHTML = `
-                  <div style="color:#dc2626;padding:16px;background:rgba(220,38,38,0.08);border-radius:8px;text-align:center">
+                  <div style="color:var(--danger);padding:16px;background:rgba(220,38,38,0.08);border-radius:8px;text-align:center">
                     <strong>Erro na geração</strong>
                     <p style="margin-top:8px;font-size:0.85rem;opacity:0.8">
                       Houve um problema ao gerar seu material. Entre em contato com o time de Marketing.
@@ -22521,7 +22506,7 @@ window.Modal = (function () {
     .vc-resizer:hover { background: rgba(172,54,49,0.45); }
 
     .vc-count { font-size: 0.85rem; color: rgba(34,27,25,0.5); }
-    .vc-saved { font-size: 0.78rem; color: #15803d; opacity: 0; transition: opacity .2s; }
+    .vc-saved { font-size: 0.78rem; color: var(--success); opacity: 0; transition: opacity .2s; }
     .vc-saved.show { opacity: 1; }
 
     .vc-scroll { overflow: auto; max-height: 70vh; border: 1px solid #e8edf2; border-radius: 12px; scrollbar-width: thin; scrollbar-color: #e6e0d8 transparent; }
@@ -22707,11 +22692,11 @@ window.Modal = (function () {
     ];
     const STATUS_COLORS = {
       'aguardando-validacao': { bg: '#eef2f7', text: '#475569' },
-      'aguardando-contrato': { bg: '#ffedd5', text: '#c2410c' },
+      'aguardando-contrato': { bg: '#ffedd5', text: 'var(--warning)' },
       'validado': { bg: '#ede9fe', text: '#6d28d9' },
       'envio-grafica': { bg: '#dbeafe', text: '#1d4ed8' },
-      'envio-assessor': { bg: '#dcfce7', text: '#15803d' },
-      'reprovado': { bg: '#fee2e2', text: '#dc2626' },
+      'envio-assessor': { bg: '#dcfce7', text: 'var(--success)' },
+      'reprovado': { bg: '#fee2e2', text: 'var(--danger)' },
     };
     const COLS = [
       { f: '_del', label: '', group: 'form', type: 'delete', min: 34 },
@@ -23245,6 +23230,7 @@ import router from "./routes";
 import authRouter from "./routes/auth";
 import { MARCAS_OPTS, CONTRATOS_OPTS, SETORES_LIST, CARGOS_OPTS } from "./config/form-schemas";
 import { UNIDADES } from "./config/unidades";
+import { TIPOS_AUTOMACAO } from "./config/tipos";
 import { logger } from "./lib/logger";
 import { pool } from "@workspace/db";
 import { ApiError } from "./utils/api-error";
@@ -23358,6 +23344,7 @@ app.get("/api/config", (_req, res) => {
     setores: SETORES_LIST,
     cargos: CARGOS_OPTS,
     unidades: UNIDADES,
+    tiposAutomacao: TIPOS_AUTOMACAO,
   });
 });
 
@@ -23397,7 +23384,6 @@ app.use((err: Error, req: Request, res: Response, _next: NextFunction) => {
 });
 
 export default app;
-
 ```
 
 
@@ -24280,6 +24266,27 @@ export function getFormSchemaList() {
     };
   });
 }
+```
+
+
+## File: artifacts/api-server/src/config/tipos.ts
+
+```
+// Fonte única dos tipos de solicitação automatizados (entregam material sem passar
+// pela fila do time). Backend importa daqui; o frontend recebe a lista via
+// GET /api/config (campo `tiposAutomacao`), eliminando as cópias hardcoded.
+export const TIPOS_AUTOMACAO = [
+  "assinatura-email",
+  "cartao-visita-digital",
+  "cartao-boas-vindas",
+  "divulgacao-nps",
+  "convite-fp",
+  "cartao-comemorativo",
+] as const;
+
+// Versão Set para checagens O(1) (onde antes se usava new Set([...]).has()).
+export const TIPOS_AUTOMACAO_SET: ReadonlySet<string> = new Set(TIPOS_AUTOMACAO);
+
 ```
 
 
@@ -28052,6 +28059,7 @@ export async function getClickUpTaskSnapshot(taskId: string): Promise<ClickUpSna
 
 ```
 import { Router } from "express";
+import { TIPOS_AUTOMACAO } from "../config/tipos";
 import { fetchWithTimeout } from "../lib/http";
 import multer from "multer";
 import os from "os";
@@ -28863,14 +28871,6 @@ router.post("/solicitacoes/:id/entrega", requireAuth, async (req, res): Promise<
     const [solicitacao] = await db.select().from(solicitacoesTable).where(eq(solicitacoesTable.id, id));
     if (!solicitacao) { res.status(404).json({ error: "Não encontrada" }); return; }
 
-    const TIPOS_AUTOMACAO = [
-      "assinatura-email",
-      "cartao-visita-digital",
-      "cartao-boas-vindas",
-      "divulgacao-nps",
-      "convite-fp",
-      "cartao-comemorativo",
-    ];
     const novoStatus = TIPOS_AUTOMACAO.includes(solicitacao.tipo_solicitacao)
       ? "concluido"
       : "em-aprovacao";
@@ -30829,6 +30829,7 @@ export async function gerarArteParaSolicitacao(
 
 ```
 import { db, solicitacoesTable } from "@workspace/db";
+import { TIPOS_AUTOMACAO_SET } from "../config/tipos";
 import { fetchWithTimeout } from "../lib/http";
 import { eq, sql } from "drizzle-orm";
 import { logger } from "../lib/logger";
@@ -30838,14 +30839,6 @@ import { logEventoBg, logAtividadeBg } from "./activity-log";
 const WEBHOOK_URL = process.env.N8N_NOTIFICATIONS_WEBHOOK_URL;
 const HUB_URL = process.env.HUB_PUBLIC_URL || "https://hub.portalsvn.com.br";
 
-export const TIPOS_AUTOMACAO = new Set([
-  "assinatura-email",
-  "cartao-visita-digital",
-  "cartao-boas-vindas",
-  "divulgacao-nps",
-  "convite-fp",
-  "cartao-comemorativo",
-]);
 
 export const TIPOS_COM_APROVACAO = new Set([
   "eventos",
@@ -30874,7 +30867,7 @@ export async function notificarMarco(solicitacaoId: number, marco: Marco): Promi
     if (!sol) return;
 
     const tipo = sol.tipo_solicitacao;
-    const isAutomacao = TIPOS_AUTOMACAO.has(tipo);
+    const isAutomacao = TIPOS_AUTOMACAO_SET.has(tipo);
     const isFisico = tipo === "cartao-visita-fisico";
 
     if (marco === "recebida" && isAutomacao) return;
