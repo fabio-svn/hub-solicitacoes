@@ -116,7 +116,7 @@ app.get("/api/config", (_req, res) => {
   res.set('Cache-Control', 'private, max-age=300');
   res.json({
     r2PublicUrl: process.env.R2_PUBLIC_URL || "https://pub-a2132f9b61f940659cc98265acfcf64c.r2.dev",
-    emailUpload: process.env.EMAIL_UPLOAD || "gabriela.franca@svninvest.com.br",
+    emailUpload: process.env.EMAIL_UPLOAD || "",
     urlVideoHero: process.env.URL_VIDEO_HERO || "https://pub-a2132f9b61f940659cc98265acfcf64c.r2.dev/bg-eventos-2.mp4",
     urlLogoBranca: process.env.URL_LOGO_BRANCA || "https://pub-a2132f9b61f940659cc98265acfcf64c.r2.dev/SVN-2.svg",
     urlLogoPreta: process.env.URL_LOGO_PRETA || "https://pub-a2132f9b61f940659cc98265acfcf64c.r2.dev/SVN-1.svg",

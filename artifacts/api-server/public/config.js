@@ -360,14 +360,12 @@ const STATUS_SOLICITACAO = [
   { id: "em-espera",              label: "Em espera",                  bg: "#4D545F", text: "#FFFFFF"  },
   { id: "gerando",                label: "Gerando arte",               bg: "#dbeafe", text: "#1e40af" },
   { id: "erro",                   label: "Erro",                       bg: "#fee2e2", text: "#991b1b" },
-  { id: "aguardando-validacao",   label: "Aguardando validação",       bg: "#fee2e2", text: "var(--danger-strong)" },
-  { id: "aguardando-contrato",    label: "Aguardando contrato",        bg: "#f1f5f9", text: "#475569" },
-  { id: "validado",               label: "Validado",                   bg: "#d1fae5", text: "#047857" },
-  { id: "liberado-design",        label: "Em design",                  bg: "#ede9fe", text: "#6d28d9" },
-  { id: "arte-finalizada",        label: "Arte finalizada",            bg: "#fef9c3", text: "#a16207" },
-  { id: "envio-grafica",          label: "Envio gráfica",              bg: "#dbeafe", text: "#1d4ed8" },
+  { id: "aguardando-validacao",   label: "Aguardando validação",       bg: "#eef2f7", text: "#475569" },
+  { id: "aguardando-contrato",    label: "Aguardando contrato",        bg: "#fef3e2", text: "var(--warning)" },
+  { id: "validado",               label: "Validado",                   bg: "#dbeafe", text: "#1d4ed8" },
+  { id: "envio-grafica",          label: "Envio gráfica",              bg: "#e6e9ff", text: "#4338ca" },
   { id: "envio-assessor",         label: "Envio assessor",             bg: "#dcfce7", text: "var(--success)" },
-  { id: "reprovado",              label: "Reprovado",                  bg: "#fecaca", text: "var(--danger)" },
+  { id: "reprovado",              label: "Reprovado",                  bg: "#fee2e2", text: "var(--danger)" },
 ];
 
 const STATUS_MAP = Object.fromEntries(STATUS_SOLICITACAO.map(s => [s.id, s]));
@@ -567,8 +565,6 @@ const FLUXOS_ETAPAS = {
     { id: "envio-grafica",        label: "Envio gráfica",        visivel: true  },
     { id: "envio-assessor",       label: "Envio assessor",       visivel: true  },
     { id: "reprovado",            label: "Reprovado",            visivel: false },
-    { id: "liberado-design",      label: "Em design",            visivel: false },
-    { id: "arte-finalizada",      label: "Arte finalizada",      visivel: false },
   ],
   "_default": [
     { id: "recebido",     label: "Recebido",              visivel: true  },

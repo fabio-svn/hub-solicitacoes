@@ -173,6 +173,7 @@ const DB_STATEMENTS = [
   )`,
   `CREATE INDEX IF NOT EXISTS "IDX_cartao_aprovacoes_solic" ON "cartao_aprovacoes" ("solicitacao_id")`,
   `ALTER TABLE "cartao_aprovacoes" ADD COLUMN IF NOT EXISTS "observacao" TEXT`,
+  `ALTER TABLE "cartao_aprovacoes" ADD COLUMN IF NOT EXISTS "status_changed_at" TIMESTAMP`,
 
   // Eventos estruturados por solicitação
   `CREATE TABLE IF NOT EXISTS "eventos_solicitacao" (

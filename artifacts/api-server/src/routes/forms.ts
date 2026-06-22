@@ -297,7 +297,7 @@ router.post("/solicitacoes", requireAuth, upload.any(), async (req, res): Promis
     const files = req.files as Express.Multer.File[];
     const arquivosMap: ArquivosMap = {};
     if (files && files.length > 0) {
-      for (const file of files) {
+      await Promise.all(files.map(async (file) => {
         let uploadedUrl: string | null = null;
         try {
           uploadedUrl = await uploadToR2(file, solicitacao.id, file.fieldname);
@@ -318,7 +318,7 @@ router.post("/solicitacoes", requireAuth, upload.any(), async (req, res): Promis
             logger.warn({ url: uploadedUrl }, "Arquivo órfão removido do R2 após falha no insert");
           }
         }
-      }
+      }));
     }
 
     // Merge uploaded file URLs into dados so art-generator can access them by field name
@@ -1415,6 +1415,7 @@ router.get("/cartao-aprovacoes", requireAuth, async (req, res): Promise<void> =>
         envio_para: a?.envio_para ?? "",
         custo: a?.custo ?? "",
         status: a?.status ?? "aguardando-validacao",
+        status_changed_at: a?.status_changed_at ?? null,
         observacao: a?.observacao ?? "",
         pdf_url: (Array.isArray(s.entrega_links) && (s.entrega_links as any)[0]?.url) ? (s.entrega_links as any)[0].url : "",
       };
@@ -1433,22 +1434,45 @@ router.put("/cartao-aprovacoes/:solicitacaoId", requireAuth, async (req, res): P
     const solicitacaoId = parseInt(String(req.params.solicitacaoId), 10);
     if (Number.isNaN(solicitacaoId)) { res.status(400).json({ error: "ID inválido" }); return; }
     const b = req.body || {};
-    const valores = {
-      data_pedido: b.data_pedido ?? null,
-      nome: b.nome ?? null,
-      whatsapp: b.whatsapp ?? null,
-      email: b.email ?? null,
-      unidade: b.unidade ?? null,
-      contrato_social: b.contrato_social ?? null,
-      envio_para: b.envio_para ?? null,
-      custo: b.custo ?? null,
-      status: b.status || "aguardando-validacao",
-      observacao: b.observacao ?? null,
-      updated_at: new Date(),
-    };
+
+    // Validação básica: status precisa ser um dos válidos; campos de texto precisam ser string.
+    const STATUS_VALIDOS = ["aguardando-validacao", "aguardando-contrato", "validado", "envio-grafica", "envio-assessor", "reprovado"];
+    if (b.status !== undefined && !STATUS_VALIDOS.includes(b.status)) {
+      res.status(400).json({ error: "Status inválido" }); return;
+    }
+    const CAMPOS_TEXTO = ["data_pedido", "nome", "whatsapp", "email", "unidade", "contrato_social", "envio_para", "custo", "observacao"] as const;
+    for (const campo of CAMPOS_TEXTO) {
+      if (b[campo] !== undefined && b[campo] !== null && typeof b[campo] !== "string") {
+        res.status(400).json({ error: `Campo "${campo}" inválido` }); return;
+      }
+    }
+
+    // Lê o registro atual ANTES de montar os valores, para fazer MERGE parcial:
+    // só sobrescreve o que veio no body; o que não veio é preservado (evita zerar campos).
     const [prev] = await db.select().from(cartaoAprovacoesTable)
       .where(eq(cartaoAprovacoesTable.solicitacao_id, solicitacaoId));
+    const pick = (campo: string) =>
+      b[campo] !== undefined ? b[campo] : ((prev as any)?.[campo] ?? null);
+
     const statusAnterior = prev?.status;
+    const novoStatus = b.status !== undefined ? b.status : (prev?.status ?? "aguardando-validacao");
+    const statusMudou = statusAnterior !== novoStatus;
+
+    const valores = {
+      data_pedido: pick("data_pedido"),
+      nome: pick("nome"),
+      whatsapp: pick("whatsapp"),
+      email: pick("email"),
+      unidade: pick("unidade"),
+      contrato_social: pick("contrato_social"),
+      envio_para: pick("envio_para"),
+      custo: pick("custo"),
+      status: novoStatus,
+      observacao: pick("observacao"),
+      updated_at: new Date(),
+      // marca quando a etapa mudou — "pendente há" passa a contar o tempo na etapa atual
+      status_changed_at: statusMudou ? new Date() : ((prev as any)?.status_changed_at ?? null),
+    };
     await db.insert(cartaoAprovacoesTable)
       .values({ solicitacao_id: solicitacaoId, ...valores })
       .onConflictDoUpdate({ target: cartaoAprovacoesTable.solicitacao_id, set: valores });

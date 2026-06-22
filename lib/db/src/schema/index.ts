@@ -127,6 +127,7 @@ export const cartaoAprovacoesTable = pgTable("cartao_aprovacoes", {
   status: varchar("status", { length: 40 }).notNull().default("aguardando-validacao"),
   observacao: text("observacao"),
   updated_at: timestamp("updated_at").notNull().defaultNow(),
+  status_changed_at: timestamp("status_changed_at"),
 });
 
 export type CartaoAprovacao = typeof cartaoAprovacoesTable.$inferSelect;

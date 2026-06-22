@@ -1802,13 +1802,19 @@
       const nota = window._notaSelecionada;
       if (!nota) return;
       const comentario = (document.getElementById('pesquisaComentario')?.value || '').trim();
+      let ok = false;
       try {
-        await fetch('/api/solicitacoes/' + solId + '/avaliacao', {
+        const res = await fetch('/api/solicitacoes/' + solId + '/avaliacao', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ nota, comentario }),
         });
+        ok = res.ok;
       } catch {}
+      if (!ok) {
+        if (window.showToast) showToast('Não foi possível registrar sua avaliação. Tente novamente.', 'error');
+        return;
+      }
       const el = document.getElementById('pesquisaSatisfacao');
       if (el) el.outerHTML = `
         <div style="
