@@ -174,6 +174,9 @@ const DB_STATEMENTS = [
   `CREATE INDEX IF NOT EXISTS "IDX_cartao_aprovacoes_solic" ON "cartao_aprovacoes" ("solicitacao_id")`,
   `ALTER TABLE "cartao_aprovacoes" ADD COLUMN IF NOT EXISTS "observacao" TEXT`,
   `ALTER TABLE "cartao_aprovacoes" ADD COLUMN IF NOT EXISTS "status_changed_at" TIMESTAMP`,
+  // Backfill único e idempotente: aproxima o "pendente há" dos cartões antigos
+  // (só age em linhas com status_changed_at NULL; depois vira no-op barato).
+  `UPDATE "cartao_aprovacoes" SET "status_changed_at" = "updated_at" WHERE "status_changed_at" IS NULL`,
 
   // Eventos estruturados por solicitação
   `CREATE TABLE IF NOT EXISTS "eventos_solicitacao" (
