@@ -29,7 +29,7 @@
       <div class="page-header">
         <h1 class="page-title">Templates de Arte</h1>
         <div class="page-header__actions">
-          <button class="btn btn--primary" onclick="showView('create')" style="padding:7px 14px;font-size:0.82rem">+ Novo template</button>
+          <button class="btn btn--solid" onclick="showView('create')" style="padding:7px 14px;font-size:0.82rem">+ Novo template</button>
         </div>
       </div>
       <p class="page-subtitle" style="margin-bottom:20px">Templates visuais usados para gerar artes automaticamente nas solicitações de automação.</p>
@@ -53,7 +53,7 @@
           <select class="form-input" id="createTipo" onchange="onCreateTipoChange()">
             <option value="">Selecione um formulário…</option>
           </select>
-          <div id="createTipoLoading" style="display:none;font-size:0.75rem;color:rgba(34,27,25,0.4);margin-top:4px">Carregando formulários…</div>
+          <div id="createTipoLoading" style="display:none;font-size:0.75rem;color:var(--ink-40);margin-top:4px">Carregando formulários…</div>
         </div>
         <div class="form-group" id="createVariantGroup" style="display:none">
           <label class="form-label">Para qual modelo? <span class="text-ruby">*</span></label>
@@ -90,7 +90,7 @@
         <div id="createError" style="display:none;color:var(--danger);font-size:0.82rem;margin-bottom:12px;padding:8px 12px;background:#fef2f2;border-radius:8px;border:1px solid #fecaca"></div>
         <div class="form-actions">
           <button class="btn" onclick="showView('list')">Cancelar</button>
-          <button class="btn btn--primary" id="createBtn" onclick="submitCreate()" disabled>Criar e abrir</button>
+          <button class="btn btn--solid" id="createBtn" onclick="submitCreate()" disabled>Criar e abrir</button>
         </div>
       </div>
     </div>
@@ -107,7 +107,7 @@
         <div class="asset-modal-filters">
           <label><input type="checkbox" id="assetFilterOrphan" onchange="loadAssets()"> Apenas não usados</label>
         </div>
-        <button onclick="closeAssetLibrary()" style="background:none;border:none;cursor:pointer;font-size:1.2rem;color:rgba(34,27,25,0.5);padding:4px 8px">×</button>
+        <button onclick="closeAssetLibrary()" aria-label="Fechar" style="background:none;border:none;cursor:pointer;color:var(--ink-50);padding:4px 8px;display:inline-flex;align-items:center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
       </div>
       <div class="asset-modal-body" id="assetModalBody">
         <div class="asset-empty">Carregando…</div>
@@ -117,7 +117,7 @@
           ⬆ Upload novo asset
           <input type="file" accept="image/png,image/jpeg,image/webp" style="display:none" onchange="uploadAssetFromModal(this)">
         </label>
-        <span id="assetModalStatus" style="font-size:0.78rem;color:rgba(34,27,25,0.5)"></span>
+        <span id="assetModalStatus" style="font-size:0.78rem;color:var(--ink-50)"></span>
       </div>
     </div>
   </div>
@@ -190,7 +190,7 @@
           <div class="test-data-strip-fields" id="testDataFields"></div>
         </div>
         <div class="canvas-scroll" id="canvasScroll">
-          <div class="no-template" id="noTemplate" style="display:flex;align-items:center;justify-content:center;flex:1;color:rgba(34,27,25,0.3);font-size:0.9rem">Carregando template…</div>
+          <div class="no-template" id="noTemplate" style="display:flex;align-items:center;justify-content:center;flex:1;color:var(--ink-30);font-size:0.9rem">Carregando template…</div>
           <div class="canvas-wrap" id="canvasWrap" style="display:none">
             <img class="bg-img" id="bgImg" src="" alt="" draggable="false">
             <img class="canvas-preview-img" id="previewImg" alt="Preview">
@@ -250,7 +250,7 @@
     <div class="modal-card" style="max-width:90vw">
       <div class="modal-header">
         <h3 class="modal-title" id="previewModalTitle">Preview</h3>
-        <button class="modal-close" onclick="Modal.close('previewModalOverlay')">×</button>
+        <button class="modal-close" onclick="Modal.close('previewModalOverlay')" aria-label="Fechar"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
       </div>
       <div class="modal-body">
         <div id="previewModalContent" style="min-width:300px;min-height:200px;display:flex;align-items:center;justify-content:center;background:#f5f3f0;border-radius:8px">

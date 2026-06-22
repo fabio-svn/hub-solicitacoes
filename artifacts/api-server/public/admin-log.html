@@ -174,7 +174,7 @@
           </td>
           <td style="padding:8px 14px;overflow:hidden">
             <span style="font-size:0.76rem;opacity:0.8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block" title="${esc(tipoLabel)}">${esc(tipoLabel)}</span>
-            ${item.solicitacao_id ? `<a href="/solicitacao.html?id=${item.solicitacao_id}" target="_blank" rel="noopener" class="log-sol-link">#${item.solicitacao_id} ↗</a>` : ''}
+            ${item.solicitacao_id ? `<a href="/solicitacao.html?id=${item.solicitacao_id}" target="_blank" rel="noopener" class="log-sol-link">#${item.solicitacao_id} <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg></a>` : ''}
           </td>
           <td style="padding:8px 14px;overflow:hidden">
             <div style="font-size:0.78rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${esc(item.detalhe)}">${esc(item.detalhe)}</div>

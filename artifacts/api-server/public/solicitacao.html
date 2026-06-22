@@ -52,7 +52,7 @@
     .status-step-line {
       flex: 1;
       height: 2px;
-      background: rgba(34,27,25,0.1);
+      background: var(--ink-10);
       transition: background 0.3s;
     }
     .status-step-line.done { background: #6B9080; }
@@ -61,7 +61,7 @@
       width: 22px;
       height: 22px;
       border-radius: 50%;
-      border: 2px solid rgba(34,27,25,0.15);
+      border: 2px solid var(--ink-12);
       background: transparent;
       display: flex;
       align-items: center;
@@ -81,7 +81,7 @@
       animation: pulse-ring 1.8s ease-out infinite;
     }
     @keyframes pulse-ring {
-      0%   { box-shadow: 0 0 0 0px rgba(34,27,25,0.32); }
+      0%   { box-shadow: 0 0 0 0px var(--ink-30); }
       70%  { box-shadow: 0 0 0 6px rgba(34,27,25,0); }
       100% { box-shadow: 0 0 0 0px rgba(34,27,25,0); }
     }
@@ -94,7 +94,7 @@
       margin-top: 6px;
       font-size: 0.68rem;
       text-align: center;
-      color: rgba(34,27,25,0.35);
+      color: var(--ink-30);
       font-weight: 400;
       line-height: 1.3;
       padding: 0 2px;
@@ -125,10 +125,10 @@
       scroll-behavior: smooth;
       background: #ede8e3;
       scrollbar-width: thin;
-      scrollbar-color: rgba(34,27,25,0.15) transparent;
+      scrollbar-color: var(--ink-12) transparent;
     }
     .chat-wrap::-webkit-scrollbar { width: 4px; }
-    .chat-wrap::-webkit-scrollbar-thumb { background: rgba(34,27,25,0.15); border-radius: 2px; }
+    .chat-wrap::-webkit-scrollbar-thumb { background: var(--ink-12); border-radius: 2px; }
 
     .chat-msg {
       display: flex;
@@ -149,7 +149,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      box-shadow: 0 1px 4px rgba(34,27,25,0.18);
+      box-shadow: 0 1px 4px var(--ink-20);
     }
     .chat-avatar img {
       width: 17px;
@@ -175,13 +175,13 @@
       background: #ffffff;
       border-bottom-left-radius: 4px;
       color: var(--carbon-black);
-      box-shadow: 0 1px 3px rgba(34,27,25,0.08), 0 2px 8px rgba(34,27,25,0.06);
+      box-shadow: 0 1px 3px var(--ink-08), 0 2px 8px var(--ink-05);
     }
     .chat-msg.usuario .chat-bubble {
       background: var(--carbon-black);
       color: var(--paper-white);
       border-bottom-right-radius: 4px;
-      box-shadow: 0 1px 3px rgba(34,27,25,0.15), 0 2px 8px rgba(34,27,25,0.1);
+      box-shadow: 0 1px 3px var(--ink-12), 0 2px 8px var(--ink-10);
     }
     .chat-msg .chat-time {
       font-size: 0.68rem;
@@ -198,13 +198,13 @@
       border-radius: 18px;
       border-bottom-left-radius: 4px;
       width: fit-content;
-      box-shadow: 0 1px 3px rgba(34,27,25,0.08), 0 2px 8px rgba(34,27,25,0.06);
+      box-shadow: 0 1px 3px var(--ink-08), 0 2px 8px var(--ink-05);
     }
     .chat-typing span {
       width: 6px;
       height: 6px;
       border-radius: 50%;
-      background: rgba(34,27,25,0.3);
+      background: var(--ink-30);
       animation: typing-dot 1.2s infinite;
     }
     .chat-typing span:nth-child(2) { animation-delay: 0.2s; }
@@ -215,7 +215,7 @@
     }
 
     .chat-input-area {
-      border-top: 1px solid rgba(34,27,25,0.08);
+      border-top: 1px solid var(--ink-08);
       padding: 12px 16px;
       display: flex;
       gap: 8px;
@@ -234,13 +234,13 @@
       max-height: 120px;
       line-height: 1.4;
       background: #ffffff;
-      box-shadow: 0 1px 3px rgba(34,27,25,0.08);
+      box-shadow: 0 1px 3px var(--ink-08);
       transition: box-shadow 0.2s;
       box-sizing: border-box;
     }
     .chat-input-area textarea:focus {
       outline: none;
-      box-shadow: 0 1px 3px rgba(34,27,25,0.08), 0 0 0 2px rgba(34,27,25,0.15);
+      box-shadow: 0 1px 3px var(--ink-08), 0 0 0 2px var(--ink-12);
     }
     .chat-input-area textarea:disabled {
       opacity: 0.4;
@@ -259,7 +259,7 @@
       justify-content: center;
       flex-shrink: 0;
       transition: opacity 0.2s, transform 0.15s;
-      box-shadow: 0 2px 6px rgba(34,27,25,0.2);
+      box-shadow: 0 2px 6px var(--ink-20);
     }
     .chat-send-btn:hover:not(:disabled) { transform: scale(1.06); }
     .chat-send-btn:disabled { opacity: 0.25; cursor: not-allowed; }
@@ -269,9 +269,9 @@
       align-items: center;
       gap: 6px;
       padding: 7px 14px;
-      background: rgba(34,27,25,0.07);
+      background: var(--ink-08);
       color: var(--carbon-black);
-      border: 1px solid rgba(34,27,25,0.18);
+      border: 1px solid var(--ink-20);
       border-radius: 10px;
       font-size: 0.82rem;
       font-weight: 600;
@@ -280,8 +280,8 @@
       margin: 2px 4px 2px 0;
     }
     .chat-link-btn:hover {
-      background: rgba(34,27,25,0.13);
-      box-shadow: 0 2px 8px rgba(34,27,25,0.1);
+      background: var(--ink-12);
+      box-shadow: 0 2px 8px var(--ink-10);
     }
 
     .chat-action-btns {
@@ -326,14 +326,14 @@
     .btn-alterar:hover { background: var(--danger-strong); }
 
     .rodada-historico {
-      border: 1px solid rgba(34,27,25,0.08);
+      border: 1px solid var(--ink-08);
       border-radius: 10px;
       overflow: hidden;
       margin-bottom: 8px;
     }
     .rodada-historico-header {
       padding: 10px 16px;
-      background: rgba(34,27,25,0.04);
+      background: var(--ink-05);
       font-size: 0.8rem;
       font-weight: 600;
       opacity: 0.6;
@@ -422,7 +422,7 @@
     }
     .fact {
       background: var(--card-white, #fff);
-      border: 1px solid var(--border-light, rgba(34,27,25,0.1));
+      border: 1px solid var(--border-light, var(--ink-10));
       border-radius: 10px;
       padding: 11px 13px;
       min-width: 0;
@@ -434,13 +434,13 @@
       font-size: 0.7rem;
       font-weight: 600;
       letter-spacing: 0.02em;
-      color: rgba(34,27,25,0.5);
+      color: var(--ink-50);
       margin-bottom: 5px;
     }
     .fact-label svg { flex-shrink: 0; opacity: 0.7; }
     .fact-value { font-size: 0.92rem; font-weight: 700; color: var(--carbon-black); word-break: normal; overflow-wrap: break-word; line-height: 1.25; }
     .fact-rel-sub { font-size: 0.74rem; font-weight: 600; margin-top: 3px; }
-    .fact-alt-block { margin-top: 9px; padding-top: 9px; border-top: 1px solid rgba(34,27,25,0.1); }
+    .fact-alt-block { margin-top: 9px; padding-top: 9px; border-top: 1px solid var(--ink-10); }
     .fact-alt-head { display: flex; align-items: center; gap: 4px; font-size: 0.7rem; font-weight: 700; letter-spacing: 0.02em; color: var(--warning); margin-bottom: 4px; }
     .fact-alt-head svg { flex-shrink: 0; }
     .fact-alt-line { font-size: 0.78rem; font-weight: 500; color: var(--warning); line-height: 1.3; word-break: normal; overflow-wrap: break-word; }
@@ -664,7 +664,7 @@
             <svg id="atividadeChevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="opacity:0.3;transition:transform 0.28s cubic-bezier(.4,0,.2,1);flex-shrink:0"><polyline points="6 9 12 15 18 9"/></svg>
           </div>
           <div id="atividadeBody" style="max-height:0;overflow:hidden;transition:max-height 0.35s ease">
-            <div style="border-top:1px solid rgba(34,27,25,0.07);padding:16px 20px 20px">
+            <div style="border-top:1px solid var(--ink-08);padding:16px 20px 20px">
               <div id="atividadeContent">
                 <div style="text-align:center;padding:20px;opacity:0.35;font-size:0.85rem">Carregando…</div>
               </div>
@@ -821,7 +821,7 @@
         const alvo = new Date(pd); alvo.setHours(0,0,0,0);
         const diff = Math.round((alvo - hoje) / 86400000);
         let bg, fg, br, rel;
-        if (finalizado) { bg='rgba(34,27,25,0.05)'; fg='rgba(34,27,25,0.65)'; br='rgba(34,27,25,0.12)'; rel=''; }
+        if (finalizado) { bg='var(--ink-05)'; fg='var(--ink-70)'; br='var(--ink-12)'; rel=''; }
         else if (diff < 0) { bg='rgba(220,38,38,0.08)'; fg='var(--danger-strong)'; br='rgba(220,38,38,0.25)'; rel='atrasado há ' + Math.abs(diff) + (Math.abs(diff)===1?' dia':' dias'); }
         else if (diff === 0) { bg='rgba(220,38,38,0.08)'; fg='var(--danger-strong)'; br='rgba(220,38,38,0.25)'; rel='é hoje'; }
         else if (diff <= 2) { bg='rgba(234,88,12,0.08)'; fg='var(--warning)'; br='rgba(234,88,12,0.25)'; rel='em ' + diff + (diff===1?' dia':' dias'); }
@@ -1192,7 +1192,7 @@
         card.innerHTML = `
           <div class="form-card" style="padding:20px 24px">
             <div style="display:flex;align-items:center;gap:12px">
-              <div style="width:36px;height:36px;border-radius:50%;background:rgba(34,27,25,0.07);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+              <div style="width:36px;height:36px;border-radius:50%;background:var(--ink-08);display:flex;align-items:center;justify-content:center;flex-shrink:0">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="opacity:0.4">
                   <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
                 </svg>
@@ -1255,11 +1255,11 @@
         } else {
           previewHtml = `
             <div class="assinatura-preview-card" style="background:#f5f3f0;padding:40px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px">
-              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="rgba(34,27,25,0.4)" stroke-width="1.5">
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--ink-40)" stroke-width="1.5">
                 <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
                 <polyline points="14 2 14 8 20 8"/>
               </svg>
-              <span style="font-size:0.85rem;color:rgba(34,27,25,0.5)">Pré-visualização indisponível</span>
+              <span style="font-size:0.85rem;color:var(--ink-50)">Pré-visualização indisponível</span>
             </div>`;
         }
 
@@ -1366,7 +1366,7 @@
           </div>
 
           <div id="aprovacaoBody" style="max-height:0;overflow:hidden;transition:max-height 0.35s ease">
-            <div style="border-top:1px solid rgba(34,27,25,0.07)">
+            <div style="border-top:1px solid var(--ink-08)">
               <div id="chatLoading" style="padding:24px;text-align:center;opacity:0.4;font-size:0.85rem">
                 Carregando…
               </div>
@@ -1465,12 +1465,12 @@
         badgeRodada.innerHTML = `
           <span style="
             background: var(--icon-bg);
-            border: 1px solid rgba(34,27,25,0.1);
+            border: 1px solid var(--ink-10);
             border-radius: 999px;
             font-size: 0.72rem;
             font-weight: 700;
             letter-spacing: 0.05em;
-            color: rgba(34,27,25,0.45);
+            color: var(--ink-40);
             padding: 3px 12px;
             text-transform: uppercase;
           ">Rodada ${rodadaAtual.numero}</span>`;
@@ -1732,7 +1732,7 @@
       const html = `
         <div id="pesquisaSatisfacao" style="
           background: rgba(255,255,255,0.7);
-          border: 1px solid rgba(34,27,25,0.1);
+          border: 1px solid var(--ink-10);
           border-radius: 12px;
           padding: 16px 20px;
           margin-top: 16px;
@@ -1749,7 +1749,7 @@
                 onclick="selecionarNota(${n})"
                 style="
                   width:36px;height:36px;border-radius:8px;
-                  border:2px solid rgba(34,27,25,0.18);
+                  border:2px solid var(--ink-20);
                   background:transparent;font-size:0.85rem;
                   font-weight:700;color:var(--carbon-black);
                   cursor:pointer;transition:all 0.15s;
@@ -1763,7 +1763,7 @@
               placeholder="Comentário opcional (máx. 500 caracteres)"
               maxlength="500"
               style="
-                width:100%;border-radius:8px;border:1px solid rgba(34,27,25,0.2);
+                width:100%;border-radius:8px;border:1px solid var(--ink-20);
                 padding:8px 12px;font-family:inherit;font-size:0.85rem;
                 resize:vertical;min-height:64px;background:var(--paper-white);
                 box-sizing:border-box;
@@ -1776,7 +1776,7 @@
                 font-weight:600;cursor:pointer;
               ">Enviar avaliação</button>
               <button onclick="document.getElementById('pesquisaSatisfacao').remove()" style="
-                background:transparent;color:rgba(34,27,25,0.5);border:none;
+                background:transparent;color:var(--ink-50);border:none;
                 font-size:0.82rem;cursor:pointer;text-decoration:underline;
               ">Pular</button>
             </div>
@@ -1791,7 +1791,7 @@
         const n = parseInt(btn.dataset.nota);
         btn.style.background = n === nota ? 'var(--ruby-red)' : 'transparent';
         btn.style.color = n === nota ? '#fff' : 'var(--carbon-black)';
-        btn.style.borderColor = n === nota ? 'var(--ruby-red)' : 'rgba(34,27,25,0.18)';
+        btn.style.borderColor = n === nota ? 'var(--ruby-red)' : 'var(--ink-20)';
       });
       document.querySelector('.nota-btn[data-nota="' + nota + '"]').dataset.selecionado = '1';
       window._notaSelecionada = nota;
@@ -1812,7 +1812,7 @@
       const el = document.getElementById('pesquisaSatisfacao');
       if (el) el.outerHTML = `
         <div style="
-          text-align:center;padding:14px;color:rgba(34,27,25,0.55);
+          text-align:center;padding:14px;color:var(--ink-50);
           font-size:0.85rem;margin-top:12px;
         ">Obrigado pelo feedback! 💛</div>`;
     }
@@ -1843,7 +1843,7 @@
           const notaCor = nota >= 4 ? '#16a34a' : nota >= 3 ? '#ea580c' : 'var(--danger)';
           const notaLabel = nota >= 4 ? 'Excelente' : nota >= 3 ? 'Regular' : 'Precisa melhorar';
           const estrelas = Array.from({length: 5}, (_, i) =>
-            `<svg width="18" height="18" viewBox="0 0 24 24" fill="${i < nota ? '#f59e0b' : 'none'}" stroke="${i < nota ? '#f59e0b' : 'rgba(34,27,25,0.2)'}" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`
+            `<svg width="18" height="18" viewBox="0 0 24 24" fill="${i < nota ? '#f59e0b' : 'none'}" stroke="${i < nota ? '#f59e0b' : 'var(--ink-20)'}" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`
           ).join('');
 
           content.innerHTML = `
@@ -2062,7 +2062,7 @@
       const avatarHtml = `<div class="chat-avatar"><img src="${URL_LOGO_BRANCA}" alt="SVN" /></div>`;
       const badgeHtml = `
         <div style="display:flex;align-items:center;justify-content:center;margin-bottom:8px">
-          <span style="background:var(--icon-bg);border:1px solid rgba(34,27,25,0.1);border-radius:999px;font-size:0.72rem;font-weight:700;letter-spacing:0.05em;color:rgba(34,27,25,0.45);padding:3px 12px;text-transform:uppercase">Rodada ${rodada.numero}</span>
+          <span style="background:var(--icon-bg);border:1px solid var(--ink-10);border-radius:999px;font-size:0.72rem;font-weight:700;letter-spacing:0.05em;color:var(--ink-40);padding:3px 12px;text-transform:uppercase">Rodada ${rodada.numero}</span>
         </div>`;
       wrap.innerHTML = `
         ${badgeHtml}
@@ -2115,7 +2115,7 @@
               <div style="padding:12px 16px;font-size:0.82rem;opacity:0.7">
                 ${rodada.links?.map(l => `<a href="${esc(l.url)}" target="_blank" style="color:var(--carbon-black);font-weight:600">${esc(l.label)}</a>`).join(' · ') || 'Sem links'}
                 ${rodada.decisao === 'alteracao' && rodada.mensagens?.length
-                  ? `<div style="margin-top:8px;padding-top:8px;border-top:1px solid rgba(34,27,25,0.08)">${rodada.mensagens.map((m, i) => `<div style="margin-bottom:4px">${rodada.mensagens.length > 1 ? (i+1)+'. ' : ''}${esc(m)}</div>`).join('')}</div>`
+                  ? `<div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--ink-08)">${rodada.mensagens.map((m, i) => `<div style="margin-bottom:4px">${rodada.mensagens.length > 1 ? (i+1)+'. ' : ''}${esc(m)}</div>`).join('')}</div>`
                   : ''}
               </div>
             </div>

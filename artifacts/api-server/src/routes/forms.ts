@@ -560,6 +560,8 @@ router.get("/solicitacoes/stats", requireAuth, async (req, res) => {
     const user = req.session.user!;
     const isAdmin = user.role === "admin" || user.role === "gestor";
     const baseCondition = (isAdmin && req.query.escopo !== 'proprias') ? undefined : eq(solicitacoesTable.user_email, user.email);
+    // registros importados da planilha histórica de cartões não entram nos contadores (igual à listagem)
+    const naoImportada = sql`(${solicitacoesTable.dados} ->> '_importado_planilha') IS NULL`;
 
     const activeStatuses = [
       "recebido", "em-analise", "em-producao", "aguardando",
@@ -573,19 +575,19 @@ router.get("/solicitacoes/stats", requireAuth, async (req, res) => {
 
     const [activeCount] = await db.select({ count: sql<number>`count(*)` })
       .from(solicitacoesTable)
-      .where(and(...activeConditions));
+      .where(and(naoImportada, ...activeConditions));
 
     const completedConditions: ReturnType<typeof eq>[] = [eq(solicitacoesTable.status, "concluido")];
     if (baseCondition) completedConditions.push(baseCondition);
 
     const [completedCount] = await db.select({ count: sql<number>`count(*)` })
       .from(solicitacoesTable)
-      .where(and(...completedConditions));
+      .where(and(naoImportada, ...completedConditions));
 
     const totalConditions: ReturnType<typeof eq>[] = baseCondition ? [baseCondition] : [];
     const [totalCount] = await db.select({ count: sql<number>`count(*)` })
       .from(solicitacoesTable)
-      .where(totalConditions.length > 0 ? and(...totalConditions) : undefined);
+      .where(and(naoImportada, ...totalConditions));
 
     const startOfMonth = new Date();
     startOfMonth.setDate(1);
@@ -595,7 +597,7 @@ router.get("/solicitacoes/stats", requireAuth, async (req, res) => {
 
     const [monthCount] = await db.select({ count: sql<number>`count(*)` })
       .from(solicitacoesTable)
-      .where(and(...monthConditions));
+      .where(and(naoImportada, ...monthConditions));
 
     res.json({
       active: Number(activeCount.count),
@@ -1196,16 +1198,20 @@ router.get("/admin/stats", requireAuth, async (req, res): Promise<void> => {
     const now = new Date();
     const periodoAtual = new Date(now.getTime() - dias * 86400000);
     const periodoAnterior = new Date(periodoAtual.getTime() - dias * 86400000);
+    // registros importados da planilha histórica de cartões não entram nos contadores
+    const naoImportada = sql`(${solicitacoesTable.dados} ->> '_importado_planilha') IS NULL`;
+    const noPeriodo = and(sql`${solicitacoesTable.created_at} >= ${periodoAtual.toISOString()}`, naoImportada);
 
     const [atual] = await db.select({ count: sql<number>`count(*)` })
       .from(solicitacoesTable)
-      .where(sql`${solicitacoesTable.created_at} >= ${periodoAtual.toISOString()}`);
+      .where(noPeriodo);
 
     const [anterior] = await db.select({ count: sql<number>`count(*)` })
       .from(solicitacoesTable)
       .where(and(
         sql`${solicitacoesTable.created_at} >= ${periodoAnterior.toISOString()}`,
-        sql`${solicitacoesTable.created_at} < ${periodoAtual.toISOString()}`
+        sql`${solicitacoesTable.created_at} < ${periodoAtual.toISOString()}`,
+        naoImportada
       ));
 
     const porTipo = await db.select({
@@ -1213,7 +1219,7 @@ router.get("/admin/stats", requireAuth, async (req, res): Promise<void> => {
       count: sql<number>`count(*)`
     })
       .from(solicitacoesTable)
-      .where(sql`${solicitacoesTable.created_at} >= ${periodoAtual.toISOString()}`)
+      .where(noPeriodo)
       .groupBy(solicitacoesTable.tipo_solicitacao)
       .orderBy(desc(sql`count(*)`));
 
@@ -1222,25 +1228,19 @@ router.get("/admin/stats", requireAuth, async (req, res): Promise<void> => {
       count: sql<number>`count(*)`
     })
       .from(solicitacoesTable)
-      .where(sql`${solicitacoesTable.created_at} >= ${periodoAtual.toISOString()}`)
+      .where(noPeriodo)
       .groupBy(solicitacoesTable.status)
       .orderBy(desc(sql`count(*)`));
 
     const [avaliacoes] = await db.select({ count: sql<number>`count(*)` })
       .from(solicitacoesTable)
-      .where(and(
-        sql`${solicitacoesTable.created_at} >= ${periodoAtual.toISOString()}`,
-        sql`${solicitacoesTable.avaliacao} IS NOT NULL`
-      ));
+      .where(and(noPeriodo, sql`${solicitacoesTable.avaliacao} IS NOT NULL`));
 
     const [mediaNotas] = await db.select({
       media: sql<number>`avg((avaliacao->>'nota')::numeric)`
     })
       .from(solicitacoesTable)
-      .where(and(
-        sql`${solicitacoesTable.created_at} >= ${periodoAtual.toISOString()}`,
-        sql`${solicitacoesTable.avaliacao} IS NOT NULL`
-      ));
+      .where(and(noPeriodo, sql`${solicitacoesTable.avaliacao} IS NOT NULL`));
 
     const totalAtual = Number(atual.count);
     const totalAnterior = Number(anterior.count);

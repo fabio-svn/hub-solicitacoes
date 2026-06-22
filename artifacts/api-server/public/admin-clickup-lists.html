@@ -12,38 +12,38 @@
   <link rel="stylesheet" href="style.css?v=20260615c">
   <style>
 
-    .ccu-section-title { font-size: 0.72rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(34,27,25,0.5); margin: 28px 0 12px; }
+    .ccu-section-title { font-size: 0.72rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-50); margin: 28px 0 12px; }
     .ccu-card { padding: 18px; margin-bottom: 12px; border-radius: 14px; }
     .ccu-add-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
     .ccu-status { font-size: 0.78rem; margin-top: 8px; min-height: 1em; }
     .ccu-status.ok { color: #0A7040; }
     .ccu-status.err { color: var(--danger); }
-    .ccu-hint { font-size: 0.78rem; color: rgba(34,27,25,0.5); margin-top: 8px; line-height: 1.45; }
-    .ccu-hint code { background: rgba(34,27,25,0.06); padding: 1px 5px; border-radius: 4px; }
+    .ccu-hint { font-size: 0.78rem; color: var(--ink-50); margin-top: 8px; line-height: 1.45; }
+    .ccu-hint code { background: var(--ink-05); padding: 1px 5px; border-radius: 4px; }
     .ccu-add-inline { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; flex-wrap: wrap; }
-    .ccu-help-btn { width: 30px; height: 30px; border-radius: 50%; border: 1.5px solid #e8e2dc; background: #fff; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; color: rgba(34,27,25,0.5); flex-shrink: 0; transition: background 0.15s, border-color 0.15s, color 0.15s; }
+    .ccu-help-btn { width: 30px; height: 30px; border-radius: 50%; border: 1.5px solid #e8e2dc; background: #fff; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; color: var(--ink-50); flex-shrink: 0; transition: background 0.15s, border-color 0.15s, color 0.15s; }
     .ccu-help-btn:hover { border-color: var(--ruby-red); color: var(--ruby-red); }
     .ccu-list-head { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 12px; }
     .ccu-list-head-text { flex: 1; min-width: 0; }
     .ccu-list-name { font-size: 1.05rem; font-weight: 700; color: var(--carbon-black); line-height: 1.3; }
-    .ccu-list-id { font-size: 0.72rem; color: rgba(34,27,25,0.4); font-weight: 500; margin-top: 2px; }
+    .ccu-list-id { font-size: 0.72rem; color: var(--ink-40); font-weight: 500; margin-top: 2px; }
     .ccu-link-btn { background: none; border: none; padding: 0; font-size: inherit; color: inherit; cursor: pointer; font-family: inherit; text-decoration: underline; text-decoration-style: dotted; text-underline-offset: 2px; }
     .ccu-link-btn:hover { color: var(--ruby-red); }
-    .ccu-icon-btn { width: 32px; height: 32px; border-radius: 8px; border: 1px solid transparent; background: transparent; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; color: rgba(34,27,25,0.45); transition: background 0.15s, color 0.15s, border-color 0.15s; flex-shrink: 0; }
+    .ccu-icon-btn { width: 32px; height: 32px; border-radius: 8px; border: 1px solid transparent; background: transparent; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; color: var(--ink-40); transition: background 0.15s, color 0.15s, border-color 0.15s; flex-shrink: 0; }
     .ccu-icon-btn:hover { background: #fef2f2; color: var(--danger); border-color: #fecaca; }
-    .ccu-forms-label { font-size: 0.74rem; font-weight: 700; color: rgba(34,27,25,0.55); margin-bottom: 8px; }
+    .ccu-forms-label { font-size: 0.74rem; font-weight: 700; color: var(--ink-50); margin-bottom: 8px; }
     .ccu-forms-grid { display: block; }
     .ccu-category { margin-bottom: 16px; }
     .ccu-category:last-child { margin-bottom: 0; }
-    .ccu-category-title { font-size: 0.7rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em; color: rgba(34,27,25,0.55); margin-bottom: 8px; padding-bottom: 6px; border-bottom: 1px solid rgba(34,27,25,0.08); }
+    .ccu-category-title { font-size: 0.7rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink-50); margin-bottom: 8px; padding-bottom: 6px; border-bottom: 1px solid var(--ink-08); }
     .ccu-checkbox-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 4px 16px; }
-    .ccu-checkbox { display: flex; align-items: center; gap: 8px; padding: 6px 0; cursor: pointer; user-select: none; font-size: 0.85rem; color: rgba(34,27,25,0.85); line-height: 1.3; }
+    .ccu-checkbox { display: flex; align-items: center; gap: 8px; padding: 6px 0; cursor: pointer; user-select: none; font-size: 0.85rem; color: var(--ink-80); line-height: 1.3; }
     .ccu-checkbox input { accent-color: var(--ruby-red); cursor: pointer; margin: 0; flex-shrink: 0; width: 16px; height: 16px; }
     .ccu-checkbox-label { flex: 1; }
     .ccu-checkbox.checked .ccu-checkbox-label { font-weight: 600; color: var(--carbon-black); }
     .ccu-checkbox.locked { cursor: not-allowed; }
-    .ccu-checkbox.locked .ccu-checkbox-label { color: rgba(34,27,25,0.35); text-decoration: line-through; text-decoration-thickness: 1px; }
-    .ccu-checkbox .ccu-lockinfo { font-size: 0.7rem; color: rgba(34,27,25,0.4); font-style: italic; }
+    .ccu-checkbox.locked .ccu-checkbox-label { color: var(--ink-30); text-decoration: line-through; text-decoration-thickness: 1px; }
+    .ccu-checkbox .ccu-lockinfo { font-size: 0.7rem; color: var(--ink-40); font-style: italic; }
     .ccu-row-actions { display: flex; gap: 8px; margin-top: 14px; align-items: center; }
     .ccu-loading, .ccu-error { text-align: center; padding: 32px 20px; font-size: 0.88rem; }
     .ccu-loading { opacity: 0.5; }
@@ -67,7 +67,7 @@
       font-weight: 600;
       padding: 3px 9px;
       border-radius: 999px;
-      background: rgba(34, 27, 25, 0.07);
+      background: var(--ink-08);
       color: var(--carbon-black);
       cursor: pointer;
       border: 1px solid transparent;
@@ -76,11 +76,11 @@
       flex-shrink: 0;
       user-select: none;
     }
-    .ccu-tag:hover { border-color: rgba(34, 27, 25, 0.18); }
+    .ccu-tag:hover { border-color: var(--ink-20); }
     .ccu-tag.empty {
       background: transparent;
-      color: rgba(34, 27, 25, 0.35);
-      border: 1px dashed rgba(34, 27, 25, 0.2);
+      color: var(--ink-30);
+      border: 1px dashed var(--ink-20);
     }
     .ccu-tag.empty:hover {
       border-color: var(--ruby-red);
@@ -103,7 +103,7 @@
     /* === Resumo (estado colapsado) === */
     .ccu-summary {
       font-size: 0.86rem;
-      color: rgba(34, 27, 25, 0.65);
+      color: var(--ink-70);
       margin: 14px 0 16px;
       line-height: 1.55;
     }
@@ -113,11 +113,11 @@
     }
     .ccu-summary-more {
       font-weight: 600;
-      color: rgba(34, 27, 25, 0.4);
+      color: var(--ink-40);
     }
     .ccu-summary-empty {
       font-style: italic;
-      color: rgba(34, 27, 25, 0.4);
+      color: var(--ink-40);
     }
 
     /* === Botão expandir === */
@@ -130,7 +130,7 @@
       font-weight: 600;
       cursor: pointer;
       font-family: 'Nunito Sans', sans-serif;
-      color: rgba(34, 27, 25, 0.75);
+      color: var(--ink-80);
       display: inline-flex;
       align-items: center;
       gap: 6px;
@@ -138,7 +138,7 @@
     }
     .ccu-expand-btn:hover {
       background: #f5f3f0;
-      border-color: rgba(34, 27, 25, 0.2);
+      border-color: var(--ink-20);
     }
     .ccu-chevron { transition: transform 0.2s; flex-shrink: 0; }
 
@@ -146,8 +146,18 @@
     .ccu-save-row {
       margin-top: 14px;
       padding-top: 14px;
-      border-top: 1px solid rgba(34, 27, 25, 0.06);
+      border-top: 1px solid var(--ink-05);
     }
+
+    .ccu-status.ok, .ccu-status.err { display: inline-flex; align-items: center; gap: 6px; }
+    .ccu-status.ok::before, .ccu-status.err::before {
+      content: ""; flex: 0 0 auto; width: 14px; height: 14px; background-color: currentColor;
+      -webkit-mask: var(--ccu-icon) center / contain no-repeat;
+              mask: var(--ccu-icon) center / contain no-repeat;
+    }
+    .ccu-status.ok  { --ccu-icon: url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2024%2024%27%20fill%3D%27none%27%20stroke%3D%27black%27%20stroke-width%3D%272.2%27%20stroke-linecap%3D%27round%27%20stroke-linejoin%3D%27round%27%3E%3Cpolyline%20points%3D%2720%206%209%2017%204%2012%27%2F%3E%3C%2Fsvg%3E"); }
+    .ccu-status.err { --ccu-icon: url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2024%2024%27%20fill%3D%27none%27%20stroke%3D%27black%27%20stroke-width%3D%272.2%27%20stroke-linecap%3D%27round%27%20stroke-linejoin%3D%27round%27%3E%3Cpath%20d%3D%27M10.29%203.86%201.82%2018a2%202%200%200%200%201.71%203h16.94a2%202%200%200%200%201.71-3L13.71%203.86a2%202%200%200%200-3.42%200Z%27%2F%3E%3Cpath%20d%3D%27M12%209v4%27%2F%3E%3Cpath%20d%3D%27M12%2017h.01%27%2F%3E%3C%2Fsvg%3E"); }
+    
   </style>
 </head>
 <body class="page-light">
@@ -162,7 +172,7 @@
 
       <div class="ccu-add-inline">
         <input class="input" id="addInput" type="text" inputmode="numeric" placeholder="ID da lista do ClickUp" oninput="onAddInputChange()" style="flex:1;min-width:240px">
-        <button class="btn btn--primary" id="addBtn" onclick="adicionarLista()" disabled>+ Adicionar</button>
+        <button class="btn btn--solid" id="addBtn" onclick="adicionarLista()" disabled>+ Adicionar</button>
         <button class="ccu-help-btn" type="button" onclick="toggleAddHint()" title="Como encontrar o ID" aria-label="Ajuda">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
         </button>
@@ -313,9 +323,9 @@
           '</div>' +
           '<div class="ccu-forms-area">' +
             '<div class="ccu-forms-label">Formulários que usam esta lista</div>' +
-            '<div class="ccu-forms-grid">' + (chips || '<span style="color:rgba(34,27,25,0.45);font-size:0.82rem">Nenhum formulário disponível.</span>') + '</div>' +
+            '<div class="ccu-forms-grid">' + (chips || '<span style="color:var(--ink-40);font-size:0.82rem">Nenhum formulário disponível.</span>') + '</div>' +
             '<div class="ccu-row-actions ccu-save-row">' +
-              '<button class="btn btn--primary" onclick="salvarForms(' + list.id + ')">Salvar formulários</button>' +
+              '<button class="btn btn--solid" onclick="salvarForms(' + list.id + ')">Salvar formulários</button>' +
               '<span class="ccu-status" id="status-' + list.id + '"></span>' +
             '</div>' +
           '</div>' +
@@ -426,11 +436,11 @@
           });
           const d = await res.json();
           if (d.ok) {
-            setStatus(status, '✓ ' + esc(d.name || 'Lista encontrada'), 'ok');
+            setStatus(status, '' + esc(d.name || 'Lista encontrada'), 'ok');
             _validatedListId = listId;
             btn.disabled = false;
           } else {
-            setStatus(status, '⚠ ' + esc(d.error || 'Lista inválida'), 'err');
+            setStatus(status, '' + esc(d.error || 'Lista inválida'), 'err');
           }
         } catch (err) { console.error('[clickup-lists/validate]', err); setStatus(status, 'Erro de rede ao validar.', 'err'); }
       }, 500);
@@ -452,8 +462,8 @@
           body: JSON.stringify({ list_id: listId }),
         });
         const d = await res.json().catch(function () { return {}; });
-        if (!res.ok || !d.ok) { setStatus(status, '⚠ ' + esc(d.error || ('Erro ' + res.status)), 'err'); return; }
-        setStatus(status, '✓ Lista adicionada' + (d.list && d.list.list_name ? ' — ' + esc(d.list.list_name) : ''), 'ok');
+        if (!res.ok || !d.ok) { setStatus(status, '' + esc(d.error || ('Erro ' + res.status)), 'err'); return; }
+        setStatus(status, 'Lista adicionada' + (d.list && d.list.list_name ? ' — ' + esc(d.list.list_name) : ''), 'ok');
         input.value = '';
         loadConfig();
       } catch (err) { console.error('[clickup-lists/save]', err); setStatus(status, 'Erro de rede ao salvar.', 'err'); }
@@ -471,8 +481,8 @@
           body: JSON.stringify({ tipos: tipos }),
         });
         const d = await res.json().catch(function () { return {}; });
-        if (!res.ok || !d.ok) { setStatus(status, '⚠ ' + esc(d.error || ('Erro ' + res.status)), 'err'); return; }
-        setStatus(status, '✓ Salvo', 'ok');
+        if (!res.ok || !d.ok) { setStatus(status, '' + esc(d.error || ('Erro ' + res.status)), 'err'); return; }
+        setStatus(status, 'Salvo', 'ok');
         loadConfig();
       } catch (err) { console.error('[clickup-lists/save]', err); setStatus(status, 'Erro de rede ao salvar.', 'err'); }
     }

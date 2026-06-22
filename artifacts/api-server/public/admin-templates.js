@@ -117,7 +117,7 @@
   }
   function renderColorPickerWithSwatches(id, currentValue, onChangeStr) {
     const swatches = SVN_BRAND_SWATCHES.map(s =>
-      `<button type="button" class="brand-swatch" title="${s.label}" onclick="applySwatch('${id}','${s.color}')" style="width:18px;height:18px;border-radius:50%;border:1px solid rgba(34,27,25,0.15);background:${s.color};cursor:pointer;padding:0;flex-shrink:0"></button>`
+      `<button type="button" class="brand-swatch" title="${s.label}" onclick="applySwatch('${id}','${s.color}')" style="width:18px;height:18px;border-radius:50%;border:1px solid var(--ink-12);background:${s.color};cursor:pointer;padding:0;flex-shrink:0"></button>`
     ).join('');
     return `<div style="display:flex;flex-direction:column;gap:4px"><input class="props-input" type="color" id="${id}" value="${currentValue||'#ffffff'}" onchange="${onChangeStr}"><div style="display:flex;gap:4px;flex-wrap:wrap">${swatches}</div></div>`;
   }
@@ -1834,7 +1834,7 @@
     isDirty = false;
     updateSaveButton();
     document.getElementById('unsavedBadge').classList.remove('visible');
-    showToast('✓ Template salvo', 'success');
+    showToast('Template salvo', 'success');
     const fb = document.getElementById('savedFeedback');
     if (fb) {
       fb.style.opacity = '1';
@@ -1932,7 +1932,7 @@
       const r = await fetch('/api/admin/assets/upload', { method: 'POST', body: fd });
       const d = await r.json();
       if (!r.ok) { status.textContent = d.error || 'Erro.'; return; }
-      status.textContent = '✓ Upload concluído';
+      status.textContent = 'Upload concluído';
       setTimeout(() => { status.textContent = ''; }, 3000);
       loadAssets();
     } catch(e) { status.textContent = 'Erro de rede.'; }
@@ -1948,7 +1948,7 @@
       const d = await r.json();
       if (!r.ok) { showToast(d.error || 'Erro no upload.', 'error'); return; }
       cb(d.url);
-      showToast('✓ Upload concluído', 'success');
+      showToast('Upload concluído', 'success');
     } catch (e) { console.error('[admin-templates/upload]', e); showToast('Erro de rede.', 'error'); }
     input.value = '';
   }

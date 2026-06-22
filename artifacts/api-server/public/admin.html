@@ -71,7 +71,7 @@
           <input type="date" id="adminAte" style="flex:1;padding:6px 10px;border:1px solid var(--border-light);border-radius:7px;font-size:0.82rem;font-family:'Nunito Sans',sans-serif" onchange="setAdminCustomPeriodo()">
         </div>
         <div style="display:flex;justify-content:flex-end;margin-top:10px">
-          <button onclick="closeCustomPeriodo()" style="font-size:0.78rem;color:rgba(34,27,25,0.55);background:none;border:none;cursor:pointer;font-weight:600;font-family:'Nunito Sans',sans-serif">Fechar</button>
+          <button onclick="closeCustomPeriodo()" style="font-size:0.78rem;color:var(--ink-50);background:none;border:none;cursor:pointer;font-weight:600;font-family:'Nunito Sans',sans-serif">Fechar</button>
         </div>
       </div>
     </div>
@@ -597,7 +597,7 @@
         const deltaEl = document.getElementById('adminDelta');
         if (data.delta !== undefined) {
           const sinal = data.deltaPositivo ? '+' : '';
-          const cor = data.delta === 0 ? 'rgba(34,27,25,0.4)' : data.deltaPositivo ? '#16a34a' : 'var(--danger)';
+          const cor = data.delta === 0 ? 'var(--ink-40)' : data.deltaPositivo ? '#16a34a' : 'var(--danger)';
           deltaEl.innerHTML = '<span style="color:' + cor + '">' + sinal + data.delta + '% vs período anterior</span>';
         }
 
@@ -799,7 +799,7 @@
             ctx.textBaseline = 'middle';
             ctx.fillText(total, cx, cy - 6);
             ctx.font = '11px "Nunito Sans", sans-serif';
-            ctx.fillStyle = 'rgba(34,27,25,0.4)';
+            ctx.fillStyle = 'var(--ink-40)';
             ctx.fillText('total', cx, cy + 14);
             ctx.globalAlpha = 1;
           }
