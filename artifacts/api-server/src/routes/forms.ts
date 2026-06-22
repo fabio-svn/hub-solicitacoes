@@ -20,6 +20,14 @@ import { eventosSolicitacaoTable } from "@workspace/db";
 
 const router = Router();
 
+/** Formata string de telefone para (XX) XXXXX-XXXX ou (XX) XXXX-XXXX. */
+function formatarTelefone(raw: string): string {
+  const d = raw.replace(/\D/g, "").slice(0, 11);
+  if (d.length === 11) return `(${d.slice(0,2)}) ${d.slice(2,7)}-${d.slice(7)}`;
+  if (d.length === 10) return `(${d.slice(0,2)}) ${d.slice(2,6)}-${d.slice(6)}`;
+  return raw; // devolve sem alterar se não tiver dígitos suficientes
+}
+
 // Config de prazos (tabela + faixas + feriados) — fonte única para o front exibir o mesmo que o back calcula.
 router.get("/prazo/config", requireAuth, (_req, res): void => {
   res.json({
@@ -1559,7 +1567,8 @@ router.post("/cartao-aprovacoes/:solicitacaoId/gerar-pdf", requireAuth, async (r
 
     const b = req.body || {};
     const nome = String(b.nome ?? "").trim();
-    const telefone = String(b.whatsapp ?? b.telefone ?? "").trim();
+    const telefoneRaw = String(b.whatsapp ?? b.telefone ?? "").trim();
+    const telefone = formatarTelefone(telefoneRaw);
     const email = String(b.email ?? "").trim();
     if (!nome || !email) { res.status(400).json({ error: "Nome e e-mail são obrigatórios para gerar o cartão" }); return; }
 

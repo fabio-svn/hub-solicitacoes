@@ -256,7 +256,13 @@
     let colWidths = {};
     let colResizing = false;
 
-      function optionsHtml(opts, sel) { return opts.map(function (o) { return '<option value="' + esc(o.v) + '"' + (o.v === sel ? ' selected' : '') + '>' + esc(o.label) + '</option>'; }).join(''); }
+      function fmtTelefone(raw) {
+      var d = String(raw || '').replace(/\D/g, '').slice(0, 11);
+      if (d.length === 11) return '(' + d.slice(0,2) + ') ' + d.slice(2,7) + '-' + d.slice(7);
+      if (d.length === 10) return '(' + d.slice(0,2) + ') ' + d.slice(2,6) + '-' + d.slice(6);
+      return raw || '';
+    }
+    function optionsHtml(opts, sel) { return opts.map(function (o) { return '<option value="' + esc(o.v) + '"' + (o.v === sel ? ' selected' : '') + '>' + esc(o.label) + '</option>'; }).join(''); }
     function colorSelect(el, map) { const c = map && map[el.value]; if (c) { el.style.background = c.bg; el.style.color = c.text; } else { el.style.background = 'transparent'; el.style.color = '#221b19'; } }
 
     function toggleFilterPanel() {
@@ -446,7 +452,8 @@
             return '<td' + w + '><div class="vc-namecell">' + firstBadge(l._seq)
               + '<input data-f="nome" value="' + esc(val) + '" title="' + esc(val) + '"></div></td>';
           }
-          return '<td' + w + '><input data-f="' + c.f + '" value="' + esc(val) + '" title="' + esc(val) + '"' + (c.f === 'envio_para' ? ' placeholder="—"' : '') + '></td>';
+          var displayVal = c.f === 'whatsapp' ? fmtTelefone(val) : val;
+          return '<td' + w + '><input data-f="' + c.f + '" value="' + esc(displayVal) + '" title="' + esc(displayVal) + '"' + (c.f === 'envio_para' ? ' placeholder="—"' : '') + '></td>';
         }).join('');
         return '<tr data-id="' + l.solicitacao_id + '"' + (l.status === 'envio-assessor' ? ' class="vc-final"' : '') + '>' + tds + '</tr>';
       }).join('');
