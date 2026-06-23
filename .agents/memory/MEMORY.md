@@ -1,0 +1,1 @@
+- [forms.ts markdown contamination](forms-ts-markdown-bug.md) — backtick fences at top of forms.ts cause runtime TypeError: "" is not a function.

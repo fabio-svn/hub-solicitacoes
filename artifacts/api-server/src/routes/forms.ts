@@ -1407,9 +1407,13 @@ router.get("/cartao-aprovacoes", requireAuth, async (req, res): Promise<void> =>
         solicitacao_id: s.id,
         created_at: s.created_at,
         data_pedido: a?.data_pedido ?? new Date(s.created_at).toLocaleDateString("pt-BR"),
-        nome: a?.nome ?? (dados.nomeCartao || ""),
-        whatsapp: a?.whatsapp ?? (dados.whatsapp || ""),
-        email: a?.email ?? (dados.emailCorporativo || ""),
+        // Lê nome/e-mail tolerando as 3 convenções de chave que coexistem no jsonb:
+        // canônica (nome_cartao / email_corporativo), camel legada (nomeCartao / emailCorporativo)
+        // e a chave simples usada na importação da planilha (nome / email).
+        // Usa || (não ??) de propósito: assim uma aprovação com string vazia também recorre ao jsonb.
+        nome: a?.nome || dados.nome_cartao || dados.nomeCartao || dados.nome || "",
+        whatsapp: a?.whatsapp || dados.whatsapp || "",
+        email: a?.email || dados.email_corporativo || dados.emailCorporativo || dados.email || "",
         unidade: a?.unidade ?? (dados.unidade || ""),
         contrato_social: a?.contrato_social ?? (dados.contrato_social || ""),
         envio_para: a?.envio_para ?? "",
@@ -1418,7 +1422,6 @@ router.get("/cartao-aprovacoes", requireAuth, async (req, res): Promise<void> =>
         status_changed_at: a?.status_changed_at ?? null,
         observacao: a?.observacao ?? "",
         pdf_url: (Array.isArray(s.entrega_links) && (s.entrega_links as any)[0]?.url) ? (s.entrega_links as any)[0].url : "",
-        erro_geracao: (s as any).erro_geracao ?? null,
       };
     });
     res.json({ linhas });
@@ -1483,12 +1486,24 @@ router.put("/cartao-aprovacoes/:solicitacaoId", requireAuth, async (req, res): P
     // resposta e não reverte o status se falhar; o link é gravado em entrega_links e passa a
     // aparecer no pdf_url do próximo GET. Só roda na transição (não regenera se já era validado).
     if (statusAnterior !== valores.status && valores.status === "validado") {
-      const nomeGerar = String(valores.nome ?? "").trim();
-      const emailGerar = String(valores.email ?? "").trim();
+      // Resolve nome/e-mail/whatsapp com a MESMA prioridade do GET, incluindo o jsonb da
+      // solicitação: aprovação → forma canônica → camel legada → chave de importação.
+      // Sem isso, validar por um caminho que muda só o status (ex.: select no card mobile,
+      // "avançar etapa") não acharia os dados de cartões importados/ainda não editados,
+      // e o PDF sairia em branco ou não seria gerado.
+      const [solCartao] = await db.select().from(solicitacoesTable)
+        .where(eq(solicitacoesTable.id, solicitacaoId));
+      const d: any = solCartao?.dados || {};
+      const nomeGerar = String(valores.nome ?? "").trim()
+        || String(d.nome_cartao || d.nomeCartao || d.nome || "").trim();
+      const emailGerar = String(valores.email ?? "").trim()
+        || String(d.email_corporativo || d.emailCorporativo || d.email || "").trim();
+      const whatsGerar = String(valores.whatsapp ?? "").trim()
+        || String(d.whatsapp || "").trim();
       if (nomeGerar && emailGerar) {
         gerarCartaoFisicoPdf(solicitacaoId, {
           nome: nomeGerar,
-          telefone: formatarTelefone(String(valores.whatsapp ?? "").trim()),
+          telefone: formatarTelefone(whatsGerar),
           email: emailGerar,
         })
           .then(() => logger.info({ solicitacaoId }, "[cartao] PDF gerado automaticamente ao validar"))
@@ -1614,10 +1629,16 @@ router.post("/cartao-aprovacoes/:solicitacaoId/gerar-pdf", requireAuth, async (r
     if (!sol || sol.tipo_solicitacao !== "cartao-visita-fisico") { res.status(404).json({ error: "Cartão não encontrado" }); return; }
 
     const b = req.body || {};
-    const nome = String(b.nome ?? "").trim();
-    const telefoneRaw = String(b.whatsapp ?? b.telefone ?? "").trim();
+    const d: any = sol.dados || {};
+    // Prioriza o que a tela enviou; se vier vazio, recorre ao jsonb (canônica → camel → import),
+    // espelhando a leitura do GET e da geração automática.
+    const nome = String(b.nome ?? "").trim()
+      || String(d.nome_cartao || d.nomeCartao || d.nome || "").trim();
+    const telefoneRaw = String(b.whatsapp ?? b.telefone ?? "").trim()
+      || String(d.whatsapp || "").trim();
     const telefone = formatarTelefone(telefoneRaw);
-    const email = String(b.email ?? "").trim();
+    const email = String(b.email ?? "").trim()
+      || String(d.email_corporativo || d.emailCorporativo || d.email || "").trim();
     if (!nome || !email) { res.status(400).json({ error: "Nome e e-mail são obrigatórios para gerar o cartão" }); return; }
 
     const url = await gerarCartaoFisicoPdf(solicitacaoId, { nome, telefone, email });

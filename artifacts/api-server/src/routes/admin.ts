@@ -62,7 +62,7 @@ function parseTombamentoPlanilha(buf: Buffer): { rows: Array<Record<string, unkn
   return { rows };
 }
 
-router.post("/tombamentos/parse", requireRole("admin"), uploadPlanilha.single("planilha"), (req, res): void => {
+router.post("/tombamentos/parse", requireRole("admin", "capital_humano"), uploadPlanilha.single("planilha"), (req, res): void => {
   try {
     const file = (req as { file?: { buffer: Buffer } }).file;
     if (!file) { res.status(400).json({ error: "Envie a planilha no campo 'planilha'." }); return; }
@@ -73,7 +73,7 @@ router.post("/tombamentos/parse", requireRole("admin"), uploadPlanilha.single("p
   }
 });
 
-router.post("/tombamentos", requireRole("admin"), async (req, res): Promise<void> => {
+router.post("/tombamentos", requireRole("admin", "capital_humano"), async (req, res): Promise<void> => {
   try {
     const { nome, marca } = req.body as { nome?: string; marca?: string };
     if (!nome || !nome.trim()) { res.status(400).json({ error: "Informe o nome do tombamento." }); return; }
@@ -90,12 +90,12 @@ router.post("/tombamentos", requireRole("admin"), async (req, res): Promise<void
   }
 });
 
-router.get("/tombamentos", requireRole("admin"), async (_req, res): Promise<void> => {
+router.get("/tombamentos", requireRole("admin", "capital_humano"), async (_req, res): Promise<void> => {
   const rows = await db.select().from(tombamentosTable).orderBy(desc(tombamentosTable.created_at));
   res.json({ tombamentos: rows });
 });
 
-router.get("/tombamentos/:id", requireRole("admin"), async (req, res): Promise<void> => {
+router.get("/tombamentos/:id", requireRole("admin", "capital_humano"), async (req, res): Promise<void> => {
   const id = parseInt(String(req.params.id), 10);
   if (isNaN(id)) { res.status(400).json({ error: "ID inválido" }); return; }
   const [row] = await db.select().from(tombamentosTable).where(eq(tombamentosTable.id, id));
@@ -103,7 +103,7 @@ router.get("/tombamentos/:id", requireRole("admin"), async (req, res): Promise<v
   res.json(row);
 });
 
-router.patch("/tombamentos/:id", requireRole("admin"), async (req, res): Promise<void> => {
+router.patch("/tombamentos/:id", requireRole("admin", "capital_humano"), async (req, res): Promise<void> => {
   const id = parseInt(String(req.params.id), 10);
   if (isNaN(id)) { res.status(400).json({ error: "ID inválido" }); return; }
   const { linhas, nome } = req.body as { linhas?: unknown; nome?: string };
@@ -123,7 +123,7 @@ function tombNormCfp(v: unknown): string {
   return ["sim", "s", "yes", "y", "1", "true", "x"].includes(n) ? "sim" : "nao";
 }
 
-router.post("/tombamentos/:id/gerar-assinaturas", requireRole("admin"), async (req, res): Promise<void> => {
+router.post("/tombamentos/:id/gerar-assinaturas", requireRole("admin", "capital_humano"), async (req, res): Promise<void> => {
   try {
     const id = parseInt(String(req.params.id), 10);
     if (isNaN(id)) { res.status(400).json({ error: "ID inválido" }); return; }
@@ -265,7 +265,7 @@ function lerNomesFotos(fotosZip: JSZip): { nome: string; tokens: string[]; compa
 }
 
 // Etapa 1: sobe o .zip, casa as fotos por nome e devolve a tabela de revisão.
-router.post("/tombamentos/:id/match-fotos", requireRole("admin"), uploadFotos.single("fotos"), async (req, res): Promise<void> => {
+router.post("/tombamentos/:id/match-fotos", requireRole("admin", "capital_humano"), uploadFotos.single("fotos"), async (req, res): Promise<void> => {
   try {
     const id = parseInt(String(req.params.id), 10);
     if (isNaN(id)) { res.status(400).json({ error: "ID inválido" }); return; }
@@ -344,7 +344,7 @@ router.post("/tombamentos/:id/match-fotos", requireRole("admin"), uploadFotos.si
 });
 
 // Etapa 2: gera os cartões usando as atribuições confirmadas na revisão.
-router.post("/tombamentos/:id/gerar-cartoes", requireRole("admin"), uploadFotos.single("fotos"), async (req, res): Promise<void> => {
+router.post("/tombamentos/:id/gerar-cartoes", requireRole("admin", "capital_humano"), uploadFotos.single("fotos"), async (req, res): Promise<void> => {
   try {
     const id = parseInt(String(req.params.id), 10);
     if (isNaN(id)) { res.status(400).json({ error: "ID inválido" }); return; }
@@ -435,7 +435,7 @@ router.post("/tombamentos/:id/gerar-cartoes", requireRole("admin"), uploadFotos.
 });
 
 // Prévia de uma foto do .zip em cache (usada pelo ícone de olho na revisão).
-router.get("/tombamentos/:id/foto", requireRole("admin"), async (req, res): Promise<void> => {
+router.get("/tombamentos/:id/foto", requireRole("admin", "capital_humano"), async (req, res): Promise<void> => {
   try {
     const id = parseInt(String(req.params.id), 10);
     const nome = String(req.query.nome ?? "");
@@ -462,7 +462,7 @@ router.get("/tombamentos/:id/foto", requireRole("admin"), async (req, res): Prom
 });
 
 // Exclui um tombamento.
-router.delete("/tombamentos/:id", requireRole("admin"), async (req, res): Promise<void> => {
+router.delete("/tombamentos/:id", requireRole("admin", "capital_humano"), async (req, res): Promise<void> => {
   try {
     const id = parseInt(String(req.params.id), 10);
     if (isNaN(id)) { res.status(400).json({ error: "ID inválido" }); return; }
