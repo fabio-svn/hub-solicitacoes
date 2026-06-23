@@ -1477,3 +1477,73 @@ export async function getClickUpTaskSnapshot(taskId: string): Promise<ClickUpSna
     return null;
   }
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Notificação no ClickUp Chat (API v3) quando um cartão é validado.
+//
+// Posta uma mensagem num canal de Chat para avisar o time (ex.: gráfica/entrega).
+// Configuração por env (sem elas, é um no-op silencioso — nada quebra):
+//   CLICKUP_CHAT_WORKSPACE_ID   → ID do workspace (team). Aparece na URL do ClickUp:
+//                                 app.clickup.com/<ESTE_NUMERO>/...  (ou GET /api/v2/team)
+//   CLICKUP_CHAT_CHANNEL_CARTOES→ ID do canal onde a mensagem é postada.
+//                                 Liste com GET /api/v3/workspaces/<wid>/chat/channels
+//   CLICKUP_CHAT_ASSIGNEE_CARTOES (opcional) → user_id a quem a mensagem é atribuída,
+//                                 para notificar uma pessoa específica (a API de Chat
+//                                 não permite @menção no texto; usa-se assignee).
+//
+// Observações importantes:
+//  • A identidade da mensagem é a conta dona do CLICKUP_API_TOKEN (não há "postar como bot").
+//    Se quiser que apareça como o ClickBot, use o token dessa conta.
+//  • A API de Chat é marcada como EXPERIMENTAL pela ClickUp e pode mudar.
+//  • Fire-and-forget: nunca lança — loga e retorna false em falha, sem travar a validação.
+const CLICKUP_CHAT_WORKSPACE_ID = process.env.CLICKUP_CHAT_WORKSPACE_ID || "";
+const CLICKUP_CHAT_CHANNEL_CARTOES = process.env.CLICKUP_CHAT_CHANNEL_CARTOES || "";
+const CLICKUP_CHAT_ASSIGNEE_CARTOES = process.env.CLICKUP_CHAT_ASSIGNEE_CARTOES || "";
+
+export async function notificarCartaoValidadoChat(params: {
+  nome: string;
+  email: string;
+  unidade?: string;
+  solicitante?: string;
+  pdfUrl?: string;
+}): Promise<boolean> {
+  // Sem token ou sem destino configurado, não faz nada (e não loga erro: é opcional).
+  if (!CLICKUP_API_TOKEN || !CLICKUP_CHAT_WORKSPACE_ID || !CLICKUP_CHAT_CHANNEL_CARTOES) return false;
+
+  const linhas = [
+    "✅ **Cartão de visita validado** — pronto para a gráfica",
+    `**Nome no cartão:** ${params.nome}`,
+    params.unidade ? `**Unidade:** ${params.unidade}` : "",
+    params.solicitante ? `**Solicitante:** ${params.solicitante}` : "",
+    params.pdfUrl ? `**Arquivo:** ${params.pdfUrl}` : "",
+  ].filter(Boolean);
+
+  const body: Record<string, unknown> = {
+    type: "message",
+    content_format: "text/md",
+    content: linhas.join("\n"),
+  };
+  // Atribui a mensagem a uma pessoa (notifica) quando o assignee estiver configurado.
+  if (CLICKUP_CHAT_ASSIGNEE_CARTOES) body.assignee = CLICKUP_CHAT_ASSIGNEE_CARTOES;
+
+  try {
+    const r = await fetchWithTimeout(
+      `https://api.clickup.com/api/v3/workspaces/${CLICKUP_CHAT_WORKSPACE_ID}/chat/channels/${CLICKUP_CHAT_CHANNEL_CARTOES}/messages`,
+      {
+        method: "POST",
+        headers: { "Authorization": CLICKUP_API_TOKEN, "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      },
+    );
+    if (!r.ok) {
+      const errBody = await r.text().catch(() => "");
+      logger.error({ httpStatus: r.status, body: errBody }, "ClickUp Chat: erro ao notificar cartão validado");
+      return false;
+    }
+    logger.info({ nome: params.nome }, "ClickUp Chat: cartão validado notificado");
+    return true;
+  } catch (err) {
+    logger.error({ err }, "ClickUp Chat: falha ao notificar cartão validado");
+    return false;
+  }
+}

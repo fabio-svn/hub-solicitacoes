@@ -7,7 +7,7 @@ import { db } from "@workspace/db";
 import { solicitacoesTable, arquivosTable, cartaoAprovacoesTable, usersTable, activityLogTable } from "@workspace/db";
 import { eq, desc, and, ne, sql, inArray } from "drizzle-orm";
 import { requireAuth, requireRole } from "../middleware/auth.middleware";
-import { createClickUpTask, getClickUpTaskStatus, getClickUpTaskSnapshot, setClickUpTaskStatus, calcularPrazo, getPrazoDiasUteis, PRAZO_DIAS_UTEIS, APRESENTACAO_TIERS, CLICKUP_STATUS_EM_REVISAO, CLICKUP_STATUS_CONCLUIDO, type ArquivosMap } from "./clickup";
+import { createClickUpTask, getClickUpTaskStatus, getClickUpTaskSnapshot, setClickUpTaskStatus, calcularPrazo, getPrazoDiasUteis, PRAZO_DIAS_UTEIS, APRESENTACAO_TIERS, CLICKUP_STATUS_EM_REVISAO, CLICKUP_STATUS_CONCLUIDO, notificarCartaoValidadoChat, type ArquivosMap } from "./clickup";
 import { holidaysList } from "../lib/holidays";
 import { FORM_SCHEMAS } from "../config/form-schemas";
 import { uploadToR2, deleteFromR2 } from "./r2";
@@ -1501,12 +1501,25 @@ router.put("/cartao-aprovacoes/:solicitacaoId", requireAuth, async (req, res): P
       const whatsGerar = String(valores.whatsapp ?? "").trim()
         || String(d.whatsapp || "").trim();
       if (nomeGerar && emailGerar) {
+        const unidadeGerar = String(valores.unidade ?? "").trim() || String(d.unidade || "").trim();
+        const solicitanteEmail = solCartao?.user_email ?? "";
         gerarCartaoFisicoPdf(solicitacaoId, {
           nome: nomeGerar,
           telefone: formatarTelefone(whatsGerar),
           email: emailGerar,
         })
-          .then(() => logger.info({ solicitacaoId }, "[cartao] PDF gerado automaticamente ao validar"))
+          .then((url) => {
+            logger.info({ solicitacaoId }, "[cartao] PDF gerado automaticamente ao validar");
+            // Avisa o time no ClickUp Chat que o cartão foi validado e já saiu o arquivo.
+            // No-op silencioso se as envs de chat não estiverem configuradas; nunca trava a validação.
+            notificarCartaoValidadoChat({
+              nome: nomeGerar,
+              email: emailGerar,
+              unidade: unidadeGerar || undefined,
+              solicitante: solicitanteEmail || undefined,
+              pdfUrl: typeof url === "string" ? url : undefined,
+            }).catch(() => {});
+          })
           .catch((genErr) =>
             logger.error({ genErr, solicitacaoId }, "[cartao] Falha ao gerar PDF automático ao validar (status mantido)"),
           );
