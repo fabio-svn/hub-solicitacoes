@@ -1418,6 +1418,7 @@ router.get("/cartao-aprovacoes", requireAuth, async (req, res): Promise<void> =>
         status_changed_at: a?.status_changed_at ?? null,
         observacao: a?.observacao ?? "",
         pdf_url: (Array.isArray(s.entrega_links) && (s.entrega_links as any)[0]?.url) ? (s.entrega_links as any)[0].url : "",
+        erro_geracao: (s as any).erro_geracao ?? null,
       };
     });
     res.json({ linhas });
@@ -1476,6 +1477,29 @@ router.put("/cartao-aprovacoes/:solicitacaoId", requireAuth, async (req, res): P
     await db.insert(cartaoAprovacoesTable)
       .values({ solicitacao_id: solicitacaoId, ...valores })
       .onConflictDoUpdate({ target: cartaoAprovacoesTable.solicitacao_id, set: valores });
+
+    // Geração automática do arquivo do cartão ao validar — dispara por qualquer caminho que
+    // mude o status (edição na linha, "avançar etapa" ou lote). Fire-and-forget: não trava a
+    // resposta e não reverte o status se falhar; o link é gravado em entrega_links e passa a
+    // aparecer no pdf_url do próximo GET. Só roda na transição (não regenera se já era validado).
+    if (statusAnterior !== valores.status && valores.status === "validado") {
+      const nomeGerar = String(valores.nome ?? "").trim();
+      const emailGerar = String(valores.email ?? "").trim();
+      if (nomeGerar && emailGerar) {
+        gerarCartaoFisicoPdf(solicitacaoId, {
+          nome: nomeGerar,
+          telefone: formatarTelefone(String(valores.whatsapp ?? "").trim()),
+          email: emailGerar,
+        })
+          .then(() => logger.info({ solicitacaoId }, "[cartao] PDF gerado automaticamente ao validar"))
+          .catch((genErr) =>
+            logger.error({ genErr, solicitacaoId }, "[cartao] Falha ao gerar PDF automático ao validar (status mantido)"),
+          );
+      } else {
+        logger.warn({ solicitacaoId }, "[cartao] Validado sem nome/e-mail — PDF automático não gerado");
+      }
+    }
+
     if (statusAnterior !== valores.status && valores.status === "envio-assessor") {
       notificarMarcoBg(solicitacaoId, "concluida");
     }

@@ -20,6 +20,7 @@
   <script src="shell.js?v=20260611f"></script>
   <script src="utils.js?v=20260615d"></script>
   <script src="toast.js?v=20260603"></script>
+  <script src="icons.js?v=20260623a"></script>
   <link rel="stylesheet" href="style.css?v=20260615c">
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -131,7 +132,7 @@
 
   window.handleAssetImgError = function(img) {
     const parent = img.parentElement;
-    if (parent) parent.innerHTML = '<div class="no-thumb">🖼</div>';
+    if (parent) parent.innerHTML = '<div class="no-thumb">' + icon('image', { size: 32 }) + '</div>';
   };
 
   async function init() {

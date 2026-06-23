@@ -6,7 +6,7 @@ const FileUpload = {
       : Math.round(file.size / 1024) + ' KB';
     nameEl.innerHTML =
       `<div class="upload-feedback upload-feedback--success">` +
-        `<svg class="upload-feedback__icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>` +
+        `<svg class="upload-feedback__icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="20 6 9 17 4 12"/></svg>` +
         `<span class="upload-feedback__name" title="${file.name}">${file.name}</span>` +
         `<span class="upload-feedback__meta">${size}</span>` +
       `</div>`;
@@ -16,7 +16,7 @@ const FileUpload = {
     if (!nameEl) return;
     nameEl.innerHTML =
       `<div class="upload-feedback upload-feedback--error">` +
-        `<svg class="upload-feedback__icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>` +
+        `<svg class="upload-feedback__icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>` +
         `<span>${message}</span>` +
       `</div>`;
   },

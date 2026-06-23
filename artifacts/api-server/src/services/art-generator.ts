@@ -88,37 +88,52 @@ export async function gerarCartaoFisicoPdf(
   solicitacaoId: number,
   campos: { nome: string; telefone: string; email: string },
 ): Promise<string> {
-  const pdfBuffer = await gerarCartaoPdf(campos);
-
-  const filename = `cartao-visita-fisico-${solicitacaoId}-${Date.now()}.pdf`;
-  const tmpPath = path.join(os.tmpdir(), filename);
-  await fs.promises.writeFile(tmpPath, pdfBuffer);
-
-  const nomeLabel = campos.nome?.trim() || String(solicitacaoId);
-  const downloadName = `Cartão de Visita - ${nomeLabel}.pdf`;
-
-  const url = await uploadToR2(
-    { path: tmpPath, originalname: "cartao-visita-fisico.pdf", mimetype: "application/pdf" },
-    solicitacaoId,
-    "cartao-visita-fisico",
-    downloadName,
-  );
-
   try {
+    const pdfBuffer = await gerarCartaoPdf(campos);
+
+    const filename = `cartao-visita-fisico-${solicitacaoId}-${Date.now()}.pdf`;
+    const tmpPath = path.join(os.tmpdir(), filename);
+    await fs.promises.writeFile(tmpPath, pdfBuffer);
+
+    const nomeLabel = campos.nome?.trim() || String(solicitacaoId);
+    const downloadName = `Cartão de Visita - ${nomeLabel}.pdf`;
+
+    const url = await uploadToR2(
+      { path: tmpPath, originalname: "cartao-visita-fisico.pdf", mimetype: "application/pdf" },
+      solicitacaoId,
+      "cartao-visita-fisico",
+      downloadName,
+    );
+
+    try {
+      await db.update(solicitacoesTable)
+        .set({
+          entrega_links: [{ label: TIPO_LABELS["cartao-visita-fisico"], url }],
+          erro_geracao: null,
+          updated_at: new Date(),
+        })
+        .where(eq(solicitacoesTable.id, solicitacaoId));
+    } catch (dbErr) {
+      logger.error({ dbErr, solicitacaoId, url }, "DB update falhou após upload R2 — deletando objeto órfão");
+      await deleteFromR2(url).catch(() => {});
+      throw dbErr;
+    }
+
+    logger.info({ solicitacaoId, url }, "[cartao] PDF gerado sob demanda");
+    return url;
+  } catch (genErr) {
+    // Persiste o motivo da falha para ficar visível na tela de validação (não fica só no log).
+    // Best-effort: se o próprio update falhar, não mascara o erro original.
     await db.update(solicitacoesTable)
       .set({
-        entrega_links: [{ label: TIPO_LABELS["cartao-visita-fisico"], url }],
+        erro_geracao: genErr instanceof Error ? genErr.message : String(genErr),
         updated_at: new Date(),
       })
-      .where(eq(solicitacoesTable.id, solicitacaoId));
-  } catch (dbErr) {
-    logger.error({ dbErr, solicitacaoId, url }, "DB update falhou após upload R2 — deletando objeto órfão");
-    await deleteFromR2(url).catch(() => {});
-    throw dbErr;
+      .where(eq(solicitacoesTable.id, solicitacaoId))
+      .catch(() => {});
+    logger.error({ genErr, solicitacaoId }, "[cartao] Falha ao gerar PDF físico");
+    throw genErr;
   }
-
-  logger.info({ solicitacaoId, url }, "[cartao] PDF gerado sob demanda");
-  return url;
 }
 
 /**

@@ -74,12 +74,10 @@ Lista completa de status com seus slugs internos:
 | `em-espera` | Em espera | Cinza escuro |
 | `gerando` | Gerando arte | Azul claro |
 | `erro` | Erro | Vermelho claro |
-| `aguardando-validacao` | Aguardando validação | Vermelho claro |
-| `aguardando-contrato` | Aguardando contrato | Cinza claro |
-| `validado` | Validado | Verde claro |
-| `liberado-design` | Em design | Roxo claro |
-| `arte-finalizada` | Arte finalizada | Amarelo claro |
-| `envio-grafica` | Envio gráfica | Azul claro |
+| `aguardando-validacao` | Aguardando validação | Cinza claro |
+| `aguardando-contrato` | Aguardando contrato | Âmbar claro |
+| `validado` | Validado | Azul claro |
+| `envio-grafica` | Envio gráfica | Índigo claro |
 | `envio-assessor` | Envio assessor | Verde claro |
 | `reprovado` | Reprovado | Vermelho claro |
 

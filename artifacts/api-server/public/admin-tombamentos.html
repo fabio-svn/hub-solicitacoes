@@ -106,7 +106,7 @@
 
         <div class="tomb-panel active" id="panelCriar">
           <button class="btn btn-primary" id="btnNovo" onclick="abrirNovoForm()" style="display:inline-flex;align-items:center;gap:6px">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
             Novo tombamento
           </button>
 
@@ -137,7 +137,7 @@
       <!-- Workspace de um tombamento aberto -->
       <div id="tombWorkspace" style="display:none">
         <button type="button" onclick="voltarLista()" class="btn-voltar" style="margin-bottom:14px">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="15 18 9 12 15 6"/></svg>
           Voltar
         </button>
         <div class="tomb-ws-header">
@@ -147,7 +147,7 @@
 
         <div class="tomb-drop" id="tombDrop">
           <label class="btn btn-primary" style="cursor:pointer;display:inline-flex;align-items:center;gap:6px">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
             Escolher planilha
             <input type="file" id="tombFile" accept=".xlsx,.xls,.csv" style="display:none" onchange="aoEscolherArquivo(this)">
           </label>
@@ -162,7 +162,7 @@
           </div>
           <div class="tomb-actions">
             <button class="btn btn-primary" id="btnGerarAssinaturas" onclick="gerarAssinaturas()" disabled>Gerar assinaturas (.zip)</button>
-            <button class="btn btn-dark" id="btnGerarCartoes" style="display:inline-flex;align-items:center;gap:7px" onclick="document.getElementById('fotosZipInput').click()" disabled><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>Upload de .zip com fotos para cartões</button>
+            <button class="btn btn-dark" id="btnGerarCartoes" style="display:inline-flex;align-items:center;gap:7px" onclick="document.getElementById('fotosZipInput').click()" disabled><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>Upload de .zip com fotos para cartões</button>
             <input type="file" id="fotosZipInput" accept=".zip,application/zip" style="display:none" onchange="cartoesStep1(this)">
           </div>
           <p class="tomb-note">Cartões digitais: suba um <strong>.zip com as fotos</strong> (máx. 100 MB) e o sistema casa cada pessoa pelo nome — você confere antes de gerar. A coluna <strong>arquivo_foto</strong> é opcional (se preenchida, tem prioridade). Disponível apenas para marcas com cartão digital (Investimentos, Capital, Connect).</p>
@@ -295,7 +295,7 @@
           return '<div class="tomb-item" onclick="abrirTombamento(' + t.id + ')">'
             + '<div><div class="tomb-item-nome">' + esc(t.nome) + '</div><div class="tomb-item-meta">' + dt + ' · ' + n + '</div></div>'
             + '<div class="tomb-item-actions"><span class="tomb-marca-pill">' + esc(marcaLabel(t.marca)) + '</span>'
-            + '<button type="button" class="tomb-del" title="Excluir tombamento" aria-label="Excluir tombamento" onclick="event.stopPropagation(); deletarTombamento(' + t.id + ')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-2 14a2 2 0 01-2 2H9a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg></button></div></div>';
+            + '<button type="button" class="tomb-del" title="Excluir tombamento" aria-label="Excluir tombamento" onclick="event.stopPropagation(); deletarTombamento(' + t.id + ')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-2 14a2 2 0 01-2 2H9a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg></button></div></div>';
         }).join('');
       } catch (err) { el.innerHTML = '<div class="tomb-empty">Erro ao carregar.</div>'; }
     }
@@ -458,7 +458,7 @@
           + '<td>' + cartEsc(p.nome) + '<div style="font-size:.75rem;color:var(--ink-50)">' + sub + '</div></td>'
           + '<td><span class="rev-badge rev-' + p.status + '">' + p.status.replace('_', ' ') + '</span></td>'
           + '<td><div class="rev-foto-cell"><select data-email="' + cartEsc(p.email) + '">' + opts + '</select>'
-          + '<button type="button" class="rev-eye" title="Ver foto" onclick="cartoesPreview(this)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button></div></td></tr>';
+          + '<button type="button" class="rev-eye" title="Ver foto" onclick="cartoesPreview(this)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button></div></td></tr>';
       }).join('');
       const selects = tbody.querySelectorAll('select[data-email]');
       pessoas.forEach(function (p, i) { if (selects[i]) selects[i].value = p.foto || ''; });

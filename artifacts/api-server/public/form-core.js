@@ -51,27 +51,75 @@ window.FormCore = (function () {
     Auth.aplicarPerfilNoCampo('email',      Auth.getUserEmail && Auth.getUserEmail());
     Auth.aplicarPerfilNoCampo('nome',       Auth.getUserName && Auth.getUserName());
   }
-  function _draftKey(tipo) { return 'form-' + tipo; }
+  // ---- Autosave de rascunho (localStorage) -------------------------------
+  // Persiste o que o usuário digitou para sobreviver a fechar a aba / queda de
+  // conexão / crash — não só a recarregar a página (era sessionStorage antes).
+  // Namespace por tipo + usuário (não vaza rascunho entre logins no mesmo PC).
+  // Cobre text/select/textarea e checkbox/radio. Arquivos não são salvos.
+  var DRAFT_TTL_MS = 7 * 24 * 60 * 60 * 1000;   // descarta rascunho com mais de 7 dias
+  var _activeDraftTipo = null;   // namespace do rascunho desta página (p/ o submit limpar a chave certa)
+  function _draftKey(tipo) {
+    var email = '';
+    try { email = (typeof Auth !== 'undefined' && Auth.getUserEmail && Auth.getUserEmail()) || ''; } catch (_) {}
+    return 'svn-draft:' + tipo + (email ? ':' + email : '');
+  }
   function _saveDraft(tipo) {
     try {
       const root = document.getElementById('pageContent') || document;
-      const blob = {};
+      const v = {};
       root.querySelectorAll('input[id], select[id], textarea[id]').forEach(function (el) {
-        if (el.type === 'file' || el.type === 'checkbox' || el.type === 'radio') return;
-        blob[el.id] = el.value;
+        if (el.type === 'file') return;
+        if (el.type === 'checkbox' || el.type === 'radio') v[el.id] = el.checked ? 1 : 0;
+        else v[el.id] = el.value;
       });
-      sessionStorage.setItem(_draftKey(tipo), JSON.stringify(blob));
+      localStorage.setItem(_draftKey(tipo), JSON.stringify({ v: v, t: Date.now() }));
     } catch (_) {}
   }
+  // Retorna true se havia rascunho válido e algum campo foi de fato preenchido.
   function _restoreDraft(tipo) {
     try {
-      const blob = JSON.parse(sessionStorage.getItem(_draftKey(tipo)) || 'null');
-      if (!blob) return;
-      Object.keys(blob).forEach(function (id) {
+      const raw = JSON.parse(localStorage.getItem(_draftKey(tipo)) || 'null');
+      if (!raw || !raw.v) return false;
+      if (raw.t && (Date.now() - raw.t) > DRAFT_TTL_MS) { _clearDraft(tipo); return false; }
+      let aplicou = false;
+      Object.keys(raw.v).forEach(function (id) {
         const el = document.getElementById(id);
-        if (el && blob[id] != null && blob[id] !== '') el.value = blob[id];
+        if (!el) return;
+        const val = raw.v[id];
+        if (el.type === 'checkbox' || el.type === 'radio') {
+          const novo = !!val;
+          if (el.checked !== novo) { el.checked = novo; aplicou = true; el.dispatchEvent(new Event('change', { bubbles: true })); }
+        } else if (val != null && val !== '' && el.value !== val) {
+          el.value = val; aplicou = true;
+          // só select dispara change (reidrata blocos condicionais); texto fica quieto.
+          if (el.tagName === 'SELECT') el.dispatchEvent(new Event('change', { bubbles: true }));
+        }
       });
-    } catch (_) {}
+      return aplicou;
+    } catch (_) { return false; }
+  }
+  function _clearDraft(tipo) {
+    try { localStorage.removeItem(_draftKey(tipo)); } catch (_) {}
+    try { sessionStorage.removeItem('form-' + tipo); } catch (_) {}   // limpa o formato antigo, se houver
+  }
+  var _draftTimer = null;
+  function _scheduleSave(tipo) {
+    clearTimeout(_draftTimer);
+    _draftTimer = setTimeout(function () { _saveDraft(tipo); }, 400);   // debounce
+  }
+  // Faixa discreta avisando que um rascunho foi recuperado, com opção de descartar.
+  function _showDraftBanner(tipo) {
+    if (document.getElementById('svnDraftBanner')) return;
+    const host = document.getElementById('pageContent') || document.body;
+    const bar = document.createElement('div');
+    bar.id = 'svnDraftBanner';
+    bar.setAttribute('role', 'status');
+    bar.style.cssText = 'display:flex;align-items:center;gap:10px;justify-content:space-between;flex-wrap:wrap;margin:0 0 16px;padding:10px 14px;border:1px solid var(--ink-15,#e5e0d8);background:var(--ink-05,#faf7f2);border-radius:10px;font-size:0.86rem;color:var(--ink-70,#4a463f)';
+    bar.innerHTML = '<span>Recuperamos um rascunho que você não chegou a enviar.</span>'
+      + '<button type="button" id="svnDraftDiscard" style="padding:5px 12px;border-radius:7px;border:1px solid var(--ink-20,#d6d3cd);background:#fff;color:var(--ink-70,#4a463f);font-weight:600;font-size:0.82rem;cursor:pointer;white-space:nowrap">Descartar e começar do zero</button>';
+    host.insertBefore(bar, host.firstChild);
+    const btn = document.getElementById('svnDraftDiscard');
+    if (btn) btn.addEventListener('click', function () { _clearDraft(tipo); location.reload(); });
   }
 
   async function initForm(opts) {
@@ -91,10 +139,12 @@ window.FormCore = (function () {
     _aplicarPerfil();
     if (typeof opts.onReady === 'function') { try { await opts.onReady(); } catch (e) { console.error(e); } }
     syncRequiredMarks();   // garante que todo [required] mostre o asterisco
-    if (opts.draft && opts.tipo) {
-      _restoreDraft(opts.tipo);
+    // Autosave automático: liga sempre que houver `tipo`, salvo opt-out (draft:false).
+    if (opts.tipo && opts.draft !== false) {
+      _activeDraftTipo = opts.tipo;
+      if (_restoreDraft(opts.tipo)) _showDraftBanner(opts.tipo);
       ['input', 'change'].forEach(function (evt) {
-        document.addEventListener(evt, function () { _saveDraft(opts.tipo); });
+        document.addEventListener(evt, function () { _scheduleSave(opts.tipo); });
       });
     }
     if (opts.stepper && opts.stepper.el) {
@@ -209,7 +259,7 @@ window.FormCore = (function () {
     } catch (_) {}
 
     if (res.ok) {
-      try { sessionStorage.removeItem('form-' + (opts.draftTipo || tipo)); } catch (_) {}
+      _clearDraft(opts.draftTipo || _activeDraftTipo || tipo);
       try {
         const baseResumo = {
           tipo_id: tipo,

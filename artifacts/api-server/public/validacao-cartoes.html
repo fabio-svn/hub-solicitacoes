@@ -39,7 +39,7 @@
     /* Botões: classe .btn do design system. Estados específicos desta tela: */
     .btn.active { background: var(--carbon-black); color: var(--paper-white); border-color: var(--carbon-black); }
     .btn.has-filters { border-color: var(--ruby-red); color: var(--ruby-red); }
-    .vc-toolbar .btn > svg, .vc-bulk .btn > svg { width: 15px; height: 15px; flex-shrink: 0; }
+    .vc-toolbar .btn svg, .vc-bulk .btn svg { width: 15px; height: 15px; flex-shrink: 0; }
 
     /* ===== Linha de meta (legenda · salvo · contagem) ===== */
     .vc-meta { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin: 2px 0 14px; }
@@ -154,13 +154,13 @@
       <!-- Toolbar -->
       <div class="vc-toolbar">
         <div class="search-bar">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="color:var(--ink-40,#9c978e);flex-shrink:0" aria-hidden="true"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <span data-icon="search" data-icon-size="16" data-icon-style="color:var(--ink-40,#9c978e);flex-shrink:0"></span>
           <input type="search" id="vcSearch" placeholder="Buscar por nome, e-mail, WhatsApp ou unidade…">
         </div>
         <div class="vc-tools">
           <div style="position:relative">
             <button class="btn" id="vcFilterToggle" onclick="toggleFilterPanel()">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+              <span data-icon="filter" style="display:inline-flex"></span>
               Filtros <span class="filter-count-badge" id="vcFilterBadge" style="display:none">1</span>
             </button>
             <div class="filter-panel" id="vcFilterPanel">
@@ -185,11 +185,11 @@
             </div>
           </div>
           <button class="btn" id="vcColsBtn" type="button" onclick="toggleColunas()" title="Mostra/esconde WhatsApp, e-mail, contrato e custo">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="18" rx="1"/><rect x="14" y="3" width="7" height="18" rx="1"/></svg>
+            <span data-icon="columns" style="display:inline-flex"></span>
             Compactar
           </button>
           <button class="btn" type="button" onclick="exportarCSV()">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            <span data-icon="download" style="display:inline-flex"></span>
             Exportar
           </button>
         </div>
@@ -207,7 +207,7 @@
       <!-- Barra de seleção em lote -->
       <div id="vcBulkBar" class="vc-bulk">
         <strong id="vcBulkCount">0 selecionados</strong>
-        <button type="button" class="btn" onclick="avancarLote()">→ Avançar etapa</button>
+        <button type="button" class="btn" onclick="avancarLote()"><span data-icon="arrow-right" style="display:inline-flex"></span> Avançar etapa</button>
         <select onchange="mudarStatusLote(this.value); this.value=''">
           <option value="">Mudar status para…</option>
           <option value="aguardando-validacao">Aguardando validação</option>
@@ -229,7 +229,7 @@
       <!-- Menu de linha (excluir) -->
       <div id="vcRowMenu" style="display:none;position:fixed;z-index:1000;background:var(--card-white,#fff);border:1px solid var(--border-light);border-radius:8px;box-shadow:0 4px 16px rgba(34,27,25,.12);padding:4px;min-width:150px">
         <button type="button" onclick="excluirDoMenu(this)" style="display:flex;align-items:center;gap:8px;width:100%;padding:8px 10px;border:none;background:transparent;color:var(--danger);cursor:pointer;border-radius:6px;font:inherit;text-align:left;font-size:0.8rem">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+          <span data-icon="trash" data-icon-size="14" style="display:inline-flex"></span>
           Excluir cartão
         </button>
       </div>
@@ -242,6 +242,7 @@
   <script src="shell.js?v=20260611f"></script>
   <script src="utils.js?v=20260615d"></script>
   <script src="toast.js?v=20260603"></script>
+  <script src="icons.js?v=20260623a"></script>
   <script>
     const CONTRATO_OPTS = [
       { v: '', label: 'Selecione…' },
@@ -376,6 +377,41 @@
       }
     }
 
+    // Após validar, o backend gera o PDF em background (~1-2s). Re-busca leve, atualiza só os
+    // pdf_url no RAW e re-renderiza uma vez (preservando o scroll) p/ o botão "Baixar PDF" surgir
+    // sozinho. Com 1 retry caso a geração demore um pouco mais.
+    let _refreshPdfTimer = null;
+    function agendarRefreshValidado() {
+      clearTimeout(_refreshPdfTimer);
+      _refreshPdfTimer = setTimeout(function () { recarregarPdfUrls(2); }, 2500);
+    }
+    async function recarregarPdfUrls(tentativas) {
+      try {
+        const res = await fetch('/api/cartao-aprovacoes');
+        if (!res.ok) return;
+        const d = await res.json().catch(function () { return {}; });
+        const byId = {};
+        ((d && d.linhas) || []).forEach(function (l) { byId[l.solicitacao_id] = l; });
+        let mudou = false;
+        RAW.forEach(function (r) {
+          const fr = byId[r.solicitacao_id];
+          if (fr) {
+            if ((fr.pdf_url || '') !== (r.pdf_url || '')) { r.pdf_url = fr.pdf_url; mudou = true; }
+            if ((fr.erro_geracao || '') !== (r.erro_geracao || '')) { r.erro_geracao = fr.erro_geracao; mudou = true; }
+          }
+        });
+        if (mudou) {
+          const sc = document.querySelector('.vc-scroll');
+          const top = sc ? sc.scrollTop : 0;
+          render();
+          const sc2 = document.querySelector('.vc-scroll');
+          if (sc2) sc2.scrollTop = top;
+        } else if (tentativas > 1) {
+          setTimeout(function () { recarregarPdfUrls(tentativas - 1); }, 3000);
+        }
+      } catch (e) {}
+    }
+
     function popularUnidades() {
       const sel = document.getElementById('vcFilterUnidade');
       if (!sel) return;
@@ -475,12 +511,16 @@
           }
           if (c.type === 'delete') {
             const chk = '<input type="checkbox" class="vc-sel" onclick="toggleSel(' + l.solicitacao_id + ',this)"' + (selected.has(l.solicitacao_id) ? ' checked' : '') + ' aria-label="Selecionar cartão">';
-            const menu = IS_ADMIN ? '<button type="button" class="vc-menubtn" onclick="abrirRowMenu(' + l.solicitacao_id + ',this)" title="Mais ações" aria-label="Mais ações">⋯</button>' : '';
+            const menu = IS_ADMIN ? '<button type="button" class="vc-menubtn" onclick="abrirRowMenu(' + l.solicitacao_id + ',this)" title="Mais ações" aria-label="Mais ações">' + icon('dots', { size: 16 }) + '</button>' : '';
             return '<td' + w + '><div style="display:flex;align-items:center;gap:5px;justify-content:center">' + chk + menu + '</div></td>';
           }
           if (c.type === 'pdf') {
             const sid = l.solicitacao_id;
-            if (!val) return '<td' + w + '><button type="button" onclick="gerarPdfCartao(' + sid + ',this)" style="padding:4px 10px;border-radius:6px;border:1px solid var(--ruby-red,#AC3631);background:var(--ruby-red,#AC3631);color:#fff;font-weight:700;font-size:0.7rem;cursor:pointer">Gerar PDF</button></td>';
+            if (!val) {
+              if (l.erro_geracao) return '<td' + w + '><div style="display:flex;gap:5px;justify-content:center;align-items:center;flex-wrap:nowrap"><span title="' + esc(l.erro_geracao) + '" style="display:inline-flex;align-items:center;gap:3px;color:var(--danger,#dc2626);font-weight:700;font-size:0.7rem">' + icon('x', { size: 13, style: 'vertical-align:middle' }) + 'Falha</span><button type="button" onclick="gerarPdfCartao(' + sid + ',this)" style="padding:4px 8px;border-radius:6px;border:1px solid var(--ruby-red,#AC3631);background:#fff;color:var(--ruby-red,#AC3631);font-weight:700;font-size:0.7rem;cursor:pointer;white-space:nowrap">Tentar de novo</button></div></td>';
+              if (l.status === 'validado') return '<td' + w + '><button type="button" onclick="gerarPdfCartao(' + sid + ',this)" title="O PDF está sendo gerado automaticamente. Clique para gerar agora." style="padding:4px 10px;border-radius:6px;border:1px dashed var(--ink-30,#c9c4ba);background:transparent;color:var(--ink-50,#7a756c);font-weight:600;font-size:0.7rem;cursor:pointer">Gerando…</button></td>';
+              return '<td' + w + '><button type="button" onclick="gerarPdfCartao(' + sid + ',this)" style="padding:4px 10px;border-radius:6px;border:1px solid var(--ruby-red,#AC3631);background:var(--ruby-red,#AC3631);color:#fff;font-weight:700;font-size:0.7rem;cursor:pointer">Gerar PDF</button></td>';
+            }
             return '<td' + w + '><div style="display:flex;gap:5px;justify-content:center;align-items:center;flex-wrap:nowrap">'
               + '<a href="' + esc(val) + '" rel="noopener" style="display:inline-block;padding:4px 10px;border-radius:6px;background:var(--ruby-red,#AC3631);color:#fff;font-weight:700;text-decoration:none;font-size:0.7rem">Baixar</a>'
               + '<button type="button" onclick="gerarPdfCartao(' + sid + ',this)" title="Gerar o PDF novamente com os dados atuais" style="padding:4px 8px;border-radius:6px;border:1px solid var(--ruby-red,#AC3631);background:#fff;color:var(--ruby-red,#AC3631);font-weight:700;font-size:0.7rem;cursor:pointer;white-space:nowrap">Gerar novo</button>'
@@ -489,7 +529,7 @@
           if (c.f === 'status') {
             const prox = NEXT_STATUS[val];
             const lbl = prox ? ((STATUS_OPTS.find(function (s) { return s.v === prox; }) || {}).label || '') : '';
-            const av = prox ? '<button type="button" class="vc-avancar" title="Avançar para: ' + esc(lbl) + '" aria-label="Avançar etapa" onclick="avancarEtapa(' + l.solicitacao_id + ')">→</button>' : '';
+            const av = prox ? '<button type="button" class="vc-avancar" title="Avançar para: ' + esc(lbl) + '" aria-label="Avançar etapa" onclick="avancarEtapa(' + l.solicitacao_id + ')">' + icon('arrow-right', { size: 14 }) + '</button>' : '';
             return '<td' + w + '><div class="vc-statuscell"><select data-f="status">' + optionsHtml(c.opts, val) + '</select>' + av + '</div></td>';
           }
           if (c.type === 'select') return '<td' + w + '><select data-f="' + c.f + '">' + optionsHtml(c.opts, val) + '</select></td>';
@@ -581,7 +621,7 @@
             '</div>' +
             '<div style="display:flex;align-items:center;gap:8px">' +
               '<span style="display:inline-flex;align-items:center;padding:4px 10px;border-radius:6px;font-size:0.72rem;font-weight:700;background:' + statusColor.bg + ';color:' + statusColor.text + '">' + esc(statusLabel) + '</span>' +
-              (IS_ADMIN ? '<button type="button" onclick="deleteCartao(' + c.solicitacao_id + ',this)" title="Excluir permanentemente" aria-label="Excluir" style="border:none;background:transparent;cursor:pointer;color:var(--danger);padding:2px;display:inline-flex;align-items:center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg></button>' : '') +
+              (IS_ADMIN ? '<button type="button" onclick="deleteCartao(' + c.solicitacao_id + ',this)" title="Excluir permanentemente" aria-label="Excluir" style="border:none;background:transparent;cursor:pointer;color:var(--danger);padding:2px;display:inline-flex;align-items:center">' + icon('trash', { size: 18 }) + '</button>' : '') +
             '</div>' +
           '</div>' +
           '<div class="cartao-card-row">' +
@@ -592,7 +632,11 @@
           '<div class="cartao-card-field"><span class="cartao-card-label">Cartão (PDF)</span>' +
             (c.pdf_url
               ? '<div style="display:flex;gap:8px"><a href="' + esc(c.pdf_url) + '" rel="noopener" style="flex:1;padding:8px 12px;border-radius:8px;background:var(--ruby-red,#AC3631);color:#fff;font-weight:700;text-decoration:none;font-size:0.8rem;text-align:center">Baixar PDF</a><button type="button" onclick="gerarPdfCartao(' + c.solicitacao_id + ',this)" style="padding:8px 12px;border-radius:8px;border:1px solid var(--ruby-red,#AC3631);background:#fff;color:var(--ruby-red,#AC3631);font-weight:700;font-size:0.8rem;cursor:pointer">Gerar novo</button></div>'
-              : '<button type="button" onclick="gerarPdfCartao(' + c.solicitacao_id + ',this)" style="margin-top:4px;padding:8px 12px;border-radius:8px;border:1px solid var(--ruby-red,#AC3631);background:#fff;color:var(--ruby-red,#AC3631);font-weight:700;font-size:0.8rem;cursor:pointer">Gerar PDF</button>') +
+              : c.erro_geracao
+                ? '<div style="display:flex;flex-direction:column;gap:6px;margin-top:4px"><span title="' + esc(c.erro_geracao) + '" style="display:inline-flex;align-items:center;gap:4px;color:var(--danger,#dc2626);font-weight:700;font-size:0.8rem">' + icon('x', { size: 14, style: 'vertical-align:middle' }) + 'Falha ao gerar</span><button type="button" onclick="gerarPdfCartao(' + c.solicitacao_id + ',this)" style="padding:8px 12px;border-radius:8px;border:1px solid var(--ruby-red,#AC3631);background:#fff;color:var(--ruby-red,#AC3631);font-weight:700;font-size:0.8rem;cursor:pointer">Tentar de novo</button></div>'
+                : c.status === 'validado'
+                  ? '<button type="button" onclick="gerarPdfCartao(' + c.solicitacao_id + ',this)" title="O PDF está sendo gerado automaticamente. Toque para gerar agora." style="margin-top:4px;padding:8px 12px;border-radius:8px;border:1px dashed var(--ink-30,#c9c4ba);background:transparent;color:var(--ink-50,#7a756c);font-weight:600;font-size:0.8rem;cursor:pointer">Gerando…</button>'
+                  : '<button type="button" onclick="gerarPdfCartao(' + c.solicitacao_id + ',this)" style="margin-top:4px;padding:8px 12px;border-radius:8px;border:1px solid var(--ruby-red,#AC3631);background:#fff;color:var(--ruby-red,#AC3631);font-weight:700;font-size:0.8rem;cursor:pointer">Gerar PDF</button>') +
           '</div>' +
           '<div class="cartao-card-row">' +
             '<div class="cartao-card-field"><span class="cartao-card-label">Contrato Social</span><span class="cartao-card-value">' + esc(c.contrato_social || '—') + '</span></div>' +
@@ -625,7 +669,14 @@
           if (card) { card.classList.add('flash-saved'); setTimeout(function() { card.classList.remove('flash-saved'); }, 600); }
           var tag = document.getElementById('vcSaved');
           if (tag) { tag.classList.add('show'); clearTimeout(saveTimer); saveTimer = setTimeout(function() { tag.classList.remove('show'); }, 1500); }
-          if (field === 'status' && window.showToast) showToast('Comentário enviado ao ClickUp');
+          if (field === 'status') {
+            if (value === 'validado') {
+              agendarRefreshValidado();
+              if (window.showToast) showToast('Cartão validado — o arquivo está sendo gerado e aparece em instantes.');
+            } else if (window.showToast) {
+              showToast('Comentário enviado ao ClickUp');
+            }
+          }
         } else {
           if (window.showToast) showToast('Não foi possível salvar. Tente novamente.', 'error');
         }
@@ -650,7 +701,14 @@
           tr.classList.add('flash'); setTimeout(function () { tr.classList.remove('flash'); }, 600);
           const tag = document.getElementById('vcSaved'); tag.classList.add('show');
           clearTimeout(saveTimer); saveTimer = setTimeout(function () { tag.classList.remove('show'); }, 1500);
-          if (statusChanged && window.showToast) showToast('Comentário enviado ao ClickUp');
+          if (statusChanged) {
+            if (payload.status === 'validado') {
+              agendarRefreshValidado();
+              if (window.showToast) showToast('Cartão validado — o arquivo está sendo gerado e aparece em instantes.');
+            } else if (window.showToast) {
+              showToast('Comentário enviado ao ClickUp');
+            }
+          }
         } else {
           if (window.showToast) showToast('Não foi possível salvar a alteração. Tente novamente.', 'error');
         }
@@ -682,11 +740,12 @@
         });
         const d = await res.json().catch(function () { return {}; });
         if (res.ok && d.url) {
-          if (raw) raw.pdf_url = d.url;
+          raw.pdf_url = d.url; raw.erro_geracao = null;
           render();
         } else {
           window.showToast ? showToast(d.error || 'Erro ao gerar o PDF.', 'error') : alert(d.error || 'Erro ao gerar o PDF.');
-          btn.disabled = false; btn.textContent = orig;
+          raw.erro_geracao = d.error || 'Falha ao gerar o PDF.';
+          render();
         }
       } catch (e) {
         window.showToast ? showToast('Erro de rede ao gerar o PDF.', 'error') : alert('Erro de rede ao gerar o PDF.');
@@ -864,13 +923,14 @@
 
     async function avancarLote() {
       const ids = Array.from(selected);
-      let n = 0, falhas = 0;
+      let n = 0, falhas = 0, validou = false;
       for (const id of ids) {
         const item = RAW.find(function (r) { return r.solicitacao_id === id; });
         const prox = item && NEXT_STATUS[item.status];
-        if (prox) { const ok = await _putStatus(id, prox); if (ok) { n++; } else { falhas++; } }
+        if (prox) { const ok = await _putStatus(id, prox); if (ok) { n++; if (prox === 'validado') validou = true; } else { falhas++; } }
       }
       selected.clear();
+      if (validou) agendarRefreshValidado();
       if (window.showToast) {
         if (falhas) showToast(n + ' avançado(s), ' + falhas + ' falhou(falharam). Tente novamente.', 'error');
         else showToast(n ? (n + ' cartão(ões) avançado(s)') : 'Nenhum cartão tinha próxima etapa');
@@ -884,6 +944,7 @@
       let n = 0, falhas = 0;
       for (const id of ids) { const ok = await _putStatus(id, v); if (ok) { n++; } else { falhas++; } }
       selected.clear();
+      if (v === 'validado') agendarRefreshValidado();
       const lbl = (STATUS_OPTS.find(function (s) { return s.v === v; }) || {}).label || v;
       if (window.showToast) {
         if (falhas) showToast(n + ' alterado(s), ' + falhas + ' falhou(falharam). Tente novamente.', 'error');

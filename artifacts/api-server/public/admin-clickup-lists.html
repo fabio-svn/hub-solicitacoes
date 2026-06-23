@@ -174,7 +174,7 @@
         <input class="input" id="addInput" type="text" inputmode="numeric" placeholder="ID da lista do ClickUp" oninput="onAddInputChange()" style="flex:1;min-width:240px">
         <button class="btn btn--solid" id="addBtn" onclick="adicionarLista()" disabled>+ Adicionar</button>
         <button class="ccu-help-btn" type="button" onclick="toggleAddHint()" title="Como encontrar o ID" aria-label="Ajuda">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
         </button>
       </div>
       <div class="ccu-hint" id="addHint" style="display:none">O ID está na URL do ClickUp: <code>app.clickup.com/…/v/l/<strong>LISTA_ID</strong></code> (o número longo). A validação acontece automaticamente quando você digita.</div>
@@ -311,7 +311,7 @@
               '<div class="ccu-list-id">ID ' + esc(list.list_id) + ' · <button class="ccu-link-btn" onclick="copiarListId(\'' + esc(list.list_id) + '\', this)" title="Copiar">copiar</button></div>' +
             '</div>' +
             '<button class="ccu-icon-btn" onclick="excluirLista(' + list.id + ', \'' + delName + '\')" title="Excluir lista" aria-label="Excluir lista">' +
-              '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-2 14a2 2 0 01-2 2H9a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>' +
+              '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-2 14a2 2 0 01-2 2H9a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>' +
             '</button>' +
           '</div>' +
           '<div class="ccu-summary">' + summaryHtml + '</div>' +

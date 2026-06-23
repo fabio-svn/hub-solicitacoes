@@ -1,4 +1,4 @@
-  // ── Constants ────────────────────────────────────────────────
+// ── Constants ────────────────────────────────────────────────
   const PLACEHOLDERS_BY_TIPO = {
     'assinatura-email':      ['nome','cargo','telefone','email','marca_label','tem_cfp','marca'],
     'cartao-boas-vindas':    ['telefone','nome_cliente','nome_assinatura','unidade','contrato_social','is_private_key','contrato_label'],
@@ -248,8 +248,8 @@
     if (bg.type === 'static') {
       bgHtml = `<div class="url-row">
         <input class="props-input" value="${esc(bg.url || '')}" placeholder="URL do fundo…" onchange="updDocBgUrl(this.value)">
-        <button class="url-action-btn" onclick="openAssetLibrary(url => { updDocBgUrl(url); renderDocumentPanel(); })" title="Biblioteca">🖼</button>
-        <label class="url-action-btn" style="cursor:pointer" title="Upload">⬆<input type="file" accept="image/*" style="display:none" onchange="uploadAndSetUrl(this, url => { updDocBgUrl(url); renderDocumentPanel(); })"></label>
+        <button class="url-action-btn" onclick="openAssetLibrary(url => { updDocBgUrl(url); renderDocumentPanel(); })" title="Biblioteca">${icon('image', { size: 14, style: 'vertical-align:middle' })}</button>
+        <label class="url-action-btn" style="cursor:pointer" title="Upload">${icon('upload', { size: 14, style: 'vertical-align:middle' })}<input type="file" accept="image/*" style="display:none" onchange="uploadAndSetUrl(this, url => { updDocBgUrl(url); renderDocumentPanel(); })"></label>
       </div>`;
     } else {
       const varSrc = bg.variant_source || '';
@@ -598,7 +598,7 @@
           </div>
           <div class="template-row-actions">
             <button class="row-btn" onclick="abrirPreviewModal(${t.id})" title="Visualizar preview" style="padding:5px 8px">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;display:block"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="vertical-align:middle;display:block"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
             </button>
             <button class="row-btn" onclick="openEditor(${t.id})">Editar</button>
             ${activateBtn}${deleteBtn}
@@ -1196,9 +1196,9 @@
 
   // ── Layers ───────────────────────────────────────────────────
   function layerTypeIcon(type) {
-    if (type === 'text-line' || type === 'text-block') return `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" title="Texto" style="flex-shrink:0"><line x1="17" y1="10" x2="3" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="17" y1="18" x2="3" y2="18"/></svg>`;
-    if (type === 'shape') return `<svg class="layer-icon-shape" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" title="Forma" style="flex-shrink:0"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>`;
-    return `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" title="Imagem" style="flex-shrink:0"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>`;
+    if (type === 'text-line' || type === 'text-block') return `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" title="Texto" style="flex-shrink:0"><line x1="17" y1="10" x2="3" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="17" y1="18" x2="3" y2="18"/></svg>`;
+    if (type === 'shape') return `<svg class="layer-icon-shape" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" title="Forma" style="flex-shrink:0"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>`;
+    return `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" title="Imagem" style="flex-shrink:0"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>`;
   }
   // Convenção Figma: índice 0 = frente do canvas (topo da lista), último = fundo
   function renderLayersList() {
@@ -1230,7 +1230,7 @@
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
           </button>
           <button class="layer-action-btn" onclick="event.stopPropagation();duplicateLayer('${layer.id}')" title="Duplicar layer">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
           </button>
         </div>
       </div>
@@ -1378,7 +1378,7 @@
       .map(a => `<button class="align-btn${layer.align===a?' active':''}" onclick="updLayer('${id}','align','${a}');renderAlignBtns('${id}')" title="${a}">${a==='left'?'←':a==='center'?'↔':'→'}</button>`).join('');
 
     let html = `<details class="panel-accordion" open>
-  <summary class="panel-accordion-summary">Identificação &amp; Posição <svg class="chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></summary>
+  <summary class="panel-accordion-summary">Identificação &amp; Posição <svg class="chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="6 9 12 15 18 9"/></svg></summary>
   <div class="panel-accordion-body">
       <div class="props-section">
         <div class="props-label">ID / Nome</div>
@@ -1400,24 +1400,24 @@
         <div class="props-label" style="margin-bottom:6px">Alinhar no canvas</div>
         <div class="layer-align-row">
           <button class="layer-align-btn" onclick="alignLayer('${id}','left')" title="Alinhar à esquerda">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="3" x2="3" y2="21"/><rect x="7" y="6" width="11" height="5"/><rect x="7" y="13" width="7" height="5"/></svg>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="3" y1="3" x2="3" y2="21"/><rect x="7" y="6" width="11" height="5"/><rect x="7" y="13" width="7" height="5"/></svg>
           </button>
           <button class="layer-align-btn" onclick="alignLayer('${id}','center-h')" title="Centralizar horizontalmente">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="3" x2="12" y2="21"/><rect x="6" y="6" width="12" height="5"/><rect x="8" y="13" width="8" height="5"/></svg>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="12" y1="3" x2="12" y2="21"/><rect x="6" y="6" width="12" height="5"/><rect x="8" y="13" width="8" height="5"/></svg>
           </button>
           <button class="layer-align-btn" onclick="alignLayer('${id}','right')" title="Alinhar à direita">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="21" y1="3" x2="21" y2="21"/><rect x="6" y="6" width="11" height="5"/><rect x="10" y="13" width="7" height="5"/></svg>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="21" y1="3" x2="21" y2="21"/><rect x="6" y="6" width="11" height="5"/><rect x="10" y="13" width="7" height="5"/></svg>
           </button>
         </div>
         <div class="layer-align-row">
           <button class="layer-align-btn" onclick="alignLayer('${id}','top')" title="Alinhar ao topo">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="3" x2="21" y2="3"/><rect x="6" y="7" width="5" height="11"/><rect x="13" y="7" width="5" height="7"/></svg>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="3" y1="3" x2="21" y2="3"/><rect x="6" y="7" width="5" height="11"/><rect x="13" y="7" width="5" height="7"/></svg>
           </button>
           <button class="layer-align-btn" onclick="alignLayer('${id}','center-v')" title="Centralizar verticalmente">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><rect x="6" y="6" width="5" height="12"/><rect x="13" y="8" width="5" height="8"/></svg>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="3" y1="12" x2="21" y2="12"/><rect x="6" y="6" width="5" height="12"/><rect x="13" y="8" width="5" height="8"/></svg>
           </button>
           <button class="layer-align-btn" onclick="alignLayer('${id}','bottom')" title="Alinhar ao fundo">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="21" x2="21" y2="21"/><rect x="6" y="6" width="5" height="11"/><rect x="13" y="10" width="5" height="7"/></svg>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="3" y1="21" x2="21" y2="21"/><rect x="6" y="6" width="5" height="11"/><rect x="13" y="10" width="5" height="7"/></svg>
           </button>
         </div>
         <div class="layer-align-row">
@@ -1433,7 +1433,7 @@
       const va = layer.vertical_align || 'top';
       const valignBtns = ['top','middle','bottom'].map(a => `<button class="align-btn${va===a?' active':''}" onclick="updLayer('${id}','vertical_align','${a}');renderVAlignBtns('${id}')" title="${a}">${a==='top'?'↑':a==='middle'?'↕':'↓'}</button>`).join('');
       html += `<details class="panel-accordion" open>
-  <summary class="panel-accordion-summary">Tipografia <svg class="chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></summary>
+  <summary class="panel-accordion-summary">Tipografia <svg class="chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="6 9 12 15 18 9"/></svg></summary>
   <div class="panel-accordion-body">
       <div class="props-section">
         <div class="props-label">Fonte</div>
@@ -1488,8 +1488,8 @@
                 <input class="props-input variant-row-input" placeholder="URL…"
                   value="${esc((layer.source.variants || {})[opt.value] || '')}"
                   oninput="updImageVariantUrl('${id}','${opt.value}',this.value)">
-                <button class="url-action-btn" onclick="openAssetLibrary(url => updImageVariantUrl('${id}','${opt.value}',url))" title="Biblioteca">🖼</button>
-                <label class="url-action-btn" style="cursor:pointer" title="Upload">⬆<input type="file" accept="image/*" style="display:none" onchange="uploadAndSetUrl(this,url=>updImageVariantUrl('${id}','${opt.value}',url))"></label>
+                <button class="url-action-btn" onclick="openAssetLibrary(url => updImageVariantUrl('${id}','${opt.value}',url))" title="Biblioteca">${icon('image', { size: 14, style: 'vertical-align:middle' })}</button>
+                <label class="url-action-btn" style="cursor:pointer" title="Upload">${icon('upload', { size: 14, style: 'vertical-align:middle' })}<input type="file" accept="image/*" style="display:none" onchange="uploadAndSetUrl(this,url=>updImageVariantUrl('${id}','${opt.value}',url))"></label>
               </div>
             </div>`).join('')}</div>`;
         } else {
@@ -1502,7 +1502,7 @@
       const placeholderField = (layer.source?.type === 'placeholder') ? (layer.source.field || '') : '';
       const placeholdersWithFiles = getActivePlaceholders(tipo, true);
       html += `<details class="panel-accordion" open>
-  <summary class="panel-accordion-summary">Aparência <svg class="chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></summary>
+  <summary class="panel-accordion-summary">Aparência <svg class="chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="6 9 12 15 18 9"/></svg></summary>
   <div class="panel-accordion-body">
       <div class="props-section">
         <div class="props-label">Fonte da imagem</div>
@@ -1515,8 +1515,8 @@
         <div class="props-label" style="margin-top:6px">URL</div>
         <div class="url-row">
           <input class="props-input" value="${esc(layer.source.url||'')}" id="imgUrlInput-${id}" onchange="updLayer('${id}','source',{type:'static',url:this.value})">
-          <button class="url-action-btn" onclick="openAssetLibrary(url => { const l=getLayer('${id}'); if(l){l.source={type:'static',url};markDirty();debouncedPushHistory();showProps('${id}');scheduleLivePreview(NORMAL_DEBOUNCE);} })" title="Biblioteca">🖼</button>
-          <label class="url-action-btn" style="cursor:pointer" title="Upload">⬆<input type="file" accept="image/*" style="display:none" onchange="uploadAndSetUrl(this,url=>{const l=getLayer('${id}');if(l){l.source={type:'static',url};markDirty();debouncedPushHistory();showProps('${id}');scheduleLivePreview(NORMAL_DEBOUNCE);}})"></label>
+          <button class="url-action-btn" onclick="openAssetLibrary(url => { const l=getLayer('${id}'); if(l){l.source={type:'static',url};markDirty();debouncedPushHistory();showProps('${id}');scheduleLivePreview(NORMAL_DEBOUNCE);} })" title="Biblioteca">${icon('image', { size: 14, style: 'vertical-align:middle' })}</button>
+          <label class="url-action-btn" style="cursor:pointer" title="Upload">${icon('upload', { size: 14, style: 'vertical-align:middle' })}<input type="file" accept="image/*" style="display:none" onchange="uploadAndSetUrl(this,url=>{const l=getLayer('${id}');if(l){l.source={type:'static',url};markDirty();debouncedPushHistory();showProps('${id}');scheduleLivePreview(NORMAL_DEBOUNCE);}})"></label>
         </div>
         `:srcType==='placeholder'?`
         <div class="props-label" style="margin-top:6px">Campo (placeholder)</div>
@@ -1557,7 +1557,7 @@
 
     if (layer.type === 'shape') {
       html += `<details class="panel-accordion" open>
-  <summary class="panel-accordion-summary">Aparência <svg class="chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></summary>
+  <summary class="panel-accordion-summary">Aparência <svg class="chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="6 9 12 15 18 9"/></svg></summary>
   <div class="panel-accordion-body">
       <div class="props-section">
         <div class="props-label">Tipo de forma</div>
@@ -1584,7 +1584,7 @@
 
     const linkType = layer.link?.type || '';
     html += `<details class="panel-accordion">
-  <summary class="panel-accordion-summary">Comportamento <svg class="chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></summary>
+  <summary class="panel-accordion-summary">Comportamento <svg class="chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="6 9 12 15 18 9"/></svg></summary>
   <div class="panel-accordion-body">
     <div class="props-section">
       <div class="props-label">Link (clicável no PDF)</div>
@@ -1904,7 +1904,7 @@
           </div>
           <div class="asset-card-actions">
             <button class="asset-action-btn primary" onclick="selectAsset('${esc(a.url)}')">Usar</button>
-            <button class="asset-action-btn" onclick="deleteAsset(${a.id})">🗑</button>
+            <button class="asset-action-btn" onclick="deleteAsset(${a.id})">${icon('trash', { size: 15, style: 'vertical-align:middle' })}</button>
           </div>
         </div>`).join('')}</div>`;
     } catch(e) { body.innerHTML = '<div class="asset-empty">Erro ao carregar assets.</div>'; }
