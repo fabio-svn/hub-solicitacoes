@@ -1682,6 +1682,11 @@ input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
 /* App Main */
 .app-main {
   grid-area: main;
+  /* Sem isto, a coluna 1fr do grid não encolhe abaixo do conteúdo: uma tabela larga
+     (ex.: validação de cartões, 1180px) estica a coluna, empurra o grid e gera scroll
+     horizontal na página inteira — pior com a sidebar expandida (232px), que reduz o
+     espaço. Com min-width:0 a coluna respeita o espaço e a tabela rola dentro da .vc-scroll. */
+  min-width: 0;
   min-height: calc(100vh - 60px);
 }
 

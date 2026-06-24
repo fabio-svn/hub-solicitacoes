@@ -1,6 +1,6 @@
 # Pack do Projeto Hub SVN
 
-Gerado em: 2026-06-24 12:27:22
+Gerado em: 2026-06-24 18:20:50
 
 Roots: artifacts/api-server lib scripts
 
@@ -23257,7 +23257,16 @@ window.Modal = (function () {
     async function salvarLinha(tr) {
       const id = parseInt(tr.getAttribute('data-id'), 10);
       const payload = {};
-      tr.querySelectorAll('[data-f]').forEach(function (el) { payload[el.getAttribute('data-f')] = el.value; });
+      // Campos de identidade da pessoa (vão para o cartão): input vazio NÃO entra no payload.
+      // Senão um valor bom no servidor seria sobrescrito por "" — ex.: coluna secundária (sec)
+      // fora da viewport ou linha ainda sem o dado carregado. Demais campos podem ser limpos.
+      const SEM_VAZIO = { nome: 1, whatsapp: 1, email: 1 };
+      tr.querySelectorAll('[data-f]').forEach(function (el) {
+        const f = el.getAttribute('data-f');
+        const v = el.value;
+        if (SEM_VAZIO[f] && !String(v).trim()) return;
+        payload[f] = v;
+      });
       const rawItem = RAW.find(function (r) { return r.solicitacao_id === id; });
       const statusChanged = !!rawItem && payload.status !== undefined && payload.status !== rawItem.status;
       if (rawItem) Object.keys(payload).forEach(function (k) { rawItem[k] = payload[k]; });
@@ -23292,7 +23301,10 @@ window.Modal = (function () {
       // Se o clique veio da tabela (desktop), usa os valores atuais dos inputs da linha.
       const tr = btn.closest('tr');
       if (tr) {
-        const g = function (f) { const el = tr.querySelector('[data-f="' + f + '"]'); return el ? el.value : null; };
+        // Só sobrescreve o dado vindo do servidor (raw) se o input REALMENTE tem conteúdo.
+        // Um input vazio (coluna secundária fora da tela, etc.) não pode apagar o valor bom:
+        // antes, g() devolvia "" e o "!= null" deixava passar, zerando nome/email.
+        const g = function (f) { const el = tr.querySelector('[data-f="' + f + '"]'); const v = el ? el.value : null; return (v != null && String(v).trim()) ? v : null; };
         if (g('nome') != null) nome = g('nome');
         if (g('whatsapp') != null) whatsapp = g('whatsapp');
         if (g('email') != null) email = g('email');
@@ -23854,10 +23866,11 @@ interface LinhaLayout {
 }
 
 // Bloco centralizado no eixo x=127.56 (centro do cartão e centro da linha divisória).
-// Nome não passa da largura da divisória (~146pt); contato pode ir um pouco mais largo.
+// A divisória tem ~146pt. Nomes longos podem ultrapassar um pouco dela (maxWidth do nome > 146)
+// para não encolherem demais; nomes curtos seguem no corpo base. Contato vai bem mais largo.
 const CX = 127.56;
 const LAYOUT: LinhaLayout[] = [
-  { campo: "nome",     font: "bold",    size: 10,  cx: CX, y: 53.96, maxWidth: 146, tracking: 0.2, transform: (s) => s.toUpperCase() },
+  { campo: "nome",     font: "bold",    size: 10,  cx: CX, y: 53.96, maxWidth: 170, tracking: 0.2, transform: (s) => s.toUpperCase() },
   { campo: "telefone", font: "regular", size: 8.5, cx: CX, y: 81.03, maxWidth: 235 },
   { campo: "email",    font: "regular", size: 8.5, cx: CX, y: 95.03, maxWidth: 235 }, // 2ª linha do bloco (81.03 + 14)
 ];
@@ -23885,21 +23898,25 @@ function medirLargura(font: opentype.Font, texto: string, size: number, tracking
   return base + Math.max(0, n - 1) * ls; // n-1 espaços entre as letras
 }
 
-// Gera o path do texto aplicando tracking (espaço extra após cada glifo).
-// Retorna o path-data e a largura visual (sem o espaço final, para centralizar bem).
+// Gera o path do texto, montando glifo a glifo. Aplica tracking (espaço extra após cada
+// glifo) quando pedido e SEMPRE arredonda o x de cada glifo para 2 casas.
+// Por que arredondar: offsets com "lixo" de ponto flutuante (ex.: 96.56000000000002, que
+// vêm do startX centralizado e do acúmulo do cursor) disparam um bug no opentype.js que
+// gera coordenadas NaN em alguns glifos CFF. O svg-to-pdfkit então aborta o path inteiro
+// ("SvgPath: command C with 0 numbers") e a linha (nome/e-mail) some do cartão — de forma
+// intermitente, dependendo do nome. Arredondar para 2 casas elimina o lixo sem efeito
+// visual (diferença < 0,01pt; largura total idêntica à do font.getPath original).
 function pathComTracking(
   font: opentype.Font, texto: string, x: number, y: number, size: number, trackingEm = 0,
 ): { d: string } {
-  if (!trackingEm) {
-    return { d: font.getPath(texto, x, y, size).toPathData(2) };
-  }
   const ls = trackingEm * size;
   const scale = size / font.unitsPerEm;
   const glyphs = font.stringToGlyphs(texto);
   const full = new opentype.Path();
   let cursor = x;
   for (const g of glyphs) {
-    full.extend(g.getPath(cursor, y, size));
+    const gx = Math.round(cursor * 100) / 100;
+    full.extend(g.getPath(gx, y, size));
     cursor += (g.advanceWidth || 0) * scale + ls;
   }
   return { d: full.toPathData(2) };
@@ -23954,6 +23971,17 @@ export function gerarVersoSvg(dados: DadosCartao): string {
  * fica centralizada. O TrimBox marca o corte final (9x5cm) pra prepress da gráfica.
  */
 export async function gerarPdf(dados: DadosCartao): Promise<Buffer> {
+  // Blindagem: nome e e-mail são essenciais. Se vierem vazios, o verso omitia a linha
+  // silenciosamente (if (!valor) return "") e saía um cartão incompleto sem aviso.
+  // Em vez disso, falha de forma visível — o catch em gerarCartaoFisicoPdf grava
+  // erro_geracao, que aparece na tela de validação apontando exatamente o que faltou.
+  const faltando: string[] = [];
+  if (!String(dados.nome ?? "").trim()) faltando.push("nome");
+  if (!String(dados.email ?? "").trim()) faltando.push("e-mail");
+  if (faltando.length) {
+    throw new Error(`Cartão não gerado: faltou ${faltando.join(" e ")} nos dados do registro.`);
+  }
+
   const PT_CM = 28.3465;        // 1cm em pt
   const SANGRIA = 0 * PT_CM;  // cartao 9x5 exato (sem area de sangria)
   const TRIM_W = 255.12;        // corte final: 9cm
@@ -24199,7 +24227,7 @@ export const FORM_SCHEMAS: Record<string, FormSchema> = {
     tipo: 'cartao-visita-fisico',
     label: 'Cartão de Visita — Físico',
     is_automation: false,
-    has_clickup: true,
+    has_clickup: false, // task removida: a notificação no canal do ClickUp Chat (ao validar) já avisa a gráfica
     has_approval_flow: true,
     has_downloadable_artifact: false,
     fields: [
@@ -30007,8 +30035,18 @@ router.put("/cartao-aprovacoes/:solicitacaoId", requireAuth, async (req, res): P
     // só sobrescreve o que veio no body; o que não veio é preservado (evita zerar campos).
     const [prev] = await db.select().from(cartaoAprovacoesTable)
       .where(eq(cartaoAprovacoesTable.solicitacao_id, solicitacaoId));
-    const pick = (campo: string) =>
-      b[campo] !== undefined ? b[campo] : ((prev as any)?.[campo] ?? null);
+    // Campos de identidade da pessoa nunca devem ser zerados por um "" vindo da tela
+    // (a validação pode enviar input vazio de coluna secundária fora da viewport). Para
+    // esses, string vazia = "não enviado": preserva o valor atual. Defesa em profundidade
+    // junto com o front, que já evita mandar esses campos vazios.
+    const SEM_VAZIO = new Set(["nome", "whatsapp", "email"]);
+    const pick = (campo: string) => {
+      const v = b[campo];
+      if (SEM_VAZIO.has(campo) && typeof v === "string" && v.trim() === "") {
+        return (prev as any)?.[campo] ?? null;
+      }
+      return v !== undefined ? v : ((prev as any)?.[campo] ?? null);
+    };
 
     const statusAnterior = prev?.status;
     const novoStatus = b.status !== undefined ? b.status : (prev?.status ?? "aguardando-validacao");
@@ -33903,13 +33941,9 @@ console.log("Hello from @workspace/scripts");
       "path": "./lib/db"
     },
     {
-      "path": "./lib/api-client-react"
-    },
-    {
       "path": "./lib/api-zod"
     }
   ]
 }
-
 ```
 
