@@ -3,6 +3,7 @@ import { TIPOS_AUTOMACAO_SET } from "../config/tipos";
 import { fetchWithTimeout } from "../lib/http";
 import multer from "multer";
 import os from "os";
+import fs from "fs";
 import { db } from "@workspace/db";
 import { solicitacoesTable, arquivosTable, cartaoAprovacoesTable, usersTable, activityLogTable } from "@workspace/db";
 import { eq, desc, and, ne, sql, inArray } from "drizzle-orm";
@@ -987,7 +988,7 @@ router.get("/solicitacoes/:id/entrega", requireAuth, async (req, res): Promise<v
   }
 });
 
-router.post("/solicitacoes/:id/alteracao", requireAuth, async (req, res): Promise<void> => {
+router.post("/solicitacoes/:id/alteracao", requireAuth, upload.array("arquivos", 10), async (req, res): Promise<void> => {
   try {
     const user = req.session.user!;
     const id = parseInt(String(req.params.id), 10);
@@ -998,37 +999,70 @@ router.post("/solicitacoes/:id/alteracao", requireAuth, async (req, res): Promis
       res.status(400).json({ error: "Mensagem obrigatória" });
       return;
     }
+    const arquivos = (req.files as Express.Multer.File[] | undefined) ?? [];
+    const limparTemp = () => arquivos.forEach((f) => { try { fs.unlinkSync(f.path); } catch {} });
 
     const conditions: ReturnType<typeof eq>[] = [eq(solicitacoesTable.id, id), eq(solicitacoesTable.user_email, user.email)];
     const [solicitacao] = await db.select().from(solicitacoesTable).where(and(...conditions));
-    if (!solicitacao) { res.status(404).json({ error: "Solicitação não encontrada" }); return; }
-    if (!solicitacao.clickup_task_id) { res.status(400).json({ error: "Task não encontrada no ClickUp" }); return; }
+    if (!solicitacao) { limparTemp(); res.status(404).json({ error: "Solicitação não encontrada" }); return; }
+    if (!solicitacao.clickup_task_id) { limparTemp(); res.status(400).json({ error: "Task não encontrada no ClickUp" }); return; }
 
     const token = process.env.CLICKUP_API_TOKEN || "";
+    const taskId = solicitacao.clickup_task_id;
 
-    let mentionText = "";
+    // Assignees da task → menção REAL. A API só marca/notifica via bloco "tag" com o user id;
+    // um "@username" dentro de comment_text vira texto cru e não notifica ninguém.
+    let assigneeIds: number[] = [];
     try {
-      const taskRes = await fetchWithTimeout(`https://api.clickup.com/api/v2/task/${solicitacao.clickup_task_id}`, {
+      const taskRes = await fetchWithTimeout(`https://api.clickup.com/api/v2/task/${taskId}`, {
         headers: { "Authorization": token },
       });
       if (taskRes.ok) {
-        const taskData = await taskRes.json() as { assignees?: Array<{ id: number; username: string }> };
-        const firstAssignee = taskData.assignees?.[0];
-        if (firstAssignee) {
-          mentionText = `@${firstAssignee.username} `;
-        }
+        const taskData = await taskRes.json() as { assignees?: Array<{ id: number }> };
+        assigneeIds = (taskData.assignees ?? []).map((a) => a.id).filter((x): x is number => typeof x === "number");
       }
     } catch {}
 
-    const isMultiple = /^\d+\./.test(mensagem.trim());
-    const comentario = isMultiple
-      ? `${mentionText}✏️ Alterações solicitadas por ${user.name}:\n\n${mensagem.trim()}`
-      : `${mentionText}✏️ Alteração solicitada por ${user.name}:\n\n${mensagem.trim()}`;
+    // Anexa cada arquivo na própria task (aba Anexos). Best-effort: loga falha sem abortar
+    // o fluxo; o binário vai via multipart (a API não aceita URL/arquivo "na nuvem").
+    let anexadosOk = 0;
+    for (const f of arquivos) {
+      try {
+        const fd = new FormData();
+        fd.append("attachment", new Blob([fs.readFileSync(f.path)], { type: f.mimetype || "application/octet-stream" }), f.originalname);
+        const attRes = await fetchWithTimeout(`https://api.clickup.com/api/v2/task/${taskId}/attachment`, {
+          method: "POST",
+          headers: { "Authorization": token }, // sem Content-Type: o FormData define o boundary
+          body: fd,
+        }, 30000);
+        if (attRes.ok) anexadosOk++;
+        else logger.warn({ status: attRes.status, file: f.originalname }, "Falha ao anexar arquivo no ClickUp");
+      } catch (e) {
+        logger.warn({ err: e, file: f.originalname }, "Erro ao anexar arquivo no ClickUp");
+      } finally {
+        try { fs.unlinkSync(f.path); } catch {}
+      }
+    }
 
-    const commentRes = await fetchWithTimeout(`https://api.clickup.com/api/v2/task/${solicitacao.clickup_task_id}/comment`, {
+    // Comentário em blocos ("comment") para a menção funcionar de verdade (tag + user id).
+    const isMultiple = /^\d+\./.test(mensagem.trim());
+    const cabecalho = isMultiple
+      ? `✏️ Alterações solicitadas por ${user.name}:`
+      : `✏️ Alteração solicitada por ${user.name}:`;
+    const blocks: Array<Record<string, unknown>> = [];
+    for (const aid of assigneeIds) {
+      blocks.push({ type: "tag", user: { id: aid } });
+      blocks.push({ text: " " });
+    }
+    blocks.push({ text: `${cabecalho}\n\n${mensagem.trim()}` });
+    if (anexadosOk > 0) {
+      blocks.push({ text: `\n\n\ud83d\udcce ${anexadosOk} arquivo(s) anexado(s) a esta tarefa.` });
+    }
+
+    const commentRes = await fetchWithTimeout(`https://api.clickup.com/api/v2/task/${taskId}/comment`, {
       method: "POST",
       headers: { "Authorization": token, "Content-Type": "application/json" },
-      body: JSON.stringify({ comment_text: comentario }),
+      body: JSON.stringify({ comment: blocks, notify_all: true }),
     });
 
     if (!commentRes.ok) {
