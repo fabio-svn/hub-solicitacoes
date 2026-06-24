@@ -141,7 +141,7 @@ export const FORM_SCHEMAS: Record<string, FormSchema> = {
     tipo: 'cartao-visita-fisico',
     label: 'Cartão de Visita — Físico',
     is_automation: false,
-    has_clickup: true,
+    has_clickup: false, // task removida: a notificação no canal do ClickUp Chat (ao validar) já avisa a gráfica
     has_approval_flow: true,
     has_downloadable_artifact: false,
     fields: [

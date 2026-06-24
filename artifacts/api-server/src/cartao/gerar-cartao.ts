@@ -46,10 +46,11 @@ interface LinhaLayout {
 }
 
 // Bloco centralizado no eixo x=127.56 (centro do cartão e centro da linha divisória).
-// Nome não passa da largura da divisória (~146pt); contato pode ir um pouco mais largo.
+// A divisória tem ~146pt. Nomes longos podem ultrapassar um pouco dela (maxWidth do nome > 146)
+// para não encolherem demais; nomes curtos seguem no corpo base. Contato vai bem mais largo.
 const CX = 127.56;
 const LAYOUT: LinhaLayout[] = [
-  { campo: "nome",     font: "bold",    size: 10,  cx: CX, y: 53.96, maxWidth: 146, tracking: 0.2, transform: (s) => s.toUpperCase() },
+  { campo: "nome",     font: "bold",    size: 10,  cx: CX, y: 53.96, maxWidth: 170, tracking: 0.2, transform: (s) => s.toUpperCase() },
   { campo: "telefone", font: "regular", size: 8.5, cx: CX, y: 81.03, maxWidth: 235 },
   { campo: "email",    font: "regular", size: 8.5, cx: CX, y: 95.03, maxWidth: 235 }, // 2ª linha do bloco (81.03 + 14)
 ];
