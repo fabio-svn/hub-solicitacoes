@@ -1455,8 +1455,18 @@ router.put("/cartao-aprovacoes/:solicitacaoId", requireAuth, async (req, res): P
     // só sobrescreve o que veio no body; o que não veio é preservado (evita zerar campos).
     const [prev] = await db.select().from(cartaoAprovacoesTable)
       .where(eq(cartaoAprovacoesTable.solicitacao_id, solicitacaoId));
-    const pick = (campo: string) =>
-      b[campo] !== undefined ? b[campo] : ((prev as any)?.[campo] ?? null);
+    // Campos de identidade da pessoa nunca devem ser zerados por um "" vindo da tela
+    // (a validação pode enviar input vazio de coluna secundária fora da viewport). Para
+    // esses, string vazia = "não enviado": preserva o valor atual. Defesa em profundidade
+    // junto com o front, que já evita mandar esses campos vazios.
+    const SEM_VAZIO = new Set(["nome", "whatsapp", "email"]);
+    const pick = (campo: string) => {
+      const v = b[campo];
+      if (SEM_VAZIO.has(campo) && typeof v === "string" && v.trim() === "") {
+        return (prev as any)?.[campo] ?? null;
+      }
+      return v !== undefined ? v : ((prev as any)?.[campo] ?? null);
+    };
 
     const statusAnterior = prev?.status;
     const novoStatus = b.status !== undefined ? b.status : (prev?.status ?? "aguardando-validacao");

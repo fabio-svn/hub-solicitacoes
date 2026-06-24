@@ -147,6 +147,17 @@ export function gerarVersoSvg(dados: DadosCartao): string {
  * fica centralizada. O TrimBox marca o corte final (9x5cm) pra prepress da gráfica.
  */
 export async function gerarPdf(dados: DadosCartao): Promise<Buffer> {
+  // Blindagem: nome e e-mail são essenciais. Se vierem vazios, o verso omitia a linha
+  // silenciosamente (if (!valor) return "") e saía um cartão incompleto sem aviso.
+  // Em vez disso, falha de forma visível — o catch em gerarCartaoFisicoPdf grava
+  // erro_geracao, que aparece na tela de validação apontando exatamente o que faltou.
+  const faltando: string[] = [];
+  if (!String(dados.nome ?? "").trim()) faltando.push("nome");
+  if (!String(dados.email ?? "").trim()) faltando.push("e-mail");
+  if (faltando.length) {
+    throw new Error(`Cartão não gerado: faltou ${faltando.join(" e ")} nos dados do registro.`);
+  }
+
   const PT_CM = 28.3465;        // 1cm em pt
   const SANGRIA = 0 * PT_CM;  // cartao 9x5 exato (sem area de sangria)
   const TRIM_W = 255.12;        // corte final: 9cm

@@ -713,7 +713,16 @@
     async function salvarLinha(tr) {
       const id = parseInt(tr.getAttribute('data-id'), 10);
       const payload = {};
-      tr.querySelectorAll('[data-f]').forEach(function (el) { payload[el.getAttribute('data-f')] = el.value; });
+      // Campos de identidade da pessoa (vão para o cartão): input vazio NÃO entra no payload.
+      // Senão um valor bom no servidor seria sobrescrito por "" — ex.: coluna secundária (sec)
+      // fora da viewport ou linha ainda sem o dado carregado. Demais campos podem ser limpos.
+      const SEM_VAZIO = { nome: 1, whatsapp: 1, email: 1 };
+      tr.querySelectorAll('[data-f]').forEach(function (el) {
+        const f = el.getAttribute('data-f');
+        const v = el.value;
+        if (SEM_VAZIO[f] && !String(v).trim()) return;
+        payload[f] = v;
+      });
       const rawItem = RAW.find(function (r) { return r.solicitacao_id === id; });
       const statusChanged = !!rawItem && payload.status !== undefined && payload.status !== rawItem.status;
       if (rawItem) Object.keys(payload).forEach(function (k) { rawItem[k] = payload[k]; });
@@ -748,7 +757,10 @@
       // Se o clique veio da tabela (desktop), usa os valores atuais dos inputs da linha.
       const tr = btn.closest('tr');
       if (tr) {
-        const g = function (f) { const el = tr.querySelector('[data-f="' + f + '"]'); return el ? el.value : null; };
+        // Só sobrescreve o dado vindo do servidor (raw) se o input REALMENTE tem conteúdo.
+        // Um input vazio (coluna secundária fora da tela, etc.) não pode apagar o valor bom:
+        // antes, g() devolvia "" e o "!= null" deixava passar, zerando nome/email.
+        const g = function (f) { const el = tr.querySelector('[data-f="' + f + '"]'); const v = el ? el.value : null; return (v != null && String(v).trim()) ? v : null; };
         if (g('nome') != null) nome = g('nome');
         if (g('whatsapp') != null) whatsapp = g('whatsapp');
         if (g('email') != null) email = g('email');
