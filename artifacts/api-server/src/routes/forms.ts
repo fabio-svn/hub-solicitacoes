@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { TIPOS_AUTOMACAO } from "../config/tipos";
+import { TIPOS_AUTOMACAO_SET } from "../config/tipos";
 import { fetchWithTimeout } from "../lib/http";
 import multer from "multer";
 import os from "os";
@@ -821,7 +821,7 @@ router.post("/solicitacoes/:id/entrega", requireAuth, async (req, res): Promise<
     const [solicitacao] = await db.select().from(solicitacoesTable).where(eq(solicitacoesTable.id, id));
     if (!solicitacao) { res.status(404).json({ error: "Não encontrada" }); return; }
 
-    const novoStatus = TIPOS_AUTOMACAO.includes(solicitacao.tipo_solicitacao)
+    const novoStatus = TIPOS_AUTOMACAO_SET.has(solicitacao.tipo_solicitacao)
       ? "concluido"
       : "em-aprovacao";
 

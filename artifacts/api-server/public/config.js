@@ -166,7 +166,7 @@ let CARGOS_ASSESSOR = [
 
 // DRAWER_FIELD_LABELS — labels exibidos no detalhe da solicitação.
 // Chaves canônicas em snake_case. As chaves camelCase do KEY_MAP foram removidas (8.3)
-// após a migração migrate-drawer-keys normalizar os dados legados do banco.
+// após a normalização dos dados legados no banco.
 const DRAWER_FIELD_LABELS = {
   mes:                 { label: "Mês" },
   objetivo:            { label: "Objetivo da sessão",          wide: true },

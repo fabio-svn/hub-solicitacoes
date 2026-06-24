@@ -26,7 +26,9 @@ async function pingBanco(): Promise<void> {
   await pool.query("SELECT 1");
 }
 async function pingR2(): Promise<void> {
-  await getR2Client().send(new HeadBucketCommand({ Bucket: R2_BUCKET }));
+  const client = getR2Client();
+  if (!client) throw new Error("R2 não configurado (getR2Client retornou null)");
+  await client.send(new HeadBucketCommand({ Bucket: R2_BUCKET }));
 }
 
 const DEPS: { name: string; ping: () => Promise<void> }[] = [{ name: "banco", ping: pingBanco }];

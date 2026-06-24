@@ -1,4 +1,3 @@
-
 :root {
   --gold-primary: #C1A25A;
   --bg-light: #f5f3f0;
@@ -1348,7 +1347,6 @@ input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
   /* Maturidade (cards numerados): empilhar coluna, cada card vira linha horizontal */
   .maturidade-cards { flex-direction: column !important; flex-wrap: nowrap !important; }
   .maturidade-cards > * { flex: 1 1 100% !important; max-width: 100% !important; }
-  .drawer { width: 100%; right: -100%; }
   .title-row { flex-direction: column; align-items: stretch; }
   .title-row .btn { width: 100%; justify-content: center; }
   .tabs { overflow-x: auto; flex-wrap: nowrap; -webkit-overflow-scrolling: touch; scrollbar-width: none; }

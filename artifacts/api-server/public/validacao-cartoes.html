@@ -98,6 +98,8 @@
 
     /* Pendente há */
     .vc-dias { font-weight: 600; color: var(--ink-60, #6b6760); }
+    .vc-spin { display: inline-block; box-sizing: border-box; border: 2px solid var(--ink-20, #d8d3c9); border-top-color: var(--ruby-red, #AC3631); border-radius: 50%; animation: vcspin 0.7s linear infinite; }
+    @keyframes vcspin { to { transform: rotate(360deg); } }
     .vc-dias.alerta { color: var(--danger); }
     .vc-dias.none { color: var(--ink-30, #b3aea4); }
 
@@ -403,9 +405,10 @@
         if (mudou) {
           const sc = document.querySelector('.vc-scroll');
           const top = sc ? sc.scrollTop : 0;
+          const left = sc ? sc.scrollLeft : 0;
           render();
           const sc2 = document.querySelector('.vc-scroll');
-          if (sc2) sc2.scrollTop = top;
+          if (sc2) { sc2.scrollTop = top; sc2.scrollLeft = left; }
         } else if (tentativas > 1) {
           setTimeout(function () { recarregarPdfUrls(tentativas - 1); }, 3000);
         }
@@ -475,6 +478,43 @@
 
     /* ── Toggle "Esconder cartões enviados" (status envio-assessor → linhas .vc-final) ── */
 
+    /* ── Célula "Cartão (PDF)": HTML reutilizável + atualização in-place (sem re-render) ──
+       Mantém a posição de rolagem da tabela ao gerar: só a célula muda, não a tabela toda. */
+    function pdfCellInner(l) {
+      const sid = l.solicitacao_id;
+      const val = l.pdf_url;
+      if (!val) {
+        if (l.erro_geracao) return '<div style="display:flex;gap:5px;justify-content:center;align-items:center;flex-wrap:nowrap"><span title="' + esc(l.erro_geracao) + '" style="display:inline-flex;align-items:center;gap:3px;color:var(--danger,#dc2626);font-weight:700;font-size:0.7rem">' + icon('x', { size: 13, style: 'vertical-align:middle' }) + 'Falha</span><button type="button" onclick="gerarPdfCartao(' + sid + ',this)" style="padding:4px 8px;border-radius:6px;border:1px solid var(--ruby-red,#AC3631);background:#fff;color:var(--ruby-red,#AC3631);font-weight:700;font-size:0.7rem;cursor:pointer;white-space:nowrap">Tentar de novo</button></div>';
+        if (l.status === 'validado') return '<button type="button" onclick="gerarPdfCartao(' + sid + ',this)" title="O PDF está sendo gerado automaticamente. Clique para gerar agora." style="padding:4px 10px;border-radius:6px;border:1px dashed var(--ink-30,#c9c4ba);background:transparent;color:var(--ink-50,#7a756c);font-weight:600;font-size:0.7rem;cursor:pointer">Gerando…</button>';
+        return '<button type="button" onclick="gerarPdfCartao(' + sid + ',this)" style="padding:4px 10px;border-radius:6px;border:1px solid var(--ruby-red,#AC3631);background:var(--ruby-red,#AC3631);color:#fff;font-weight:700;font-size:0.7rem;cursor:pointer">Gerar PDF</button>';
+      }
+      return '<div style="display:flex;gap:5px;justify-content:center;align-items:center;flex-wrap:nowrap">'
+        + '<a href="' + esc(val) + '" rel="noopener" style="display:inline-block;padding:4px 10px;border-radius:6px;background:var(--ruby-red,#AC3631);color:#fff;font-weight:700;text-decoration:none;font-size:0.7rem">Baixar</a>'
+        + '<button type="button" onclick="gerarPdfCartao(' + sid + ',this)" title="Gerar o PDF novamente com os dados atuais" style="padding:4px 8px;border-radius:6px;border:1px solid var(--ruby-red,#AC3631);background:#fff;color:var(--ruby-red,#AC3631);font-weight:700;font-size:0.7rem;cursor:pointer;white-space:nowrap">Gerar novo</button>'
+        + '</div>';
+    }
+    function pdfCardInner(c) {
+      const sid = c.solicitacao_id;
+      if (c.pdf_url) return '<div style="display:flex;gap:8px"><a href="' + esc(c.pdf_url) + '" rel="noopener" style="flex:1;padding:8px 12px;border-radius:8px;background:var(--ruby-red,#AC3631);color:#fff;font-weight:700;text-decoration:none;font-size:0.8rem;text-align:center">Baixar PDF</a><button type="button" onclick="gerarPdfCartao(' + sid + ',this)" style="padding:8px 12px;border-radius:8px;border:1px solid var(--ruby-red,#AC3631);background:#fff;color:var(--ruby-red,#AC3631);font-weight:700;font-size:0.8rem;cursor:pointer">Gerar novo</button></div>';
+      if (c.erro_geracao) return '<div style="display:flex;flex-direction:column;gap:6px;margin-top:4px"><span title="' + esc(c.erro_geracao) + '" style="display:inline-flex;align-items:center;gap:4px;color:var(--danger,#dc2626);font-weight:700;font-size:0.8rem">' + icon('x', { size: 14, style: 'vertical-align:middle' }) + 'Falha ao gerar</span><button type="button" onclick="gerarPdfCartao(' + sid + ',this)" style="padding:8px 12px;border-radius:8px;border:1px solid var(--ruby-red,#AC3631);background:#fff;color:var(--ruby-red,#AC3631);font-weight:700;font-size:0.8rem;cursor:pointer">Tentar de novo</button></div>';
+      if (c.status === 'validado') return '<button type="button" onclick="gerarPdfCartao(' + sid + ',this)" title="O PDF está sendo gerado automaticamente. Toque para gerar agora." style="margin-top:4px;padding:8px 12px;border-radius:8px;border:1px dashed var(--ink-30,#c9c4ba);background:transparent;color:var(--ink-50,#7a756c);font-weight:600;font-size:0.8rem;cursor:pointer">Gerando…</button>';
+      return '<button type="button" onclick="gerarPdfCartao(' + sid + ',this)" style="margin-top:4px;padding:8px 12px;border-radius:8px;border:1px solid var(--ruby-red,#AC3631);background:#fff;color:var(--ruby-red,#AC3631);font-weight:700;font-size:0.8rem;cursor:pointer">Gerar PDF</button>';
+    }
+    function pdfSpinnerHtml(compact) {
+      const sz = compact ? 13 : 15;
+      const fs = compact ? '0.7rem' : '0.8rem';
+      return '<span role="status" aria-label="Gerando" style="display:inline-flex;align-items:center;gap:6px;color:var(--ink-50,#7a756c);font-weight:600;font-size:' + fs + '"><span class="vc-spin" style="width:' + sz + 'px;height:' + sz + 'px"></span>Gerando…</span>';
+    }
+    // Re-renderiza apenas a área "Cartão (PDF)" (célula da tabela e/ou bloco do card) a partir do RAW.
+    function atualizarAreaPdf(id) {
+      const raw = RAW.find(function (r) { return r.solicitacao_id === id; });
+      if (!raw) return;
+      const td = document.querySelector('td[data-pdfcell="' + id + '"]');
+      if (td) td.innerHTML = pdfCellInner(raw);
+      const card = document.querySelector('[data-pdfcard="' + id + '"]');
+      if (card) card.innerHTML = pdfCardInner(raw);
+    }
+
     function render() {
       recomputeFirstSeq();
       renderFunil();
@@ -515,16 +555,7 @@
             return '<td' + w + '><div style="display:flex;align-items:center;gap:5px;justify-content:center">' + chk + menu + '</div></td>';
           }
           if (c.type === 'pdf') {
-            const sid = l.solicitacao_id;
-            if (!val) {
-              if (l.erro_geracao) return '<td' + w + '><div style="display:flex;gap:5px;justify-content:center;align-items:center;flex-wrap:nowrap"><span title="' + esc(l.erro_geracao) + '" style="display:inline-flex;align-items:center;gap:3px;color:var(--danger,#dc2626);font-weight:700;font-size:0.7rem">' + icon('x', { size: 13, style: 'vertical-align:middle' }) + 'Falha</span><button type="button" onclick="gerarPdfCartao(' + sid + ',this)" style="padding:4px 8px;border-radius:6px;border:1px solid var(--ruby-red,#AC3631);background:#fff;color:var(--ruby-red,#AC3631);font-weight:700;font-size:0.7rem;cursor:pointer;white-space:nowrap">Tentar de novo</button></div></td>';
-              if (l.status === 'validado') return '<td' + w + '><button type="button" onclick="gerarPdfCartao(' + sid + ',this)" title="O PDF está sendo gerado automaticamente. Clique para gerar agora." style="padding:4px 10px;border-radius:6px;border:1px dashed var(--ink-30,#c9c4ba);background:transparent;color:var(--ink-50,#7a756c);font-weight:600;font-size:0.7rem;cursor:pointer">Gerando…</button></td>';
-              return '<td' + w + '><button type="button" onclick="gerarPdfCartao(' + sid + ',this)" style="padding:4px 10px;border-radius:6px;border:1px solid var(--ruby-red,#AC3631);background:var(--ruby-red,#AC3631);color:#fff;font-weight:700;font-size:0.7rem;cursor:pointer">Gerar PDF</button></td>';
-            }
-            return '<td' + w + '><div style="display:flex;gap:5px;justify-content:center;align-items:center;flex-wrap:nowrap">'
-              + '<a href="' + esc(val) + '" rel="noopener" style="display:inline-block;padding:4px 10px;border-radius:6px;background:var(--ruby-red,#AC3631);color:#fff;font-weight:700;text-decoration:none;font-size:0.7rem">Baixar</a>'
-              + '<button type="button" onclick="gerarPdfCartao(' + sid + ',this)" title="Gerar o PDF novamente com os dados atuais" style="padding:4px 8px;border-radius:6px;border:1px solid var(--ruby-red,#AC3631);background:#fff;color:var(--ruby-red,#AC3631);font-weight:700;font-size:0.7rem;cursor:pointer;white-space:nowrap">Gerar novo</button>'
-              + '</div></td>';
+            return '<td' + w + ' data-pdfcell="' + l.solicitacao_id + '">' + pdfCellInner(l) + '</td>';
           }
           if (c.f === 'status') {
             const prox = NEXT_STATUS[val];
@@ -630,13 +661,7 @@
           '</div>' +
           '<div class="cartao-card-field"><span class="cartao-card-label">E-mail</span><span class="cartao-card-value">' + esc(c.email || '—') + '</span></div>' +
           '<div class="cartao-card-field"><span class="cartao-card-label">Cartão (PDF)</span>' +
-            (c.pdf_url
-              ? '<div style="display:flex;gap:8px"><a href="' + esc(c.pdf_url) + '" rel="noopener" style="flex:1;padding:8px 12px;border-radius:8px;background:var(--ruby-red,#AC3631);color:#fff;font-weight:700;text-decoration:none;font-size:0.8rem;text-align:center">Baixar PDF</a><button type="button" onclick="gerarPdfCartao(' + c.solicitacao_id + ',this)" style="padding:8px 12px;border-radius:8px;border:1px solid var(--ruby-red,#AC3631);background:#fff;color:var(--ruby-red,#AC3631);font-weight:700;font-size:0.8rem;cursor:pointer">Gerar novo</button></div>'
-              : c.erro_geracao
-                ? '<div style="display:flex;flex-direction:column;gap:6px;margin-top:4px"><span title="' + esc(c.erro_geracao) + '" style="display:inline-flex;align-items:center;gap:4px;color:var(--danger,#dc2626);font-weight:700;font-size:0.8rem">' + icon('x', { size: 14, style: 'vertical-align:middle' }) + 'Falha ao gerar</span><button type="button" onclick="gerarPdfCartao(' + c.solicitacao_id + ',this)" style="padding:8px 12px;border-radius:8px;border:1px solid var(--ruby-red,#AC3631);background:#fff;color:var(--ruby-red,#AC3631);font-weight:700;font-size:0.8rem;cursor:pointer">Tentar de novo</button></div>'
-                : c.status === 'validado'
-                  ? '<button type="button" onclick="gerarPdfCartao(' + c.solicitacao_id + ',this)" title="O PDF está sendo gerado automaticamente. Toque para gerar agora." style="margin-top:4px;padding:8px 12px;border-radius:8px;border:1px dashed var(--ink-30,#c9c4ba);background:transparent;color:var(--ink-50,#7a756c);font-weight:600;font-size:0.8rem;cursor:pointer">Gerando…</button>'
-                  : '<button type="button" onclick="gerarPdfCartao(' + c.solicitacao_id + ',this)" style="margin-top:4px;padding:8px 12px;border-radius:8px;border:1px solid var(--ruby-red,#AC3631);background:#fff;color:var(--ruby-red,#AC3631);font-weight:700;font-size:0.8rem;cursor:pointer">Gerar PDF</button>') +
+            '<div data-pdfcard="' + c.solicitacao_id + '">' + pdfCardInner(c) + '</div>' +
           '</div>' +
           '<div class="cartao-card-row">' +
             '<div class="cartao-card-field"><span class="cartao-card-label">Contrato Social</span><span class="cartao-card-value">' + esc(c.contrato_social || '—') + '</span></div>' +
@@ -732,7 +757,11 @@
         window.showToast ? showToast('Preencha Nome e E-mail antes de gerar o cartão.', 'error') : alert('Preencha Nome e E-mail antes de gerar o cartão.');
         return;
       }
-      const orig = btn.textContent; btn.disabled = true; btn.textContent = 'Gerando…';
+      // Atualiza só a área "Cartão (PDF)" desta linha/card — sem re-render, preservando o scroll.
+      // Mostra um spinner enquanto gera; ao terminar troca direto pelo botão "Baixar".
+      const area = btn.closest('[data-pdfcell]') || btn.closest('[data-pdfcard]');
+      const originalHtml = area ? area.innerHTML : null;
+      if (area) area.innerHTML = pdfSpinnerHtml(area.hasAttribute('data-pdfcell'));
       try {
         const res = await fetch('/api/cartao-aprovacoes/' + id + '/gerar-pdf', {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -741,15 +770,16 @@
         const d = await res.json().catch(function () { return {}; });
         if (res.ok && d.url) {
           raw.pdf_url = d.url; raw.erro_geracao = null;
-          render();
+          atualizarAreaPdf(id);
         } else {
-          window.showToast ? showToast(d.error || 'Erro ao gerar o PDF.', 'error') : alert(d.error || 'Erro ao gerar o PDF.');
           raw.erro_geracao = d.error || 'Falha ao gerar o PDF.';
-          render();
+          atualizarAreaPdf(id);
+          window.showToast ? showToast(d.error || 'Erro ao gerar o PDF.', 'error') : alert(d.error || 'Erro ao gerar o PDF.');
         }
       } catch (e) {
+        // Falha de rede: restaura o conteúdo anterior da área (botão volta como estava).
+        if (area && originalHtml != null) area.innerHTML = originalHtml;
         window.showToast ? showToast('Erro de rede ao gerar o PDF.', 'error') : alert('Erro de rede ao gerar o PDF.');
-        btn.disabled = false; btn.textContent = orig;
       }
     }
 
