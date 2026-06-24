@@ -78,21 +78,25 @@ function medirLargura(font: opentype.Font, texto: string, size: number, tracking
   return base + Math.max(0, n - 1) * ls; // n-1 espaços entre as letras
 }
 
-// Gera o path do texto aplicando tracking (espaço extra após cada glifo).
-// Retorna o path-data e a largura visual (sem o espaço final, para centralizar bem).
+// Gera o path do texto, montando glifo a glifo. Aplica tracking (espaço extra após cada
+// glifo) quando pedido e SEMPRE arredonda o x de cada glifo para 2 casas.
+// Por que arredondar: offsets com "lixo" de ponto flutuante (ex.: 96.56000000000002, que
+// vêm do startX centralizado e do acúmulo do cursor) disparam um bug no opentype.js que
+// gera coordenadas NaN em alguns glifos CFF. O svg-to-pdfkit então aborta o path inteiro
+// ("SvgPath: command C with 0 numbers") e a linha (nome/e-mail) some do cartão — de forma
+// intermitente, dependendo do nome. Arredondar para 2 casas elimina o lixo sem efeito
+// visual (diferença < 0,01pt; largura total idêntica à do font.getPath original).
 function pathComTracking(
   font: opentype.Font, texto: string, x: number, y: number, size: number, trackingEm = 0,
 ): { d: string } {
-  if (!trackingEm) {
-    return { d: font.getPath(texto, x, y, size).toPathData(2) };
-  }
   const ls = trackingEm * size;
   const scale = size / font.unitsPerEm;
   const glyphs = font.stringToGlyphs(texto);
   const full = new opentype.Path();
   let cursor = x;
   for (const g of glyphs) {
-    full.extend(g.getPath(cursor, y, size));
+    const gx = Math.round(cursor * 100) / 100;
+    full.extend(g.getPath(gx, y, size));
     cursor += (g.advanceWidth || 0) * scale + ls;
   }
   return { d: full.toPathData(2) };
