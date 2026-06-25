@@ -2,7 +2,7 @@ import crypto from "crypto";
 import express, { Router } from "express";
 import { db } from "@workspace/db";
 import { solicitacoesTable } from "@workspace/db";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { logger } from "../lib/logger";
 import { mapClickUpStatus } from "../config/clickup-status";
 import { notificarMarcoBg } from "../services/notifications";
@@ -119,9 +119,16 @@ router.post(
         detalhes: { de: statusAnterior, para: hubStatus, clickup_status: rawStatus },
       });
 
+      const patch: Record<string, unknown> = { status: hubStatus, updated_at: new Date() };
+      if (hubStatus === "em-revisao") {
+        // Voltou para revisão (alteração) — libera o e-mail de re-aprovação para a
+        // próxima volta a "em-aprovacao". Cobre o caso em que a alteração é feita
+        // direto no ClickUp (sem passar pelo chat do Hub / endpoint /alteracao).
+        patch.notifications_sent = sql`COALESCE(${solicitacoesTable.notifications_sent}, '{}'::jsonb) - 'reaprovacao'`;
+      }
       await db
         .update(solicitacoesTable)
-        .set({ status: hubStatus, updated_at: new Date() })
+        .set(patch)
         .where(eq(solicitacoesTable.clickup_task_id, taskId));
 
       logger.info(
