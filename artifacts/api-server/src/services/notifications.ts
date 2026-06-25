@@ -19,7 +19,7 @@ export const TIPOS_COM_APROVACAO = new Set([
   "apresentacao-atualizar",
 ]);
 
-export type Marco = "recebida" | "aprovacao" | "concluida" | "prazo_alterado";
+export type Marco = "recebida" | "aprovacao" | "reaprovacao" | "concluida" | "prazo_alterado";
 
 export async function notificarMarco(solicitacaoId: number, marco: Marco): Promise<void> {
   if (!WEBHOOK_URL) {
@@ -41,7 +41,7 @@ export async function notificarMarco(solicitacaoId: number, marco: Marco): Promi
     const isFisico = tipo === "cartao-visita-fisico";
 
     if (marco === "recebida" && isAutomacao) return;
-    if (marco === "aprovacao" && !TIPOS_COM_APROVACAO.has(tipo)) return;
+    if ((marco === "aprovacao" || marco === "reaprovacao") && !TIPOS_COM_APROVACAO.has(tipo)) return;
 
     const sent = (sol.notifications_sent as Record<string, string>) || {};
     if (marco !== "prazo_alterado" && sent[marco]) return;

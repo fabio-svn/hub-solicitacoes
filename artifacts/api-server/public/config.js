@@ -373,6 +373,18 @@ function getStatus(id) {
   return STATUS_MAP[id] || { label: id, bg: '#f1f5f9', text: '#475569' };
 }
 
+// Status "visual" derivado: quando a demanda está "em-revisao" MAS já teve uma entrega
+// (entrega_links preenchido), significa que voltou para revisão por uma solicitação de
+// alteração — mostramos "Em alteração" para distinguir da revisão inicial. Não é um
+// status real no banco/ClickUp, só uma leitura para a interface.
+function getStatusVisual(item) {
+  if (item && item.status === 'em-revisao'
+      && Array.isArray(item.entrega_links) && item.entrega_links.length > 0) {
+    return { id: 'em-alteracao', label: 'Em alteração', bg: '#D97706', text: '#FFFFFF' };
+  }
+  return getStatus(item && item.status);
+}
+
 let SETORES = [
   "Selecione seu setor",
   "Administração",

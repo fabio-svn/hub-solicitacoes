@@ -941,7 +941,7 @@
       const titulo = dados.nomeEvento || dados.tituloEvento || dados.titulo || dados.nome_completo || dados.nomeCompleto ||
         (TIPO_SOLICITACAO_LABELS[item.tipo_solicitacao] || item.tipo_solicitacao);
       const tipoLabel = TIPO_SOLICITACAO_LABELS[item.tipo_solicitacao] || item.tipo_solicitacao;
-      const statusObj = getStatus(item.status);
+      const statusObj = getStatusVisual(item);
 
       // ── Layout clean para todos os tipos de automação ──────────────
       if (isTipoAutomacao(item.tipo_solicitacao)) {

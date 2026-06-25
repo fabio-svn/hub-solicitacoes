@@ -136,7 +136,10 @@ router.post(
 
       if (statusAnterior !== hubStatus) {
         if (hubStatus === "em-aprovacao") {
-          notificarMarcoBg(solicitacao.id, "aprovacao");
+          // Se já houve uma aprovação antes (sent.aprovacao gravado), esta é uma
+          // re-aprovação após alteração → e-mail com mensagem própria.
+          const sent = (solicitacao.notifications_sent as Record<string, string> | null) || {};
+          notificarMarcoBg(solicitacao.id, sent.aprovacao ? "reaprovacao" : "aprovacao");
         }
         if (hubStatus === "concluido" && solicitacao.tipo_solicitacao !== "cartao-visita-fisico") {
           notificarMarcoBg(solicitacao.id, "concluida");

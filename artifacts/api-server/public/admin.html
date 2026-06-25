@@ -1,4 +1,3 @@
-```
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -319,7 +318,7 @@
         const dados = typeof item.dados === 'string' ? JSON.parse(item.dados) : (item.dados || {});
         const titulo = item.titulo || dados.nomeEvento || dados.tituloEvento || dados.titulo || dados.nome_completo || dados.nomeCompleto || '-';
         const tipoLabel = TIPO_SOLICITACAO_LABELS[item.tipo_solicitacao] || item.tipo_solicitacao;
-        const statusObj = getStatus(item.status);
+        const statusObj = getStatusVisual(item);
         const date = new Date(item.created_at).toLocaleDateString('pt-BR');
         const acoesCell = isAdmin
           ? `<td onclick="event.stopPropagation()" style="text-align:center;white-space:nowrap">

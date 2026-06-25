@@ -830,6 +830,16 @@ router.post("/solicitacoes/:id/entrega", requireAuth, async (req, res): Promise<
       .set({ entrega_links: links, status: novoStatus, updated_at: new Date() })
       .where(eq(solicitacoesTable.id, id));
 
+    // Dispara o e-mail na própria entrega (ponto confiável), sem depender do webhook
+    // do ClickUp — que pode não sincronizar a volta para "em-revisao" e, por isso,
+    // ignorar a re-aprovação. Se a demanda já passou por aprovação antes
+    // (sent.aprovacao gravado), é uma re-aprovação após alteração. O dedup de
+    // notificações evita e-mail duplicado caso o webhook também dispare.
+    if (novoStatus === "em-aprovacao") {
+      const sent = (solicitacao.notifications_sent as Record<string, string> | null) || {};
+      notificarMarcoBg(id, sent.aprovacao ? "reaprovacao" : "aprovacao");
+    }
+
     logger.info({ id, count: links.length }, "Links de entrega salvos");
     logAtividade({
       userEmail: user?.email, userName: user?.name,
@@ -1083,7 +1093,15 @@ router.post("/solicitacoes/:id/alteracao", requireAuth, upload.array("arquivos",
       }).catch(() => {});
     }
     await db.update(solicitacoesTable)
-      .set({ status: "em-revisao", updated_at: new Date() })
+      .set({
+        status: "em-revisao",
+        updated_at: new Date(),
+        // Limpa só a flag de re-aprovação para que a PRÓXIMA volta a "em-aprovacao"
+        // dispare o e-mail de novo. Mantém "aprovacao" como marcador de que a demanda
+        // já passou por aprovação uma vez (o webhook/entrega usa isso para escolher
+        // entre o e-mail de 1ª aprovação e o de re-aprovação).
+        notifications_sent: sql`COALESCE(${solicitacoesTable.notifications_sent}, '{}'::jsonb) - 'reaprovacao'`,
+      })
       .where(eq(solicitacoesTable.id, id));
 
     await logAtividade({

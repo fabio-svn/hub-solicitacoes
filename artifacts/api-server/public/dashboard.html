@@ -319,7 +319,7 @@
         const isAdm = isCurrentUserAdmin();
         const isStaff = isCurrentUserStaff();
         const tipoLabel = TIPO_SOLICITACAO_LABELS[item.tipo_solicitacao] || item.tipo_solicitacao;
-        const statusObj = getStatus(item.status);
+        const statusObj = getStatusVisual(item);
         const dataRel = dataRelativa(item.created_at);
         const periodo = periodoGrupo(item.created_at);
         const naturezaLabel = dados.natureza ? NATUREZA_LABEL[dados.natureza] : null;
