@@ -1033,9 +1033,10 @@ router.post("/solicitacoes/:id/alteracao", requireAuth, upload.array("arquivos",
       }
     } catch {}
 
-    // Anexa cada arquivo na própria task (aba Anexos). Best-effort: loga falha sem abortar
-    // o fluxo; o binário vai via multipart (a API não aceita URL/arquivo "na nuvem").
-    let anexadosOk = 0;
+    // Anexa cada arquivo na própria task (aba Anexos) e captura a URL pública retornada
+    // pela API, para colocar o link clicável dentro do próprio comentário. Best-effort:
+    // loga falha sem abortar; o binário vai via multipart (a API não aceita URL "na nuvem").
+    const anexados: Array<{ nome: string; url: string }> = [];
     for (const f of arquivos) {
       try {
         const fd = new FormData();
@@ -1045,8 +1046,12 @@ router.post("/solicitacoes/:id/alteracao", requireAuth, upload.array("arquivos",
           headers: { "Authorization": token }, // sem Content-Type: o FormData define o boundary
           body: fd,
         }, 30000);
-        if (attRes.ok) anexadosOk++;
-        else logger.warn({ status: attRes.status, file: f.originalname }, "Falha ao anexar arquivo no ClickUp");
+        if (attRes.ok) {
+          const att = await attRes.json().catch(() => ({})) as { url?: string; title?: string };
+          anexados.push({ nome: att.title || f.originalname, url: att.url || "" });
+        } else {
+          logger.warn({ status: attRes.status, file: f.originalname }, "Falha ao anexar arquivo no ClickUp");
+        }
       } catch (e) {
         logger.warn({ err: e, file: f.originalname }, "Erro ao anexar arquivo no ClickUp");
       } finally {
@@ -1065,8 +1070,14 @@ router.post("/solicitacoes/:id/alteracao", requireAuth, upload.array("arquivos",
       blocks.push({ text: " " });
     }
     blocks.push({ text: `${cabecalho}\n\n${mensagem.trim()}` });
-    if (anexadosOk > 0) {
-      blocks.push({ text: `\n\n\ud83d\udcce ${anexadosOk} arquivo(s) anexado(s) a esta tarefa.` });
+    if (anexados.length > 0) {
+      blocks.push({ text: `\n\n\ud83d\udcce Anexo${anexados.length > 1 ? "s" : ""}:` });
+      for (const a of anexados) {
+        blocks.push({ text: "\n" });
+        // Nome do arquivo como link clicável. Se a URL não veio na resposta, cai no nome puro.
+        if (a.url) blocks.push({ text: a.nome, attributes: { link: a.url } });
+        else blocks.push({ text: a.nome });
+      }
     }
 
     const commentRes = await fetchWithTimeout(`https://api.clickup.com/api/v2/task/${taskId}/comment`, {
