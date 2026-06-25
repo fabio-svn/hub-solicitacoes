@@ -80,7 +80,15 @@ app.use(cors({
   },
   credentials: true,
 }));
-app.use(express.json({ limit: "1mb" }));
+// O webhook do ClickUp valida a assinatura HMAC sobre o corpo CRU (Buffer). Se o
+// express.json() parsear o corpo antes, ele vira objeto e o crypto.update() quebra
+// (ERR_INVALID_ARG_TYPE → 500, e o ClickUp fica re-tentando). Por isso o parser global
+// pula essa rota; o próprio webhook tem o seu express.raw() para receber o corpo cru.
+const _jsonParser = express.json({ limit: "1mb" });
+app.use((req, res, next) => {
+  if (req.path === "/api/webhook/clickup") return next();
+  _jsonParser(req, res, next);
+});
 app.use(express.urlencoded({ extended: true, limit: "1mb" }));
 
 app.set("trust proxy", 1);
