@@ -102,6 +102,7 @@ export const AVAILABLE_FONTS = [
 ];
 
 export const PLACEHOLDERS_BY_TIPO: Record<string, string[]> = {
+  'convite-evento':        ['tipo_evento','titulo','num_palestrantes','horario_brasilia','data','horario','local_nome','endereco','palestrante_1_nome','palestrante_1_cargo','palestrante_1_foto','palestrante_2_nome','palestrante_2_cargo','palestrante_2_foto','palestrante_3_nome','palestrante_3_cargo','palestrante_3_foto'],
   'assinatura-email':      ['nome', 'cargo', 'telefone', 'email', 'marca_label', 'tem_cfp', 'marca'],
   'cartao-boas-vindas':    ['telefone', 'nome_cliente', 'nome_assinatura', 'unidade', 'contrato_social', 'is_private_key', 'contrato_label'],
   'cartao-visita-digital': ['nome', 'telefone', 'email', 'contrato_social', 'foto_perfil', 'contrato_label', 'telefone_digits', 'site_url'],
