@@ -1,6 +1,5 @@
 // ── Constants ────────────────────────────────────────────────
   const PLACEHOLDERS_BY_TIPO = {
-    'convite-evento':        ['tipo_evento','titulo','num_palestrantes','horario_brasilia','data','horario','local_nome','endereco','palestrante_1_nome','palestrante_1_cargo','palestrante_1_foto','palestrante_2_nome','palestrante_2_cargo','palestrante_2_foto','palestrante_3_nome','palestrante_3_cargo','palestrante_3_foto'],
     'assinatura-email':      ['nome','cargo','telefone','email','marca_label','tem_cfp','marca'],
     'cartao-boas-vindas':    ['telefone','nome_cliente','nome_assinatura','unidade','contrato_social','is_private_key','contrato_label'],
     'cartao-visita-digital': ['nome','telefone','email','contrato_social','foto_perfil','contrato_label','telefone_digits','site_url'],
@@ -10,7 +9,6 @@
   };
 
   const TIPO_LABELS = {
-    'convite-evento':               'Convite de Evento',
     'cartao-boas-vindas':           'Cartão de Boas-vindas',
     'assinatura-email':             'Assinatura de E-mail',
     'cartao-comemorativo':          'Cartão Comemorativo',
@@ -26,7 +24,6 @@
   };
 
   const KNOWN_TIPOS = [
-    { value: 'convite-evento',                label: 'Convite de Evento' },
     { value: 'cartao-boas-vindas',            label: 'Cartão de Boas-vindas' },
     { value: 'assinatura-email',              label: 'Assinatura de E-mail' },
     { value: 'cartao-comemorativo',           label: 'Cartão Comemorativo' },
