@@ -38,6 +38,8 @@ export type TextLineLayer = LayerBase & {
   font_size: number;
   color: string;
   align: 'left' | 'center' | 'right';
+  letter_spacing?: number;                 // px extras entre glifos (kerning); default 0
+  text_transform?: 'none' | 'uppercase' | 'capitalize-first'; // caixa do texto no render; default 'none'
   auto_fit?: {
     enabled: boolean;
     min_font_size: number;
@@ -56,6 +58,8 @@ export type TextBlockLayer = LayerBase & {
   color: string;
   align: 'left' | 'center' | 'right';
   vertical_align?: 'top' | 'middle' | 'bottom';
+  letter_spacing?: number;                 // px extras entre glifos (kerning); default 0
+  text_transform?: 'none' | 'uppercase' | 'capitalize-first'; // caixa do texto no render; default 'none'
   auto_fit?: {
     enabled?: boolean;
     min_font_size?: number;
@@ -76,6 +80,9 @@ export type ImageLayer = LayerBase & {
       };
   blend_mode?: 'normal' | 'screen' | 'multiply';
   resize_mode?: 'contain' | 'cover' | 'fill';
+  // Ponto de foco do recorte quando a imagem é cortada (círculo ou resize 'cover').
+  // 'attention' = sharp detecta a região mais saliente (tipicamente o rosto). default 'center'.
+  crop_focus?: 'center' | 'top' | 'bottom' | 'attention';
   shape?: 'rectangle' | 'circle';
   border?: {
     width: number;
@@ -95,14 +102,22 @@ export type ShapeLayer = LayerBase & {
 };
 
 export const AVAILABLE_FONTS = [
-  { family: 'Taviraj Light',           file: 'Taviraj-Light.woff2' },
-  { family: 'Nunito Sans Light',       file: 'NunitoSans-Light.woff2' },
-  { family: 'Ivy Journal Light',       file: 'IvyJournal-Light.ttf' },
-  { family: 'Roobert PRO TRIAL Light', file: 'RoobertPROTRIAL-Light.otf' },
+  { family: 'Taviraj Light',              file: 'Taviraj-Light.woff2' },
+  { family: 'Nunito Sans Light',          file: 'NunitoSans-Light.woff2' },
+  { family: 'Ivy Journal Thin',           file: 'IvyJournal-Thin.ttf' },
+  { family: 'Ivy Journal Light',          file: 'IvyJournal-Light.ttf' },
+  { family: 'Ivy Journal Regular',        file: 'IvyJournal-Regular.ttf' },
+  { family: 'Ivy Journal SemiBold',       file: 'IvyJournal-SemiBold.ttf' },
+  { family: 'Ivy Journal Bold',           file: 'IvyJournal-Bold.ttf' },
+  { family: 'Roobert PRO TRIAL Light',    file: 'RoobertPROTRIAL-Light.otf' },
+  { family: 'Roobert PRO TRIAL Regular',  file: 'RoobertPROTRIAL-Regular.otf' },
+  { family: 'Roobert PRO TRIAL Medium',   file: 'RoobertPROTRIAL-Medium.otf' },
+  { family: 'Roobert PRO TRIAL SemiBold', file: 'RoobertPROTRIAL-SemiBold.otf' },
+  { family: 'Roobert PRO TRIAL Bold',     file: 'RoobertPROTRIAL-Bold.otf' },
+  { family: 'Roobert PRO TRIAL Heavy',    file: 'RoobertPROTRIAL-Heavy.otf' },
 ];
 
 export const PLACEHOLDERS_BY_TIPO: Record<string, string[]> = {
-  'convite-evento':        ['tipo_evento','titulo','num_palestrantes','horario_brasilia','data','horario','local_nome','endereco','palestrante_1_nome','palestrante_1_cargo','palestrante_1_foto','palestrante_2_nome','palestrante_2_cargo','palestrante_2_foto','palestrante_3_nome','palestrante_3_cargo','palestrante_3_foto'],
   'assinatura-email':      ['nome', 'cargo', 'telefone', 'email', 'marca_label', 'tem_cfp', 'marca'],
   'cartao-boas-vindas':    ['telefone', 'nome_cliente', 'nome_assinatura', 'unidade', 'contrato_social', 'is_private_key', 'contrato_label'],
   'cartao-visita-digital': ['nome', 'telefone', 'email', 'contrato_social', 'foto_perfil', 'contrato_label', 'telefone_digits', 'site_url'],

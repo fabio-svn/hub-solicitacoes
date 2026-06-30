@@ -1,6 +1,5 @@
 // ── Constants ────────────────────────────────────────────────
   const PLACEHOLDERS_BY_TIPO = {
-    'convite-evento':        ['tipo_evento','titulo','num_palestrantes','horario_brasilia','data','horario','local_nome','endereco','palestrante_1_nome','palestrante_1_cargo','palestrante_1_foto','palestrante_2_nome','palestrante_2_cargo','palestrante_2_foto','palestrante_3_nome','palestrante_3_cargo','palestrante_3_foto'],
     'assinatura-email':      ['nome','cargo','telefone','email','marca_label','tem_cfp','marca'],
     'cartao-boas-vindas':    ['telefone','nome_cliente','nome_assinatura','unidade','contrato_social','is_private_key','contrato_label'],
     'cartao-visita-digital': ['nome','telefone','email','contrato_social','foto_perfil','contrato_label','telefone_digits','site_url'],
@@ -10,7 +9,6 @@
   };
 
   const TIPO_LABELS = {
-    'convite-evento':               'Convite de Evento',
     'cartao-boas-vindas':           'Cartão de Boas-vindas',
     'assinatura-email':             'Assinatura de E-mail',
     'cartao-comemorativo':          'Cartão Comemorativo',
@@ -26,7 +24,6 @@
   };
 
   const KNOWN_TIPOS = [
-    { value: 'convite-evento',                label: 'Convite de Evento' },
     { value: 'cartao-boas-vindas',            label: 'Cartão de Boas-vindas' },
     { value: 'assinatura-email',              label: 'Assinatura de E-mail' },
     { value: 'cartao-comemorativo',           label: 'Cartão Comemorativo' },
@@ -116,13 +113,46 @@
     const input = document.getElementById(colorInputId);
     if (!input) return;
     input.value = color;
+    const hexEl = document.getElementById(colorInputId + '_hex');
+    if (hexEl) { hexEl.value = color; hexEl.style.borderColor = ''; }
     input.dispatchEvent(new Event('change', { bubbles: true }));
   }
+  // Aceita "#abc", "#aabbcc" ou sem "#"; devolve "#aabbcc" normalizado, ou null se inválido.
+  function _normalizeHex(v) {
+    if (!v) return null;
+    let h = String(v).trim().replace(/^#/, '');
+    if (/^[0-9a-fA-F]{3}$/.test(h)) h = h.split('').map(c => c + c).join('');
+    return /^[0-9a-fA-F]{6}$/.test(h) ? '#' + h.toLowerCase() : null;
+  }
+  // Texto HEX digitado/colado → atualiza o seletor de cor e dispara o onchange original.
+  function applyHexInput(colorInputId, hexInputId) {
+    const colorEl = document.getElementById(colorInputId);
+    const hexEl = document.getElementById(hexInputId);
+    if (!colorEl || !hexEl) return;
+    const norm = _normalizeHex(hexEl.value);
+    if (!norm) { hexEl.style.borderColor = '#c0392b'; return; }
+    hexEl.style.borderColor = '';
+    colorEl.value = norm;
+    colorEl.dispatchEvent(new Event('change', { bubbles: true }));
+  }
+  // Seletor nativo mexido → reflete o valor no campo de texto HEX.
+  function syncHexFromColor(colorInputId, hexInputId) {
+    const colorEl = document.getElementById(colorInputId);
+    const hexEl = document.getElementById(hexInputId);
+    if (colorEl && hexEl) { hexEl.value = colorEl.value; hexEl.style.borderColor = ''; }
+  }
   function renderColorPickerWithSwatches(id, currentValue, onChangeStr) {
+    const val = currentValue || '#ffffff';
+    const hexId = id + '_hex';
     const swatches = SVN_BRAND_SWATCHES.map(s =>
       `<button type="button" class="brand-swatch" title="${s.label}" onclick="applySwatch('${id}','${s.color}')" style="width:18px;height:18px;border-radius:50%;border:1px solid var(--ink-12);background:${s.color};cursor:pointer;padding:0;flex-shrink:0"></button>`
     ).join('');
-    return `<div style="display:flex;flex-direction:column;gap:4px"><input class="props-input" type="color" id="${id}" value="${currentValue||'#ffffff'}" onchange="${onChangeStr}"><div style="display:flex;gap:4px;flex-wrap:wrap">${swatches}</div></div>`;
+    return `<div style="display:flex;flex-direction:column;gap:4px">`
+      + `<div style="display:flex;gap:6px;align-items:center">`
+      + `<input class="props-input" type="color" id="${id}" value="${val}" onchange="${onChangeStr}" oninput="syncHexFromColor('${id}','${hexId}')" style="flex:0 0 auto;width:42px;padding:2px;cursor:pointer">`
+      + `<input class="props-input" type="text" id="${hexId}" value="${val}" maxlength="7" spellcheck="false" placeholder="#000000" oninput="applyHexInput('${id}','${hexId}')" onblur="syncHexFromColor('${id}','${hexId}')" style="flex:1;min-width:0;font-family:monospace;text-transform:lowercase">`
+      + `</div>`
+      + `<div style="display:flex;gap:4px;flex-wrap:wrap">${swatches}</div></div>`;
   }
   let bgVariantKey = null;
   let testData = {};
@@ -625,11 +655,20 @@
   }
 
   async function deleteTemplateConfirm(id, name, isActive) {
-    if (isActive) { showToast('Não é possível deletar o template ativo. Ative outro primeiro.', 'warning'); return; }
-    const ok = await showConfirm(`Deletar "${name}"? Esta ação não pode ser desfeita.`, { danger: true, okLabel: 'Excluir' });
+    const aviso = isActive
+      ? `Deletar "${name}"? Este é o template ATIVO — se houver outro do mesmo tipo, ele passa a ativo no lugar. Esta ação não pode ser desfeita.`
+      : `Deletar "${name}"? Esta ação não pode ser desfeita.`;
+    const ok = await showConfirm(aviso, { danger: true, okLabel: 'Excluir' });
     if (!ok) return;
-    const res = await fetch(`/api/admin/art-templates/${id}`, { method: 'DELETE' });
-    const d = await res.json().catch(()=>({}));
+    let res = await fetch(`/api/admin/art-templates/${id}`, { method: 'DELETE' });
+    let d = await res.json().catch(()=>({}));
+    // O backend pede confirmação extra quando é o último template do tipo e há solicitações.
+    if (res.status === 409 && d.code === 'last_template_with_solicitacoes') {
+      const forcar = await showConfirm(`${d.error} Deletar mesmo assim?`, { danger: true, okLabel: 'Deletar mesmo assim' });
+      if (!forcar) return;
+      res = await fetch(`/api/admin/art-templates/${id}?force=true`, { method: 'DELETE' });
+      d = await res.json().catch(()=>({}));
+    }
     if (!res.ok) { showToast(d.error || 'Erro ao deletar template', 'error'); return; }
     await loadAllTemplates(); renderListView();
   }
@@ -931,6 +970,38 @@
     `).join('');
   }
 
+  // Gera um valor de exemplo para um campo: 1ª opção (select/radio) ou heurística pelo nome.
+  function _sampleValueFor(key) {
+    const afo = getActiveFieldOptions();
+    if (afo[key] && afo[key].length) {
+      const o = afo[key][0];
+      return (o && typeof o === 'object') ? (o.value ?? o.label ?? '') : String(o);
+    }
+    const k = String(key).toLowerCase();
+    if (k.includes('email')) return 'exemplo@svninvest.com.br';
+    if (k.includes('whats') || k.includes('telefone') || k.includes('fone') || k === 'tel') return '(44) 99999-9999';
+    if (k.includes('nome')) return 'Fulano de Tal';
+    if (k.includes('cargo')) return 'Assessor de Investimentos';
+    if (k.includes('unidade') || k.includes('cidade')) return 'Maringá';
+    if (k.includes('data')) return new Date().toLocaleDateString('pt-BR');
+    if (k.includes('site') || k.includes('url')) return 'https://svninvest.com.br';
+    if (k.includes('contrato') || k.includes('marca')) return 'SVN Investimentos';
+    return 'Exemplo';
+  }
+
+  // Botão "Auto preencher": puxa os dados de exemplo do backend e completa o que sobrar
+  // vazio com valores de exemplo, para visualizar a prévia sem digitar campo a campo.
+  async function autoPreencherTestData() {
+    await loadSampleData(); // popula testData com exemplos do backend (já re-renderiza o painel)
+    const placeholders = getActivePlaceholders(currentTemplateMeta?.tipo);
+    for (const key of placeholders) {
+      const v = testData[key];
+      if (v === undefined || v === null || v === '') testData[key] = _sampleValueFor(key);
+    }
+    renderTestDataPanel();
+    scheduleLivePreview(0);
+  }
+
   // ── Canvas ───────────────────────────────────────────────────
   function fitToView() {
     if (!currentTemplate) return;
@@ -1075,18 +1146,28 @@
         // como fonte carregada no navegador) → família carregada + peso, APENAS
         // para o preview do overlay. NÃO altera o layer.font_family salvo.
         const _fontMap = {
-          'Taviraj Light':     { fam: "'Taviraj'",     w: 300 },
-          'Nunito Sans Light': { fam: "'Nunito Sans'", w: 300 },
+          'Taviraj Light':              { fam: "'Taviraj'",           w: 300 },
+          'Nunito Sans Light':          { fam: "'Nunito Sans'",       w: 300 },
+          'Ivy Journal Thin':           { fam: "'Ivy Journal'",       w: 100 },
+          'Ivy Journal Light':          { fam: "'Ivy Journal'",       w: 300 },
+          'Ivy Journal Regular':        { fam: "'Ivy Journal'",       w: 400 },
+          'Ivy Journal SemiBold':       { fam: "'Ivy Journal'",       w: 600 },
+          'Ivy Journal Bold':           { fam: "'Ivy Journal'",       w: 700 },
+          'Roobert PRO TRIAL Light':    { fam: "'Roobert PRO TRIAL'", w: 300 },
+          'Roobert PRO TRIAL Regular':  { fam: "'Roobert PRO TRIAL'", w: 400 },
+          'Roobert PRO TRIAL Medium':   { fam: "'Roobert PRO TRIAL'", w: 500 },
+          'Roobert PRO TRIAL SemiBold': { fam: "'Roobert PRO TRIAL'", w: 600 },
+          'Roobert PRO TRIAL Bold':     { fam: "'Roobert PRO TRIAL'", w: 700 },
+          'Roobert PRO TRIAL Heavy':    { fam: "'Roobert PRO TRIAL'", w: 800 },
         };
         const _pf = _fontMap[layer.font_family] || { fam: layer.font_family ? `'${layer.font_family}'` : '', w: 400 };
-        const _weight = layer.font_weight || (layer.bold ? 700 : _pf.w);
+        const _weight = _pf.w; // peso vem do nome da fonte (ex: "Ivy Journal Bold"); não há campo separado
         txtPreview.style.cssText = [
           'position:absolute;inset:0;pointer-events:none;overflow:hidden;',
           `font-family:${_pf.fam ? _pf.fam + ',' : ''}sans-serif;`,
           `font-size:${scaledSize}px;`,
           `color:${layer.color || '#000'};`,
           `font-weight:${_weight};`,
-          layer.italic ? 'font-style:italic;' : '',
           `text-align:${align};`,
           `display:flex;flex-direction:column;`,
           `justify-content:${vAlignMap[valign] || 'flex-start'};`,
@@ -1094,14 +1175,15 @@
           layer.type === 'text-block' ? 'white-space:pre-wrap;word-break:break-word;' : 'white-space:nowrap;',
           `line-height:${layer.line_height || 1.2};`,
           `letter-spacing:${layer.letter_spacing ? layer.letter_spacing * SCALE + 'px' : 'normal'};`,
-          `text-transform:${layer.text_transform || 'none'};`,
         ].join('');
         const content = layer.content || layer.text || '';
-        const preview = content.replace(/\{\{[^}]+\}\}/g, m => {
+        let preview = content.replace(/\{\{[^}]+\}\}/g, m => {
           const key = m.slice(2,-2).trim();
           const td = typeof testData !== 'undefined' ? testData : {};
           return td[key] !== undefined ? td[key] : m;
         });
+        if (layer.text_transform === 'uppercase') preview = preview.toUpperCase();
+        else if (layer.text_transform === 'capitalize-first' && preview) preview = preview.charAt(0).toUpperCase() + preview.slice(1);
         txtPreview.textContent = preview || '(texto vazio)';
         div.appendChild(txtPreview);
       } else if (layer.type === 'image') {
@@ -1112,7 +1194,11 @@
         if (src) {
           const im = document.createElement('img');
           im.src = src;
-          im.style.cssText = `width:100%;height:100%;object-fit:${layer.object_fit || 'cover'};pointer-events:none;`;
+          // object-position espelha o crop_focus; 'attention' (detecção de rosto no
+          // render) não tem equivalente em CSS — aproximamos por 'top', já que em
+          // retratos o rosto fica no topo.
+          const _focusPos = { center:'center', top:'top', bottom:'bottom', attention:'top' }[layer.crop_focus || 'center'] || 'center';
+          im.style.cssText = `width:100%;height:100%;object-fit:${layer.object_fit || 'cover'};object-position:${_focusPos};pointer-events:none;`;
           imgWrap.appendChild(im);
         } else {
           imgWrap.style.background = 'rgba(100,100,100,0.15)';
@@ -1365,6 +1451,29 @@
   }
 
   // ── Props panel ──────────────────────────────────────────────
+  // Lista canônica de fontes (mantida em sincronia com AVAILABLE_FONTS do backend).
+  const FONT_OPTIONS = [
+    'Taviraj Light',
+    'Nunito Sans Light',
+    'Ivy Journal Thin','Ivy Journal Light','Ivy Journal Regular','Ivy Journal SemiBold','Ivy Journal Bold',
+    'Roobert PRO TRIAL Light','Roobert PRO TRIAL Regular','Roobert PRO TRIAL Medium','Roobert PRO TRIAL SemiBold','Roobert PRO TRIAL Bold','Roobert PRO TRIAL Heavy',
+  ];
+  // Deriva família → [pesos] (o peso é sempre a última palavra do nome).
+  const FONT_FAMILIES = (() => {
+    const m = {};
+    for (const full of FONT_OPTIONS) {
+      const parts = full.split(' ');
+      const weight = parts[parts.length - 1];
+      const fam = parts.slice(0, -1).join(' ');
+      (m[fam] = m[fam] || []).push(weight);
+    }
+    return m;
+  })();
+  function splitFontFamily(full) {
+    const parts = String(full || FONT_OPTIONS[0]).split(' ');
+    return { family: parts.slice(0, -1).join(' '), weight: parts[parts.length - 1] };
+  }
+
   function showProps(id) {
     const empty = document.getElementById('propsEmpty');
     const content = document.getElementById('propsContent');
@@ -1375,8 +1484,6 @@
     content.style.display = 'block';
     const tipo = currentTemplateMeta?.tipo;
     const placeholders = getActivePlaceholders(tipo);
-    const fontOptions = ['Taviraj Light','Nunito Sans Light','Ivy Journal Light','Roobert PRO TRIAL Light']
-      .map(f => `<option${layer.font_family===f?' selected':''}>${f}</option>`).join('');
     const alignBtns = ['left','center','right']
       .map(a => `<button class="align-btn${layer.align===a?' active':''}" onclick="updLayer('${id}','align','${a}');renderAlignBtns('${id}')" title="${a}">${a==='left'?'←':a==='center'?'↔':'→'}</button>`).join('');
 
@@ -1389,14 +1496,14 @@
           <div><input class="props-input" value="${esc(layer.id)}" onchange="updLayer('${id}','id',this.value)" placeholder="id"></div>
           <div><input class="props-input" value="${esc(layer.name)}" onchange="updLayer('${id}','name',this.value)" placeholder="nome"></div>
         </div>
-        <div class="props-label">Posição / Tamanho</div>
-        <div class="props-row">
-          <div><div class="props-label">X</div><input class="props-input" type="number" value="${layer.x}" onchange="updLayerN('${id}','x',this.value)"></div>
-          <div><div class="props-label">Y</div><input class="props-input" type="number" value="${layer.y}" onchange="updLayerN('${id}','y',this.value)"></div>
-        </div>
+        <div class="props-label">Tamanho / Posição</div>
         <div class="props-row">
           <div><div class="props-label">W</div><input class="props-input" type="number" value="${layer.w||0}" onchange="updLayerN('${id}','w',this.value)"></div>
           <div><div class="props-label">H</div><input class="props-input" type="number" value="${layer.h||0}" onchange="updLayerN('${id}','h',this.value)"></div>
+        </div>
+        <div class="props-row">
+          <div><div class="props-label">X</div><input class="props-input" type="number" value="${layer.x}" onchange="updLayerN('${id}','x',this.value)"></div>
+          <div><div class="props-label">Y</div><input class="props-input" type="number" value="${layer.y}" onchange="updLayerN('${id}','y',this.value)"></div>
         </div>
       </div>
       <div class="layer-align-section">
@@ -1435,23 +1542,38 @@
     if (layer.type === 'text-line' || layer.type === 'text-block') {
       const va = layer.vertical_align || 'top';
       const valignBtns = ['top','middle','bottom'].map(a => `<button class="align-btn${va===a?' active':''}" onclick="updLayer('${id}','vertical_align','${a}');renderVAlignBtns('${id}')" title="${a}">${a==='top'?'↑':a==='middle'?'↕':'↓'}</button>`).join('');
+      const _cur = splitFontFamily(layer.font_family);
+      const familiaOptions = Object.keys(FONT_FAMILIES).map(fam => `<option${_cur.family===fam?' selected':''}>${fam}</option>`).join('');
+      const pesoOptions = (FONT_FAMILIES[_cur.family] || []).map(w => `<option${_cur.weight===w?' selected':''}>${w}</option>`).join('');
       html += `<details class="panel-accordion" open>
   <summary class="panel-accordion-summary">Tipografia <svg class="chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="6 9 12 15 18 9"/></svg></summary>
   <div class="panel-accordion-body">
       <div class="props-section">
         <div class="props-label">Fonte</div>
-        <div class="props-row single"><select class="props-input" onchange="updLayer('${id}','font_family',this.value)">${fontOptions}</select></div>
-        <div class="props-row">
+        <div class="props-row single"><select class="props-input" onchange="updFontFamilia('${id}',this.value)">${familiaOptions}</select></div>
+        <div class="props-label" style="margin-top:6px">Peso</div>
+        <div class="props-row single"><select class="props-input" onchange="updFontPeso('${id}',this.value)">${pesoOptions}</select></div>
+        <div class="props-row" style="margin-top:8px">
           <div><div class="props-label">Tamanho</div><input class="props-input" type="number" value="${layer.font_size}" onchange="updLayerN('${id}','font_size',this.value)"></div>
-          <div><div class="props-label">Cor</div>${renderColorPickerWithSwatches(`color-${id}`, layer.color||'#ffffff', `updLayer('${id}','color',this.value)`)}</div>
+          <div><div class="props-label">Kerning</div><input class="props-input" type="number" step="0.5" value="${layer.letter_spacing||0}" onchange="updLayerN('${id}','letter_spacing',this.value)" title="Espaçamento entre letras (kerning), em px — aceita negativo"></div>
         </div>
-        <div class="props-label">Alinhamento horiz.</div>
+        <div style="margin-top:8px">
+          <div class="props-label">Cor</div>
+          ${renderColorPickerWithSwatches(`color-${id}`, layer.color||'#ffffff', `updLayer('${id}','color',this.value)`)}
+        </div>
+        <div class="props-label" style="margin-top:8px">Alinhamento horiz.</div>
         <div class="align-btns" id="alignBtns-${id}">${alignBtns}</div>
         <div class="props-label" style="margin-top:8px">Alinhamento vert.</div>
         <div class="align-btns" id="valignBtns-${id}">${valignBtns}</div>
         <div class="props-row" style="margin-top:8px">
           <div><div class="props-label">Line height</div><input class="props-input" type="number" value="${layer.line_height||0}" onchange="updLayerN('${id}','line_height',this.value)"></div>
           <div><div class="props-label">Parágrafo</div><input class="props-input" type="number" value="${layer.paragraph_spacing||0}" onchange="updLayerN('${id}','paragraph_spacing',this.value)"></div>
+        </div>
+        <div class="props-label" style="margin-top:8px">Caixa</div>
+        <div class="align-btns">
+          <button type="button" class="align-btn${(layer.text_transform||'none')==='none'?' active':''}" onclick="setTextTransform('${id}','none')" title="Normal — texto como digitado">Aa</button>
+          <button type="button" class="align-btn${layer.text_transform==='uppercase'?' active':''}" onclick="setTextTransform('${id}','uppercase')" title="TUDO MAIÚSCULO (all caps)" style="letter-spacing:0.08em;font-weight:700">AA</button>
+          <button type="button" class="align-btn${layer.text_transform==='capitalize-first'?' active':''}" onclick="setTextTransform('${id}','capitalize-first')" title="Apenas a primeira letra maiúscula">Ab</button>
         </div>
         ${layer.auto_fit?`
         <div class="props-label" style="margin-top:8px">Auto-fit min</div>
@@ -1547,6 +1669,10 @@
         <select class="props-input" onchange="updLayerShape('${id}',this.value)">
           <option value="rectangle"${(!layer.shape||layer.shape==='rectangle')?' selected':''}>Retângulo</option>
           <option value="circle"${layer.shape==='circle'?' selected':''}>Círculo</option>
+        </select>
+        <div class="props-label" style="margin-top:8px">Enquadramento <span style="font-weight:400;opacity:0.5">(quando a foto é cortada)</span></div>
+        <select class="props-input" onchange="updLayer('${id}','crop_focus',this.value)">
+          ${[['center','Centro'],['top','Topo'],['bottom','Base'],['attention','Rosto (automático)']].map(([v,lbl])=>`<option value="${v}"${(layer.crop_focus||'center')===v?' selected':''}>${lbl}</option>`).join('')}
         </select>
         <div class="props-label" style="margin-top:8px">Borda</div>
         <div class="props-row">
@@ -1644,6 +1770,32 @@
     scheduleLivePreview(NORMAL_DEBOUNCE);
   }
   function updLayerN(id, key, value) { updLayer(id, key, parseFloat(value) || 0); }
+
+  // Define a transformação de caixa (text_transform) do layer de texto: 'none',
+  // 'uppercase' (TUDO MAIÚSCULO) ou 'capitalize-first' (só a 1ª letra). Não destrói o
+  // conteúdo — a transformação é aplicada no preview e no render final, então as
+  // variáveis {{}} continuam intactas. Re-renderiza o painel pra refletir o botão ativo.
+  function setTextTransform(id, value) {
+    const layer = getLayer(id); if (!layer) return;
+    updLayer(id, 'text_transform', value);
+    showProps(id);
+  }
+
+  // Troca a família mantendo o peso atual se ele existir na nova família; senão cai no
+  // primeiro peso disponível. Re-renderiza o painel para atualizar o seletor de pesos.
+  function updFontFamilia(id, fam) {
+    const layer = getLayer(id); if (!layer) return;
+    const pesos = FONT_FAMILIES[fam] || [];
+    const cur = splitFontFamily(layer.font_family);
+    const peso = pesos.includes(cur.weight) ? cur.weight : (pesos[0] || '');
+    updLayer(id, 'font_family', (fam + ' ' + peso).trim());
+    showProps(id);
+  }
+  function updFontPeso(id, peso) {
+    const layer = getLayer(id); if (!layer) return;
+    const cur = splitFontFamily(layer.font_family);
+    updLayer(id, 'font_family', (cur.family + ' ' + peso).trim());
+  }
   function alignLayer(layerId, direction) {
     const layer = getLayer(layerId);
     if (!layer || !currentTemplate) return;

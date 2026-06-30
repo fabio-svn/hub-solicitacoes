@@ -63,7 +63,7 @@ body { margin: 0; font-family: 'Nunito Sans', sans-serif; background: var(--bg-l
 .create-form { background: #fff; border: 1.5px solid #e8e2dc; border-radius: 16px; padding: 28px; }
 .form-group { margin-bottom: 20px; }
 .form-label { font-size: 0.78rem; font-weight: 700; color: var(--ink-60); margin-bottom: 6px; display: block; letter-spacing: 0.03em; }
-.form-input { width: 100%; padding: 9px 12px; border: 1.5px solid #e8e2dc; border-radius: 8px; font-size: 0.88rem; font-family: 'Nunito Sans', sans-serif; color: #221b19; background: #fff; transition: border-color 0.15s; }
+.form-input { width: 100%; padding: 7px 10px; border: 1px solid #e8e2dc; border-radius: 7px; box-sizing: border-box; font-size: 0.85rem; font-family: 'Nunito Sans', sans-serif; color: #221b19; background: #fff; transition: border-color 0.15s; }
 .form-input:focus { outline: none; border-color: var(--ruby-red); }
 .form-input[type="radio"] { width: auto; }
 .radio-group { display: flex; flex-direction: column; gap: 10px; margin-top: 4px; }
@@ -106,7 +106,7 @@ body { margin: 0; font-family: 'Nunito Sans', sans-serif; background: var(--bg-l
 .layer-item:hover .layer-drag-handle { color: var(--ink-40); }
 .layer-actions { display: none; gap: 1px; flex-shrink: 0; align-items: center; }
 .layer-item:hover .layer-actions, .layer-item.active .layer-actions { display: flex; }
-.layer-action-btn { width: 22px; height: 22px; border-radius: 4px; border: none; background: transparent; color: var(--ink-40); cursor: pointer; display: inline-flex; align-items: center; justify-content: center; transition: background 0.12s, color 0.12s; flex-shrink: 0; padding: 0; }
+.layer-action-btn { width: 22px; height: 22px; border-radius: 6px; border: none; background: transparent; color: var(--ink-40); cursor: pointer; display: inline-flex; align-items: center; justify-content: center; transition: background 0.12s, color 0.12s; flex-shrink: 0; padding: 0; }
 .layer-action-btn:hover:not(:disabled) { background: var(--ink-10); color: var(--carbon-black); }
 .layer-action-btn:disabled { opacity: 0.2; cursor: default; }
 .layer-type-badge { font-size: 0.65rem; padding: 1px 5px; border-radius: 4px; background: #e8e2dc; color: #6b5e58; white-space: nowrap; }
@@ -188,10 +188,10 @@ body { margin: 0; font-family: 'Nunito Sans', sans-serif; background: var(--bg-l
 .panel-accordion[open] .chevron { transform: rotate(180deg); opacity: 0.8; }
 .panel-accordion-body { padding: 0; }
 .panel-accordion-body .props-section:last-child, .panel-accordion-body .layer-align-section { border-bottom: none; }
-.props-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
+.props-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; align-items: end; }
 .props-row.single { grid-template-columns: 1fr; }
 .props-label { font-size: 0.72rem; color: var(--ink-50); font-weight: 600; margin-bottom: 3px; letter-spacing: 0.03em; }
-.props-input { width: 100%; padding: 5px 8px; border: 1px solid #e8e2dc; border-radius: 6px; font-size: 0.8rem; font-family: 'Nunito Sans', sans-serif; color: #221b19; background: #fff; transition: border-color 0.15s; }
+.props-input { width: 100%; padding: 7px 10px; border: 1px solid #e8e2dc; border-radius: 7px; box-sizing: border-box; font-size: 0.85rem; font-family: 'Nunito Sans', sans-serif; color: #221b19; background: #fff; transition: border-color 0.15s; }
 .props-input:focus { outline: none; border-color: var(--ruby-red); }
 .props-input[type="color"] { padding: 2px 4px; height: 30px; cursor: pointer; }
 .props-textarea { height: 90px; resize: vertical; }
@@ -210,11 +210,11 @@ body { margin: 0; font-family: 'Nunito Sans', sans-serif; background: var(--bg-l
 .test-data-strip-fields { padding: 10px 14px; display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-end; }
 .test-field { display: flex; flex-direction: column; gap: 3px; min-width: 160px; }
 .test-field label { font-size: 0.7rem; color: var(--ink-50); }
-.test-field input, .test-field select { padding: 4px 8px; border: 1px solid var(--ink-12); border-radius: 4px; font-size: 0.82rem; font-family: inherit; background: #fff; color: var(--carbon-black); }
+.test-field input, .test-field select { padding: 4px 8px; border: 1px solid #e8e2dc; border-radius: 6px; font-size: 0.82rem; font-family: inherit; background: #fff; color: var(--carbon-black); }
 .add-layer-section { padding: 8px 14px 14px; }
 .add-layer-btn { font-size: 0.75rem; padding: 5px 10px; border: 1px dashed #ccc; background: transparent; border-radius: 5px; cursor: pointer; color: var(--ink-50); font-family: 'Nunito Sans',sans-serif; width: 100%; margin-bottom: 4px; }
 .add-layer-btn:hover { border-color: var(--ruby-red); color: var(--ruby-red); background: #fdf5f5; }
-.bg-variant-select { font-size: 0.75rem; padding: 4px 8px; border: 1px solid rgba(255,255,255,0.2); border-radius: 5px; background: rgba(255,255,255,0.08); color: #fff; font-family: 'Nunito Sans',sans-serif; }
+.bg-variant-select { font-size: 0.75rem; padding: 4px 8px; border: 1px solid rgba(255,255,255,0.2); border-radius: 6px; background: rgba(255,255,255,0.08); color: #fff; font-family: 'Nunito Sans',sans-serif; }
 .bg-variant-select option { background: #222; }
 .placeholder-chips { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
 .placeholder-chip { font-size: 0.68rem; padding: 2px 7px; background: rgba(172,54,49,0.07); color: var(--ruby-dark); border-radius: 10px; cursor: pointer; border: 1px solid rgba(172,54,49,0.22); }
@@ -225,10 +225,10 @@ body { margin: 0; font-family: 'Nunito Sans', sans-serif; background: var(--bg-l
 .align-btn.active { background: rgba(172,54,49,0.07); color: var(--ruby-dark); font-weight: 600; }
 
 /* ── Layer type icons ── */
-.layer-align-section { margin: 8px 0; padding: 8px 0; border-top: 1px solid var(--ink-08); border-bottom: 1px solid var(--ink-08); }
+.layer-align-section { margin: 8px 0; padding: 8px 14px; border-top: 1px solid var(--ink-08); border-bottom: 1px solid var(--ink-08); }
 .layer-align-row { display: flex; gap: 4px; margin-bottom: 4px; }
 .layer-align-row:last-child { margin-bottom: 0; }
-.layer-align-btn { flex: 1; padding: 6px 0; background: var(--ink-05); border: 1px solid var(--ink-10); border-radius: 5px; cursor: pointer; font-size: 0.85rem; color: var(--ink-70); display: flex; align-items: center; justify-content: center; transition: background 0.12s; font-family: 'Nunito Sans', sans-serif; }
+.layer-align-btn { flex: 1; padding: 6px 0; background: var(--ink-05); border: 1px solid #e8e2dc; border-radius: 6px; cursor: pointer; font-size: 0.85rem; color: var(--ink-70); display: flex; align-items: center; justify-content: center; transition: background 0.12s; font-family: 'Nunito Sans', sans-serif; }
 .layer-align-btn:hover { background: rgba(172,54,49,0.12); color: var(--ruby-red); }
 .layer-align-btn svg { display: block; }
 .layer-icon-t  { font-size: 0.78rem; font-weight: 900; color: var(--ruby-red); min-width: 18px; text-align: center; flex-shrink: 0; letter-spacing: -0.04em; }
@@ -248,7 +248,7 @@ body { margin: 0; font-family: 'Nunito Sans', sans-serif; background: var(--bg-l
 
 /* ── Zoom floating pill ── */
 .zoom-floating { position: absolute; bottom: 16px; right: 16px; background: rgba(0,0,0,0.75); backdrop-filter: blur(8px); color: #fff; padding: 5px 8px; border-radius: 24px; display: flex; align-items: center; gap: 4px; box-shadow: 0 4px 12px rgba(0,0,0,0.35); z-index: 20; pointer-events: all; }
-.zoom-floating button { background: transparent; border: none; color: #fff; cursor: pointer; padding: 3px 8px; border-radius: 4px; font-size: 0.88rem; line-height: 1; font-family: 'Nunito Sans', sans-serif; }
+.zoom-floating button { background: transparent; border: none; color: #fff; cursor: pointer; padding: 3px 8px; border-radius: 6px; font-size: 0.88rem; line-height: 1; font-family: 'Nunito Sans', sans-serif; }
 .zoom-floating button:hover { background: rgba(255,255,255,0.18); }
 .zoom-floating .zoom-val { font-size: 0.75rem; min-width: 38px; text-align: center; color: rgba(255,255,255,0.85); }
 
@@ -351,3 +351,21 @@ body { margin: 0; font-family: 'Nunito Sans', sans-serif; background: var(--bg-l
 .panel-scroll::-webkit-scrollbar-thumb:hover,
 .list-group-body::-webkit-scrollbar-thumb:hover { background: var(--ink-30); }
 .editor-layout, .canvas-scroll, .panel-scroll, .list-group-body { scrollbar-width: thin; scrollbar-color: var(--ink-12) transparent; }
+
+/* ── Padrão único de campo do editor ──────────────────────────────
+   O style.css base do hub define `input[type="number"], input[type="text"]…`
+   com padding 10px 14px / radius 10px / borda --ink-20, e esse seletor vence
+   `.props-input` por especificidade — por isso os campos numéricos (W/H/X/Y)
+   ficavam mais altos e com stroke mais forte que os de texto (ID/Nome).
+   Os seletores abaixo (elemento+classe) empatam em especificidade e vencem
+   por ordem de carga, uniformizando TODOS os campos no mesmo padrão. */
+input.props-input, select.props-input, textarea.props-input,
+input.form-input, select.form-input {
+  padding: 7px 10px;
+  border: 1px solid #e8e2dc;
+  border-radius: 7px;
+  box-sizing: border-box;
+  font-size: 0.85rem;
+}
+/* Preserva o swatch de cor (altura fixa, padding mínimo) */
+input.props-input[type="color"] { padding: 2px 4px; height: 30px; }

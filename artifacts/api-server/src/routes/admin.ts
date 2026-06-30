@@ -836,25 +836,49 @@ router.patch("/art-templates/:id/activate", requireRole("admin"), async (req, re
   }
 });
 
-// DELETE /art-templates/:id — delete (blocked if active or last of tipo)
+// DELETE /art-templates/:id — permite deletar inclusive o ativo (promove outro do mesmo
+// grupo tipo+variante a ativo). Bloqueia apagar o ÚLTIMO template de um tipo que ainda
+// tem solicitações, a menos que ?force=true seja enviado (confirmação explícita do admin).
 router.delete("/art-templates/:id", requireRole("admin"), async (req, res): Promise<void> => {
   try {
     const id = parseInt(String(req.params.id));
     if (isNaN(id)) { res.status(400).json({ error: "ID inválido" }); return; }
+    const force = req.query.force === "true" || req.query.force === "1";
     const [target] = await db.select().from(artTemplatesTable).where(eq(artTemplatesTable.id, id));
     if (!target) { res.status(404).json({ error: "Template não encontrado" }); return; }
-    if (target.is_active) {
-      res.status(400).json({ error: "Não é possível deletar o template ativo. Ative outro primeiro." }); return;
-    }
+
     const siblings = await db.select({ id: artTemplatesTable.id }).from(artTemplatesTable).where(eq(artTemplatesTable.tipo, target.tipo));
-    if (siblings.length <= 1) {
+    // Proteção: apagar o ÚLTIMO template de um tipo que ainda tem solicitações deixa essas
+    // solicitações sem como gerar a arte. Exige confirmação explícita (force).
+    if (siblings.length <= 1 && !force) {
       const [{ total }] = await db.select({ total: count() }).from(solicitacoesTable)
         .where(eq(solicitacoesTable.tipo_solicitacao, target.tipo));
       if (total > 0) {
-        res.status(400).json({ error: `Este é o único template do tipo "${target.tipo}" e há ${total} solicitação(ões) associada(s). Crie outro template antes de deletar este.` }); return;
+        res.status(409).json({
+          code: "last_template_with_solicitacoes",
+          total,
+          error: `Este é o único template do tipo "${target.tipo}" e há ${total} solicitação(ões) associada(s). Se deletar, elas ficam sem template até você criar outro.`,
+        });
+        return;
       }
     }
+
     await db.delete(artTemplatesTable).where(eq(artTemplatesTable.id, id));
+
+    // Se o deletado era o ativo e ainda existem outros do mesmo grupo (tipo+variante),
+    // promove o mais recente a ativo — assim o grupo não fica sem template ativo
+    // (a geração ignora os inativos).
+    if (target.is_active) {
+      const sameGroupWhere = target.variant_value !== null && target.variant_value !== undefined
+        ? and(eq(artTemplatesTable.tipo, target.tipo), eq(artTemplatesTable.variant_value, target.variant_value))
+        : and(eq(artTemplatesTable.tipo, target.tipo), isNull(artTemplatesTable.variant_value));
+      const [next] = await db.select({ id: artTemplatesTable.id }).from(artTemplatesTable)
+        .where(sameGroupWhere).orderBy(desc(artTemplatesTable.id)).limit(1);
+      if (next) {
+        await db.update(artTemplatesTable).set({ is_active: true }).where(eq(artTemplatesTable.id, next.id));
+      }
+    }
+
     res.json({ success: true });
   } catch (err: any) {
     req.log.error({ err, body: req.body }, "Erro ao deletar art-template");

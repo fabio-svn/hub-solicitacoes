@@ -2,7 +2,7 @@ import sharp from 'sharp';
 import * as fontkitLib from 'fontkit';
 import * as fs from 'fs';
 import * as path from 'path';
-import { ArtTemplate, TextLineLayer, TextBlockLayer, ImageLayer, ShapeLayer } from '../types/art-template';
+import { ArtTemplate, TextLineLayer, TextBlockLayer, ImageLayer, ShapeLayer, AVAILABLE_FONTS } from '../types/art-template';
 import { logger } from '../lib/logger';
 import { CONTRATOS_OPTS, MARCAS_OPTS } from '../config/form-schemas';
 
@@ -56,12 +56,11 @@ function loadFont(file: string): any {
   return font;
 }
 
-const FONT_FILES: Record<string, string> = {
-  'Taviraj Light':           'Taviraj-Light.woff2',
-  'Nunito Sans Light':       'NunitoSans-Light.woff2',
-  'Ivy Journal Light':       'IvyJournal-Light.ttf',
-  'Roobert PRO TRIAL Light': 'RoobertPROTRIAL-Light.otf',
-};
+// Fonte única: deriva de AVAILABLE_FONTS (em ../types/art-template), que também é
+// usada pela validação do backend. Assim a lista nunca dessincroniza entre render e save.
+const FONT_FILES: Record<string, string> = Object.fromEntries(
+  AVAILABLE_FONTS.map((f) => [f.family, f.file])
+);
 
 for (const file of Object.values(FONT_FILES)) {
   try { loadFont(file); } catch (err) { logger.warn({ file, err }, 'render: falha ao pré-carregar fonte'); }
@@ -69,7 +68,13 @@ for (const file of Object.values(FONT_FILES)) {
 
 function getFont(family: string): any {
   const file = FONT_FILES[family];
-  if (!file) throw new Error(`Fonte desconhecida: ${family}`);
+  if (!file) {
+    // Fonte fora da lista (ex.: template legado ou nome inválido): em vez de derrubar a
+    // layer — o que faria o texto sumir sem aviso —, cai na primeira fonte disponível.
+    const fallback = AVAILABLE_FONTS[0];
+    logger.warn({ family, fallback: fallback?.family }, 'render: fonte desconhecida, usando fallback');
+    return loadFont(fallback.file);
+  }
   return loadFont(file);
 }
 
@@ -125,19 +130,21 @@ async function getRemoteAsset(url: string): Promise<Buffer> {
   return fs.promises.readFile(fullPath);
 }
 
-function measureTextWidth(font: any, text: string, fontSize: number): number {
+function measureTextWidth(font: any, text: string, fontSize: number, letterSpacing = 0): number {
   const run = font.layout(text);
   const scale = fontSize / font.unitsPerEm;
-  return run.positions.reduce((s: number, p: any) => s + p.xAdvance, 0) * scale;
+  const base = run.positions.reduce((s: number, p: any) => s + p.xAdvance, 0) * scale;
+  const gaps = Math.max(0, run.glyphs.length - 1) * letterSpacing;
+  return base + gaps;
 }
 
-function wrapTextToLines(font: any, text: string, fontSize: number, maxWidth: number): string[] {
+function wrapTextToLines(font: any, text: string, fontSize: number, maxWidth: number, letterSpacing = 0): string[] {
   const words = text.split(/\s+/);
   const lines: string[] = [];
   let current = '';
   for (const word of words) {
     const test = current ? `${current} ${word}` : word;
-    if (measureTextWidth(font, test, fontSize) <= maxWidth) {
+    if (measureTextWidth(font, test, fontSize, letterSpacing) <= maxWidth) {
       current = test;
     } else {
       if (current) lines.push(current);
@@ -148,7 +155,7 @@ function wrapTextToLines(font: any, text: string, fontSize: number, maxWidth: nu
   return lines;
 }
 
-async function renderTextBuffer(font: any, text: string, fontSize: number, fill: string) {
+async function renderTextBuffer(font: any, text: string, fontSize: number, fill: string, letterSpacing = 0) {
   const run = font.layout(text);
   const scale = fontSize / font.unitsPerEm;
   const ascent = font.ascent * scale;
@@ -157,21 +164,23 @@ async function renderTextBuffer(font: any, text: string, fontSize: number, fill:
   const svgHeight = Math.ceil(ascent + descent);
 
   let x = 0;
+  let spacing = 0; // px de letter-spacing acumulados antes do glifo atual
   const pathElements: string[] = [];
   for (let i = 0; i < run.glyphs.length; i++) {
     const glyph = run.glyphs[i];
     const pos = run.positions[i];
     const pathData = glyph.path.toSVG();
     if (pathData) {
-      const tx = (x + pos.xOffset) * scale;
+      const tx = (x + pos.xOffset) * scale + spacing;
       const ty = baselineY + pos.yOffset * scale;
       pathElements.push(
         `<path d="${pathData}" transform="translate(${tx.toFixed(2)},${ty.toFixed(2)}) scale(${scale.toFixed(5)},-${scale.toFixed(5)})" fill="${fill}"/>`
       );
     }
     x += pos.xAdvance;
+    if (i < run.glyphs.length - 1) spacing += letterSpacing; // não aplica após o último glifo
   }
-  const totalWidth = Math.ceil(x * scale) + 4;
+  const totalWidth = Math.ceil(x * scale + spacing) + 4;
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${totalWidth}" height="${svgHeight}">${pathElements.join('')}</svg>`;
   return {
     buffer: await sharp(Buffer.from(svg)).png().toBuffer(),
@@ -212,14 +221,17 @@ async function renderTextLine(
   composites: sharp.OverlayOptions[],
   ctx?: { tipo?: string; layoutId?: string | number }
 ) {
-  const text = substitute(layer.content, data, ctx);
+  let text = substitute(layer.content, data, ctx);
+  if (layer.text_transform === 'uppercase') text = text.toUpperCase();
+  else if (layer.text_transform === 'capitalize-first' && text) text = text.charAt(0).toUpperCase() + text.slice(1);
   if (!text.trim()) return;
   const font = getFont(layer.font_family);
+  const letterSpacing = layer.letter_spacing || 0;
 
   let fontSize = layer.font_size;
   {
     // Auto-fit por padrão: encolhe pra caber na largura mesmo sem auto_fit.enabled.
-    const natural = measureTextWidth(font, text, fontSize);
+    const natural = measureTextWidth(font, text, fontSize, letterSpacing);
     if (natural > layer.w) {
       const minFont = layer.auto_fit?.min_font_size ?? Math.round(layer.font_size * 0.5);
       const scaled = Math.floor(fontSize * (layer.w / natural));
@@ -227,7 +239,7 @@ async function renderTextLine(
     }
   }
 
-  const { buffer, width } = await renderTextBuffer(font, text, fontSize, layer.color);
+  const { buffer, width } = await renderTextBuffer(font, text, fontSize, layer.color, letterSpacing);
   composites.push({
     input: buffer,
     top: topForText(font, fontSize, layer.y),
@@ -241,15 +253,18 @@ async function renderTextBlock(
   composites: sharp.OverlayOptions[],
   ctx?: { tipo?: string; layoutId?: string | number }
 ) {
-  const text = substitute(layer.content, data, ctx);
+  let text = substitute(layer.content, data, ctx);
+  if (layer.text_transform === 'uppercase') text = text.toUpperCase();
+  else if (layer.text_transform === 'capitalize-first' && text) text = text.charAt(0).toUpperCase() + text.slice(1);
   const font = getFont(layer.font_family);
+  const letterSpacing = layer.letter_spacing || 0;
 
   // Build wrapped lines for a given font size (forced \n breaks + word-wrap within layer.w)
   const buildLines = (fs: number): string[] => {
     const result: string[] = [];
     for (const userLine of text.split('\n')) {
       if (userLine === '') result.push(''); // blank spacer
-      else result.push(...wrapTextToLines(font, userLine, fs, layer.w));
+      else result.push(...wrapTextToLines(font, userLine, fs, layer.w, letterSpacing));
     }
     return result;
   };
@@ -265,7 +280,7 @@ async function renderTextBlock(
     const lh = Math.max(layer.line_height * (fontSize / layer.font_size), naturalLh);
     const ch = allLines.length * lh;
     const maxW = allLines.reduce(
-      (max, l) => (l ? Math.max(max, measureTextWidth(font, l, fontSize)) : max),
+      (max, l) => (l ? Math.max(max, measureTextWidth(font, l, fontSize, letterSpacing)) : max),
       0
     );
     if (ch <= layer.h && maxW <= layer.w) break;
@@ -286,7 +301,7 @@ async function renderTextBlock(
 
   for (const line of allLines) {
     if (line !== '') {
-      const { buffer, width } = await renderTextBuffer(font, line, fontSize, layer.color);
+      const { buffer, width } = await renderTextBuffer(font, line, fontSize, layer.color, letterSpacing);
       composites.push({
         input: buffer,
         top: topForText(font, fontSize, yCursor),
@@ -295,6 +310,16 @@ async function renderTextBlock(
     }
     yCursor += lineHeight;
   }
+}
+
+// Converte crop_focus do layer na opção `position` do sharp (usada no fit:'cover').
+// 'attention' faz o sharp recortar pela região mais saliente — tipicamente o rosto,
+// resolvendo o caso de fotos verticais que cortavam a cabeça.
+function cropPosition(focus?: string): any {
+  if (focus === 'top') return 'top';
+  if (focus === 'bottom') return 'bottom';
+  if (focus === 'attention') return sharp.strategy.attention;
+  return 'centre';
 }
 
 async function renderImage(
@@ -349,8 +374,10 @@ async function renderImage(
       return;
     }
     const fitMode = isCircle ? 'cover' : (layer.resize_mode ?? 'contain');
+    const resizeOpts: sharp.ResizeOptions = { fit: fitMode, background: { r: 0, g: 0, b: 0, alpha: 0 } };
+    if (fitMode === 'cover') resizeOpts.position = cropPosition(layer.crop_focus);
     input = await sharp(raw)
-      .resize(safeW, safeH, { fit: fitMode, background: { r: 0, g: 0, b: 0, alpha: 0 } })
+      .resize(safeW, safeH, resizeOpts)
       .toBuffer();
   } else {
     const meta = await sharp(raw).metadata();
@@ -376,7 +403,7 @@ async function renderImage(
       `</svg>`
     );
     input = await sharp(input)
-      .resize(size, size, { fit: 'cover' })
+      .resize(size, size, { fit: 'cover', position: cropPosition(layer.crop_focus) })
       .composite([{ input: mask, blend: 'dest-in' }])
       .png()
       .toBuffer();
