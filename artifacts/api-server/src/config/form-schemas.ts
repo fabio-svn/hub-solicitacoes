@@ -53,6 +53,19 @@ export const CARGOS_OPTS = [
   { value: 'socia-assessora', label: 'Sócia e Assessora de Investimentos' },
 ];
 
+// Mantido em espelho com SELOS_ASSESSOR em public/config.js — atualize os dois juntos.
+export const SELOS_LABELS: Record<string, string> = {
+  "ancord": "Ancord",
+  "cea": "CEA",
+  "cfp": "CFP",
+  "cga": "CGA",
+  "cnpi": "CNPI",
+  "cpa10": "CPA-10",
+  "cpa20": "CPA-20",
+  "xp-private": "XP Private",
+  "palestrante-svn": "Palestrante SVN",
+};
+
 // Fonte única de setores: nome (exibição/dropdown) + code (geração de ID no ClickUp).
 // Adicione um setor novo APENAS aqui — a lista de nomes e o mapa de códigos
 // são derivados automaticamente, então não há mais risco de desync.

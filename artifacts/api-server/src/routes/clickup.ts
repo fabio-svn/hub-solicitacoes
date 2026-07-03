@@ -5,7 +5,7 @@ import { db, usersTable, userTipoAssignmentsTable, tipoClickupListTable } from "
 import { eq } from "drizzle-orm";
 import { mapClickUpStatus } from "../config/clickup-status";
 import { UNIDADES_ENDERECOS } from "../config/unidades";
-import { FORM_SCHEMAS, SETOR_CODIGO_MAP, TIPOS_COM_CLICKUP } from "../config/form-schemas";
+import { FORM_SCHEMAS, SETOR_CODIGO_MAP, TIPOS_COM_CLICKUP, SELOS_LABELS } from "../config/form-schemas";
 import { buscarContato } from "../lib/mysqlContatos";
 import { addBusinessDays, proximaQuarta as proximaQuartaUtil } from "../lib/holidays";
 
@@ -569,7 +569,8 @@ function buildDetailsSection(tipo: string, dados: FormDados): string | null {
     if (miniBio) items.push(`• Mini bio:\n${miniBio}`);
     const selos = dados.selos as string[] | undefined;
     if (selos && Array.isArray(selos) && selos.length > 0) {
-      items.push(`• Selos: ${selos.join(", ")}`);
+      const selosLabels = selos.map(id => SELOS_LABELS[id] || humanizeSlug(id));
+      items.push(`• Selos: ${selosLabels.join(", ")}`);
     }
     const depos = dados.depoimentos as Array<{ nome: string; texto: string }> | undefined;
     if (depos && Array.isArray(depos) && depos.length > 0) {
