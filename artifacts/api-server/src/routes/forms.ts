@@ -236,7 +236,11 @@ function gerarTituloSolicitacao(tipo: string, dados: Record<string, unknown>, us
     case "sessao-fotos":         return `[Sessão de Fotos] ${s(dados.tituloFotos) || userName}`;
     case "materiais-impressos": {
       const tipoMat = s(dados.tipoMaterial) || s(dados.tipoImpresso) || "Material";
-      const label = tipoMat.charAt(0).toUpperCase() + tipoMat.slice(1);
+      const label = tipoMat
+        .split(/[-_\s]+/)
+        .filter(Boolean)
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(" ");
       return `[Material Impresso] ${label}`;
     }
     default: return `[${tipo}] ${userName}`;

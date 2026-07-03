@@ -317,6 +317,24 @@ function humanizeRequestType(tipo: string): string {
     || tipo;
 }
 
+function humanizeSlug(raw: string): string {
+  const s = str(raw);
+  if (!s) return s;
+  return s
+    .split(/[-_\s]+/)
+    .filter(Boolean)
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+}
+
+function resolveOptionLabel(tipo: string, fieldName: string, raw: string): string {
+  const s = str(raw);
+  if (!s) return s;
+  const field = FORM_SCHEMAS[tipo]?.fields.find(f => f.name === fieldName);
+  const option = field?.options?.find(o => o.value === s);
+  return option?.label || humanizeSlug(s);
+}
+
 // ─────────────────────────────────────────────
 // Task name builders
 // ─────────────────────────────────────────────
@@ -355,7 +373,7 @@ function buildGeneralTaskName(tipo: string, _subtipo: string, dados: FormDados, 
 
     case "materiais-impressos": {
       const tipoMat = str(dados.tipoMaterial) || str(dados.tipoImpresso) || "Material";
-      const tipoMatLabel = tipoMat.charAt(0).toUpperCase() + tipoMat.slice(1);
+      const tipoMatLabel = humanizeSlug(tipoMat);
       return `[Material Impresso] ${tipoMatLabel} - ${setor}`;
     }
 
@@ -527,7 +545,7 @@ function buildDetailsSection(tipo: string, dados: FormDados): string | null {
 
   } else if (["apresentacao-nova", "apresentacao-atualizar"].includes(tipo)) {
     const tamanho = str(dados.tamanho);
-    if (tamanho) items.push(`• Formato / Tamanho: ${tamanho}`);
+    if (tamanho) items.push(`• Formato / Tamanho: ${resolveOptionLabel(tipo, "tamanho", tamanho)}`);
     const tipoCriacao = str(dados.tipoCriacao);
     if (tipoCriacao) {
       const tipoHuman = tipoCriacao === "do-zero" ? "Do zero"
@@ -592,7 +610,7 @@ function buildGeneralDescription(
   const setor = getUserDepartment(user, dados);
   const resumoItems: string[] = [];
   addLine(resumoItems, "Tipo", tipoHuman);
-  if (subtipo) addLine(resumoItems, "Subtipo", subtipo);
+  if (subtipo) addLine(resumoItems, "Subtipo", humanizeSlug(subtipo));
   if (setor) addLine(resumoItems, "Setor", setor);
   addLine(resumoItems, "Título", str(dados.titulo) || str(dados.nome_completo));
   addLine(resumoItems, "Finalidade", str(dados.finalidade));
@@ -721,14 +739,17 @@ function buildMateriaisImpressosDescription(dados: FormDados, user: UserData, ar
   blocks.push(buildRequesterSection(user, dados));
 
   const items: string[] = [];
+  const tipoMatRaw = str(dados.tipoMaterial) || str(dados.tipoImpresso);
   addLine(items, "Setor", str(dados.setor as string));
-  addLine(items, "Tipo de material", str(dados.tipoMaterial) || str(dados.tipoImpresso));
-  addLine(items, "Formato do papel", str(dados.formatoPapel));
-  addLine(items, "Orientação", str(dados.orientacao));
+  addLine(items, "Tipo de material", tipoMatRaw
+    ? resolveOptionLabel("materiais-impressos", "tipoMaterial", tipoMatRaw)
+    : "");
+  addLine(items, "Formato do papel", resolveOptionLabel("materiais-impressos", "formatoPapel", str(dados.formatoPapel)));
+  addLine(items, "Orientação", resolveOptionLabel("materiais-impressos", "orientacao", str(dados.orientacao)));
   addLine(items, "Tamanho", str(dados.tamanhoBanner) || str(dados.tamanhoAdesivo));
-  addLine(items, "Tipo de adesivo", str(dados.tipoAdesivo));
-  addLine(items, "Tipo de camiseta", str(dados.tipoCamiseta));
-  addLine(items, "Cor", str(dados.corCamiseta));
+  addLine(items, "Tipo de adesivo", resolveOptionLabel("materiais-impressos", "tipoAdesivo", str(dados.tipoAdesivo)));
+  addLine(items, "Tipo de camiseta", resolveOptionLabel("materiais-impressos", "tipoCamiseta", str(dados.tipoCamiseta)));
+  addLine(items, "Cor", resolveOptionLabel("materiais-impressos", "corCamiseta", str(dados.corCamiseta)));
   addLine(items, "Quantidade/tamanhos", str(dados.qtdTamanhos));
   addLine(items, "Fornecedor", str(dados.fornecedor));
   addLine(items, "Conteúdo selecionado", str(dados.conteudoSelecionado));
@@ -1313,7 +1334,7 @@ export async function createClickUpTask(
   } else if (tipo === "materiais-impressos") {
     const setor = getUserDepartment(user, dados);
     const tipoMat = str(dados.tipoMaterial) || str(dados.tipoImpresso) || "Material";
-    const tipoLabel = tipoMat.charAt(0).toUpperCase() + tipoMat.slice(1);
+    const tipoLabel = humanizeSlug(tipoMat);
     taskName = `[Material Impresso] ${tipoLabel} - ${setor}`;
     description = buildMateriaisImpressosDescription(dados, user, safeArquivos);
   } else if (tipo === "email-marketing") {
