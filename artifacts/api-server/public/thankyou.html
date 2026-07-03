@@ -34,7 +34,7 @@
       <div id="artefatoCard" style="display:none;margin-top:28px;margin-bottom:48px;width:100%">
         <div style="border-top:1px solid rgba(255,248,243,0.12);padding-top:24px">
           <div id="artefatoPolling" style="text-align:center;padding:16px 0">
-            <div style="display:inline-block;width:20px;height:20px;border:2px solid rgba(255,248,243,0.3);border-top-color:#c8a96e;border-radius:50%;animation:spin 0.9s linear infinite"></div>
+            <div style="display:inline-block;width:20px;height:20px;border:2px solid rgba(255,248,243,0.3);border-top-color:var(--gold-soft);border-radius:var(--radius-round);animation:spin 0.9s linear infinite"></div>
             <p style="margin-top:10px;font-size:0.8rem;color:rgba(255,248,243,0.6)">Gerando seu material…</p>
           </div>
           <div id="artefatoReady" style="display:none">
@@ -91,7 +91,7 @@
               const readyEl = document.getElementById('artefatoReady');
               if (readyEl) {
                 readyEl.innerHTML = `
-                  <div style="color:var(--danger);padding:16px;background:rgba(220,38,38,0.08);border-radius:8px;text-align:center">
+                  <div style="color:var(--danger);padding:16px;background:rgba(220,38,38,0.08);border-radius:var(--radius-md);text-align:center">
                     <strong>Erro na geração</strong>
                     <p style="margin-top:8px;font-size:0.85rem;opacity:0.8">
                       Houve um problema ao gerar seu material. Entre em contato com o time de Marketing.

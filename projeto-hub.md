@@ -1,6 +1,6 @@
 # Pack do Projeto Hub SVN
 
-Gerado em: 2026-06-24 18:20:50
+Gerado em: 2026-07-03 14:02:04
 
 Roots: artifacts/api-server lib scripts
 
@@ -2416,48 +2416,48 @@ MYSQL_CONTATOS=                                              # [opcional]
     .header { background: var(--card-white); border-bottom: 1px solid var(--border-light); padding: 0 24px; height: 58px; }
     .header-inner { display: flex; align-items: center; justify-content: space-between; height: 100%; max-width: 1400px; margin: 0 auto; }
     .header-logo img { display: block; }
-    .avatar { width: 34px; height: 34px; border-radius: 50%; background: var(--ruby-red); color: #fff; font-size: 0.78rem; font-weight: 700; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+    .avatar { width: 34px; height: 34px; border-radius: var(--radius-round); background: var(--ruby-red); color: #fff; font-size: 0.78rem; font-weight: 700; display: flex; align-items: center; justify-content: center; cursor: pointer; }
     .user-name { font-size: 0.82rem; font-weight: 600; }
-    .notif-badge { position: absolute; top: -3px; right: -3px; background: var(--danger); color: #fff; border-radius: 50%; width: 16px; height: 16px; font-size: 0.6rem; display: flex; align-items: center; justify-content: center; font-weight: 700; }
-    .notif-badge-menu { background: var(--danger); color: #fff; border-radius: 4px; padding: 1px 5px; font-size: 0.65rem; font-weight: 700; margin-left: auto; }
+    .notif-badge { position: absolute; top: -3px; right: -3px; background: var(--danger); color: #fff; border-radius: var(--radius-round); width: 16px; height: 16px; font-size: 0.6rem; display: flex; align-items: center; justify-content: center; font-weight: 700; }
+    .notif-badge-menu { background: var(--danger); color: #fff; border-radius: var(--radius-xs); padding: 1px 5px; font-size: 0.65rem; font-weight: 700; margin-left: auto; }
     .stats-bar { display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
-    .stat-pill { background: var(--card-white); border: 1px solid var(--border-light); border-radius: 8px; padding: 8px 14px; font-size: 0.78rem; font-weight: 600; color: var(--ink-60); }
+    .stat-pill { background: var(--card-white); border: 1px solid var(--border-light); border-radius: var(--radius-md); padding: 8px 14px; font-size: 0.78rem; font-weight: 600; color: var(--ink-60); }
     .stat-pill strong { color: var(--carbon-black); }
     .asset-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 14px; }
     .asset-card { overflow: hidden; transition: box-shadow 0.15s, border-color 0.15s; }
     .asset-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.08); border-color: #d0cac4; }
     .asset-card.selected { border-color: var(--ruby-red); box-shadow: 0 0 0 2px rgba(159,63,55,0.2); }
-    .asset-thumb { width: 100%; aspect-ratio: 1; background: #f0ece8; display: flex; align-items: center; justify-content: center; overflow: hidden; cursor: pointer; position: relative; }
+    .asset-thumb { width: 100%; aspect-ratio: 1; background: var(--surface-warm); display: flex; align-items: center; justify-content: center; overflow: hidden; cursor: pointer; position: relative; }
     .asset-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
     .asset-thumb .no-thumb { font-size: 2rem; opacity: 0.2; }
     .asset-thumb .overlay { position: absolute; inset: 0; background: rgba(159,63,55,0.7); display: none; align-items: center; justify-content: center; gap: 8px; }
     .asset-card:hover .overlay { display: flex; }
-    .overlay-btn { background: #fff; border: none; border-radius: 6px; padding: 6px 12px; font-size: 0.75rem; font-weight: 700; cursor: pointer; font-family: 'Nunito Sans', sans-serif; transition: background 0.12s; }
-    .overlay-btn:hover { background: #f5f3f0; }
+    .overlay-btn { background: #fff; border: none; border-radius: var(--radius-sm); padding: 6px 12px; font-size: 0.75rem; font-weight: 700; cursor: pointer; font-family: 'Nunito Sans', sans-serif; transition: background 0.12s; }
+    .overlay-btn:hover { background: var(--bg-light); }
     .asset-info { padding: 10px 12px; }
     .asset-name { font-size: 0.78rem; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-bottom: 3px; }
     .asset-meta { font-size: 0.68rem; color: var(--ink-40); display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
     .asset-actions { padding: 0 10px 10px; display: flex; gap: 6px; }
-    .asset-act-btn { flex: 1; padding: 5px; font-size: 0.72rem; border-radius: 6px; border: 1px solid var(--border-light); background: var(--icon-bg); cursor: pointer; font-family: 'Nunito Sans', sans-serif; text-align: center; transition: background 0.12s; }
-    .asset-act-btn:hover { background: #e8e2dc; }
-    .asset-act-btn.danger { color: var(--danger); border-color: #fecaca; }
-    .asset-act-btn.danger:hover { background: #fef2f2; }
+    .asset-act-btn { flex: 1; padding: 5px; font-size: 0.72rem; border-radius: var(--radius-sm); border: 1px solid var(--border-light); background: var(--icon-bg); cursor: pointer; font-family: 'Nunito Sans', sans-serif; text-align: center; transition: background 0.12s; }
+    .asset-act-btn:hover { background: var(--border-warm); }
+    .asset-act-btn.danger { color: var(--danger); border-color: var(--danger-border); }
+    .asset-act-btn.danger:hover { background: var(--danger-soft); }
     .loading-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 14px; }
-    .skeleton { background: linear-gradient(90deg, #f0ece8 25%, #e8e2dc 50%, #f0ece8 75%); background-size: 200% 100%; animation: shimmer 1.4s infinite; border-radius: 12px; aspect-ratio: 1; }
+    .skeleton { background: linear-gradient(90deg, #f0ece8 25%, #e8e2dc 50%, #f0ece8 75%); background-size: 200% 100%; animation: shimmer 1.4s infinite; border-radius: var(--radius-xl); aspect-ratio: 1; }
     @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
     .pagination { display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 28px; padding-bottom: 40px; }
-    .page-btn { padding: 6px 12px; border: 1.5px solid var(--border-light); border-radius: 7px; background: var(--card-white); font-family: 'Nunito Sans', sans-serif; font-size: 0.78rem; cursor: pointer; transition: background 0.12s; }
-    .page-btn:hover { background: #f5f3f0; }
+    .page-btn { padding: 6px 12px; border: 1.5px solid var(--border-light); border-radius: var(--radius-sm); background: var(--card-white); font-family: 'Nunito Sans', sans-serif; font-size: 0.78rem; cursor: pointer; transition: background 0.12s; }
+    .page-btn:hover { background: var(--bg-light); }
     .page-btn.active { background: var(--ruby-red); color: #fff; border-color: var(--ruby-red); }
     .page-btn:disabled { opacity: 0.35; cursor: not-allowed; }
     /* Upload drop zone */
-    .upload-zone { border: 2px dashed var(--border-light); border-radius: 12px; padding: 16px 20px; text-align: center; margin-bottom: 16px; cursor: pointer; transition: border-color 0.15s, background 0.15s; display: flex; align-items: center; justify-content: center; gap: 10px; min-height: 56px; }
+    .upload-zone { border: 2px dashed var(--border-light); border-radius: var(--radius-xl); padding: 16px 20px; text-align: center; margin-bottom: 16px; cursor: pointer; transition: border-color 0.15s, background 0.15s; display: flex; align-items: center; justify-content: center; gap: 10px; min-height: 56px; }
     .upload-zone svg { flex-shrink: 0; width: 20px; height: 20px; opacity: 0.5; }
     .upload-zone:hover, .upload-zone.drag-over { border-color: var(--ruby-red); background: rgba(159,63,55,0.04); }
     .upload-zone:hover svg, .upload-zone.drag-over svg { opacity: 1; color: var(--ruby-red); }
     .upload-zone p { font-size: 0.82rem; color: var(--ink-50); margin: 0; }
     .upload-zone strong { color: var(--ruby-red); }
-    .upload-progress { height: 4px; background: #f0ece8; border-radius: 2px; margin-top: 10px; overflow: hidden; display: none; }
+    .upload-progress { height: 4px; background: var(--surface-warm); border-radius: var(--radius-xs); margin-top: 10px; overflow: hidden; display: none; }
     .upload-progress-bar { height: 100%; background: var(--ruby-red); transition: width 0.3s; }
   </style>
 </head>
@@ -2644,7 +2644,7 @@ MYSQL_CONTATOS=                                              # [opcional]
     overlay.onclick = () => overlay.remove();
     const img = document.createElement('img');
     img.src = url;
-    img.style.cssText = 'max-width:90vw;max-height:90vh;border-radius:8px;box-shadow:0 20px 60px rgba(0,0,0,0.5)';
+    img.style.cssText = 'max-width:90vw;max-height:90vh;border-radius:var(--radius-md);box-shadow:0 20px 60px rgba(0,0,0,0.5)';
     overlay.appendChild(img);
     document.body.appendChild(overlay);
   }
@@ -2746,15 +2746,15 @@ MYSQL_CONTATOS=                                              # [opcional]
   <style>
 
     .ccu-section-title { font-size: 0.72rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-50); margin: 28px 0 12px; }
-    .ccu-card { padding: 18px; margin-bottom: 12px; border-radius: 14px; }
+    .ccu-card { padding: 18px; margin-bottom: 12px; border-radius: var(--radius-xl); }
     .ccu-add-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
     .ccu-status { font-size: 0.78rem; margin-top: 8px; min-height: 1em; }
     .ccu-status.ok { color: #0A7040; }
     .ccu-status.err { color: var(--danger); }
     .ccu-hint { font-size: 0.78rem; color: var(--ink-50); margin-top: 8px; line-height: 1.45; }
-    .ccu-hint code { background: var(--ink-05); padding: 1px 5px; border-radius: 4px; }
+    .ccu-hint code { background: var(--ink-05); padding: 1px 5px; border-radius: var(--radius-xs); }
     .ccu-add-inline { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; flex-wrap: wrap; }
-    .ccu-help-btn { width: 30px; height: 30px; border-radius: 50%; border: 1.5px solid #e8e2dc; background: #fff; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; color: var(--ink-50); flex-shrink: 0; transition: background 0.15s, border-color 0.15s, color 0.15s; }
+    .ccu-help-btn { width: 30px; height: 30px; border-radius: var(--radius-round); border: 1.5px solid #e8e2dc; background: #fff; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; color: var(--ink-50); flex-shrink: 0; transition: background 0.15s, border-color 0.15s, color 0.15s; }
     .ccu-help-btn:hover { border-color: var(--ruby-red); color: var(--ruby-red); }
     .ccu-list-head { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 12px; }
     .ccu-list-head-text { flex: 1; min-width: 0; }
@@ -2762,8 +2762,8 @@ MYSQL_CONTATOS=                                              # [opcional]
     .ccu-list-id { font-size: 0.72rem; color: var(--ink-40); font-weight: 500; margin-top: 2px; }
     .ccu-link-btn { background: none; border: none; padding: 0; font-size: inherit; color: inherit; cursor: pointer; font-family: inherit; text-decoration: underline; text-decoration-style: dotted; text-underline-offset: 2px; }
     .ccu-link-btn:hover { color: var(--ruby-red); }
-    .ccu-icon-btn { width: 32px; height: 32px; border-radius: 8px; border: 1px solid transparent; background: transparent; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; color: var(--ink-40); transition: background 0.15s, color 0.15s, border-color 0.15s; flex-shrink: 0; }
-    .ccu-icon-btn:hover { background: #fef2f2; color: var(--danger); border-color: #fecaca; }
+    .ccu-icon-btn { width: 32px; height: 32px; border-radius: var(--radius-md); border: 1px solid transparent; background: transparent; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; color: var(--ink-40); transition: background 0.15s, color 0.15s, border-color 0.15s; flex-shrink: 0; }
+    .ccu-icon-btn:hover { background: var(--danger-soft); color: var(--danger); border-color: var(--danger-border); }
     .ccu-forms-label { font-size: 0.74rem; font-weight: 700; color: var(--ink-50); margin-bottom: 8px; }
     .ccu-forms-grid { display: block; }
     .ccu-category { margin-bottom: 16px; }
@@ -2799,7 +2799,7 @@ MYSQL_CONTATOS=                                              # [opcional]
       font-size: 0.72rem;
       font-weight: 600;
       padding: 3px 9px;
-      border-radius: 999px;
+      border-radius: var(--radius-pill);
       background: var(--ink-08);
       color: var(--carbon-black);
       cursor: pointer;
@@ -2823,7 +2823,7 @@ MYSQL_CONTATOS=                                              # [opcional]
       font-size: 0.72rem;
       font-weight: 600;
       padding: 2px 9px;
-      border-radius: 999px;
+      border-radius: var(--radius-pill);
       border: 1.5px solid var(--ruby-red);
       background: #fff;
       color: var(--carbon-black);
@@ -2856,7 +2856,7 @@ MYSQL_CONTATOS=                                              # [opcional]
     /* === Botão expandir === */
     .ccu-expand-btn {
       padding: 7px 14px;
-      border-radius: 8px;
+      border-radius: var(--radius-md);
       border: 1.5px solid #e8e2dc;
       background: #fff;
       font-size: 0.82rem;
@@ -2870,7 +2870,7 @@ MYSQL_CONTATOS=                                              # [opcional]
       transition: background 0.15s, border-color 0.15s;
     }
     .ccu-expand-btn:hover {
-      background: #f5f3f0;
+      background: var(--bg-light);
       border-color: var(--ink-20);
     }
     .ccu-chevron { transition: transform 0.2s; flex-shrink: 0; }
@@ -3246,13 +3246,11 @@ MYSQL_CONTATOS=                                              # [opcional]
   </script>
 </body>
 </html>
-
 ```
 
 
 ## File: artifacts/api-server/public/admin.html
 
-```
 ```
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -3274,7 +3272,7 @@ MYSQL_CONTATOS=                                              # [opcional]
   <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap"></noscript>
   <link rel="stylesheet" href="style.css?v=20260615c">
   <style>
-    .bulk-bar { display:flex; align-items:center; justify-content:space-between; gap:12px; background:var(--icon-bg); border:1px solid var(--border-light); border-radius:10px; padding:10px 14px; margin-bottom:12px; }
+    .bulk-bar { display:flex; align-items:center; justify-content:space-between; gap:12px; background:var(--icon-bg); border:1px solid var(--border-light); border-radius:var(--radius-lg); padding:10px 14px; margin-bottom:12px; }
     .bulk-bar .bulk-count { font-weight:700; font-size:0.85rem; color:var(--carbon-black); }
     .bulk-bar .bulk-actions { display:flex; gap:8px; }
     .btn-sm { padding:7px 14px; font-size:0.82rem; }
@@ -3319,15 +3317,15 @@ MYSQL_CONTATOS=                                              # [opcional]
         </button>
       </div>
 
-      <div id="customPeriodoPopover" style="display:none;position:absolute;top:calc(100% + 8px);left:0;background:var(--card-white);border:1px solid var(--border-light);border-radius:12px;padding:14px 16px;box-shadow:0 8px 24px rgba(0,0,0,0.12);z-index:50;min-width:280px">
+      <div id="customPeriodoPopover" style="display:none;position:absolute;top:calc(100% + 8px);left:0;background:var(--card-white);border:1px solid var(--border-light);border-radius:var(--radius-xl);padding:14px 16px;box-shadow:0 8px 24px rgba(0,0,0,0.12);z-index:50;min-width:280px">
         <div style="font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;opacity:0.5;margin-bottom:8px">Intervalo personalizado</div>
         <div style="display:flex;gap:8px;align-items:center">
-          <input type="date" id="adminDe" style="flex:1;padding:6px 10px;border:1px solid var(--border-light);border-radius:7px;font-size:0.82rem;font-family:'Nunito Sans',sans-serif" onchange="setAdminCustomPeriodo()">
+          <input type="date" id="adminDe" style="flex:1;padding:6px 10px;border:1px solid var(--border-light);border-radius:var(--radius-sm);font-size:0.82rem;font-family:'Nunito Sans', sans-serif" onchange="setAdminCustomPeriodo()">
           <span style="font-size:0.78rem;opacity:0.5">até</span>
-          <input type="date" id="adminAte" style="flex:1;padding:6px 10px;border:1px solid var(--border-light);border-radius:7px;font-size:0.82rem;font-family:'Nunito Sans',sans-serif" onchange="setAdminCustomPeriodo()">
+          <input type="date" id="adminAte" style="flex:1;padding:6px 10px;border:1px solid var(--border-light);border-radius:var(--radius-sm);font-size:0.82rem;font-family:'Nunito Sans', sans-serif" onchange="setAdminCustomPeriodo()">
         </div>
         <div style="display:flex;justify-content:flex-end;margin-top:10px">
-          <button onclick="closeCustomPeriodo()" style="font-size:0.78rem;color:var(--ink-50);background:none;border:none;cursor:pointer;font-weight:600;font-family:'Nunito Sans',sans-serif">Fechar</button>
+          <button onclick="closeCustomPeriodo()" style="font-size:0.78rem;color:var(--ink-50);background:none;border:none;cursor:pointer;font-weight:600;font-family:'Nunito Sans', sans-serif">Fechar</button>
         </div>
       </div>
     </div>
@@ -3352,13 +3350,13 @@ MYSQL_CONTATOS=                                              # [opcional]
         <span style="font-size:0.8rem;font-weight:700;opacity:0.5;text-transform:uppercase;letter-spacing:0.06em">Distribuição</span>
         <div style="display:flex;gap:6px">
           <div style="position:relative" id="graficoDropdownTipoWrap">
-            <button id="graficoBtnTipo" onclick="toggleGraficoDropdown('tipo')" style="display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:8px;border:1px solid var(--border-light);background:var(--carbon-black);color:white;font-family:'Nunito Sans',sans-serif;font-size:0.8rem;font-weight:600;cursor:pointer;white-space:nowrap;transition:all 0.15s">
+            <button id="graficoBtnTipo" onclick="toggleGraficoDropdown('tipo')" style="display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:var(--radius-md);border:1px solid var(--border-light);background:var(--carbon-black);color:white;font-family:'Nunito Sans', sans-serif;font-size:0.8rem;font-weight:600;cursor:pointer;white-space:nowrap;transition:all 0.15s">
               Por tipo
               <svg id="graficoChevronTipo" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="transition:transform 0.2s"><polyline points="6 9 12 15 18 9"/></svg>
             </button>
           </div>
           <div style="position:relative" id="graficoDropdownStatusWrap">
-            <button id="graficoBtnStatus" onclick="toggleGraficoDropdown('status')" style="display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:8px;border:1px solid var(--border-light);background:var(--card-white);color:var(--carbon-black);font-family:'Nunito Sans',sans-serif;font-size:0.8rem;font-weight:600;cursor:pointer;white-space:nowrap;transition:all 0.15s">
+            <button id="graficoBtnStatus" onclick="toggleGraficoDropdown('status')" style="display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:var(--radius-md);border:1px solid var(--border-light);background:var(--card-white);color:var(--carbon-black);font-family:'Nunito Sans', sans-serif;font-size:0.8rem;font-weight:600;cursor:pointer;white-space:nowrap;transition:all 0.15s">
               Por status
               <svg id="graficoChevronStatus" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="transition:transform 0.2s"><polyline points="6 9 12 15 18 9"/></svg>
             </button>
@@ -3410,7 +3408,7 @@ MYSQL_CONTATOS=                                              # [opcional]
           </div>
         </div>
         </div>
-        <div class="search-bar" style="flex:1;margin-bottom:0;height:32px;padding:0 14px;border-radius:8px">
+        <div class="search-bar" style="flex:1;margin-bottom:0;height:32px;padding:0 14px;border-radius:var(--radius-md)">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" opacity="0.4"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
           <input type="text" placeholder="Buscar..." id="searchEventos" oninput="debounceLoad('eventos')">
         </div>
@@ -3456,7 +3454,7 @@ MYSQL_CONTATOS=                                              # [opcional]
           </div>
         </div>
         </div>
-        <div class="search-bar" style="flex:1;margin-bottom:0;height:32px;padding:0 14px;border-radius:8px">
+        <div class="search-bar" style="flex:1;margin-bottom:0;height:32px;padding:0 14px;border-radius:var(--radius-md)">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" opacity="0.4"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
           <input type="text" placeholder="Buscar..." id="searchGeral" oninput="debounceLoad('geral')">
         </div>
@@ -3574,7 +3572,7 @@ MYSQL_CONTATOS=                                              # [opcional]
         const dados = typeof item.dados === 'string' ? JSON.parse(item.dados) : (item.dados || {});
         const titulo = item.titulo || dados.nomeEvento || dados.tituloEvento || dados.titulo || dados.nome_completo || dados.nomeCompleto || '-';
         const tipoLabel = TIPO_SOLICITACAO_LABELS[item.tipo_solicitacao] || item.tipo_solicitacao;
-        const statusObj = getStatus(item.status);
+        const statusObj = getStatusVisual(item);
         const date = new Date(item.created_at).toLocaleDateString('pt-BR');
         const acoesCell = isAdmin
           ? `<td onclick="event.stopPropagation()" style="text-align:center;white-space:nowrap">
@@ -3852,7 +3850,7 @@ MYSQL_CONTATOS=                                              # [opcional]
       const header = document.createElement('div');
       header.style.cssText = 'display:flex;justify-content:space-between;align-items:center;padding:4px 6px 8px;border-bottom:1px solid var(--border-light);margin-bottom:4px';
       header.innerHTML = '<span style="font-size:0.72rem;font-weight:700;opacity:0.4;text-transform:uppercase;letter-spacing:0.05em">Filtrar</span>' +
-        '<button onclick="resetGraficoFiltros()" style="font-size:0.75rem;color:var(--ruby-red);background:none;border:none;cursor:pointer;font-family:\'Nunito Sans\',sans-serif;font-weight:600;padding:0">Todos</button>';
+        '<button onclick="resetGraficoFiltros()" style="font-size:0.75rem;color:var(--ruby-red);background:none;border:none;cursor:pointer;font-family:\'Nunito Sans\', sans-serif;font-weight:600;padding:0">Todos</button>';
       container.innerHTML = '';
       container.appendChild(header);
 
@@ -3862,7 +3860,7 @@ MYSQL_CONTATOS=                                              # [opcional]
         const label = document.createElement('label');
         label.className = 'dropdown-checkbox-label';
         label.innerHTML = '<input type="checkbox" ' + (isAtivo ? 'checked' : '') + ' style="accent-color:' + cor + '">' +
-          '<span style="width:8px;height:8px;border-radius:2px;background:' + cor + ';flex-shrink:0;display:inline-block"></span>' +
+          '<span style="width:8px;height:8px;border-radius:var(--radius-xs);background:' + cor + ';flex-shrink:0;display:inline-block"></span>' +
           '<span style="flex:1">' + esc(item.label) + '</span>' +
           '<span style="font-size:0.72rem;opacity:0.4;margin-left:4px">' + item.value + '</span>';
         label.querySelector('input').addEventListener('change', () => toggleGraficoFiltro(item.id));
@@ -3982,7 +3980,7 @@ MYSQL_CONTATOS=                                              # [opcional]
           const pct = Math.round((item.value / total) * 100);
           const cor = item.cor || CORES[i % CORES.length];
           return '<div style="display:flex;align-items:center;gap:8px">' +
-            '<div style="width:10px;height:10px;border-radius:2px;background:' + cor + ';flex-shrink:0"></div>' +
+            '<div style="width:10px;height:10px;border-radius:var(--radius-xs);background:' + cor + ';flex-shrink:0"></div>' +
             '<span style="font-size:0.8rem;flex:1;line-height:1.3">' + esc(item.label) + '</span>' +
             '<span style="font-size:0.8rem;font-weight:700;opacity:0.7">' + pct + '%</span>' +
             '<span style="font-size:0.75rem;opacity:0.4">' + item.value + '</span>' +
@@ -4029,8 +4027,8 @@ MYSQL_CONTATOS=                                              # [opcional]
 
     init();
   </script>
-<div id="graficoDropdownTipo" style="display:none;position:fixed;z-index:500;background:var(--card-white);border:1px solid var(--border-light);border-radius:10px;box-shadow:0 4px 20px rgba(0,0,0,.12);padding:8px;min-width:280px"></div>
-<div id="graficoDropdownStatus" style="display:none;position:fixed;z-index:500;background:var(--card-white);border:1px solid var(--border-light);border-radius:10px;box-shadow:0 4px 20px rgba(0,0,0,.12);padding:8px;min-width:280px"></div>
+<div id="graficoDropdownTipo" style="display:none;position:fixed;z-index:500;background:var(--card-white);border:1px solid var(--border-light);border-radius:var(--radius-lg);box-shadow:0 4px 20px rgba(0,0,0,.12);padding:8px;min-width:280px"></div>
+<div id="graficoDropdownStatus" style="display:none;position:fixed;z-index:500;background:var(--card-white);border:1px solid var(--border-light);border-radius:var(--radius-lg);box-shadow:0 4px 20px rgba(0,0,0,.12);padding:8px;min-width:280px"></div>
 </body>
 </html>
 ```
@@ -4066,7 +4064,7 @@ MYSQL_CONTATOS=                                              # [opcional]
       <div class="page-header">
         <h1 class="page-title">Log de atividade</h1>
         <div class="page-header__actions">
-          <button onclick="exportarLogCSV()" style="display:inline-flex;align-items:center;gap:6px;padding:7px 16px;border-radius:9px;border:1px solid var(--border-light);background:transparent;font-family:'Nunito Sans',sans-serif;font-size:0.82rem;font-weight:600;cursor:pointer">
+          <button onclick="exportarLogCSV()" style="display:inline-flex;align-items:center;gap:6px;padding:7px 16px;border-radius:var(--radius-md);border:1px solid var(--border-light);background:transparent;font-family:'Nunito Sans', sans-serif;font-size:0.82rem;font-weight:600;cursor:pointer">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
             Exportar CSV
           </button>
@@ -4098,13 +4096,13 @@ MYSQL_CONTATOS=                                              # [opcional]
           </div>
         </div>
         </div>
-        <div class="search-bar" style="flex:1;margin-bottom:0;height:32px;padding:0 14px;border-radius:8px">
+        <div class="search-bar" style="flex:1;margin-bottom:0;height:32px;padding:0 14px;border-radius:var(--radius-md)">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.4"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
           <input type="text" id="logBusca" placeholder="Buscar por usuário, detalhe..." oninput="debounceLogSearch()">
         </div>
       </div>
 
-      <div style="border-radius:12px;border:1px solid var(--border-light);overflow:hidden;position:relative">
+      <div style="border-radius:var(--radius-xl);border:1px solid var(--border-light);overflow:hidden;position:relative">
         <table class="admin-table" style="table-layout:fixed" id="logTabela">
           <colgroup>
             <col style="width:110px">
@@ -4211,7 +4209,7 @@ MYSQL_CONTATOS=                                              # [opcional]
             <div style="font-size:0.78rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${esc(item.user_email || '')}">${esc(userShort)}</div>
           </td>
           <td style="padding:8px 14px">
-            <span style="display:inline-block;padding:2px 7px;border-radius:5px;font-size:0.68rem;font-weight:800;background:${ns.bg};color:${ns.text};letter-spacing:0.04em">${ns.label}</span>
+            <span style="display:inline-block;padding:2px 7px;border-radius:var(--radius-sm);font-size:0.68rem;font-weight:800;background:${ns.bg};color:${ns.text};letter-spacing:0.04em">${ns.label}</span>
           </td>
           <td style="padding:8px 14px;overflow:hidden">
             <span style="font-size:0.76rem;opacity:0.8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block" title="${esc(tipoLabel)}">${esc(tipoLabel)}</span>
@@ -4305,6 +4303,7 @@ MYSQL_CONTATOS=                                              # [opcional]
 ## File: artifacts/api-server/public/admin-templates.css
 
 ```
+/* Tokens (--border-warm, --ruby-hover, --gold-soft, escala --fs-*) vêm do style.css global. */
 *, *::before, *::after { box-sizing: border-box; }
 body { margin: 0; font-family: 'Nunito Sans', sans-serif; background: var(--bg-light, #f5f3f0); color: var(--text-dark, #221b19); }
 
@@ -4313,76 +4312,76 @@ body { margin: 0; font-family: 'Nunito Sans', sans-serif; background: var(--bg-l
 .full-view-inner { width: 100%; max-width: 860px; }
 
 /* ── Breadcrumb ── */
-.breadcrumb { display: flex; align-items: center; gap: 6px; font-size: 0.78rem; color: var(--ink-40); margin-bottom: 28px; flex-wrap: wrap; }
+.breadcrumb { display: flex; align-items: center; gap: 6px; font-size: var(--fs-sm); color: var(--ink-40); margin-bottom: 28px; flex-wrap: wrap; }
 .breadcrumb a { color: var(--ink-50); cursor: pointer; text-decoration: none; font-weight: 600; }
 .breadcrumb a:hover { color: var(--ruby-red); }
 .breadcrumb .sep { opacity: 0.35; }
 .breadcrumb .current { color: var(--ink-80); font-weight: 600; }
 
 /* ── Landing cards ── */
-.landing-header { font-size: 1.5rem; font-weight: 700; margin-bottom: 8px; }
-.landing-sub { font-size: 0.88rem; opacity: 0.5; margin-bottom: 40px; }
+.landing-header { font-size: var(--fs-xl); font-weight: 700; margin-bottom: 8px; }
+.landing-sub { font-size: var(--fs-md); opacity: 0.5; margin-bottom: 40px; }
 .landing-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
 .landing-card {
-  background: #fff; border: 1.5px solid #e8e2dc; border-radius: 16px;
+  background: #fff; border: 1.5px solid var(--border-warm); border-radius: var(--radius-2xl);
   padding: 36px 28px; cursor: pointer; transition: border-color 0.15s, box-shadow 0.15s;
   display: flex; flex-direction: column; gap: 10px;
 }
 .landing-card:hover { border-color: var(--ruby-red); box-shadow: 0 4px 20px rgba(159,63,55,0.1); }
-.landing-card-icon { font-size: 2rem; line-height: 1; }
-.landing-card-title { font-size: 1.05rem; font-weight: 700; }
-.landing-card-desc { font-size: 0.84rem; opacity: 0.55; line-height: 1.5; }
+.landing-card-icon { font-size: var(--fs-icon); line-height: 1; }
+.landing-card-title { font-size: var(--fs-lg); font-weight: 700; }
+.landing-card-desc { font-size: var(--fs-base); opacity: 0.55; line-height: 1.5; }
 
 /* ── List view ── */
-.list-group-title { cursor: pointer; user-select: none; display: flex; align-items: center; gap: 8px; padding: 12px 0 8px; margin: 24px 0 0; font-size: 0.7rem; font-weight: 800; letter-spacing: 0.09em; text-transform: uppercase; color: var(--ink-50); border-bottom: 1px solid var(--ink-08); }
+.list-group-title { cursor: pointer; user-select: none; display: flex; align-items: center; gap: 8px; padding: 12px 0 8px; margin: 24px 0 0; font-size: var(--fs-xs); font-weight: 800; letter-spacing: 0.09em; text-transform: uppercase; color: var(--ink-50); border-bottom: 1px solid var(--ink-08); }
 .list-group-title:first-child { margin-top: 0; }
-.list-group-title .chevron { display: inline-block; width: 12px; height: 12px; transition: transform 0.2s ease; font-size: 0.9rem; line-height: 1; flex-shrink: 0; }
+.list-group-title .chevron { display: inline-block; width: 12px; height: 12px; transition: transform 0.2s ease; font-size: var(--fs-md); line-height: 1; flex-shrink: 0; }
 .list-group-title.expanded .chevron { transform: rotate(90deg); }
 .list-group-body { overflow: hidden; max-height: 0; transition: max-height 0.25s ease; }
 .list-group-body.expanded { max-height: 9999px; }
 .template-row {
-  background: #fff; border: 1.5px solid #e8e2dc; border-radius: 12px;
+  background: #fff; border: 1.5px solid var(--border-warm); border-radius: var(--radius-xl);
   padding: 14px 16px; margin-bottom: 8px; display: flex; align-items: center; gap: 12px;
   transition: border-color 0.15s;
 }
-.template-row:hover { border-color: #c8a96e; }
-.template-row-indicator { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
-.template-row-indicator.active { background: #0A9060; }
+.template-row:hover { border-color: var(--gold-soft); }
+.template-row-indicator { width: 10px; height: 10px; border-radius: var(--radius-round); flex-shrink: 0; }
+.template-row-indicator.active { background: var(--live-green); }
 .template-row-indicator.inactive { background: transparent; border: 2px solid #c8c4c0; }
 .template-row-body { flex: 1; min-width: 0; }
-.template-row-name { font-size: 0.88rem; font-weight: 700; }
-.template-row-meta { font-size: 0.75rem; opacity: 0.45; margin-top: 2px; }
-.badge-active { display: inline-block; padding: 2px 8px; border-radius: 20px; font-size: 0.68rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; background: #d1fae5; color: #065f46; }
+.template-row-name { font-size: var(--fs-md); font-weight: 700; }
+.template-row-meta { font-size: var(--fs-xs); opacity: 0.45; margin-top: 2px; }
+.badge-active { display: inline-block; padding: 2px 8px; border-radius: var(--radius-2xl); font-size: var(--fs-2xs); font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; background: #d1fae5; color: #065f46; }
 .template-row-actions { display: flex; gap: 6px; flex-shrink: 0; }
 .row-btn {
-  padding: 5px 11px; border-radius: 7px; border: 1px solid #e8e2dc; background: transparent;
-  font-size: 0.76rem; font-weight: 600; cursor: pointer; font-family: 'Nunito Sans', sans-serif;
+  padding: 5px 11px; border-radius: var(--radius-sm); border: 1px solid var(--border-warm); background: transparent;
+  font-size: var(--fs-xs); font-weight: 600; cursor: pointer; font-family: 'Nunito Sans', sans-serif;
   color: var(--ink-70); transition: background 0.15s, border-color 0.15s;
 }
-.row-btn:hover { background: #f5f3f0; border-color: #c8c4c0; }
+.row-btn:hover { background: var(--bg-light); border-color: #c8c4c0; }
 .row-btn.danger { color: var(--danger); }
-.row-btn.danger:hover { background: #fef2f2; border-color: #fecaca; }
+.row-btn.danger:hover { background: var(--danger-soft); border-color: var(--danger-border); }
 .row-btn.primary { background: var(--ruby-red); color: #fff; border-color: var(--ruby-red); }
-.row-btn.primary:hover { background: #b44b42; border-color: #b44b42; }
-.empty-state { text-align: center; padding: 60px 20px; opacity: 0.4; font-size: 0.9rem; }
+.row-btn.primary:hover { background: var(--ruby-hover); border-color: var(--ruby-hover); }
+.empty-state { text-align: center; padding: 60px 20px; opacity: 0.4; font-size: var(--fs-md); }
 
 /* ── Create form ── */
-.create-form { background: #fff; border: 1.5px solid #e8e2dc; border-radius: 16px; padding: 28px; }
+.create-form { background: #fff; border: 1.5px solid var(--border-warm); border-radius: var(--radius-2xl); padding: 28px; }
 .form-group { margin-bottom: 20px; }
-.form-label { font-size: 0.78rem; font-weight: 700; color: var(--ink-60); margin-bottom: 6px; display: block; letter-spacing: 0.03em; }
-.form-input { width: 100%; padding: 9px 12px; border: 1.5px solid #e8e2dc; border-radius: 8px; font-size: 0.88rem; font-family: 'Nunito Sans', sans-serif; color: #221b19; background: #fff; transition: border-color 0.15s; }
+.form-label { font-size: var(--fs-sm); font-weight: 700; color: var(--ink-60); margin-bottom: 6px; display: block; letter-spacing: 0.03em; }
+.form-input { width: 100%; padding: 7px 10px; border: 1px solid var(--border-warm); border-radius: var(--radius-sm); box-sizing: border-box; font-size: var(--fs-base); font-family: 'Nunito Sans', sans-serif; color: var(--carbon-black); background: #fff; transition: border-color 0.15s; }
 .form-input:focus { outline: none; border-color: var(--ruby-red); }
 .form-input[type="radio"] { width: auto; }
 .radio-group { display: flex; flex-direction: column; gap: 10px; margin-top: 4px; }
 .radio-option { display: flex; align-items: flex-start; gap: 10px; cursor: pointer; }
 .radio-option input { margin-top: 3px; accent-color: var(--ruby-red); cursor: pointer; }
-.radio-label { font-size: 0.85rem; }
-.radio-label-sub { font-size: 0.75rem; opacity: 0.5; }
+.radio-label { font-size: var(--fs-base); }
+.radio-label-sub { font-size: var(--fs-xs); opacity: 0.5; }
 .form-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 24px; border-top: 1px solid #f0ece8; padding-top: 20px; }
-.btn { padding: 8px 18px; border-radius: 8px; border: 1.5px solid #e8e2dc; background: #fff; font-size: 0.84rem; font-weight: 600; cursor: pointer; font-family: 'Nunito Sans', sans-serif; color: var(--ink-70); transition: background 0.15s; }
-.btn:hover { background: #f5f3f0; }
+.btn { padding: 8px 18px; border-radius: var(--radius-md); border: 1.5px solid var(--border-warm); background: #fff; font-size: var(--fs-base); font-weight: 600; cursor: pointer; font-family: 'Nunito Sans', sans-serif; color: var(--ink-70); transition: background 0.15s; }
+.btn:hover { background: var(--bg-light); }
 .btn.primary { background: var(--ruby-red); color: #fff; border-color: var(--ruby-red); }
-.btn.primary:hover { background: #b44b42; border-color: #b44b42; }
+.btn.primary:hover { background: var(--ruby-hover); border-color: var(--ruby-hover); }
 .btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
 /* ── Editor layout ── */
@@ -4394,55 +4393,55 @@ body { margin: 0; font-family: 'Nunito Sans', sans-serif; background: var(--bg-l
   min-height: 0;
   gap: 0;
 }
-.panel { background: #fff; border-right: 1px solid #e8e2dc; overflow-y: auto; }
-.panel-title { font-size: 0.7rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-40); padding: 12px 14px 8px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--ink-05); }
+.panel { background: #fff; border-right: 1px solid var(--border-warm); overflow-y: auto; }
+.panel-title { font-size: var(--fs-xs); font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-40); padding: 12px 14px 8px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--ink-05); }
 .add-layer-toolbar { display: flex; gap: 2px; }
-.add-layer-icon-btn { width: 26px; height: 26px; border-radius: 6px; border: 1px solid transparent; background: transparent; color: var(--ink-40); cursor: pointer; display: inline-flex; align-items: center; justify-content: center; transition: background 0.15s, color 0.15s, border-color 0.15s; }
+.add-layer-icon-btn { width: 26px; height: 26px; border-radius: var(--radius-sm); border: 1px solid transparent; background: transparent; color: var(--ink-40); cursor: pointer; display: inline-flex; align-items: center; justify-content: center; transition: background 0.15s, color 0.15s, border-color 0.15s; }
 .add-layer-icon-btn:hover { background: var(--ink-05); color: var(--ruby-red); border-color: rgba(172,54,49,0.2); }
 .panel-tmpl-header { padding: 8px 14px 12px; border-bottom: 1px solid var(--ink-08); margin-bottom: 8px; }
-.panel-tmpl-name { font-family: 'Taviraj', serif; font-size: 1.05rem; font-weight: 300; color: var(--carbon-black); line-height: 1.2; margin-bottom: 2px; }
-.panel-tmpl-tipo { font-size: 0.74rem; color: var(--ink-50); font-weight: 500; }
-.layer-item { padding: 6px 10px 6px 14px; cursor: pointer; border-left: 3px solid transparent; border-bottom: 1px solid var(--ink-05); font-size: 0.8rem; display: flex; align-items: center; gap: 6px; color: var(--ink-70); user-select: none; }
-.layer-item:hover { background: #f5f3f0; }
+.panel-tmpl-name { font-family: 'Taviraj', serif; font-size: var(--fs-lg); font-weight: 300; color: var(--carbon-black); line-height: 1.2; margin-bottom: 2px; }
+.panel-tmpl-tipo { font-size: var(--fs-xs); color: var(--ink-50); font-weight: 500; }
+.layer-item { padding: 6px 10px 6px 14px; cursor: pointer; border-left: 3px solid transparent; border-bottom: 1px solid var(--ink-05); font-size: var(--fs-sm); display: flex; align-items: center; gap: 6px; color: var(--ink-70); user-select: none; }
+.layer-item:hover { background: var(--bg-light); }
 .layer-item.active { border-left-color: var(--ruby-red); background: rgba(172,54,49,0.07); color: var(--ruby-dark); }
-.layer-item.dragging { opacity: 0.35; background: #f5f3f0; }
+.layer-item.dragging { opacity: 0.35; background: var(--bg-light); }
 .layer-item.drag-over-top { border-top: 2px solid var(--ruby-red); }
 .layer-item.drag-over-bottom { border-bottom: 2px solid var(--ruby-red); }
-.layer-drag-handle { cursor: grab; color: var(--ink-20); font-size: 0.65rem; letter-spacing: 1px; flex-shrink: 0; user-select: none; padding: 2px 1px; }
+.layer-drag-handle { cursor: grab; color: var(--ink-20); font-size: var(--fs-2xs); letter-spacing: 1px; flex-shrink: 0; user-select: none; padding: 2px 1px; }
 .layer-drag-handle:active { cursor: grabbing; }
 .layer-item:hover .layer-drag-handle { color: var(--ink-40); }
 .layer-actions { display: none; gap: 1px; flex-shrink: 0; align-items: center; }
 .layer-item:hover .layer-actions, .layer-item.active .layer-actions { display: flex; }
-.layer-action-btn { width: 22px; height: 22px; border-radius: 4px; border: none; background: transparent; color: var(--ink-40); cursor: pointer; display: inline-flex; align-items: center; justify-content: center; transition: background 0.12s, color 0.12s; flex-shrink: 0; padding: 0; }
+.layer-action-btn { width: 22px; height: 22px; border-radius: var(--radius-sm); border: none; background: transparent; color: var(--ink-40); cursor: pointer; display: inline-flex; align-items: center; justify-content: center; transition: background 0.12s, color 0.12s; flex-shrink: 0; padding: 0; }
 .layer-action-btn:hover:not(:disabled) { background: var(--ink-10); color: var(--carbon-black); }
 .layer-action-btn:disabled { opacity: 0.2; cursor: default; }
-.layer-type-badge { font-size: 0.65rem; padding: 1px 5px; border-radius: 4px; background: #e8e2dc; color: #6b5e58; white-space: nowrap; }
-.canvas-panel { background: #ede8e4; display: flex; flex-direction: column; overflow: hidden; position: relative; }
+.layer-type-badge { font-size: var(--fs-2xs); padding: 1px 5px; border-radius: var(--radius-xs); background: var(--border-warm); color: #6b5e58; white-space: nowrap; }
+.canvas-panel { background: var(--surface-warm); display: flex; flex-direction: column; overflow: hidden; position: relative; }
 .canvas-toolbar {
-  background: #f5f3f0; padding: 8px 12px; display: flex; align-items: center; gap: 8px;
+  background: var(--bg-light); padding: 8px 12px; display: flex; align-items: center; gap: 8px;
   border-bottom: 1px solid var(--ink-10); flex-shrink: 0; flex-wrap: wrap;
 }
-.canvas-toolbar button { font-size: 0.78rem; padding: 5px 10px; border-radius: 6px; border: 1px solid var(--ink-12); background: var(--ink-05); color: var(--carbon-black); cursor: pointer; font-family: 'Nunito Sans', sans-serif; transition: background 0.15s; }
+.canvas-toolbar button { font-size: var(--fs-sm); padding: 5px 10px; border-radius: var(--radius-sm); border: 1px solid var(--ink-12); background: var(--ink-05); color: var(--carbon-black); cursor: pointer; font-family: 'Nunito Sans', sans-serif; transition: background 0.15s; }
 .canvas-toolbar button:hover { background: var(--ink-10); }
 .canvas-toolbar button.primary { background: var(--ruby-red); border-color: var(--ruby-red); color: #fff; }
-.canvas-toolbar button.primary:hover { background: #b44b42; }
+.canvas-toolbar button.primary:hover { background: var(--ruby-hover); }
 .canvas-toolbar button.active { background: var(--ink-12); }
 .canvas-toolbar button:disabled { opacity: 0.3; cursor: not-allowed; }
 .canvas-toolbar button:disabled:hover { background: var(--ink-05); }
-.canvas-toolbar .unsaved-badge { font-size: 0.72rem; color: #c8a96e; display: none; }
+.canvas-toolbar .unsaved-badge { font-size: var(--fs-xs); color: var(--gold-soft); display: none; }
 .canvas-toolbar .unsaved-badge.visible { display: block; }
 .toolbar-sep { width: 1px; height: 18px; background: var(--ink-12); flex-shrink: 0; }
-.toolbar-tmpl-name { font-size: 0.8rem; color: var(--carbon-black); font-weight: 600; max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; cursor: pointer; }
+.toolbar-tmpl-name { font-size: var(--fs-sm); color: var(--carbon-black); font-weight: 600; max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; cursor: pointer; }
 .toolbar-tmpl-name:hover { color: var(--ruby-red); }
-.badge-status { display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px; border-radius: 999px; font-size: 0.65rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; background: rgba(10,144,96,0.1); color: #0A7040; border: 1px solid rgba(10,144,96,0.2); }
-.badge-status .status-dot { width: 6px; height: 6px; border-radius: 50%; background: #0A9060; animation: pulse-dot 2s infinite ease-in-out; flex-shrink: 0; }
+.badge-status { display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px; border-radius: var(--radius-pill); font-size: var(--fs-2xs); font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; background: rgba(10,144,96,0.1); color: #0A7040; border: 1px solid rgba(10,144,96,0.2); }
+.badge-status .status-dot { width: 6px; height: 6px; border-radius: var(--radius-round); background: var(--live-green); animation: pulse-dot 2s infinite ease-in-out; flex-shrink: 0; }
 @keyframes pulse-dot { 0%,100%{box-shadow:0 0 0 0 rgba(10,144,96,0.4)} 50%{box-shadow:0 0 0 5px rgba(10,144,96,0)} }
 .badge-status.inactive { background: var(--ink-05); color: var(--ink-50); border-color: var(--ink-12); cursor: pointer; }
 .badge-status.inactive .status-dot { background: var(--ink-30); animation: none; }
 .badge-status.inactive:hover { background: var(--ink-10); color: var(--ink-70); }
-.rendering-indicator { display: none; align-items: center; gap: 5px; font-size: 0.72rem; color: #aaa; }
+.rendering-indicator { display: none; align-items: center; gap: 5px; font-size: var(--fs-xs); color: #aaa; }
 .rendering-indicator.visible { display: flex; }
-.spinner { width: 12px; height: 12px; border: 2px solid rgba(255,255,255,0.2); border-top-color: #c8a96e; border-radius: 50%; animation: spin 0.7s linear infinite; }
+.spinner { width: 12px; height: 12px; border: 2px solid rgba(255,255,255,0.2); border-top-color: var(--gold-soft); border-radius: var(--radius-round); animation: spin 0.7s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
 
 /* ── Variant switches bar ── */
@@ -4451,9 +4450,9 @@ body { margin: 0; font-family: 'Nunito Sans', sans-serif; background: var(--bg-l
   display: flex; align-items: center; flex-wrap: wrap; gap: 10px; flex-shrink: 0;
 }
 .vsw-group { display: flex; align-items: center; gap: 5px; }
-.vsw-label { font-size: 0.68rem; color: #888; font-weight: 600; text-transform: capitalize; white-space: nowrap; margin-right: 2px; }
+.vsw-label { font-size: var(--fs-2xs); color: #888; font-weight: 600; text-transform: capitalize; white-space: nowrap; margin-right: 2px; }
 .vsw-btn {
-  font-size: 0.72rem; padding: 3px 9px; border-radius: 12px;
+  font-size: var(--fs-xs); padding: 3px 9px; border-radius: var(--radius-xl);
   border: 1px solid rgba(255,255,255,0.15); background: rgba(255,255,255,0.06);
   color: #ccc; cursor: pointer; font-family: 'Nunito Sans', sans-serif;
   transition: background 0.12s, color 0.12s; white-space: nowrap;
@@ -4472,7 +4471,7 @@ body { margin: 0; font-family: 'Nunito Sans', sans-serif; background: var(--bg-l
 .layer-box img { pointer-events: none; }
 .layer-box .layer-label { display: none; position: absolute; top: -18px; left: 0; font-size: 9px; background: var(--ruby-red); color: #fff; padding: 1px 5px; border-radius: 3px 3px 3px 0; white-space: nowrap; line-height: 16px; cursor: move; user-select: none; }
 .layer-box:hover .layer-label, .layer-box.selected .layer-label { display: block; }
-.resize-handle { position: absolute; width: 9px; height: 9px; background: #fff; border: 2px solid var(--ruby-red); border-radius: 2px; z-index: 10; box-sizing: border-box; pointer-events: all; }
+.resize-handle { position: absolute; width: 9px; height: 9px; background: #fff; border: 2px solid var(--ruby-red); border-radius: var(--radius-xs); z-index: 10; box-sizing: border-box; pointer-events: all; }
 .resize-handle.nw { top: -5px; left: -5px; cursor: nw-resize; }
 .resize-handle.ne { top: -5px; right: -5px; cursor: ne-resize; }
 .resize-handle.sw { bottom: -5px; left: -5px; cursor: sw-resize; }
@@ -4480,14 +4479,14 @@ body { margin: 0; font-family: 'Nunito Sans', sans-serif; background: var(--bg-l
 .layer-box:not(.selected):not(:hover) .resize-handle { display: none; }
 .canvas-preview-img { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: fill; z-index: 1; display: none; pointer-events: none; }
 #canvasWrap.live-preview-active .layer-content-preview { opacity: 0; }
-.no-template { display: flex; align-items: center; justify-content: center; flex: 1; color: rgba(255,255,255,0.3); font-size: 0.9rem; }
+.no-template { display: flex; align-items: center; justify-content: center; flex: 1; color: rgba(255,255,255,0.3); font-size: var(--fs-md); }
 
 /* ── Props panel ── */
-.props-panel { border-right: none; border-left: 1px solid #e8e2dc; display: flex; flex-direction: column; overflow: hidden; }
+.props-panel { border-right: none; border-left: 1px solid var(--border-warm); display: flex; flex-direction: column; overflow: hidden; }
 .props-section { padding: 12px 14px; border-bottom: 1px solid #f0ece8; }
 .panel-accordion { border-bottom: 1px solid var(--ink-08); padding: 0; margin: 0; }
 .panel-accordion:last-child { border-bottom: none; }
-.panel-accordion-summary { list-style: none; display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; cursor: pointer; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: var(--ink-50); user-select: none; transition: color 0.12s; }
+.panel-accordion-summary { list-style: none; display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; cursor: pointer; font-size: var(--fs-xs); font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: var(--ink-50); user-select: none; transition: color 0.12s; }
 .panel-accordion-summary::-webkit-details-marker { display: none; }
 .panel-accordion-summary:hover { color: var(--carbon-black); }
 .panel-accordion[open] .panel-accordion-summary { color: var(--carbon-black); }
@@ -4495,50 +4494,50 @@ body { margin: 0; font-family: 'Nunito Sans', sans-serif; background: var(--bg-l
 .panel-accordion[open] .chevron { transform: rotate(180deg); opacity: 0.8; }
 .panel-accordion-body { padding: 0; }
 .panel-accordion-body .props-section:last-child, .panel-accordion-body .layer-align-section { border-bottom: none; }
-.props-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
+.props-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; align-items: end; }
 .props-row.single { grid-template-columns: 1fr; }
-.props-label { font-size: 0.72rem; color: var(--ink-50); font-weight: 600; margin-bottom: 3px; letter-spacing: 0.03em; }
-.props-input { width: 100%; padding: 5px 8px; border: 1px solid #e8e2dc; border-radius: 6px; font-size: 0.8rem; font-family: 'Nunito Sans', sans-serif; color: #221b19; background: #fff; transition: border-color 0.15s; }
+.props-label { font-size: var(--fs-xs); color: var(--ink-50); font-weight: 600; margin-bottom: 3px; letter-spacing: 0.03em; }
+.props-input { width: 100%; padding: 7px 10px; border: 1px solid var(--border-warm); border-radius: var(--radius-sm); box-sizing: border-box; font-size: var(--fs-base); font-family: 'Nunito Sans', sans-serif; color: var(--carbon-black); background: #fff; transition: border-color 0.15s; }
 .props-input:focus { outline: none; border-color: var(--ruby-red); }
 .props-input[type="color"] { padding: 2px 4px; height: 30px; cursor: pointer; }
 .props-textarea { height: 90px; resize: vertical; }
-.props-empty { padding: 40px 14px; text-align: center; color: var(--ink-30); font-size: 0.82rem; }
-.btn-delete-layer { width: 100%; padding: 8px; border: none; background: var(--ruby-red); color: #fff; border-radius: 6px; cursor: pointer; font-size: 0.82rem; font-family: 'Nunito Sans', sans-serif; font-weight: 700; transition: background 0.15s; }
+.props-empty { padding: 40px 14px; text-align: center; color: var(--ink-30); font-size: var(--fs-base); }
+.btn-delete-layer { width: 100%; padding: 8px; border: none; background: var(--ruby-red); color: #fff; border-radius: var(--radius-sm); cursor: pointer; font-size: var(--fs-base); font-family: 'Nunito Sans', sans-serif; font-weight: 700; transition: background 0.15s; }
 .btn-delete-layer:hover { background: var(--ruby-dark); }
-.btn-duplicate-layer { width: 100%; padding: 7px; border: 1px solid rgba(172,54,49,0.22); background: rgba(172,54,49,0.07); color: var(--ruby-red); border-radius: 6px; cursor: pointer; font-size: 0.78rem; font-family: 'Nunito Sans', sans-serif; font-weight: 600; transition: background 0.15s; margin-bottom: 6px; }
+.btn-duplicate-layer { width: 100%; padding: 7px; border: 1px solid rgba(172,54,49,0.22); background: rgba(172,54,49,0.07); color: var(--ruby-red); border-radius: var(--radius-sm); cursor: pointer; font-size: var(--fs-sm); font-family: 'Nunito Sans', sans-serif; font-weight: 600; transition: background 0.15s; margin-bottom: 6px; }
 .btn-duplicate-layer:hover { background: rgba(172,54,49,0.14); }
 /* ── Test data strip ── */
-.test-data-strip { background: #ede8e4; border-bottom: 1px solid var(--ink-08); flex-shrink: 0; display: none; }
+.test-data-strip { background: var(--surface-warm); border-bottom: 1px solid var(--ink-08); flex-shrink: 0; display: none; }
 .test-data-strip.open { display: block; }
-.test-data-strip-header { padding: 7px 14px; display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.78rem; color: var(--ink-70); user-select: none; }
+.test-data-strip-header { padding: 7px 14px; display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: var(--fs-sm); color: var(--ink-70); user-select: none; }
 .test-data-strip-header:hover { background: var(--ink-05); }
-.test-data-strip-toggle { font-size: 0.65rem; }
-.test-data-strip-hint { color: var(--ink-40); font-size: 0.72rem; margin-left: auto; }
+.test-data-strip-toggle { font-size: var(--fs-2xs); }
+.test-data-strip-hint { color: var(--ink-40); font-size: var(--fs-xs); margin-left: auto; }
 .test-data-strip-fields { padding: 10px 14px; display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-end; }
 .test-field { display: flex; flex-direction: column; gap: 3px; min-width: 160px; }
-.test-field label { font-size: 0.7rem; color: var(--ink-50); }
-.test-field input, .test-field select { padding: 4px 8px; border: 1px solid var(--ink-12); border-radius: 4px; font-size: 0.82rem; font-family: inherit; background: #fff; color: var(--carbon-black); }
+.test-field label { font-size: var(--fs-xs); color: var(--ink-50); }
+.test-field input, .test-field select { padding: 4px 8px; border: 1px solid var(--border-warm); border-radius: var(--radius-sm); font-size: var(--fs-base); font-family: inherit; background: #fff; color: var(--carbon-black); }
 .add-layer-section { padding: 8px 14px 14px; }
-.add-layer-btn { font-size: 0.75rem; padding: 5px 10px; border: 1px dashed #ccc; background: transparent; border-radius: 5px; cursor: pointer; color: var(--ink-50); font-family: 'Nunito Sans',sans-serif; width: 100%; margin-bottom: 4px; }
+.add-layer-btn { font-size: var(--fs-xs); padding: 5px 10px; border: 1px dashed #ccc; background: transparent; border-radius: var(--radius-sm); cursor: pointer; color: var(--ink-50); font-family: 'Nunito Sans', sans-serif; width: 100%; margin-bottom: 4px; }
 .add-layer-btn:hover { border-color: var(--ruby-red); color: var(--ruby-red); background: #fdf5f5; }
-.bg-variant-select { font-size: 0.75rem; padding: 4px 8px; border: 1px solid rgba(255,255,255,0.2); border-radius: 5px; background: rgba(255,255,255,0.08); color: #fff; font-family: 'Nunito Sans',sans-serif; }
+.bg-variant-select { font-size: var(--fs-xs); padding: 4px 8px; border: 1px solid rgba(255,255,255,0.2); border-radius: var(--radius-sm); background: rgba(255,255,255,0.08); color: #fff; font-family: 'Nunito Sans', sans-serif; }
 .bg-variant-select option { background: #222; }
 .placeholder-chips { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
-.placeholder-chip { font-size: 0.68rem; padding: 2px 7px; background: rgba(172,54,49,0.07); color: var(--ruby-dark); border-radius: 10px; cursor: pointer; border: 1px solid rgba(172,54,49,0.22); }
+.placeholder-chip { font-size: var(--fs-2xs); padding: 2px 7px; background: rgba(172,54,49,0.07); color: var(--ruby-dark); border-radius: var(--radius-lg); cursor: pointer; border: 1px solid rgba(172,54,49,0.22); }
 .placeholder-chip:hover { background: rgba(172,54,49,0.14); }
-.align-btns { display: flex; border: 1px solid #e8e2dc; border-radius: 6px; overflow: hidden; }
-.align-btn { flex: 1; padding: 5px 0; border: none; background: #fff; cursor: pointer; font-family: 'Nunito Sans',sans-serif; font-size: 0.75rem; transition: background 0.15s; }
-.align-btn:hover { background: #f5f3f0; }
+.align-btns { display: flex; border: 1px solid var(--border-warm); border-radius: var(--radius-sm); overflow: hidden; }
+.align-btn { flex: 1; padding: 5px 0; border: none; background: #fff; cursor: pointer; font-family: 'Nunito Sans', sans-serif; font-size: var(--fs-xs); transition: background 0.15s; }
+.align-btn:hover { background: var(--bg-light); }
 .align-btn.active { background: rgba(172,54,49,0.07); color: var(--ruby-dark); font-weight: 600; }
 
 /* ── Layer type icons ── */
-.layer-align-section { margin: 8px 0; padding: 8px 0; border-top: 1px solid var(--ink-08); border-bottom: 1px solid var(--ink-08); }
+.layer-align-section { margin: 8px 0; padding: 8px 14px; border-top: 1px solid var(--ink-08); border-bottom: 1px solid var(--ink-08); }
 .layer-align-row { display: flex; gap: 4px; margin-bottom: 4px; }
 .layer-align-row:last-child { margin-bottom: 0; }
-.layer-align-btn { flex: 1; padding: 6px 0; background: var(--ink-05); border: 1px solid var(--ink-10); border-radius: 5px; cursor: pointer; font-size: 0.85rem; color: var(--ink-70); display: flex; align-items: center; justify-content: center; transition: background 0.12s; font-family: 'Nunito Sans', sans-serif; }
+.layer-align-btn { flex: 1; padding: 6px 0; background: var(--ink-05); border: 1px solid var(--border-warm); border-radius: var(--radius-sm); cursor: pointer; font-size: var(--fs-base); color: var(--ink-70); display: flex; align-items: center; justify-content: center; transition: background 0.12s; font-family: 'Nunito Sans', sans-serif; }
 .layer-align-btn:hover { background: rgba(172,54,49,0.12); color: var(--ruby-red); }
 .layer-align-btn svg { display: block; }
-.layer-icon-t  { font-size: 0.78rem; font-weight: 900; color: var(--ruby-red); min-width: 18px; text-align: center; flex-shrink: 0; letter-spacing: -0.04em; }
+.layer-icon-t  { font-size: var(--fs-sm); font-weight: 900; color: var(--ruby-red); min-width: 18px; text-align: center; flex-shrink: 0; letter-spacing: -0.04em; }
 .layer-icon-img { flex-shrink: 0; color: var(--ruby-red); }
 .layer-icon-shape { flex-shrink: 0; color: var(--ruby-red); }
 .add-layer-btn { display: flex; align-items: center; gap: 6px; }
@@ -4546,58 +4545,58 @@ body { margin: 0; font-family: 'Nunito Sans', sans-serif; background: var(--bg-l
 .brand-swatch:hover { transform: scale(1.15); border-color: var(--carbon-black) !important; }
 
 /* ── Editor page header ── */
-.editor-page-header { display: flex; align-items: center; gap: 12px; padding: 9px 14px; background: #fff; border-bottom: 1px solid #e8e2dc; flex-shrink: 0; }
-.editor-back-btn { display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; border: none; border-radius: 7px; background: var(--carbon-black); font-size: 0.82rem; font-weight: 700; cursor: pointer; font-family: 'Nunito Sans', sans-serif; color: var(--paper-white); transition: background 0.15s; }
+.editor-page-header { display: flex; align-items: center; gap: 12px; padding: 9px 14px; background: #fff; border-bottom: 1px solid var(--border-warm); flex-shrink: 0; }
+.editor-back-btn { display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; border: none; border-radius: var(--radius-sm); background: var(--carbon-black); font-size: var(--fs-base); font-weight: 700; cursor: pointer; font-family: 'Nunito Sans', sans-serif; color: var(--paper-white); transition: background 0.15s; }
 .editor-back-btn:hover { background: #3a2e2a; }
-.editor-page-header-title { font-size: 0.82rem; font-weight: 600; color: var(--ink-50); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.editor-page-header-title { font-size: var(--fs-base); font-weight: 600; color: var(--ink-50); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 #view-editor { display: flex; flex-direction: column; overflow: hidden; position: fixed; inset: 0; z-index: 100; background: var(--bg-light, #f5f3f0); }
 #view-editor .editor-layout { flex: 1; overflow: hidden; min-height: 0; }
 
 /* ── Zoom floating pill ── */
-.zoom-floating { position: absolute; bottom: 16px; right: 16px; background: rgba(0,0,0,0.75); backdrop-filter: blur(8px); color: #fff; padding: 5px 8px; border-radius: 24px; display: flex; align-items: center; gap: 4px; box-shadow: 0 4px 12px rgba(0,0,0,0.35); z-index: 20; pointer-events: all; }
-.zoom-floating button { background: transparent; border: none; color: #fff; cursor: pointer; padding: 3px 8px; border-radius: 4px; font-size: 0.88rem; line-height: 1; font-family: 'Nunito Sans', sans-serif; }
+.zoom-floating { position: absolute; bottom: 16px; right: 16px; background: rgba(0,0,0,0.75); backdrop-filter: blur(8px); color: #fff; padding: 5px 8px; border-radius: var(--radius-3xl); display: flex; align-items: center; gap: 4px; box-shadow: 0 4px 12px rgba(0,0,0,0.35); z-index: 20; pointer-events: all; }
+.zoom-floating button { background: transparent; border: none; color: #fff; cursor: pointer; padding: 3px 8px; border-radius: var(--radius-sm); font-size: var(--fs-md); line-height: 1; font-family: 'Nunito Sans', sans-serif; }
 .zoom-floating button:hover { background: rgba(255,255,255,0.18); }
-.zoom-floating .zoom-val { font-size: 0.75rem; min-width: 38px; text-align: center; color: rgba(255,255,255,0.85); }
+.zoom-floating .zoom-val { font-size: var(--fs-xs); min-width: 38px; text-align: center; color: rgba(255,255,255,0.85); }
 
 /* ── Center snap indicator ── */
-.center-indicator { position: fixed; bottom: 76px; left: 50%; transform: translateX(-50%); background: #e040fb; color: #fff; padding: 5px 14px; border-radius: 6px; font-size: 0.75rem; font-weight: 700; opacity: 0; transition: opacity 0.15s; pointer-events: none; z-index: 9999; letter-spacing: 0.02em; }
+.center-indicator { position: fixed; bottom: 76px; left: 50%; transform: translateX(-50%); background: #e040fb; color: #fff; padding: 5px 14px; border-radius: var(--radius-sm); font-size: var(--fs-xs); font-weight: 700; opacity: 0; transition: opacity 0.15s; pointer-events: none; z-index: 9999; letter-spacing: 0.02em; }
 .center-indicator.visible { opacity: 1; }
 
 /* ── URL input + upload/library buttons ── */
 .url-row { display: flex; gap: 4px; align-items: center; }
 .url-row .props-input { flex: 1; min-width: 0; }
-.url-action-btn { padding: 5px 7px; border-radius: 6px; border: 1px solid #e8e2dc; background: #f5f3f0; font-size: 0.7rem; cursor: pointer; color: var(--ink-70); white-space: nowrap; flex-shrink: 0; font-family: 'Nunito Sans', sans-serif; transition: background 0.15s; }
-.url-action-btn:hover { background: #ede8e4; }
-.url-upload-status { font-size: 0.7rem; color: var(--ruby-red); margin-top: 2px; }
+.url-action-btn { padding: 5px 7px; border-radius: var(--radius-sm); border: 1px solid var(--border-warm); background: var(--bg-light); font-size: var(--fs-xs); cursor: pointer; color: var(--ink-70); white-space: nowrap; flex-shrink: 0; font-family: 'Nunito Sans', sans-serif; transition: background 0.15s; }
+.url-action-btn:hover { background: var(--surface-warm); }
+.url-upload-status { font-size: var(--fs-xs); color: var(--ruby-red); margin-top: 2px; }
 
 /* ── Asset library modal ── */
 .asset-modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 3000; display: flex; align-items: center; justify-content: center; }
-.asset-modal { background: #fff; border-radius: 16px; width: 880px; max-width: 96vw; max-height: 86vh; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,0.25); }
-.asset-modal-header { padding: 14px 18px; border-bottom: 1px solid #e8e2dc; display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
-.asset-modal-title { font-size: 0.95rem; font-weight: 700; flex: 1; }
+.asset-modal { background: #fff; border-radius: var(--radius-2xl); width: 880px; max-width: 96vw; max-height: 86vh; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,0.25); }
+.asset-modal-header { padding: 14px 18px; border-bottom: 1px solid var(--border-warm); display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+.asset-modal-title { font-size: var(--fs-md); font-weight: 700; flex: 1; }
 .asset-modal-filters { display: flex; gap: 8px; align-items: center; }
-.asset-modal-filters label { font-size: 0.78rem; color: var(--ink-60); display: flex; align-items: center; gap: 4px; cursor: pointer; }
+.asset-modal-filters label { font-size: var(--fs-sm); color: var(--ink-60); display: flex; align-items: center; gap: 4px; cursor: pointer; }
 .asset-modal-body { flex: 1; overflow-y: auto; padding: 14px; }
 .asset-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; }
-.asset-card { border: 1.5px solid #e8e2dc; border-radius: 10px; overflow: hidden; transition: border-color 0.15s, box-shadow 0.15s; cursor: pointer; }
+.asset-card { border: 1.5px solid var(--border-warm); border-radius: var(--radius-lg); overflow: hidden; transition: border-color 0.15s, box-shadow 0.15s; cursor: pointer; }
 .asset-card:hover { border-color: var(--ruby-red); box-shadow: 0 2px 8px rgba(159,63,55,0.15); }
-.asset-thumb-wrap { width: 100%; aspect-ratio: 1; background: #f5f3f0; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+.asset-thumb-wrap { width: 100%; aspect-ratio: 1; background: var(--bg-light); display: flex; align-items: center; justify-content: center; overflow: hidden; }
 .asset-thumb-wrap img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .asset-card-info { padding: 5px 7px 0; }
-.asset-card-name { font-size: 0.68rem; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #221b19; }
-.asset-card-meta { font-size: 0.63rem; color: var(--ink-40); margin-top: 1px; }
+.asset-card-name { font-size: var(--fs-2xs); font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--carbon-black); }
+.asset-card-meta { font-size: var(--fs-2xs); color: var(--ink-40); margin-top: 1px; }
 .asset-card-actions { padding: 4px 6px 6px; display: flex; gap: 4px; }
-.asset-action-btn { flex: 1; padding: 3px 5px; font-size: 0.67rem; border-radius: 5px; border: 1px solid #e8e2dc; background: #f5f3f0; cursor: pointer; font-family: 'Nunito Sans', sans-serif; text-align: center; }
+.asset-action-btn { flex: 1; padding: 3px 5px; font-size: var(--fs-2xs); border-radius: var(--radius-sm); border: 1px solid var(--border-warm); background: var(--bg-light); cursor: pointer; font-family: 'Nunito Sans', sans-serif; text-align: center; }
 .asset-action-btn.primary { background: var(--ruby-red); color: #fff; border-color: var(--ruby-red); }
-.asset-modal-footer { padding: 10px 16px; border-top: 1px solid #e8e2dc; display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
-.asset-empty { padding: 40px; text-align: center; color: var(--ink-30); font-size: 0.85rem; }
+.asset-modal-footer { padding: 10px 16px; border-top: 1px solid var(--border-warm); display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+.asset-empty { padding: 40px; text-align: center; color: var(--ink-30); font-size: var(--fs-base); }
 
 /* ── Panel tabs (Layer / Documento) ── */
 .panel-tabs-header {
-  display: flex; border-bottom: 1px solid #e8e2dc; background: #faf9f7; flex-shrink: 0;
+  display: flex; border-bottom: 1px solid var(--border-warm); background: #faf9f7; flex-shrink: 0;
 }
 .panel-tab {
-  flex: 1; padding: 9px 6px; border: none; background: transparent; font-size: 0.76rem;
+  flex: 1; padding: 9px 6px; border: none; background: transparent; font-size: var(--fs-xs);
   font-weight: 600; color: var(--ink-40); cursor: pointer; font-family: 'Nunito Sans', sans-serif;
   border-bottom: 2px solid transparent; transition: color 0.15s, border-color 0.15s; margin-bottom: -1px;
 }
@@ -4607,23 +4606,23 @@ body { margin: 0; font-family: 'Nunito Sans', sans-serif; background: var(--bg-l
 
 /* ── Document panel ── */
 .preset-btn {
-  font-size: 0.68rem; padding: 3px 7px; border: 1px solid #e8e2dc; border-radius: 5px;
+  font-size: var(--fs-2xs); padding: 3px 7px; border: 1px solid var(--border-warm); border-radius: var(--radius-sm);
   background: #fff; cursor: pointer; font-family: 'Nunito Sans', sans-serif;
   color: var(--ink-50); transition: background 0.12s; white-space: nowrap;
 }
-.preset-btn:hover { background: #f5f3f0; border-color: #c8a96e; }
+.preset-btn:hover { background: var(--bg-light); border-color: var(--gold-soft); }
 .preset-btn.active { background: rgba(172,54,49,0.07); border-color: rgba(172,54,49,0.4); color: var(--ruby-dark); font-weight: 600; }
 
 /* ── Variant field rows ── */
 .variant-row { display: flex; align-items: center; gap: 6px; margin-bottom: 5px; }
-.variant-row-label { font-size: 0.73rem; font-weight: 600; color: var(--ink-60); min-width: 110px; flex-shrink: 0; }
+.variant-row-label { font-size: var(--fs-xs); font-weight: 600; color: var(--ink-60); min-width: 110px; flex-shrink: 0; }
 .variant-row-input { flex: 1; min-width: 0; }
 
 /* ── Inline name edit ── */
 .name-edit-wrap { display: flex; align-items: center; gap: 6px; }
-.name-edit-input { background: transparent; border: none; border-bottom: 1px solid var(--ink-30); color: var(--carbon-black); font-size: 0.8rem; font-weight: 600; font-family: 'Nunito Sans',sans-serif; padding: 2px 4px; max-width: 160px; outline: none; }
+.name-edit-input { background: transparent; border: none; border-bottom: 1px solid var(--ink-30); color: var(--carbon-black); font-size: var(--fs-sm); font-weight: 600; font-family: 'Nunito Sans', sans-serif; padding: 2px 4px; max-width: 160px; outline: none; }
 .name-edit-input:focus { border-bottom-color: var(--ruby-red); }
-.name-edit-pencil { font-size: 0.7rem; color: var(--ink-50); cursor: pointer; }
+.name-edit-pencil { font-size: var(--fs-xs); color: var(--ink-50); cursor: pointer; }
 .name-edit-pencil:hover { color: var(--ink-80); }
 
 /* ── Toast ── */
@@ -4631,14 +4630,14 @@ body { margin: 0; font-family: 'Nunito Sans', sans-serif; background: var(--bg-l
 /* ── Unsaved changes modal ── */
 .modal-overlay { display: none; position: fixed; inset: 0; z-index: 500; background: var(--ink-50); backdrop-filter: blur(4px); align-items: center; justify-content: center; }
 .modal-overlay.open { display: flex; opacity: 1 !important; pointer-events: auto !important; }
-.unsaved-box { background: #fff; border-radius: 16px; padding: 28px; max-width: 400px; width: 100%; margin: 16px; }
-.unsaved-title { font-size: 1rem; font-weight: 700; margin-bottom: 8px; }
-.unsaved-desc { font-size: 0.84rem; opacity: 0.6; margin-bottom: 24px; line-height: 1.5; }
+.unsaved-box { background: #fff; border-radius: var(--radius-2xl); padding: 28px; max-width: 400px; width: 100%; margin: 16px; }
+.unsaved-title { font-size: var(--fs-lg); font-weight: 700; margin-bottom: 8px; }
+.unsaved-desc { font-size: var(--fs-base); opacity: 0.6; margin-bottom: 24px; line-height: 1.5; }
 .unsaved-actions { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; }
-.unsaved-btn { padding: 8px 16px; border-radius: 8px; border: 1.5px solid #e8e2dc; background: #fff; font-size: 0.82rem; font-weight: 600; cursor: pointer; font-family: 'Nunito Sans',sans-serif; transition: background 0.15s; }
-.unsaved-btn:hover { background: #f5f3f0; }
+.unsaved-btn { padding: 8px 16px; border-radius: var(--radius-md); border: 1.5px solid var(--border-warm); background: #fff; font-size: var(--fs-base); font-weight: 600; cursor: pointer; font-family: 'Nunito Sans', sans-serif; transition: background 0.15s; }
+.unsaved-btn:hover { background: var(--bg-light); }
 .unsaved-btn.primary { background: var(--ruby-red); color: #fff; border-color: var(--ruby-red); }
-.unsaved-btn.primary:hover { background: #b44b42; }
+.unsaved-btn.primary:hover { background: var(--ruby-hover); }
 .unsaved-btn.ghost { color: var(--ink-50); }
 /* Scrollbars sutis — fundo claro */
 .editor-layout *::-webkit-scrollbar,
@@ -4652,12 +4651,30 @@ body { margin: 0; font-family: 'Nunito Sans', sans-serif; background: var(--bg-l
 .editor-layout *::-webkit-scrollbar-thumb,
 .canvas-scroll::-webkit-scrollbar-thumb,
 .panel-scroll::-webkit-scrollbar-thumb,
-.list-group-body::-webkit-scrollbar-thumb { background: var(--ink-12); border-radius: 4px; }
+.list-group-body::-webkit-scrollbar-thumb { background: var(--ink-12); border-radius: var(--radius-xs); }
 .editor-layout *::-webkit-scrollbar-thumb:hover,
 .canvas-scroll::-webkit-scrollbar-thumb:hover,
 .panel-scroll::-webkit-scrollbar-thumb:hover,
 .list-group-body::-webkit-scrollbar-thumb:hover { background: var(--ink-30); }
 .editor-layout, .canvas-scroll, .panel-scroll, .list-group-body { scrollbar-width: thin; scrollbar-color: var(--ink-12) transparent; }
+
+/* ── Padrão único de campo do editor ──────────────────────────────
+   O style.css base do hub define `input[type="number"], input[type="text"]…`
+   com padding 10px 14px / radius 10px / borda --ink-20, e esse seletor vence
+   `.props-input` por especificidade — por isso os campos numéricos (W/H/X/Y)
+   ficavam mais altos e com stroke mais forte que os de texto (ID/Nome).
+   Os seletores abaixo (elemento+classe) empatam em especificidade e vencem
+   por ordem de carga, uniformizando TODOS os campos no mesmo padrão. */
+input.props-input, select.props-input, textarea.props-input,
+input.form-input, select.form-input {
+  padding: 7px 10px;
+  border: 1px solid var(--border-warm);
+  border-radius: var(--radius-sm);
+  box-sizing: border-box;
+  font-size: var(--fs-base);
+}
+/* Preserva o swatch de cor (altura fixa, padding mínimo) */
+input.props-input[type="color"] { padding: 2px 4px; height: 30px; }
 ```
 
 
@@ -4753,7 +4770,7 @@ body { margin: 0; font-family: 'Nunito Sans', sans-serif; background: var(--bg-l
             <option value="">Selecione um template…</option>
           </select>
         </div>
-        <div id="createError" style="display:none;color:var(--danger);font-size:0.82rem;margin-bottom:12px;padding:8px 12px;background:#fef2f2;border-radius:8px;border:1px solid #fecaca"></div>
+        <div id="createError" style="display:none;color:var(--danger);font-size:0.82rem;margin-bottom:12px;padding:8px 12px;background:var(--danger-soft);border-radius:var(--radius-md);border:1px solid #fecaca"></div>
         <div class="form-actions">
           <button class="btn" onclick="showView('list')">Cancelar</button>
           <button class="btn btn--solid" id="createBtn" onclick="submitCreate()" disabled>Criar e abrir</button>
@@ -4843,7 +4860,7 @@ body { margin: 0; font-family: 'Nunito Sans', sans-serif; background: var(--bg-l
           <button onclick="openTestDataStrip()" title="Editar dados de teste para preview">Dados de teste</button>
           <div style="margin-left:auto;display:flex;flex-direction:column;align-items:flex-end;gap:2px">
             <button class="primary" id="btnSalvar" onclick="saveTemplate()">Salvar</button>
-            <span id="savedFeedback" style="font-size:0.7rem;color:#0A9060;font-weight:600;opacity:0;transition:opacity 0.2s">✓ Salvo</span>
+            <span id="savedFeedback" style="font-size:0.7rem;color:var(--live-green);font-weight:600;opacity:0;transition:opacity 0.2s">✓ Salvo</span>
           </div>
         </div>
         <!-- Test data strip (inline, abaixo da toolbar) -->
@@ -4852,6 +4869,7 @@ body { margin: 0; font-family: 'Nunito Sans', sans-serif; background: var(--bg-l
             <span class="test-data-strip-toggle">▾</span>
             <span>Dados de teste</span>
             <span class="test-data-strip-hint">usados apenas no preview</span>
+            <button type="button" onclick="event.stopPropagation(); autoPreencherTestData()" title="Preencher os campos com valores de exemplo para uma prévia rápida" style="margin-left:auto;font-size:0.72rem;padding:3px 10px;border:1px solid var(--ink-12);border-radius:var(--radius-sm);background:transparent;cursor:pointer;color:inherit">Auto preencher</button>
           </div>
           <div class="test-data-strip-fields" id="testDataFields"></div>
         </div>
@@ -4920,7 +4938,7 @@ body { margin: 0; font-family: 'Nunito Sans', sans-serif; background: var(--bg-l
         <button class="modal-close" onclick="Modal.close('previewModalOverlay')" aria-label="Fechar"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
       </div>
       <div class="modal-body">
-        <div id="previewModalContent" style="min-width:300px;min-height:200px;display:flex;align-items:center;justify-content:center;background:#f5f3f0;border-radius:8px">
+        <div id="previewModalContent" style="min-width:300px;min-height:200px;display:flex;align-items:center;justify-content:center;background:var(--bg-light);border-radius:var(--radius-md)">
           <span style="opacity:0.5;font-size:0.9rem">Carregando…</span>
         </div>
       </div>
@@ -5049,13 +5067,46 @@ body { margin: 0; font-family: 'Nunito Sans', sans-serif; background: var(--bg-l
     const input = document.getElementById(colorInputId);
     if (!input) return;
     input.value = color;
+    const hexEl = document.getElementById(colorInputId + '_hex');
+    if (hexEl) { hexEl.value = color; hexEl.style.borderColor = ''; }
     input.dispatchEvent(new Event('change', { bubbles: true }));
   }
+  // Aceita "#abc", "#aabbcc" ou sem "#"; devolve "#aabbcc" normalizado, ou null se inválido.
+  function _normalizeHex(v) {
+    if (!v) return null;
+    let h = String(v).trim().replace(/^#/, '');
+    if (/^[0-9a-fA-F]{3}$/.test(h)) h = h.split('').map(c => c + c).join('');
+    return /^[0-9a-fA-F]{6}$/.test(h) ? '#' + h.toLowerCase() : null;
+  }
+  // Texto HEX digitado/colado → atualiza o seletor de cor e dispara o onchange original.
+  function applyHexInput(colorInputId, hexInputId) {
+    const colorEl = document.getElementById(colorInputId);
+    const hexEl = document.getElementById(hexInputId);
+    if (!colorEl || !hexEl) return;
+    const norm = _normalizeHex(hexEl.value);
+    if (!norm) { hexEl.style.borderColor = '#c0392b'; return; }
+    hexEl.style.borderColor = '';
+    colorEl.value = norm;
+    colorEl.dispatchEvent(new Event('change', { bubbles: true }));
+  }
+  // Seletor nativo mexido → reflete o valor no campo de texto HEX.
+  function syncHexFromColor(colorInputId, hexInputId) {
+    const colorEl = document.getElementById(colorInputId);
+    const hexEl = document.getElementById(hexInputId);
+    if (colorEl && hexEl) { hexEl.value = colorEl.value; hexEl.style.borderColor = ''; }
+  }
   function renderColorPickerWithSwatches(id, currentValue, onChangeStr) {
+    const val = currentValue || '#ffffff';
+    const hexId = id + '_hex';
     const swatches = SVN_BRAND_SWATCHES.map(s =>
-      `<button type="button" class="brand-swatch" title="${s.label}" onclick="applySwatch('${id}','${s.color}')" style="width:18px;height:18px;border-radius:50%;border:1px solid var(--ink-12);background:${s.color};cursor:pointer;padding:0;flex-shrink:0"></button>`
+      `<button type="button" class="brand-swatch" title="${s.label}" onclick="applySwatch('${id}','${s.color}')" style="width:18px;height:18px;border-radius:var(--radius-round);border:1px solid var(--ink-12);background:${s.color};cursor:pointer;padding:0;flex-shrink:0"></button>`
     ).join('');
-    return `<div style="display:flex;flex-direction:column;gap:4px"><input class="props-input" type="color" id="${id}" value="${currentValue||'#ffffff'}" onchange="${onChangeStr}"><div style="display:flex;gap:4px;flex-wrap:wrap">${swatches}</div></div>`;
+    return `<div style="display:flex;flex-direction:column;gap:4px">`
+      + `<div style="display:flex;gap:6px;align-items:center">`
+      + `<input class="props-input" type="color" id="${id}" value="${val}" onchange="${onChangeStr}" oninput="syncHexFromColor('${id}','${hexId}')" style="flex:0 0 auto;width:42px;padding:2px;cursor:pointer">`
+      + `<input class="props-input" type="text" id="${hexId}" value="${val}" maxlength="7" spellcheck="false" placeholder="#000000" oninput="applyHexInput('${id}','${hexId}')" onblur="syncHexFromColor('${id}','${hexId}')" style="flex:1;min-width:0;font-family:monospace;text-transform:lowercase">`
+      + `</div>`
+      + `<div style="display:flex;gap:4px;flex-wrap:wrap">${swatches}</div></div>`;
   }
   let bgVariantKey = null;
   let testData = {};
@@ -5405,7 +5456,7 @@ body { margin: 0; font-family: 'Nunito Sans', sans-serif; background: var(--bg-l
       title.textContent = t.name;
       const bgUrl = t.config?.bg?.url || t.config?.background_image_url;
       if (bgUrl) {
-        content.innerHTML = `<img src="${bgUrl}" style="max-width:100%;max-height:70vh;border-radius:6px;display:block">`;
+        content.innerHTML = `<img src="${bgUrl}" style="max-width:100%;max-height:70vh;border-radius:var(--radius-sm);display:block">`;
       } else {
         content.innerHTML = `<div style="padding:40px;opacity:0.5;font-size:0.9rem;text-align:center">Nenhum background configurado ainda.<br>Abra o editor para pré-visualizar o template.</div>`;
       }
@@ -5558,11 +5609,20 @@ body { margin: 0; font-family: 'Nunito Sans', sans-serif; background: var(--bg-l
   }
 
   async function deleteTemplateConfirm(id, name, isActive) {
-    if (isActive) { showToast('Não é possível deletar o template ativo. Ative outro primeiro.', 'warning'); return; }
-    const ok = await showConfirm(`Deletar "${name}"? Esta ação não pode ser desfeita.`, { danger: true, okLabel: 'Excluir' });
+    const aviso = isActive
+      ? `Deletar "${name}"? Este é o template ATIVO — se houver outro do mesmo tipo, ele passa a ativo no lugar. Esta ação não pode ser desfeita.`
+      : `Deletar "${name}"? Esta ação não pode ser desfeita.`;
+    const ok = await showConfirm(aviso, { danger: true, okLabel: 'Excluir' });
     if (!ok) return;
-    const res = await fetch(`/api/admin/art-templates/${id}`, { method: 'DELETE' });
-    const d = await res.json().catch(()=>({}));
+    let res = await fetch(`/api/admin/art-templates/${id}`, { method: 'DELETE' });
+    let d = await res.json().catch(()=>({}));
+    // O backend pede confirmação extra quando é o último template do tipo e há solicitações.
+    if (res.status === 409 && d.code === 'last_template_with_solicitacoes') {
+      const forcar = await showConfirm(`${d.error} Deletar mesmo assim?`, { danger: true, okLabel: 'Deletar mesmo assim' });
+      if (!forcar) return;
+      res = await fetch(`/api/admin/art-templates/${id}?force=true`, { method: 'DELETE' });
+      d = await res.json().catch(()=>({}));
+    }
     if (!res.ok) { showToast(d.error || 'Erro ao deletar template', 'error'); return; }
     await loadAllTemplates(); renderListView();
   }
@@ -5864,6 +5924,38 @@ body { margin: 0; font-family: 'Nunito Sans', sans-serif; background: var(--bg-l
     `).join('');
   }
 
+  // Gera um valor de exemplo para um campo: 1ª opção (select/radio) ou heurística pelo nome.
+  function _sampleValueFor(key) {
+    const afo = getActiveFieldOptions();
+    if (afo[key] && afo[key].length) {
+      const o = afo[key][0];
+      return (o && typeof o === 'object') ? (o.value ?? o.label ?? '') : String(o);
+    }
+    const k = String(key).toLowerCase();
+    if (k.includes('email')) return 'exemplo@svninvest.com.br';
+    if (k.includes('whats') || k.includes('telefone') || k.includes('fone') || k === 'tel') return '(44) 99999-9999';
+    if (k.includes('nome')) return 'Fulano de Tal';
+    if (k.includes('cargo')) return 'Assessor de Investimentos';
+    if (k.includes('unidade') || k.includes('cidade')) return 'Maringá';
+    if (k.includes('data')) return new Date().toLocaleDateString('pt-BR');
+    if (k.includes('site') || k.includes('url')) return 'https://svninvest.com.br';
+    if (k.includes('contrato') || k.includes('marca')) return 'SVN Investimentos';
+    return 'Exemplo';
+  }
+
+  // Botão "Auto preencher": puxa os dados de exemplo do backend e completa o que sobrar
+  // vazio com valores de exemplo, para visualizar a prévia sem digitar campo a campo.
+  async function autoPreencherTestData() {
+    await loadSampleData(); // popula testData com exemplos do backend (já re-renderiza o painel)
+    const placeholders = getActivePlaceholders(currentTemplateMeta?.tipo);
+    for (const key of placeholders) {
+      const v = testData[key];
+      if (v === undefined || v === null || v === '') testData[key] = _sampleValueFor(key);
+    }
+    renderTestDataPanel();
+    scheduleLivePreview(0);
+  }
+
   // ── Canvas ───────────────────────────────────────────────────
   function fitToView() {
     if (!currentTemplate) return;
@@ -6008,18 +6100,28 @@ body { margin: 0; font-family: 'Nunito Sans', sans-serif; background: var(--bg-l
         // como fonte carregada no navegador) → família carregada + peso, APENAS
         // para o preview do overlay. NÃO altera o layer.font_family salvo.
         const _fontMap = {
-          'Taviraj Light':     { fam: "'Taviraj'",     w: 300 },
-          'Nunito Sans Light': { fam: "'Nunito Sans'", w: 300 },
+          'Taviraj Light':              { fam: "'Taviraj'",           w: 300 },
+          'Nunito Sans Light':          { fam: "'Nunito Sans'",       w: 300 },
+          'Ivy Journal Thin':           { fam: "'Ivy Journal'",       w: 100 },
+          'Ivy Journal Light':          { fam: "'Ivy Journal'",       w: 300 },
+          'Ivy Journal Regular':        { fam: "'Ivy Journal'",       w: 400 },
+          'Ivy Journal SemiBold':       { fam: "'Ivy Journal'",       w: 600 },
+          'Ivy Journal Bold':           { fam: "'Ivy Journal'",       w: 700 },
+          'Roobert PRO TRIAL Light':    { fam: "'Roobert PRO TRIAL'", w: 300 },
+          'Roobert PRO TRIAL Regular':  { fam: "'Roobert PRO TRIAL'", w: 400 },
+          'Roobert PRO TRIAL Medium':   { fam: "'Roobert PRO TRIAL'", w: 500 },
+          'Roobert PRO TRIAL SemiBold': { fam: "'Roobert PRO TRIAL'", w: 600 },
+          'Roobert PRO TRIAL Bold':     { fam: "'Roobert PRO TRIAL'", w: 700 },
+          'Roobert PRO TRIAL Heavy':    { fam: "'Roobert PRO TRIAL'", w: 800 },
         };
         const _pf = _fontMap[layer.font_family] || { fam: layer.font_family ? `'${layer.font_family}'` : '', w: 400 };
-        const _weight = layer.font_weight || (layer.bold ? 700 : _pf.w);
+        const _weight = _pf.w; // peso vem do nome da fonte (ex: "Ivy Journal Bold"); não há campo separado
         txtPreview.style.cssText = [
           'position:absolute;inset:0;pointer-events:none;overflow:hidden;',
           `font-family:${_pf.fam ? _pf.fam + ',' : ''}sans-serif;`,
           `font-size:${scaledSize}px;`,
           `color:${layer.color || '#000'};`,
           `font-weight:${_weight};`,
-          layer.italic ? 'font-style:italic;' : '',
           `text-align:${align};`,
           `display:flex;flex-direction:column;`,
           `justify-content:${vAlignMap[valign] || 'flex-start'};`,
@@ -6027,14 +6129,15 @@ body { margin: 0; font-family: 'Nunito Sans', sans-serif; background: var(--bg-l
           layer.type === 'text-block' ? 'white-space:pre-wrap;word-break:break-word;' : 'white-space:nowrap;',
           `line-height:${layer.line_height || 1.2};`,
           `letter-spacing:${layer.letter_spacing ? layer.letter_spacing * SCALE + 'px' : 'normal'};`,
-          `text-transform:${layer.text_transform || 'none'};`,
         ].join('');
         const content = layer.content || layer.text || '';
-        const preview = content.replace(/\{\{[^}]+\}\}/g, m => {
+        let preview = content.replace(/\{\{[^}]+\}\}/g, m => {
           const key = m.slice(2,-2).trim();
           const td = typeof testData !== 'undefined' ? testData : {};
           return td[key] !== undefined ? td[key] : m;
         });
+        if (layer.text_transform === 'uppercase') preview = preview.toUpperCase();
+        else if (layer.text_transform === 'capitalize-first' && preview) preview = preview.charAt(0).toUpperCase() + preview.slice(1);
         txtPreview.textContent = preview || '(texto vazio)';
         div.appendChild(txtPreview);
       } else if (layer.type === 'image') {
@@ -6045,7 +6148,11 @@ body { margin: 0; font-family: 'Nunito Sans', sans-serif; background: var(--bg-l
         if (src) {
           const im = document.createElement('img');
           im.src = src;
-          im.style.cssText = `width:100%;height:100%;object-fit:${layer.object_fit || 'cover'};pointer-events:none;`;
+          // object-position espelha o crop_focus; 'attention' (detecção de rosto no
+          // render) não tem equivalente em CSS — aproximamos por 'top', já que em
+          // retratos o rosto fica no topo.
+          const _focusPos = { center:'center', top:'top', bottom:'bottom', attention:'top' }[layer.crop_focus || 'center'] || 'center';
+          im.style.cssText = `width:100%;height:100%;object-fit:${layer.object_fit || 'cover'};object-position:${_focusPos};pointer-events:none;`;
           imgWrap.appendChild(im);
         } else {
           imgWrap.style.background = 'rgba(100,100,100,0.15)';
@@ -6298,6 +6405,29 @@ body { margin: 0; font-family: 'Nunito Sans', sans-serif; background: var(--bg-l
   }
 
   // ── Props panel ──────────────────────────────────────────────
+  // Lista canônica de fontes (mantida em sincronia com AVAILABLE_FONTS do backend).
+  const FONT_OPTIONS = [
+    'Taviraj Light',
+    'Nunito Sans Light',
+    'Ivy Journal Thin','Ivy Journal Light','Ivy Journal Regular','Ivy Journal SemiBold','Ivy Journal Bold',
+    'Roobert PRO TRIAL Light','Roobert PRO TRIAL Regular','Roobert PRO TRIAL Medium','Roobert PRO TRIAL SemiBold','Roobert PRO TRIAL Bold','Roobert PRO TRIAL Heavy',
+  ];
+  // Deriva família → [pesos] (o peso é sempre a última palavra do nome).
+  const FONT_FAMILIES = (() => {
+    const m = {};
+    for (const full of FONT_OPTIONS) {
+      const parts = full.split(' ');
+      const weight = parts[parts.length - 1];
+      const fam = parts.slice(0, -1).join(' ');
+      (m[fam] = m[fam] || []).push(weight);
+    }
+    return m;
+  })();
+  function splitFontFamily(full) {
+    const parts = String(full || FONT_OPTIONS[0]).split(' ');
+    return { family: parts.slice(0, -1).join(' '), weight: parts[parts.length - 1] };
+  }
+
   function showProps(id) {
     const empty = document.getElementById('propsEmpty');
     const content = document.getElementById('propsContent');
@@ -6308,8 +6438,6 @@ body { margin: 0; font-family: 'Nunito Sans', sans-serif; background: var(--bg-l
     content.style.display = 'block';
     const tipo = currentTemplateMeta?.tipo;
     const placeholders = getActivePlaceholders(tipo);
-    const fontOptions = ['Taviraj Light','Nunito Sans Light','Ivy Journal Light','Roobert PRO TRIAL Light']
-      .map(f => `<option${layer.font_family===f?' selected':''}>${f}</option>`).join('');
     const alignBtns = ['left','center','right']
       .map(a => `<button class="align-btn${layer.align===a?' active':''}" onclick="updLayer('${id}','align','${a}');renderAlignBtns('${id}')" title="${a}">${a==='left'?'←':a==='center'?'↔':'→'}</button>`).join('');
 
@@ -6322,14 +6450,14 @@ body { margin: 0; font-family: 'Nunito Sans', sans-serif; background: var(--bg-l
           <div><input class="props-input" value="${esc(layer.id)}" onchange="updLayer('${id}','id',this.value)" placeholder="id"></div>
           <div><input class="props-input" value="${esc(layer.name)}" onchange="updLayer('${id}','name',this.value)" placeholder="nome"></div>
         </div>
-        <div class="props-label">Posição / Tamanho</div>
-        <div class="props-row">
-          <div><div class="props-label">X</div><input class="props-input" type="number" value="${layer.x}" onchange="updLayerN('${id}','x',this.value)"></div>
-          <div><div class="props-label">Y</div><input class="props-input" type="number" value="${layer.y}" onchange="updLayerN('${id}','y',this.value)"></div>
-        </div>
+        <div class="props-label">Tamanho / Posição</div>
         <div class="props-row">
           <div><div class="props-label">W</div><input class="props-input" type="number" value="${layer.w||0}" onchange="updLayerN('${id}','w',this.value)"></div>
           <div><div class="props-label">H</div><input class="props-input" type="number" value="${layer.h||0}" onchange="updLayerN('${id}','h',this.value)"></div>
+        </div>
+        <div class="props-row">
+          <div><div class="props-label">X</div><input class="props-input" type="number" value="${layer.x}" onchange="updLayerN('${id}','x',this.value)"></div>
+          <div><div class="props-label">Y</div><input class="props-input" type="number" value="${layer.y}" onchange="updLayerN('${id}','y',this.value)"></div>
         </div>
       </div>
       <div class="layer-align-section">
@@ -6368,23 +6496,38 @@ body { margin: 0; font-family: 'Nunito Sans', sans-serif; background: var(--bg-l
     if (layer.type === 'text-line' || layer.type === 'text-block') {
       const va = layer.vertical_align || 'top';
       const valignBtns = ['top','middle','bottom'].map(a => `<button class="align-btn${va===a?' active':''}" onclick="updLayer('${id}','vertical_align','${a}');renderVAlignBtns('${id}')" title="${a}">${a==='top'?'↑':a==='middle'?'↕':'↓'}</button>`).join('');
+      const _cur = splitFontFamily(layer.font_family);
+      const familiaOptions = Object.keys(FONT_FAMILIES).map(fam => `<option${_cur.family===fam?' selected':''}>${fam}</option>`).join('');
+      const pesoOptions = (FONT_FAMILIES[_cur.family] || []).map(w => `<option${_cur.weight===w?' selected':''}>${w}</option>`).join('');
       html += `<details class="panel-accordion" open>
   <summary class="panel-accordion-summary">Tipografia <svg class="chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="6 9 12 15 18 9"/></svg></summary>
   <div class="panel-accordion-body">
       <div class="props-section">
         <div class="props-label">Fonte</div>
-        <div class="props-row single"><select class="props-input" onchange="updLayer('${id}','font_family',this.value)">${fontOptions}</select></div>
-        <div class="props-row">
+        <div class="props-row single"><select class="props-input" onchange="updFontFamilia('${id}',this.value)">${familiaOptions}</select></div>
+        <div class="props-label" style="margin-top:6px">Peso</div>
+        <div class="props-row single"><select class="props-input" onchange="updFontPeso('${id}',this.value)">${pesoOptions}</select></div>
+        <div class="props-row" style="margin-top:8px">
           <div><div class="props-label">Tamanho</div><input class="props-input" type="number" value="${layer.font_size}" onchange="updLayerN('${id}','font_size',this.value)"></div>
-          <div><div class="props-label">Cor</div>${renderColorPickerWithSwatches(`color-${id}`, layer.color||'#ffffff', `updLayer('${id}','color',this.value)`)}</div>
+          <div><div class="props-label">Kerning</div><input class="props-input" type="number" step="0.5" value="${layer.letter_spacing||0}" onchange="updLayerN('${id}','letter_spacing',this.value)" title="Espaçamento entre letras (kerning), em px — aceita negativo"></div>
         </div>
-        <div class="props-label">Alinhamento horiz.</div>
+        <div style="margin-top:8px">
+          <div class="props-label">Cor</div>
+          ${renderColorPickerWithSwatches(`color-${id}`, layer.color||'#ffffff', `updLayer('${id}','color',this.value)`)}
+        </div>
+        <div class="props-label" style="margin-top:8px">Alinhamento horiz.</div>
         <div class="align-btns" id="alignBtns-${id}">${alignBtns}</div>
         <div class="props-label" style="margin-top:8px">Alinhamento vert.</div>
         <div class="align-btns" id="valignBtns-${id}">${valignBtns}</div>
         <div class="props-row" style="margin-top:8px">
           <div><div class="props-label">Line height</div><input class="props-input" type="number" value="${layer.line_height||0}" onchange="updLayerN('${id}','line_height',this.value)"></div>
           <div><div class="props-label">Parágrafo</div><input class="props-input" type="number" value="${layer.paragraph_spacing||0}" onchange="updLayerN('${id}','paragraph_spacing',this.value)"></div>
+        </div>
+        <div class="props-label" style="margin-top:8px">Caixa</div>
+        <div class="align-btns">
+          <button type="button" class="align-btn${(layer.text_transform||'none')==='none'?' active':''}" onclick="setTextTransform('${id}','none')" title="Normal — texto como digitado">Aa</button>
+          <button type="button" class="align-btn${layer.text_transform==='uppercase'?' active':''}" onclick="setTextTransform('${id}','uppercase')" title="TUDO MAIÚSCULO (all caps)" style="letter-spacing:0.08em;font-weight:700">AA</button>
+          <button type="button" class="align-btn${layer.text_transform==='capitalize-first'?' active':''}" onclick="setTextTransform('${id}','capitalize-first')" title="Apenas a primeira letra maiúscula">Ab</button>
         </div>
         ${layer.auto_fit?`
         <div class="props-label" style="margin-top:8px">Auto-fit min</div>
@@ -6480,6 +6623,10 @@ body { margin: 0; font-family: 'Nunito Sans', sans-serif; background: var(--bg-l
         <select class="props-input" onchange="updLayerShape('${id}',this.value)">
           <option value="rectangle"${(!layer.shape||layer.shape==='rectangle')?' selected':''}>Retângulo</option>
           <option value="circle"${layer.shape==='circle'?' selected':''}>Círculo</option>
+        </select>
+        <div class="props-label" style="margin-top:8px">Enquadramento <span style="font-weight:400;opacity:0.5">(quando a foto é cortada)</span></div>
+        <select class="props-input" onchange="updLayer('${id}','crop_focus',this.value)">
+          ${[['center','Centro'],['top','Topo'],['bottom','Base'],['attention','Rosto (automático)']].map(([v,lbl])=>`<option value="${v}"${(layer.crop_focus||'center')===v?' selected':''}>${lbl}</option>`).join('')}
         </select>
         <div class="props-label" style="margin-top:8px">Borda</div>
         <div class="props-row">
@@ -6577,6 +6724,32 @@ body { margin: 0; font-family: 'Nunito Sans', sans-serif; background: var(--bg-l
     scheduleLivePreview(NORMAL_DEBOUNCE);
   }
   function updLayerN(id, key, value) { updLayer(id, key, parseFloat(value) || 0); }
+
+  // Define a transformação de caixa (text_transform) do layer de texto: 'none',
+  // 'uppercase' (TUDO MAIÚSCULO) ou 'capitalize-first' (só a 1ª letra). Não destrói o
+  // conteúdo — a transformação é aplicada no preview e no render final, então as
+  // variáveis {{}} continuam intactas. Re-renderiza o painel pra refletir o botão ativo.
+  function setTextTransform(id, value) {
+    const layer = getLayer(id); if (!layer) return;
+    updLayer(id, 'text_transform', value);
+    showProps(id);
+  }
+
+  // Troca a família mantendo o peso atual se ele existir na nova família; senão cai no
+  // primeiro peso disponível. Re-renderiza o painel para atualizar o seletor de pesos.
+  function updFontFamilia(id, fam) {
+    const layer = getLayer(id); if (!layer) return;
+    const pesos = FONT_FAMILIES[fam] || [];
+    const cur = splitFontFamily(layer.font_family);
+    const peso = pesos.includes(cur.weight) ? cur.weight : (pesos[0] || '');
+    updLayer(id, 'font_family', (fam + ' ' + peso).trim());
+    showProps(id);
+  }
+  function updFontPeso(id, peso) {
+    const layer = getLayer(id); if (!layer) return;
+    const cur = splitFontFamily(layer.font_family);
+    updLayer(id, 'font_family', (cur.family + ' ' + peso).trim());
+  }
   function alignLayer(layerId, direction) {
     const layer = getLayer(layerId);
     if (!layer || !currentTemplate) return;
@@ -6915,69 +7088,69 @@ body { margin: 0; font-family: 'Nunito Sans', sans-serif; background: var(--bg-l
     .tomb-tab.active { color: var(--carbon-black); border-bottom-color: var(--ruby-red); }
     .tomb-panel { display: none; } .tomb-panel.active { display: block; }
 
-    .tomb-create { max-width: 480px; border: 1px solid var(--border-light); border-radius: 12px; padding: 22px; margin-top: 8px; }
+    .tomb-create { max-width: 480px; border: 1px solid var(--border-light); border-radius: var(--radius-xl); padding: 22px; margin-top: 8px; }
     .tomb-create .field { margin-bottom: 14px; }
     .tomb-create label { display: block; font-size: 0.8rem; font-weight: 700; margin-bottom: 5px; }
-    .tomb-create input, .tomb-create select { width: 100%; padding: 9px 11px; border: 1px solid var(--border-light); border-radius: 8px; font-family: inherit; font-size: 0.9rem; }
+    .tomb-create input, .tomb-create select { width: 100%; padding: 9px 11px; border: 1px solid var(--border-light); border-radius: var(--radius-md); font-family: inherit; font-size: 0.9rem; }
 
     .tomb-list { display: flex; flex-direction: column; gap: 10px; }
-    .tomb-item { display: flex; align-items: center; justify-content: space-between; gap: 12px; border: 1px solid var(--border-light); border-radius: 10px; padding: 14px 16px; cursor: pointer; transition: background .12s; }
+    .tomb-item { display: flex; align-items: center; justify-content: space-between; gap: 12px; border: 1px solid var(--border-light); border-radius: var(--radius-lg); padding: 14px 16px; cursor: pointer; transition: background .12s; }
     .tomb-item:hover { background: var(--icon-bg); }
     .tomb-item-nome { font-weight: 700; font-size: 0.95rem; }
     .tomb-item-meta { font-size: 0.78rem; color: var(--ink-50); margin-top: 2px; }
-    .tomb-marca-pill { padding: 3px 11px; border-radius: 999px; font-size: 0.76rem; font-weight: 700; background: rgba(172,54,49,0.1); color: var(--ruby-red); white-space: nowrap; }
+    .tomb-marca-pill { padding: 3px 11px; border-radius: var(--radius-pill); font-size: 0.76rem; font-weight: 700; background: rgba(172,54,49,0.1); color: var(--ruby-red); white-space: nowrap; }
 
     .tomb-ws-header { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin-bottom: 18px; }
     .tomb-ws-nome { font-family: 'Taviraj', serif; font-weight: 400; font-size: 1.5rem; }
 
-    .tomb-drop { border: 2px dashed var(--border-light); border-radius: 12px; padding: 26px; text-align: center; }
+    .tomb-drop { border: 2px dashed var(--border-light); border-radius: var(--radius-xl); padding: 26px; text-align: center; }
     .tomb-drop p { margin: 8px 0 0; font-size: 0.84rem; color: var(--ink-50); }
     .tomb-filename { font-size: 0.85rem; font-weight: 700; margin-top: 10px; }
     .tomb-summary { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; margin: 22px 0 12px; }
-    .tomb-pill { padding: 3px 11px; border-radius: 999px; font-weight: 700; font-size: 0.78rem; }
+    .tomb-pill { padding: 3px 11px; border-radius: var(--radius-pill); font-weight: 700; font-size: 0.78rem; }
     .tomb-pill--ok { background: #dcfce7; color: var(--success); }
-    .tomb-pill--warn { background: #fee2e2; color: var(--danger); }
-    .tomb-pill--total { background: #eef2f7; color: #475569; }
+    .tomb-pill--warn { background: var(--danger-soft); color: var(--danger); }
+    .tomb-pill--total { background: #eef2f7; color: var(--info-strong); }
     #tombTabela td, #tombTabela th { font-size: 0.82rem; }
     .row-status-ok { color: var(--success); font-weight: 700; font-size: 0.78rem; }
     .row-status-warn { color: var(--danger); font-weight: 700; font-size: 0.78rem; }
-    tr.tomb-row--warn td { background: #fef2f2; }
+    tr.tomb-row--warn td { background: var(--danger-soft); }
     .tomb-actions { display: flex; gap: 12px; margin-top: 20px; flex-wrap: wrap; }
     .tomb-note { font-size: 0.78rem; color: var(--ink-50); margin-top: 10px; }
     .tomb-review { margin-top: 22px; border-top: 1px solid var(--border-light); padding-top: 18px; }
     .tomb-review-head { display:flex; align-items:center; justify-content:space-between; gap:12px; }
     .tomb-review-resumo { font-size:0.8rem; color: var(--ink-50); margin-left:10px; }
-    .tomb-review-wrap { max-height: 52vh; overflow:auto; border:1px solid var(--border-light); border-radius:12px; margin-top:10px; }
+    .tomb-review-wrap { max-height: 52vh; overflow:auto; border:1px solid var(--border-light); border-radius:var(--radius-xl); margin-top:10px; }
     #cartoesRevTabela td { vertical-align: middle; }
-    #cartoesRevTabela select { width:100%; padding:7px 9px; border:1px solid var(--border-light); border-radius:8px; background:var(--card-white); font:inherit; }
-    .rev-badge { display:inline-block; padding:2px 9px; border-radius:999px; font-size:0.72rem; font-weight:700; text-transform:uppercase; letter-spacing:.02em; }
+    #cartoesRevTabela select { width:100%; padding:7px 9px; border:1px solid var(--border-light); border-radius:var(--radius-md); background:var(--card-white); font:inherit; }
+    .rev-badge { display:inline-block; padding:2px 9px; border-radius:var(--radius-pill); font-size:0.72rem; font-weight:700; text-transform:uppercase; letter-spacing:.02em; }
     .rev-exato, .rev-forte { background:#dcfce7; color:var(--success); }
-    .rev-manual { background:#dbeafe; color:#1d4ed8; }
+    .rev-manual { background:var(--info-soft); color:#1d4ed8; }
     .rev-revisar { background:#ffedd5; color:var(--warning); }
-    .rev-sem_foto { background:#eef2f7; color:#475569; }
+    .rev-sem_foto { background:#eef2f7; color:var(--info-strong); }
     tr.rev-row--alert td { background:#fff7ed; }
     .btn-text { background:transparent; border:none; color:var(--ruby-red); cursor:pointer; font:inherit; padding:6px 8px; }
     .tomb-empty { padding: 40px; text-align: center; color: var(--ink-40); }
-    .spin { display:inline-block; width:13px; height:13px; border:2px solid rgba(255,255,255,.45); border-top-color:#fff; border-radius:50%; vertical-align:-2px; animation: tombspin .7s linear infinite; }
+    .spin { display:inline-block; width:13px; height:13px; border:2px solid rgba(255,255,255,.45); border-top-color:#fff; border-radius:var(--radius-round); vertical-align:-2px; animation: tombspin .7s linear infinite; }
     .spin--dark { border-color: var(--ink-20); border-top-color:var(--carbon-black); }
     @keyframes tombspin { to { transform: rotate(360deg); } }
     .rev-foto-cell { display:flex; gap:8px; align-items:center; }
     .rev-foto-cell select { flex:1; }
-    .rev-eye { background:transparent; border:1px solid var(--border-light); border-radius:8px; cursor:pointer; padding:6px 8px; display:inline-flex; align-items:center; color:var(--carbon-black); flex:none; }
+    .rev-eye { background:transparent; border:1px solid var(--border-light); border-radius:var(--radius-md); cursor:pointer; padding:6px 8px; display:inline-flex; align-items:center; color:var(--carbon-black); flex:none; }
     .rev-eye:hover { background:var(--icon-bg); }
     .tomb-item-actions { display:flex; align-items:center; gap:10px; }
-    .tomb-del { width:32px; height:32px; border-radius:8px; border:1px solid transparent; background:transparent; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; color:var(--ink-40); transition:background .15s,color .15s,border-color .15s; flex-shrink:0; }
-    .tomb-del:hover { background:#fef2f2; color:var(--danger); border-color:#fecaca; }
+    .tomb-del { width:32px; height:32px; border-radius:var(--radius-md); border:1px solid transparent; background:transparent; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; color:var(--ink-40); transition:background .15s,color .15s,border-color .15s; flex-shrink:0; }
+    .tomb-del:hover { background:var(--danger-soft); color:var(--danger); border-color:var(--danger-border); }
     .foto-modal { position:fixed; inset:0; background:var(--ink-60); display:flex; align-items:center; justify-content:center; z-index:9999; padding:20px; }
-    .foto-modal-inner { background:var(--card-white); border-radius:14px; padding:14px; max-width:min(90vw,520px); position:relative; }
-    .foto-modal-inner img { max-width:100%; max-height:70vh; border-radius:10px; display:block; }
+    .foto-modal-inner { background:var(--card-white); border-radius:var(--radius-xl); padding:14px; max-width:min(90vw,520px); position:relative; }
+    .foto-modal-inner img { max-width:100%; max-height:70vh; border-radius:var(--radius-lg); display:block; }
     .foto-modal-close { position:absolute; top:6px; right:10px; background:none; border:none; font-size:1.7rem; line-height:1; cursor:pointer; color:var(--carbon-black); }
     .foto-modal-nome { margin-top:8px; font-size:.8rem; color:var(--ink-60); text-align:center; word-break:break-all; }
     .req-star { color: var(--danger); font-weight: 700; }
     .tomb-erro { color: var(--danger); font-size: 0.78rem; margin-top: 5px; }
     .field input.erro, .field select.erro { border-color: var(--danger) !important; box-shadow: 0 0 0 3px rgba(220,38,38,0.12); }
     /* Logo da marca no topo (tela de edição) */
-    .tomb-brand-logo { display: none; align-items: center; justify-content: center; background: var(--carbon-black); border-radius: 12px; padding: 14px 26px; box-shadow: 0 2px 8px var(--ink-12); }
+    .tomb-brand-logo { display: none; align-items: center; justify-content: center; background: var(--carbon-black); border-radius: var(--radius-xl); padding: 14px 26px; box-shadow: 0 2px 8px var(--ink-12); }
     .tomb-brand-logo img { height: 34px; max-width: 240px; object-fit: contain; display: block; }
     @media (max-width: 640px) { .tomb-brand-logo { padding: 10px 18px; } .tomb-brand-logo img { height: 26px; } }
   </style>
@@ -7053,7 +7226,7 @@ body { margin: 0; font-family: 'Nunito Sans', sans-serif; background: var(--bg-l
 
         <div id="tombResultado" style="display:none">
           <div class="tomb-summary" id="tombSummary"></div>
-          <div class="admin-userlist-table-wrap" style="border-radius:12px;border:1px solid var(--border-light);overflow-x:auto">
+          <div class="admin-userlist-table-wrap" style="border-radius:var(--radius-xl);border:1px solid var(--border-light);overflow-x:auto">
             <table class="admin-table" id="tombTabela"><thead id="tombThead"></thead><tbody id="tombTbody"></tbody></table>
           </div>
           <div class="tomb-actions">
@@ -7488,7 +7661,7 @@ body { margin: 0; font-family: 'Nunito Sans', sans-serif; background: var(--bg-l
     .col-resizer { position: absolute; top: 0; right: 0; width: 7px; height: 100%; cursor: col-resize; user-select: none; z-index: 3; }
     .col-resizer:hover { background: rgba(172,54,49,0.5); }
     .role-group-row td { background: #f4ece1; border-top: 1px solid var(--border-light); border-bottom: 1px solid var(--border-light); padding: 7px 14px !important; }
-    .rg-pill { padding: 3px 10px; border-radius: 999px; font-size: 0.78rem; font-weight: 700; font-family: 'Nunito Sans', sans-serif; }
+    .rg-pill { padding: 3px 10px; border-radius: var(--radius-pill); font-size: 0.78rem; font-weight: 700; font-family: 'Nunito Sans', sans-serif; }
     .rg-count { margin-left: 8px; font-size: 0.78rem; opacity: 0.55; }
     @media (max-width: 600px) {
       #usuariosTabela { table-layout: auto !important; width: 100% !important; }
@@ -7505,11 +7678,11 @@ body { margin: 0; font-family: 'Nunito Sans', sans-serif; background: var(--bg-l
       <div class="page-header">
         <h1 class="page-title">Usuários</h1>
         <div class="page-header__actions">
-          <div class="search-bar" style="margin-bottom:0;height:32px;padding:0 14px;border-radius:8px;min-width:220px">
+          <div class="search-bar" style="margin-bottom:0;height:32px;padding:0 14px;border-radius:var(--radius-md);min-width:220px">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.4"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
             <input type="text" id="userBusca" placeholder="Buscar por nome ou e-mail..." oninput="debounceUserSearch()">
           </div>
-          <button onclick="loadUsuarios()" style="padding:6px 14px;border-radius:8px;border:1px solid var(--border-light);background:transparent;font-family:'Nunito Sans',sans-serif;font-size:0.8rem;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:6px">
+          <button onclick="loadUsuarios()" style="padding:6px 14px;border-radius:var(--radius-md);border:1px solid var(--border-light);background:transparent;font-family:'Nunito Sans', sans-serif;font-size:0.8rem;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:6px">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 102.13-9.36L1 10"/></svg>
             Atualizar
           </button>
@@ -7521,7 +7694,7 @@ body { margin: 0; font-family: 'Nunito Sans', sans-serif; background: var(--bg-l
       </div>
       <p class="page-subtitle" style="margin-bottom:20px">Gerencie usuários do sistema: funções e IDs do ClickUp. Use o botão "Logar como" para visualizar o sistema como aquele usuário.</p>
 
-      <div class="admin-userlist-table-wrap" style="border-radius:12px;border:1px solid var(--border-light);overflow-x:auto">
+      <div class="admin-userlist-table-wrap" style="border-radius:var(--radius-xl);border:1px solid var(--border-light);overflow-x:auto">
         <table class="admin-table" id="usuariosTabela">
           <thead id="usuariosThead"></thead>
           <tbody id="usuariosTabelaBody">
@@ -7559,7 +7732,7 @@ body { margin: 0; font-family: 'Nunito Sans', sans-serif; background: var(--bg-l
               <input type="text" id="novoUsuarioClickup" placeholder="ex: 55127950">
               <p style="font-size:0.72rem;opacity:0.5;margin-top:4px">Necessário para receber atribuições automáticas de tasks.</p>
             </div>
-            <div id="novoUsuarioErro" style="display:none;margin:12px 0;padding:10px;background:rgba(220,38,38,0.08);color:var(--danger);border-radius:6px;font-size:0.82rem"></div>
+            <div id="novoUsuarioErro" style="display:none;margin:12px 0;padding:10px;background:rgba(220,38,38,0.08);color:var(--danger);border-radius:var(--radius-sm);font-size:0.82rem"></div>
           </div>
           <div class="modal-footer">
             <button onclick="cancelarNovoUsuario()" class="btn btn-secondary">Cancelar</button>
@@ -7602,7 +7775,7 @@ body { margin: 0; font-family: 'Nunito Sans', sans-serif; background: var(--bg-l
             <button class="modal-close" onclick="cancelarEditAssignments()">&times;</button>
           </div>
           <div class="modal-body">
-            <div id="editAssignmentsList" style="max-height:380px;overflow:auto;border:1px solid var(--border-light);border-radius:8px;padding:8px"></div>
+            <div id="editAssignmentsList" style="max-height:380px;overflow:auto;border:1px solid var(--border-light);border-radius:var(--radius-md);padding:8px"></div>
           </div>
           <div class="modal-footer">
             <button onclick="cancelarEditAssignments()" class="btn btn-secondary">Cancelar</button>
@@ -7799,11 +7972,11 @@ body { margin: 0; font-family: 'Nunito Sans', sans-serif; background: var(--bg-l
             <div style="font-size:0.82rem;opacity:0.7">${esc(u.email || '—')}</div>
           </td>
           <td style="padding:10px 14px">
-            <button onclick="abrirEditRole('${esc(u.id)}', '${esc(u.name || u.email)}', '${esc(u.role)}')" style="padding:3px 9px;border-radius:6px;background:${roleStyle};border:none;font-family:'Nunito Sans',sans-serif;font-size:0.78rem;font-weight:700;cursor:pointer">${roleLabel}</button>
+            <button onclick="abrirEditRole('${esc(u.id)}', '${esc(u.name || u.email)}', '${esc(u.role)}')" style="padding:3px 9px;border-radius:var(--radius-sm);background:${roleStyle};border:none;font-family:'Nunito Sans', sans-serif;font-size:0.78rem;font-weight:700;cursor:pointer">${roleLabel}</button>
           </td>
           <td style="padding:10px 14px">
             <button onclick="abrirEditClickup('${esc(u.id)}', '${esc(u.name || u.email)}', '${esc(u.clickup_user_id || '')}')"
-                    style="font-size:0.8rem;font-family:monospace;opacity:0.7;background:transparent;border:1px dashed var(--ink-12);padding:3px 9px;border-radius:5px;cursor:pointer;transition:all 0.15s"
+                    style="font-size:0.8rem;font-family:monospace;opacity:0.7;background:transparent;border:1px dashed var(--ink-12);padding:3px 9px;border-radius:var(--radius-sm);cursor:pointer;transition:all 0.15s"
                     onmouseover="this.style.background='var(--icon-bg)';this.style.opacity='1'"
                     onmouseout="this.style.background='transparent';this.style.opacity='0.7'">
               ${esc(u.clickup_user_id || '— editar —')}
@@ -7811,7 +7984,7 @@ body { margin: 0; font-family: 'Nunito Sans', sans-serif; background: var(--bg-l
           </td>
           <td style="padding:10px 14px">
             <button onclick="abrirEditAssignments('${esc(u.id)}', '${esc(u.name || u.email)}')"
-                    style="font-size:0.78rem;background:var(--ink-05);border:none;padding:4px 10px;border-radius:5px;cursor:pointer;display:inline-flex;align-items:center;gap:5px;transition:all 0.15s"
+                    style="font-size:0.78rem;background:var(--ink-05);border:none;padding:4px 10px;border-radius:var(--radius-sm);cursor:pointer;display:inline-flex;align-items:center;gap:5px;transition:all 0.15s"
                     onmouseover="this.style.background='var(--icon-bg)'"
                     onmouseout="this.style.background='var(--ink-05)'">
               <strong>${(u.tipos_assigned || []).length}</strong>
@@ -7823,7 +7996,7 @@ body { margin: 0; font-family: 'Nunito Sans', sans-serif; background: var(--bg-l
             <span style="font-size:0.8rem;opacity:0.6">${dt}</span>
           </td>
           <td style="padding:10px 14px;text-align:center">
-            ${!isMe ? `<button onclick="logarComo('${esc(u.email)}')" title="Visualizar sistema como este usuário" style="padding:5px 12px;border-radius:8px;border:1px solid var(--border-light);background:transparent;font-family:'Nunito Sans',sans-serif;font-size:0.78rem;font-weight:600;cursor:pointer;white-space:nowrap;display:inline-flex;align-items:center;gap:5px">
+            ${!isMe ? `<button onclick="logarComo('${esc(u.email)}')" title="Visualizar sistema como este usuário" style="padding:5px 12px;border-radius:var(--radius-md);border:1px solid var(--border-light);background:transparent;font-family:'Nunito Sans', sans-serif;font-size:0.78rem;font-weight:600;cursor:pointer;white-space:nowrap;display:inline-flex;align-items:center;gap:5px">
               <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
               Logar como
             </button>` : `<span style="font-size:0.75rem;opacity:0.35">Você</span>`}
@@ -7988,7 +8161,7 @@ body { margin: 0; font-family: 'Nunito Sans', sans-serif; background: var(--bg-l
       await _ensureTipos();
       const listEl = document.getElementById('editAssignmentsList');
       listEl.innerHTML = _tiposComClickup.map(t => `
-        <label style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:5px;cursor:pointer;transition:background 0.12s"
+        <label style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:var(--radius-sm);cursor:pointer;transition:background 0.12s"
                onmouseover="this.style.background='var(--icon-bg)'"
                onmouseout="this.style.background='transparent'">
           <input type="checkbox" value="${esc(t.tipo)}" ${tiposAtuais.has(t.tipo) ? 'checked' : ''} style="cursor:pointer">
@@ -8839,6 +9012,18 @@ function getStatus(id) {
   return STATUS_MAP[id] || { label: id, bg: '#f1f5f9', text: '#475569' };
 }
 
+// Status "visual" derivado: quando a demanda está "em-revisao" MAS já teve uma entrega
+// (entrega_links preenchido), significa que voltou para revisão por uma solicitação de
+// alteração — mostramos "Em alteração" para distinguir da revisão inicial. Não é um
+// status real no banco/ClickUp, só uma leitura para a interface.
+function getStatusVisual(item) {
+  if (item && item.status === 'em-revisao'
+      && Array.isArray(item.entrega_links) && item.entrega_links.length > 0) {
+    return { id: 'em-alteracao', label: 'Em alteração', bg: '#D97706', text: '#FFFFFF' };
+  }
+  return getStatus(item && item.status);
+}
+
 let SETORES = [
   "Selecione seu setor",
   "Administração",
@@ -9152,7 +9337,7 @@ const FLUXOS_ETAPAS = {
           </div>
         </div>
         </div>
-        <div class="search-bar" style="flex:1;margin-bottom:0;height:32px;padding:0 14px;border-radius:8px">
+        <div class="search-bar" style="flex:1;margin-bottom:0;height:32px;padding:0 14px;border-radius:var(--radius-md)">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.4"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
           <input type="text" placeholder="Buscar por nome do evento..." id="searchEventos" oninput="debounceSearch('eventos')">
         </div>
@@ -9216,7 +9401,7 @@ const FLUXOS_ETAPAS = {
           </div>
         </div>
         </div>
-        <div class="search-bar" style="flex:1;margin-bottom:0;height:32px;padding:0 14px;border-radius:8px">
+        <div class="search-bar" style="flex:1;margin-bottom:0;height:32px;padding:0 14px;border-radius:var(--radius-md)">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.4"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
           <input type="text" placeholder="Buscar..." id="searchGeral" oninput="debounceSearch('geral')">
         </div>
@@ -9301,7 +9486,7 @@ const FLUXOS_ETAPAS = {
     async function loadList(tab) {
       const listEl = document.getElementById(tab === 'eventos' ? 'listEventos' : 'listGeral');
       listEl.innerHTML = [1,2,3].map(() => `
-        <div style="background:var(--icon-bg);border-radius:12px;height:64px;margin-bottom:12px;overflow:hidden;position:relative">
+        <div style="background:var(--icon-bg);border-radius:var(--radius-xl);height:64px;margin-bottom:12px;overflow:hidden;position:relative">
           <div style="position:absolute;inset:0;background:linear-gradient(90deg,transparent 25%,rgba(255,255,255,0.5) 50%,transparent 75%);background-size:200% 100%;animation:shimmer 1.2s infinite"></div>
         </div>
       `).join('');
@@ -9371,7 +9556,7 @@ const FLUXOS_ETAPAS = {
         const isAdm = isCurrentUserAdmin();
         const isStaff = isCurrentUserStaff();
         const tipoLabel = TIPO_SOLICITACAO_LABELS[item.tipo_solicitacao] || item.tipo_solicitacao;
-        const statusObj = getStatus(item.status);
+        const statusObj = getStatusVisual(item);
         const dataRel = dataRelativa(item.created_at);
         const periodo = periodoGrupo(item.created_at);
         const naturezaLabel = dados.natureza ? NATUREZA_LABEL[dados.natureza] : null;
@@ -9386,7 +9571,7 @@ const FLUXOS_ETAPAS = {
         const temErros = (item.erros_24h || 0) > 0;
         const isAdmin = isCurrentUserAdmin();
         const erroBadgeHtml = (temErros && isAdmin)
-          ? `<span title="${item.erros_24h} erro(s) nas últimas 24h" style="display:inline-flex;align-items:center;gap:3px;font-size:0.62rem;font-weight:800;background:#fee2e2;color:var(--danger-strong);padding:2px 7px;border-radius:999px;vertical-align:middle;margin-left:4px;flex-shrink:0">
+          ? `<span title="${item.erros_24h} erro(s) nas últimas 24h" style="display:inline-flex;align-items:center;gap:3px;font-size:0.62rem;font-weight:800;background:var(--danger-soft);color:var(--danger-strong);padding:2px 7px;border-radius:var(--radius-pill);vertical-align:middle;margin-left:4px;flex-shrink:0">
               <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
               ${item.erros_24h}
              </span>` : '';
@@ -9394,7 +9579,7 @@ const FLUXOS_ETAPAS = {
         return groupHeader + `<div class="request-card" onclick="window.location.href='/solicitacao.html?id=${item.id}'"
           style="${pendente ? 'border-left:3px solid var(--ruby-red);' : ''}">
           <div class="request-info">
-            <div class="request-title">${esc(titulo)}${pendente ? ' <span style="display:inline-block;font-size:0.62rem;font-weight:800;background:var(--ruby-red);color:white;padding:1px 6px;border-radius:999px;vertical-align:middle;margin-left:4px">APROVAÇÃO</span>' : ''}${erroBadgeHtml}</div>
+            <div class="request-title">${esc(titulo)}${pendente ? ' <span style="display:inline-block;font-size:0.62rem;font-weight:800;background:var(--ruby-red);color:white;padding:1px 6px;border-radius:var(--radius-pill);vertical-align:middle;margin-left:4px">APROVAÇÃO</span>' : ''}${erroBadgeHtml}</div>
             <div class="request-meta">
               <span>${esc(tipoLabel)}</span>
               <span>${esc(dataRel)}</span>
@@ -9418,7 +9603,7 @@ const FLUXOS_ETAPAS = {
               <a href="${esc(item.clickup_url)}" target="_blank" rel="noopener"
                  onclick="event.stopPropagation()"
                  title="Abrir no ClickUp"
-                 style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:7px;background:rgba(137,48,253,0.08);text-decoration:none;transition:background 0.15s;flex-shrink:0"
+                 style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:var(--radius-sm);background:rgba(137,48,253,0.08);text-decoration:none;transition:background 0.15s;flex-shrink:0"
                  onmouseover="this.style.background='rgba(137,48,253,0.15)'"
                  onmouseout="this.style.background='rgba(137,48,253,0.08)'">
                 ${CLICKUP_ICON}
@@ -11024,7 +11209,7 @@ window.FilterPanel = (function () {
       gap: 14px;
       padding: 16px 18px;
       border: 1.5px solid var(--border-light);
-      border-radius: 12px;
+      border-radius: var(--radius-xl);
       cursor: pointer;
       transition: border-color .15s, background .15s;
       margin-bottom: 10px;
@@ -11032,7 +11217,7 @@ window.FilterPanel = (function () {
     }
     .tipo-option:hover { border-color: var(--gold-primary); background: var(--icon-bg); }
     .tipo-option.selected { border-color: var(--gold-primary); background: rgba(193,162,90,.07); }
-    .tipo-option .tipo-icon { width: 38px; height: 38px; border-radius: 8px; background: var(--icon-bg); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .tipo-option .tipo-icon { width: 38px; height: 38px; border-radius: var(--radius-md); background: var(--icon-bg); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
     .tipo-option .tipo-label { font-weight: 600; font-size: 0.92rem; }
     .tipo-option .tipo-desc { font-size: 0.79rem; opacity: 0.6; margin-top: 2px; }
     .form-step { display: none; }
@@ -11451,7 +11636,7 @@ window.FilterPanel = (function () {
   <link rel="stylesheet" href="style.css?v=20260615c">
   <style>
     .opt-checks { display: flex; flex-direction: column; gap: 8px; }
-    .opt-check { display: flex; align-items: center; gap: 10px; padding: 11px 13px; border: 1px solid var(--border-light, #e8e2dc); border-radius: 10px; cursor: pointer; font-size: .92rem; }
+    .opt-check { display: flex; align-items: center; gap: 10px; padding: 11px 13px; border: 1px solid var(--border-light, #e8e2dc); border-radius: var(--radius-lg); cursor: pointer; font-size: .92rem; }
     .opt-check input { width: 17px; height: 17px; accent-color: var(--ruby-red, #AC3631); cursor: pointer; }
     .field-invalid .opt-check { border-color: var(--ruby-red, #AC3631); }
   </style>
@@ -12136,9 +12321,9 @@ window.FormCore = (function () {
     const bar = document.createElement('div');
     bar.id = 'svnDraftBanner';
     bar.setAttribute('role', 'status');
-    bar.style.cssText = 'display:flex;align-items:center;gap:10px;justify-content:space-between;flex-wrap:wrap;margin:0 0 16px;padding:10px 14px;border:1px solid var(--ink-15,#e5e0d8);background:var(--ink-05,#faf7f2);border-radius:10px;font-size:0.86rem;color:var(--ink-70,#4a463f)';
+    bar.style.cssText = 'display:flex;align-items:center;gap:10px;justify-content:space-between;flex-wrap:wrap;margin:0 0 16px;padding:10px 14px;border:1px solid var(--ink-15,#e5e0d8);background:var(--ink-05,#faf7f2);border-radius:var(--radius-lg);font-size:0.86rem;color:var(--ink-70,#4a463f)';
     bar.innerHTML = '<span>Recuperamos um rascunho que você não chegou a enviar.</span>'
-      + '<button type="button" id="svnDraftDiscard" style="padding:5px 12px;border-radius:7px;border:1px solid var(--ink-20,#d6d3cd);background:#fff;color:var(--ink-70,#4a463f);font-weight:600;font-size:0.82rem;cursor:pointer;white-space:nowrap">Descartar e começar do zero</button>';
+      + '<button type="button" id="svnDraftDiscard" style="padding:5px 12px;border-radius:var(--radius-sm);border:1px solid var(--ink-20,#d6d3cd);background:#fff;color:var(--ink-70,#4a463f);font-weight:600;font-size:0.82rem;cursor:pointer;white-space:nowrap">Descartar e começar do zero</button>';
     host.insertBefore(bar, host.firstChild);
     const btn = document.getElementById('svnDraftDiscard');
     if (btn) btn.addEventListener('click', function () { _clearDraft(tipo); location.reload(); });
@@ -12994,17 +13179,17 @@ Muito obrigado(a), e conte sempre comigo!</textarea>
             <h2 style="font-weight:600;font-size:1.1rem;margin-bottom:20px">Qual o nível de informação que você tem sobre o evento?</h2>
             <div class="radio-cards maturidade-cards" style="margin-bottom:16px">
               <div class="radio-card" onclick="selectMaturidade(1)" id="mat1">
-                <div class="card-icon" style="font-size:2rem;font-family:'Taviraj',serif;font-weight:300">1</div>
+                <div class="card-icon" style="font-size:2rem;font-family:'Taviraj', serif;font-weight:300">1</div>
                 <div class="card-label">Tenho a maioria das informações</div>
                 <div class="card-desc">Evento com data, local e detalhes definidos</div>
               </div>
               <div class="radio-card" onclick="selectMaturidade(2)" id="mat2">
-                <div class="card-icon" style="font-size:2rem;font-family:'Taviraj',serif;font-weight:300">2</div>
+                <div class="card-icon" style="font-size:2rem;font-family:'Taviraj', serif;font-weight:300">2</div>
                 <div class="card-label">Tenho algumas informações</div>
                 <div class="card-desc">Algumas informações definidas, outras em aberto</div>
               </div>
               <div class="radio-card" onclick="selectMaturidade(3)" id="mat3">
-                <div class="card-icon" style="font-size:2rem;font-family:'Taviraj',serif;font-weight:300">3</div>
+                <div class="card-icon" style="font-size:2rem;font-family:'Taviraj', serif;font-weight:300">3</div>
                 <div class="card-label">Ainda estou estruturando</div>
                 <div class="card-desc">Tenho uma ideia, preciso de apoio para estruturar</div>
               </div>
@@ -13155,7 +13340,7 @@ Muito obrigado(a), e conte sempre comigo!</textarea>
           <div id="previewRows">
             <div style="padding:12px 0;border-bottom:1px solid var(--border-light)">
               <div style="font-size:0.7rem;font-weight:600;opacity:0.4;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px">Evento</div>
-              <div style="font-family:'Taviraj',serif;font-weight:300;font-size:1.1rem;color:var(--carbon-black)" id="pvEvento">—</div>
+              <div style="font-family:'Taviraj', serif;font-weight:300;font-size:1.1rem;color:var(--carbon-black)" id="pvEvento">—</div>
             </div>
             <div class="preview-row"><span class="preview-label">Solicitante</span><span class="preview-value empty" id="pvSolicitante">—</span></div>
             <div class="preview-row"><span class="preview-label">Data</span><span class="preview-value empty" id="pvData">—</span></div>
@@ -13186,19 +13371,19 @@ Muito obrigado(a), e conte sempre comigo!</textarea>
       <div class="modal-body">
         <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px">
           <div style="text-align:center;padding:16px">
-            <div style="font-family:'Taviraj',serif;font-size:3rem;font-weight:300;margin-bottom:8px;color:var(--carbon-black)">1</div>
+            <div style="font-family:'Taviraj', serif;font-size:3rem;font-weight:300;margin-bottom:8px;color:var(--carbon-black)">1</div>
             <span class="badge" style="background:var(--ruby-red);color:white;margin-bottom:8px;white-space:normal;display:inline-block;line-height:1.3">Tenho a maioria das informações</span>
             <p style="font-size:0.82rem;opacity:0.7;margin-top:8px">Quando as informações mais básicas do evento estiverem pré-definidas.</p>
             <p style="font-size:0.78rem;font-style:italic;opacity:0.5;margin-top:4px">Ex.: Tenho Nome, Data, Local, Formato, etc</p>
           </div>
           <div style="text-align:center;padding:16px">
-            <div style="font-family:'Taviraj',serif;font-size:3rem;font-weight:300;margin-bottom:8px;color:var(--carbon-black)">2</div>
+            <div style="font-family:'Taviraj', serif;font-size:3rem;font-weight:300;margin-bottom:8px;color:var(--carbon-black)">2</div>
             <span class="badge" style="background:var(--sage-green);color:white;margin-bottom:8px;white-space:normal;display:inline-block;line-height:1.3">Tenho algumas informações</span>
             <p style="font-size:0.82rem;opacity:0.7;margin-top:8px">Quando algumas informações estiverem definidas, mas você precisa de apoio para fechar outros pontos.</p>
             <p style="font-size:0.78rem;font-style:italic;opacity:0.5;margin-top:4px">Ex.: Quero realizar uma palestra sobre FIIs no dia 7, mas ainda preciso definir o local.</p>
           </div>
           <div style="text-align:center;padding:16px">
-            <div style="font-family:'Taviraj',serif;font-size:3rem;font-weight:300;margin-bottom:8px;color:var(--carbon-black)">3</div>
+            <div style="font-family:'Taviraj', serif;font-size:3rem;font-weight:300;margin-bottom:8px;color:var(--carbon-black)">3</div>
             <span class="badge" style="background:var(--leather-brown);color:white;margin-bottom:8px;white-space:normal;display:inline-block;line-height:1.3">Ainda estou estruturando</span>
             <p style="font-size:0.82rem;opacity:0.7;margin-top:8px">Quando você tiver uma ideia para um evento, mas precisa de apoio para estruturar.</p>
             <p style="font-size:0.78rem;font-style:italic;opacity:0.5;margin-top:4px">Ex.: Gostaria de realizar uma experiencia com clientes, mas preciso de assistência.</p>
@@ -13529,7 +13714,7 @@ Muito obrigado(a), e conte sempre comigo!</textarea>
         <div class="field"><label>Descrição do evento</label><textarea id="descricao" placeholder="Descreva sua ideia para o evento..."></textarea></div>
         <div class="field"><label>Tipo aproximado de evento</label>
           <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
-            ${TIPOS_EVENTO_FORM3.map(t => `<label class="radio-option" style="padding:8px 12px;border:1px solid var(--border-light);border-radius:8px"><input type="radio" name="tipoAprox" value="${t}"><span class="radio-custom"></span><span style="font-size:0.85rem">${t}</span></label>`).join('')}
+            ${TIPOS_EVENTO_FORM3.map(t => `<label class="radio-option" style="padding:8px 12px;border:1px solid var(--border-light);border-radius:var(--radius-md)"><input type="radio" name="tipoAprox" value="${t}"><span class="radio-custom"></span><span style="font-size:0.85rem">${t}</span></label>`).join('')}
           </div>
         </div>
         <div class="field"><label>Ideia de quando realizar (opcional)</label><input type="text" id="ideaQuando" placeholder="Ex.: segundo semestre, próximo trimestre..."></div>
@@ -13573,7 +13758,7 @@ Muito obrigado(a), e conte sempre comigo!</textarea>
         <div class="field"><label>Descrição</label><textarea id="descricao" placeholder="Descreva sua ideia..."></textarea></div>
         <div class="field"><label>Tipo online aproximado</label>
           <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
-            ${tiposOnline.map(t => `<label class="radio-option" style="padding:8px 12px;border:1px solid var(--border-light);border-radius:8px"><input type="radio" name="tipoAprox" value="${t}"><span class="radio-custom"></span><span style="font-size:0.85rem">${t}</span></label>`).join('')}
+            ${tiposOnline.map(t => `<label class="radio-option" style="padding:8px 12px;border:1px solid var(--border-light);border-radius:var(--radius-md)"><input type="radio" name="tipoAprox" value="${t}"><span class="radio-custom"></span><span style="font-size:0.85rem">${t}</span></label>`).join('')}
           </div>
         </div>
         <div class="field"><label>Ideia de quando realizar (opcional)</label><input type="text" id="ideaQuando" placeholder="Ex.: próximo mês..."></div>
@@ -14115,7 +14300,7 @@ Muito obrigado(a), e conte sempre comigo!</textarea>
         const prazo = PRAZOS_MATERIAIS[id];
         const icon = ICONS[id] || '';
         if (!item) return '';
-        return `<div style="background:var(--icon-bg);border-radius:8px;padding:8px 10px;font-size:0.75rem;font-weight:600;display:flex;align-items:flex-start;gap:6px;margin-bottom:4px">
+        return `<div style="background:var(--icon-bg);border-radius:var(--radius-md);padding:8px 10px;font-size:0.75rem;font-weight:600;display:flex;align-items:flex-start;gap:6px;margin-bottom:4px">
           <span style="color:var(--ruby-red);flex-shrink:0;line-height:1.4;margin-top:1px">${icon}</span>
           <div style="min-width:0">
             <div style="line-height:1.4">${item.label}</div>
@@ -14265,7 +14450,7 @@ Muito obrigado(a), e conte sempre comigo!</textarea>
               updatePalPreview(i);
               const avatarEl = document.querySelector('#palPreview' + i + ' .speaker-avatar');
               if (avatarEl) {
-                avatarEl.innerHTML = `<img src="${e.target.result}" alt="foto" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`;
+                avatarEl.innerHTML = `<img src="${e.target.result}" alt="foto" style="width:100%;height:100%;object-fit:cover;border-radius:var(--radius-round)">`;
               }
             };
             reader.readAsDataURL(file);
@@ -14307,7 +14492,7 @@ Muito obrigado(a), e conte sempre comigo!</textarea>
           <div style="flex:1;min-width:200px;max-width:320px">
             <p style="font-size:0.8rem;font-weight:600;color:var(--carbon-black);opacity:0.6;margin-bottom:8px;text-align:center">${item.titulo}</p>
             <img src="${item.url}"
-                 style="width:100%;height:auto;border-radius:8px;object-fit:contain;display:block"
+                 style="width:100%;height:auto;border-radius:var(--radius-md);object-fit:contain;display:block"
                  onerror="this.parentElement.innerHTML='<p style=\\'opacity:0.4;font-size:0.8rem;text-align:center;padding:20px\\'>Imagem não disponível</p>'">
           </div>
         `).join('');
@@ -14545,21 +14730,21 @@ Muito obrigado(a), e conte sempre comigo!</textarea>
       </div>
       <div class="modal-body">
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:16px">
-          <div style="background:var(--ink-05);border:1px solid var(--ink-08);border-radius:10px;padding:16px">
+          <div style="background:var(--ink-05);border:1px solid var(--ink-08);border-radius:var(--radius-lg);padding:16px">
             <div style="font-size:0.62rem;text-transform:uppercase;letter-spacing:0.07em;color:var(--ink-40);margin-bottom:6px">Online</div>
-            <div style="font-size:2rem;font-weight:500;font-family:'Taviraj',serif;color:var(--carbon-black);line-height:1">15</div>
+            <div style="font-size:2rem;font-weight:500;font-family:'Taviraj', serif;color:var(--carbon-black);line-height:1">15</div>
             <div style="font-size:0.76rem;color:var(--ink-50);margin-top:3px">dias úteis de antecedência</div>
             <div style="margin-top:10px;font-size:0.76rem;color:var(--ink-50);line-height:1.5">Webinars, lives, transmissões internas. Inclui divulgação digital e convite.</div>
           </div>
-          <div style="background:var(--ink-05);border:1px solid var(--ink-08);border-radius:10px;padding:16px">
+          <div style="background:var(--ink-05);border:1px solid var(--ink-08);border-radius:var(--radius-lg);padding:16px">
             <div style="font-size:0.62rem;text-transform:uppercase;letter-spacing:0.07em;color:var(--ink-40);margin-bottom:6px">Presencial simples</div>
-            <div style="font-size:2rem;font-weight:500;font-family:'Taviraj',serif;color:var(--carbon-black);line-height:1">21</div>
+            <div style="font-size:2rem;font-weight:500;font-family:'Taviraj', serif;color:var(--carbon-black);line-height:1">21</div>
             <div style="font-size:0.76rem;color:var(--ink-50);margin-top:3px">dias úteis de antecedência</div>
             <div style="margin-top:10px;font-size:0.76rem;color:var(--ink-50);line-height:1.5">Coffee, treinamentos e reuniões internas. Inclui logística e divulgação.</div>
           </div>
-          <div style="background:var(--ink-05);border:1px solid var(--ink-08);border-radius:10px;padding:16px">
+          <div style="background:var(--ink-05);border:1px solid var(--ink-08);border-radius:var(--radius-lg);padding:16px">
             <div style="font-size:0.62rem;text-transform:uppercase;letter-spacing:0.07em;color:var(--ink-40);margin-bottom:6px">Presencial complexo</div>
-            <div style="font-size:2rem;font-weight:500;font-family:'Taviraj',serif;color:var(--carbon-black);line-height:1">45</div>
+            <div style="font-size:2rem;font-weight:500;font-family:'Taviraj', serif;color:var(--carbon-black);line-height:1">45</div>
             <div style="font-size:0.76rem;color:var(--ink-50);margin-top:3px">dias úteis de antecedência</div>
             <div style="margin-top:10px;font-size:0.76rem;color:var(--ink-50);line-height:1.5">Eventos externos, com palestrante, buffet, espaços locados ou cobertura jornalística.</div>
           </div>
@@ -14602,18 +14787,18 @@ Muito obrigado(a), e conte sempre comigo!</textarea>
   <style>
     .tipo-material-btn {
       display:flex;align-items:center;gap:10px;padding:10px 14px;
-      border:1.5px solid var(--border-light);border-radius:10px;background:var(--card-white);
-      cursor:pointer;transition:all 0.15s;font-family:'Nunito Sans',sans-serif;font-size:0.85rem;font-weight:600;
+      border:1.5px solid var(--border-light);border-radius:var(--radius-lg);background:var(--card-white);
+      cursor:pointer;transition:all 0.15s;font-family:'Nunito Sans', sans-serif;font-size:0.85rem;font-weight:600;
       text-align:left;width:100%;
     }
     .tipo-material-btn:hover { border-color:var(--ruby-red); }
     .tipo-material-btn.selected { background:var(--carbon-black);color:white;border-color:var(--carbon-black); }
     .tipo-material-btn.selected svg { stroke:white; }
-    .pill-radio { display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border:1.5px solid var(--border-light);border-radius:999px;background:var(--card-white);cursor:pointer;font-size:0.82rem;font-weight:600;transition:all 0.15s;user-select:none; }
+    .pill-radio { display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border:1.5px solid var(--border-light);border-radius:var(--radius-pill);background:var(--card-white);cursor:pointer;font-size:0.82rem;font-weight:600;transition:all 0.15s;user-select:none; }
     .pill-radio input { display:none; }
     .pill-radio:hover { border-color:var(--ruby-red); }
     .pill-radio.checked { background:var(--carbon-black);color:white;border-color:var(--carbon-black); }
-    .pill-tag { margin-left:6px;background:var(--ink-10);border-radius:999px;padding:2px 8px;font-size:0.68rem;font-weight:700; }
+    .pill-tag { margin-left:6px;background:var(--ink-10);border-radius:var(--radius-pill);padding:2px 8px;font-size:0.68rem;font-weight:700; }
     .pill-radio.checked .pill-tag { background:rgba(255,255,255,0.15);color:rgba(255,255,255,0.8); }
   </style>
 </head>
@@ -15087,11 +15272,11 @@ Muito obrigado(a), e conte sempre comigo!</textarea>
         <p style="opacity:0.7;margin:0 0 18px">Os dados do flyer padrão são validados e atualizados antes do envio para produção.</p>
         <div style="display:flex;gap:16px;flex-wrap:wrap;justify-content:center">
           <figure style="margin:0;flex:1 1 260px;max-width:320px">
-            <img src="https://solicitacoes.portalsvn.com.br/assets/2026-06/IJoyGwNp-Flyer_Institucional_A5_Frente.jpg" alt="Flyer Institucional — Frente" loading="lazy" style="width:100%;height:auto;display:block;border-radius:8px;border:1px solid var(--border-light)">
+            <img src="https://solicitacoes.portalsvn.com.br/assets/2026-06/IJoyGwNp-Flyer_Institucional_A5_Frente.jpg" alt="Flyer Institucional — Frente" loading="lazy" style="width:100%;height:auto;display:block;border-radius:var(--radius-md);border:1px solid var(--border-light)">
             <figcaption style="text-align:center;font-size:0.78rem;opacity:0.55;margin-top:8px">Frente</figcaption>
           </figure>
           <figure style="margin:0;flex:1 1 260px;max-width:320px">
-            <img src="https://solicitacoes.portalsvn.com.br/assets/2026-06/uQfkpsmQ-Flyer_Institucional_A5_Verso.jpg" alt="Flyer Institucional — Verso" loading="lazy" style="width:100%;height:auto;display:block;border-radius:8px;border:1px solid var(--border-light)">
+            <img src="https://solicitacoes.portalsvn.com.br/assets/2026-06/uQfkpsmQ-Flyer_Institucional_A5_Verso.jpg" alt="Flyer Institucional — Verso" loading="lazy" style="width:100%;height:auto;display:block;border-radius:var(--radius-md);border:1px solid var(--border-light)">
             <figcaption style="text-align:center;font-size:0.78rem;opacity:0.55;margin-top:8px">Verso</figcaption>
           </figure>
         </div>
@@ -15103,7 +15288,6 @@ Muito obrigado(a), e conte sempre comigo!</textarea>
   </div>
 </body>
 </html>
-
 ```
 
 
@@ -15371,7 +15555,7 @@ Muito obrigado(a), e conte sempre comigo!</textarea>
 
         <div class="field" id="field_depoimentos" style="margin-top:24px">
           <label>Depoimentos de clientes (opcional, até 3)</label>
-          <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin:8px 0 10px;padding:9px 14px;background:var(--icon-bg);border:1px solid var(--border-light);border-radius:9px;flex-wrap:wrap">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin:8px 0 10px;padding:9px 14px;background:var(--icon-bg);border:1px solid var(--border-light);border-radius:var(--radius-md);flex-wrap:wrap">
             <span style="font-size:0.8rem;color:var(--carbon-black);opacity:0.7">Consulte a pesquisa NPS para encontrar depoimentos pelo seu código de assessor.</span>
             <a href="https://svninvest-my.sharepoint.com/:x:/g/personal/eduardo_filho_svninvest_com_br/IQBsd2rvk_KKQ44PVtzuxQrSAS6m-YB05OaB0m11B0pvc7k?wdExp=TEAMS-TREATMENT&web=1&isSPOFile=1&ovuser=91608a81-cb4c-4123-8e4f-ffc75f8c4b6c%2Cjoao.sardeto%40svninvest.com.br&clickparams=eyJBcHBOYW1lIjoiVGVhbXMtRGVza3RvcCIsIkFwcFZlcnNpb24iOiI1MC8yNjAzMTIyMzAyMCIsIkhhc0ZlZGVyYXRlZFVzZXIiOmZhbHNlfQ%3D%3D"
                target="_blank"
@@ -15408,7 +15592,7 @@ Muito obrigado(a), e conte sempre comigo!</textarea>
       <button class="modal-close" onclick="closePreview()">&times;</button>
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:20px">
         <span style="font-weight:700;font-size:1rem">Prévia da página</span>
-        <span style="background:rgba(111,135,123,0.12);color:var(--sage-green);font-size:0.7rem;padding:3px 10px;border-radius:999px">Atualiza em tempo real</span>
+        <span style="background:rgba(111,135,123,0.12);color:var(--sage-green);font-size:0.7rem;padding:3px 10px;border-radius:var(--radius-pill)">Atualiza em tempo real</span>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px" id="previewContent">
         <div class="preview-assessor-left">
@@ -15417,7 +15601,7 @@ Muito obrigado(a), e conte sempre comigo!</textarea>
           <p style="font-size:0.95rem;opacity:0.8;margin-bottom:16px;max-width:440px" id="previewBio">A bio aparecerá aqui...</p>
           <div style="display:flex;gap:8px;margin-bottom:16px" id="previewSocialIcons">
             <a id="previewLinkedin" href="#" target="_blank"
-               style="display:none;width:28px;height:28px;background:#0A66C2;border-radius:5px;align-items:center;justify-content:center;text-decoration:none">
+               style="display:none;width:28px;height:28px;background:#0A66C2;border-radius:var(--radius-sm);align-items:center;justify-content:center;text-decoration:none">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="white">
                 <path d="M16 8a6 6 0 016 6v7h-4v-7a2 2 0 00-2-2 2 2 0 00-2 2v7h-4v-7a6 6 0 016-6z"/>
                 <rect x="2" y="9" width="4" height="12" fill="white"/>
@@ -15425,7 +15609,7 @@ Muito obrigado(a), e conte sempre comigo!</textarea>
               </svg>
             </a>
             <a id="previewInstagram" href="#" target="_blank"
-               style="display:none;width:28px;height:28px;background:linear-gradient(135deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888);border-radius:7px;align-items:center;justify-content:center;text-decoration:none">
+               style="display:none;width:28px;height:28px;background:linear-gradient(135deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888);border-radius:var(--radius-sm);align-items:center;justify-content:center;text-decoration:none">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.5">
                 <rect x="2" y="2" width="20" height="20" rx="5"/>
                 <circle cx="12" cy="12" r="4"/>
@@ -15434,12 +15618,12 @@ Muito obrigado(a), e conte sempre comigo!</textarea>
             </a>
           </div>
           <div style="display:flex;gap:8px">
-            <span class="btn btn-dark" style="font-size:0.8rem;padding:8px 20px;border-radius:8px;pointer-events:none">Abrir conta</span>
-            <span class="btn btn-secondary" style="font-size:0.8rem;padding:8px 20px;border-radius:8px;pointer-events:none">Falar com assessor</span>
+            <span class="btn btn-dark" style="font-size:0.8rem;padding:8px 20px;border-radius:var(--radius-md);pointer-events:none">Abrir conta</span>
+            <span class="btn btn-secondary" style="font-size:0.8rem;padding:8px 20px;border-radius:var(--radius-md);pointer-events:none">Falar com assessor</span>
           </div>
         </div>
         <div>
-          <div id="previewPhoto" style="width:100%;height:320px;border-radius:12px;background:var(--icon-bg);display:flex;align-items:center;justify-content:center;overflow:hidden">
+          <div id="previewPhoto" style="width:100%;height:320px;border-radius:var(--radius-xl);background:var(--icon-bg);display:flex;align-items:center;justify-content:center;overflow:hidden">
             <span style="opacity:0.3;font-size:0.85rem">Foto aparecerá aqui</span>
           </div>
         </div>
@@ -15608,7 +15792,7 @@ Muito obrigado(a), e conte sempre comigo!</textarea>
     function renderDepoimentos() {
       const container = document.getElementById('depoimentosContainer');
       container.innerHTML = depoimentos.map((d, i) => `
-        <div style="background:var(--icon-bg);border-radius:10px;padding:16px;margin-bottom:10px;position:relative">
+        <div style="background:var(--icon-bg);border-radius:var(--radius-lg);padding:16px;margin-bottom:10px;position:relative">
           <button onclick="removeDepoimento(${i})" style="position:absolute;top:8px;right:8px;background:none;border:none;cursor:pointer;opacity:0.4;font-size:1.2rem">&times;</button>
           <div class="field" style="margin-bottom:8px">
             <label style="font-size:0.8rem">Nome do cliente</label>
@@ -15659,7 +15843,7 @@ Muito obrigado(a), e conte sempre comigo!</textarea>
         if (!selo) return '';
         return selo.icon_url
           ? `<img src="${selo.icon_url}" loading="lazy" style="height:32px;width:auto;max-width:80px;object-fit:contain" alt="${selo.label}">`
-          : `<span style="background:var(--icon-bg);border:1px solid var(--border-light);padding:4px 10px;border-radius:6px;font-size:0.75rem;font-weight:600">${selo.label}</span>`;
+          : `<span style="background:var(--icon-bg);border:1px solid var(--border-light);padding:4px 10px;border-radius:var(--radius-sm);font-size:0.75rem;font-weight:600">${selo.label}</span>`;
       }).join('');
 
       const photoFile = document.getElementById('fotoPerfil').files[0];
@@ -16667,7 +16851,7 @@ const IBGELoader = {
       backdrop-filter: blur(12px);
       -webkit-backdrop-filter: blur(12px);
       border: 1px solid rgba(255, 248, 243, 0.1);
-      border-radius: 20px;
+      border-radius: var(--radius-2xl);
       padding: 52px 48px;
       max-width: 560px;
       width: 100%;
@@ -16692,7 +16876,7 @@ const IBGELoader = {
       gap: 10px;
       width: 100%;
       padding: 16px 24px;
-      border-radius: 12px;
+      border-radius: var(--radius-xl);
       font-family: 'Nunito Sans', sans-serif;
       font-weight: 600;
       font-size: 0.95rem;
@@ -16713,7 +16897,7 @@ const IBGELoader = {
     .home-btn svg { flex-shrink: 0; }
     .home-logo { margin-top: 40px; opacity: 0; transition: opacity 0.4s ease; }
     .home-logo.visible { opacity: 1; }
-    .error-msg { display:none; margin-top:16px; background:rgba(159,63,55,0.15); border:1px solid var(--ruby-red); border-radius:8px; padding:12px 16px; font-size:0.85rem; color:var(--paper-white); max-width:500px; text-align:center; }
+    .error-msg { display:none; margin-top:16px; background:rgba(159,63,55,0.15); border:1px solid var(--ruby-red); border-radius:var(--radius-md); padding:12px 16px; font-size:0.85rem; color:var(--paper-white); max-width:500px; text-align:center; }
     @media (max-width: 480px) { .home-card { padding: 36px 24px; } }
   </style>
 </head>
@@ -16934,8 +17118,8 @@ window.Shell = {
       const email = sessionStorage.getItem('svn_impersonate') || '';
       const el = document.createElement('div');
       el.id = 'impersonarBanner';
-      el.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:9999;background:#7c3aed;color:#fff;padding:8px 20px;display:flex;align-items:center;justify-content:center;gap:10px;font-size:0.82rem;font-weight:600;font-family:"Nunito Sans",sans-serif';
-      el.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg> Visualizando como: <strong>' + window.esc(email) + '</strong> <button onclick="window._sairImpersonar()" style="background:rgba(255,255,255,0.2);border:none;color:#fff;padding:3px 10px;border-radius:6px;cursor:pointer;font-family:\'Nunito Sans\',sans-serif;font-weight:600;font-size:0.78rem;margin-left:6px">Sair ✕</button>';
+      el.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:9999;background:#7c3aed;color:#fff;padding:8px 20px;display:flex;align-items:center;justify-content:center;gap:10px;font-size:0.82rem;font-weight:600;font-family:"Nunito Sans", sans-serif';
+      el.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg> Visualizando como: <strong>' + window.esc(email) + '</strong> <button onclick="window._sairImpersonar()" style="background:rgba(255,255,255,0.2);border:none;color:#fff;padding:3px 10px;border-radius:var(--radius-sm);cursor:pointer;font-family:\'Nunito Sans\', sans-serif;font-weight:600;font-size:0.78rem;margin-left:6px">Sair ✕</button>';
       document.body.prepend(el);
     }
     document.body.style.paddingTop = '40px';
@@ -17288,12 +17472,12 @@ window.Shell = {
       background: var(--ink-10);
       transition: background 0.3s;
     }
-    .status-step-line.done { background: #6B9080; }
+    .status-step-line.done { background: var(--sage-green); }
     .status-step-line.invisible { background: transparent; }
     .status-step-circle {
       width: 22px;
       height: 22px;
-      border-radius: 50%;
+      border-radius: var(--radius-round);
       border: 2px solid var(--ink-12);
       background: transparent;
       display: flex;
@@ -17305,8 +17489,8 @@ window.Shell = {
       position: relative;
     }
     .status-step-circle.done {
-      background: #6B9080;
-      border-color: #6B9080;
+      background: var(--sage-green);
+      border-color: var(--sage-green);
     }
     .status-step-circle.current {
       border-color: var(--current-color, #2563C0);
@@ -17332,7 +17516,7 @@ window.Shell = {
       line-height: 1.3;
       padding: 0 2px;
     }
-    .status-step-label.done { color: #6B9080; font-weight: 600; }
+    .status-step-label.done { color: var(--sage-green); font-weight: 600; }
     .status-step-label.current { color: var(--current-color, #2563C0); font-weight: 700; }
     @media (max-width: 560px) {
       .status-rail-scroll { overflow-x: hidden; overflow-y: visible; padding: 4px 0; }
@@ -17361,7 +17545,7 @@ window.Shell = {
       scrollbar-color: var(--ink-12) transparent;
     }
     .chat-wrap::-webkit-scrollbar { width: 4px; }
-    .chat-wrap::-webkit-scrollbar-thumb { background: var(--ink-12); border-radius: 2px; }
+    .chat-wrap::-webkit-scrollbar-thumb { background: var(--ink-12); border-radius: var(--radius-xs); }
 
     .chat-msg {
       display: flex;
@@ -17375,7 +17559,7 @@ window.Shell = {
     .chat-avatar {
       width: 28px;
       height: 28px;
-      border-radius: 50%;
+      border-radius: var(--radius-round);
       background: var(--carbon-black);
       flex-shrink: 0;
       overflow: hidden;
@@ -17399,7 +17583,7 @@ window.Shell = {
 
     .chat-bubble {
       padding: 10px 14px;
-      border-radius: 18px;
+      border-radius: var(--radius-2xl);
       font-size: 0.875rem;
       line-height: 1.55;
       word-break: break-word;
@@ -17428,7 +17612,7 @@ window.Shell = {
       gap: 4px;
       padding: 10px 14px;
       background: #ffffff;
-      border-radius: 18px;
+      border-radius: var(--radius-2xl);
       border-bottom-left-radius: 4px;
       width: fit-content;
       box-shadow: 0 1px 3px var(--ink-08), 0 2px 8px var(--ink-05);
@@ -17436,7 +17620,7 @@ window.Shell = {
     .chat-typing span {
       width: 6px;
       height: 6px;
-      border-radius: 50%;
+      border-radius: var(--radius-round);
       background: var(--ink-30);
       animation: typing-dot 1.2s infinite;
     }
@@ -17458,7 +17642,7 @@ window.Shell = {
     .chat-input-area textarea {
       flex: 1;
       border: none;
-      border-radius: 20px;
+      border-radius: var(--radius-2xl);
       padding: 10px 16px;
       font-family: 'Nunito Sans', sans-serif;
       font-size: 0.875rem;
@@ -17480,10 +17664,61 @@ window.Shell = {
       cursor: not-allowed;
     }
 
+    .chat-attach-btn {
+      width: 38px;
+      height: 38px;
+      border-radius: var(--radius-round);
+      background: #ffffff;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      color: var(--carbon-black);
+      box-shadow: 0 1px 3px var(--ink-08);
+      transition: opacity 0.2s;
+    }
+    .chat-attach-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .chat-attachments {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      padding: 10px 16px 0;
+      background: #ede8e3;
+    }
+    .chat-attach-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: #ffffff;
+      border: 1px solid var(--ink-12);
+      border-radius: var(--radius-xl);
+      padding: 4px 8px 4px 11px;
+      font-size: 0.78rem;
+      max-width: 220px;
+      box-shadow: 0 1px 2px var(--ink-08);
+    }
+    .chat-attach-chip > span {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .chat-attach-chip button {
+      border: none;
+      background: none;
+      cursor: pointer;
+      display: flex;
+      padding: 0;
+      color: var(--ink-50);
+      flex-shrink: 0;
+    }
+    .chat-attach-chip button:hover { color: var(--carbon-black); }
+
     .chat-send-btn {
       width: 38px;
       height: 38px;
-      border-radius: 50%;
+      border-radius: var(--radius-round);
       background: var(--carbon-black);
       border: none;
       cursor: pointer;
@@ -17505,7 +17740,7 @@ window.Shell = {
       background: var(--ink-08);
       color: var(--carbon-black);
       border: 1px solid var(--ink-20);
-      border-radius: 10px;
+      border-radius: var(--radius-lg);
       font-size: 0.82rem;
       font-weight: 600;
       text-decoration: none;
@@ -17527,7 +17762,7 @@ window.Shell = {
     .btn-aprovar {
       padding: 9px 18px;
       border: none;
-      border-radius: 10px;
+      border-radius: var(--radius-lg);
       background: #16a34a;
       color: white;
       font-size: 0.875rem;
@@ -17550,7 +17785,7 @@ window.Shell = {
     .btn-alterar {
       padding: 9px 18px;
       border: none;
-      border-radius: 10px;
+      border-radius: var(--radius-lg);
       background: var(--danger);
       color: white;
       font-size: 0.875rem;
@@ -17560,7 +17795,7 @@ window.Shell = {
 
     .rodada-historico {
       border: 1px solid var(--ink-08);
-      border-radius: 10px;
+      border-radius: var(--radius-lg);
       overflow: hidden;
       margin-bottom: 8px;
     }
@@ -17632,14 +17867,14 @@ window.Shell = {
     }
     .sol-meta:empty { display: none; }
     .sol-meta-sep {
-      width: 3px; height: 3px; border-radius: 50%;
+      width: 3px; height: 3px; border-radius: var(--radius-round);
       background: currentColor; opacity: 0.5; flex-shrink: 0;
     }
     .sol-status-badge {
       display: inline-flex;
       align-items: center;
       padding: 6px 14px;
-      border-radius: 8px;
+      border-radius: var(--radius-md);
       font-size: 0.78rem;
       font-weight: 700;
       letter-spacing: 0.04em;
@@ -17656,7 +17891,7 @@ window.Shell = {
     .fact {
       background: var(--card-white, #fff);
       border: 1px solid var(--border-light, var(--ink-10));
-      border-radius: 10px;
+      border-radius: var(--radius-lg);
       padding: 11px 13px;
       min-width: 0;
     }
@@ -17740,7 +17975,7 @@ window.Shell = {
     .sol-actions-kebab { position: relative; }
     .kebab-btn {
       width: 36px; height: 36px;
-      border-radius: 8px;
+      border-radius: var(--radius-md);
       border: 1px solid var(--border-light);
       background: var(--paper-white);
       cursor: pointer;
@@ -17758,7 +17993,7 @@ window.Shell = {
       margin-top: 4px;
       background: var(--paper-white);
       border: 1px solid var(--border-light);
-      border-radius: 10px;
+      border-radius: var(--radius-lg);
       box-shadow: 0 8px 24px rgba(0,0,0,0.12);
       min-width: 180px;
       padding: 6px;
@@ -17770,7 +18005,7 @@ window.Shell = {
       padding: 9px 12px;
       border: none; background: none;
       font-size: 0.85rem; cursor: pointer;
-      border-radius: 6px;
+      border-radius: var(--radius-sm);
       text-align: left;
       color: var(--carbon-black);
       font-family: 'Nunito Sans', sans-serif;
@@ -17824,10 +18059,10 @@ window.Shell = {
 
     <!-- Skeleton -->
     <div id="skeletonLoader">
-      <div style="height:28px;width:55%;background:var(--icon-bg);border-radius:8px;margin-bottom:10px;overflow:hidden;position:relative"><div class="shimmer-inner"></div></div>
-      <div style="height:18px;width:35%;background:var(--icon-bg);border-radius:6px;margin-bottom:32px;overflow:hidden;position:relative"><div class="shimmer-inner"></div></div>
-      <div style="height:90px;background:var(--icon-bg);border-radius:12px;margin-bottom:16px;overflow:hidden;position:relative"><div class="shimmer-inner"></div></div>
-      <div style="height:140px;background:var(--icon-bg);border-radius:12px;overflow:hidden;position:relative"><div class="shimmer-inner"></div></div>
+      <div style="height:28px;width:55%;background:var(--icon-bg);border-radius:var(--radius-md);margin-bottom:10px;overflow:hidden;position:relative"><div class="shimmer-inner"></div></div>
+      <div style="height:18px;width:35%;background:var(--icon-bg);border-radius:var(--radius-sm);margin-bottom:32px;overflow:hidden;position:relative"><div class="shimmer-inner"></div></div>
+      <div style="height:90px;background:var(--icon-bg);border-radius:var(--radius-xl);margin-bottom:16px;overflow:hidden;position:relative"><div class="shimmer-inner"></div></div>
+      <div style="height:140px;background:var(--icon-bg);border-radius:var(--radius-xl);overflow:hidden;position:relative"><div class="shimmer-inner"></div></div>
     </div>
 
     <!-- Content -->
@@ -17887,7 +18122,7 @@ window.Shell = {
       <div id="atividadeSection" style="display:none;margin-top:14px">
         <div class="form-card" style="padding:0;overflow:hidden">
           <div id="atividadeHeader" style="display:flex;align-items:center;gap:12px;padding:16px 20px;cursor:pointer;user-select:none" onclick="toggleAtividade()">
-            <div style="width:32px;height:32px;border-radius:8px;background:var(--icon-bg);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+            <div style="width:32px;height:32px;border-radius:var(--radius-md);background:var(--icon-bg);display:flex;align-items:center;justify-content:center;flex-shrink:0">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.55"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
             </div>
             <div style="flex:1;min-width:0">
@@ -18123,7 +18358,7 @@ window.Shell = {
       const titulo = dados.nomeEvento || dados.tituloEvento || dados.titulo || dados.nome_completo || dados.nomeCompleto ||
         (TIPO_SOLICITACAO_LABELS[item.tipo_solicitacao] || item.tipo_solicitacao);
       const tipoLabel = TIPO_SOLICITACAO_LABELS[item.tipo_solicitacao] || item.tipo_solicitacao;
-      const statusObj = getStatus(item.status);
+      const statusObj = getStatusVisual(item);
 
       // ── Layout clean para todos os tipos de automação ──────────────
       if (isTipoAutomacao(item.tipo_solicitacao)) {
@@ -18148,8 +18383,8 @@ window.Shell = {
         const headerRight = document.getElementById('solHeaderRight');
         headerRight.innerHTML = `
           <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;text-align:right">
-            <span style="color:${isConcluido ? '#0A9060' : '#92400e'};font-weight:600;font-size:0.9rem;font-family:'Nunito Sans',sans-serif">${isConcluido ? 'Material disponível' : 'Em processamento'}</span>
-            <span style="font-size:0.75rem;opacity:0.45;font-family:'Nunito Sans',sans-serif" title="${dtFormatted}">Atualizado: ${dtAutRel}</span>
+            <span style="color:${isConcluido ? '#0A9060' : '#92400e'};font-weight:600;font-size:0.9rem;font-family:'Nunito Sans', sans-serif">${isConcluido ? 'Material disponível' : 'Em processamento'}</span>
+            <span style="font-size:0.75rem;opacity:0.45;font-family:'Nunito Sans', sans-serif" title="${dtFormatted}">Atualizado: ${dtAutRel}</span>
             ${isAdm ? `<div class="sol-actions-kebab">
               <button class="kebab-btn" onclick="toggleKebabMenu()" aria-label="Mais ações">⋯</button>
               <div class="kebab-menu" id="solKebabMenu" hidden>
@@ -18210,7 +18445,7 @@ window.Shell = {
 
       const clickupBtn = (isStaff && item.clickup_url ? `
           <a href="${esc(item.clickup_url)}" target="_blank" rel="noopener" title="Abrir no ClickUp"
-             style="display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:8px;background:rgba(137,48,253,0.08);text-decoration:none;transition:background 0.15s"
+             style="display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:var(--radius-md);background:rgba(137,48,253,0.08);text-decoration:none;transition:background 0.15s"
              onmouseover="this.style.background='rgba(137,48,253,0.15)'" onmouseout="this.style.background='rgba(137,48,253,0.08)'">
             ${CLICKUP_ICON}
           </a>` : '');
@@ -18221,7 +18456,7 @@ window.Shell = {
           const cor = nota >= 4 ? '#16a34a' : nota >= 3 ? '#ea580c' : 'var(--danger)';
           const corBg = nota >= 4 ? 'rgba(22,163,74,0.12)' : nota >= 3 ? 'rgba(234,88,12,0.12)' : 'rgba(220,38,38,0.12)';
           return `<button onclick="verAvaliacao(${item.id})" id="btnVerAvaliacao" title="Ver avaliação: ${nota}/5"
-              style="display:inline-flex;align-items:center;gap:5px;height:32px;padding:0 11px;border-radius:8px;border:none;background:${corBg};color:${cor};cursor:pointer;transition:filter 0.15s"
+              style="display:inline-flex;align-items:center;gap:5px;height:32px;padding:0 11px;border-radius:var(--radius-md);border:none;background:${corBg};color:${cor};cursor:pointer;transition:filter 0.15s"
               onmouseover="this.style.filter='brightness(0.94)'" onmouseout="this.style.filter='none'">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="${cor}" stroke="${cor}" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
               <span style="font-size:13px;font-weight:600;line-height:1">${nota}<span style="font-size:11px;font-weight:400;opacity:0.65">/5</span></span>
@@ -18229,7 +18464,7 @@ window.Shell = {
         }
         if (item.status === 'concluido') {
           return `<span title="Concluída — aguardando avaliação do solicitante"
-              style="display:inline-flex;align-items:center;gap:5px;height:32px;padding:0 10px;border-radius:8px;background:transparent;opacity:0.4;cursor:default">
+              style="display:inline-flex;align-items:center;gap:5px;height:32px;padding:0 10px;border-radius:var(--radius-md);background:transparent;opacity:0.4;cursor:default">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
               <span style="font-size:12px">Sem nota</span>
             </span>`;
@@ -18280,7 +18515,7 @@ window.Shell = {
         const sObj = getStatus(item.status);
         if (item.status === 'cancelado') {
           card.innerHTML = `
-            <div style="display:flex;align-items:flex-start;gap:10px;padding:14px 16px;background:rgba(200,40,40,0.07);border:1px solid rgba(200,40,40,0.22);border-radius:10px">
+            <div style="display:flex;align-items:flex-start;gap:10px;padding:14px 16px;background:rgba(200,40,40,0.07);border:1px solid rgba(200,40,40,0.22);border-radius:var(--radius-lg)">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#C82828" stroke-width="1.5" style="flex-shrink:0;margin-top:1px"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
               <div>
                 <div style="font-size:0.9rem;font-weight:700;color:#C82828">Solicitação cancelada</div>
@@ -18291,7 +18526,7 @@ window.Shell = {
         }
         card.innerHTML = `
           <div style="display:flex;align-items:center;gap:8px;padding:8px 0">
-            <div style="width:10px;height:10px;border-radius:50%;background:${sObj.text || 'var(--danger)'};flex-shrink:0"></div>
+            <div style="width:10px;height:10px;border-radius:var(--radius-round);background:${sObj.text || 'var(--danger)'};flex-shrink:0"></div>
             <span style="font-size:0.875rem;font-weight:700;color:${sObj.text || 'var(--danger)'}">${excepcional.label}</span>
           </div>`;
         return;
@@ -18312,7 +18547,7 @@ window.Shell = {
         const iconInner = isConcluida
           ? `<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.5"><polyline points="20 6 9 17 4 12"/></svg>`
           : isAtual
-            ? `<div style="width:7px;height:7px;border-radius:50%;background:${sObj.text || '#3B82F6'}"></div>`
+            ? `<div style="width:7px;height:7px;border-radius:var(--radius-round);background:${sObj.text || '#3B82F6'}"></div>`
             : '';
 
         const lineLeftClass = idx === 0 ? 'invisible' : isConcluida || (isAtual && idx <= idxAtual) ? 'done' : '';
@@ -18406,7 +18641,7 @@ window.Shell = {
           card.innerHTML = `
             <div class="form-card" style="padding:20px 24px">
               <div style="display:flex;align-items:center;gap:12px">
-                <div style="width:36px;height:36px;border-radius:50%;background:rgba(220,38,38,0.08);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                <div style="width:36px;height:36px;border-radius:var(--radius-round);background:rgba(220,38,38,0.08);display:flex;align-items:center;justify-content:center;flex-shrink:0">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--danger)" stroke-width="1.5">
                     <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
                   </svg>
@@ -18425,7 +18660,7 @@ window.Shell = {
         card.innerHTML = `
           <div class="form-card" style="padding:20px 24px">
             <div style="display:flex;align-items:center;gap:12px">
-              <div style="width:36px;height:36px;border-radius:50%;background:var(--ink-08);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+              <div style="width:36px;height:36px;border-radius:var(--radius-round);background:var(--ink-08);display:flex;align-items:center;justify-content:center;flex-shrink:0">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="opacity:0.4">
                   <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
                 </svg>
@@ -18475,7 +18710,7 @@ window.Shell = {
         let previewHtml;
         if (isPdf) {
           previewHtml = `
-            <div class="assinatura-preview-card" style="background:#f5f3f0;padding:0;overflow:hidden">
+            <div class="assinatura-preview-card" style="background:var(--bg-light);padding:0;overflow:hidden">
               <iframe src="${esc(url)}#toolbar=0&navpanes=0"
                       style="width:100%;height:600px;border:none;display:block;background:white"
                       title="${_altText}"></iframe>
@@ -18487,7 +18722,7 @@ window.Shell = {
             </div>`;
         } else {
           previewHtml = `
-            <div class="assinatura-preview-card" style="background:#f5f3f0;padding:40px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px">
+            <div class="assinatura-preview-card" style="background:var(--bg-light);padding:40px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px">
               <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--ink-40)" stroke-width="1.5">
                 <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
                 <polyline points="14 2 14 8 20 8"/>
@@ -18518,7 +18753,7 @@ window.Shell = {
         card.innerHTML = `
           <div class="form-card" style="padding:20px 24px">
             <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
-              <div style="width:36px;height:36px;border-radius:50%;background:rgba(10,144,96,0.12);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+              <div style="width:36px;height:36px;border-radius:var(--radius-round);background:rgba(10,144,96,0.12);display:flex;align-items:center;justify-content:center;flex-shrink:0">
                 <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#0A9060" stroke-width="1.5"><polyline points="20 6 9 17 4 12"/></svg>
               </div>
               <div>
@@ -18583,13 +18818,13 @@ window.Shell = {
           mostrarDestaque ? 'box-shadow:0 0 0 2px var(--ruby-red),0 8px 32px rgba(172,54,49,0.18);' : ''
         }">
           <div id="aprovacaoHeader" style="padding:20px 24px;cursor:pointer;display:flex;align-items:center;gap:12px">
-            <div style="width:36px;height:36px;border-radius:50%;background:rgba(172,54,49,0.1);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+            <div style="width:36px;height:36px;border-radius:var(--radius-round);background:rgba(172,54,49,0.1);display:flex;align-items:center;justify-content:center;flex-shrink:0">
               <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#AC3631" stroke-width="1.5"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
             </div>
             <div style="flex:1;min-width:0">
               <div style="font-weight:700;font-size:0.92rem;display:flex;align-items:center;gap:8px;line-height:1.2">
                 Materiais para aprovação
-                ${mostrarDestaque ? '<span style="background:var(--ruby-red);color:white;font-size:0.62rem;font-weight:800;padding:2px 8px;border-radius:999px;letter-spacing:0.03em;animation:badgePop 0.4s ease forwards;flex-shrink:0">NOVO</span>' : ''}
+                ${mostrarDestaque ? '<span style="background:var(--ruby-red);color:white;font-size:0.62rem;font-weight:800;padding:2px 8px;border-radius:var(--radius-pill);letter-spacing:0.03em;animation:badgePop 0.4s ease forwards;flex-shrink:0">NOVO</span>' : ''}
               </div>
               <div style="font-size:0.78rem;opacity:0.42;margin-top:2px" id="aprovacaoSubtitle">
                 ${item.status === 'em-aprovacao' ? 'Os materiais estão prontos para sua análise' : 'Histórico de aprovação'}
@@ -18606,7 +18841,12 @@ window.Shell = {
               <div id="chatUI" style="display:none">
                 <div id="historicoRodadas" style="padding:0 16px;padding-top:16px"></div>
                 <div class="chat-wrap" id="chatWrap"></div>
+                <div class="chat-attachments" id="chatAttachments" style="display:none"></div>
                 <div class="chat-input-area" id="chatInputArea">
+                  <input type="file" id="chatFileInput" multiple style="display:none" onchange="onChatFilesSelected(this)">
+                  <button class="chat-attach-btn" id="chatAttachBtn" disabled title="Anexar arquivo" onclick="document.getElementById('chatFileInput').click()">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+                  </button>
                   <textarea id="chatInput" placeholder="Digite sua mensagem..." rows="1" disabled
                     oninput="autoResizeTextarea(this)"
                     onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();enviarMensagemUsuario()}"
@@ -18699,7 +18939,7 @@ window.Shell = {
           <span style="
             background: var(--icon-bg);
             border: 1px solid var(--ink-10);
-            border-radius: 999px;
+            border-radius: var(--radius-pill);
             font-size: 0.72rem;
             font-weight: 700;
             letter-spacing: 0.05em;
@@ -18719,6 +18959,7 @@ window.Shell = {
         nomeUsuario,
         fase: 'apresentacao',
         mensagensAlteracao: [],
+        arquivos: [],
         plural,
       };
 
@@ -18930,10 +19171,12 @@ window.Shell = {
 
       let sucesso = false;
       try {
+        const fd = new FormData();
+        fd.append('mensagem', mensagemFormatada);
+        (window._chatState.arquivos || []).forEach(function(f) { fd.append('arquivos', f, f.name); });
         const res = await fetch('/api/solicitacoes/' + window._chatState.solId + '/alteracao', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ mensagem: mensagemFormatada }),
+          body: fd,
         });
         sucesso = res.ok;
       } catch {}
@@ -18955,6 +19198,8 @@ window.Shell = {
       ultima.dataDecisao = new Date().toISOString();
       saveRodadas(window._chatState.solId, rodadas);
 
+      window._chatState.arquivos = [];
+      renderChatAttachments();
       document.getElementById('chatInputArea').style.display = 'none';
     }
 
@@ -18966,7 +19211,7 @@ window.Shell = {
         <div id="pesquisaSatisfacao" style="
           background: rgba(255,255,255,0.7);
           border: 1px solid var(--ink-10);
-          border-radius: 12px;
+          border-radius: var(--radius-xl);
           padding: 16px 20px;
           margin-top: 16px;
           font-family: inherit;
@@ -18981,7 +19226,7 @@ window.Shell = {
                 data-nota="${n}"
                 onclick="selecionarNota(${n})"
                 style="
-                  width:36px;height:36px;border-radius:8px;
+                  width:36px;height:36px;border-radius:var(--radius-md);
                   border:2px solid var(--ink-20);
                   background:transparent;font-size:0.85rem;
                   font-weight:700;color:var(--carbon-black);
@@ -18996,7 +19241,7 @@ window.Shell = {
               placeholder="Comentário opcional (máx. 500 caracteres)"
               maxlength="500"
               style="
-                width:100%;border-radius:8px;border:1px solid var(--ink-20);
+                width:100%;border-radius:var(--radius-md);border:1px solid var(--ink-20);
                 padding:8px 12px;font-family:inherit;font-size:0.85rem;
                 resize:vertical;min-height:64px;background:var(--paper-white);
                 box-sizing:border-box;
@@ -19005,7 +19250,7 @@ window.Shell = {
             <div style="display:flex;gap:8px;margin-top:8px">
               <button onclick="enviarAvaliacao(${solId})" style="
                 background:var(--ruby-red);color:#fff;border:none;
-                border-radius:8px;padding:7px 18px;font-size:0.85rem;
+                border-radius:var(--radius-md);padding:7px 18px;font-size:0.85rem;
                 font-weight:600;cursor:pointer;
               ">Enviar avaliação</button>
               <button onclick="document.getElementById('pesquisaSatisfacao').remove()" style="
@@ -19093,7 +19338,7 @@ window.Shell = {
               <div style="font-size:0.75rem;opacity:0.35;margin-top:8px">de 10</div>
             </div>
             ${comentario ? `
-              <div style="background:var(--icon-bg);border-radius:10px;padding:14px 16px;margin-bottom:16px">
+              <div style="background:var(--icon-bg);border-radius:var(--radius-lg);padding:14px 16px;margin-bottom:16px">
                 <div style="font-size:0.72rem;font-weight:700;opacity:0.4;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px">Comentário</div>
                 <p style="font-size:0.875rem;line-height:1.55;margin:0">${esc(comentario)}</p>
               </div>
@@ -19213,15 +19458,60 @@ window.Shell = {
     function habilitarInput(placeholder) {
       const input = document.getElementById('chatInput');
       const btn = document.getElementById('chatSendBtn');
+      const att = document.getElementById('chatAttachBtn');
       if (input) { input.disabled = false; input.placeholder = placeholder || 'Digite sua mensagem...'; input.focus(); }
       if (btn) btn.disabled = false;
+      if (att) att.disabled = false;
     }
 
     function desabilitarInput() {
       const input = document.getElementById('chatInput');
       const btn = document.getElementById('chatSendBtn');
+      const att = document.getElementById('chatAttachBtn');
       if (input) input.disabled = true;
       if (btn) btn.disabled = true;
+      if (att) att.disabled = true;
+    }
+
+    function onChatFilesSelected(input) {
+      if (!window._chatState) return;
+      const novos = Array.from(input.files || []);
+      const atuais = window._chatState.arquivos || (window._chatState.arquivos = []);
+      const LIMITE = 10, MAX_MB = 50;
+      for (const f of novos) {
+        if (atuais.length >= LIMITE) {
+          if (window.showToast) showToast('Máximo de ' + LIMITE + ' arquivos por solicitação.', 'error');
+          break;
+        }
+        if (f.size > MAX_MB * 1024 * 1024) {
+          if (window.showToast) showToast('"' + f.name + '" passa de ' + MAX_MB + 'MB e não foi anexado.', 'error');
+          continue;
+        }
+        atuais.push(f);
+      }
+      input.value = '';
+      renderChatAttachments();
+    }
+
+    function removerAnexoChat(idx) {
+      const arr = window._chatState && window._chatState.arquivos;
+      if (!arr) return;
+      arr.splice(idx, 1);
+      renderChatAttachments();
+    }
+
+    function renderChatAttachments() {
+      const cont = document.getElementById('chatAttachments');
+      if (!cont) return;
+      const arr = (window._chatState && window._chatState.arquivos) || [];
+      if (!arr.length) { cont.style.display = 'none'; cont.innerHTML = ''; return; }
+      cont.style.display = 'flex';
+      cont.innerHTML = arr.map(function(f, i) {
+        return '<span class="chat-attach-chip"><span title="' + esc(f.name) + '">' + esc(f.name) + '</span>' +
+          '<button type="button" aria-label="Remover anexo" onclick="removerAnexoChat(' + i + ')">' +
+          '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>' +
+          '</button></span>';
+      }).join('');
     }
 
     function removerBotoesDecisao() {
@@ -19301,7 +19591,7 @@ window.Shell = {
       const avatarHtml = `<div class="chat-avatar"><img src="${URL_LOGO_BRANCA}" alt="SVN" /></div>`;
       const badgeHtml = `
         <div style="display:flex;align-items:center;justify-content:center;margin-bottom:8px">
-          <span style="background:var(--icon-bg);border:1px solid var(--ink-10);border-radius:999px;font-size:0.72rem;font-weight:700;letter-spacing:0.05em;color:var(--ink-40);padding:3px 12px;text-transform:uppercase">Rodada ${rodada.numero}</span>
+          <span style="background:var(--icon-bg);border:1px solid var(--ink-10);border-radius:var(--radius-pill);font-size:0.72rem;font-weight:700;letter-spacing:0.05em;color:var(--ink-40);padding:3px 12px;text-transform:uppercase">Rodada ${rodada.numero}</span>
         </div>`;
       wrap.innerHTML = `
         ${badgeHtml}
@@ -19415,7 +19705,7 @@ window.Shell = {
           const svn = String(dados['palSvn' + n] || '').trim();
           if (!nome) continue;
           const svnBadge = svn.toLowerCase() === 'sim'
-            ? '<span style="background:var(--ruby-red);color:var(--paper-white);font-size:0.6rem;padding:2px 7px;border-radius:999px;font-weight:700;margin-left:6px">SVN</span>' : '';
+            ? '<span style="background:var(--ruby-red);color:var(--paper-white);font-size:0.6rem;padding:2px 7px;border-radius:var(--radius-pill);font-weight:700;margin-left:6px">SVN</span>' : '';
           palestrantesBlock += `
             <div style="display:flex;flex-direction:column;gap:2px">
               <div class="dados-label">Palestrante ${n}</div>
@@ -19432,7 +19722,7 @@ window.Shell = {
           if (value.length === 0) continue;
           if (typeof value[0] === 'object') {
             const depoBlock = value.filter(d => d && d.texto).map(d => `
-              <div style="background:var(--icon-bg);border-radius:8px;padding:10px 12px;margin-top:6px;font-size:0.85rem">
+              <div style="background:var(--icon-bg);border-radius:var(--radius-md);padding:10px 12px;margin-top:6px;font-size:0.85rem">
                 <div style="font-style:italic;opacity:0.8;margin-bottom:3px">"${esc(d.texto)}"</div>
                 ${d.nome ? `<div style="font-weight:600;font-size:0.78rem">${esc(d.nome)}</div>` : ''}
               </div>`).join('');
@@ -19462,7 +19752,7 @@ window.Shell = {
 
       let html = `<div class="dados-grid">${gridFields}`;
       if (palestrantesBlock) {
-        html += `<div class="dados-grid-wide" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px;padding:14px;background:var(--icon-bg);border-radius:10px">
+        html += `<div class="dados-grid-wide" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px;padding:14px;background:var(--icon-bg);border-radius:var(--radius-lg)">
           ${palestrantesBlock}
         </div>`;
       }
@@ -19526,10 +19816,10 @@ window.Shell = {
         const dataFmt = new Date(ev.created_at).toLocaleString('pt-BR', { day:'2-digit', month:'2-digit', year:'2-digit', hour:'2-digit', minute:'2-digit' });
         const detalhesHtml = ev.detalhes && Object.keys(ev.detalhes).length
           ? `<details style="margin-top:6px"><summary style="font-size:0.72rem;opacity:0.45;cursor:pointer;user-select:none">Detalhes</summary>
-              <pre style="font-size:0.7rem;opacity:0.55;white-space:pre-wrap;word-break:break-all;margin:6px 0 0;background:var(--icon-bg);padding:8px;border-radius:6px">${esc(JSON.stringify(ev.detalhes, null, 2))}</pre>
+              <pre style="font-size:0.7rem;opacity:0.55;white-space:pre-wrap;word-break:break-all;margin:6px 0 0;background:var(--icon-bg);padding:8px;border-radius:var(--radius-sm)">${esc(JSON.stringify(ev.detalhes, null, 2))}</pre>
              </details>` : '';
-        return `<div style="display:flex;gap:10px;margin-bottom:10px;padding:10px 12px;border-radius:8px;background:${cor.bg}">
-          <div style="width:8px;height:8px;border-radius:50%;background:${cor.dot};flex-shrink:0;margin-top:5px"></div>
+        return `<div style="display:flex;gap:10px;margin-bottom:10px;padding:10px 12px;border-radius:var(--radius-md);background:${cor.bg}">
+          <div style="width:8px;height:8px;border-radius:var(--radius-round);background:${cor.dot};flex-shrink:0;margin-top:5px"></div>
           <div style="flex:1;min-width:0">
             <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
               <span style="font-size:0.82rem;font-weight:600;line-height:1.4">${esc(ev.mensagem)}</span>
@@ -19573,7 +19863,7 @@ window.Shell = {
       <button class="modal-close" onclick="cancelarExcluir()">&times;</button>
     </div>
     <div class="modal-body">
-      <div style="background:rgba(172,54,49,0.07);border:1px solid rgba(172,54,49,0.22);border-radius:8px;padding:11px 14px;font-size:0.82rem;color:#8f2c28">Todos os arquivos vinculados também serão excluídos.</div>
+      <div style="background:rgba(172,54,49,0.07);border:1px solid rgba(172,54,49,0.22);border-radius:var(--radius-md);padding:11px 14px;font-size:0.82rem;color:var(--ruby-dark)">Todos os arquivos vinculados também serão excluídos.</div>
     </div>
     <div class="modal-footer">
       <button type="button" class="btn btn-secondary" onclick="cancelarExcluir()">Cancelar</button>
@@ -19591,7 +19881,7 @@ window.Shell = {
         <button class="modal-close" onclick="fecharCancelarModal()">&times;</button>
       </div>
       <div class="modal-body">
-        <textarea id="cancelarJustificativa" placeholder="Motivo do cancelamento..." style="width:100%;min-height:96px;padding:12px;border:1px solid var(--border-light);border-radius:8px;font-family:inherit;font-size:0.9rem;resize:vertical;box-sizing:border-box"></textarea>
+        <textarea id="cancelarJustificativa" placeholder="Motivo do cancelamento..." style="width:100%;min-height:96px;padding:12px;border:1px solid var(--border-light);border-radius:var(--radius-md);font-family:inherit;font-size:0.9rem;resize:vertical;box-sizing:border-box"></textarea>
         <div id="cancelarErro" style="display:none;color:var(--ruby-red);font-size:0.8rem;margin-top:8px"></div>
       </div>
       <div class="modal-footer">
@@ -19867,13 +20157,47 @@ window.Shell = {
   --ink-10: rgba(34,27,25,.10);
   --ink-08: rgba(34,27,25,.08);
   --ink-05: rgba(34,27,25,.05);
+  /* ── Promovidos do editor — cores quentes usadas no hub todo ── */
+  --border-warm: #e8e2dc;  /* borda de campos/controles (unifica os ~28 usos de #e8e2dc) */
+  --ruby-hover: #b44b42;   /* hover de botões primários (ruby claro) */
+  --gold-soft: #c8a96e;    /* dourado de destaque / hover */
+  /* ── Escala tipográfica (8 degraus; consolidará os 44 tamanhos avulsos) ── */
+  --fs-2xs:  0.68rem;
+  --fs-xs:   0.74rem;
+  --fs-sm:   0.80rem;
+  --fs-base: 0.85rem;
+  --fs-md:   0.92rem;
+  --fs-lg:   1.05rem;
+  --fs-xl:   1.5rem;
+  --fs-icon: 2rem;
+  /* ── Status: erro (borda; o fundo reusa o --danger-soft já existente) ── */
+  --danger-border: #fecaca;  /* borda de alerta de erro */
+  /* ── Superfície bege quente ── */
+  --surface-warm: #f0ece8;   /* fundo de card/seção (unifica beges próximos) */
+  /* ── Verde "ativo / ao vivo" (distinto do --success de formulário) ── */
+  --live-green: #0a9060;
+  /* ── Info (azul neutro, fora da paleta de marca; avisos/badges) ── */
+  --info: #2563c0;
+  --info-soft: #dbeafe;      /* fundo azul claro */
+  --info-strong: #475569;    /* slate escuro (texto/ícone) */
+  --info-bg: #f1f5f9;        /* slate muito claro (fundo neutro) */
+  /* ── Escala de arredondamento (consolida os raios avulsos) ── */
+  --radius-xs:  4px;   /* micro-controles */
+  --radius-sm:  6px;   /* botões/campos pequenos */
+  --radius-md:  8px;   /* botões/inputs padrão */
+  --radius-lg:  10px;  /* cards menores */
+  --radius-xl:  12px;  /* cards */
+  --radius-2xl: 16px;  /* cards grandes/modais */
+  --radius-3xl: 24px;  /* destaque/hero */
+  --radius-pill: 999px;
+  --radius-round: 50%;
 }
 
 /* ===== Toast (global — usado por toast.js em todas as páginas) ===== */
 .toast-container { position: fixed; top: 68px; right: 16px; z-index: 9999; display: flex; flex-direction: column; gap: 8px; pointer-events: none; }
 .toast {
   display: flex; align-items: center; gap: 8px;
-  padding: 10px 16px; border-radius: 10px; font-size: 0.82rem; font-weight: 600;
+  padding: 10px 16px; border-radius: var(--radius-lg); font-size: 0.82rem; font-weight: 600;
   font-family: 'Nunito Sans', sans-serif; box-shadow: 0 4px 20px rgba(0,0,0,0.15);
   pointer-events: auto; opacity: 1; transform: translateX(0);
   transition: opacity 0.4s ease, transform 0.4s ease; max-width: 320px;
@@ -19932,7 +20256,7 @@ body {
 
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--leather-brown); border-radius: 3px; }
+::-webkit-scrollbar-thumb { background: var(--leather-brown); border-radius: var(--radius-xs); }
 
 a { color: var(--ruby-red); text-decoration: none; }
 a:hover { text-decoration: underline; }
@@ -19985,7 +20309,7 @@ img { max-width: 100%; height: auto; }
 .avatar {
   width: 32px;
   height: 32px;
-  border-radius: 50%;
+  border-radius: var(--radius-round);
   background: var(--leather-brown);
   color: var(--paper-white);
   display: flex;
@@ -20003,7 +20327,7 @@ img { max-width: 100%; height: auto; }
   align-items: center;
   gap: 6px;
   padding: 7px 16px;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   border: 1.5px solid var(--border-light);
   background: var(--card-white);
   font-family: 'Nunito Sans', sans-serif;
@@ -20023,7 +20347,7 @@ img { max-width: 100%; height: auto; }
 /* Form / landing-page button variants — self-contained (override compact base) */
 .btn-primary {
   padding: 12px 24px;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   border: none;
   font-size: 0.9rem;
   font-weight: 700;
@@ -20034,7 +20358,7 @@ img { max-width: 100%; height: auto; }
 .btn-primary:hover { background: var(--ruby-dark); transform: translateY(-2px); text-decoration: none; }
 .btn-secondary {
   padding: 12px 24px;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   border: 1px solid var(--ink-20);
   font-size: 0.9rem;
   font-weight: 700;
@@ -20044,7 +20368,7 @@ img { max-width: 100%; height: auto; }
 .btn-secondary:hover { background: var(--ink-12); }
 .btn-dark {
   padding: 12px 24px;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   border: none;
   font-size: 0.9rem;
   font-weight: 700;
@@ -20055,7 +20379,7 @@ img { max-width: 100%; height: auto; }
 
 .form-status {
   padding: 14px 18px;
-  border-radius: 10px;
+  border-radius: var(--radius-lg);
   margin-top: 16px;
   display: flex;
   align-items: center;
@@ -20063,7 +20387,7 @@ img { max-width: 100%; height: auto; }
   font-size: 0.88rem;
   font-weight: 500;
 }
-.form-status-loading { background: #f5f3f0; color: var(--carbon-black); }
+.form-status-loading { background: var(--bg-light); color: var(--carbon-black); }
 .form-status-error {
   background: #fef2f2;
   color: #991b1b;
@@ -20078,7 +20402,7 @@ img { max-width: 100%; height: auto; }
   width: 16px; height: 16px;
   border: 2px solid var(--ink-12);
   border-top-color: var(--ruby-red);
-  border-radius: 50%;
+  border-radius: var(--radius-round);
   animation: formSpin 0.7s linear infinite;
 }
 @keyframes formSpin { to { transform: rotate(360deg); } }
@@ -20089,7 +20413,7 @@ img { max-width: 100%; height: auto; }
 .input {
   padding: 7px 12px;
   border: 1.5px solid var(--border-light);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   font-family: 'Nunito Sans', sans-serif;
   font-size: 0.82rem;
   color: var(--carbon-black);
@@ -20100,7 +20424,7 @@ img { max-width: 100%; height: auto; }
 .select {
   padding: 6px 10px;
   border: 1.5px solid var(--border-light);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   font-family: 'Nunito Sans', sans-serif;
   font-size: 0.82rem;
   color: var(--carbon-black);
@@ -20114,14 +20438,14 @@ img { max-width: 100%; height: auto; }
 .card {
   background: var(--card-white);
   border: 1.5px solid var(--border-light);
-  border-radius: 12px;
+  border-radius: var(--radius-xl);
 }
 
 /* Form Elements */
 .form-card {
   background: var(--card-white);
   border: 1px solid var(--border-light);
-  border-radius: 16px;
+  border-radius: var(--radius-2xl);
   box-shadow: 0 2px 16px var(--ink-05);
   padding: 32px;
   position: relative;
@@ -20157,7 +20481,7 @@ input[type="number"], input[type="date"], input[type="time"],
 input[type="tel"], select, textarea {
   width: 100%;
   border: 1px solid var(--ink-20);
-  border-radius: 10px;
+  border-radius: var(--radius-lg);
   padding: 10px 14px;
   font-family: 'Nunito Sans', sans-serif;
   font-size: 0.9rem;
@@ -20241,7 +20565,7 @@ input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
 .radio-custom {
   width: 18px;
   height: 18px;
-  border-radius: 50%;
+  border-radius: var(--radius-round);
   border: 1.5px solid var(--ink-30);
   background: white;
   display: flex;
@@ -20257,13 +20581,13 @@ input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
   content: '';
   width: 10px;
   height: 10px;
-  border-radius: 50%;
+  border-radius: var(--radius-round);
   background: var(--ruby-red);
 }
 .checkbox-custom {
   width: 18px;
   height: 18px;
-  border-radius: 4px;
+  border-radius: var(--radius-xs);
   border: 1.5px solid var(--ink-30);
   background: white;
   display: flex;
@@ -20291,7 +20615,7 @@ input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
   flex: 1;
   min-width: 140px;
   border: 1px solid var(--border-light);
-  border-radius: 12px;
+  border-radius: var(--radius-xl);
   padding: 20px;
   text-align: center;
   cursor: pointer;
@@ -20310,7 +20634,7 @@ input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
   align-items: center;
   gap: 6px;
   padding: 8px 16px;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   border: 1px solid var(--ink-30);
   background: white;
   cursor: pointer;
@@ -20325,7 +20649,7 @@ input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
 
 /* Alert Cards */
 .alert-card {
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   padding: 14px 16px;
   margin-bottom: 20px;
 }
@@ -20353,7 +20677,7 @@ input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
   align-items: center;
   gap: 4px;
   padding: 4px 10px;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   font-size: 0.7rem;
   font-weight: 700;
   text-transform: uppercase;
@@ -20383,7 +20707,7 @@ input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
   width: 3px;
   height: 14px;
   background: var(--ruby-red);
-  border-radius: 2px;
+  border-radius: var(--radius-xs);
   flex-shrink: 0;
 }
 .category-title:first-child { margin-top: 0; }
@@ -20399,7 +20723,7 @@ input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
   -webkit-appearance: none;
   background: var(--card-white);
   border: 1px solid var(--border-light);
-  border-radius: 12px;
+  border-radius: var(--radius-xl);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -20448,7 +20772,7 @@ input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
 .preview-panel {
   background: var(--card-white);
   border: 1px solid var(--border-light);
-  border-radius: 16px;
+  border-radius: var(--radius-2xl);
   padding: 20px;
 }
 .preview-panel h4 {
@@ -20493,7 +20817,7 @@ input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
 
 .stats-row { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-bottom: 24px; }
 .stat-card {
-  border-radius: 12px;
+  border-radius: var(--radius-xl);
   padding: 20px;
   border: 1px solid;
 }
@@ -20528,7 +20852,7 @@ input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
 /* Filters */
 .filter-chip {
   padding: 6px 14px;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   font-size: 0.8rem;
   font-weight: 600;
   cursor: pointer;
@@ -20548,7 +20872,7 @@ input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
   gap: 8px;
   background: var(--card-white);
   border: 1px solid var(--border-light);
-  border-radius: 10px;
+  border-radius: var(--radius-lg);
   padding: 10px 14px;
   margin-bottom: 20px;
   max-width: 480px;
@@ -20566,7 +20890,7 @@ input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
 .request-card {
   background: var(--card-white);
   border: 1px solid var(--border-light);
-  border-radius: 12px;
+  border-radius: var(--radius-xl);
   padding: 16px 20px;
   margin-bottom: 12px;
   cursor: pointer;
@@ -20611,7 +20935,7 @@ input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
   display: inline-block;
   width: 10px;
   height: 10px;
-  border-radius: 50%;
+  border-radius: var(--radius-round);
   flex-shrink: 0;
 }
 
@@ -20625,7 +20949,7 @@ input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
 @media (max-width: 600px) {
   .admin-table thead { display: none; }
   .admin-table, .admin-table tbody, .admin-table tr, .admin-table td { display: block; width: 100%; }
-  .admin-table tr { border: 1px solid var(--border-light); border-radius: 10px; margin-bottom: 10px; padding: 4px 0; }
+  .admin-table tr { border: 1px solid var(--border-light); border-radius: var(--radius-lg); margin-bottom: 10px; padding: 4px 0; }
   .admin-table td { padding: 8px 14px; border-bottom: none; display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 0.82rem; }
   .admin-table td::before { content: attr(data-label); font-size: 0.72rem; font-weight: 700; opacity: 0.45; text-transform: uppercase; letter-spacing: 0.04em; white-space: nowrap; flex-shrink: 0; }
   .admin-table td:last-child { justify-content: flex-end; }
@@ -20637,7 +20961,7 @@ input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
 .pagination button {
   padding: 8px 14px;
   border: 1px solid var(--border-light);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   background: var(--card-white);
   cursor: pointer;
   font-family: 'Nunito Sans', sans-serif;
@@ -20669,7 +20993,7 @@ input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
 .modal-overlay.visible .modal-card { animation: scaleIn 0.22s ease forwards; }
 .modal-card {
   background: var(--paper-white);
-  border-radius: 16px;
+  border-radius: var(--radius-2xl);
   max-width: 760px;
   width: 90%;
   max-height: 90vh;
@@ -20745,7 +21069,7 @@ input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
 .address-pill {
   background: var(--paper-white);
   border: 1px solid var(--border-light);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   padding: 12px 16px;
   font-size: 0.875rem;
   display: flex;
@@ -20761,7 +21085,7 @@ input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
 .material-block .pill {
   width: 100%;
   justify-content: flex-start;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   padding: 12px 16px;
   text-align: left;
 }
@@ -20778,7 +21102,7 @@ input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
 .speaker-preview {
   background: var(--paper-white);
   border: 1px solid var(--border-light);
-  border-radius: 12px;
+  border-radius: var(--radius-xl);
   padding: 10px 14px;
   display: flex;
   align-items: center;
@@ -20789,7 +21113,7 @@ input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
 .speaker-avatar {
   width: 40px;
   height: 40px;
-  border-radius: 50%;
+  border-radius: var(--radius-round);
   background: var(--leather-brown);
   color: var(--paper-white);
   display: flex;
@@ -20808,7 +21132,7 @@ input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
   color: var(--paper-white);
   font-size: 0.65rem;
   padding: 2px 8px;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   font-weight: 700;
 }
 
@@ -20822,7 +21146,7 @@ input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
   padding: 10px 16px;
   background: var(--icon-bg);
   border: 1px dashed var(--border-light);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   cursor: pointer;
   font-size: 0.85rem;
   transition: 0.2s;
@@ -20835,7 +21159,7 @@ input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
 /* Upload feedback component */
 .upload-feedback {
   display: inline-flex; align-items: center; gap: 8px;
-  padding: 6px 10px; border-radius: 6px; margin-top: 6px;
+  padding: 6px 10px; border-radius: var(--radius-sm); margin-top: 6px;
   font-size: 0.82rem; line-height: 1.4; max-width: 100%;
 }
 .upload-feedback__icon { flex-shrink: 0; }
@@ -20861,7 +21185,7 @@ input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
   background: var(--carbon-black);
   color: var(--paper-white);
   padding: 6px 12px;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   font-size: 0.75rem;
   white-space: nowrap;
   z-index: 10;
@@ -20904,7 +21228,7 @@ input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
   align-items: center;
   gap: 5px;
   padding: 4px 12px;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   font-family: 'Nunito Sans', sans-serif;
   font-size: 0.7rem;
   font-weight: 700;
@@ -20941,7 +21265,7 @@ input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
 
 /* Card da assinatura — sem fundo branco, só sombra */
 .assinatura-preview-card {
-  border-radius: 12px;
+  border-radius: var(--radius-xl);
   overflow: hidden;
   box-shadow: 0 8px 32px var(--ink-20);
   margin-bottom: 16px;
@@ -20959,7 +21283,7 @@ input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
   gap: 8px;
   padding: 8px 14px;
   border: 1px solid var(--border-light);
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   cursor: pointer;
   transition: 0.15s;
   background: var(--card-white);
@@ -20982,7 +21306,7 @@ input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
 /* Campo toggle btn (seletor de atualização) */
 .campo-toggle-btn {
   padding: 6px 14px;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   background: var(--icon-bg);
   border: 1.5px solid transparent;
   font-family: 'Nunito Sans', sans-serif;
@@ -21005,7 +21329,7 @@ input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
   gap: 8px;
   padding: 6px 8px;
   font-size: 0.82rem;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   cursor: pointer;
   transition: background 0.1s;
   font-family: 'Nunito Sans', sans-serif;
@@ -21034,7 +21358,7 @@ input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
   height: 420px;
   object-fit: cover;
   object-position: top;
-  border-radius: 12px;
+  border-radius: var(--radius-xl);
   border: 1px solid var(--carbon-black);
   display: block;
   margin: 0 auto;
@@ -21042,7 +21366,7 @@ input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
 .preview-depoimento-card {
   background: transparent;
   border: 1px solid var(--carbon-black);
-  border-radius: 12px;
+  border-radius: var(--radius-xl);
   padding: 20px 24px;
 }
 .preview-depoimento-card p {
@@ -21069,7 +21393,7 @@ input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border: 1px solid rgba(255, 248, 243, 0.1);
-  border-radius: 20px;
+  border-radius: var(--radius-2xl);
   padding: 52px 48px;
   text-align: center;
 }
@@ -21096,7 +21420,7 @@ input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
     max-height: 85vh;
     width: 100%;
     background: var(--paper-white);
-    border-radius: 16px 16px 0 0;
+    border-radius: var(--radius-2xl) var(--radius-2xl) 0 0;
     box-shadow: 0 -8px 28px rgba(0,0,0,0.18);
     z-index: 200;
     transform: translateY(100%);
@@ -21119,7 +21443,7 @@ input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
     left: 22px;
     width: 52px;
     height: 52px;
-    border-radius: 50%;
+    border-radius: var(--radius-round);
     background: var(--carbon-black);
     color: var(--paper-white);
     border: none;
@@ -21154,7 +21478,7 @@ input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
   .form-sidebar-mobile-close {
     width: 34px;
     height: 34px;
-    border-radius: 8px;
+    border-radius: var(--radius-md);
     border: none;
     background: rgba(0,0,0,0.06);
     font-size: 1.5rem;
@@ -21195,24 +21519,24 @@ input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
 .filter-bar { display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:16px; }
 .filter-toggle-btn {
   display:inline-flex; align-items:center; gap:6px; height:32px; padding:0 14px;
-  border-radius:8px; border:1px solid var(--border-light); background:var(--card-white);
-  cursor:pointer; font-family:'Nunito Sans',sans-serif; font-size:0.8rem; font-weight:600;
+  border-radius:var(--radius-md); border:1px solid var(--border-light); background:var(--card-white);
+  cursor:pointer; font-family:'Nunito Sans', sans-serif; font-size:0.8rem; font-weight:600;
   color:var(--carbon-black); transition:0.15s; white-space:nowrap;
 }
 .filter-toggle-btn:hover { border-color:var(--ruby-red); }
 .filter-toggle-btn.has-filters { border-color:var(--ruby-red); color:var(--ruby-red); }
-.filter-count-badge { background:var(--ruby-red); color:var(--paper-white); border-radius:999px; font-size:0.65rem; font-weight:700; padding:1px 5px; line-height:1.4; }
+.filter-count-badge { background:var(--ruby-red); color:var(--paper-white); border-radius:var(--radius-pill); font-size:0.65rem; font-weight:700; padding:1px 5px; line-height:1.4; }
 .filter-active-badge {
   display:inline-flex; align-items:center; gap:5px; height:28px; padding:0 10px;
-  border-radius:6px; font-size:0.75rem; font-weight:600;
+  border-radius:var(--radius-sm); font-size:0.75rem; font-weight:600;
   background:var(--ink-05); border:1px solid var(--ink-12);
   color:var(--carbon-black); cursor:default; animation:fadeIn 0.15s ease;
 }
 .filter-active-badge .remove-badge { opacity:0.35; cursor:pointer; font-size:0.85rem; line-height:1; transition:opacity 0.1s; }
 .filter-active-badge .remove-badge:hover { opacity:0.8; }
-.filter-clear-btn { font-size:0.75rem; color:var(--ruby-red); background:none; border:none; cursor:pointer; font-family:'Nunito Sans',sans-serif; font-weight:600; padding:0 4px; opacity:0.8; }
+.filter-clear-btn { font-size:0.75rem; color:var(--ruby-red); background:none; border:none; cursor:pointer; font-family:'Nunito Sans', sans-serif; font-weight:600; padding:0 4px; opacity:0.8; }
 .filter-clear-btn:hover { opacity:1; }
-.filter-panel { background:var(--card-white); border:1px solid var(--border-light); border-radius:12px; padding:16px 20px; margin-bottom:16px; display:none; animation:fadeIn 0.2s ease; }
+.filter-panel { background:var(--card-white); border:1px solid var(--border-light); border-radius:var(--radius-xl); padding:16px 20px; margin-bottom:16px; display:none; animation:fadeIn 0.2s ease; }
 .filter-panel.open {
   display: block;
   position: absolute;
@@ -21263,7 +21587,7 @@ input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
   bottom: 20px;
   width: 44px;
   height: 44px;
-  border-radius: 50%;
+  border-radius: var(--radius-round);
   background: #25D366;
   display: flex;
   align-items: center;
@@ -21297,7 +21621,7 @@ input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
   right: -3px;
   min-width: 16px;
   height: 16px;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   background: var(--ruby-red);
   color: white;
   font-size: 0.62rem;
@@ -21315,7 +21639,7 @@ input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
   display: inline-block;
   margin-left: 6px;
   padding: 1px 6px;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   background: var(--ruby-red);
   color: white;
   font-size: 0.62rem;
@@ -21386,7 +21710,7 @@ input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
   border: none;
   width: 32px;
   height: 32px;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -21406,14 +21730,14 @@ input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
   gap: 8px;
   cursor: pointer;
   padding: 5px 10px;
-  border-radius: 24px;
+  border-radius: var(--radius-3xl);
   user-select: none;
 }
 .app-user-trigger:hover { background: rgba(0,0,0,0.04); }
 .app-avatar {
   width: 30px;
   height: 30px;
-  border-radius: 50%;
+  border-radius: var(--radius-round);
   background: var(--leather-brown);
   color: var(--paper-white);
   display: flex;
@@ -21431,7 +21755,7 @@ input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
   right: 0;
   background: var(--card-white);
   border: 1px solid var(--border-light);
-  border-radius: 10px;
+  border-radius: var(--radius-lg);
   box-shadow: 0 4px 16px rgba(0,0,0,0.10);
   min-width: 200px;
   padding: 4px 0;
@@ -21512,6 +21836,11 @@ input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
 /* App Main */
 .app-main {
   grid-area: main;
+  /* Sem isto, a coluna 1fr do grid não encolhe abaixo do conteúdo: uma tabela larga
+     (ex.: validação de cartões, 1180px) estica a coluna, empurra o grid e gera scroll
+     horizontal na página inteira — pior com a sidebar expandida (232px), que reduz o
+     espaço. Com min-width:0 a coluna respeita o espaço e a tabela rola dentro da .vc-scroll. */
+  min-width: 0;
   min-height: calc(100vh - 60px);
 }
 
@@ -21573,7 +21902,7 @@ input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
     justify-content: center;
     background: rgba(159,63,55,0.08);
     color: var(--ruby-red) !important;
-    border-radius: 999px;
+    border-radius: var(--radius-pill);
     margin: 0 !important;
     font-family: 'Taviraj', serif;
     font-weight: 300;
@@ -21611,7 +21940,7 @@ input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
   .form-buttons .btn {
     min-height: 46px;
     padding: 12px 22px !important;
-    border-radius: 10px !important;
+    border-radius: var(--radius-lg) !important;
     font-size: 0.92rem !important;
     font-weight: 600 !important;
     flex: 1;
@@ -21733,7 +22062,7 @@ input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
   justify-content: center;
   width: 30px;
   height: 30px;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   border: 1px solid var(--border-light);
   background: var(--paper-white);
   color: var(--carbon-black);
@@ -21812,7 +22141,7 @@ input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
 .confirm-overlay.fade-out { animation: fadeOut 0.15s ease forwards; }
 .confirm-modal {
   background: var(--paper-white);
-  border-radius: 14px;
+  border-radius: var(--radius-xl);
   padding: 24px;
   max-width: 420px;
   width: calc(100% - 32px);
@@ -21851,7 +22180,7 @@ input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
 .svn-stepper { display:flex; align-items:center; gap:10px; margin:4px 0 20px; }
 .svn-step { display:flex; align-items:center; gap:8px; flex-shrink:0; }
 .svn-step-num {
-  width:28px; height:28px; border-radius:50%;
+  width:28px; height:28px; border-radius:var(--radius-round);
   display:flex; align-items:center; justify-content:center;
   font-size:13px; font-weight:600; transition:all .2s ease;
   background:transparent; border:1.5px solid var(--ink-30); color:var(--ink-40);
@@ -21937,7 +22266,7 @@ input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
       <div id="artefatoCard" style="display:none;margin-top:28px;margin-bottom:48px;width:100%">
         <div style="border-top:1px solid rgba(255,248,243,0.12);padding-top:24px">
           <div id="artefatoPolling" style="text-align:center;padding:16px 0">
-            <div style="display:inline-block;width:20px;height:20px;border:2px solid rgba(255,248,243,0.3);border-top-color:#c8a96e;border-radius:50%;animation:spin 0.9s linear infinite"></div>
+            <div style="display:inline-block;width:20px;height:20px;border:2px solid rgba(255,248,243,0.3);border-top-color:var(--gold-soft);border-radius:var(--radius-round);animation:spin 0.9s linear infinite"></div>
             <p style="margin-top:10px;font-size:0.8rem;color:rgba(255,248,243,0.6)">Gerando seu material…</p>
           </div>
           <div id="artefatoReady" style="display:none">
@@ -21994,7 +22323,7 @@ input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
               const readyEl = document.getElementById('artefatoReady');
               if (readyEl) {
                 readyEl.innerHTML = `
-                  <div style="color:var(--danger);padding:16px;background:rgba(220,38,38,0.08);border-radius:8px;text-align:center">
+                  <div style="color:var(--danger);padding:16px;background:rgba(220,38,38,0.08);border-radius:var(--radius-md);text-align:center">
                     <strong>Erro na geração</strong>
                     <p style="margin-top:8px;font-size:0.85rem;opacity:0.8">
                       Houve um problema ao gerar seu material. Entre em contato com o time de Marketing.
@@ -22135,7 +22464,6 @@ input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
 
 </body>
 </html>
-
 ```
 
 
@@ -22595,16 +22923,16 @@ window.Modal = (function () {
 
     /* ===== Barra de seleção em lote ===== */
     .vc-bulk { display: none; align-items: center; gap: 10px; flex-wrap: wrap; margin: 0 0 12px;
-      padding: 10px 14px; border: 1px solid var(--ruby-red); border-radius: 12px; background: #fdf3f2; }
+      padding: 10px 14px; border: 1px solid var(--ruby-red); border-radius: var(--radius-xl); background: #fdf3f2; }
     .vc-bulk strong { color: var(--ruby-red); font-size: 0.85rem; }
-    .vc-bulk select { height: 34px; border: 1px solid var(--border-light); border-radius: 8px; padding: 0 10px; background: var(--card-white, #fff); font: inherit; }
+    .vc-bulk select { height: 34px; border: 1px solid var(--border-light); border-radius: var(--radius-md); padding: 0 10px; background: var(--card-white, #fff); font: inherit; }
 
     /* ===== Tabela editável ===== */
-    .vc-scroll { overflow: auto; max-height: 70vh; border: 1px solid var(--border-light); border-radius: 14px;
+    .vc-scroll { overflow: auto; max-height: 70vh; border: 1px solid var(--border-light); border-radius: var(--radius-xl);
       scrollbar-width: thin; scrollbar-color: #e6e0d8 transparent; }
     .vc-scroll::-webkit-scrollbar { width: 10px; height: 10px; }
     .vc-scroll::-webkit-scrollbar-track { background: transparent; }
-    .vc-scroll::-webkit-scrollbar-thumb { background: #e6e0d8; border-radius: 8px; border: 2px solid transparent; background-clip: padding-box; }
+    .vc-scroll::-webkit-scrollbar-thumb { background: #e6e0d8; border-radius: var(--radius-md); border: 2px solid transparent; background-clip: padding-box; }
     .vc-scroll::-webkit-scrollbar-thumb:hover { background: #d8d0c5; background-clip: padding-box; }
     table.vc { border-collapse: separate; border-spacing: 0; width: 100%; min-width: 1180px; font-size: 0.74rem; }
     table.vc th { position: sticky; top: 0; z-index: 2; background: var(--carbon-black); color: var(--paper-white);
@@ -22620,7 +22948,7 @@ window.Modal = (function () {
     table.vc tbody tr:hover td { background: #fbf6f5; }
     table.vc tr.flash td { background: #ecfdf3 !important; transition: background .2s; }
     table.vc input, table.vc select, table.vc textarea { width: 100%; box-sizing: border-box; border: 1px solid transparent;
-      background: transparent; font: inherit; text-align: center; padding: 5px; border-radius: 6px; color: #221b19; transition: border-color .12s, background .12s; cursor: pointer; }
+      background: transparent; font: inherit; text-align: center; padding: 5px; border-radius: var(--radius-sm); color: var(--carbon-black); transition: border-color .12s, background .12s; cursor: pointer; }
     table.vc select { -webkit-appearance: none; appearance: none; font-weight: 600; }
     table.vc textarea { resize: vertical; min-height: 34px; line-height: 1.3; }
     table.vc input:hover, table.vc select:hover, table.vc textarea:hover { border-color: rgba(172,54,49,.22); background: rgba(255,255,255,.5); }
@@ -22635,14 +22963,14 @@ window.Modal = (function () {
     /* Status (com botão avançar etapa) */
     .vc-statuscell { display: flex; align-items: center; gap: 4px; }
     .vc-statuscell select { flex: 1; min-width: 0; }
-    .vc-avancar { flex-shrink: 0; width: 24px; height: 24px; border: 1px solid var(--ink-20, #d6d3cd); border-radius: 6px;
+    .vc-avancar { flex-shrink: 0; width: 24px; height: 24px; border: 1px solid var(--ink-20, #d6d3cd); border-radius: var(--radius-sm);
       background: var(--card-white, #fff); color: var(--carbon-black); cursor: pointer; font-size: 0.95rem; line-height: 1;
       display: inline-flex; align-items: center; justify-content: center; transition: background .12s, color .12s, border-color .12s; }
     .vc-avancar:hover { background: var(--ruby-red); color: #fff; border-color: var(--ruby-red); }
 
     /* Pendente há */
     .vc-dias { font-weight: 600; color: var(--ink-60, #6b6760); }
-    .vc-spin { display: inline-block; box-sizing: border-box; border: 2px solid var(--ink-20, #d8d3c9); border-top-color: var(--ruby-red, #AC3631); border-radius: 50%; animation: vcspin 0.7s linear infinite; }
+    .vc-spin { display: inline-block; box-sizing: border-box; border: 2px solid var(--ink-20, #d8d3c9); border-top-color: var(--ruby-red, #AC3631); border-radius: var(--radius-round); animation: vcspin 0.7s linear infinite; }
     @keyframes vcspin { to { transform: rotate(360deg); } }
     .vc-dias.alerta { color: var(--danger); }
     .vc-dias.none { color: var(--ink-30, #b3aea4); }
@@ -22656,7 +22984,7 @@ window.Modal = (function () {
     .vc-sel { width: 16px; height: 16px; cursor: pointer; accent-color: var(--ruby-red); }
     .vc-resizer { position: absolute; top: 0; right: 0; width: 7px; height: 100%; cursor: col-resize; user-select: none; z-index: 3; }
     .vc-resizer:hover { background: rgba(172,54,49,.4); }
-    .vc-menubtn { border: none; background: transparent; cursor: pointer; padding: 2px 6px; color: var(--ink-50, #847f76); font-size: 1.05rem; line-height: 1; border-radius: 4px; }
+    .vc-menubtn { border: none; background: transparent; cursor: pointer; padding: 2px 6px; color: var(--ink-50, #847f76); font-size: 1.05rem; line-height: 1; border-radius: var(--radius-xs); }
     .vc-menubtn:hover { background: var(--icon-bg, #f4f1ea); color: var(--carbon-black); }
     #vcRowMenu button:hover { background: var(--icon-bg, #f4f1ea); }
 
@@ -22679,7 +23007,7 @@ window.Modal = (function () {
     .cartao-card-label { font-size: 0.66rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--ink-50, #847f76); }
     .cartao-card-value { font-size: 0.85rem; color: var(--carbon-black); word-break: break-word; }
     .cartao-card-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-    .cartao-card select, .cartao-card input, .cartao-card textarea { width: 100%; padding: 8px 10px; border: 1px solid var(--border-light); border-radius: 8px; font-family: inherit; font-size: 0.85rem; background: var(--paper-white); }
+    .cartao-card select, .cartao-card input, .cartao-card textarea { width: 100%; padding: 8px 10px; border: 1px solid var(--border-light); border-radius: var(--radius-md); font-family: inherit; font-size: 0.85rem; background: var(--paper-white); }
     .cartao-card textarea { min-height: 60px; resize: vertical; }
   </style>
 </head>
@@ -22773,8 +23101,8 @@ window.Modal = (function () {
       <div class="cartoes-cards-mobile"></div>
 
       <!-- Menu de linha (excluir) -->
-      <div id="vcRowMenu" style="display:none;position:fixed;z-index:1000;background:var(--card-white,#fff);border:1px solid var(--border-light);border-radius:8px;box-shadow:0 4px 16px rgba(34,27,25,.12);padding:4px;min-width:150px">
-        <button type="button" onclick="excluirDoMenu(this)" style="display:flex;align-items:center;gap:8px;width:100%;padding:8px 10px;border:none;background:transparent;color:var(--danger);cursor:pointer;border-radius:6px;font:inherit;text-align:left;font-size:0.8rem">
+      <div id="vcRowMenu" style="display:none;position:fixed;z-index:1000;background:var(--card-white,#fff);border:1px solid var(--border-light);border-radius:var(--radius-md);box-shadow:0 4px 16px rgba(34,27,25,.12);padding:4px;min-width:150px">
+        <button type="button" onclick="excluirDoMenu(this)" style="display:flex;align-items:center;gap:8px;width:100%;padding:8px 10px;border:none;background:transparent;color:var(--danger);cursor:pointer;border-radius:var(--radius-sm);font:inherit;text-align:left;font-size:0.8rem">
           <span data-icon="trash" data-icon-size="14" style="display:inline-flex"></span>
           Excluir cartão
         </button>
@@ -23028,21 +23356,21 @@ window.Modal = (function () {
       const sid = l.solicitacao_id;
       const val = l.pdf_url;
       if (!val) {
-        if (l.erro_geracao) return '<div style="display:flex;gap:5px;justify-content:center;align-items:center;flex-wrap:nowrap"><span title="' + esc(l.erro_geracao) + '" style="display:inline-flex;align-items:center;gap:3px;color:var(--danger,#dc2626);font-weight:700;font-size:0.7rem">' + icon('x', { size: 13, style: 'vertical-align:middle' }) + 'Falha</span><button type="button" onclick="gerarPdfCartao(' + sid + ',this)" style="padding:4px 8px;border-radius:6px;border:1px solid var(--ruby-red,#AC3631);background:#fff;color:var(--ruby-red,#AC3631);font-weight:700;font-size:0.7rem;cursor:pointer;white-space:nowrap">Tentar de novo</button></div>';
-        if (l.status === 'validado') return '<button type="button" onclick="gerarPdfCartao(' + sid + ',this)" title="O PDF está sendo gerado automaticamente. Clique para gerar agora." style="padding:4px 10px;border-radius:6px;border:1px dashed var(--ink-30,#c9c4ba);background:transparent;color:var(--ink-50,#7a756c);font-weight:600;font-size:0.7rem;cursor:pointer">Gerando…</button>';
-        return '<button type="button" onclick="gerarPdfCartao(' + sid + ',this)" style="padding:4px 10px;border-radius:6px;border:1px solid var(--ruby-red,#AC3631);background:var(--ruby-red,#AC3631);color:#fff;font-weight:700;font-size:0.7rem;cursor:pointer">Gerar PDF</button>';
+        if (l.erro_geracao) return '<div style="display:flex;gap:5px;justify-content:center;align-items:center;flex-wrap:nowrap"><span title="' + esc(l.erro_geracao) + '" style="display:inline-flex;align-items:center;gap:3px;color:var(--danger,#dc2626);font-weight:700;font-size:0.7rem">' + icon('x', { size: 13, style: 'vertical-align:middle' }) + 'Falha</span><button type="button" onclick="gerarPdfCartao(' + sid + ',this)" style="padding:4px 8px;border-radius:var(--radius-sm);border:1px solid var(--ruby-red,#AC3631);background:#fff;color:var(--ruby-red,#AC3631);font-weight:700;font-size:0.7rem;cursor:pointer;white-space:nowrap">Tentar de novo</button></div>';
+        if (l.status === 'validado') return '<button type="button" onclick="gerarPdfCartao(' + sid + ',this)" title="O PDF está sendo gerado automaticamente. Clique para gerar agora." style="padding:4px 10px;border-radius:var(--radius-sm);border:1px dashed var(--ink-30,#c9c4ba);background:transparent;color:var(--ink-50,#7a756c);font-weight:600;font-size:0.7rem;cursor:pointer">Gerando…</button>';
+        return '<button type="button" onclick="gerarPdfCartao(' + sid + ',this)" style="padding:4px 10px;border-radius:var(--radius-sm);border:1px solid var(--ruby-red,#AC3631);background:var(--ruby-red,#AC3631);color:#fff;font-weight:700;font-size:0.7rem;cursor:pointer">Gerar PDF</button>';
       }
       return '<div style="display:flex;gap:5px;justify-content:center;align-items:center;flex-wrap:nowrap">'
-        + '<a href="' + esc(val) + '" rel="noopener" style="display:inline-block;padding:4px 10px;border-radius:6px;background:var(--ruby-red,#AC3631);color:#fff;font-weight:700;text-decoration:none;font-size:0.7rem">Baixar</a>'
-        + '<button type="button" onclick="gerarPdfCartao(' + sid + ',this)" title="Gerar o PDF novamente com os dados atuais" style="padding:4px 8px;border-radius:6px;border:1px solid var(--ruby-red,#AC3631);background:#fff;color:var(--ruby-red,#AC3631);font-weight:700;font-size:0.7rem;cursor:pointer;white-space:nowrap">Gerar novo</button>'
+        + '<a href="' + esc(val) + '" rel="noopener" style="display:inline-block;padding:4px 10px;border-radius:var(--radius-sm);background:var(--ruby-red,#AC3631);color:#fff;font-weight:700;text-decoration:none;font-size:0.7rem">Baixar</a>'
+        + '<button type="button" onclick="gerarPdfCartao(' + sid + ',this)" title="Gerar o PDF novamente com os dados atuais" style="padding:4px 8px;border-radius:var(--radius-sm);border:1px solid var(--ruby-red,#AC3631);background:#fff;color:var(--ruby-red,#AC3631);font-weight:700;font-size:0.7rem;cursor:pointer;white-space:nowrap">Gerar novo</button>'
         + '</div>';
     }
     function pdfCardInner(c) {
       const sid = c.solicitacao_id;
-      if (c.pdf_url) return '<div style="display:flex;gap:8px"><a href="' + esc(c.pdf_url) + '" rel="noopener" style="flex:1;padding:8px 12px;border-radius:8px;background:var(--ruby-red,#AC3631);color:#fff;font-weight:700;text-decoration:none;font-size:0.8rem;text-align:center">Baixar PDF</a><button type="button" onclick="gerarPdfCartao(' + sid + ',this)" style="padding:8px 12px;border-radius:8px;border:1px solid var(--ruby-red,#AC3631);background:#fff;color:var(--ruby-red,#AC3631);font-weight:700;font-size:0.8rem;cursor:pointer">Gerar novo</button></div>';
-      if (c.erro_geracao) return '<div style="display:flex;flex-direction:column;gap:6px;margin-top:4px"><span title="' + esc(c.erro_geracao) + '" style="display:inline-flex;align-items:center;gap:4px;color:var(--danger,#dc2626);font-weight:700;font-size:0.8rem">' + icon('x', { size: 14, style: 'vertical-align:middle' }) + 'Falha ao gerar</span><button type="button" onclick="gerarPdfCartao(' + sid + ',this)" style="padding:8px 12px;border-radius:8px;border:1px solid var(--ruby-red,#AC3631);background:#fff;color:var(--ruby-red,#AC3631);font-weight:700;font-size:0.8rem;cursor:pointer">Tentar de novo</button></div>';
-      if (c.status === 'validado') return '<button type="button" onclick="gerarPdfCartao(' + sid + ',this)" title="O PDF está sendo gerado automaticamente. Toque para gerar agora." style="margin-top:4px;padding:8px 12px;border-radius:8px;border:1px dashed var(--ink-30,#c9c4ba);background:transparent;color:var(--ink-50,#7a756c);font-weight:600;font-size:0.8rem;cursor:pointer">Gerando…</button>';
-      return '<button type="button" onclick="gerarPdfCartao(' + sid + ',this)" style="margin-top:4px;padding:8px 12px;border-radius:8px;border:1px solid var(--ruby-red,#AC3631);background:#fff;color:var(--ruby-red,#AC3631);font-weight:700;font-size:0.8rem;cursor:pointer">Gerar PDF</button>';
+      if (c.pdf_url) return '<div style="display:flex;gap:8px"><a href="' + esc(c.pdf_url) + '" rel="noopener" style="flex:1;padding:8px 12px;border-radius:var(--radius-md);background:var(--ruby-red,#AC3631);color:#fff;font-weight:700;text-decoration:none;font-size:0.8rem;text-align:center">Baixar PDF</a><button type="button" onclick="gerarPdfCartao(' + sid + ',this)" style="padding:8px 12px;border-radius:var(--radius-md);border:1px solid var(--ruby-red,#AC3631);background:#fff;color:var(--ruby-red,#AC3631);font-weight:700;font-size:0.8rem;cursor:pointer">Gerar novo</button></div>';
+      if (c.erro_geracao) return '<div style="display:flex;flex-direction:column;gap:6px;margin-top:4px"><span title="' + esc(c.erro_geracao) + '" style="display:inline-flex;align-items:center;gap:4px;color:var(--danger,#dc2626);font-weight:700;font-size:0.8rem">' + icon('x', { size: 14, style: 'vertical-align:middle' }) + 'Falha ao gerar</span><button type="button" onclick="gerarPdfCartao(' + sid + ',this)" style="padding:8px 12px;border-radius:var(--radius-md);border:1px solid var(--ruby-red,#AC3631);background:#fff;color:var(--ruby-red,#AC3631);font-weight:700;font-size:0.8rem;cursor:pointer">Tentar de novo</button></div>';
+      if (c.status === 'validado') return '<button type="button" onclick="gerarPdfCartao(' + sid + ',this)" title="O PDF está sendo gerado automaticamente. Toque para gerar agora." style="margin-top:4px;padding:8px 12px;border-radius:var(--radius-md);border:1px dashed var(--ink-30,#c9c4ba);background:transparent;color:var(--ink-50,#7a756c);font-weight:600;font-size:0.8rem;cursor:pointer">Gerando…</button>';
+      return '<button type="button" onclick="gerarPdfCartao(' + sid + ',this)" style="margin-top:4px;padding:8px 12px;border-radius:var(--radius-md);border:1px solid var(--ruby-red,#AC3631);background:#fff;color:var(--ruby-red,#AC3631);font-weight:700;font-size:0.8rem;cursor:pointer">Gerar PDF</button>';
     }
     function pdfSpinnerHtml(compact) {
       const sz = compact ? 13 : 15;
@@ -23195,7 +23523,7 @@ window.Modal = (function () {
               '<div class="cartao-card-data">' + esc(dataFmt) + '</div>' +
             '</div>' +
             '<div style="display:flex;align-items:center;gap:8px">' +
-              '<span style="display:inline-flex;align-items:center;padding:4px 10px;border-radius:6px;font-size:0.72rem;font-weight:700;background:' + statusColor.bg + ';color:' + statusColor.text + '">' + esc(statusLabel) + '</span>' +
+              '<span style="display:inline-flex;align-items:center;padding:4px 10px;border-radius:var(--radius-sm);font-size:0.72rem;font-weight:700;background:' + statusColor.bg + ';color:' + statusColor.text + '">' + esc(statusLabel) + '</span>' +
               (IS_ADMIN ? '<button type="button" onclick="deleteCartao(' + c.solicitacao_id + ',this)" title="Excluir permanentemente" aria-label="Excluir" style="border:none;background:transparent;cursor:pointer;color:var(--danger);padding:2px;display:inline-flex;align-items:center">' + icon('trash', { size: 18 }) + '</button>' : '') +
             '</div>' +
           '</div>' +
@@ -23725,7 +24053,15 @@ app.use(cors({
   },
   credentials: true,
 }));
-app.use(express.json({ limit: "1mb" }));
+// O webhook do ClickUp valida a assinatura HMAC sobre o corpo CRU (Buffer). Se o
+// express.json() parsear o corpo antes, ele vira objeto e o crypto.update() quebra
+// (ERR_INVALID_ARG_TYPE → 500, e o ClickUp fica re-tentando). Por isso o parser global
+// pula essa rota; o próprio webhook tem o seu express.raw() para receber o corpo cru.
+const _jsonParser = express.json({ limit: "1mb" });
+app.use((req, res, next) => {
+  if (req.path === "/api/webhook/clickup") return next();
+  _jsonParser(req, res, next);
+});
 app.use(express.urlencoded({ extended: true, limit: "1mb" }));
 
 app.set("trust proxy", 1);
@@ -24597,6 +24933,39 @@ export const FORM_SCHEMAS: Record<string, FormSchema> = {
           { value: 'fotos', label: 'Sessão de Fotos' },
         ],
       },
+    ],
+  },
+
+  'convite-evento': {
+    tipo: 'convite-evento',
+    label: 'Convite de Evento',
+    description: 'Gerador de convite de evento (chamado via API pelo Sistema de Eventos). Sem formulario proprio.',
+    is_automation: false,
+    has_clickup: false,
+    has_approval_flow: false,
+    has_downloadable_artifact: true,
+    template_variant_field: 'num_palestrantes',
+    fields: [
+      { name: 'tipo_evento',      label: 'Tipo de evento',      type: 'select', required: true,
+        options: [ { value: 'presencial', label: 'Presencial' }, { value: 'online', label: 'Online' } ] },
+      { name: 'titulo',           label: 'Titulo do evento',    type: 'text',   required: true },
+      { name: 'num_palestrantes', label: 'Numero de palestrantes', type: 'select', required: true,
+        options: [ { value: '1', label: '1' }, { value: '2', label: '2' }, { value: '3', label: '3' } ] },
+      { name: 'horario_brasilia', label: 'Mostrar "Horario de Brasilia"', type: 'select',
+        options: [ { value: 'sim', label: 'Sim' }, { value: 'nao', label: 'Nao' } ] },
+      { name: 'data',             label: 'Data',                type: 'text',   required: true },
+      { name: 'horario',          label: 'Horario',             type: 'text',   required: true },
+      { name: 'local_nome',       label: 'Nome do local',       type: 'text',   required: true },
+      { name: 'endereco',         label: 'Endereco',            type: 'textarea' },
+      { name: 'palestrante_1_nome',  label: 'Palestrante 1 - Nome',  type: 'text' },
+      { name: 'palestrante_1_cargo', label: 'Palestrante 1 - Cargo', type: 'text' },
+      { name: 'palestrante_1_foto',  label: 'Palestrante 1 - Foto',  type: 'file' },
+      { name: 'palestrante_2_nome',  label: 'Palestrante 2 - Nome',  type: 'text' },
+      { name: 'palestrante_2_cargo', label: 'Palestrante 2 - Cargo', type: 'text' },
+      { name: 'palestrante_2_foto',  label: 'Palestrante 2 - Foto',  type: 'file' },
+      { name: 'palestrante_3_nome',  label: 'Palestrante 3 - Nome',  type: 'text' },
+      { name: 'palestrante_3_cargo', label: 'Palestrante 3 - Cargo', type: 'text' },
+      { name: 'palestrante_3_foto',  label: 'Palestrante 3 - Foto',  type: 'file' },
     ],
   },
 
@@ -26208,25 +26577,49 @@ router.patch("/art-templates/:id/activate", requireRole("admin"), async (req, re
   }
 });
 
-// DELETE /art-templates/:id — delete (blocked if active or last of tipo)
+// DELETE /art-templates/:id — permite deletar inclusive o ativo (promove outro do mesmo
+// grupo tipo+variante a ativo). Bloqueia apagar o ÚLTIMO template de um tipo que ainda
+// tem solicitações, a menos que ?force=true seja enviado (confirmação explícita do admin).
 router.delete("/art-templates/:id", requireRole("admin"), async (req, res): Promise<void> => {
   try {
     const id = parseInt(String(req.params.id));
     if (isNaN(id)) { res.status(400).json({ error: "ID inválido" }); return; }
+    const force = req.query.force === "true" || req.query.force === "1";
     const [target] = await db.select().from(artTemplatesTable).where(eq(artTemplatesTable.id, id));
     if (!target) { res.status(404).json({ error: "Template não encontrado" }); return; }
-    if (target.is_active) {
-      res.status(400).json({ error: "Não é possível deletar o template ativo. Ative outro primeiro." }); return;
-    }
+
     const siblings = await db.select({ id: artTemplatesTable.id }).from(artTemplatesTable).where(eq(artTemplatesTable.tipo, target.tipo));
-    if (siblings.length <= 1) {
+    // Proteção: apagar o ÚLTIMO template de um tipo que ainda tem solicitações deixa essas
+    // solicitações sem como gerar a arte. Exige confirmação explícita (force).
+    if (siblings.length <= 1 && !force) {
       const [{ total }] = await db.select({ total: count() }).from(solicitacoesTable)
         .where(eq(solicitacoesTable.tipo_solicitacao, target.tipo));
       if (total > 0) {
-        res.status(400).json({ error: `Este é o único template do tipo "${target.tipo}" e há ${total} solicitação(ões) associada(s). Crie outro template antes de deletar este.` }); return;
+        res.status(409).json({
+          code: "last_template_with_solicitacoes",
+          total,
+          error: `Este é o único template do tipo "${target.tipo}" e há ${total} solicitação(ões) associada(s). Se deletar, elas ficam sem template até você criar outro.`,
+        });
+        return;
       }
     }
+
     await db.delete(artTemplatesTable).where(eq(artTemplatesTable.id, id));
+
+    // Se o deletado era o ativo e ainda existem outros do mesmo grupo (tipo+variante),
+    // promove o mais recente a ativo — assim o grupo não fica sem template ativo
+    // (a geração ignora os inativos).
+    if (target.is_active) {
+      const sameGroupWhere = target.variant_value !== null && target.variant_value !== undefined
+        ? and(eq(artTemplatesTable.tipo, target.tipo), eq(artTemplatesTable.variant_value, target.variant_value))
+        : and(eq(artTemplatesTable.tipo, target.tipo), isNull(artTemplatesTable.variant_value));
+      const [next] = await db.select({ id: artTemplatesTable.id }).from(artTemplatesTable)
+        .where(sameGroupWhere).orderBy(desc(artTemplatesTable.id)).limit(1);
+      if (next) {
+        await db.update(artTemplatesTable).set({ is_active: true }).where(eq(artTemplatesTable.id, next.id));
+      }
+    }
+
     res.json({ success: true });
   } catch (err: any) {
     req.log.error({ err, body: req.body }, "Erro ao deletar art-template");
@@ -28575,6 +28968,90 @@ export async function notificarCartaoValidadoChat(params: {
 ```
 
 
+## File: artifacts/api-server/src/routes/convites.ts
+
+```
+import os from "os";
+import path from "path";
+import fs from "fs";
+import { Router } from "express";
+import { gerarArteBuffer } from "../services/art-generator";
+import { uploadToR2 } from "./r2";
+import { logger } from "../lib/logger";
+
+const router = Router();
+
+/**
+ * POST /api/gerar-convite
+ * Gera um convite de evento a partir de um template "convite-evento" e retorna a URL no R2.
+ * Chamado pelo Sistema de Eventos (maquina-a-maquina).
+ *
+ * Auth: header x-internal-secret == process.env.INTERNAL_API_SECRET
+ *
+ * Body JSON:
+ *   { dados: { tipo_evento, titulo, num_palestrantes, horario_brasilia, data, horario,
+ *              local_nome, endereco, palestrante_1_nome, ... palestrante_3_foto } }
+ *
+ * Resposta: { url: string }
+ */
+router.post("/gerar-convite", async (req, res): Promise<void> => {
+  try {
+    // 1) Auth interna (mesmo padrao das rotas n8n -> Hub)
+    const secret = process.env.INTERNAL_API_SECRET;
+    const provided = req.headers["x-internal-secret"];
+    if (!secret || provided !== secret) {
+      res.status(401).json({ error: "Nao autorizado" });
+      return;
+    }
+
+    // 2) Validar payload
+    const dados = (req.body && req.body.dados) as Record<string, unknown> | undefined;
+    if (!dados || typeof dados !== "object") {
+      res.status(400).json({ error: "Campo 'dados' (objeto) e obrigatorio" });
+      return;
+    }
+    if (!dados.titulo) {
+      res.status(400).json({ error: "Campo 'dados.titulo' e obrigatorio" });
+      return;
+    }
+
+    // 3) Gerar a arte (reusa o motor existente; escolhe o template pela variante num_palestrantes)
+    const resultado = await gerarArteBuffer("convite-evento", dados);
+    if (!resultado) {
+      res.status(404).json({
+        error: "Nenhum template ativo encontrado para convite-evento com essa variante (num_palestrantes).",
+      });
+      return;
+    }
+
+    const { buffer, ext, mimetype } = resultado;
+
+    // 4) Gravar em arquivo temporario (uploadToR2 le de disco)
+    const filename = `convite-evento-${Date.now()}.${ext}`;
+    const tmpPath = path.join(os.tmpdir(), filename);
+    await fs.promises.writeFile(tmpPath, buffer);
+
+    // 5) Subir no R2. Convite nao tem solicitacao -> usa id sintetico 0 e campo "convite".
+    //    (uploadToR2 apaga o arquivo temporario ao final.)
+    const url = await uploadToR2(
+      { path: tmpPath, originalname: `convite-evento.${ext}`, mimetype },
+      0,
+      "convite",
+    );
+
+    logger.info({ url }, "[convite] gerado e enviado ao R2");
+    res.json({ url });
+  } catch (err: any) {
+    logger.error({ err }, "[convite] erro ao gerar convite");
+    res.status(500).json({ error: "Erro ao gerar convite", detalhe: err?.message });
+  }
+});
+
+export default router;
+
+```
+
+
 ## File: artifacts/api-server/src/routes/forms.ts
 
 ```
@@ -28583,6 +29060,7 @@ import { TIPOS_AUTOMACAO_SET } from "../config/tipos";
 import { fetchWithTimeout } from "../lib/http";
 import multer from "multer";
 import os from "os";
+import fs from "fs";
 import { db } from "@workspace/db";
 import { solicitacoesTable, arquivosTable, cartaoAprovacoesTable, usersTable, activityLogTable } from "@workspace/db";
 import { eq, desc, and, ne, sql, inArray } from "drizzle-orm";
@@ -29409,6 +29887,16 @@ router.post("/solicitacoes/:id/entrega", requireAuth, async (req, res): Promise<
       .set({ entrega_links: links, status: novoStatus, updated_at: new Date() })
       .where(eq(solicitacoesTable.id, id));
 
+    // Dispara o e-mail na própria entrega (ponto confiável), sem depender do webhook
+    // do ClickUp — que pode não sincronizar a volta para "em-revisao" e, por isso,
+    // ignorar a re-aprovação. Se a demanda já passou por aprovação antes
+    // (sent.aprovacao gravado), é uma re-aprovação após alteração. O dedup de
+    // notificações evita e-mail duplicado caso o webhook também dispare.
+    if (novoStatus === "em-aprovacao") {
+      const sent = (solicitacao.notifications_sent as Record<string, string> | null) || {};
+      notificarMarcoBg(id, sent.aprovacao ? "reaprovacao" : "aprovacao");
+    }
+
     logger.info({ id, count: links.length }, "Links de entrega salvos");
     logAtividade({
       userEmail: user?.email, userName: user?.name,
@@ -29567,7 +30055,7 @@ router.get("/solicitacoes/:id/entrega", requireAuth, async (req, res): Promise<v
   }
 });
 
-router.post("/solicitacoes/:id/alteracao", requireAuth, async (req, res): Promise<void> => {
+router.post("/solicitacoes/:id/alteracao", requireAuth, upload.array("arquivos", 10), async (req, res): Promise<void> => {
   try {
     const user = req.session.user!;
     const id = parseInt(String(req.params.id), 10);
@@ -29578,37 +30066,81 @@ router.post("/solicitacoes/:id/alteracao", requireAuth, async (req, res): Promis
       res.status(400).json({ error: "Mensagem obrigatória" });
       return;
     }
+    const arquivos = (req.files as Express.Multer.File[] | undefined) ?? [];
+    const limparTemp = () => arquivos.forEach((f) => { try { fs.unlinkSync(f.path); } catch {} });
 
     const conditions: ReturnType<typeof eq>[] = [eq(solicitacoesTable.id, id), eq(solicitacoesTable.user_email, user.email)];
     const [solicitacao] = await db.select().from(solicitacoesTable).where(and(...conditions));
-    if (!solicitacao) { res.status(404).json({ error: "Solicitação não encontrada" }); return; }
-    if (!solicitacao.clickup_task_id) { res.status(400).json({ error: "Task não encontrada no ClickUp" }); return; }
+    if (!solicitacao) { limparTemp(); res.status(404).json({ error: "Solicitação não encontrada" }); return; }
+    if (!solicitacao.clickup_task_id) { limparTemp(); res.status(400).json({ error: "Task não encontrada no ClickUp" }); return; }
 
     const token = process.env.CLICKUP_API_TOKEN || "";
+    const taskId = solicitacao.clickup_task_id;
 
-    let mentionText = "";
+    // Assignees da task → menção REAL. A API só marca/notifica via bloco "tag" com o user id;
+    // um "@username" dentro de comment_text vira texto cru e não notifica ninguém.
+    let assigneeIds: number[] = [];
     try {
-      const taskRes = await fetchWithTimeout(`https://api.clickup.com/api/v2/task/${solicitacao.clickup_task_id}`, {
+      const taskRes = await fetchWithTimeout(`https://api.clickup.com/api/v2/task/${taskId}`, {
         headers: { "Authorization": token },
       });
       if (taskRes.ok) {
-        const taskData = await taskRes.json() as { assignees?: Array<{ id: number; username: string }> };
-        const firstAssignee = taskData.assignees?.[0];
-        if (firstAssignee) {
-          mentionText = `@${firstAssignee.username} `;
-        }
+        const taskData = await taskRes.json() as { assignees?: Array<{ id: number }> };
+        assigneeIds = (taskData.assignees ?? []).map((a) => a.id).filter((x): x is number => typeof x === "number");
       }
     } catch {}
 
-    const isMultiple = /^\d+\./.test(mensagem.trim());
-    const comentario = isMultiple
-      ? `${mentionText}✏️ Alterações solicitadas por ${user.name}:\n\n${mensagem.trim()}`
-      : `${mentionText}✏️ Alteração solicitada por ${user.name}:\n\n${mensagem.trim()}`;
+    // Anexa cada arquivo na própria task (aba Anexos) e captura a URL pública retornada
+    // pela API, para colocar o link clicável dentro do próprio comentário. Best-effort:
+    // loga falha sem abortar; o binário vai via multipart (a API não aceita URL "na nuvem").
+    const anexados: Array<{ nome: string; url: string }> = [];
+    for (const f of arquivos) {
+      try {
+        const fd = new FormData();
+        fd.append("attachment", new Blob([fs.readFileSync(f.path)], { type: f.mimetype || "application/octet-stream" }), f.originalname);
+        const attRes = await fetchWithTimeout(`https://api.clickup.com/api/v2/task/${taskId}/attachment`, {
+          method: "POST",
+          headers: { "Authorization": token }, // sem Content-Type: o FormData define o boundary
+          body: fd,
+        }, 30000);
+        if (attRes.ok) {
+          const att = await attRes.json().catch(() => ({})) as { url?: string; title?: string };
+          anexados.push({ nome: att.title || f.originalname, url: att.url || "" });
+        } else {
+          logger.warn({ status: attRes.status, file: f.originalname }, "Falha ao anexar arquivo no ClickUp");
+        }
+      } catch (e) {
+        logger.warn({ err: e, file: f.originalname }, "Erro ao anexar arquivo no ClickUp");
+      } finally {
+        try { fs.unlinkSync(f.path); } catch {}
+      }
+    }
 
-    const commentRes = await fetchWithTimeout(`https://api.clickup.com/api/v2/task/${solicitacao.clickup_task_id}/comment`, {
+    // Comentário em blocos ("comment") para a menção funcionar de verdade (tag + user id).
+    const isMultiple = /^\d+\./.test(mensagem.trim());
+    const cabecalho = isMultiple
+      ? `✏️ Alterações solicitadas por ${user.name}:`
+      : `✏️ Alteração solicitada por ${user.name}:`;
+    const blocks: Array<Record<string, unknown>> = [];
+    for (const aid of assigneeIds) {
+      blocks.push({ type: "tag", user: { id: aid } });
+      blocks.push({ text: " " });
+    }
+    blocks.push({ text: `${cabecalho}\n\n${mensagem.trim()}` });
+    if (anexados.length > 0) {
+      blocks.push({ text: `\n\n\ud83d\udcce Anexo${anexados.length > 1 ? "s" : ""}:` });
+      for (const a of anexados) {
+        blocks.push({ text: "\n" });
+        // Nome do arquivo como link clicável. Se a URL não veio na resposta, cai no nome puro.
+        if (a.url) blocks.push({ text: a.nome, attributes: { link: a.url } });
+        else blocks.push({ text: a.nome });
+      }
+    }
+
+    const commentRes = await fetchWithTimeout(`https://api.clickup.com/api/v2/task/${taskId}/comment`, {
       method: "POST",
       headers: { "Authorization": token, "Content-Type": "application/json" },
-      body: JSON.stringify({ comment_text: comentario }),
+      body: JSON.stringify({ comment: blocks, notify_all: true }),
     });
 
     if (!commentRes.ok) {
@@ -29629,7 +30161,15 @@ router.post("/solicitacoes/:id/alteracao", requireAuth, async (req, res): Promis
       }).catch(() => {});
     }
     await db.update(solicitacoesTable)
-      .set({ status: "em-revisao", updated_at: new Date() })
+      .set({
+        status: "em-revisao",
+        updated_at: new Date(),
+        // Limpa só a flag de re-aprovação para que a PRÓXIMA volta a "em-aprovacao"
+        // dispare o e-mail de novo. Mantém "aprovacao" como marcador de que a demanda
+        // já passou por aprovação uma vez (o webhook/entrega usa isso para escolher
+        // entre o e-mail de 1ª aprovação e o de re-aprovação).
+        notifications_sent: sql`COALESCE(${solicitacoesTable.notifications_sent}, '{}'::jsonb) - 'reaprovacao'`,
+      })
       .where(eq(solicitacoesTable.id, id));
 
     await logAtividade({
@@ -30291,6 +30831,7 @@ import formsRouter from "./forms";
 import adminRouter from "./admin";
 import assetsRouter from "./assets";
 import webhookRouter from "./webhook";
+import convitesRouter from "./convites";
 
 const router: IRouter = Router();
 
@@ -30299,6 +30840,7 @@ router.use(formsRouter);
 router.use("/admin", adminRouter);
 router.use("/admin/assets", assetsRouter);
 router.use(webhookRouter);
+router.use(convitesRouter);
 
 export default router;
 
@@ -30398,7 +30940,7 @@ import crypto from "crypto";
 import express, { Router } from "express";
 import { db } from "@workspace/db";
 import { solicitacoesTable } from "@workspace/db";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { logger } from "../lib/logger";
 import { mapClickUpStatus } from "../config/clickup-status";
 import { notificarMarcoBg } from "../services/notifications";
@@ -30515,9 +31057,16 @@ router.post(
         detalhes: { de: statusAnterior, para: hubStatus, clickup_status: rawStatus },
       });
 
+      const patch: Record<string, unknown> = { status: hubStatus, updated_at: new Date() };
+      if (hubStatus === "em-revisao") {
+        // Voltou para revisão (alteração) — libera o e-mail de re-aprovação para a
+        // próxima volta a "em-aprovacao". Cobre o caso em que a alteração é feita
+        // direto no ClickUp (sem passar pelo chat do Hub / endpoint /alteracao).
+        patch.notifications_sent = sql`COALESCE(${solicitacoesTable.notifications_sent}, '{}'::jsonb) - 'reaprovacao'`;
+      }
       await db
         .update(solicitacoesTable)
-        .set({ status: hubStatus, updated_at: new Date() })
+        .set(patch)
         .where(eq(solicitacoesTable.clickup_task_id, taskId));
 
       logger.info(
@@ -30532,7 +31081,10 @@ router.post(
 
       if (statusAnterior !== hubStatus) {
         if (hubStatus === "em-aprovacao") {
-          notificarMarcoBg(solicitacao.id, "aprovacao");
+          // Se já houve uma aprovação antes (sent.aprovacao gravado), esta é uma
+          // re-aprovação após alteração → e-mail com mensagem própria.
+          const sent = (solicitacao.notifications_sent as Record<string, string> | null) || {};
+          notificarMarcoBg(solicitacao.id, sent.aprovacao ? "reaprovacao" : "aprovacao");
         }
         if (hubStatus === "concluido" && solicitacao.tipo_solicitacao !== "cartao-visita-fisico") {
           notificarMarcoBg(solicitacao.id, "concluida");
@@ -30545,7 +31097,6 @@ router.post(
 );
 
 export default router;
-
 ```
 
 
@@ -31643,7 +32194,7 @@ export const TIPOS_COM_APROVACAO = new Set([
   "apresentacao-atualizar",
 ]);
 
-export type Marco = "recebida" | "aprovacao" | "concluida" | "prazo_alterado";
+export type Marco = "recebida" | "aprovacao" | "reaprovacao" | "concluida" | "prazo_alterado";
 
 export async function notificarMarco(solicitacaoId: number, marco: Marco): Promise<void> {
   if (!WEBHOOK_URL) {
@@ -31665,7 +32216,7 @@ export async function notificarMarco(solicitacaoId: number, marco: Marco): Promi
     const isFisico = tipo === "cartao-visita-fisico";
 
     if (marco === "recebida" && isAutomacao) return;
-    if (marco === "aprovacao" && !TIPOS_COM_APROVACAO.has(tipo)) return;
+    if ((marco === "aprovacao" || marco === "reaprovacao") && !TIPOS_COM_APROVACAO.has(tipo)) return;
 
     const sent = (sol.notifications_sent as Record<string, string>) || {};
     if (marco !== "prazo_alterado" && sent[marco]) return;
@@ -31914,7 +32465,7 @@ import sharp from 'sharp';
 import * as fontkitLib from 'fontkit';
 import * as fs from 'fs';
 import * as path from 'path';
-import { ArtTemplate, TextLineLayer, TextBlockLayer, ImageLayer, ShapeLayer } from '../types/art-template';
+import { ArtTemplate, TextLineLayer, TextBlockLayer, ImageLayer, ShapeLayer, AVAILABLE_FONTS } from '../types/art-template';
 import { logger } from '../lib/logger';
 import { CONTRATOS_OPTS, MARCAS_OPTS } from '../config/form-schemas';
 
@@ -31968,12 +32519,11 @@ function loadFont(file: string): any {
   return font;
 }
 
-const FONT_FILES: Record<string, string> = {
-  'Taviraj Light':           'Taviraj-Light.woff2',
-  'Nunito Sans Light':       'NunitoSans-Light.woff2',
-  'Ivy Journal Light':       'IvyJournal-Light.ttf',
-  'Roobert PRO TRIAL Light': 'RoobertPROTRIAL-Light.otf',
-};
+// Fonte única: deriva de AVAILABLE_FONTS (em ../types/art-template), que também é
+// usada pela validação do backend. Assim a lista nunca dessincroniza entre render e save.
+const FONT_FILES: Record<string, string> = Object.fromEntries(
+  AVAILABLE_FONTS.map((f) => [f.family, f.file])
+);
 
 for (const file of Object.values(FONT_FILES)) {
   try { loadFont(file); } catch (err) { logger.warn({ file, err }, 'render: falha ao pré-carregar fonte'); }
@@ -31981,7 +32531,13 @@ for (const file of Object.values(FONT_FILES)) {
 
 function getFont(family: string): any {
   const file = FONT_FILES[family];
-  if (!file) throw new Error(`Fonte desconhecida: ${family}`);
+  if (!file) {
+    // Fonte fora da lista (ex.: template legado ou nome inválido): em vez de derrubar a
+    // layer — o que faria o texto sumir sem aviso —, cai na primeira fonte disponível.
+    const fallback = AVAILABLE_FONTS[0];
+    logger.warn({ family, fallback: fallback?.family }, 'render: fonte desconhecida, usando fallback');
+    return loadFont(fallback.file);
+  }
   return loadFont(file);
 }
 
@@ -32037,19 +32593,21 @@ async function getRemoteAsset(url: string): Promise<Buffer> {
   return fs.promises.readFile(fullPath);
 }
 
-function measureTextWidth(font: any, text: string, fontSize: number): number {
+function measureTextWidth(font: any, text: string, fontSize: number, letterSpacing = 0): number {
   const run = font.layout(text);
   const scale = fontSize / font.unitsPerEm;
-  return run.positions.reduce((s: number, p: any) => s + p.xAdvance, 0) * scale;
+  const base = run.positions.reduce((s: number, p: any) => s + p.xAdvance, 0) * scale;
+  const gaps = Math.max(0, run.glyphs.length - 1) * letterSpacing;
+  return base + gaps;
 }
 
-function wrapTextToLines(font: any, text: string, fontSize: number, maxWidth: number): string[] {
+function wrapTextToLines(font: any, text: string, fontSize: number, maxWidth: number, letterSpacing = 0): string[] {
   const words = text.split(/\s+/);
   const lines: string[] = [];
   let current = '';
   for (const word of words) {
     const test = current ? `${current} ${word}` : word;
-    if (measureTextWidth(font, test, fontSize) <= maxWidth) {
+    if (measureTextWidth(font, test, fontSize, letterSpacing) <= maxWidth) {
       current = test;
     } else {
       if (current) lines.push(current);
@@ -32060,7 +32618,7 @@ function wrapTextToLines(font: any, text: string, fontSize: number, maxWidth: nu
   return lines;
 }
 
-async function renderTextBuffer(font: any, text: string, fontSize: number, fill: string) {
+async function renderTextBuffer(font: any, text: string, fontSize: number, fill: string, letterSpacing = 0) {
   const run = font.layout(text);
   const scale = fontSize / font.unitsPerEm;
   const ascent = font.ascent * scale;
@@ -32069,21 +32627,23 @@ async function renderTextBuffer(font: any, text: string, fontSize: number, fill:
   const svgHeight = Math.ceil(ascent + descent);
 
   let x = 0;
+  let spacing = 0; // px de letter-spacing acumulados antes do glifo atual
   const pathElements: string[] = [];
   for (let i = 0; i < run.glyphs.length; i++) {
     const glyph = run.glyphs[i];
     const pos = run.positions[i];
     const pathData = glyph.path.toSVG();
     if (pathData) {
-      const tx = (x + pos.xOffset) * scale;
+      const tx = (x + pos.xOffset) * scale + spacing;
       const ty = baselineY + pos.yOffset * scale;
       pathElements.push(
         `<path d="${pathData}" transform="translate(${tx.toFixed(2)},${ty.toFixed(2)}) scale(${scale.toFixed(5)},-${scale.toFixed(5)})" fill="${fill}"/>`
       );
     }
     x += pos.xAdvance;
+    if (i < run.glyphs.length - 1) spacing += letterSpacing; // não aplica após o último glifo
   }
-  const totalWidth = Math.ceil(x * scale) + 4;
+  const totalWidth = Math.ceil(x * scale + spacing) + 4;
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${totalWidth}" height="${svgHeight}">${pathElements.join('')}</svg>`;
   return {
     buffer: await sharp(Buffer.from(svg)).png().toBuffer(),
@@ -32124,14 +32684,17 @@ async function renderTextLine(
   composites: sharp.OverlayOptions[],
   ctx?: { tipo?: string; layoutId?: string | number }
 ) {
-  const text = substitute(layer.content, data, ctx);
+  let text = substitute(layer.content, data, ctx);
+  if (layer.text_transform === 'uppercase') text = text.toUpperCase();
+  else if (layer.text_transform === 'capitalize-first' && text) text = text.charAt(0).toUpperCase() + text.slice(1);
   if (!text.trim()) return;
   const font = getFont(layer.font_family);
+  const letterSpacing = layer.letter_spacing || 0;
 
   let fontSize = layer.font_size;
   {
     // Auto-fit por padrão: encolhe pra caber na largura mesmo sem auto_fit.enabled.
-    const natural = measureTextWidth(font, text, fontSize);
+    const natural = measureTextWidth(font, text, fontSize, letterSpacing);
     if (natural > layer.w) {
       const minFont = layer.auto_fit?.min_font_size ?? Math.round(layer.font_size * 0.5);
       const scaled = Math.floor(fontSize * (layer.w / natural));
@@ -32139,7 +32702,7 @@ async function renderTextLine(
     }
   }
 
-  const { buffer, width } = await renderTextBuffer(font, text, fontSize, layer.color);
+  const { buffer, width } = await renderTextBuffer(font, text, fontSize, layer.color, letterSpacing);
   composites.push({
     input: buffer,
     top: topForText(font, fontSize, layer.y),
@@ -32153,15 +32716,18 @@ async function renderTextBlock(
   composites: sharp.OverlayOptions[],
   ctx?: { tipo?: string; layoutId?: string | number }
 ) {
-  const text = substitute(layer.content, data, ctx);
+  let text = substitute(layer.content, data, ctx);
+  if (layer.text_transform === 'uppercase') text = text.toUpperCase();
+  else if (layer.text_transform === 'capitalize-first' && text) text = text.charAt(0).toUpperCase() + text.slice(1);
   const font = getFont(layer.font_family);
+  const letterSpacing = layer.letter_spacing || 0;
 
   // Build wrapped lines for a given font size (forced \n breaks + word-wrap within layer.w)
   const buildLines = (fs: number): string[] => {
     const result: string[] = [];
     for (const userLine of text.split('\n')) {
       if (userLine === '') result.push(''); // blank spacer
-      else result.push(...wrapTextToLines(font, userLine, fs, layer.w));
+      else result.push(...wrapTextToLines(font, userLine, fs, layer.w, letterSpacing));
     }
     return result;
   };
@@ -32177,7 +32743,7 @@ async function renderTextBlock(
     const lh = Math.max(layer.line_height * (fontSize / layer.font_size), naturalLh);
     const ch = allLines.length * lh;
     const maxW = allLines.reduce(
-      (max, l) => (l ? Math.max(max, measureTextWidth(font, l, fontSize)) : max),
+      (max, l) => (l ? Math.max(max, measureTextWidth(font, l, fontSize, letterSpacing)) : max),
       0
     );
     if (ch <= layer.h && maxW <= layer.w) break;
@@ -32198,7 +32764,7 @@ async function renderTextBlock(
 
   for (const line of allLines) {
     if (line !== '') {
-      const { buffer, width } = await renderTextBuffer(font, line, fontSize, layer.color);
+      const { buffer, width } = await renderTextBuffer(font, line, fontSize, layer.color, letterSpacing);
       composites.push({
         input: buffer,
         top: topForText(font, fontSize, yCursor),
@@ -32207,6 +32773,16 @@ async function renderTextBlock(
     }
     yCursor += lineHeight;
   }
+}
+
+// Converte crop_focus do layer na opção `position` do sharp (usada no fit:'cover').
+// 'attention' faz o sharp recortar pela região mais saliente — tipicamente o rosto,
+// resolvendo o caso de fotos verticais que cortavam a cabeça.
+function cropPosition(focus?: string): any {
+  if (focus === 'top') return 'top';
+  if (focus === 'bottom') return 'bottom';
+  if (focus === 'attention') return sharp.strategy.attention;
+  return 'centre';
 }
 
 async function renderImage(
@@ -32261,8 +32837,10 @@ async function renderImage(
       return;
     }
     const fitMode = isCircle ? 'cover' : (layer.resize_mode ?? 'contain');
+    const resizeOpts: sharp.ResizeOptions = { fit: fitMode, background: { r: 0, g: 0, b: 0, alpha: 0 } };
+    if (fitMode === 'cover') resizeOpts.position = cropPosition(layer.crop_focus);
     input = await sharp(raw)
-      .resize(safeW, safeH, { fit: fitMode, background: { r: 0, g: 0, b: 0, alpha: 0 } })
+      .resize(safeW, safeH, resizeOpts)
       .toBuffer();
   } else {
     const meta = await sharp(raw).metadata();
@@ -32288,7 +32866,7 @@ async function renderImage(
       `</svg>`
     );
     input = await sharp(input)
-      .resize(size, size, { fit: 'cover' })
+      .resize(size, size, { fit: 'cover', position: cropPosition(layer.crop_focus) })
       .composite([{ input: mask, blend: 'dest-in' }])
       .png()
       .toBuffer();
@@ -32479,6 +33057,8 @@ export type TextLineLayer = LayerBase & {
   font_size: number;
   color: string;
   align: 'left' | 'center' | 'right';
+  letter_spacing?: number;                 // px extras entre glifos (kerning); default 0
+  text_transform?: 'none' | 'uppercase' | 'capitalize-first'; // caixa do texto no render; default 'none'
   auto_fit?: {
     enabled: boolean;
     min_font_size: number;
@@ -32497,6 +33077,8 @@ export type TextBlockLayer = LayerBase & {
   color: string;
   align: 'left' | 'center' | 'right';
   vertical_align?: 'top' | 'middle' | 'bottom';
+  letter_spacing?: number;                 // px extras entre glifos (kerning); default 0
+  text_transform?: 'none' | 'uppercase' | 'capitalize-first'; // caixa do texto no render; default 'none'
   auto_fit?: {
     enabled?: boolean;
     min_font_size?: number;
@@ -32517,6 +33099,9 @@ export type ImageLayer = LayerBase & {
       };
   blend_mode?: 'normal' | 'screen' | 'multiply';
   resize_mode?: 'contain' | 'cover' | 'fill';
+  // Ponto de foco do recorte quando a imagem é cortada (círculo ou resize 'cover').
+  // 'attention' = sharp detecta a região mais saliente (tipicamente o rosto). default 'center'.
+  crop_focus?: 'center' | 'top' | 'bottom' | 'attention';
   shape?: 'rectangle' | 'circle';
   border?: {
     width: number;
@@ -32536,10 +33121,19 @@ export type ShapeLayer = LayerBase & {
 };
 
 export const AVAILABLE_FONTS = [
-  { family: 'Taviraj Light',           file: 'Taviraj-Light.woff2' },
-  { family: 'Nunito Sans Light',       file: 'NunitoSans-Light.woff2' },
-  { family: 'Ivy Journal Light',       file: 'IvyJournal-Light.ttf' },
-  { family: 'Roobert PRO TRIAL Light', file: 'RoobertPROTRIAL-Light.otf' },
+  { family: 'Taviraj Light',              file: 'Taviraj-Light.woff2' },
+  { family: 'Nunito Sans Light',          file: 'NunitoSans-Light.woff2' },
+  { family: 'Ivy Journal Thin',           file: 'IvyJournal-Thin.ttf' },
+  { family: 'Ivy Journal Light',          file: 'IvyJournal-Light.ttf' },
+  { family: 'Ivy Journal Regular',        file: 'IvyJournal-Regular.ttf' },
+  { family: 'Ivy Journal SemiBold',       file: 'IvyJournal-SemiBold.ttf' },
+  { family: 'Ivy Journal Bold',           file: 'IvyJournal-Bold.ttf' },
+  { family: 'Roobert PRO TRIAL Light',    file: 'RoobertPROTRIAL-Light.otf' },
+  { family: 'Roobert PRO TRIAL Regular',  file: 'RoobertPROTRIAL-Regular.otf' },
+  { family: 'Roobert PRO TRIAL Medium',   file: 'RoobertPROTRIAL-Medium.otf' },
+  { family: 'Roobert PRO TRIAL SemiBold', file: 'RoobertPROTRIAL-SemiBold.otf' },
+  { family: 'Roobert PRO TRIAL Bold',     file: 'RoobertPROTRIAL-Bold.otf' },
+  { family: 'Roobert PRO TRIAL Heavy',    file: 'RoobertPROTRIAL-Heavy.otf' },
 ];
 
 export const PLACEHOLDERS_BY_TIPO: Record<string, string[]> = {
@@ -32550,7 +33144,6 @@ export const PLACEHOLDERS_BY_TIPO: Record<string, string[]> = {
   'convite-fp':            ['telefone', 'codigo_assessor', 'nome_assinatura', 'cargo', 'contrato_social', 'contrato_label'],
   'cartao-comemorativo':   ['telefone', 'nome_aniversariante', 'modelo_cartao', 'mensagem', 'assinatura', 'email_destinatario'],
 };
-
 ```
 
 

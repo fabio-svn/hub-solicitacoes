@@ -20,18 +20,18 @@
   <style>
     .tipo-material-btn {
       display:flex;align-items:center;gap:10px;padding:10px 14px;
-      border:1.5px solid var(--border-light);border-radius:10px;background:var(--card-white);
-      cursor:pointer;transition:all 0.15s;font-family:'Nunito Sans',sans-serif;font-size:0.85rem;font-weight:600;
+      border:1.5px solid var(--border-light);border-radius:var(--radius-lg);background:var(--card-white);
+      cursor:pointer;transition:all 0.15s;font-family:'Nunito Sans', sans-serif;font-size:0.85rem;font-weight:600;
       text-align:left;width:100%;
     }
     .tipo-material-btn:hover { border-color:var(--ruby-red); }
     .tipo-material-btn.selected { background:var(--carbon-black);color:white;border-color:var(--carbon-black); }
     .tipo-material-btn.selected svg { stroke:white; }
-    .pill-radio { display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border:1.5px solid var(--border-light);border-radius:999px;background:var(--card-white);cursor:pointer;font-size:0.82rem;font-weight:600;transition:all 0.15s;user-select:none; }
+    .pill-radio { display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border:1.5px solid var(--border-light);border-radius:var(--radius-pill);background:var(--card-white);cursor:pointer;font-size:0.82rem;font-weight:600;transition:all 0.15s;user-select:none; }
     .pill-radio input { display:none; }
     .pill-radio:hover { border-color:var(--ruby-red); }
     .pill-radio.checked { background:var(--carbon-black);color:white;border-color:var(--carbon-black); }
-    .pill-tag { margin-left:6px;background:var(--ink-10);border-radius:999px;padding:2px 8px;font-size:0.68rem;font-weight:700; }
+    .pill-tag { margin-left:6px;background:var(--ink-10);border-radius:var(--radius-pill);padding:2px 8px;font-size:0.68rem;font-weight:700; }
     .pill-radio.checked .pill-tag { background:rgba(255,255,255,0.15);color:rgba(255,255,255,0.8); }
   </style>
 </head>
@@ -505,11 +505,11 @@
         <p style="opacity:0.7;margin:0 0 18px">Os dados do flyer padrão são validados e atualizados antes do envio para produção.</p>
         <div style="display:flex;gap:16px;flex-wrap:wrap;justify-content:center">
           <figure style="margin:0;flex:1 1 260px;max-width:320px">
-            <img src="https://solicitacoes.portalsvn.com.br/assets/2026-06/IJoyGwNp-Flyer_Institucional_A5_Frente.jpg" alt="Flyer Institucional — Frente" loading="lazy" style="width:100%;height:auto;display:block;border-radius:8px;border:1px solid var(--border-light)">
+            <img src="https://solicitacoes.portalsvn.com.br/assets/2026-06/IJoyGwNp-Flyer_Institucional_A5_Frente.jpg" alt="Flyer Institucional — Frente" loading="lazy" style="width:100%;height:auto;display:block;border-radius:var(--radius-md);border:1px solid var(--border-light)">
             <figcaption style="text-align:center;font-size:0.78rem;opacity:0.55;margin-top:8px">Frente</figcaption>
           </figure>
           <figure style="margin:0;flex:1 1 260px;max-width:320px">
-            <img src="https://solicitacoes.portalsvn.com.br/assets/2026-06/uQfkpsmQ-Flyer_Institucional_A5_Verso.jpg" alt="Flyer Institucional — Verso" loading="lazy" style="width:100%;height:auto;display:block;border-radius:8px;border:1px solid var(--border-light)">
+            <img src="https://solicitacoes.portalsvn.com.br/assets/2026-06/uQfkpsmQ-Flyer_Institucional_A5_Verso.jpg" alt="Flyer Institucional — Verso" loading="lazy" style="width:100%;height:auto;display:block;border-radius:var(--radius-md);border:1px solid var(--border-light)">
             <figcaption style="text-align:center;font-size:0.78rem;opacity:0.55;margin-top:8px">Verso</figcaption>
           </figure>
         </div>

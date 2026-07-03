@@ -148,7 +148,7 @@
 
         <div class="field" id="field_depoimentos" style="margin-top:24px">
           <label>Depoimentos de clientes (opcional, até 3)</label>
-          <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin:8px 0 10px;padding:9px 14px;background:var(--icon-bg);border:1px solid var(--border-light);border-radius:9px;flex-wrap:wrap">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin:8px 0 10px;padding:9px 14px;background:var(--icon-bg);border:1px solid var(--border-light);border-radius:var(--radius-md);flex-wrap:wrap">
             <span style="font-size:0.8rem;color:var(--carbon-black);opacity:0.7">Consulte a pesquisa NPS para encontrar depoimentos pelo seu código de assessor.</span>
             <a href="https://svninvest-my.sharepoint.com/:x:/g/personal/eduardo_filho_svninvest_com_br/IQBsd2rvk_KKQ44PVtzuxQrSAS6m-YB05OaB0m11B0pvc7k?wdExp=TEAMS-TREATMENT&web=1&isSPOFile=1&ovuser=91608a81-cb4c-4123-8e4f-ffc75f8c4b6c%2Cjoao.sardeto%40svninvest.com.br&clickparams=eyJBcHBOYW1lIjoiVGVhbXMtRGVza3RvcCIsIkFwcFZlcnNpb24iOiI1MC8yNjAzMTIyMzAyMCIsIkhhc0ZlZGVyYXRlZFVzZXIiOmZhbHNlfQ%3D%3D"
                target="_blank"
@@ -185,7 +185,7 @@
       <button class="modal-close" onclick="closePreview()">&times;</button>
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:20px">
         <span style="font-weight:700;font-size:1rem">Prévia da página</span>
-        <span style="background:rgba(111,135,123,0.12);color:var(--sage-green);font-size:0.7rem;padding:3px 10px;border-radius:999px">Atualiza em tempo real</span>
+        <span style="background:rgba(111,135,123,0.12);color:var(--sage-green);font-size:0.7rem;padding:3px 10px;border-radius:var(--radius-pill)">Atualiza em tempo real</span>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px" id="previewContent">
         <div class="preview-assessor-left">
@@ -194,7 +194,7 @@
           <p style="font-size:0.95rem;opacity:0.8;margin-bottom:16px;max-width:440px" id="previewBio">A bio aparecerá aqui...</p>
           <div style="display:flex;gap:8px;margin-bottom:16px" id="previewSocialIcons">
             <a id="previewLinkedin" href="#" target="_blank"
-               style="display:none;width:28px;height:28px;background:#0A66C2;border-radius:5px;align-items:center;justify-content:center;text-decoration:none">
+               style="display:none;width:28px;height:28px;background:#0A66C2;border-radius:var(--radius-sm);align-items:center;justify-content:center;text-decoration:none">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="white">
                 <path d="M16 8a6 6 0 016 6v7h-4v-7a2 2 0 00-2-2 2 2 0 00-2 2v7h-4v-7a6 6 0 016-6z"/>
                 <rect x="2" y="9" width="4" height="12" fill="white"/>
@@ -202,7 +202,7 @@
               </svg>
             </a>
             <a id="previewInstagram" href="#" target="_blank"
-               style="display:none;width:28px;height:28px;background:linear-gradient(135deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888);border-radius:7px;align-items:center;justify-content:center;text-decoration:none">
+               style="display:none;width:28px;height:28px;background:linear-gradient(135deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888);border-radius:var(--radius-sm);align-items:center;justify-content:center;text-decoration:none">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.5">
                 <rect x="2" y="2" width="20" height="20" rx="5"/>
                 <circle cx="12" cy="12" r="4"/>
@@ -211,12 +211,12 @@
             </a>
           </div>
           <div style="display:flex;gap:8px">
-            <span class="btn btn-dark" style="font-size:0.8rem;padding:8px 20px;border-radius:8px;pointer-events:none">Abrir conta</span>
-            <span class="btn btn-secondary" style="font-size:0.8rem;padding:8px 20px;border-radius:8px;pointer-events:none">Falar com assessor</span>
+            <span class="btn btn-dark" style="font-size:0.8rem;padding:8px 20px;border-radius:var(--radius-md);pointer-events:none">Abrir conta</span>
+            <span class="btn btn-secondary" style="font-size:0.8rem;padding:8px 20px;border-radius:var(--radius-md);pointer-events:none">Falar com assessor</span>
           </div>
         </div>
         <div>
-          <div id="previewPhoto" style="width:100%;height:320px;border-radius:12px;background:var(--icon-bg);display:flex;align-items:center;justify-content:center;overflow:hidden">
+          <div id="previewPhoto" style="width:100%;height:320px;border-radius:var(--radius-xl);background:var(--icon-bg);display:flex;align-items:center;justify-content:center;overflow:hidden">
             <span style="opacity:0.3;font-size:0.85rem">Foto aparecerá aqui</span>
           </div>
         </div>
@@ -385,7 +385,7 @@
     function renderDepoimentos() {
       const container = document.getElementById('depoimentosContainer');
       container.innerHTML = depoimentos.map((d, i) => `
-        <div style="background:var(--icon-bg);border-radius:10px;padding:16px;margin-bottom:10px;position:relative">
+        <div style="background:var(--icon-bg);border-radius:var(--radius-lg);padding:16px;margin-bottom:10px;position:relative">
           <button onclick="removeDepoimento(${i})" style="position:absolute;top:8px;right:8px;background:none;border:none;cursor:pointer;opacity:0.4;font-size:1.2rem">&times;</button>
           <div class="field" style="margin-bottom:8px">
             <label style="font-size:0.8rem">Nome do cliente</label>
@@ -436,7 +436,7 @@
         if (!selo) return '';
         return selo.icon_url
           ? `<img src="${selo.icon_url}" loading="lazy" style="height:32px;width:auto;max-width:80px;object-fit:contain" alt="${selo.label}">`
-          : `<span style="background:var(--icon-bg);border:1px solid var(--border-light);padding:4px 10px;border-radius:6px;font-size:0.75rem;font-weight:600">${selo.label}</span>`;
+          : `<span style="background:var(--icon-bg);border:1px solid var(--border-light);padding:4px 10px;border-radius:var(--radius-sm);font-size:0.75rem;font-weight:600">${selo.label}</span>`;
       }).join('');
 
       const photoFile = document.getElementById('fotoPerfil').files[0];

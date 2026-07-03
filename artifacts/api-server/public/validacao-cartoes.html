@@ -51,16 +51,16 @@
 
     /* ===== Barra de seleção em lote ===== */
     .vc-bulk { display: none; align-items: center; gap: 10px; flex-wrap: wrap; margin: 0 0 12px;
-      padding: 10px 14px; border: 1px solid var(--ruby-red); border-radius: 12px; background: #fdf3f2; }
+      padding: 10px 14px; border: 1px solid var(--ruby-red); border-radius: var(--radius-xl); background: #fdf3f2; }
     .vc-bulk strong { color: var(--ruby-red); font-size: 0.85rem; }
-    .vc-bulk select { height: 34px; border: 1px solid var(--border-light); border-radius: 8px; padding: 0 10px; background: var(--card-white, #fff); font: inherit; }
+    .vc-bulk select { height: 34px; border: 1px solid var(--border-light); border-radius: var(--radius-md); padding: 0 10px; background: var(--card-white, #fff); font: inherit; }
 
     /* ===== Tabela editável ===== */
-    .vc-scroll { overflow: auto; max-height: 70vh; border: 1px solid var(--border-light); border-radius: 14px;
+    .vc-scroll { overflow: auto; max-height: 70vh; border: 1px solid var(--border-light); border-radius: var(--radius-xl);
       scrollbar-width: thin; scrollbar-color: #e6e0d8 transparent; }
     .vc-scroll::-webkit-scrollbar { width: 10px; height: 10px; }
     .vc-scroll::-webkit-scrollbar-track { background: transparent; }
-    .vc-scroll::-webkit-scrollbar-thumb { background: #e6e0d8; border-radius: 8px; border: 2px solid transparent; background-clip: padding-box; }
+    .vc-scroll::-webkit-scrollbar-thumb { background: #e6e0d8; border-radius: var(--radius-md); border: 2px solid transparent; background-clip: padding-box; }
     .vc-scroll::-webkit-scrollbar-thumb:hover { background: #d8d0c5; background-clip: padding-box; }
     table.vc { border-collapse: separate; border-spacing: 0; width: 100%; min-width: 1180px; font-size: 0.74rem; }
     table.vc th { position: sticky; top: 0; z-index: 2; background: var(--carbon-black); color: var(--paper-white);
@@ -76,7 +76,7 @@
     table.vc tbody tr:hover td { background: #fbf6f5; }
     table.vc tr.flash td { background: #ecfdf3 !important; transition: background .2s; }
     table.vc input, table.vc select, table.vc textarea { width: 100%; box-sizing: border-box; border: 1px solid transparent;
-      background: transparent; font: inherit; text-align: center; padding: 5px; border-radius: 6px; color: #221b19; transition: border-color .12s, background .12s; cursor: pointer; }
+      background: transparent; font: inherit; text-align: center; padding: 5px; border-radius: var(--radius-sm); color: var(--carbon-black); transition: border-color .12s, background .12s; cursor: pointer; }
     table.vc select { -webkit-appearance: none; appearance: none; font-weight: 600; }
     table.vc textarea { resize: vertical; min-height: 34px; line-height: 1.3; }
     table.vc input:hover, table.vc select:hover, table.vc textarea:hover { border-color: rgba(172,54,49,.22); background: rgba(255,255,255,.5); }
@@ -91,14 +91,14 @@
     /* Status (com botão avançar etapa) */
     .vc-statuscell { display: flex; align-items: center; gap: 4px; }
     .vc-statuscell select { flex: 1; min-width: 0; }
-    .vc-avancar { flex-shrink: 0; width: 24px; height: 24px; border: 1px solid var(--ink-20, #d6d3cd); border-radius: 6px;
+    .vc-avancar { flex-shrink: 0; width: 24px; height: 24px; border: 1px solid var(--ink-20, #d6d3cd); border-radius: var(--radius-sm);
       background: var(--card-white, #fff); color: var(--carbon-black); cursor: pointer; font-size: 0.95rem; line-height: 1;
       display: inline-flex; align-items: center; justify-content: center; transition: background .12s, color .12s, border-color .12s; }
     .vc-avancar:hover { background: var(--ruby-red); color: #fff; border-color: var(--ruby-red); }
 
     /* Pendente há */
     .vc-dias { font-weight: 600; color: var(--ink-60, #6b6760); }
-    .vc-spin { display: inline-block; box-sizing: border-box; border: 2px solid var(--ink-20, #d8d3c9); border-top-color: var(--ruby-red, #AC3631); border-radius: 50%; animation: vcspin 0.7s linear infinite; }
+    .vc-spin { display: inline-block; box-sizing: border-box; border: 2px solid var(--ink-20, #d8d3c9); border-top-color: var(--ruby-red, #AC3631); border-radius: var(--radius-round); animation: vcspin 0.7s linear infinite; }
     @keyframes vcspin { to { transform: rotate(360deg); } }
     .vc-dias.alerta { color: var(--danger); }
     .vc-dias.none { color: var(--ink-30, #b3aea4); }
@@ -112,7 +112,7 @@
     .vc-sel { width: 16px; height: 16px; cursor: pointer; accent-color: var(--ruby-red); }
     .vc-resizer { position: absolute; top: 0; right: 0; width: 7px; height: 100%; cursor: col-resize; user-select: none; z-index: 3; }
     .vc-resizer:hover { background: rgba(172,54,49,.4); }
-    .vc-menubtn { border: none; background: transparent; cursor: pointer; padding: 2px 6px; color: var(--ink-50, #847f76); font-size: 1.05rem; line-height: 1; border-radius: 4px; }
+    .vc-menubtn { border: none; background: transparent; cursor: pointer; padding: 2px 6px; color: var(--ink-50, #847f76); font-size: 1.05rem; line-height: 1; border-radius: var(--radius-xs); }
     .vc-menubtn:hover { background: var(--icon-bg, #f4f1ea); color: var(--carbon-black); }
     #vcRowMenu button:hover { background: var(--icon-bg, #f4f1ea); }
 
@@ -135,7 +135,7 @@
     .cartao-card-label { font-size: 0.66rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--ink-50, #847f76); }
     .cartao-card-value { font-size: 0.85rem; color: var(--carbon-black); word-break: break-word; }
     .cartao-card-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-    .cartao-card select, .cartao-card input, .cartao-card textarea { width: 100%; padding: 8px 10px; border: 1px solid var(--border-light); border-radius: 8px; font-family: inherit; font-size: 0.85rem; background: var(--paper-white); }
+    .cartao-card select, .cartao-card input, .cartao-card textarea { width: 100%; padding: 8px 10px; border: 1px solid var(--border-light); border-radius: var(--radius-md); font-family: inherit; font-size: 0.85rem; background: var(--paper-white); }
     .cartao-card textarea { min-height: 60px; resize: vertical; }
   </style>
 </head>
@@ -229,8 +229,8 @@
       <div class="cartoes-cards-mobile"></div>
 
       <!-- Menu de linha (excluir) -->
-      <div id="vcRowMenu" style="display:none;position:fixed;z-index:1000;background:var(--card-white,#fff);border:1px solid var(--border-light);border-radius:8px;box-shadow:0 4px 16px rgba(34,27,25,.12);padding:4px;min-width:150px">
-        <button type="button" onclick="excluirDoMenu(this)" style="display:flex;align-items:center;gap:8px;width:100%;padding:8px 10px;border:none;background:transparent;color:var(--danger);cursor:pointer;border-radius:6px;font:inherit;text-align:left;font-size:0.8rem">
+      <div id="vcRowMenu" style="display:none;position:fixed;z-index:1000;background:var(--card-white,#fff);border:1px solid var(--border-light);border-radius:var(--radius-md);box-shadow:0 4px 16px rgba(34,27,25,.12);padding:4px;min-width:150px">
+        <button type="button" onclick="excluirDoMenu(this)" style="display:flex;align-items:center;gap:8px;width:100%;padding:8px 10px;border:none;background:transparent;color:var(--danger);cursor:pointer;border-radius:var(--radius-sm);font:inherit;text-align:left;font-size:0.8rem">
           <span data-icon="trash" data-icon-size="14" style="display:inline-flex"></span>
           Excluir cartão
         </button>
@@ -484,21 +484,21 @@
       const sid = l.solicitacao_id;
       const val = l.pdf_url;
       if (!val) {
-        if (l.erro_geracao) return '<div style="display:flex;gap:5px;justify-content:center;align-items:center;flex-wrap:nowrap"><span title="' + esc(l.erro_geracao) + '" style="display:inline-flex;align-items:center;gap:3px;color:var(--danger,#dc2626);font-weight:700;font-size:0.7rem">' + icon('x', { size: 13, style: 'vertical-align:middle' }) + 'Falha</span><button type="button" onclick="gerarPdfCartao(' + sid + ',this)" style="padding:4px 8px;border-radius:6px;border:1px solid var(--ruby-red,#AC3631);background:#fff;color:var(--ruby-red,#AC3631);font-weight:700;font-size:0.7rem;cursor:pointer;white-space:nowrap">Tentar de novo</button></div>';
-        if (l.status === 'validado') return '<button type="button" onclick="gerarPdfCartao(' + sid + ',this)" title="O PDF está sendo gerado automaticamente. Clique para gerar agora." style="padding:4px 10px;border-radius:6px;border:1px dashed var(--ink-30,#c9c4ba);background:transparent;color:var(--ink-50,#7a756c);font-weight:600;font-size:0.7rem;cursor:pointer">Gerando…</button>';
-        return '<button type="button" onclick="gerarPdfCartao(' + sid + ',this)" style="padding:4px 10px;border-radius:6px;border:1px solid var(--ruby-red,#AC3631);background:var(--ruby-red,#AC3631);color:#fff;font-weight:700;font-size:0.7rem;cursor:pointer">Gerar PDF</button>';
+        if (l.erro_geracao) return '<div style="display:flex;gap:5px;justify-content:center;align-items:center;flex-wrap:nowrap"><span title="' + esc(l.erro_geracao) + '" style="display:inline-flex;align-items:center;gap:3px;color:var(--danger,#dc2626);font-weight:700;font-size:0.7rem">' + icon('x', { size: 13, style: 'vertical-align:middle' }) + 'Falha</span><button type="button" onclick="gerarPdfCartao(' + sid + ',this)" style="padding:4px 8px;border-radius:var(--radius-sm);border:1px solid var(--ruby-red,#AC3631);background:#fff;color:var(--ruby-red,#AC3631);font-weight:700;font-size:0.7rem;cursor:pointer;white-space:nowrap">Tentar de novo</button></div>';
+        if (l.status === 'validado') return '<button type="button" onclick="gerarPdfCartao(' + sid + ',this)" title="O PDF está sendo gerado automaticamente. Clique para gerar agora." style="padding:4px 10px;border-radius:var(--radius-sm);border:1px dashed var(--ink-30,#c9c4ba);background:transparent;color:var(--ink-50,#7a756c);font-weight:600;font-size:0.7rem;cursor:pointer">Gerando…</button>';
+        return '<button type="button" onclick="gerarPdfCartao(' + sid + ',this)" style="padding:4px 10px;border-radius:var(--radius-sm);border:1px solid var(--ruby-red,#AC3631);background:var(--ruby-red,#AC3631);color:#fff;font-weight:700;font-size:0.7rem;cursor:pointer">Gerar PDF</button>';
       }
       return '<div style="display:flex;gap:5px;justify-content:center;align-items:center;flex-wrap:nowrap">'
-        + '<a href="' + esc(val) + '" rel="noopener" style="display:inline-block;padding:4px 10px;border-radius:6px;background:var(--ruby-red,#AC3631);color:#fff;font-weight:700;text-decoration:none;font-size:0.7rem">Baixar</a>'
-        + '<button type="button" onclick="gerarPdfCartao(' + sid + ',this)" title="Gerar o PDF novamente com os dados atuais" style="padding:4px 8px;border-radius:6px;border:1px solid var(--ruby-red,#AC3631);background:#fff;color:var(--ruby-red,#AC3631);font-weight:700;font-size:0.7rem;cursor:pointer;white-space:nowrap">Gerar novo</button>'
+        + '<a href="' + esc(val) + '" rel="noopener" style="display:inline-block;padding:4px 10px;border-radius:var(--radius-sm);background:var(--ruby-red,#AC3631);color:#fff;font-weight:700;text-decoration:none;font-size:0.7rem">Baixar</a>'
+        + '<button type="button" onclick="gerarPdfCartao(' + sid + ',this)" title="Gerar o PDF novamente com os dados atuais" style="padding:4px 8px;border-radius:var(--radius-sm);border:1px solid var(--ruby-red,#AC3631);background:#fff;color:var(--ruby-red,#AC3631);font-weight:700;font-size:0.7rem;cursor:pointer;white-space:nowrap">Gerar novo</button>'
         + '</div>';
     }
     function pdfCardInner(c) {
       const sid = c.solicitacao_id;
-      if (c.pdf_url) return '<div style="display:flex;gap:8px"><a href="' + esc(c.pdf_url) + '" rel="noopener" style="flex:1;padding:8px 12px;border-radius:8px;background:var(--ruby-red,#AC3631);color:#fff;font-weight:700;text-decoration:none;font-size:0.8rem;text-align:center">Baixar PDF</a><button type="button" onclick="gerarPdfCartao(' + sid + ',this)" style="padding:8px 12px;border-radius:8px;border:1px solid var(--ruby-red,#AC3631);background:#fff;color:var(--ruby-red,#AC3631);font-weight:700;font-size:0.8rem;cursor:pointer">Gerar novo</button></div>';
-      if (c.erro_geracao) return '<div style="display:flex;flex-direction:column;gap:6px;margin-top:4px"><span title="' + esc(c.erro_geracao) + '" style="display:inline-flex;align-items:center;gap:4px;color:var(--danger,#dc2626);font-weight:700;font-size:0.8rem">' + icon('x', { size: 14, style: 'vertical-align:middle' }) + 'Falha ao gerar</span><button type="button" onclick="gerarPdfCartao(' + sid + ',this)" style="padding:8px 12px;border-radius:8px;border:1px solid var(--ruby-red,#AC3631);background:#fff;color:var(--ruby-red,#AC3631);font-weight:700;font-size:0.8rem;cursor:pointer">Tentar de novo</button></div>';
-      if (c.status === 'validado') return '<button type="button" onclick="gerarPdfCartao(' + sid + ',this)" title="O PDF está sendo gerado automaticamente. Toque para gerar agora." style="margin-top:4px;padding:8px 12px;border-radius:8px;border:1px dashed var(--ink-30,#c9c4ba);background:transparent;color:var(--ink-50,#7a756c);font-weight:600;font-size:0.8rem;cursor:pointer">Gerando…</button>';
-      return '<button type="button" onclick="gerarPdfCartao(' + sid + ',this)" style="margin-top:4px;padding:8px 12px;border-radius:8px;border:1px solid var(--ruby-red,#AC3631);background:#fff;color:var(--ruby-red,#AC3631);font-weight:700;font-size:0.8rem;cursor:pointer">Gerar PDF</button>';
+      if (c.pdf_url) return '<div style="display:flex;gap:8px"><a href="' + esc(c.pdf_url) + '" rel="noopener" style="flex:1;padding:8px 12px;border-radius:var(--radius-md);background:var(--ruby-red,#AC3631);color:#fff;font-weight:700;text-decoration:none;font-size:0.8rem;text-align:center">Baixar PDF</a><button type="button" onclick="gerarPdfCartao(' + sid + ',this)" style="padding:8px 12px;border-radius:var(--radius-md);border:1px solid var(--ruby-red,#AC3631);background:#fff;color:var(--ruby-red,#AC3631);font-weight:700;font-size:0.8rem;cursor:pointer">Gerar novo</button></div>';
+      if (c.erro_geracao) return '<div style="display:flex;flex-direction:column;gap:6px;margin-top:4px"><span title="' + esc(c.erro_geracao) + '" style="display:inline-flex;align-items:center;gap:4px;color:var(--danger,#dc2626);font-weight:700;font-size:0.8rem">' + icon('x', { size: 14, style: 'vertical-align:middle' }) + 'Falha ao gerar</span><button type="button" onclick="gerarPdfCartao(' + sid + ',this)" style="padding:8px 12px;border-radius:var(--radius-md);border:1px solid var(--ruby-red,#AC3631);background:#fff;color:var(--ruby-red,#AC3631);font-weight:700;font-size:0.8rem;cursor:pointer">Tentar de novo</button></div>';
+      if (c.status === 'validado') return '<button type="button" onclick="gerarPdfCartao(' + sid + ',this)" title="O PDF está sendo gerado automaticamente. Toque para gerar agora." style="margin-top:4px;padding:8px 12px;border-radius:var(--radius-md);border:1px dashed var(--ink-30,#c9c4ba);background:transparent;color:var(--ink-50,#7a756c);font-weight:600;font-size:0.8rem;cursor:pointer">Gerando…</button>';
+      return '<button type="button" onclick="gerarPdfCartao(' + sid + ',this)" style="margin-top:4px;padding:8px 12px;border-radius:var(--radius-md);border:1px solid var(--ruby-red,#AC3631);background:#fff;color:var(--ruby-red,#AC3631);font-weight:700;font-size:0.8rem;cursor:pointer">Gerar PDF</button>';
     }
     function pdfSpinnerHtml(compact) {
       const sz = compact ? 13 : 15;
@@ -651,7 +651,7 @@
               '<div class="cartao-card-data">' + esc(dataFmt) + '</div>' +
             '</div>' +
             '<div style="display:flex;align-items:center;gap:8px">' +
-              '<span style="display:inline-flex;align-items:center;padding:4px 10px;border-radius:6px;font-size:0.72rem;font-weight:700;background:' + statusColor.bg + ';color:' + statusColor.text + '">' + esc(statusLabel) + '</span>' +
+              '<span style="display:inline-flex;align-items:center;padding:4px 10px;border-radius:var(--radius-sm);font-size:0.72rem;font-weight:700;background:' + statusColor.bg + ';color:' + statusColor.text + '">' + esc(statusLabel) + '</span>' +
               (IS_ADMIN ? '<button type="button" onclick="deleteCartao(' + c.solicitacao_id + ',this)" title="Excluir permanentemente" aria-label="Excluir" style="border:none;background:transparent;cursor:pointer;color:var(--danger);padding:2px;display:inline-flex;align-items:center">' + icon('trash', { size: 18 }) + '</button>' : '') +
             '</div>' +
           '</div>' +

@@ -55,12 +55,12 @@
       background: var(--ink-10);
       transition: background 0.3s;
     }
-    .status-step-line.done { background: #6B9080; }
+    .status-step-line.done { background: var(--sage-green); }
     .status-step-line.invisible { background: transparent; }
     .status-step-circle {
       width: 22px;
       height: 22px;
-      border-radius: 50%;
+      border-radius: var(--radius-round);
       border: 2px solid var(--ink-12);
       background: transparent;
       display: flex;
@@ -72,8 +72,8 @@
       position: relative;
     }
     .status-step-circle.done {
-      background: #6B9080;
-      border-color: #6B9080;
+      background: var(--sage-green);
+      border-color: var(--sage-green);
     }
     .status-step-circle.current {
       border-color: var(--current-color, #2563C0);
@@ -99,7 +99,7 @@
       line-height: 1.3;
       padding: 0 2px;
     }
-    .status-step-label.done { color: #6B9080; font-weight: 600; }
+    .status-step-label.done { color: var(--sage-green); font-weight: 600; }
     .status-step-label.current { color: var(--current-color, #2563C0); font-weight: 700; }
     @media (max-width: 560px) {
       .status-rail-scroll { overflow-x: hidden; overflow-y: visible; padding: 4px 0; }
@@ -128,7 +128,7 @@
       scrollbar-color: var(--ink-12) transparent;
     }
     .chat-wrap::-webkit-scrollbar { width: 4px; }
-    .chat-wrap::-webkit-scrollbar-thumb { background: var(--ink-12); border-radius: 2px; }
+    .chat-wrap::-webkit-scrollbar-thumb { background: var(--ink-12); border-radius: var(--radius-xs); }
 
     .chat-msg {
       display: flex;
@@ -142,7 +142,7 @@
     .chat-avatar {
       width: 28px;
       height: 28px;
-      border-radius: 50%;
+      border-radius: var(--radius-round);
       background: var(--carbon-black);
       flex-shrink: 0;
       overflow: hidden;
@@ -166,7 +166,7 @@
 
     .chat-bubble {
       padding: 10px 14px;
-      border-radius: 18px;
+      border-radius: var(--radius-2xl);
       font-size: 0.875rem;
       line-height: 1.55;
       word-break: break-word;
@@ -195,7 +195,7 @@
       gap: 4px;
       padding: 10px 14px;
       background: #ffffff;
-      border-radius: 18px;
+      border-radius: var(--radius-2xl);
       border-bottom-left-radius: 4px;
       width: fit-content;
       box-shadow: 0 1px 3px var(--ink-08), 0 2px 8px var(--ink-05);
@@ -203,7 +203,7 @@
     .chat-typing span {
       width: 6px;
       height: 6px;
-      border-radius: 50%;
+      border-radius: var(--radius-round);
       background: var(--ink-30);
       animation: typing-dot 1.2s infinite;
     }
@@ -225,7 +225,7 @@
     .chat-input-area textarea {
       flex: 1;
       border: none;
-      border-radius: 20px;
+      border-radius: var(--radius-2xl);
       padding: 10px 16px;
       font-family: 'Nunito Sans', sans-serif;
       font-size: 0.875rem;
@@ -250,7 +250,7 @@
     .chat-attach-btn {
       width: 38px;
       height: 38px;
-      border-radius: 50%;
+      border-radius: var(--radius-round);
       background: #ffffff;
       border: none;
       cursor: pointer;
@@ -276,7 +276,7 @@
       gap: 6px;
       background: #ffffff;
       border: 1px solid var(--ink-12);
-      border-radius: 14px;
+      border-radius: var(--radius-xl);
       padding: 4px 8px 4px 11px;
       font-size: 0.78rem;
       max-width: 220px;
@@ -301,7 +301,7 @@
     .chat-send-btn {
       width: 38px;
       height: 38px;
-      border-radius: 50%;
+      border-radius: var(--radius-round);
       background: var(--carbon-black);
       border: none;
       cursor: pointer;
@@ -323,7 +323,7 @@
       background: var(--ink-08);
       color: var(--carbon-black);
       border: 1px solid var(--ink-20);
-      border-radius: 10px;
+      border-radius: var(--radius-lg);
       font-size: 0.82rem;
       font-weight: 600;
       text-decoration: none;
@@ -345,7 +345,7 @@
     .btn-aprovar {
       padding: 9px 18px;
       border: none;
-      border-radius: 10px;
+      border-radius: var(--radius-lg);
       background: #16a34a;
       color: white;
       font-size: 0.875rem;
@@ -368,7 +368,7 @@
     .btn-alterar {
       padding: 9px 18px;
       border: none;
-      border-radius: 10px;
+      border-radius: var(--radius-lg);
       background: var(--danger);
       color: white;
       font-size: 0.875rem;
@@ -378,7 +378,7 @@
 
     .rodada-historico {
       border: 1px solid var(--ink-08);
-      border-radius: 10px;
+      border-radius: var(--radius-lg);
       overflow: hidden;
       margin-bottom: 8px;
     }
@@ -450,14 +450,14 @@
     }
     .sol-meta:empty { display: none; }
     .sol-meta-sep {
-      width: 3px; height: 3px; border-radius: 50%;
+      width: 3px; height: 3px; border-radius: var(--radius-round);
       background: currentColor; opacity: 0.5; flex-shrink: 0;
     }
     .sol-status-badge {
       display: inline-flex;
       align-items: center;
       padding: 6px 14px;
-      border-radius: 8px;
+      border-radius: var(--radius-md);
       font-size: 0.78rem;
       font-weight: 700;
       letter-spacing: 0.04em;
@@ -474,7 +474,7 @@
     .fact {
       background: var(--card-white, #fff);
       border: 1px solid var(--border-light, var(--ink-10));
-      border-radius: 10px;
+      border-radius: var(--radius-lg);
       padding: 11px 13px;
       min-width: 0;
     }
@@ -558,7 +558,7 @@
     .sol-actions-kebab { position: relative; }
     .kebab-btn {
       width: 36px; height: 36px;
-      border-radius: 8px;
+      border-radius: var(--radius-md);
       border: 1px solid var(--border-light);
       background: var(--paper-white);
       cursor: pointer;
@@ -576,7 +576,7 @@
       margin-top: 4px;
       background: var(--paper-white);
       border: 1px solid var(--border-light);
-      border-radius: 10px;
+      border-radius: var(--radius-lg);
       box-shadow: 0 8px 24px rgba(0,0,0,0.12);
       min-width: 180px;
       padding: 6px;
@@ -588,7 +588,7 @@
       padding: 9px 12px;
       border: none; background: none;
       font-size: 0.85rem; cursor: pointer;
-      border-radius: 6px;
+      border-radius: var(--radius-sm);
       text-align: left;
       color: var(--carbon-black);
       font-family: 'Nunito Sans', sans-serif;
@@ -621,13 +621,24 @@
       font-weight: 600;
       color: var(--carbon-black);
       line-height: 1.45;
+      white-space: pre-wrap;
       word-break: break-word;
       overflow-wrap: break-word;
     }
+    .dados-link {
+      color: var(--ruby-red);
+      text-decoration: none;
+      word-break: break-all;
+      border-bottom: 1px solid transparent;
+      transition: border-color .12s;
+    }
+    .dados-link:hover { border-bottom-color: currentColor; }
     @media (max-width: 480px) {
       .dados-grid { grid-template-columns: 1fr; }
       .dados-grid-wide { grid-column: 1; }
     }
+
+    
 
   </style>
 </head>
@@ -642,10 +653,10 @@
 
     <!-- Skeleton -->
     <div id="skeletonLoader">
-      <div style="height:28px;width:55%;background:var(--icon-bg);border-radius:8px;margin-bottom:10px;overflow:hidden;position:relative"><div class="shimmer-inner"></div></div>
-      <div style="height:18px;width:35%;background:var(--icon-bg);border-radius:6px;margin-bottom:32px;overflow:hidden;position:relative"><div class="shimmer-inner"></div></div>
-      <div style="height:90px;background:var(--icon-bg);border-radius:12px;margin-bottom:16px;overflow:hidden;position:relative"><div class="shimmer-inner"></div></div>
-      <div style="height:140px;background:var(--icon-bg);border-radius:12px;overflow:hidden;position:relative"><div class="shimmer-inner"></div></div>
+      <div style="height:28px;width:55%;background:var(--icon-bg);border-radius:var(--radius-md);margin-bottom:10px;overflow:hidden;position:relative"><div class="shimmer-inner"></div></div>
+      <div style="height:18px;width:35%;background:var(--icon-bg);border-radius:var(--radius-sm);margin-bottom:32px;overflow:hidden;position:relative"><div class="shimmer-inner"></div></div>
+      <div style="height:90px;background:var(--icon-bg);border-radius:var(--radius-xl);margin-bottom:16px;overflow:hidden;position:relative"><div class="shimmer-inner"></div></div>
+      <div style="height:140px;background:var(--icon-bg);border-radius:var(--radius-xl);overflow:hidden;position:relative"><div class="shimmer-inner"></div></div>
     </div>
 
     <!-- Content -->
@@ -705,7 +716,7 @@
       <div id="atividadeSection" style="display:none;margin-top:14px">
         <div class="form-card" style="padding:0;overflow:hidden">
           <div id="atividadeHeader" style="display:flex;align-items:center;gap:12px;padding:16px 20px;cursor:pointer;user-select:none" onclick="toggleAtividade()">
-            <div style="width:32px;height:32px;border-radius:8px;background:var(--icon-bg);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+            <div style="width:32px;height:32px;border-radius:var(--radius-md);background:var(--icon-bg);display:flex;align-items:center;justify-content:center;flex-shrink:0">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.55"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
             </div>
             <div style="flex:1;min-width:0">
@@ -966,8 +977,8 @@
         const headerRight = document.getElementById('solHeaderRight');
         headerRight.innerHTML = `
           <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;text-align:right">
-            <span style="color:${isConcluido ? '#0A9060' : '#92400e'};font-weight:600;font-size:0.9rem;font-family:'Nunito Sans',sans-serif">${isConcluido ? 'Material disponível' : 'Em processamento'}</span>
-            <span style="font-size:0.75rem;opacity:0.45;font-family:'Nunito Sans',sans-serif" title="${dtFormatted}">Atualizado: ${dtAutRel}</span>
+            <span style="color:${isConcluido ? '#0A9060' : '#92400e'};font-weight:600;font-size:0.9rem;font-family:'Nunito Sans', sans-serif">${isConcluido ? 'Material disponível' : 'Em processamento'}</span>
+            <span style="font-size:0.75rem;opacity:0.45;font-family:'Nunito Sans', sans-serif" title="${dtFormatted}">Atualizado: ${dtAutRel}</span>
             ${isAdm ? `<div class="sol-actions-kebab">
               <button class="kebab-btn" onclick="toggleKebabMenu()" aria-label="Mais ações">⋯</button>
               <div class="kebab-menu" id="solKebabMenu" hidden>
@@ -1028,7 +1039,7 @@
 
       const clickupBtn = (isStaff && item.clickup_url ? `
           <a href="${esc(item.clickup_url)}" target="_blank" rel="noopener" title="Abrir no ClickUp"
-             style="display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:8px;background:rgba(137,48,253,0.08);text-decoration:none;transition:background 0.15s"
+             style="display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:var(--radius-md);background:rgba(137,48,253,0.08);text-decoration:none;transition:background 0.15s"
              onmouseover="this.style.background='rgba(137,48,253,0.15)'" onmouseout="this.style.background='rgba(137,48,253,0.08)'">
             ${CLICKUP_ICON}
           </a>` : '');
@@ -1039,7 +1050,7 @@
           const cor = nota >= 4 ? '#16a34a' : nota >= 3 ? '#ea580c' : 'var(--danger)';
           const corBg = nota >= 4 ? 'rgba(22,163,74,0.12)' : nota >= 3 ? 'rgba(234,88,12,0.12)' : 'rgba(220,38,38,0.12)';
           return `<button onclick="verAvaliacao(${item.id})" id="btnVerAvaliacao" title="Ver avaliação: ${nota}/5"
-              style="display:inline-flex;align-items:center;gap:5px;height:32px;padding:0 11px;border-radius:8px;border:none;background:${corBg};color:${cor};cursor:pointer;transition:filter 0.15s"
+              style="display:inline-flex;align-items:center;gap:5px;height:32px;padding:0 11px;border-radius:var(--radius-md);border:none;background:${corBg};color:${cor};cursor:pointer;transition:filter 0.15s"
               onmouseover="this.style.filter='brightness(0.94)'" onmouseout="this.style.filter='none'">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="${cor}" stroke="${cor}" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
               <span style="font-size:13px;font-weight:600;line-height:1">${nota}<span style="font-size:11px;font-weight:400;opacity:0.65">/5</span></span>
@@ -1047,7 +1058,7 @@
         }
         if (item.status === 'concluido') {
           return `<span title="Concluída — aguardando avaliação do solicitante"
-              style="display:inline-flex;align-items:center;gap:5px;height:32px;padding:0 10px;border-radius:8px;background:transparent;opacity:0.4;cursor:default">
+              style="display:inline-flex;align-items:center;gap:5px;height:32px;padding:0 10px;border-radius:var(--radius-md);background:transparent;opacity:0.4;cursor:default">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
               <span style="font-size:12px">Sem nota</span>
             </span>`;
@@ -1098,7 +1109,7 @@
         const sObj = getStatus(item.status);
         if (item.status === 'cancelado') {
           card.innerHTML = `
-            <div style="display:flex;align-items:flex-start;gap:10px;padding:14px 16px;background:rgba(200,40,40,0.07);border:1px solid rgba(200,40,40,0.22);border-radius:10px">
+            <div style="display:flex;align-items:flex-start;gap:10px;padding:14px 16px;background:rgba(200,40,40,0.07);border:1px solid rgba(200,40,40,0.22);border-radius:var(--radius-lg)">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#C82828" stroke-width="1.5" style="flex-shrink:0;margin-top:1px"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
               <div>
                 <div style="font-size:0.9rem;font-weight:700;color:#C82828">Solicitação cancelada</div>
@@ -1109,7 +1120,7 @@
         }
         card.innerHTML = `
           <div style="display:flex;align-items:center;gap:8px;padding:8px 0">
-            <div style="width:10px;height:10px;border-radius:50%;background:${sObj.text || 'var(--danger)'};flex-shrink:0"></div>
+            <div style="width:10px;height:10px;border-radius:var(--radius-round);background:${sObj.text || 'var(--danger)'};flex-shrink:0"></div>
             <span style="font-size:0.875rem;font-weight:700;color:${sObj.text || 'var(--danger)'}">${excepcional.label}</span>
           </div>`;
         return;
@@ -1130,7 +1141,7 @@
         const iconInner = isConcluida
           ? `<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.5"><polyline points="20 6 9 17 4 12"/></svg>`
           : isAtual
-            ? `<div style="width:7px;height:7px;border-radius:50%;background:${sObj.text || '#3B82F6'}"></div>`
+            ? `<div style="width:7px;height:7px;border-radius:var(--radius-round);background:${sObj.text || '#3B82F6'}"></div>`
             : '';
 
         const lineLeftClass = idx === 0 ? 'invisible' : isConcluida || (isAtual && idx <= idxAtual) ? 'done' : '';
@@ -1224,7 +1235,7 @@
           card.innerHTML = `
             <div class="form-card" style="padding:20px 24px">
               <div style="display:flex;align-items:center;gap:12px">
-                <div style="width:36px;height:36px;border-radius:50%;background:rgba(220,38,38,0.08);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                <div style="width:36px;height:36px;border-radius:var(--radius-round);background:rgba(220,38,38,0.08);display:flex;align-items:center;justify-content:center;flex-shrink:0">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--danger)" stroke-width="1.5">
                     <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
                   </svg>
@@ -1243,7 +1254,7 @@
         card.innerHTML = `
           <div class="form-card" style="padding:20px 24px">
             <div style="display:flex;align-items:center;gap:12px">
-              <div style="width:36px;height:36px;border-radius:50%;background:var(--ink-08);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+              <div style="width:36px;height:36px;border-radius:var(--radius-round);background:var(--ink-08);display:flex;align-items:center;justify-content:center;flex-shrink:0">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="opacity:0.4">
                   <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
                 </svg>
@@ -1293,7 +1304,7 @@
         let previewHtml;
         if (isPdf) {
           previewHtml = `
-            <div class="assinatura-preview-card" style="background:#f5f3f0;padding:0;overflow:hidden">
+            <div class="assinatura-preview-card" style="background:var(--bg-light);padding:0;overflow:hidden">
               <iframe src="${esc(url)}#toolbar=0&navpanes=0"
                       style="width:100%;height:600px;border:none;display:block;background:white"
                       title="${_altText}"></iframe>
@@ -1305,7 +1316,7 @@
             </div>`;
         } else {
           previewHtml = `
-            <div class="assinatura-preview-card" style="background:#f5f3f0;padding:40px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px">
+            <div class="assinatura-preview-card" style="background:var(--bg-light);padding:40px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px">
               <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--ink-40)" stroke-width="1.5">
                 <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
                 <polyline points="14 2 14 8 20 8"/>
@@ -1336,7 +1347,7 @@
         card.innerHTML = `
           <div class="form-card" style="padding:20px 24px">
             <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
-              <div style="width:36px;height:36px;border-radius:50%;background:rgba(10,144,96,0.12);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+              <div style="width:36px;height:36px;border-radius:var(--radius-round);background:rgba(10,144,96,0.12);display:flex;align-items:center;justify-content:center;flex-shrink:0">
                 <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#0A9060" stroke-width="1.5"><polyline points="20 6 9 17 4 12"/></svg>
               </div>
               <div>
@@ -1401,13 +1412,13 @@
           mostrarDestaque ? 'box-shadow:0 0 0 2px var(--ruby-red),0 8px 32px rgba(172,54,49,0.18);' : ''
         }">
           <div id="aprovacaoHeader" style="padding:20px 24px;cursor:pointer;display:flex;align-items:center;gap:12px">
-            <div style="width:36px;height:36px;border-radius:50%;background:rgba(172,54,49,0.1);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+            <div style="width:36px;height:36px;border-radius:var(--radius-round);background:rgba(172,54,49,0.1);display:flex;align-items:center;justify-content:center;flex-shrink:0">
               <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#AC3631" stroke-width="1.5"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
             </div>
             <div style="flex:1;min-width:0">
               <div style="font-weight:700;font-size:0.92rem;display:flex;align-items:center;gap:8px;line-height:1.2">
                 Materiais para aprovação
-                ${mostrarDestaque ? '<span style="background:var(--ruby-red);color:white;font-size:0.62rem;font-weight:800;padding:2px 8px;border-radius:999px;letter-spacing:0.03em;animation:badgePop 0.4s ease forwards;flex-shrink:0">NOVO</span>' : ''}
+                ${mostrarDestaque ? '<span style="background:var(--ruby-red);color:white;font-size:0.62rem;font-weight:800;padding:2px 8px;border-radius:var(--radius-pill);letter-spacing:0.03em;animation:badgePop 0.4s ease forwards;flex-shrink:0">NOVO</span>' : ''}
               </div>
               <div style="font-size:0.78rem;opacity:0.42;margin-top:2px" id="aprovacaoSubtitle">
                 ${item.status === 'em-aprovacao' ? 'Os materiais estão prontos para sua análise' : 'Histórico de aprovação'}
@@ -1522,7 +1533,7 @@
           <span style="
             background: var(--icon-bg);
             border: 1px solid var(--ink-10);
-            border-radius: 999px;
+            border-radius: var(--radius-pill);
             font-size: 0.72rem;
             font-weight: 700;
             letter-spacing: 0.05em;
@@ -1794,7 +1805,7 @@
         <div id="pesquisaSatisfacao" style="
           background: rgba(255,255,255,0.7);
           border: 1px solid var(--ink-10);
-          border-radius: 12px;
+          border-radius: var(--radius-xl);
           padding: 16px 20px;
           margin-top: 16px;
           font-family: inherit;
@@ -1809,7 +1820,7 @@
                 data-nota="${n}"
                 onclick="selecionarNota(${n})"
                 style="
-                  width:36px;height:36px;border-radius:8px;
+                  width:36px;height:36px;border-radius:var(--radius-md);
                   border:2px solid var(--ink-20);
                   background:transparent;font-size:0.85rem;
                   font-weight:700;color:var(--carbon-black);
@@ -1824,7 +1835,7 @@
               placeholder="Comentário opcional (máx. 500 caracteres)"
               maxlength="500"
               style="
-                width:100%;border-radius:8px;border:1px solid var(--ink-20);
+                width:100%;border-radius:var(--radius-md);border:1px solid var(--ink-20);
                 padding:8px 12px;font-family:inherit;font-size:0.85rem;
                 resize:vertical;min-height:64px;background:var(--paper-white);
                 box-sizing:border-box;
@@ -1833,7 +1844,7 @@
             <div style="display:flex;gap:8px;margin-top:8px">
               <button onclick="enviarAvaliacao(${solId})" style="
                 background:var(--ruby-red);color:#fff;border:none;
-                border-radius:8px;padding:7px 18px;font-size:0.85rem;
+                border-radius:var(--radius-md);padding:7px 18px;font-size:0.85rem;
                 font-weight:600;cursor:pointer;
               ">Enviar avaliação</button>
               <button onclick="document.getElementById('pesquisaSatisfacao').remove()" style="
@@ -1921,7 +1932,7 @@
               <div style="font-size:0.75rem;opacity:0.35;margin-top:8px">de 10</div>
             </div>
             ${comentario ? `
-              <div style="background:var(--icon-bg);border-radius:10px;padding:14px 16px;margin-bottom:16px">
+              <div style="background:var(--icon-bg);border-radius:var(--radius-lg);padding:14px 16px;margin-bottom:16px">
                 <div style="font-size:0.72rem;font-weight:700;opacity:0.4;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px">Comentário</div>
                 <p style="font-size:0.875rem;line-height:1.55;margin:0">${esc(comentario)}</p>
               </div>
@@ -2174,7 +2185,7 @@
       const avatarHtml = `<div class="chat-avatar"><img src="${URL_LOGO_BRANCA}" alt="SVN" /></div>`;
       const badgeHtml = `
         <div style="display:flex;align-items:center;justify-content:center;margin-bottom:8px">
-          <span style="background:var(--icon-bg);border:1px solid var(--ink-10);border-radius:999px;font-size:0.72rem;font-weight:700;letter-spacing:0.05em;color:var(--ink-40);padding:3px 12px;text-transform:uppercase">Rodada ${rodada.numero}</span>
+          <span style="background:var(--icon-bg);border:1px solid var(--ink-10);border-radius:var(--radius-pill);font-size:0.72rem;font-weight:700;letter-spacing:0.05em;color:var(--ink-40);padding:3px 12px;text-transform:uppercase">Rodada ${rodada.numero}</span>
         </div>`;
       wrap.innerHTML = `
         ${badgeHtml}
@@ -2243,6 +2254,16 @@
       if (chevron) chevron.style.transform = isOpen ? 'rotate(0deg)' : 'rotate(180deg)';
     }
 
+    /* URLs viram link clicável e enxuto; resto continua texto. */
+    function fieldValueHtml(val) {
+      const s = String(val).trim();
+      if (/^https?:\/\/\S+$/i.test(s)) {
+        const label = s.replace(/^https?:\/\//i, '').replace(/^www\./i, '').replace(/\/+$/, '');
+        return `<a class="dados-link" href="${esc(s)}" target="_blank" rel="noopener noreferrer">${esc(label)}</a>`;
+      }
+      return esc(String(val));
+    }
+
     /* ── renderDados ──────────────────────────── */
     function renderDados(dados, item) {
         if (TIPOS_AUTOMACAO.includes(item.tipo_solicitacao)) {
@@ -2288,7 +2309,7 @@
           const svn = String(dados['palSvn' + n] || '').trim();
           if (!nome) continue;
           const svnBadge = svn.toLowerCase() === 'sim'
-            ? '<span style="background:var(--ruby-red);color:var(--paper-white);font-size:0.6rem;padding:2px 7px;border-radius:999px;font-weight:700;margin-left:6px">SVN</span>' : '';
+            ? '<span style="background:var(--ruby-red);color:var(--paper-white);font-size:0.6rem;padding:2px 7px;border-radius:var(--radius-pill);font-weight:700;margin-left:6px">SVN</span>' : '';
           palestrantesBlock += `
             <div style="display:flex;flex-direction:column;gap:2px">
               <div class="dados-label">Palestrante ${n}</div>
@@ -2305,7 +2326,7 @@
           if (value.length === 0) continue;
           if (typeof value[0] === 'object') {
             const depoBlock = value.filter(d => d && d.texto).map(d => `
-              <div style="background:var(--icon-bg);border-radius:8px;padding:10px 12px;margin-top:6px;font-size:0.85rem">
+              <div style="background:var(--icon-bg);border-radius:var(--radius-md);padding:10px 12px;margin-top:6px;font-size:0.85rem">
                 <div style="font-style:italic;opacity:0.8;margin-bottom:3px">"${esc(d.texto)}"</div>
                 ${d.nome ? `<div style="font-weight:600;font-size:0.78rem">${esc(d.nome)}</div>` : ''}
               </div>`).join('');
@@ -2316,15 +2337,15 @@
           } else {
             const val = value.map(v => humanizeValue(key, v)).join(', ');
             const wideAuto = (val.length > 70 || /\n/.test(val)) ? ' dados-grid-wide' : '';
-            gridFields += `<div class="dados-field${wideAuto}"><div class="dados-label">${esc(label)}</div><div class="dados-value">${esc(val)}</div></div>`;
-            hasContent = true;
+            gridFields += `<div class="dados-field${wideAuto}"><div class="dados-label">${esc(label)}</div><div class="dados-value">${fieldValueHtml(val)}</div></div>`;
+
           }
           continue;
         }
         if (typeof value === 'object') continue;
         const val = String(humanizeValue(key, value));
         const wideAuto = (val.length > 70 || /\n/.test(val)) ? ' dados-grid-wide' : '';
-        gridFields += `<div class="dados-field${wideAuto}"><div class="dados-label">${esc(label)}</div><div class="dados-value">${esc(val)}</div></div>`;
+        gridFields += `<div class="dados-field${wideAuto}"><div class="dados-label">${esc(label)}</div><div class="dados-value">${fieldValueHtml(val)}</div></div>`;
         hasContent = true;
       }
 
@@ -2335,7 +2356,7 @@
 
       let html = `<div class="dados-grid">${gridFields}`;
       if (palestrantesBlock) {
-        html += `<div class="dados-grid-wide" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px;padding:14px;background:var(--icon-bg);border-radius:10px">
+        html += `<div class="dados-grid-wide" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px;padding:14px;background:var(--icon-bg);border-radius:var(--radius-lg)">
           ${palestrantesBlock}
         </div>`;
       }
@@ -2399,10 +2420,10 @@
         const dataFmt = new Date(ev.created_at).toLocaleString('pt-BR', { day:'2-digit', month:'2-digit', year:'2-digit', hour:'2-digit', minute:'2-digit' });
         const detalhesHtml = ev.detalhes && Object.keys(ev.detalhes).length
           ? `<details style="margin-top:6px"><summary style="font-size:0.72rem;opacity:0.45;cursor:pointer;user-select:none">Detalhes</summary>
-              <pre style="font-size:0.7rem;opacity:0.55;white-space:pre-wrap;word-break:break-all;margin:6px 0 0;background:var(--icon-bg);padding:8px;border-radius:6px">${esc(JSON.stringify(ev.detalhes, null, 2))}</pre>
+              <pre style="font-size:0.7rem;opacity:0.55;white-space:pre-wrap;word-break:break-all;margin:6px 0 0;background:var(--icon-bg);padding:8px;border-radius:var(--radius-sm)">${esc(JSON.stringify(ev.detalhes, null, 2))}</pre>
              </details>` : '';
-        return `<div style="display:flex;gap:10px;margin-bottom:10px;padding:10px 12px;border-radius:8px;background:${cor.bg}">
-          <div style="width:8px;height:8px;border-radius:50%;background:${cor.dot};flex-shrink:0;margin-top:5px"></div>
+        return `<div style="display:flex;gap:10px;margin-bottom:10px;padding:10px 12px;border-radius:var(--radius-md);background:${cor.bg}">
+          <div style="width:8px;height:8px;border-radius:var(--radius-round);background:${cor.dot};flex-shrink:0;margin-top:5px"></div>
           <div style="flex:1;min-width:0">
             <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
               <span style="font-size:0.82rem;font-weight:600;line-height:1.4">${esc(ev.mensagem)}</span>
@@ -2446,7 +2467,7 @@
       <button class="modal-close" onclick="cancelarExcluir()">&times;</button>
     </div>
     <div class="modal-body">
-      <div style="background:rgba(172,54,49,0.07);border:1px solid rgba(172,54,49,0.22);border-radius:8px;padding:11px 14px;font-size:0.82rem;color:#8f2c28">Todos os arquivos vinculados também serão excluídos.</div>
+      <div style="background:rgba(172,54,49,0.07);border:1px solid rgba(172,54,49,0.22);border-radius:var(--radius-md);padding:11px 14px;font-size:0.82rem;color:var(--ruby-dark)">Todos os arquivos vinculados também serão excluídos.</div>
     </div>
     <div class="modal-footer">
       <button type="button" class="btn btn-secondary" onclick="cancelarExcluir()">Cancelar</button>
@@ -2464,7 +2485,7 @@
         <button class="modal-close" onclick="fecharCancelarModal()">&times;</button>
       </div>
       <div class="modal-body">
-        <textarea id="cancelarJustificativa" placeholder="Motivo do cancelamento..." style="width:100%;min-height:96px;padding:12px;border:1px solid var(--border-light);border-radius:8px;font-family:inherit;font-size:0.9rem;resize:vertical;box-sizing:border-box"></textarea>
+        <textarea id="cancelarJustificativa" placeholder="Motivo do cancelamento..." style="width:100%;min-height:96px;padding:12px;border:1px solid var(--border-light);border-radius:var(--radius-md);font-family:inherit;font-size:0.9rem;resize:vertical;box-sizing:border-box"></textarea>
         <div id="cancelarErro" style="display:none;color:var(--ruby-red);font-size:0.8rem;margin-top:8px"></div>
       </div>
       <div class="modal-footer">

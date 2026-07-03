@@ -25,7 +25,7 @@
       <div class="page-header">
         <h1 class="page-title">Log de atividade</h1>
         <div class="page-header__actions">
-          <button onclick="exportarLogCSV()" style="display:inline-flex;align-items:center;gap:6px;padding:7px 16px;border-radius:9px;border:1px solid var(--border-light);background:transparent;font-family:'Nunito Sans',sans-serif;font-size:0.82rem;font-weight:600;cursor:pointer">
+          <button onclick="exportarLogCSV()" style="display:inline-flex;align-items:center;gap:6px;padding:7px 16px;border-radius:var(--radius-md);border:1px solid var(--border-light);background:transparent;font-family:'Nunito Sans', sans-serif;font-size:0.82rem;font-weight:600;cursor:pointer">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
             Exportar CSV
           </button>
@@ -57,13 +57,13 @@
           </div>
         </div>
         </div>
-        <div class="search-bar" style="flex:1;margin-bottom:0;height:32px;padding:0 14px;border-radius:8px">
+        <div class="search-bar" style="flex:1;margin-bottom:0;height:32px;padding:0 14px;border-radius:var(--radius-md)">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.4"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
           <input type="text" id="logBusca" placeholder="Buscar por usuário, detalhe..." oninput="debounceLogSearch()">
         </div>
       </div>
 
-      <div style="border-radius:12px;border:1px solid var(--border-light);overflow:hidden;position:relative">
+      <div style="border-radius:var(--radius-xl);border:1px solid var(--border-light);overflow:hidden;position:relative">
         <table class="admin-table" style="table-layout:fixed" id="logTabela">
           <colgroup>
             <col style="width:110px">
@@ -170,7 +170,7 @@
             <div style="font-size:0.78rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${esc(item.user_email || '')}">${esc(userShort)}</div>
           </td>
           <td style="padding:8px 14px">
-            <span style="display:inline-block;padding:2px 7px;border-radius:5px;font-size:0.68rem;font-weight:800;background:${ns.bg};color:${ns.text};letter-spacing:0.04em">${ns.label}</span>
+            <span style="display:inline-block;padding:2px 7px;border-radius:var(--radius-sm);font-size:0.68rem;font-weight:800;background:${ns.bg};color:${ns.text};letter-spacing:0.04em">${ns.label}</span>
           </td>
           <td style="padding:8px 14px;overflow:hidden">
             <span style="font-size:0.76rem;opacity:0.8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block" title="${esc(tipoLabel)}">${esc(tipoLabel)}</span>

@@ -73,8 +73,8 @@ window.Shell = {
       const email = sessionStorage.getItem('svn_impersonate') || '';
       const el = document.createElement('div');
       el.id = 'impersonarBanner';
-      el.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:9999;background:#7c3aed;color:#fff;padding:8px 20px;display:flex;align-items:center;justify-content:center;gap:10px;font-size:0.82rem;font-weight:600;font-family:"Nunito Sans",sans-serif';
-      el.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg> Visualizando como: <strong>' + window.esc(email) + '</strong> <button onclick="window._sairImpersonar()" style="background:rgba(255,255,255,0.2);border:none;color:#fff;padding:3px 10px;border-radius:6px;cursor:pointer;font-family:\'Nunito Sans\',sans-serif;font-weight:600;font-size:0.78rem;margin-left:6px">Sair ✕</button>';
+      el.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:9999;background:#7c3aed;color:#fff;padding:8px 20px;display:flex;align-items:center;justify-content:center;gap:10px;font-size:0.82rem;font-weight:600;font-family:"Nunito Sans", sans-serif';
+      el.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg> Visualizando como: <strong>' + window.esc(email) + '</strong> <button onclick="window._sairImpersonar()" style="background:rgba(255,255,255,0.2);border:none;color:#fff;padding:3px 10px;border-radius:var(--radius-sm);cursor:pointer;font-family:\'Nunito Sans\', sans-serif;font-weight:600;font-size:0.78rem;margin-left:6px">Sair ✕</button>';
       document.body.prepend(el);
     }
     document.body.style.paddingTop = '40px';

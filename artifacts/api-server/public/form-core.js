@@ -114,9 +114,9 @@ window.FormCore = (function () {
     const bar = document.createElement('div');
     bar.id = 'svnDraftBanner';
     bar.setAttribute('role', 'status');
-    bar.style.cssText = 'display:flex;align-items:center;gap:10px;justify-content:space-between;flex-wrap:wrap;margin:0 0 16px;padding:10px 14px;border:1px solid var(--ink-15,#e5e0d8);background:var(--ink-05,#faf7f2);border-radius:10px;font-size:0.86rem;color:var(--ink-70,#4a463f)';
+    bar.style.cssText = 'display:flex;align-items:center;gap:10px;justify-content:space-between;flex-wrap:wrap;margin:0 0 16px;padding:10px 14px;border:1px solid var(--ink-15,#e5e0d8);background:var(--ink-05,#faf7f2);border-radius:var(--radius-lg);font-size:0.86rem;color:var(--ink-70,#4a463f)';
     bar.innerHTML = '<span>Recuperamos um rascunho que você não chegou a enviar.</span>'
-      + '<button type="button" id="svnDraftDiscard" style="padding:5px 12px;border-radius:7px;border:1px solid var(--ink-20,#d6d3cd);background:#fff;color:var(--ink-70,#4a463f);font-weight:600;font-size:0.82rem;cursor:pointer;white-space:nowrap">Descartar e começar do zero</button>';
+      + '<button type="button" id="svnDraftDiscard" style="padding:5px 12px;border-radius:var(--radius-sm);border:1px solid var(--ink-20,#d6d3cd);background:#fff;color:var(--ink-70,#4a463f);font-weight:600;font-size:0.82rem;cursor:pointer;white-space:nowrap">Descartar e começar do zero</button>';
     host.insertBefore(bar, host.firstChild);
     const btn = document.getElementById('svnDraftDiscard');
     if (btn) btn.addEventListener('click', function () { _clearDraft(tipo); location.reload(); });

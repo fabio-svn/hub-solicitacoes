@@ -13,15 +13,15 @@
   <style>
 
     .ccu-section-title { font-size: 0.72rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-50); margin: 28px 0 12px; }
-    .ccu-card { padding: 18px; margin-bottom: 12px; border-radius: 14px; }
+    .ccu-card { padding: 18px; margin-bottom: 12px; border-radius: var(--radius-xl); }
     .ccu-add-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
     .ccu-status { font-size: 0.78rem; margin-top: 8px; min-height: 1em; }
     .ccu-status.ok { color: #0A7040; }
     .ccu-status.err { color: var(--danger); }
     .ccu-hint { font-size: 0.78rem; color: var(--ink-50); margin-top: 8px; line-height: 1.45; }
-    .ccu-hint code { background: var(--ink-05); padding: 1px 5px; border-radius: 4px; }
+    .ccu-hint code { background: var(--ink-05); padding: 1px 5px; border-radius: var(--radius-xs); }
     .ccu-add-inline { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; flex-wrap: wrap; }
-    .ccu-help-btn { width: 30px; height: 30px; border-radius: 50%; border: 1.5px solid #e8e2dc; background: #fff; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; color: var(--ink-50); flex-shrink: 0; transition: background 0.15s, border-color 0.15s, color 0.15s; }
+    .ccu-help-btn { width: 30px; height: 30px; border-radius: var(--radius-round); border: 1.5px solid #e8e2dc; background: #fff; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; color: var(--ink-50); flex-shrink: 0; transition: background 0.15s, border-color 0.15s, color 0.15s; }
     .ccu-help-btn:hover { border-color: var(--ruby-red); color: var(--ruby-red); }
     .ccu-list-head { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 12px; }
     .ccu-list-head-text { flex: 1; min-width: 0; }
@@ -29,8 +29,8 @@
     .ccu-list-id { font-size: 0.72rem; color: var(--ink-40); font-weight: 500; margin-top: 2px; }
     .ccu-link-btn { background: none; border: none; padding: 0; font-size: inherit; color: inherit; cursor: pointer; font-family: inherit; text-decoration: underline; text-decoration-style: dotted; text-underline-offset: 2px; }
     .ccu-link-btn:hover { color: var(--ruby-red); }
-    .ccu-icon-btn { width: 32px; height: 32px; border-radius: 8px; border: 1px solid transparent; background: transparent; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; color: var(--ink-40); transition: background 0.15s, color 0.15s, border-color 0.15s; flex-shrink: 0; }
-    .ccu-icon-btn:hover { background: #fef2f2; color: var(--danger); border-color: #fecaca; }
+    .ccu-icon-btn { width: 32px; height: 32px; border-radius: var(--radius-md); border: 1px solid transparent; background: transparent; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; color: var(--ink-40); transition: background 0.15s, color 0.15s, border-color 0.15s; flex-shrink: 0; }
+    .ccu-icon-btn:hover { background: var(--danger-soft); color: var(--danger); border-color: var(--danger-border); }
     .ccu-forms-label { font-size: 0.74rem; font-weight: 700; color: var(--ink-50); margin-bottom: 8px; }
     .ccu-forms-grid { display: block; }
     .ccu-category { margin-bottom: 16px; }
@@ -66,7 +66,7 @@
       font-size: 0.72rem;
       font-weight: 600;
       padding: 3px 9px;
-      border-radius: 999px;
+      border-radius: var(--radius-pill);
       background: var(--ink-08);
       color: var(--carbon-black);
       cursor: pointer;
@@ -90,7 +90,7 @@
       font-size: 0.72rem;
       font-weight: 600;
       padding: 2px 9px;
-      border-radius: 999px;
+      border-radius: var(--radius-pill);
       border: 1.5px solid var(--ruby-red);
       background: #fff;
       color: var(--carbon-black);
@@ -123,7 +123,7 @@
     /* === Botão expandir === */
     .ccu-expand-btn {
       padding: 7px 14px;
-      border-radius: 8px;
+      border-radius: var(--radius-md);
       border: 1.5px solid #e8e2dc;
       background: #fff;
       font-size: 0.82rem;
@@ -137,7 +137,7 @@
       transition: background 0.15s, border-color 0.15s;
     }
     .ccu-expand-btn:hover {
-      background: #f5f3f0;
+      background: var(--bg-light);
       border-color: var(--ink-20);
     }
     .ccu-chevron { transition: transform 0.2s; flex-shrink: 0; }

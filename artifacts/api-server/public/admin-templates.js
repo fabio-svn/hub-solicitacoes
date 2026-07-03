@@ -145,7 +145,7 @@
     const val = currentValue || '#ffffff';
     const hexId = id + '_hex';
     const swatches = SVN_BRAND_SWATCHES.map(s =>
-      `<button type="button" class="brand-swatch" title="${s.label}" onclick="applySwatch('${id}','${s.color}')" style="width:18px;height:18px;border-radius:50%;border:1px solid var(--ink-12);background:${s.color};cursor:pointer;padding:0;flex-shrink:0"></button>`
+      `<button type="button" class="brand-swatch" title="${s.label}" onclick="applySwatch('${id}','${s.color}')" style="width:18px;height:18px;border-radius:var(--radius-round);border:1px solid var(--ink-12);background:${s.color};cursor:pointer;padding:0;flex-shrink:0"></button>`
     ).join('');
     return `<div style="display:flex;flex-direction:column;gap:4px">`
       + `<div style="display:flex;gap:6px;align-items:center">`
@@ -502,7 +502,7 @@
       title.textContent = t.name;
       const bgUrl = t.config?.bg?.url || t.config?.background_image_url;
       if (bgUrl) {
-        content.innerHTML = `<img src="${bgUrl}" style="max-width:100%;max-height:70vh;border-radius:6px;display:block">`;
+        content.innerHTML = `<img src="${bgUrl}" style="max-width:100%;max-height:70vh;border-radius:var(--radius-sm);display:block">`;
       } else {
         content.innerHTML = `<div style="padding:40px;opacity:0.5;font-size:0.9rem;text-align:center">Nenhum background configurado ainda.<br>Abra o editor para pré-visualizar o template.</div>`;
       }

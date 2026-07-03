@@ -207,7 +207,11 @@ function humanizeValue(key, value) {
   }
   const _phoneKeys = ['telefone', 'whatsapp', 'phone', 'tel'];
   const _looksLikePhone = typeof value === 'string' && /^\(\d{2}\)\s*\d/.test(value);
-  if (typeof value === 'string' && (value.includes('-') || value.includes('_')) && !_phoneKeys.includes(key) && !_looksLikePhone) return humanizeSlug(value);
+  // Só trata como slug se o valor INTEIRO for tokens ligados por - ou _ (ex.: "em-producao",
+  // "flyer-institucional"). Texto livre, URLs e frases com espaço/quebra de linha passam direto.
+  const _looksLikeSlug = typeof value === 'string'
+    && /^[\p{L}\p{N}]+(?:[-_][\p{L}\p{N}]+)+$/u.test(value.trim());
+  if (_looksLikeSlug && !_phoneKeys.includes(key) && !_looksLikePhone) return humanizeSlug(value);
   // Ultimo recurso: token unico minusculo (so letras, sem espaco/digito) -> capitaliza inicial.
   // Ex.: "fisico" -> "Fisico", "online" -> "Online". Nao toca nome/email/telefone/multi-palavra.
   if (typeof value === 'string' && /^\p{L}{2,}$/u.test(value) && value === value.toLowerCase()) {

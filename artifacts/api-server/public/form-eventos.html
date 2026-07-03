@@ -86,17 +86,17 @@
             <h2 style="font-weight:600;font-size:1.1rem;margin-bottom:20px">Qual o nível de informação que você tem sobre o evento?</h2>
             <div class="radio-cards maturidade-cards" style="margin-bottom:16px">
               <div class="radio-card" onclick="selectMaturidade(1)" id="mat1">
-                <div class="card-icon" style="font-size:2rem;font-family:'Taviraj',serif;font-weight:300">1</div>
+                <div class="card-icon" style="font-size:2rem;font-family:'Taviraj', serif;font-weight:300">1</div>
                 <div class="card-label">Tenho a maioria das informações</div>
                 <div class="card-desc">Evento com data, local e detalhes definidos</div>
               </div>
               <div class="radio-card" onclick="selectMaturidade(2)" id="mat2">
-                <div class="card-icon" style="font-size:2rem;font-family:'Taviraj',serif;font-weight:300">2</div>
+                <div class="card-icon" style="font-size:2rem;font-family:'Taviraj', serif;font-weight:300">2</div>
                 <div class="card-label">Tenho algumas informações</div>
                 <div class="card-desc">Algumas informações definidas, outras em aberto</div>
               </div>
               <div class="radio-card" onclick="selectMaturidade(3)" id="mat3">
-                <div class="card-icon" style="font-size:2rem;font-family:'Taviraj',serif;font-weight:300">3</div>
+                <div class="card-icon" style="font-size:2rem;font-family:'Taviraj', serif;font-weight:300">3</div>
                 <div class="card-label">Ainda estou estruturando</div>
                 <div class="card-desc">Tenho uma ideia, preciso de apoio para estruturar</div>
               </div>
@@ -247,7 +247,7 @@
           <div id="previewRows">
             <div style="padding:12px 0;border-bottom:1px solid var(--border-light)">
               <div style="font-size:0.7rem;font-weight:600;opacity:0.4;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px">Evento</div>
-              <div style="font-family:'Taviraj',serif;font-weight:300;font-size:1.1rem;color:var(--carbon-black)" id="pvEvento">—</div>
+              <div style="font-family:'Taviraj', serif;font-weight:300;font-size:1.1rem;color:var(--carbon-black)" id="pvEvento">—</div>
             </div>
             <div class="preview-row"><span class="preview-label">Solicitante</span><span class="preview-value empty" id="pvSolicitante">—</span></div>
             <div class="preview-row"><span class="preview-label">Data</span><span class="preview-value empty" id="pvData">—</span></div>
@@ -278,19 +278,19 @@
       <div class="modal-body">
         <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px">
           <div style="text-align:center;padding:16px">
-            <div style="font-family:'Taviraj',serif;font-size:3rem;font-weight:300;margin-bottom:8px;color:var(--carbon-black)">1</div>
+            <div style="font-family:'Taviraj', serif;font-size:3rem;font-weight:300;margin-bottom:8px;color:var(--carbon-black)">1</div>
             <span class="badge" style="background:var(--ruby-red);color:white;margin-bottom:8px;white-space:normal;display:inline-block;line-height:1.3">Tenho a maioria das informações</span>
             <p style="font-size:0.82rem;opacity:0.7;margin-top:8px">Quando as informações mais básicas do evento estiverem pré-definidas.</p>
             <p style="font-size:0.78rem;font-style:italic;opacity:0.5;margin-top:4px">Ex.: Tenho Nome, Data, Local, Formato, etc</p>
           </div>
           <div style="text-align:center;padding:16px">
-            <div style="font-family:'Taviraj',serif;font-size:3rem;font-weight:300;margin-bottom:8px;color:var(--carbon-black)">2</div>
+            <div style="font-family:'Taviraj', serif;font-size:3rem;font-weight:300;margin-bottom:8px;color:var(--carbon-black)">2</div>
             <span class="badge" style="background:var(--sage-green);color:white;margin-bottom:8px;white-space:normal;display:inline-block;line-height:1.3">Tenho algumas informações</span>
             <p style="font-size:0.82rem;opacity:0.7;margin-top:8px">Quando algumas informações estiverem definidas, mas você precisa de apoio para fechar outros pontos.</p>
             <p style="font-size:0.78rem;font-style:italic;opacity:0.5;margin-top:4px">Ex.: Quero realizar uma palestra sobre FIIs no dia 7, mas ainda preciso definir o local.</p>
           </div>
           <div style="text-align:center;padding:16px">
-            <div style="font-family:'Taviraj',serif;font-size:3rem;font-weight:300;margin-bottom:8px;color:var(--carbon-black)">3</div>
+            <div style="font-family:'Taviraj', serif;font-size:3rem;font-weight:300;margin-bottom:8px;color:var(--carbon-black)">3</div>
             <span class="badge" style="background:var(--leather-brown);color:white;margin-bottom:8px;white-space:normal;display:inline-block;line-height:1.3">Ainda estou estruturando</span>
             <p style="font-size:0.82rem;opacity:0.7;margin-top:8px">Quando você tiver uma ideia para um evento, mas precisa de apoio para estruturar.</p>
             <p style="font-size:0.78rem;font-style:italic;opacity:0.5;margin-top:4px">Ex.: Gostaria de realizar uma experiencia com clientes, mas preciso de assistência.</p>
@@ -621,7 +621,7 @@
         <div class="field"><label>Descrição do evento</label><textarea id="descricao" placeholder="Descreva sua ideia para o evento..."></textarea></div>
         <div class="field"><label>Tipo aproximado de evento</label>
           <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
-            ${TIPOS_EVENTO_FORM3.map(t => `<label class="radio-option" style="padding:8px 12px;border:1px solid var(--border-light);border-radius:8px"><input type="radio" name="tipoAprox" value="${t}"><span class="radio-custom"></span><span style="font-size:0.85rem">${t}</span></label>`).join('')}
+            ${TIPOS_EVENTO_FORM3.map(t => `<label class="radio-option" style="padding:8px 12px;border:1px solid var(--border-light);border-radius:var(--radius-md)"><input type="radio" name="tipoAprox" value="${t}"><span class="radio-custom"></span><span style="font-size:0.85rem">${t}</span></label>`).join('')}
           </div>
         </div>
         <div class="field"><label>Ideia de quando realizar (opcional)</label><input type="text" id="ideaQuando" placeholder="Ex.: segundo semestre, próximo trimestre..."></div>
@@ -665,7 +665,7 @@
         <div class="field"><label>Descrição</label><textarea id="descricao" placeholder="Descreva sua ideia..."></textarea></div>
         <div class="field"><label>Tipo online aproximado</label>
           <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
-            ${tiposOnline.map(t => `<label class="radio-option" style="padding:8px 12px;border:1px solid var(--border-light);border-radius:8px"><input type="radio" name="tipoAprox" value="${t}"><span class="radio-custom"></span><span style="font-size:0.85rem">${t}</span></label>`).join('')}
+            ${tiposOnline.map(t => `<label class="radio-option" style="padding:8px 12px;border:1px solid var(--border-light);border-radius:var(--radius-md)"><input type="radio" name="tipoAprox" value="${t}"><span class="radio-custom"></span><span style="font-size:0.85rem">${t}</span></label>`).join('')}
           </div>
         </div>
         <div class="field"><label>Ideia de quando realizar (opcional)</label><input type="text" id="ideaQuando" placeholder="Ex.: próximo mês..."></div>
@@ -1207,7 +1207,7 @@
         const prazo = PRAZOS_MATERIAIS[id];
         const icon = ICONS[id] || '';
         if (!item) return '';
-        return `<div style="background:var(--icon-bg);border-radius:8px;padding:8px 10px;font-size:0.75rem;font-weight:600;display:flex;align-items:flex-start;gap:6px;margin-bottom:4px">
+        return `<div style="background:var(--icon-bg);border-radius:var(--radius-md);padding:8px 10px;font-size:0.75rem;font-weight:600;display:flex;align-items:flex-start;gap:6px;margin-bottom:4px">
           <span style="color:var(--ruby-red);flex-shrink:0;line-height:1.4;margin-top:1px">${icon}</span>
           <div style="min-width:0">
             <div style="line-height:1.4">${item.label}</div>
@@ -1357,7 +1357,7 @@
               updatePalPreview(i);
               const avatarEl = document.querySelector('#palPreview' + i + ' .speaker-avatar');
               if (avatarEl) {
-                avatarEl.innerHTML = `<img src="${e.target.result}" alt="foto" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`;
+                avatarEl.innerHTML = `<img src="${e.target.result}" alt="foto" style="width:100%;height:100%;object-fit:cover;border-radius:var(--radius-round)">`;
               }
             };
             reader.readAsDataURL(file);
@@ -1399,7 +1399,7 @@
           <div style="flex:1;min-width:200px;max-width:320px">
             <p style="font-size:0.8rem;font-weight:600;color:var(--carbon-black);opacity:0.6;margin-bottom:8px;text-align:center">${item.titulo}</p>
             <img src="${item.url}"
-                 style="width:100%;height:auto;border-radius:8px;object-fit:contain;display:block"
+                 style="width:100%;height:auto;border-radius:var(--radius-md);object-fit:contain;display:block"
                  onerror="this.parentElement.innerHTML='<p style=\\'opacity:0.4;font-size:0.8rem;text-align:center;padding:20px\\'>Imagem não disponível</p>'">
           </div>
         `).join('');
@@ -1637,21 +1637,21 @@
       </div>
       <div class="modal-body">
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:16px">
-          <div style="background:var(--ink-05);border:1px solid var(--ink-08);border-radius:10px;padding:16px">
+          <div style="background:var(--ink-05);border:1px solid var(--ink-08);border-radius:var(--radius-lg);padding:16px">
             <div style="font-size:0.62rem;text-transform:uppercase;letter-spacing:0.07em;color:var(--ink-40);margin-bottom:6px">Online</div>
-            <div style="font-size:2rem;font-weight:500;font-family:'Taviraj',serif;color:var(--carbon-black);line-height:1">15</div>
+            <div style="font-size:2rem;font-weight:500;font-family:'Taviraj', serif;color:var(--carbon-black);line-height:1">15</div>
             <div style="font-size:0.76rem;color:var(--ink-50);margin-top:3px">dias úteis de antecedência</div>
             <div style="margin-top:10px;font-size:0.76rem;color:var(--ink-50);line-height:1.5">Webinars, lives, transmissões internas. Inclui divulgação digital e convite.</div>
           </div>
-          <div style="background:var(--ink-05);border:1px solid var(--ink-08);border-radius:10px;padding:16px">
+          <div style="background:var(--ink-05);border:1px solid var(--ink-08);border-radius:var(--radius-lg);padding:16px">
             <div style="font-size:0.62rem;text-transform:uppercase;letter-spacing:0.07em;color:var(--ink-40);margin-bottom:6px">Presencial simples</div>
-            <div style="font-size:2rem;font-weight:500;font-family:'Taviraj',serif;color:var(--carbon-black);line-height:1">21</div>
+            <div style="font-size:2rem;font-weight:500;font-family:'Taviraj', serif;color:var(--carbon-black);line-height:1">21</div>
             <div style="font-size:0.76rem;color:var(--ink-50);margin-top:3px">dias úteis de antecedência</div>
             <div style="margin-top:10px;font-size:0.76rem;color:var(--ink-50);line-height:1.5">Coffee, treinamentos e reuniões internas. Inclui logística e divulgação.</div>
           </div>
-          <div style="background:var(--ink-05);border:1px solid var(--ink-08);border-radius:10px;padding:16px">
+          <div style="background:var(--ink-05);border:1px solid var(--ink-08);border-radius:var(--radius-lg);padding:16px">
             <div style="font-size:0.62rem;text-transform:uppercase;letter-spacing:0.07em;color:var(--ink-40);margin-bottom:6px">Presencial complexo</div>
-            <div style="font-size:2rem;font-weight:500;font-family:'Taviraj',serif;color:var(--carbon-black);line-height:1">45</div>
+            <div style="font-size:2rem;font-weight:500;font-family:'Taviraj', serif;color:var(--carbon-black);line-height:1">45</div>
             <div style="font-size:0.76rem;color:var(--ink-50);margin-top:3px">dias úteis de antecedência</div>
             <div style="margin-top:10px;font-size:0.76rem;color:var(--ink-50);line-height:1.5">Eventos externos, com palestrante, buffet, espaços locados ou cobertura jornalística.</div>
           </div>

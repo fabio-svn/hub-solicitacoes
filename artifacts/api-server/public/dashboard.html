@@ -100,7 +100,7 @@
           </div>
         </div>
         </div>
-        <div class="search-bar" style="flex:1;margin-bottom:0;height:32px;padding:0 14px;border-radius:8px">
+        <div class="search-bar" style="flex:1;margin-bottom:0;height:32px;padding:0 14px;border-radius:var(--radius-md)">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.4"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
           <input type="text" placeholder="Buscar por nome do evento..." id="searchEventos" oninput="debounceSearch('eventos')">
         </div>
@@ -164,7 +164,7 @@
           </div>
         </div>
         </div>
-        <div class="search-bar" style="flex:1;margin-bottom:0;height:32px;padding:0 14px;border-radius:8px">
+        <div class="search-bar" style="flex:1;margin-bottom:0;height:32px;padding:0 14px;border-radius:var(--radius-md)">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.4"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
           <input type="text" placeholder="Buscar..." id="searchGeral" oninput="debounceSearch('geral')">
         </div>
@@ -249,7 +249,7 @@
     async function loadList(tab) {
       const listEl = document.getElementById(tab === 'eventos' ? 'listEventos' : 'listGeral');
       listEl.innerHTML = [1,2,3].map(() => `
-        <div style="background:var(--icon-bg);border-radius:12px;height:64px;margin-bottom:12px;overflow:hidden;position:relative">
+        <div style="background:var(--icon-bg);border-radius:var(--radius-xl);height:64px;margin-bottom:12px;overflow:hidden;position:relative">
           <div style="position:absolute;inset:0;background:linear-gradient(90deg,transparent 25%,rgba(255,255,255,0.5) 50%,transparent 75%);background-size:200% 100%;animation:shimmer 1.2s infinite"></div>
         </div>
       `).join('');
@@ -334,7 +334,7 @@
         const temErros = (item.erros_24h || 0) > 0;
         const isAdmin = isCurrentUserAdmin();
         const erroBadgeHtml = (temErros && isAdmin)
-          ? `<span title="${item.erros_24h} erro(s) nas últimas 24h" style="display:inline-flex;align-items:center;gap:3px;font-size:0.62rem;font-weight:800;background:#fee2e2;color:var(--danger-strong);padding:2px 7px;border-radius:999px;vertical-align:middle;margin-left:4px;flex-shrink:0">
+          ? `<span title="${item.erros_24h} erro(s) nas últimas 24h" style="display:inline-flex;align-items:center;gap:3px;font-size:0.62rem;font-weight:800;background:var(--danger-soft);color:var(--danger-strong);padding:2px 7px;border-radius:var(--radius-pill);vertical-align:middle;margin-left:4px;flex-shrink:0">
               <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
               ${item.erros_24h}
              </span>` : '';
@@ -342,7 +342,7 @@
         return groupHeader + `<div class="request-card" onclick="window.location.href='/solicitacao.html?id=${item.id}'"
           style="${pendente ? 'border-left:3px solid var(--ruby-red);' : ''}">
           <div class="request-info">
-            <div class="request-title">${esc(titulo)}${pendente ? ' <span style="display:inline-block;font-size:0.62rem;font-weight:800;background:var(--ruby-red);color:white;padding:1px 6px;border-radius:999px;vertical-align:middle;margin-left:4px">APROVAÇÃO</span>' : ''}${erroBadgeHtml}</div>
+            <div class="request-title">${esc(titulo)}${pendente ? ' <span style="display:inline-block;font-size:0.62rem;font-weight:800;background:var(--ruby-red);color:white;padding:1px 6px;border-radius:var(--radius-pill);vertical-align:middle;margin-left:4px">APROVAÇÃO</span>' : ''}${erroBadgeHtml}</div>
             <div class="request-meta">
               <span>${esc(tipoLabel)}</span>
               <span>${esc(dataRel)}</span>
@@ -366,7 +366,7 @@
               <a href="${esc(item.clickup_url)}" target="_blank" rel="noopener"
                  onclick="event.stopPropagation()"
                  title="Abrir no ClickUp"
-                 style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:7px;background:rgba(137,48,253,0.08);text-decoration:none;transition:background 0.15s;flex-shrink:0"
+                 style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:var(--radius-sm);background:rgba(137,48,253,0.08);text-decoration:none;transition:background 0.15s;flex-shrink:0"
                  onmouseover="this.style.background='rgba(137,48,253,0.15)'"
                  onmouseout="this.style.background='rgba(137,48,253,0.08)'">
                 ${CLICKUP_ICON}
