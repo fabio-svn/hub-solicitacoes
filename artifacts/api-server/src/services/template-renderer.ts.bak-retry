@@ -109,44 +109,33 @@ async function getRemoteAsset(url: string): Promise<Buffer> {
       if (DEBUG_RENDER) logger.info({ url }, 'render: asset cache hit');
       return cached;
     }
-    const browserHeaders = {
-      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36',
-      'Accept': 'image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8',
-      'Accept-Language': 'pt-BR,pt;q=0.9,en;q=0.8',
-    };
-    // Retry com backoff: o desafio anti-bot do Cloudflare (202 + HTML) e intermitente
-    // sob rajada de requisicoes; costuma passar na 2a/3a tentativa.
-    const MAX_TENTATIVAS = 3;
-    let ultimoErro = '';
-    for (let tentativa = 1; tentativa <= MAX_TENTATIVAS; tentativa++) {
-      const controller = new AbortController();
-      const timer = setTimeout(() => controller.abort(), 8000);
-      let res: Response;
-      try {
-        res = await fetch(url, { signal: controller.signal, headers: browserHeaders });
-      } finally {
-        clearTimeout(timer);
-      }
-      const ct = res.headers.get('content-type') || '';
-      const ehImagem = res.ok && (ct === '' || ct.startsWith('image/'));
-      if (ehImagem) {
-        const buf = Buffer.from(await res.arrayBuffer());
-        if (buf.length < 512 && buf.subarray(0, 5).toString('utf-8').toLowerCase().includes('<htm')) {
-          ultimoErro = `resposta HTML (${buf.length}b) apesar do content-type "${ct}"`;
-        } else {
-          if (DEBUG_RENDER) logger.info({ url, tentativa }, 'render: asset ok');
-          assetCache.set(url, buf);
-          return buf;
-        }
-      } else {
-        ultimoErro = `status ${res.status}, content-type "${ct}"`;
-      }
-      if (tentativa < MAX_TENTATIVAS) {
-        logger.warn({ url, tentativa, motivo: ultimoErro }, 'render: asset nao-imagem, tentando novamente');
-        await new Promise(r => setTimeout(r, 400 * tentativa));
-      }
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 5000);
+    let res: Response;
+    try {
+      res = await fetch(url, {
+        signal: controller.signal,
+        headers: {
+          // Alguns hosts (ex.: Cloudflare no portalsvn.com.br) devolvem 202 + HTML de desafio
+          // para requisicoes sem cara de navegador. Enviar UA/Accept realistas evita isso.
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36',
+          'Accept': 'image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8',
+          'Accept-Language': 'pt-BR,pt;q=0.9,en;q=0.8',
+        },
+      });
+    } finally {
+      clearTimeout(timer);
     }
-    throw new Error(`Falha ao buscar imagem ${url} apos ${MAX_TENTATIVAS} tentativas: ${ultimoErro}`);
+    if (!res.ok) throw new Error(`Falha ao buscar ${url}: ${res.status}`);
+    const ct = res.headers.get('content-type') || '';
+    if (ct && !ct.startsWith('image/')) {
+      // Resposta 2xx mas nao e imagem (ex.: 202 + text/html de desafio anti-bot).
+      throw new Error(`Asset ${url} retornou content-type inesperado: ${ct} (status ${res.status})`);
+    }
+    const buf = Buffer.from(await res.arrayBuffer());
+    if (DEBUG_RENDER) logger.info({ url }, 'render: asset cache miss');
+    assetCache.set(url, buf);
+    return buf;
   }
   const fullPath = url.startsWith('/') ? url : path.join(ASSETS_DIR, url);
   const stats = await fs.promises.stat(fullPath).catch(() => null);
