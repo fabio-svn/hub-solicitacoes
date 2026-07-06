@@ -25,8 +25,7 @@ export async function uploadToR2(
   file: { path: string; originalname: string; mimetype: string },
   solicitacaoId: number,
   campo: string,
-  downloadName?: string,
-  fixedKey?: string
+  downloadName?: string
 ): Promise<string> {
   const client = getR2Client();
 
@@ -38,7 +37,7 @@ export async function uploadToR2(
 
   const lastDot = file.originalname.lastIndexOf(".");
   const ext = lastDot !== -1 ? file.originalname.slice(lastDot + 1) : "";
-  const key = fixedKey || `solicitacoes/${solicitacaoId}/${campo}/${uuidv4()}.${ext}`;
+  const key = `solicitacoes/${solicitacaoId}/${campo}/${uuidv4()}.${ext}`;
 
   try {
     await client.send(new PutObjectCommand({

@@ -53,26 +53,18 @@ router.post("/gerar-convite", async (req, res): Promise<void> => {
     }
 
     // 4+5) Para cada formato gerado, gravar temp e subir no R2
-    const eventIdRaw = (req.body && req.body.event_id) ? String(req.body.event_id) : "";
-    const eventId = eventIdRaw.replace(/[^a-zA-Z0-9_-]/g, "").slice(0, 64);
-    const numConvite = String(dados["num_palestrantes"] ?? "").trim() || "1";
     const urls: Record<string, string> = {};
     for (const formato of formatos) {
       const { buffer, ext, mimetype } = kit[formato];
       const filename = `convite-${formato}-${Date.now()}.${ext}`;
       const tmpPath = path.join(os.tmpdir(), filename);
       await fs.promises.writeFile(tmpPath, buffer);
-      const fixedKey = eventId
-        ? `solicitacoes/0/convite/${eventId}-${numConvite}-${formato}.${ext}`
-        : undefined;
       const url = await uploadToR2(
         { path: tmpPath, originalname: `convite-${formato}.${ext}`, mimetype },
         0,
         "convite",
-        undefined,
-        fixedKey,
       );
-      urls[formato] = fixedKey ? `${url}?v=${Date.now()}` : url;
+      urls[formato] = url;
     }
 
     logger.info({ urls }, "[convite] kit gerado e enviado ao R2");
