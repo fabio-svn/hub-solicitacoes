@@ -119,14 +119,6 @@ async function getRemoteAsset(url: string): Promise<Buffer> {
     }
     if (!res.ok) throw new Error(`Falha ao buscar ${url}: ${res.status}`);
     const buf = Buffer.from(await res.arrayBuffer());
-    // DEBUG_CONVITE_URL (temporario): mostra o que foi baixado
-    logger.info({
-      url,
-      status: res.status,
-      contentType: res.headers.get('content-type'),
-      bufLen: buf.length,
-      hexInicial: buf.subarray(0, 8).toString('hex'),
-    }, '[DEBUG_CONVITE_URL] asset baixado');
     if (DEBUG_RENDER) logger.info({ url }, 'render: asset cache miss');
     assetCache.set(url, buf);
     return buf;
