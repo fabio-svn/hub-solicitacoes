@@ -113,26 +113,20 @@ async function getRemoteAsset(url: string): Promise<Buffer> {
     const timer = setTimeout(() => controller.abort(), 5000);
     let res: Response;
     try {
-      res = await fetch(url, {
-        signal: controller.signal,
-        headers: {
-          // Alguns hosts (ex.: Cloudflare no portalsvn.com.br) devolvem 202 + HTML de desafio
-          // para requisicoes sem cara de navegador. Enviar UA/Accept realistas evita isso.
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36',
-          'Accept': 'image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8',
-          'Accept-Language': 'pt-BR,pt;q=0.9,en;q=0.8',
-        },
-      });
+      res = await fetch(url, { signal: controller.signal });
     } finally {
       clearTimeout(timer);
     }
     if (!res.ok) throw new Error(`Falha ao buscar ${url}: ${res.status}`);
-    const ct = res.headers.get('content-type') || '';
-    if (ct && !ct.startsWith('image/')) {
-      // Resposta 2xx mas nao e imagem (ex.: 202 + text/html de desafio anti-bot).
-      throw new Error(`Asset ${url} retornou content-type inesperado: ${ct} (status ${res.status})`);
-    }
     const buf = Buffer.from(await res.arrayBuffer());
+    // DEBUG_CONVITE_URL (temporario): mostra o que foi baixado
+    logger.info({
+      url,
+      status: res.status,
+      contentType: res.headers.get('content-type'),
+      bufLen: buf.length,
+      hexInicial: buf.subarray(0, 8).toString('hex'),
+    }, '[DEBUG_CONVITE_URL] asset baixado');
     if (DEBUG_RENDER) logger.info({ url }, 'render: asset cache miss');
     assetCache.set(url, buf);
     return buf;
