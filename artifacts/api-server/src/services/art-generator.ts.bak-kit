@@ -206,33 +206,6 @@ export async function gerarArteBuffer(
   return { buffer: await renderFromTemplate(config, renderData), ext: "png", mimetype: "image/png" };
 }
 
-/**
- * Gera o KIT de convite: os 3 formatos (stories, feed, quadrado) para a mesma
- * quantidade de palestrantes. Reusa gerarArteBuffer injetando o campo
- * `_variante_convite` = "{num_palestrantes}-{formato}" em cada chamada.
- * Retorna um objeto { formato: buffer } apenas com os formatos que tinham template.
- */
-const CONVITE_FORMATOS = ["stories", "feed", "quadrado"] as const;
-export type ConviteFormato = typeof CONVITE_FORMATOS[number];
-
-export async function gerarKitConvite(
-  dados: Record<string, unknown>,
-): Promise<Record<string, { buffer: Buffer; ext: string; mimetype: string }>> {
-  const num = String(dados["num_palestrantes"] ?? "").trim() || "1";
-  const resultado: Record<string, { buffer: Buffer; ext: string; mimetype: string }> = {};
-  for (const formato of CONVITE_FORMATOS) {
-    const dadosFmt = { ...dados, _variante_convite: `${num}-${formato}` };
-    try {
-      const art = await gerarArteBuffer("convite-evento", dadosFmt);
-      if (art) resultado[formato] = art;
-      else logger.warn({ variante: `${num}-${formato}` }, "[convite-kit] sem template para esta variante");
-    } catch (err) {
-      logger.error({ err, formato }, "[convite-kit] erro ao gerar formato");
-    }
-  }
-  return resultado;
-}
-
 export async function gerarArteParaSolicitacao(
   solicitacaoId: number,
   tipo: string,

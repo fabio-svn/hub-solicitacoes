@@ -535,7 +535,7 @@ export const FORM_SCHEMAS: Record<string, FormSchema> = {
     has_clickup: false,
     has_approval_flow: false,
     has_downloadable_artifact: true,
-    template_variant_field: '_variante_convite',
+    template_variant_field: 'num_palestrantes',
     fields: [
       { name: 'tipo_evento',      label: 'Tipo de evento',      type: 'select', required: true,
         options: [ { value: 'presencial', label: 'Presencial' }, { value: 'online', label: 'Online' } ] },
