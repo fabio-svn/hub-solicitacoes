@@ -541,7 +541,7 @@ export const FORM_SCHEMAS: Record<string, FormSchema> = {
         options: [ { value: 'presencial', label: 'Presencial' }, { value: 'online', label: 'Online' } ] },
       { name: 'titulo',           label: 'Titulo do evento',    type: 'text',   required: true },
       { name: 'num_palestrantes', label: 'Numero de palestrantes', type: 'select', required: true,
-        options: [ { value: '1', label: '1' }, { value: '2', label: '2' }, { value: '3', label: '3' }, { value: '4', label: '4' } ] },
+        options: [ { value: '1', label: '1' }, { value: '2', label: '2' }, { value: '3', label: '3' } ] },
       { name: 'horario_brasilia', label: 'Mostrar "Horario de Brasilia"', type: 'select',
         options: [ { value: 'sim', label: 'Sim' }, { value: 'nao', label: 'Nao' } ] },
       { name: 'data',             label: 'Data',                type: 'text',   required: true },
@@ -557,9 +557,6 @@ export const FORM_SCHEMAS: Record<string, FormSchema> = {
       { name: 'palestrante_3_nome',  label: 'Palestrante 3 - Nome',  type: 'text' },
       { name: 'palestrante_3_cargo', label: 'Palestrante 3 - Cargo', type: 'text' },
       { name: 'palestrante_3_foto',  label: 'Palestrante 3 - Foto',  type: 'file' },
-      { name: 'palestrante_4_nome',  label: 'Palestrante 4 - Nome',  type: 'text' },
-      { name: 'palestrante_4_cargo', label: 'Palestrante 4 - Cargo', type: 'text' },
-      { name: 'palestrante_4_foto',  label: 'Palestrante 4 - Foto',  type: 'file' },
     ],
   },
 
