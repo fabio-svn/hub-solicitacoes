@@ -1,19 +1,4 @@
 /* Tokens (--border-warm, --ruby-hover, --gold-soft, escala --fs-*) vêm do style.css global. */
-/* Fontes premium servidas de /fonts (assets/fonts) - WYSIWYG no preview do editor */
-@font-face { font-family: 'Taviraj Light'; src: url('/fonts/Taviraj-Light.woff2') format('woff2'); font-display: swap; }
-@font-face { font-family: 'Nunito Sans Light'; src: url('/fonts/NunitoSans-Light.woff2') format('woff2'); font-display: swap; }
-@font-face { font-family: 'Ivy Journal Thin'; src: url('/fonts/IvyJournal-Thin.ttf') format('truetype'); font-display: swap; }
-@font-face { font-family: 'Ivy Journal Light'; src: url('/fonts/IvyJournal-Light.ttf') format('truetype'); font-display: swap; }
-@font-face { font-family: 'Ivy Journal Regular'; src: url('/fonts/IvyJournal-Regular.ttf') format('truetype'); font-display: swap; }
-@font-face { font-family: 'Ivy Journal SemiBold'; src: url('/fonts/IvyJournal-SemiBold.ttf') format('truetype'); font-display: swap; }
-@font-face { font-family: 'Ivy Journal Bold'; src: url('/fonts/IvyJournal-Bold.ttf') format('truetype'); font-display: swap; }
-@font-face { font-family: 'Roobert PRO TRIAL Light'; src: url('/fonts/RoobertPROTRIAL-Light.otf') format('opentype'); font-display: swap; }
-@font-face { font-family: 'Roobert PRO TRIAL Regular'; src: url('/fonts/RoobertPROTRIAL-Regular.otf') format('opentype'); font-display: swap; }
-@font-face { font-family: 'Roobert PRO TRIAL Medium'; src: url('/fonts/RoobertPROTRIAL-Medium.otf') format('opentype'); font-display: swap; }
-@font-face { font-family: 'Roobert PRO TRIAL SemiBold'; src: url('/fonts/RoobertPROTRIAL-SemiBold.otf') format('opentype'); font-display: swap; }
-@font-face { font-family: 'Roobert PRO TRIAL Bold'; src: url('/fonts/RoobertPROTRIAL-Bold.otf') format('opentype'); font-display: swap; }
-@font-face { font-family: 'Roobert PRO TRIAL Heavy'; src: url('/fonts/RoobertPROTRIAL-Heavy.otf') format('opentype'); font-display: swap; }
-
 *, *::before, *::after { box-sizing: border-box; }
 body { margin: 0; font-family: 'Nunito Sans', sans-serif; background: var(--bg-light, #f5f3f0); color: var(--text-dark, #221b19); }
 
