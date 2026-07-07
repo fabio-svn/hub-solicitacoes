@@ -210,6 +210,7 @@
         <div class="panel-tabs-header">
           <button id="tabBtnLayer" class="panel-tab active" onclick="switchRightTab('layer')">Layer</button>
           <button id="tabBtnDoc" class="panel-tab" onclick="switchRightTab('doc')">Documento</button>
+          <button id="tabBtnJson" class="panel-tab" onclick="switchRightTab('json')">JSON</button>
         </div>
         <!-- Layer tab -->
         <div id="layerPanelContent" class="panel-scroll">
@@ -219,6 +220,14 @@
         <!-- Document tab -->
         <div id="docPanelContent" style="display:none" class="panel-scroll">
           <div id="docPanelInner"></div>
+        </div>
+        <!-- JSON tab -->
+        <div id="jsonPanelContent" style="display:none;padding:14px 14px 18px" class="panel-scroll">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;gap:8px">
+            <div class="props-label" style="margin:0">JSON do template</div>
+            <button id="btnCopiarJson" class="row-btn" onclick="copiarTemplateJson()" style="padding:5px 12px">Copiar</button>
+          </div>
+          <pre id="jsonPanelPre" style="margin:0;padding:12px;background:var(--carbon-black,#221B19);color:#8fdc9f;border-radius:8px;font-size:12px;line-height:1.55;white-space:pre-wrap;word-break:break-word;overflow:auto"></pre>
         </div>
       </div>
 

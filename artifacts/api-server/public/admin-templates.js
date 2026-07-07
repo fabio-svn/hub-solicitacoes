@@ -99,6 +99,13 @@
   let currentTemplateMeta = null;
   let currentTemplate = null;
   let selectedLayerId = null;
+  let selectedIds = new Set();
+  let _dragMoving = [];
+  let _dragAccX = 0, _dragAccY = 0;
+  const _keyState = { shift: false, alt: false };
+  let _snapTargetsX = [], _snapTargetsY = [], _groupBox = null;
+  let _rzX = 0, _rzY = 0, _rzW = 0, _rzH = 0;
+  const SNAP_THRESHOLD = 9;
   let isDirty = false;
   let _draggedLayerId = null;
 
@@ -210,6 +217,7 @@
     const snap = history[historyIndex];
     currentTemplate = JSON.parse(JSON.stringify(snap.template));
     selectedLayerId = snap.selectedLayerId;
+    selectedIds = new Set(selectedLayerId ? [selectedLayerId] : []);
     isDirty = true;
     document.getElementById('unsavedBadge').classList.add('visible');
     updateSaveButton();
@@ -221,6 +229,7 @@
     const snap = history[historyIndex];
     currentTemplate = JSON.parse(JSON.stringify(snap.template));
     selectedLayerId = snap.selectedLayerId;
+    selectedIds = new Set(selectedLayerId ? [selectedLayerId] : []);
     isDirty = true;
     document.getElementById('unsavedBadge').classList.add('visible');
     updateSaveButton();
@@ -252,11 +261,30 @@
     rightTab = tab;
     document.getElementById('tabBtnLayer').classList.toggle('active', tab === 'layer');
     document.getElementById('tabBtnDoc').classList.toggle('active', tab === 'doc');
+    const _jt = document.getElementById('tabBtnJson'); if (_jt) _jt.classList.toggle('active', tab === 'json');
     document.getElementById('layerPanelContent').style.display = tab === 'layer' ? '' : 'none';
     document.getElementById('docPanelContent').style.display = tab === 'doc' ? '' : 'none';
+    const _jp = document.getElementById('jsonPanelContent'); if (_jp) _jp.style.display = tab === 'json' ? '' : 'none';
     if (tab === 'doc') renderDocumentPanel();
+    if (tab === 'json') renderJsonPanel();
   }
 
+  function renderJsonPanel() {
+    const pre = document.getElementById('jsonPanelPre');
+    if (pre && currentTemplate) pre.textContent = JSON.stringify(currentTemplate, null, 2);
+  }
+  function copiarTemplateJson() {
+    if (!currentTemplate) return;
+    const txt = JSON.stringify(currentTemplate, null, 2);
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(txt).then(
+        () => showToast('JSON copiado', 'success'),
+        () => showToast('Nao foi possivel copiar', 'error')
+      );
+    } else {
+      showToast('Copia nao suportada neste navegador', 'error');
+    }
+  }
   // ── Document panel ───────────────────────────────────────────
   function renderDocumentPanel() {
     const el = document.getElementById('docPanelInner');
@@ -479,11 +507,16 @@
     renderTestDataPanel();
     const strip = document.getElementById('testDataStrip');
     strip.classList.add('open');
+    renderCanvas();            // aplica os dados de teste no canvas
+    scheduleLivePreview(200);  // mostra o preview de alta fidelidade
   }
   function toggleTestDataStrip() {
     const strip = document.getElementById('testDataStrip');
     if (strip.classList.contains('open')) {
       strip.classList.remove('open');
+      renderCanvas();  // volta pros placeholders brutos
+      const _pi = document.getElementById('previewImg'); if (_pi) _pi.style.display = 'none';
+      document.getElementById('canvasWrap')?.classList.remove('live-preview-active');
     } else {
       openTestDataStrip();
     }
@@ -849,6 +882,7 @@
     currentTemplateMeta = { id: row.id, tipo: row.tipo, variant_value: row.variant_value || null, name: row.name, is_active: row.is_active };
     currentTemplate = JSON.parse(JSON.stringify(row.config));
     selectedLayerId = null;
+    selectedIds.clear();
     isDirty = false;
     updateSaveButton();
     bgVariantKey = null;
@@ -889,8 +923,6 @@
     fitToView();
     const _savedScale = loadCanvasScale(currentTemplateMeta.id);
     if (_savedScale !== null) { canvasScale = _savedScale; applyCanvasScale(); }
-    doLivePreview();
-
     // Push initial state to history
     pushHistory();
     updateUndoRedoBtns();
@@ -1100,8 +1132,9 @@
     const total = currentTemplate.layers.length;
     for (let idx = 0; idx < total; idx++) {
       const layer = currentTemplate.layers[idx];
+      if (layer.hidden) continue;
       const div = document.createElement('div');
-      div.className = 'layer-box' + (layer.id === selectedLayerId ? ' selected' : '');
+      div.className = 'layer-box' + (selectedIds.has(layer.id) ? ' selected' : '');
       div.dataset.id = layer.id;
       const x = layer.x * SCALE, y = layer.y * SCALE;
       const w = (layer.w || 80) * SCALE;
@@ -1177,10 +1210,11 @@
           `letter-spacing:${layer.letter_spacing ? layer.letter_spacing * SCALE + 'px' : 'normal'};`,
         ].join('');
         const content = layer.content || layer.text || '';
+        const _useTest = document.getElementById('testDataStrip')?.classList.contains('open');
         let preview = content.replace(/\{\{[^}]+\}\}/g, m => {
           const key = m.slice(2,-2).trim();
           const td = typeof testData !== 'undefined' ? testData : {};
-          return td[key] !== undefined ? td[key] : m;
+          return (_useTest && td[key] !== undefined) ? td[key] : m;
         });
         if (layer.text_transform === 'uppercase') preview = preview.toUpperCase();
         else if (layer.text_transform === 'capitalize-first' && preview) preview = preview.charAt(0).toUpperCase() + preview.slice(1);
@@ -1211,10 +1245,36 @@
         h.className = 'resize-handle ' + pos;
         div.appendChild(h);
       });
-      div.addEventListener('click', (e) => { e.stopPropagation(); selectLayer(layer.id); });
+      div.addEventListener('click', (e) => { e.stopPropagation(); selectLayer(layer.id, e.shiftKey || e.metaKey || e.ctrlKey); });
       wrap.appendChild(div);
-      setupInteract(div);
+      if (layer.locked) div.classList.add('locked'); else setupInteract(div);
     }
+  }
+  function _buildSnapTargets() {
+    const wrap = document.getElementById('canvasWrap');
+    const W = wrap ? wrap.offsetWidth : 0, H = wrap ? wrap.offsetHeight : 0;
+    _snapTargetsX = [0, Math.round(W / 2), W];
+    _snapTargetsY = [0, Math.round(H / 2), H];
+    document.querySelectorAll('.layer-box').forEach((lb) => {
+      if (selectedIds.has(lb.dataset.id)) return;
+      const l = parseFloat(lb.style.left) || 0, t = parseFloat(lb.style.top) || 0;
+      const w = parseFloat(lb.style.width) || lb.offsetWidth, h = parseFloat(lb.style.height) || lb.offsetHeight;
+      _snapTargetsX.push(l, l + w / 2, l + w);
+      _snapTargetsY.push(t, t + h / 2, t + h);
+    });
+  }
+  function _drawGuide(type, pos) {
+    const wrap = document.getElementById('canvasWrap');
+    if (!wrap) return;
+    const g = document.createElement('div');
+    g.className = '_snap-guide';
+    g.style.cssText = type === 'v'
+      ? 'position:absolute;top:0;bottom:0;width:1px;background:#F0398A;left:' + pos + 'px;z-index:100000;pointer-events:none;'
+      : 'position:absolute;left:0;right:0;height:1px;background:#F0398A;top:' + pos + 'px;z-index:100000;pointer-events:none;';
+    wrap.appendChild(g);
+  }
+  function _clearGuides() {
+    document.querySelectorAll('._snap-guide').forEach((g) => g.remove());
   }
   function setupInteract(el) {
     interact(el).unset();
@@ -1223,57 +1283,143 @@
       .draggable({
         ignoreFrom: '.resize-handle',
         listeners: {
+          start() {
+            // se a camada arrastada nao faz parte da selecao, seleciona so ela
+            document.getElementById('canvasWrap')?.classList.remove('live-preview-active');
+            if (!selectedIds.has(el.dataset.id)) selectLayer(el.dataset.id, false);
+            // captura a origem de todas as boxes que vao mover em grupo
+            _dragMoving = [];
+            selectedIds.forEach((id) => {
+              const _lyr = getLayer(id); if (_lyr && _lyr.locked) return;
+              const sel = (window.CSS && CSS.escape) ? CSS.escape(id) : id;
+              const box = document.querySelector('.layer-box[data-id="' + sel + '"]');
+              if (box) _dragMoving.push({ box, ox: parseFloat(box.style.left) || 0, oy: parseFloat(box.style.top) || 0 });
+            });
+            if (_dragMoving.length === 0) _dragMoving.push({ box: el, ox: parseFloat(el.style.left) || 0, oy: parseFloat(el.style.top) || 0 });
+            _dragAccX = 0; _dragAccY = 0;
+            // snapping: bbox de origem do grupo (px de tela) + alvos
+            let gx0 = Infinity, gy0 = Infinity, gx1 = -Infinity, gy1 = -Infinity;
+            for (const m of _dragMoving) {
+              const w = parseFloat(m.box.style.width) || m.box.offsetWidth;
+              const h = parseFloat(m.box.style.height) || m.box.offsetHeight;
+              gx0 = Math.min(gx0, m.ox); gy0 = Math.min(gy0, m.oy);
+              gx1 = Math.max(gx1, m.ox + w); gy1 = Math.max(gy1, m.oy + h);
+            }
+            _groupBox = { x: gx0, y: gy0, w: gx1 - gx0, h: gy1 - gy0 };
+            _buildSnapTargets();
+          },
           move(event) {
-            let x = (parseFloat(el.getAttribute('data-x')) || parseFloat(el.style.left) || 0);
-            let y = (parseFloat(el.getAttribute('data-y')) || parseFloat(el.style.top) || 0);
-
-            x += event.dx;
-            y += event.dy;
-
-            el.style.left = x + 'px';
-            el.style.top  = y + 'px';
-
-            el.setAttribute('data-x', x);
-            el.setAttribute('data-y', y);
+            _dragAccX += event.dx;
+            _dragAccY += event.dy;
+            let dx = _dragAccX, dy = _dragAccY;
+            let lockX = false, lockY = false;
+            // Shift = trava no eixo dominante (estilo Illustrator)
+            if (event.shiftKey || _keyState.shift) {
+              if (Math.abs(dx) >= Math.abs(dy)) { dy = 0; lockY = true; } else { dx = 0; lockX = true; }
+            }
+            _clearGuides();
+            // snapping (Alt desativa): encaixa esq/centro/dir e topo/meio/base
+            if (_groupBox && !(event.altKey || _keyState.alt)) {
+              const gb = _groupBox;
+              if (!lockX) {
+                const cand = [gb.x + dx, gb.x + gb.w / 2 + dx, gb.x + gb.w + dx];
+                let best = null;
+                for (const c of cand) for (const t of _snapTargetsX) {
+                  const d = t - c;
+                  if (Math.abs(d) <= SNAP_THRESHOLD && (best === null || Math.abs(d) < Math.abs(best.d))) best = { d, at: t };
+                }
+                if (best) { dx += best.d; _drawGuide('v', best.at); }
+              }
+              if (!lockY) {
+                const cand = [gb.y + dy, gb.y + gb.h / 2 + dy, gb.y + gb.h + dy];
+                let best = null;
+                for (const c of cand) for (const t of _snapTargetsY) {
+                  const d = t - c;
+                  if (Math.abs(d) <= SNAP_THRESHOLD && (best === null || Math.abs(d) < Math.abs(best.d))) best = { d, at: t };
+                }
+                if (best) { dy += best.d; _drawGuide('h', best.at); }
+              }
+            }
+            for (const m of _dragMoving) {
+              m.box.style.left = Math.round(m.ox + dx) + 'px';
+              m.box.style.top  = Math.round(m.oy + dy) + 'px';
+              m.box.setAttribute('data-x', m.ox + dx);
+              m.box.setAttribute('data-y', m.oy + dy);
+            }
           },
           end() {
+            _clearGuides();
             const SCALE_FACTOR = getScale();
-            const layer = getLayer(el.dataset.id); if (!layer) return;
-            layer.x = Math.round(parseFloat(el.style.left) / SCALE_FACTOR);
-            layer.y = Math.round(parseFloat(el.style.top)  / SCALE_FACTOR);
+            for (const m of _dragMoving) {
+              const layer = getLayer(m.box.dataset.id); if (!layer) continue;
+              layer.x = Math.round(parseFloat(m.box.style.left) / SCALE_FACTOR);
+              layer.y = Math.round(parseFloat(m.box.style.top)  / SCALE_FACTOR);
+            }
+            _dragMoving = [];
             markDirty();
             debouncedPushHistory();
-            if (el.dataset.id === selectedLayerId) showProps(selectedLayerId);
+            if (selectedLayerId) showProps(selectedLayerId);
             scheduleLivePreview(NORMAL_DEBOUNCE);
           }
         }
       })
       .resizable({
-        edges: { left: true, right: true, bottom: true, top: true },
+        edges: {
+          top: '.resize-handle.nw, .resize-handle.ne',
+          bottom: '.resize-handle.sw, .resize-handle.se',
+          left: '.resize-handle.nw, .resize-handle.sw',
+          right: '.resize-handle.ne, .resize-handle.se',
+        },
         listeners: {
+          start() {
+            document.getElementById('canvasWrap')?.classList.remove('live-preview-active');
+            _rzX = parseFloat(el.style.left) || 0;
+            _rzY = parseFloat(el.style.top) || 0;
+            _rzW = parseFloat(el.style.width) || el.offsetWidth;
+            _rzH = parseFloat(el.style.height) || el.offsetHeight;
+          },
           move(event) {
-            let x = (parseFloat(el.getAttribute('data-x')) || parseFloat(el.style.left) || 0);
-            let y = (parseFloat(el.getAttribute('data-y')) || parseFloat(el.style.top) || 0);
-
-            el.style.width  = event.rect.width  + 'px';
-            el.style.height = event.rect.height + 'px';
-
-            x += event.deltaRect.left;
-            y += event.deltaRect.top;
-
-            el.style.left = x + 'px';
-            el.style.top  = y + 'px';
-            el.setAttribute('data-x', x);
-            el.setAttribute('data-y', y);
+            const shift = event.shiftKey || _keyState.shift;
+            const alt = event.altKey || _keyState.alt;
+            let w = event.rect.width;
+            let h = event.rect.height;
+            if (alt) {
+              // redimensiona a partir do centro (dobra o delta do canto)
+              w = _rzW + 2 * (event.rect.width - _rzW);
+              h = _rzH + 2 * (event.rect.height - _rzH);
+            }
+            if (shift && _rzH > 0) {
+              // trava de proporcao pelo eixo de maior mudanca
+              const aspect = _rzW / _rzH;
+              if (Math.abs(w - _rzW) >= Math.abs(h - _rzH)) h = w / aspect;
+              else w = h * aspect;
+            }
+            w = Math.max(8, w);
+            h = Math.max(8, h);
+            let left, top;
+            if (alt) {
+              const cx = _rzX + _rzW / 2, cy = _rzY + _rzH / 2;
+              left = cx - w / 2;
+              top = cy - h / 2;
+            } else {
+              left = event.edges.left ? (_rzX + _rzW - w) : _rzX;
+              top  = event.edges.top  ? (_rzY + _rzH - h) : _rzY;
+            }
+            el.style.width  = w + 'px';
+            el.style.height = h + 'px';
+            el.style.left = left + 'px';
+            el.style.top  = top + 'px';
+            el.setAttribute('data-x', left);
+            el.setAttribute('data-y', top);
           },
           end(event) {
             const SCALE_FACTOR = getScale();
             const layer = getLayer(event.target.dataset.id); if (!layer) return;
             layer.x = Math.round(parseFloat(event.target.style.left) / SCALE_FACTOR);
             layer.y = Math.round(parseFloat(event.target.style.top)  / SCALE_FACTOR);
-            layer.w = Math.round(event.rect.width  / SCALE_FACTOR);
+            layer.w = Math.round(parseFloat(event.target.style.width)  / SCALE_FACTOR);
             if (layer.type !== 'text-line') {
-              layer.h = Math.round(event.rect.height / SCALE_FACTOR);
+              layer.h = Math.round(parseFloat(event.target.style.height) / SCALE_FACTOR);
             }
             markDirty();
             pushHistory();
@@ -1307,11 +1453,14 @@
            ondragleave="onLayerDragLeave(event)"
            ondrop="onLayerDrop(event,'${layer.id}')"
            ondragend="onLayerDragEnd(event)"
-           onclick="selectLayer('${layer.id}')">
+           onclick="selectLayer('${layer.id}', event.shiftKey||event.metaKey||event.ctrlKey)">
         <span class="layer-drag-handle" title="Arraste para reordenar">⋮⋮</span>
         ${layerTypeIcon(layer.type)}
         <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(layer.name || layer.id)}</span>
+        ${_layerAudit(layer).length ? `<span title="Placeholders inexistentes: ${_layerAudit(layer).join(', ')}" style="color:var(--ruby-red);font-size:12px;flex-shrink:0;margin-right:2px">⚠</span>` : ''}
         <div class="layer-actions">
+          <button class="layer-action-btn" onclick="event.stopPropagation();toggleLayerHidden('${layer.id}')" title="${layer.hidden ? 'Mostrar camada' : 'Ocultar camada'}">${layer.hidden ? `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>` : `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>`}</button>
+          <button class="layer-action-btn" onclick="event.stopPropagation();toggleLayerLocked('${layer.id}')" title="${layer.locked ? 'Destravar' : 'Travar'}">${layer.locked ? `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>` : `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 019.9-1"/></svg>`}</button>
           <button class="layer-action-btn" onclick="event.stopPropagation();reorderLayer('${layer.id}',${idx - 1})" title="Mover para frente" ${idx === 0 ? 'disabled' : ''}>
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="18 15 12 9 6 15"/></svg>
           </button>
@@ -1325,12 +1474,65 @@
       </div>
     `).join('');
   }
-  function selectLayer(id) {
-    selectedLayerId = id;
-    document.querySelectorAll('.layer-box').forEach(el => el.classList.toggle('selected', el.dataset.id === id));
-    document.querySelectorAll('.layer-item').forEach(el => el.classList.toggle('active', el.id === `litem-${id}`));
+  function _layerAudit(layer) {
+    if (layer.type !== 'text-line' && layer.type !== 'text-block') return [];
+    const valid = new Set(getActivePlaceholders(currentTemplateMeta?.tipo, true));
+    if (valid.size === 0) return []; // sem schema conhecido, nao sinaliza (evita falso positivo)
+    const content = layer.content || '';
+    const found = [];
+    const re = /\{\{([^}]+)\}\}/g;
+    let m;
+    while ((m = re.exec(content)) !== null) {
+      const k = m[1].trim();
+      if (!valid.has(k) && found.indexOf(k) === -1) found.push(k);
+    }
+    return found;
+  }
+  function toggleLayerHidden(id) {
+    const l = getLayer(id); if (!l) return;
+    l.hidden = !l.hidden;
+    markDirty(); pushHistory(); renderCanvas(); renderLayersList();
+    scheduleLivePreview(NORMAL_DEBOUNCE);
+  }
+  function toggleLayerLocked(id) {
+    const l = getLayer(id); if (!l) return;
+    l.locked = !l.locked;
+    if (l.locked && selectedIds.has(id)) {
+      selectedIds.delete(id);
+      if (selectedLayerId === id) selectedLayerId = selectedIds.size ? Array.from(selectedIds)[selectedIds.size - 1] : null;
+    }
+    markDirty(); pushHistory(); renderCanvas(); renderLayersList();
+    _applySelectionClasses();
+    showProps(selectedLayerId);
+  }
+  function _applySelectionClasses() {
+    document.querySelectorAll('.layer-box').forEach(el => el.classList.toggle('selected', selectedIds.has(el.dataset.id)));
+    document.querySelectorAll('.layer-item').forEach(el => el.classList.toggle('active', selectedIds.has(el.id.replace(/^litem-/, ''))));
+    _updateSelectionToolbar();
+  }
+  function setSelection(ids) {
+    selectedIds = new Set(ids);
+    selectedLayerId = selectedIds.size ? Array.from(selectedIds)[selectedIds.size - 1] : null;
+    _applySelectionClasses();
+    if (selectedLayerId && rightTab !== 'layer') switchRightTab('layer');
+    showProps(selectedLayerId);
+  }
+  function selectLayer(id, additive) {
+    if (additive) {
+      if (selectedIds.has(id)) {
+        selectedIds.delete(id);
+        if (selectedLayerId === id) selectedLayerId = selectedIds.size ? Array.from(selectedIds)[selectedIds.size - 1] : null;
+      } else {
+        selectedIds.add(id);
+        selectedLayerId = id;
+      }
+    } else {
+      selectedIds = new Set([id]);
+      selectedLayerId = id;
+    }
+    _applySelectionClasses();
     if (rightTab !== 'layer') switchRightTab('layer');
-    showProps(id);
+    showProps(selectedLayerId);
   }
   function getLayer(id) {
     return currentTemplate?.layers.find(l => l.id === id) || null;
@@ -1357,6 +1559,7 @@
     const ok = await showConfirm('Deletar esta layer?', { danger: true, okLabel: 'Excluir' });
     if (!ok) return;
     currentTemplate.layers = currentTemplate.layers.filter(l => l.id !== id);
+    selectedIds.delete(id);
     if (selectedLayerId === id) selectedLayerId = null;
     markDirty();
     pushHistory();
@@ -1380,6 +1583,42 @@
     renderCanvas();
     renderLayersList();
     selectLayer(clone.id);
+    scheduleLivePreview(NORMAL_DEBOUNCE);
+  }
+  async function deleteSelectedLayers() {
+    if (!currentTemplate || selectedIds.size === 0) return;
+    const n = selectedIds.size;
+    const ok = await showConfirm(n === 1 ? 'Deletar esta layer?' : `Deletar ${n} layers?`, { danger: true, okLabel: 'Excluir' });
+    if (!ok) return;
+    currentTemplate.layers = currentTemplate.layers.filter(l => !selectedIds.has(l.id));
+    selectedIds.clear();
+    selectedLayerId = null;
+    markDirty();
+    pushHistory();
+    renderCanvas();
+    renderLayersList();
+    showProps(null);
+    scheduleLivePreview(NORMAL_DEBOUNCE);
+  }
+  function duplicateSelectedLayers() {
+    if (!currentTemplate || selectedIds.size === 0) return;
+    const originals = currentTemplate.layers.filter(l => selectedIds.has(l.id));
+    const newIds = [];
+    originals.forEach((layer, i) => {
+      const clone = JSON.parse(JSON.stringify(layer));
+      clone.id = layer.type + '_' + Date.now() + '_' + i;
+      clone.name = (clone.name || layer.id) + ' (cópia)';
+      clone.x = (clone.x || 0) + 20;
+      clone.y = (clone.y || 0) + 20;
+      const idx = currentTemplate.layers.findIndex(l => l.id === layer.id);
+      currentTemplate.layers.splice(idx + 1, 0, clone);
+      newIds.push(clone.id);
+    });
+    markDirty();
+    pushHistory();
+    renderCanvas();
+    renderLayersList();
+    setSelection(new Set(newIds));
     scheduleLivePreview(NORMAL_DEBOUNCE);
   }
 
@@ -1758,9 +1997,12 @@
 
   // ── Layer updates ────────────────────────────────────────────
   function updLayer(id, key, value) {
-    const layer = getLayer(id); if (!layer) return;
+    let layer = getLayer(id);
+    if (!layer && selectedLayerId) layer = getLayer(selectedLayerId); // id pode estar defasado apos rename
+    if (!layer) return;
     if (key === 'id') {
       const oldId = layer.id; layer.id = value;
+      if (selectedIds.has(oldId)) { selectedIds.delete(oldId); selectedIds.add(value); }
       if (selectedLayerId === oldId) selectedLayerId = value;
     } else { layer[key] = value; }
     markDirty();
@@ -1796,13 +2038,52 @@
     const cur = splitFontFamily(layer.font_family);
     updLayer(id, 'font_family', (cur.family + ' ' + peso).trim());
   }
+  function _layerBoxH(l) {
+    return l.h || (l.type === 'text-line' ? (l.font_size || 40) * 1.3 : 80);
+  }
   function alignLayer(layerId, direction) {
-    const layer = getLayer(layerId);
-    if (!layer || !currentTemplate) return;
+    if (!currentTemplate) return;
     const canvasW = currentTemplate.canvas?.width  || 1080;
     const canvasH = currentTemplate.canvas?.height || 1080;
+
+    // Grupo: alinha o bounding box da selecao ao canvas, preservando o arranjo interno
+    if (selectedIds.size > 1) {
+      const sel = currentTemplate.layers.filter(l => selectedIds.has(l.id));
+      let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+      sel.forEach(l => {
+        const w = l.w || 0, h = _layerBoxH(l);
+        minX = Math.min(minX, l.x); minY = Math.min(minY, l.y);
+        maxX = Math.max(maxX, l.x + w); maxY = Math.max(maxY, l.y + h);
+      });
+      const bw = maxX - minX, bh = maxY - minY;
+      let dx = 0, dy = 0;
+      switch (direction) {
+        case 'left':       dx = 0 - minX; break;
+        case 'center-h':   dx = Math.round((canvasW - bw) / 2) - minX; break;
+        case 'right':      dx = (canvasW - bw) - minX; break;
+        case 'top':        dy = 0 - minY; break;
+        case 'center-v':   dy = Math.round((canvasH - bh) / 2) - minY; break;
+        case 'bottom':     dy = (canvasH - bh) - minY; break;
+        case 'center-both':
+          dx = Math.round((canvasW - bw) / 2) - minX;
+          dy = Math.round((canvasH - bh) / 2) - minY;
+          break;
+      }
+      sel.forEach(l => { l.x = Math.round((l.x || 0) + dx); l.y = Math.round((l.y || 0) + dy); });
+      markDirty();
+      pushHistory();
+      renderCanvas();
+      renderLayersList();
+      if (selectedLayerId) showProps(selectedLayerId);
+      scheduleLivePreview(800);
+      return;
+    }
+
+    // Individual (comportamento original)
+    const layer = getLayer(layerId);
+    if (!layer) return;
     const layerW  = layer.w || 0;
-    const layerH  = layer.h || (layer.type === 'text-line' ? (layer.font_size || 40) * 1.3 : 80);
+    const layerH  = _layerBoxH(layer);
     switch (direction) {
       case 'left':       layer.x = 0; break;
       case 'center-h':   layer.x = Math.round((canvasW - layerW) / 2); break;
@@ -1816,10 +2097,112 @@
         break;
     }
     markDirty();
+    pushHistory();
     renderCanvas();
     renderLayersList();
     showProps(layerId);
     scheduleLivePreview(800);
+  }
+  function _selBounds(sel) {
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+    sel.forEach(l => {
+      const w = l.w || 0, h = _layerBoxH(l);
+      minX = Math.min(minX, l.x); minY = Math.min(minY, l.y);
+      maxX = Math.max(maxX, l.x + w); maxY = Math.max(maxY, l.y + h);
+    });
+    return { minX, minY, maxX, maxY, cx: (minX + maxX) / 2, cy: (minY + maxY) / 2 };
+  }
+  function alignSelection(dir) {
+    if (!currentTemplate || selectedIds.size < 2) return;
+    const sel = currentTemplate.layers.filter(l => selectedIds.has(l.id));
+    const b = _selBounds(sel);
+    sel.forEach(l => {
+      const w = l.w || 0, h = _layerBoxH(l);
+      switch (dir) {
+        case 'left':     l.x = Math.round(b.minX); break;
+        case 'center-h': l.x = Math.round(b.cx - w / 2); break;
+        case 'right':    l.x = Math.round(b.maxX - w); break;
+        case 'top':      l.y = Math.round(b.minY); break;
+        case 'center-v': l.y = Math.round(b.cy - h / 2); break;
+        case 'bottom':   l.y = Math.round(b.maxY - h); break;
+      }
+    });
+    markDirty(); pushHistory(); renderCanvas(); renderLayersList();
+    if (selectedLayerId) showProps(selectedLayerId);
+    scheduleLivePreview(NORMAL_DEBOUNCE);
+  }
+  function distributeSelection(axis) {
+    if (!currentTemplate || selectedIds.size < 3) return;
+    const sel = currentTemplate.layers.filter(l => selectedIds.has(l.id));
+    if (axis === 'h') {
+      sel.sort((a, b) => a.x - b.x);
+      const left = sel[0].x;
+      const last = sel[sel.length - 1];
+      const right = last.x + (last.w || 0);
+      const totalW = sel.reduce((s, l) => s + (l.w || 0), 0);
+      const gap = (right - left - totalW) / (sel.length - 1);
+      let cur = left;
+      sel.forEach(l => { l.x = Math.round(cur); cur += (l.w || 0) + gap; });
+    } else {
+      sel.sort((a, b) => a.y - b.y);
+      const top = sel[0].y;
+      const last = sel[sel.length - 1];
+      const bottom = last.y + _layerBoxH(last);
+      const totalH = sel.reduce((s, l) => s + _layerBoxH(l), 0);
+      const gap = (bottom - top - totalH) / (sel.length - 1);
+      let cur = top;
+      sel.forEach(l => { l.y = Math.round(cur); cur += _layerBoxH(l) + gap; });
+    }
+    markDirty(); pushHistory(); renderCanvas(); renderLayersList();
+    if (selectedLayerId) showProps(selectedLayerId);
+    scheduleLivePreview(NORMAL_DEBOUNCE);
+  }
+  function _ensureSelectionToolbar() {
+    if (document.getElementById('selectionTools')) return;
+    const panel = document.getElementById('canvasPanel');
+    if (!panel) return;
+    if (getComputedStyle(panel).position === 'static') panel.style.position = 'relative';
+    const S = "width='14' height='14'";
+    const ic = {
+      left:      `<svg ${S} viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3"><line x1="2" y1="1.5" x2="2" y2="14.5"/><rect x="4" y="3.5" width="9" height="3.2" rx="1" fill="currentColor" stroke="none"/><rect x="4" y="9.3" width="6" height="3.2" rx="1" fill="currentColor" stroke="none"/></svg>`,
+      'center-h':`<svg ${S} viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3"><line x1="8" y1="1.5" x2="8" y2="14.5"/><rect x="3.5" y="3.5" width="9" height="3.2" rx="1" fill="currentColor" stroke="none"/><rect x="5" y="9.3" width="6" height="3.2" rx="1" fill="currentColor" stroke="none"/></svg>`,
+      right:     `<svg ${S} viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3"><line x1="14" y1="1.5" x2="14" y2="14.5"/><rect x="3" y="3.5" width="9" height="3.2" rx="1" fill="currentColor" stroke="none"/><rect x="6" y="9.3" width="6" height="3.2" rx="1" fill="currentColor" stroke="none"/></svg>`,
+      top:       `<svg ${S} viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3"><line x1="1.5" y1="2" x2="14.5" y2="2"/><rect x="3.5" y="4" width="3.2" height="9" rx="1" fill="currentColor" stroke="none"/><rect x="9.3" y="4" width="3.2" height="6" rx="1" fill="currentColor" stroke="none"/></svg>`,
+      'center-v':`<svg ${S} viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3"><line x1="1.5" y1="8" x2="14.5" y2="8"/><rect x="3.5" y="3.5" width="3.2" height="9" rx="1" fill="currentColor" stroke="none"/><rect x="9.3" y="5" width="3.2" height="6" rx="1" fill="currentColor" stroke="none"/></svg>`,
+      bottom:    `<svg ${S} viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3"><line x1="1.5" y1="14" x2="14.5" y2="14"/><rect x="3.5" y="3" width="3.2" height="9" rx="1" fill="currentColor" stroke="none"/><rect x="9.3" y="6" width="3.2" height="6" rx="1" fill="currentColor" stroke="none"/></svg>`,
+      disth:     `<svg ${S} viewBox="0 0 16 16" fill="currentColor"><rect x="1" y="3" width="2.6" height="10" rx="1"/><rect x="6.7" y="3" width="2.6" height="10" rx="1"/><rect x="12.4" y="3" width="2.6" height="10" rx="1"/></svg>`,
+      distv:     `<svg ${S} viewBox="0 0 16 16" fill="currentColor"><rect x="3" y="1" width="10" height="2.6" rx="1"/><rect x="3" y="6.7" width="10" height="2.6" rx="1"/><rect x="3" y="12.4" width="10" height="2.6" rx="1"/></svg>`,
+    };
+    const btn = (title, oc, svg, dist) => `<button type="button" title="${title}"${dist ? ' data-distribute="1"' : ''} onclick="${oc}" style="width:28px;height:28px;display:inline-flex;align-items:center;justify-content:center;border:none;background:transparent;border-radius:6px;cursor:pointer;color:var(--ink-70,#555)" onmouseover="this.style.background='var(--ink-05,#f2efec)'" onmouseout="this.style.background='transparent'">${svg}</button>`;
+    const sep = `<span style="width:1px;height:18px;background:var(--ink-12,#e3ded9);margin:0 3px"></span>`;
+    const bar = document.createElement('div');
+    bar.id = 'selectionTools';
+    bar.style.cssText = "position:absolute;top:56px;left:50%;transform:translateX(-50%);display:none;gap:1px;align-items:center;background:var(--surface,#fff);border:1px solid var(--ink-12,#e3ded9);border-radius:9px;padding:4px 6px;box-shadow:0 6px 20px rgba(0,0,0,0.14);z-index:50";
+    bar.innerHTML =
+      btn('Alinhar à esquerda', "alignSelection('left')", ic.left)
+      + btn('Centralizar horizontal', "alignSelection('center-h')", ic['center-h'])
+      + btn('Alinhar à direita', "alignSelection('right')", ic.right)
+      + sep
+      + btn('Alinhar ao topo', "alignSelection('top')", ic.top)
+      + btn('Centralizar vertical', "alignSelection('center-v')", ic['center-v'])
+      + btn('Alinhar à base', "alignSelection('bottom')", ic.bottom)
+      + sep
+      + btn('Distribuir horizontal', "distributeSelection('h')", ic.disth, true)
+      + btn('Distribuir vertical', "distributeSelection('v')", ic.distv, true);
+    panel.appendChild(bar);
+  }
+  function _updateSelectionToolbar() {
+    _ensureSelectionToolbar();
+    const bar = document.getElementById('selectionTools');
+    if (!bar) return;
+    const n = selectedIds.size;
+    bar.style.display = n >= 2 ? 'flex' : 'none';
+    bar.querySelectorAll('[data-distribute]').forEach(b => {
+      const off = n < 3;
+      b.disabled = off;
+      b.style.opacity = off ? '0.3' : '1';
+      b.style.pointerEvents = off ? 'none' : 'auto';
+    });
   }
 
   function updDocOutputFormat(fmt) {
@@ -1937,6 +2320,8 @@
 
   // ── Live preview ─────────────────────────────────────────────
   function scheduleLivePreview(delay = 700) {
+    if (!document.getElementById('testDataStrip')?.classList.contains('open')) return; // preview so com dados de teste abertos
+    document.getElementById('canvasWrap')?.classList.remove('live-preview-active');
     if (previewDebounce) clearTimeout(previewDebounce);
     previewDebounce = setTimeout(() => doLivePreview(), delay);
   }
@@ -2014,6 +2399,82 @@
     if ((e.ctrlKey || e.metaKey) && e.key === 's') {
       e.preventDefault(); saveTemplate();
     }
+    // nudge: setas movem a(s) camada(s) selecionada(s) — Shift = 10px
+    if (['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.key) && selectedIds.size) {
+      e.preventDefault();
+      const step = e.shiftKey ? 10 : 1;
+      let dx = 0, dy = 0;
+      if (e.key === 'ArrowLeft') dx = -step;
+      else if (e.key === 'ArrowRight') dx = step;
+      else if (e.key === 'ArrowUp') dy = -step;
+      else dy = step;
+      selectedIds.forEach((sid) => { const l = getLayer(sid); if (l) { l.x = (l.x || 0) + dx; l.y = (l.y || 0) + dy; } });
+      markDirty();
+      debouncedPushHistory();
+      renderCanvas();
+      if (selectedLayerId) showProps(selectedLayerId);
+      scheduleLivePreview(NORMAL_DEBOUNCE);
+    }
+    // Delete/Backspace: remove a(s) camada(s) selecionada(s)
+    if ((e.key === 'Delete' || e.key === 'Backspace') && selectedIds.size) {
+      e.preventDefault();
+      deleteSelectedLayers();
+    }
+    // Cmd/Ctrl+D: duplica a(s) selecionada(s)
+    if ((e.ctrlKey || e.metaKey) && (e.key === 'd' || e.key === 'D') && selectedIds.size) {
+      e.preventDefault();
+      duplicateSelectedLayers();
+    }
+  });
+
+  // trava de eixo: rastrear Shift ao vivo (fallback ao event.shiftKey do interact)
+  document.addEventListener('keydown', (e) => { if (e.key === 'Shift') _keyState.shift = true; if (e.key === 'Alt') _keyState.alt = true; });
+  document.addEventListener('keyup',   (e) => { if (e.key === 'Shift') _keyState.shift = false; if (e.key === 'Alt') _keyState.alt = false; });
+
+  // ── Marquee: arrastar um retângulo no vazio do canvas seleciona várias camadas ──
+  document.addEventListener('mousedown', (e) => {
+    if (currentView !== 'editor' || !currentTemplate) return;
+    if (e.button !== 0) return;
+    const wrap = document.getElementById('canvasWrap');
+    if (!wrap || !wrap.contains(e.target)) return;
+    if (e.target.closest('.layer-box')) return; // clique numa camada: interact/click cuidam
+    e.preventDefault();
+    const rect = wrap.getBoundingClientRect();
+    const sx = e.clientX - rect.left, sy = e.clientY - rect.top;
+    const additive = e.shiftKey || e.metaKey || e.ctrlKey;
+    const base = additive ? new Set(selectedIds) : new Set();
+    const marq = document.createElement('div');
+    marq.style.cssText = 'position:absolute;border:1px solid var(--ruby-red,#AC3631);background:rgba(172,54,49,0.10);z-index:99999;pointer-events:none;left:' + sx + 'px;top:' + sy + 'px;width:0;height:0;';
+    wrap.appendChild(marq);
+    let moved = false;
+    function boxesIn(l, t, w, h) {
+      const set = new Set(base);
+      document.querySelectorAll('.layer-box').forEach((lb) => {
+        const bl = parseFloat(lb.style.left) || 0, bt = parseFloat(lb.style.top) || 0;
+        const bw = parseFloat(lb.style.width) || lb.offsetWidth, bh = parseFloat(lb.style.height) || lb.offsetHeight;
+        if (bl < l + w && bl + bw > l && bt < t + h && bt + bh > t) set.add(lb.dataset.id);
+      });
+      return set;
+    }
+    function mm(ev) {
+      const cx = ev.clientX - rect.left, cy = ev.clientY - rect.top;
+      const l = Math.min(sx, cx), t = Math.min(sy, cy), w = Math.abs(cx - sx), h = Math.abs(cy - sy);
+      if (w > 2 || h > 2) moved = true;
+      marq.style.left = l + 'px'; marq.style.top = t + 'px'; marq.style.width = w + 'px'; marq.style.height = h + 'px';
+      selectedIds = boxesIn(l, t, w, h);
+      _applySelectionClasses();
+    }
+    function mu(ev) {
+      document.removeEventListener('mousemove', mm);
+      document.removeEventListener('mouseup', mu);
+      marq.remove();
+      const cx = ev.clientX - rect.left, cy = ev.clientY - rect.top;
+      const l = Math.min(sx, cx), t = Math.min(sy, cy), w = Math.abs(cx - sx), h = Math.abs(cy - sy);
+      if (!moved) { if (!additive) setSelection(new Set()); return; }
+      setSelection(boxesIn(l, t, w, h));
+    }
+    document.addEventListener('mousemove', mm);
+    document.addEventListener('mouseup', mu);
   });
 
   // ── Beforeunload guard ───────────────────────────────────────

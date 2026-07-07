@@ -92,6 +92,18 @@ class BoundedCache<K, V> {
 const DEBUG_RENDER = process.env.DEBUG_RENDER === '1';
 const assetCache = new BoundedCache<string, Buffer>(100);
 
+function isImageBuffer(buf: Buffer): boolean {
+  if (buf.length < 4) return false;
+  if (buf[0] === 0x89 && buf[1] === 0x50 && buf[2] === 0x4e && buf[3] === 0x47) return true; // PNG
+  if (buf[0] === 0xff && buf[1] === 0xd8 && buf[2] === 0xff) return true;                     // JPEG
+  if (buf[0] === 0x47 && buf[1] === 0x49 && buf[2] === 0x46) return true;                     // GIF
+  if (buf.length >= 12 && buf.toString('latin1', 0, 4) === 'RIFF' && buf.toString('latin1', 8, 12) === 'WEBP') return true; // WebP
+  if (buf.length >= 12 && buf.toString('latin1', 4, 8) === 'ftyp') return true;               // AVIF/HEIF
+  const head = buf.subarray(0, 256).toString('latin1').replace(/^\s+/, '').toLowerCase();
+  if (head.startsWith('<svg') || head.startsWith('<?xml')) return true;                       // SVG/XML
+  return false;
+}
+
 async function getRemoteAsset(url: string): Promise<Buffer> {
   if (!url || url.trim() === '') throw new Error('URL de asset vazia');
   if (url.startsWith('data:')) {
@@ -127,19 +139,17 @@ async function getRemoteAsset(url: string): Promise<Buffer> {
       } finally {
         clearTimeout(timer);
       }
-      const ct = res.headers.get('content-type') || '';
-      const ehImagem = res.ok && (ct === '' || ct.startsWith('image/'));
-      if (ehImagem) {
+      if (res.ok) {
         const buf = Buffer.from(await res.arrayBuffer());
-        if (buf.length < 512 && buf.subarray(0, 5).toString('utf-8').toLowerCase().includes('<htm')) {
-          ultimoErro = `resposta HTML (${buf.length}b) apesar do content-type "${ct}"`;
-        } else {
+        if (isImageBuffer(buf)) {
           if (DEBUG_RENDER) logger.info({ url, tentativa }, 'render: asset ok');
           assetCache.set(url, buf);
           return buf;
         }
+        const inicio = buf.subarray(0, 16).toString('hex');
+        ultimoErro = `resposta nao-imagem (${buf.length}b, ct="${res.headers.get('content-type') || ''}", inicio=${inicio})`;
       } else {
-        ultimoErro = `status ${res.status}, content-type "${ct}"`;
+        ultimoErro = `status ${res.status}, content-type "${res.headers.get('content-type') || ''}"`;
       }
       if (tentativa < MAX_TENTATIVAS) {
         logger.warn({ url, tentativa, motivo: ultimoErro }, 'render: asset nao-imagem, tentando novamente');
@@ -208,7 +218,7 @@ async function renderTextBuffer(font: any, text: string, fontSize: number, fill:
   const totalWidth = Math.ceil(x * scale + spacing) + 4;
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${totalWidth}" height="${svgHeight}">${pathElements.join('')}</svg>`;
   return {
-    buffer: await sharp(Buffer.from(svg)).png().toBuffer(),
+    buffer: Buffer.from(svg), // SVG cru: rasterizado numa passada so no composite final
     width: totalWidth,
     ascent,
   };
@@ -389,15 +399,9 @@ async function renderImage(
   let input: Buffer;
 
   if (layer.w > 0 && layer.h > 0) {
-    safeW = Math.min(layer.w, bgWidth - layer.x);
-    safeH = Math.min(layer.h, bgHeight - layer.y);
-    if (safeW !== layer.w || safeH !== layer.h) {
-      logger.warn(`[render] image ${layer.id} dimensions capped: ${layer.w}x${layer.h} → ${safeW}x${safeH} (bg=${bgWidth}x${bgHeight})`);
-    }
-    if (safeW <= 0 || safeH <= 0) {
-      logger.warn(`[render] image ${layer.id} skipped: zero or negative safe dimensions`);
-      return;
-    }
+    // renderiza no tamanho pretendido (mantem escala/aspecto); o recorte na borda vem depois
+    safeW = layer.w;
+    safeH = layer.h;
     const fitMode = isCircle ? 'cover' : (layer.resize_mode ?? 'contain');
     const resizeOpts: sharp.ResizeOptions = { fit: fitMode, background: { r: 0, g: 0, b: 0, alpha: 0 } };
     if (fitMode === 'cover') resizeOpts.position = cropPosition(layer.crop_focus);
@@ -436,10 +440,31 @@ async function renderImage(
     safeH = size;
   }
 
+  // Recorta o excedente fora do canvas (em vez de encolher/distorcer)
+  let _cx = layer.x, _cy = layer.y;
+  {
+    const cropLeft = _cx < 0 ? Math.min(-_cx, safeW) : 0;
+    const cropTop  = _cy < 0 ? Math.min(-_cy, safeH) : 0;
+    const visW = Math.min(safeW - cropLeft, bgWidth  - Math.max(_cx, 0));
+    const visH = Math.min(safeH - cropTop,  bgHeight - Math.max(_cy, 0));
+    if (visW <= 0 || visH <= 0) {
+      logger.warn(`[render] image ${layer.id} fora do canvas, ignorada`);
+      return;
+    }
+    if (cropLeft > 0 || cropTop > 0 || visW < safeW || visH < safeH) {
+      input = await sharp(input)
+        .extract({ left: Math.round(cropLeft), top: Math.round(cropTop), width: Math.round(visW), height: Math.round(visH) })
+        .toBuffer();
+      safeW = visW;
+      safeH = visH;
+    }
+    _cx = Math.max(_cx, 0);
+    _cy = Math.max(_cy, 0);
+  }
   const composite: sharp.OverlayOptions = {
     input,
-    top: layer.y,
-    left: layer.x,
+    top: _cy,
+    left: _cx,
   };
   if (layer.blend_mode && layer.blend_mode !== 'normal') {
     composite.blend = layer.blend_mode as sharp.Blend;
@@ -452,7 +477,7 @@ async function renderImage(
     const borderSvg = isCircle
       ? `<svg width="${safeW}" height="${safeH}" xmlns="http://www.w3.org/2000/svg"><circle cx="${safeW / 2}" cy="${safeH / 2}" r="${safeW / 2 - hw}" fill="none" stroke="${border.color}" stroke-width="${border.width}"/></svg>`
       : `<svg width="${safeW}" height="${safeH}" xmlns="http://www.w3.org/2000/svg"><rect x="${hw}" y="${hw}" width="${safeW - border.width}" height="${safeH - border.width}" fill="none" stroke="${border.color}" stroke-width="${border.width}"/></svg>`;
-    composites.push({ input: Buffer.from(borderSvg), left: layer.x, top: layer.y });
+    composites.push({ input: Buffer.from(borderSvg), left: _cx, top: _cy });
   }
 }
 
@@ -467,9 +492,14 @@ async function renderShape(
     return;
   }
 
-  const safeW = Math.min(layer.w, bgWidth - layer.x);
-  const safeH = Math.min(layer.h, bgHeight - layer.y);
-  if (safeW <= 0 || safeH <= 0) return;
+  // desenha no tamanho pretendido e recorta o excedente fora do canvas (igual renderImage)
+  const fullW = layer.w;
+  const fullH = layer.h;
+  const cropLeft = layer.x < 0 ? Math.min(-layer.x, fullW) : 0;
+  const cropTop  = layer.y < 0 ? Math.min(-layer.y, fullH) : 0;
+  const visW = Math.min(fullW - cropLeft, bgWidth  - Math.max(layer.x, 0));
+  const visH = Math.min(fullH - cropTop,  bgHeight - Math.max(layer.y, 0));
+  if (visW <= 0 || visH <= 0) return;
 
   const fill = layer.fill || 'none';
   const stroke = layer.stroke || 'none';
@@ -478,27 +508,26 @@ async function renderShape(
 
   let shapeEl: string;
   if (layer.shape === 'ellipse') {
-    const cx = safeW / 2;
-    const cy = safeH / 2;
-    const rx = Math.max(0, (safeW / 2) - inset);
-    const ry = Math.max(0, (safeH / 2) - inset);
+    const cx = fullW / 2;
+    const cy = fullH / 2;
+    const rx = Math.max(0, (fullW / 2) - inset);
+    const ry = Math.max(0, (fullH / 2) - inset);
     shapeEl = `<ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}" fill="${fill}" stroke="${stroke}" stroke-width="${strokeWidth}"/>`;
   } else {
     const x = inset;
     const y = inset;
-    const w = Math.max(0, safeW - strokeWidth);
-    const h = Math.max(0, safeH - strokeWidth);
+    const w = Math.max(0, fullW - strokeWidth);
+    const h = Math.max(0, fullH - strokeWidth);
     const rx = Math.min(layer.border_radius || 0, w / 2, h / 2);
     shapeEl = `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${rx}" ry="${rx}" fill="${fill}" stroke="${stroke}" stroke-width="${strokeWidth}"/>`;
   }
 
-  const svg = `<svg width="${safeW}" height="${safeH}" xmlns="http://www.w3.org/2000/svg">${shapeEl}</svg>`;
-  const buffer = await sharp(Buffer.from(svg)).png().toBuffer();
-
+  // viewport = regiao visivel; o translate desloca a forma para RECORTAR (nao encolher)
+  const svg = `<svg width="${visW}" height="${visH}" xmlns="http://www.w3.org/2000/svg"><g transform="translate(${-cropLeft},${-cropTop})">${shapeEl}</g></svg>`;
   composites.push({
-    input: buffer,
-    left: Math.round(layer.x),
-    top: Math.round(layer.y),
+    input: Buffer.from(svg), // SVG cru: rasterizado no composite final
+    left: Math.round(Math.max(layer.x, 0)),
+    top: Math.round(Math.max(layer.y, 0)),
   });
 }
 
@@ -549,6 +578,7 @@ export async function renderFromTemplate(
   // Ordem do composite: último do array = fundo, primeiro = frente.
   // Convenção: índice 0 = layer mais à frente (alinhado com z-index do frontend).
   for (const layer of [...template.layers].reverse()) {
+    if ((layer as any).hidden) continue;
     try {
       if (layer.type === 'text-line')  await renderTextLine(layer, dataStr, composites, renderCtx);
       if (layer.type === 'text-block') await renderTextBlock(layer, dataStr, composites, renderCtx);
