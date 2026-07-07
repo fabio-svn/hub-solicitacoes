@@ -270,10 +270,8 @@
   }
 
   function renderJsonPanel() {
-    const ta = document.getElementById('jsonPanelText');
-    if (ta && currentTemplate) ta.value = JSON.stringify(currentTemplate, null, 2);
-    const msg = document.getElementById('jsonPanelMsg');
-    if (msg) msg.textContent = '';
+    const pre = document.getElementById('jsonPanelPre');
+    if (pre && currentTemplate) pre.textContent = JSON.stringify(currentTemplate, null, 2);
   }
   function copiarTemplateJson() {
     if (!currentTemplate) return;
@@ -286,26 +284,6 @@
     } else {
       showToast('Copia nao suportada neste navegador', 'error');
     }
-  }
-  function aplicarTemplateJson() {
-    const ta = document.getElementById('jsonPanelText');
-    const msg = document.getElementById('jsonPanelMsg');
-    if (!ta) return;
-    function fail(t) { if (msg) { msg.textContent = t; msg.style.color = 'var(--ruby-red, #AC3631)'; } }
-    let parsed;
-    try { parsed = JSON.parse(ta.value); }
-    catch (e) { fail('JSON invalido: ' + e.message); return; }
-    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) { fail('JSON precisa ser um objeto de template.'); return; }
-    if (!Array.isArray(parsed.layers)) { fail('Faltou o array "layers".'); return; }
-    if (!parsed.canvas || typeof parsed.canvas.width !== 'number' || typeof parsed.canvas.height !== 'number') { fail('Faltou "canvas" com width/height numericos.'); return; }
-    currentTemplate = Object.assign({}, currentTemplate, parsed);
-    selectedIds.clear();
-    selectedLayerId = null;
-    markDirty();
-    pushHistory();
-    reRender();
-    renderJsonPanel();
-    if (msg) { msg.textContent = 'Aplicado no editor. Use "Salvar Config" para persistir.'; msg.style.color = 'var(--svn-success, #22c55e)'; }
   }
   // ── Document panel ───────────────────────────────────────────
   function renderDocumentPanel() {

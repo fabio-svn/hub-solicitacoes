@@ -225,13 +225,9 @@
         <div id="jsonPanelContent" style="display:none;padding:14px 14px 18px" class="panel-scroll">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;gap:8px">
             <div class="props-label" style="margin:0">JSON do template</div>
-            <div style="display:flex;gap:6px">
-              <button id="btnCopiarJson" class="row-btn" onclick="copiarTemplateJson()" style="padding:5px 12px">Copiar</button>
-              <button id="btnAplicarJson" class="row-btn" onclick="aplicarTemplateJson()" style="padding:5px 12px;border-color:var(--ruby-red);color:var(--ruby-red)">Aplicar</button>
-            </div>
+            <button id="btnCopiarJson" class="row-btn" onclick="copiarTemplateJson()" style="padding:5px 12px">Copiar</button>
           </div>
-          <textarea id="jsonPanelText" spellcheck="false" style="width:100%;box-sizing:border-box;min-height:420px;resize:vertical;margin:0;padding:12px;background:var(--carbon-black,#221B19);color:#8fdc9f;border:1px solid var(--border-warm,#3a2f2c);border-radius:8px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;line-height:1.55;overflow:auto"></textarea>
-          <div id="jsonPanelMsg" style="margin-top:8px;font-size:12px;min-height:16px"></div>
+          <pre id="jsonPanelPre" style="margin:0;padding:12px;background:var(--carbon-black,#221B19);color:#8fdc9f;border-radius:8px;font-size:12px;line-height:1.55;white-space:pre-wrap;word-break:break-word;overflow:auto"></pre>
         </div>
       </div>
 
