@@ -237,8 +237,8 @@
         rodape = '<div class="va-actions"><span class="sub" style="font-size:0.8rem;color:var(--ink-50)">Registro sem página — apenas leitura.</span></div>';
       } else if (editavel) {
         rodape =
-          '<div style="margin-top:16px"><div style="font-size:0.72rem;color:var(--ink-50);margin-bottom:4px">Observação para o assessor</div>' +
-            '<textarea id="vaObs" style="width:100%;box-sizing:border-box;min-height:56px;font:inherit;font-size:0.85rem;padding:8px 10px;border:1px solid var(--border-light);border-radius:var(--radius-md);resize:vertical" placeholder="Obrigatória ao solicitar ajustes ou reprovar. Opcional ao aprovar."></textarea></div>' +
+          '<div style="margin-top:16px"><div style="font-size:0.72rem;color:var(--ink-50);margin-bottom:4px">Observação interna (para o marketing) <span style="opacity:0.7">— uso interno, não é enviada ao assessor</span></div>' +
+            '<textarea id="vaObs" style="width:100%;box-sizing:border-box;min-height:56px;font:inherit;font-size:0.85rem;padding:8px 10px;border:1px solid var(--border-light);border-radius:var(--radius-md);resize:vertical" placeholder="Direções para o time de marketing. Obrigatória ao solicitar ajustes ou reprovar; opcional ao aprovar."></textarea></div>' +
           '<div class="va-actions">' +
             '<button class="btn btn-primary" onclick="decidir(\'aprovado\')">Aprovar</button>' +
             '<button class="btn btn-dark" onclick="decidir(\'ajustes\')">Solicitar ajustes</button>' +
@@ -250,7 +250,7 @@
 
       const cabecalho =
         (resumo.categoria === 'atualizacao' ? '<div style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--ruby-red);margin-bottom:8px">Atualização de página</div>' : '') +
-        (pub.observacao ? '<div class="alert-card alert-info" style="margin:0 0 12px;font-size:0.82rem"><strong>Observação anterior:</strong> ' + esc(pub.observacao) + '</div>' : '') +
+        (pub.observacao ? '<div class="alert-card alert-info" style="margin:0 0 12px;font-size:0.82rem"><strong>Observação interna anterior:</strong> ' + esc(pub.observacao) + '</div>' : '') +
         (resumo.ciclo > 1 ? '<div style="text-align:right;font-size:0.74rem;color:var(--ink-50);margin-bottom:6px">Ciclo ' + resumo.ciclo + '</div>' : '');
 
       document.getElementById('vaDetalhe').innerHTML = cabecalho +
@@ -272,7 +272,7 @@
       const msg = document.getElementById('vaMsg');
       if ((decisao === 'ajustes' || decisao === 'reprovado') && !obs.trim()) {
         msg.style.color = 'var(--danger)';
-        msg.textContent = decisao === 'ajustes' ? 'Descreva na observação o que precisa ser ajustado.' : 'Escreva o motivo da reprovação na observação.';
+        msg.textContent = decisao === 'ajustes' ? 'Descreva na observação o que precisa ser ajustado (para o marketing encaminhar).' : 'Escreva o motivo da reprovação na observação (uso interno).';
         return;
       }
       msg.style.color = 'var(--ink-50)'; msg.textContent = 'Salvando…';
