@@ -214,6 +214,12 @@ function humanizeValue(key, value) {
   if (_looksLikeSlug && !_phoneKeys.includes(key) && !_looksLikePhone) return humanizeSlug(value);
   // Ultimo recurso: token unico minusculo (so letras, sem espaco/digito) -> capitaliza inicial.
   // Ex.: "fisico" -> "Fisico", "online" -> "Online". Nao toca nome/email/telefone/multi-palavra.
+  // Sim/Não: radios genericos do tipo sim/nao em qualquer form.
+  {
+    const _lv = typeof value === 'string' ? value.trim().toLowerCase() : value;
+    if (_lv === 'sim') return 'Sim';
+    if (_lv === 'nao' || _lv === 'não') return 'Não';
+  }
   if (typeof value === 'string' && /^\p{L}{2,}$/u.test(value) && value === value.toLowerCase()) {
     return value.charAt(0).toUpperCase() + value.slice(1);
   }

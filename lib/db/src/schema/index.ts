@@ -132,6 +132,30 @@ export const cartaoAprovacoesTable = pgTable("cartao_aprovacoes", {
 
 export type CartaoAprovacao = typeof cartaoAprovacoesTable.$inferSelect;
 
+export const assessorPublicacoesTable = pgTable("assessor_publicacoes", {
+  id: serial("id").primaryKey(),
+  solicitacao_id: integer("solicitacao_id").notNull().unique(),
+  nome: varchar("nome", { length: 255 }),
+  codigo_assessor: varchar("codigo_assessor", { length: 40 }),
+  unidade: varchar("unidade", { length: 120 }),
+  contrato_social: varchar("contrato_social", { length: 60 }),
+  foto_url: text("foto_url"),
+  status: varchar("status", { length: 30 }).notNull().default("aguardando-validacao"),
+  ajustes: jsonb("ajustes").$type<Array<{ campo: string; comentario: string }> | null>(),
+  observacao: text("observacao"),
+  dados_publicacao: jsonb("dados_publicacao").$type<Record<string, any> | null>(),
+  editado_por_rh: boolean("editado_por_rh").notNull().default(false),
+  decidido_por: integer("decidido_por"),
+  decidido_em: timestamp("decidido_em", { withTimezone: true }),
+  publicado_por: integer("publicado_por"),
+  publicado_em: timestamp("publicado_em", { withTimezone: true }),
+  ciclo: integer("ciclo").notNull().default(1),
+  criado_em: timestamp("criado_em", { withTimezone: true }).notNull().defaultNow(),
+  atualizado_em: timestamp("atualizado_em", { withTimezone: true }).notNull().defaultNow(),
+});
+
+export type AssessorPublicacao = typeof assessorPublicacoesTable.$inferSelect;
+
 export const eventosSolicitacaoTable = pgTable("eventos_solicitacao", {
   id: serial("id").primaryKey(),
   solicitacao_id: integer("solicitacao_id").notNull().references(() => solicitacoesTable.id, { onDelete: "cascade" }),

@@ -179,30 +179,6 @@ const DB_STATEMENTS = [
   // (só age em linhas com status_changed_at NULL; depois vira no-op barato).
   `UPDATE "cartao_aprovacoes" SET "status_changed_at" = "updated_at" WHERE "status_changed_at" IS NULL`,
 
-  // Publicação de perfis de assessores (fila de validação do Capital Humano)
-  `CREATE TABLE IF NOT EXISTS "assessor_publicacoes" (
-    "id"               SERIAL PRIMARY KEY,
-    "solicitacao_id"   INTEGER NOT NULL UNIQUE REFERENCES "solicitacoes" ("id") ON DELETE CASCADE,
-    "nome"             VARCHAR(255),
-    "codigo_assessor"  VARCHAR(40),
-    "unidade"          VARCHAR(120),
-    "contrato_social"  VARCHAR(60),
-    "foto_url"         TEXT,
-    "status"           VARCHAR(30) NOT NULL DEFAULT 'aguardando-validacao',
-    "ajustes"          JSONB,
-    "observacao"       TEXT,
-    "dados_publicacao" JSONB,
-    "editado_por_rh"   BOOLEAN NOT NULL DEFAULT FALSE,
-    "decidido_por"     INTEGER,
-    "decidido_em"      TIMESTAMPTZ,
-    "publicado_por"    INTEGER,
-    "publicado_em"     TIMESTAMPTZ,
-    "ciclo"            INTEGER NOT NULL DEFAULT 1,
-    "criado_em"        TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    "atualizado_em"    TIMESTAMPTZ NOT NULL DEFAULT NOW()
-  )`,
-  `CREATE INDEX IF NOT EXISTS "IDX_assessor_publicacoes_status" ON "assessor_publicacoes" ("status")`,
-
   // Eventos estruturados por solicitação
   `CREATE TABLE IF NOT EXISTS "eventos_solicitacao" (
     "id"             SERIAL        PRIMARY KEY,

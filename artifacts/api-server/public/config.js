@@ -324,6 +324,8 @@ const DRAWER_FIELD_LABELS = {
   nome_completo:       { label: "Nome completo" },
   codigo_assessor:     { label: "Código do assessor" },
   foto_perfil:         { label: "Foto de perfil" },
+  eh_assessor:         { label: "É assessor?" },
+  quer_pagina:         { label: "Quer página?" },
 };
 
 const DRAWER_FIELD_LABELS_FLAT = Object.fromEntries(

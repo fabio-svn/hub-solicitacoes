@@ -1522,29 +1522,22 @@ router.get("/cartao-aprovacoes", requireAuth, async (req, res): Promise<void> =>
 
 // ============ Página de Assessores — validação (Capital Humano) ============
 const ASSESSOR_ROLES = ["capital_humano", "gestor", "admin"];
-const ASSESSOR_TIPOS = ["pagina-assessores-dados", "pagina-assessores-atualizacao"];
-
-function assessorCategoria(sol: any, dados: any): string {
-  if (sol.tipo_solicitacao === "pagina-assessores-atualizacao") return "atualizacao";
-  return String(dados?.quer_pagina || "").toLowerCase() === "sim" ? "pagina" : "sem-pagina";
-}
-function assessorLinha(sol: any, pub: any) {
-  const dados: any = (pub?.dados_publicacao || sol.dados) || {};
-  const categoria = assessorCategoria(sol, dados);
-  const status = pub ? pub.status : (categoria === "sem-pagina" ? "registrado" : "aguardando-validacao");
+function assessorLinha(p: any, dados: any) {
   return {
-    solicitacao_id: sol.id,
-    categoria,
-    nome: (pub?.nome) || dados.nome_completo || dados.nome || "",
-    codigo_assessor: (pub?.codigo_assessor) || dados.codigo_assessor || "",
-    unidade: (pub?.unidade) || dados.unidade || "",
-    contrato_social: (pub?.contrato_social) || dados.contrato_social || "",
-    foto_url: (pub?.foto_url) || dados.foto_perfil || dados.fotoPerfil || "",
-    status,
-    ciclo: pub?.ciclo || 1,
-    observacao: pub?.observacao ?? "",
-    criado_em: sol.created_at,
-    decidido_em: pub?.decidido_em ?? null,
+    id: p.id,
+    solicitacao_id: p.solicitacao_id,
+    nome: p.nome || dados.nome_completo || "",
+    codigo_assessor: p.codigo_assessor || dados.codigo_assessor || "",
+    unidade: p.unidade || dados.unidade || "",
+    contrato_social: p.contrato_social || dados.contrato_social || "",
+    foto_url: p.foto_url || dados.foto_perfil || dados.fotoPerfil || "",
+    status: p.status,
+    ciclo: p.ciclo,
+    observacao: p.observacao ?? "",
+    ajustes: p.ajustes ?? null,
+    editado_por_rh: p.editado_por_rh,
+    criado_em: p.criado_em,
+    decidido_em: p.decidido_em,
   };
 }
 
@@ -1552,15 +1545,17 @@ router.get("/assessor-aprovacoes", requireAuth, async (req, res): Promise<void> 
   try {
     const role = req.session.user!.role;
     if (!ASSESSOR_ROLES.includes(role)) { res.status(403).json({ error: "Sem permissão" }); return; }
-    const sols = await db.select().from(solicitacoesTable)
-      .where(inArray(solicitacoesTable.tipo_solicitacao, ASSESSOR_TIPOS))
-      .orderBy(desc(solicitacoesTable.created_at));
-    const ids = sols.map(s => s.id);
-    const pubs = ids.length
-      ? await db.select().from(assessorPublicacoesTable).where(inArray(assessorPublicacoesTable.solicitacao_id, ids))
+    const pubs = await db.select().from(assessorPublicacoesTable).orderBy(desc(assessorPublicacoesTable.criado_em));
+    const ids = pubs.map(p => p.solicitacao_id);
+    const sols = ids.length
+      ? await db.select().from(solicitacoesTable).where(inArray(solicitacoesTable.id, ids))
       : [];
-    const mapa = new Map(pubs.map(p => [p.solicitacao_id, p]));
-    const linhas = sols.map(s => assessorLinha(s, mapa.get(s.id)));
+    const mapa = new Map(sols.map(s => [s.id, s]));
+    const linhas = pubs.map(p => {
+      const s = mapa.get(p.solicitacao_id);
+      const dados: any = (p.dados_publicacao || s?.dados) || {};
+      return assessorLinha(p, dados);
+    });
     res.json({ linhas });
   } catch (err) {
     logger.error({ err }, "Erro listando assessor-aprovacoes");
@@ -1574,11 +1569,11 @@ router.get("/assessor-aprovacoes/:id", requireAuth, async (req, res): Promise<vo
     if (!ASSESSOR_ROLES.includes(role)) { res.status(403).json({ error: "Sem permissão" }); return; }
     const id = parseInt(String(req.params.id), 10);
     if (Number.isNaN(id)) { res.status(400).json({ error: "ID inválido" }); return; }
-    const [sol] = await db.select().from(solicitacoesTable).where(eq(solicitacoesTable.id, id));
-    if (!sol || !ASSESSOR_TIPOS.includes(sol.tipo_solicitacao)) { res.status(404).json({ error: "Não encontrado" }); return; }
-    const [pub] = await db.select().from(assessorPublicacoesTable).where(eq(assessorPublicacoesTable.solicitacao_id, id));
-    const dados: any = (pub?.dados_publicacao || sol.dados) || {};
-    res.json({ resumo: assessorLinha(sol, pub), publicacao: pub || null, dados, original: sol.dados || {} });
+    const [pub] = await db.select().from(assessorPublicacoesTable).where(eq(assessorPublicacoesTable.id, id));
+    if (!pub) { res.status(404).json({ error: "Não encontrado" }); return; }
+    const [sol] = await db.select().from(solicitacoesTable).where(eq(solicitacoesTable.id, pub.solicitacao_id));
+    const dados: any = (pub.dados_publicacao || sol?.dados) || {};
+    res.json({ publicacao: pub, resumo: assessorLinha(pub, dados), dados, original: sol?.dados || {} });
   } catch (err) {
     logger.error({ err }, "Erro no detalhe de assessor-aprovacao");
     res.status(500).json({ error: "Erro ao buscar" });
@@ -1595,46 +1590,54 @@ router.post("/assessor-aprovacoes/:id/decisao", requireAuth, async (req, res): P
     const MAP: Record<string, string> = { aprovado: "aprovado", ajustes: "ajustes-solicitados", reprovado: "reprovado" };
     const novoStatus = MAP[String(b.decisao || "")];
     if (!novoStatus) { res.status(400).json({ error: "Decisão inválida" }); return; }
-    const [sol] = await db.select().from(solicitacoesTable).where(eq(solicitacoesTable.id, id));
-    if (!sol || !ASSESSOR_TIPOS.includes(sol.tipo_solicitacao)) { res.status(404).json({ error: "Não encontrado" }); return; }
-    const dados: any = sol.dados || {};
-    if (assessorCategoria(sol, dados) === "sem-pagina") { res.status(400).json({ error: "Registro sem página não passa por aprovação." }); return; }
-
-    const [pub] = await db.select().from(assessorPublicacoesTable).where(eq(assessorPublicacoesTable.solicitacao_id, id));
+    const [pub] = await db.select().from(assessorPublicacoesTable).where(eq(assessorPublicacoesTable.id, id));
+    if (!pub) { res.status(404).json({ error: "Não encontrado" }); return; }
     const ajustes = Array.isArray(b.ajustes)
       ? b.ajustes.filter((a: any) => a && a.campo).map((a: any) => ({ campo: String(a.campo), comentario: String(a.comentario || "") }))
       : null;
     const [u] = await db.select({ id: usersTable.id }).from(usersTable).where(eq(usersTable.email, req.session.user!.email));
-    const setFields: Record<string, unknown> = {
+    const set: Record<string, unknown> = {
       status: novoStatus,
-      observacao: typeof b.observacao === "string" ? b.observacao : (pub?.observacao ?? null),
+      observacao: typeof b.observacao === "string" ? b.observacao : pub.observacao,
       ajustes: novoStatus === "ajustes-solicitados" ? ajustes : null,
       decidido_por: u?.id ?? null,
       decidido_em: new Date(),
       atualizado_em: new Date(),
     };
-    if (novoStatus === "ajustes-solicitados") setFields.ciclo = (pub?.ciclo || 1) + 1;
-
-    if (pub) {
-      await db.update(assessorPublicacoesTable).set(setFields).where(eq(assessorPublicacoesTable.solicitacao_id, id));
-    } else {
-      const dp: any = dados;
-      await db.insert(assessorPublicacoesTable).values({
-        solicitacao_id: id,
-        nome: String(dp.nome_completo || dp.nome || "") || null,
-        codigo_assessor: String(dp.codigo_assessor || "") || null,
-        unidade: String(dp.unidade || "") || null,
-        contrato_social: String(dp.contrato_social || "") || null,
-        foto_url: String(dp.foto_perfil || dp.fotoPerfil || "") || null,
-        dados_publicacao: dp,
-        ...(setFields as any),
-        ciclo: (setFields.ciclo as number) || 1,
-      }).onConflictDoNothing({ target: assessorPublicacoesTable.solicitacao_id });
-    }
+    if (novoStatus === "ajustes-solicitados") set.ciclo = (pub.ciclo || 1) + 1;
+    await db.update(assessorPublicacoesTable).set(set).where(eq(assessorPublicacoesTable.id, id));
     res.json({ ok: true, status: novoStatus });
   } catch (err) {
     logger.error({ err }, "Erro na decisão de assessor");
     res.status(500).json({ error: "Erro ao registrar decisão" });
+  }
+});
+
+router.patch("/assessor-aprovacoes/:id/dados", requireAuth, async (req, res): Promise<void> => {
+  try {
+    const role = req.session.user!.role;
+    if (!ASSESSOR_ROLES.includes(role)) { res.status(403).json({ error: "Sem permissão" }); return; }
+    const id = parseInt(String(req.params.id), 10);
+    if (Number.isNaN(id)) { res.status(400).json({ error: "ID inválido" }); return; }
+    const b = req.body || {};
+    if (!b.dados_publicacao || typeof b.dados_publicacao !== "object") { res.status(400).json({ error: "dados_publicacao inválido" }); return; }
+    const [pub] = await db.select().from(assessorPublicacoesTable).where(eq(assessorPublicacoesTable.id, id));
+    if (!pub) { res.status(404).json({ error: "Não encontrado" }); return; }
+    const dp: any = { ...((pub.dados_publicacao as any) || {}), ...b.dados_publicacao };
+    await db.update(assessorPublicacoesTable).set({
+      dados_publicacao: dp,
+      nome: String(dp.nome_completo || pub.nome || "") || null,
+      codigo_assessor: String(dp.codigo_assessor || pub.codigo_assessor || "") || null,
+      unidade: String(dp.unidade || pub.unidade || "") || null,
+      contrato_social: String(dp.contrato_social || pub.contrato_social || "") || null,
+      foto_url: String(dp.foto_perfil || dp.fotoPerfil || pub.foto_url || "") || null,
+      editado_por_rh: true,
+      atualizado_em: new Date(),
+    }).where(eq(assessorPublicacoesTable.id, id));
+    res.json({ ok: true });
+  } catch (err) {
+    logger.error({ err }, "Erro ao editar dados de assessor");
+    res.status(500).json({ error: "Erro ao salvar" });
   }
 });
 
