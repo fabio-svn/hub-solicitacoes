@@ -1526,7 +1526,7 @@ const ASSESSOR_TIPOS = ["pagina-assessores-dados", "pagina-assessores-atualizaca
 
 function assessorCategoria(sol: any, dados: any): string {
   if (sol.tipo_solicitacao === "pagina-assessores-atualizacao") return "atualizacao";
-  return String(dados?.quer_pagina || "").toLowerCase() === "nao" ? "sem-pagina" : "pagina";
+  return String(dados?.quer_pagina || "").toLowerCase() === "sim" ? "pagina" : "sem-pagina";
 }
 function assessorLinha(sol: any, pub: any) {
   const dados: any = (pub?.dados_publicacao || sol.dados) || {};
