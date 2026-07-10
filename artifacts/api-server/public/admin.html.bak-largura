@@ -29,7 +29,7 @@
 </head>
 <body class="page-light">
   <div id="pageContent">
-  <div class="page-container page-container--wide">
+  <div class="page-container page-container--standard">
     <div class="page-header">
       <h1 class="page-title">Painel Administrativo</h1>
     </div>

@@ -112,7 +112,7 @@ app.use(
     rolling: true,
     saveUninitialized: false,
     cookie: {
-      maxAge: 30 * 24 * 60 * 60 * 1000, // 30 dias (rolling renova a cada uso)
+      maxAge: 24 * 60 * 60 * 1000,
       secure: process.env.NODE_ENV === "production",
       httpOnly: true,
       sameSite: "lax",
@@ -145,8 +145,6 @@ app.use("/api", router);
 app.use("/auth", authRouter);
 
 const publicDir = path.resolve(__dirname, "../public");
-// "Home" (index.html) descontinuada — a landing e a pagina de solicitacoes.
-app.get(["/", "/index.html"], (_req, res) => res.redirect("/solicitacoes.html"));
 app.use(express.static(publicDir, {
   setHeaders: (res, filePath) => {
     if (filePath.endsWith('.html')) {
@@ -165,7 +163,7 @@ app.use('/fonts', express.static(fontsDir, {
 }));
 
 app.get("/{*catchAll}", (_req, res) => {
-  res.redirect("/solicitacoes.html");
+  res.sendFile(path.join(publicDir, "index.html"));
 });
 
 app.use((err: Error, req: Request, res: Response, _next: NextFunction) => {

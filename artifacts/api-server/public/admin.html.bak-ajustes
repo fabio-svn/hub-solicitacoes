@@ -29,7 +29,7 @@
 </head>
 <body class="page-light">
   <div id="pageContent">
-  <div class="page-container page-container--wide">
+  <div class="page-container page-container--standard">
     <div class="page-header">
       <h1 class="page-title">Painel Administrativo</h1>
     </div>
@@ -80,7 +80,7 @@
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-top:16px;margin-bottom:24px">
       <div class="stat-card">
         <div class="stat-number" id="adminTotal">—</div>
-        <div class="stat-label" id="adminTotalLabel">Solicitações</div>
+        <div class="stat-label">Solicitações</div>
         <div id="adminDelta" style="font-size:0.75rem;margin-top:4px;font-weight:600"></div>
       </div>
       <div class="stat-card">
@@ -90,7 +90,7 @@
       </div>
     </div>
 
-    <div style="display:flex;align-items:center;gap:10px;margin:16px 0 24px;flex-wrap:wrap">
+    <div style="display:flex;align-items:center;gap:10px;margin-top:14px;flex-wrap:wrap">
       <span style="font-size:0.8rem;font-weight:600;opacity:0.5">Escopo:</span>
       <div style="display:flex;gap:6px;flex-wrap:wrap" id="adminEscopoBtns">
         <button class="filter-chip active" data-escopo="todos" onclick="setAdminEscopo(this)">Todos</button>
@@ -125,7 +125,7 @@
       </div>
     </div>
 
-    <div id="topSolicitantesCard" class="form-card" style="padding:20px;margin-bottom:28px">
+    <div id="topSolicitantesCard" style="margin-top:24px;background:var(--card-white,#fff);border:1px solid var(--border-light);border-radius:var(--radius-xl);padding:20px 22px">
       <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:16px">
         <h3 style="margin:0;font-size:1rem;font-weight:700;color:var(--carbon-black)">Solicitantes mais ativos</h3>
         <span style="font-size:0.72rem;color:var(--ink-50)">no período selecionado</span>
@@ -524,7 +524,6 @@
         const data = await res.json();
 
         document.getElementById('adminTotal').textContent = data.total;
-        { const _lbl = document.getElementById('adminTotalLabel'); if (_lbl) _lbl.textContent = adminEscopo === 'todos' ? 'Total' : adminEscopo === 'automacoes' ? 'Automações' : 'Solicitações'; }
         document.getElementById('adminAvaliacoes').textContent = data.avaliacoes;
         document.getElementById('adminMediaNota').textContent =
           data.mediaNotas ? 'Média: ' + data.mediaNotas + '/10' : 'Sem notas ainda';

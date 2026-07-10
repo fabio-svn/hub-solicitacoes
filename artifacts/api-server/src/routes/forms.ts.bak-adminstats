@@ -1283,41 +1283,13 @@ router.get("/admin/stats", requireAuth, async (req, res): Promise<void> => {
       res.status(403).json({ error: "Acesso negado" }); return;
     }
 
+    const dias = Math.min(365, Math.max(1, parseInt(String(req.query.dias), 10) || 7));
     const now = new Date();
-    const deRaw = req.query.de ? String(req.query.de) : "";
-    const ateRaw = req.query.ate ? String(req.query.ate) : "";
-    const rangeValido = /^\d{4}-\d{2}-\d{2}$/.test(deRaw) && /^\d{4}-\d{2}-\d{2}$/.test(ateRaw);
-    let dias: number, fimHoje: Date, periodoAtual: Date, periodoAnterior: Date;
-    if (rangeValido) {
-      // Intervalo personalizado: usa as datas reais ('ate' inclusivo).
-      periodoAtual = new Date(deRaw + "T00:00:00");
-      fimHoje = new Date(ateRaw + "T00:00:00"); fimHoje.setDate(fimHoje.getDate() + 1);
-      dias = Math.max(1, Math.round((fimHoje.getTime() - periodoAtual.getTime()) / 86400000));
-      periodoAnterior = new Date(periodoAtual.getTime() - dias * 86400000);
-    } else {
-      dias = Math.min(365, Math.max(1, parseInt(String(req.query.dias), 10) || 7));
-      // Períodos contam apenas DIAS CHEIOS: a janela termina no início de hoje (exclui o dia corrente).
-      fimHoje = new Date(now); fimHoje.setHours(0, 0, 0, 0);
-      periodoAtual = new Date(fimHoje.getTime() - dias * 86400000);
-      periodoAnterior = new Date(periodoAtual.getTime() - dias * 86400000);
-    }
+    const periodoAtual = new Date(now.getTime() - dias * 86400000);
+    const periodoAnterior = new Date(periodoAtual.getTime() - dias * 86400000);
     // registros importados da planilha histórica de cartões não entram nos contadores
     const naoImportada = sql`(${solicitacoesTable.dados} ->> '_importado_planilha') IS NULL`;
-    // Escopo: todos | solicitacoes (exclui automações) | automacoes (só automações)
-    const escopoParam = String(req.query.escopo || "todos");
-    const autoTipos = Array.from(TIPOS_AUTOMACAO_SET) as string[];
-    const inAuto = inArray(solicitacoesTable.tipo_solicitacao, autoTipos);
-    const escopoCond = escopoParam === "automacoes"
-      ? inAuto
-      : escopoParam === "solicitacoes"
-      ? sql`NOT (${inAuto})`
-      : undefined;
-    const noPeriodo = and(
-      sql`${solicitacoesTable.created_at} >= ${periodoAtual.toISOString()}`,
-      sql`${solicitacoesTable.created_at} < ${fimHoje.toISOString()}`,
-      naoImportada,
-      ...(escopoCond ? [escopoCond] : [])
-    );
+    const noPeriodo = and(sql`${solicitacoesTable.created_at} >= ${periodoAtual.toISOString()}`, naoImportada);
 
     const [atual] = await db.select({ count: sql<number>`count(*)` })
       .from(solicitacoesTable)
@@ -1328,8 +1300,7 @@ router.get("/admin/stats", requireAuth, async (req, res): Promise<void> => {
       .where(and(
         sql`${solicitacoesTable.created_at} >= ${periodoAnterior.toISOString()}`,
         sql`${solicitacoesTable.created_at} < ${periodoAtual.toISOString()}`,
-        naoImportada,
-        ...(escopoCond ? [escopoCond] : [])
+        naoImportada
       ));
 
     const porTipo = await db.select({
@@ -1360,27 +1331,6 @@ router.get("/admin/stats", requireAuth, async (req, res): Promise<void> => {
       .from(solicitacoesTable)
       .where(and(noPeriodo, sql`${solicitacoesTable.avaliacao} IS NOT NULL`));
 
-    const topSolicitantesRows = await db.select({
-      nome: usersTable.name,
-      email: solicitacoesTable.user_email,
-      count: sql<number>`count(*)`,
-    })
-      .from(solicitacoesTable)
-      .leftJoin(usersTable, eq(usersTable.email, solicitacoesTable.user_email))
-      .where(noPeriodo)
-      .groupBy(usersTable.name, solicitacoesTable.user_email)
-      .orderBy(desc(sql`count(*)`))
-      .limit(8);
-
-    const porTipoStatusRows = await db.select({
-      tipo: solicitacoesTable.tipo_solicitacao,
-      status: solicitacoesTable.status,
-      count: sql<number>`count(*)`,
-    })
-      .from(solicitacoesTable)
-      .where(noPeriodo)
-      .groupBy(solicitacoesTable.tipo_solicitacao, solicitacoesTable.status);
-
     const totalAtual = Number(atual.count);
     const totalAnterior = Number(anterior.count);
     const delta = totalAnterior === 0
@@ -1395,8 +1345,6 @@ router.get("/admin/stats", requireAuth, async (req, res): Promise<void> => {
       porStatus: porStatus.map(r => ({ status: r.status, count: Number(r.count) })),
       avaliacoes: Number(avaliacoes.count),
       mediaNotas: mediaNotas.media ? Number(mediaNotas.media).toFixed(1) : null,
-      topSolicitantes: topSolicitantesRows.map(r => ({ nome: r.nome || r.email, count: Number(r.count) })),
-      porTipoStatus: porTipoStatusRows.map(r => ({ tipo: r.tipo, status: r.status, count: Number(r.count) })),
       dias,
     });
   } catch (err) {

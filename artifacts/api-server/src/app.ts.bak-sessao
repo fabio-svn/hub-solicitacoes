@@ -112,7 +112,7 @@ app.use(
     rolling: true,
     saveUninitialized: false,
     cookie: {
-      maxAge: 30 * 24 * 60 * 60 * 1000, // 30 dias (rolling renova a cada uso)
+      maxAge: 24 * 60 * 60 * 1000,
       secure: process.env.NODE_ENV === "production",
       httpOnly: true,
       sameSite: "lax",

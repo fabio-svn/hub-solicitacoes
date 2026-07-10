@@ -31,18 +31,10 @@
 
       <div class="alert-card alert-info">
         <div class="alert-title">Convite personalizado</div>
-        <div class="alert-text" id="fpIntroText">Preencha os dados para gerar o convite de Financial Planning personalizado. O material gerado ficará disponível ao final da solicitação.</div>
+        <div class="alert-text">Preencha os dados para gerar o convite de Financial Planning personalizado. O material gerado ficará disponível ao final da solicitação.</div>
       </div>
 
       <div class="field">
-        <label>O que você precisa?</label>
-        <div style="display:flex;gap:8px;flex-wrap:wrap" id="fpModoBtns">
-          <button type="button" class="filter-chip active" data-modo="convite" onclick="setModoFP('convite')">Gerar convite</button>
-          <button type="button" class="filter-chip" data-modo="link" onclick="setModoFP('link')">Gerar apenas o link</button>
-        </div>
-      </div>
-
-      <div class="field" id="field-telefone">
         <label>Telefone <span class="text-ruby">*</span></label>
         <input type="tel" id="telefone" placeholder="(00) 00000-0000" oninput="mascaraTelefone(this)" required>
       </div>
@@ -50,11 +42,11 @@
         <label>Código do assessor <span class="text-ruby">*</span></label>
         <input type="text" id="codigoAssessor" placeholder="Ex: 12345" required>
       </div>
-      <div class="field" id="field-nomeAssinatura">
+      <div class="field">
         <label>Nome para assinatura <span class="text-ruby">*</span></label>
         <input type="text" id="nomeAssinatura" placeholder="Nome completo para assinar o convite" required>
       </div>
-      <div class="field" id="field-cargo">
+      <div class="field">
         <label>Cargo <span class="text-ruby">*</span></label>
         <select id="cargo" required>
           <option value="">Selecione o cargo</option>
@@ -68,10 +60,9 @@
       </div>
       <div class="section-divider">
         <div id="submitError" class="alert-card alert-danger" style="display:none;margin-bottom:16px"></div>
-        <div id="fpLinkResult" class="alert-card alert-info" style="display:none;margin-bottom:16px"></div>
         <div id="formStatusArea" style="display:none;margin-top:16px"></div>
         <div class="form-nav" style="justify-content:flex-end">
-          <button class="btn btn-primary btn-submit-gold" id="btnSubmit" onclick="onFormActionFP()">Enviar</button>
+          <button class="btn btn-primary btn-submit-gold" id="btnSubmit" onclick="submitForm()">Enviar</button>
         </div>
       </div>
     </div>
@@ -100,73 +91,6 @@
           if (contratoSel) { CONTRATOS_SOCIAIS.forEach(function(c) { var o = document.createElement('option'); o.value = c; o.textContent = c; contratoSel.appendChild(o); }); }
         },
       });
-    }
-
-    var modoFP = 'convite';
-
-    function dominioFP(contrato) {
-      var s = String(contrato || '').toLowerCase();
-      if (s.indexOf('connect') >= 0) return 'svnconnect.com.br';
-      if (s.indexOf('capital') >= 0) return 'svncapital.com.br';
-      if (s.indexOf('invest') >= 0) return 'svninvestimentos.com.br';
-      return null;
-    }
-
-    function setModoFP(m) {
-      modoFP = m;
-      document.querySelectorAll('#fpModoBtns .filter-chip').forEach(function (b) { b.classList.toggle('active', b.dataset.modo === m); });
-      var soLink = m === 'link';
-      ['field-telefone', 'field-nomeAssinatura', 'field-cargo'].forEach(function (id) { var el = document.getElementById(id); if (el) el.style.display = soLink ? 'none' : ''; });
-      var btn = document.getElementById('btnSubmit');
-      if (btn) btn.textContent = soLink ? 'Gerar link' : 'Enviar';
-      var intro = document.getElementById('fpIntroText');
-      if (intro) intro.textContent = soLink
-        ? 'Informe o código do assessor e o contrato social para gerar o link do Financial Planning.'
-        : 'Preencha os dados para gerar o convite de Financial Planning personalizado. O material gerado ficará disponível ao final da solicitação.';
-      var box = document.getElementById('fpLinkResult'); if (box) box.style.display = 'none';
-      var err = document.getElementById('submitError'); if (err) err.style.display = 'none';
-    }
-
-    function onFormActionFP() {
-      if (modoFP === 'link') gerarLinkFP();
-      else submitForm();
-    }
-
-    function gerarLinkFP() {
-      var err = document.getElementById('submitError');
-      var codigo = (document.getElementById('codigoAssessor').value || '').trim();
-      var contrato = document.getElementById('contratoSocial').value || '';
-      if (!codigo || !contrato) {
-        err.textContent = 'Preencha o código do assessor e o contrato social para gerar o link.';
-        err.style.display = 'block'; return;
-      }
-      var dom = dominioFP(contrato);
-      if (!dom) {
-        err.textContent = 'Não reconheci o contrato social para montar o link.';
-        err.style.display = 'block'; return;
-      }
-      err.style.display = 'none';
-      var aid = 'A' + codigo.replace(/^[Aa]/, '');
-      var url = 'https://' + dom + '/financial-planning/?A_ID=' + encodeURIComponent(aid);
-      var box = document.getElementById('fpLinkResult');
-      box.innerHTML =
-        '<div class="alert-title">Link do Financial Planning</div>' +
-        '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:8px">' +
-          '<input type="text" readonly value="' + url + '" id="fpLinkInput" style="flex:1;min-width:220px;padding:8px 10px;border:1px solid var(--border-light);border-radius:var(--radius-md);font-size:0.85rem;background:#fff" onclick="this.select()">' +
-          '<button type="button" class="btn btn-secondary" style="padding:6px 12px;font-size:0.82rem" onclick="copiarLinkFP(this)">Copiar</button>' +
-          '<a href="' + url + '" target="_blank" rel="noopener" class="btn btn-secondary" style="padding:6px 12px;font-size:0.82rem">Abrir</a>' +
-        '</div>';
-      box.style.display = 'block';
-    }
-
-    function copiarLinkFP(btn) {
-      var inp = document.getElementById('fpLinkInput');
-      if (!inp) return;
-      inp.select();
-      function ok() { var t = btn.textContent; btn.textContent = 'Copiado!'; setTimeout(function () { btn.textContent = t; }, 1500); }
-      if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(inp.value).then(ok).catch(function () { try { document.execCommand('copy'); ok(); } catch (e) {} });
-      } else { try { document.execCommand('copy'); ok(); } catch (e) {} }
     }
 
     async function submitForm() {

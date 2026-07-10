@@ -113,7 +113,7 @@ const Auth = {
       if (data.authenticated) {
         this.user = data.user;
         this.profile = data.profile || null;
-        if (!this.profile || !this.profile.encontrado) {
+        if (!this.profile) {
           try {
             const pr = await fetch('/auth/me-profile');
             if (pr.ok) {

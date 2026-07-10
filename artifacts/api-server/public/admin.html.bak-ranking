@@ -29,7 +29,7 @@
 </head>
 <body class="page-light">
   <div id="pageContent">
-  <div class="page-container page-container--wide">
+  <div class="page-container page-container--standard">
     <div class="page-header">
       <h1 class="page-title">Painel Administrativo</h1>
     </div>
@@ -80,22 +80,13 @@
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-top:16px;margin-bottom:24px">
       <div class="stat-card">
         <div class="stat-number" id="adminTotal">—</div>
-        <div class="stat-label" id="adminTotalLabel">Solicitações</div>
+        <div class="stat-label">Solicitações</div>
         <div id="adminDelta" style="font-size:0.75rem;margin-top:4px;font-weight:600"></div>
       </div>
       <div class="stat-card">
         <div class="stat-number" id="adminAvaliacoes">—</div>
         <div class="stat-label">Com avaliação</div>
         <div id="adminMediaNota" style="font-size:0.75rem;margin-top:4px;font-weight:600;opacity:0.6"></div>
-      </div>
-    </div>
-
-    <div style="display:flex;align-items:center;gap:10px;margin:16px 0 24px;flex-wrap:wrap">
-      <span style="font-size:0.8rem;font-weight:600;opacity:0.5">Escopo:</span>
-      <div style="display:flex;gap:6px;flex-wrap:wrap" id="adminEscopoBtns">
-        <button class="filter-chip active" data-escopo="todos" onclick="setAdminEscopo(this)">Todos</button>
-        <button class="filter-chip" data-escopo="solicitacoes" onclick="setAdminEscopo(this)">Solicitações</button>
-        <button class="filter-chip" data-escopo="automacoes" onclick="setAdminEscopo(this)">Automações</button>
       </div>
     </div>
 
@@ -116,21 +107,12 @@
               <svg id="graficoChevronStatus" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="transition:transform 0.2s"><polyline points="6 9 12 15 18 9"/></svg>
             </button>
           </div>
-          <select id="graficoRecorte" onchange="setRecorte(this.value)" title="Recortar pela outra dimensão" style="padding:5px 10px;border-radius:var(--radius-md);border:1px solid var(--border-light);background:var(--card-white);font-family:'Nunito Sans',sans-serif;font-size:0.8rem;color:var(--carbon-black);cursor:pointer;max-width:200px"></select>
         </div>
       </div>
       <div id="graficoContainer" style="display:flex;gap:24px;align-items:center;flex-wrap:wrap">
         <canvas id="adminPizza" width="200" height="200" style="flex-shrink:0;max-width:200px"></canvas>
         <div id="adminLegenda" style="flex:1;min-width:180px;display:flex;flex-direction:column;gap:8px"></div>
       </div>
-    </div>
-
-    <div id="topSolicitantesCard" class="form-card" style="padding:20px;margin-bottom:28px">
-      <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:16px">
-        <h3 style="margin:0;font-size:1rem;font-weight:700;color:var(--carbon-black)">Solicitantes mais ativos</h3>
-        <span style="font-size:0.72rem;color:var(--ink-50)">no período selecionado</span>
-      </div>
-      <div id="topSolicitantesBars"></div>
     </div>
 
     <div class="tabs">
@@ -253,9 +235,6 @@
     let adminGraficoModo = 'tipo';
     let adminGraficoData = null;
     let graficoFiltrosAtivos = null;
-    let adminEscopo = 'todos';
-    let recorteTipo = null;
-    let recorteStatus = null;
 
     async function init() {
       await _configReady;
@@ -515,16 +494,15 @@
         const de = document.getElementById('adminDe').value;
         const ate = document.getElementById('adminAte').value;
         if (de && ate) {
-          url += '?de=' + de + '&ate=' + ate;
+          const diff = Math.ceil((new Date(ate) - new Date(de)) / 86400000);
+          url += '?dias=' + Math.max(1, diff);
         } else {
           url += '?dias=' + (adminDias || 7);
         }
-        url += '&escopo=' + adminEscopo;
         const res = await fetch(url);
         const data = await res.json();
 
         document.getElementById('adminTotal').textContent = data.total;
-        { const _lbl = document.getElementById('adminTotalLabel'); if (_lbl) _lbl.textContent = adminEscopo === 'todos' ? 'Total' : adminEscopo === 'automacoes' ? 'Automações' : 'Solicitações'; }
         document.getElementById('adminAvaliacoes').textContent = data.avaliacoes;
         document.getElementById('adminMediaNota').textContent =
           data.mediaNotas ? 'Média: ' + data.mediaNotas + '/10' : 'Sem notas ainda';
@@ -537,66 +515,13 @@
         }
 
         adminGraficoData = data;
-        renderTopSolicitantes(data.topSolicitantes);
-        renderRecorteSelect();
         renderAdminGrafico();
       } catch (e) { console.error(e); }
-    }
-
-    function setAdminEscopo(btn) {
-      document.querySelectorAll('#adminEscopoBtns .filter-chip').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      adminEscopo = btn.dataset.escopo;
-      loadAdminStats();
-    }
-
-    // Base da pizza: cruza tipo x status quando há recorte pela outra dimensão.
-    function getGraficoBase(modo) {
-      const data = adminGraficoData || {};
-      const cross = modo === 'tipo' ? recorteStatus : recorteTipo;
-      if (cross && Array.isArray(data.porTipoStatus)) {
-        const acc = {};
-        data.porTipoStatus.forEach(r => {
-          const other = modo === 'tipo' ? r.status : r.tipo;
-          if (other !== cross) return;
-          const key = modo === 'tipo' ? r.tipo : r.status;
-          acc[key] = (acc[key] || 0) + (r.count || 0);
-        });
-        return Object.keys(acc).map(k => modo === 'tipo' ? { tipo: k, count: acc[k] } : { status: k, count: acc[k] });
-      }
-      return (modo === 'tipo' ? data.porTipo : data.porStatus) || [];
-    }
-
-    function renderRecorteSelect() {
-      const sel = document.getElementById('graficoRecorte');
-      if (!sel || !adminGraficoData) return;
-      const esc2 = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-      const outra = adminGraficoModo === 'tipo' ? 'status' : 'tipo';
-      const cross = adminGraficoModo === 'tipo' ? recorteStatus : recorteTipo;
-      let html;
-      if (outra === 'status') {
-        const vals = (adminGraficoData.porStatus || []).map(i => i.status);
-        html = '<option value="">Todos os status</option>' + vals.map(s => '<option value="' + esc2(s) + '"' + (cross === s ? ' selected' : '') + '>Status: ' + esc2(getStatus(s).label) + '</option>').join('');
-      } else {
-        const vals = (adminGraficoData.porTipo || []).map(i => i.tipo);
-        html = '<option value="">Todos os tipos</option>' + vals.map(t => '<option value="' + esc2(t) + '"' + (cross === t ? ' selected' : '') + '>Tipo: ' + esc2((typeof TIPO_SOLICITACAO_LABELS !== 'undefined' && TIPO_SOLICITACAO_LABELS[t]) || t) + '</option>').join('');
-      }
-      sel.innerHTML = html;
-    }
-
-    function setRecorte(val) {
-      if (adminGraficoModo === 'tipo') recorteStatus = val || null;
-      else recorteTipo = val || null;
-      graficoFiltrosAtivos = null;
-      renderAdminGrafico();
-      renderGraficoDropdown(adminGraficoModo);
     }
 
     function switchGrafico(modo) {
       adminGraficoModo = modo;
       graficoFiltrosAtivos = null;
-      recorteTipo = null; recorteStatus = null;
-      renderRecorteSelect();
       const btnTipo = document.getElementById('graficoBtnTipo');
       const btnStatus = document.getElementById('graficoBtnStatus');
       if (btnTipo) { btnTipo.style.background = modo === 'tipo' ? 'var(--carbon-black)' : 'var(--card-white)'; btnTipo.style.color = modo === 'tipo' ? 'white' : 'var(--carbon-black)'; }
@@ -659,34 +584,14 @@
       }
     }
 
-    function renderTopSolicitantes(lista) {
-      const box = document.getElementById('topSolicitantesBars');
-      if (!box) return;
-      const escq = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-      const arr = Array.isArray(lista) ? lista : [];
-      if (!arr.length) { box.innerHTML = '<div style="font-size:0.85rem;color:var(--ink-50);padding:4px 0">Sem solicitações no período.</div>'; return; }
-      const max = Math.max.apply(null, arr.map(x => x.count || 0)) || 1;
-      box.innerHTML = arr.map(x => {
-        const pct = Math.round((x.count || 0) / max * 100);
-        const nome = x.nome || '—';
-        return '<div style="display:flex;align-items:center;gap:12px;margin-bottom:9px">' +
-          '<div style="width:160px;flex-shrink:0;font-size:0.85rem;color:var(--carbon-black);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="' + escq(nome) + '">' + escq(nome) + '</div>' +
-          '<div style="flex:1;min-width:60px;background:var(--icon-bg);border-radius:var(--radius-pill);height:22px;overflow:hidden">' +
-            '<div style="width:' + pct + '%;height:100%;background:var(--ruby-red);border-radius:var(--radius-pill);min-width:3px;transition:width .3s"></div>' +
-          '</div>' +
-          '<div style="width:34px;flex-shrink:0;text-align:right;font-weight:700;font-size:0.9rem;color:var(--carbon-black)">' + (x.count || 0) + '</div>' +
-        '</div>';
-      }).join('');
-    }
-
     function renderGraficoDropdown(modo) {
       if (!adminGraficoData) return;
       const container = document.getElementById(modo === 'tipo' ? 'graficoDropdownTipo' : 'graficoDropdownStatus');
       if (!container) return;
       const CORES = ['#AC3631','#221B19','#4a7c2f','#1e40af','#9333ea','#ea580c','#0891b2','#be123c','#854d0e','#166534'];
       const todosItens = modo === 'tipo'
-        ? getGraficoBase('tipo').map(i => ({ id: i.tipo, label: (typeof TIPO_SOLICITACAO_LABELS !== 'undefined' && TIPO_SOLICITACAO_LABELS[i.tipo]) || i.tipo, value: i.count }))
-        : getGraficoBase('status').map(i => ({ id: i.status, label: getStatus(i.status).label, value: i.count, cor: getStatus(i.status).bg || null }));
+        ? adminGraficoData.porTipo.map(i => ({ id: i.tipo, label: (typeof TIPO_SOLICITACAO_LABELS !== 'undefined' && TIPO_SOLICITACAO_LABELS[i.tipo]) || i.tipo, value: i.count }))
+        : adminGraficoData.porStatus.map(i => ({ id: i.status, label: getStatus(i.status).label, value: i.count, cor: getStatus(i.status).bg || null }));
 
       const header = document.createElement('div');
       header.style.cssText = 'display:flex;justify-content:space-between;align-items:center;padding:4px 6px 8px;border-bottom:1px solid var(--border-light);margin-bottom:4px';
@@ -713,7 +618,7 @@
       if (!adminGraficoData) return;
 
       const todosItens = adminGraficoModo === 'tipo'
-        ? getGraficoBase('tipo')
+        ? adminGraficoData.porTipo
             .filter(i => i.count > 0)
             .sort((a, b) => b.count - a.count)
             .map(i => ({
@@ -721,7 +626,7 @@
               label: (typeof TIPO_SOLICITACAO_LABELS !== 'undefined' && TIPO_SOLICITACAO_LABELS[i.tipo]) || i.tipo,
               value: i.count
             }))
-        : getGraficoBase('status')
+        : adminGraficoData.porStatus
             .filter(i => i.count > 0)
             .sort((a, b) => b.count - a.count)
             .map(i => ({

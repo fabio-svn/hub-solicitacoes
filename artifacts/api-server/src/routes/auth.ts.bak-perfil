@@ -230,7 +230,7 @@ router.get("/me-profile", async (req, res): Promise<void> => {
     res.status(401).json({ error: "Não autenticado" });
     return;
   }
-  if (req.session.userProfile && req.session.userProfile.encontrado) {
+  if (req.session.userProfile) {
     res.json({ profile: req.session.userProfile, fonte: "sessao" });
     return;
   }
