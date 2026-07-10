@@ -1,6 +1,6 @@
 # Pack do Projeto Hub SVN
 
-Gerado em: 2026-07-09 13:06:59
+Gerado em: 2026-07-10 17:07:00
 
 Roots: artifacts/api-server lib scripts
 
@@ -3283,7 +3283,7 @@ MYSQL_CONTATOS=                                              # [opcional]
 </head>
 <body class="page-light">
   <div id="pageContent">
-  <div class="page-container page-container--standard">
+  <div class="page-container page-container--wide">
     <div class="page-header">
       <h1 class="page-title">Painel Administrativo</h1>
     </div>
@@ -3334,13 +3334,22 @@ MYSQL_CONTATOS=                                              # [opcional]
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-top:16px;margin-bottom:24px">
       <div class="stat-card">
         <div class="stat-number" id="adminTotal">—</div>
-        <div class="stat-label">Solicitações</div>
+        <div class="stat-label" id="adminTotalLabel">Solicitações</div>
         <div id="adminDelta" style="font-size:0.75rem;margin-top:4px;font-weight:600"></div>
       </div>
       <div class="stat-card">
         <div class="stat-number" id="adminAvaliacoes">—</div>
         <div class="stat-label">Com avaliação</div>
         <div id="adminMediaNota" style="font-size:0.75rem;margin-top:4px;font-weight:600;opacity:0.6"></div>
+      </div>
+    </div>
+
+    <div style="display:flex;align-items:center;gap:10px;margin:16px 0 24px;flex-wrap:wrap">
+      <span style="font-size:0.8rem;font-weight:600;opacity:0.5">Escopo:</span>
+      <div style="display:flex;gap:6px;flex-wrap:wrap" id="adminEscopoBtns">
+        <button class="filter-chip active" data-escopo="todos" onclick="setAdminEscopo(this)">Todos</button>
+        <button class="filter-chip" data-escopo="solicitacoes" onclick="setAdminEscopo(this)">Solicitações</button>
+        <button class="filter-chip" data-escopo="automacoes" onclick="setAdminEscopo(this)">Automações</button>
       </div>
     </div>
 
@@ -3361,12 +3370,21 @@ MYSQL_CONTATOS=                                              # [opcional]
               <svg id="graficoChevronStatus" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="transition:transform 0.2s"><polyline points="6 9 12 15 18 9"/></svg>
             </button>
           </div>
+          <select id="graficoRecorte" onchange="setRecorte(this.value)" title="Recortar pela outra dimensão" style="padding:5px 10px;border-radius:var(--radius-md);border:1px solid var(--border-light);background:var(--card-white);font-family:'Nunito Sans',sans-serif;font-size:0.8rem;color:var(--carbon-black);cursor:pointer;max-width:200px"></select>
         </div>
       </div>
       <div id="graficoContainer" style="display:flex;gap:24px;align-items:center;flex-wrap:wrap">
         <canvas id="adminPizza" width="200" height="200" style="flex-shrink:0;max-width:200px"></canvas>
         <div id="adminLegenda" style="flex:1;min-width:180px;display:flex;flex-direction:column;gap:8px"></div>
       </div>
+    </div>
+
+    <div id="topSolicitantesCard" class="form-card" style="padding:20px;margin-bottom:28px">
+      <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:16px">
+        <h3 style="margin:0;font-size:1rem;font-weight:700;color:var(--carbon-black)">Solicitantes mais ativos</h3>
+        <span style="font-size:0.72rem;color:var(--ink-50)">no período selecionado</span>
+      </div>
+      <div id="topSolicitantesBars"></div>
     </div>
 
     <div class="tabs">
@@ -3489,6 +3507,9 @@ MYSQL_CONTATOS=                                              # [opcional]
     let adminGraficoModo = 'tipo';
     let adminGraficoData = null;
     let graficoFiltrosAtivos = null;
+    let adminEscopo = 'todos';
+    let recorteTipo = null;
+    let recorteStatus = null;
 
     async function init() {
       await _configReady;
@@ -3748,15 +3769,16 @@ MYSQL_CONTATOS=                                              # [opcional]
         const de = document.getElementById('adminDe').value;
         const ate = document.getElementById('adminAte').value;
         if (de && ate) {
-          const diff = Math.ceil((new Date(ate) - new Date(de)) / 86400000);
-          url += '?dias=' + Math.max(1, diff);
+          url += '?de=' + de + '&ate=' + ate;
         } else {
           url += '?dias=' + (adminDias || 7);
         }
+        url += '&escopo=' + adminEscopo;
         const res = await fetch(url);
         const data = await res.json();
 
         document.getElementById('adminTotal').textContent = data.total;
+        { const _lbl = document.getElementById('adminTotalLabel'); if (_lbl) _lbl.textContent = adminEscopo === 'todos' ? 'Total' : adminEscopo === 'automacoes' ? 'Automações' : 'Solicitações'; }
         document.getElementById('adminAvaliacoes').textContent = data.avaliacoes;
         document.getElementById('adminMediaNota').textContent =
           data.mediaNotas ? 'Média: ' + data.mediaNotas + '/10' : 'Sem notas ainda';
@@ -3769,13 +3791,66 @@ MYSQL_CONTATOS=                                              # [opcional]
         }
 
         adminGraficoData = data;
+        renderTopSolicitantes(data.topSolicitantes);
+        renderRecorteSelect();
         renderAdminGrafico();
       } catch (e) { console.error(e); }
+    }
+
+    function setAdminEscopo(btn) {
+      document.querySelectorAll('#adminEscopoBtns .filter-chip').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      adminEscopo = btn.dataset.escopo;
+      loadAdminStats();
+    }
+
+    // Base da pizza: cruza tipo x status quando há recorte pela outra dimensão.
+    function getGraficoBase(modo) {
+      const data = adminGraficoData || {};
+      const cross = modo === 'tipo' ? recorteStatus : recorteTipo;
+      if (cross && Array.isArray(data.porTipoStatus)) {
+        const acc = {};
+        data.porTipoStatus.forEach(r => {
+          const other = modo === 'tipo' ? r.status : r.tipo;
+          if (other !== cross) return;
+          const key = modo === 'tipo' ? r.tipo : r.status;
+          acc[key] = (acc[key] || 0) + (r.count || 0);
+        });
+        return Object.keys(acc).map(k => modo === 'tipo' ? { tipo: k, count: acc[k] } : { status: k, count: acc[k] });
+      }
+      return (modo === 'tipo' ? data.porTipo : data.porStatus) || [];
+    }
+
+    function renderRecorteSelect() {
+      const sel = document.getElementById('graficoRecorte');
+      if (!sel || !adminGraficoData) return;
+      const esc2 = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+      const outra = adminGraficoModo === 'tipo' ? 'status' : 'tipo';
+      const cross = adminGraficoModo === 'tipo' ? recorteStatus : recorteTipo;
+      let html;
+      if (outra === 'status') {
+        const vals = (adminGraficoData.porStatus || []).map(i => i.status);
+        html = '<option value="">Todos os status</option>' + vals.map(s => '<option value="' + esc2(s) + '"' + (cross === s ? ' selected' : '') + '>Status: ' + esc2(getStatus(s).label) + '</option>').join('');
+      } else {
+        const vals = (adminGraficoData.porTipo || []).map(i => i.tipo);
+        html = '<option value="">Todos os tipos</option>' + vals.map(t => '<option value="' + esc2(t) + '"' + (cross === t ? ' selected' : '') + '>Tipo: ' + esc2((typeof TIPO_SOLICITACAO_LABELS !== 'undefined' && TIPO_SOLICITACAO_LABELS[t]) || t) + '</option>').join('');
+      }
+      sel.innerHTML = html;
+    }
+
+    function setRecorte(val) {
+      if (adminGraficoModo === 'tipo') recorteStatus = val || null;
+      else recorteTipo = val || null;
+      graficoFiltrosAtivos = null;
+      renderAdminGrafico();
+      renderGraficoDropdown(adminGraficoModo);
     }
 
     function switchGrafico(modo) {
       adminGraficoModo = modo;
       graficoFiltrosAtivos = null;
+      recorteTipo = null; recorteStatus = null;
+      renderRecorteSelect();
       const btnTipo = document.getElementById('graficoBtnTipo');
       const btnStatus = document.getElementById('graficoBtnStatus');
       if (btnTipo) { btnTipo.style.background = modo === 'tipo' ? 'var(--carbon-black)' : 'var(--card-white)'; btnTipo.style.color = modo === 'tipo' ? 'white' : 'var(--carbon-black)'; }
@@ -3838,14 +3913,34 @@ MYSQL_CONTATOS=                                              # [opcional]
       }
     }
 
+    function renderTopSolicitantes(lista) {
+      const box = document.getElementById('topSolicitantesBars');
+      if (!box) return;
+      const escq = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+      const arr = Array.isArray(lista) ? lista : [];
+      if (!arr.length) { box.innerHTML = '<div style="font-size:0.85rem;color:var(--ink-50);padding:4px 0">Sem solicitações no período.</div>'; return; }
+      const max = Math.max.apply(null, arr.map(x => x.count || 0)) || 1;
+      box.innerHTML = arr.map(x => {
+        const pct = Math.round((x.count || 0) / max * 100);
+        const nome = x.nome || '—';
+        return '<div style="display:flex;align-items:center;gap:12px;margin-bottom:9px">' +
+          '<div style="width:160px;flex-shrink:0;font-size:0.85rem;color:var(--carbon-black);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="' + escq(nome) + '">' + escq(nome) + '</div>' +
+          '<div style="flex:1;min-width:60px;background:var(--icon-bg);border-radius:var(--radius-pill);height:22px;overflow:hidden">' +
+            '<div style="width:' + pct + '%;height:100%;background:var(--ruby-red);border-radius:var(--radius-pill);min-width:3px;transition:width .3s"></div>' +
+          '</div>' +
+          '<div style="width:34px;flex-shrink:0;text-align:right;font-weight:700;font-size:0.9rem;color:var(--carbon-black)">' + (x.count || 0) + '</div>' +
+        '</div>';
+      }).join('');
+    }
+
     function renderGraficoDropdown(modo) {
       if (!adminGraficoData) return;
       const container = document.getElementById(modo === 'tipo' ? 'graficoDropdownTipo' : 'graficoDropdownStatus');
       if (!container) return;
       const CORES = ['#AC3631','#221B19','#4a7c2f','#1e40af','#9333ea','#ea580c','#0891b2','#be123c','#854d0e','#166534'];
       const todosItens = modo === 'tipo'
-        ? adminGraficoData.porTipo.map(i => ({ id: i.tipo, label: (typeof TIPO_SOLICITACAO_LABELS !== 'undefined' && TIPO_SOLICITACAO_LABELS[i.tipo]) || i.tipo, value: i.count }))
-        : adminGraficoData.porStatus.map(i => ({ id: i.status, label: getStatus(i.status).label, value: i.count, cor: getStatus(i.status).bg || null }));
+        ? getGraficoBase('tipo').map(i => ({ id: i.tipo, label: (typeof TIPO_SOLICITACAO_LABELS !== 'undefined' && TIPO_SOLICITACAO_LABELS[i.tipo]) || i.tipo, value: i.count }))
+        : getGraficoBase('status').map(i => ({ id: i.status, label: getStatus(i.status).label, value: i.count, cor: getStatus(i.status).bg || null }));
 
       const header = document.createElement('div');
       header.style.cssText = 'display:flex;justify-content:space-between;align-items:center;padding:4px 6px 8px;border-bottom:1px solid var(--border-light);margin-bottom:4px';
@@ -3872,7 +3967,7 @@ MYSQL_CONTATOS=                                              # [opcional]
       if (!adminGraficoData) return;
 
       const todosItens = adminGraficoModo === 'tipo'
-        ? adminGraficoData.porTipo
+        ? getGraficoBase('tipo')
             .filter(i => i.count > 0)
             .sort((a, b) => b.count - a.count)
             .map(i => ({
@@ -3880,7 +3975,7 @@ MYSQL_CONTATOS=                                              # [opcional]
               label: (typeof TIPO_SOLICITACAO_LABELS !== 'undefined' && TIPO_SOLICITACAO_LABELS[i.tipo]) || i.tipo,
               value: i.count
             }))
-        : adminGraficoData.porStatus
+        : getGraficoBase('status')
             .filter(i => i.count > 0)
             .sort((a, b) => b.count - a.count)
             .map(i => ({
@@ -9052,7 +9147,7 @@ const Auth = {
       if (data.authenticated) {
         this.user = data.user;
         this.profile = data.profile || null;
-        if (!this.profile) {
+        if (!this.profile || !this.profile.encontrado) {
           try {
             const pr = await fetch('/auth/me-profile');
             if (pr.ok) {
@@ -12824,10 +12919,18 @@ window.FilterPanel = (function () {
 
       <div class="alert-card alert-info">
         <div class="alert-title">Convite personalizado</div>
-        <div class="alert-text">Preencha os dados para gerar o convite de Financial Planning personalizado. O material gerado ficará disponível ao final da solicitação.</div>
+        <div class="alert-text" id="fpIntroText">Preencha os dados para gerar o convite de Financial Planning personalizado. O material gerado ficará disponível ao final da solicitação.</div>
       </div>
 
       <div class="field">
+        <label>O que você precisa?</label>
+        <div style="display:flex;gap:8px;flex-wrap:wrap" id="fpModoBtns">
+          <button type="button" class="filter-chip active" data-modo="convite" onclick="setModoFP('convite')">Gerar convite</button>
+          <button type="button" class="filter-chip" data-modo="link" onclick="setModoFP('link')">Gerar apenas o link</button>
+        </div>
+      </div>
+
+      <div class="field" id="field-telefone">
         <label>Telefone <span class="text-ruby">*</span></label>
         <input type="tel" id="telefone" placeholder="(00) 00000-0000" oninput="mascaraTelefone(this)" required>
       </div>
@@ -12835,11 +12938,11 @@ window.FilterPanel = (function () {
         <label>Código do assessor <span class="text-ruby">*</span></label>
         <input type="text" id="codigoAssessor" placeholder="Ex: 12345" required>
       </div>
-      <div class="field">
+      <div class="field" id="field-nomeAssinatura">
         <label>Nome para assinatura <span class="text-ruby">*</span></label>
         <input type="text" id="nomeAssinatura" placeholder="Nome completo para assinar o convite" required>
       </div>
-      <div class="field">
+      <div class="field" id="field-cargo">
         <label>Cargo <span class="text-ruby">*</span></label>
         <select id="cargo" required>
           <option value="">Selecione o cargo</option>
@@ -12853,9 +12956,10 @@ window.FilterPanel = (function () {
       </div>
       <div class="section-divider">
         <div id="submitError" class="alert-card alert-danger" style="display:none;margin-bottom:16px"></div>
+        <div id="fpLinkResult" class="alert-card alert-info" style="display:none;margin-bottom:16px"></div>
         <div id="formStatusArea" style="display:none;margin-top:16px"></div>
         <div class="form-nav" style="justify-content:flex-end">
-          <button class="btn btn-primary btn-submit-gold" id="btnSubmit" onclick="submitForm()">Enviar</button>
+          <button class="btn btn-primary btn-submit-gold" id="btnSubmit" onclick="onFormActionFP()">Enviar</button>
         </div>
       </div>
     </div>
@@ -12884,6 +12988,73 @@ window.FilterPanel = (function () {
           if (contratoSel) { CONTRATOS_SOCIAIS.forEach(function(c) { var o = document.createElement('option'); o.value = c; o.textContent = c; contratoSel.appendChild(o); }); }
         },
       });
+    }
+
+    var modoFP = 'convite';
+
+    function dominioFP(contrato) {
+      var s = String(contrato || '').toLowerCase();
+      if (s.indexOf('connect') >= 0) return 'svnconnect.com.br';
+      if (s.indexOf('capital') >= 0) return 'svncapital.com.br';
+      if (s.indexOf('invest') >= 0) return 'svninvestimentos.com.br';
+      return null;
+    }
+
+    function setModoFP(m) {
+      modoFP = m;
+      document.querySelectorAll('#fpModoBtns .filter-chip').forEach(function (b) { b.classList.toggle('active', b.dataset.modo === m); });
+      var soLink = m === 'link';
+      ['field-telefone', 'field-nomeAssinatura', 'field-cargo'].forEach(function (id) { var el = document.getElementById(id); if (el) el.style.display = soLink ? 'none' : ''; });
+      var btn = document.getElementById('btnSubmit');
+      if (btn) btn.textContent = soLink ? 'Gerar link' : 'Enviar';
+      var intro = document.getElementById('fpIntroText');
+      if (intro) intro.textContent = soLink
+        ? 'Informe o código do assessor e o contrato social para gerar o link do Financial Planning.'
+        : 'Preencha os dados para gerar o convite de Financial Planning personalizado. O material gerado ficará disponível ao final da solicitação.';
+      var box = document.getElementById('fpLinkResult'); if (box) box.style.display = 'none';
+      var err = document.getElementById('submitError'); if (err) err.style.display = 'none';
+    }
+
+    function onFormActionFP() {
+      if (modoFP === 'link') gerarLinkFP();
+      else submitForm();
+    }
+
+    function gerarLinkFP() {
+      var err = document.getElementById('submitError');
+      var codigo = (document.getElementById('codigoAssessor').value || '').trim();
+      var contrato = document.getElementById('contratoSocial').value || '';
+      if (!codigo || !contrato) {
+        err.textContent = 'Preencha o código do assessor e o contrato social para gerar o link.';
+        err.style.display = 'block'; return;
+      }
+      var dom = dominioFP(contrato);
+      if (!dom) {
+        err.textContent = 'Não reconheci o contrato social para montar o link.';
+        err.style.display = 'block'; return;
+      }
+      err.style.display = 'none';
+      var aid = 'A' + codigo.replace(/^[Aa]/, '');
+      var url = 'https://' + dom + '/financial-planning/?A_ID=' + encodeURIComponent(aid);
+      var box = document.getElementById('fpLinkResult');
+      box.innerHTML =
+        '<div class="alert-title">Link do Financial Planning</div>' +
+        '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:8px">' +
+          '<input type="text" readonly value="' + url + '" id="fpLinkInput" style="flex:1;min-width:220px;padding:8px 10px;border:1px solid var(--border-light);border-radius:var(--radius-md);font-size:0.85rem;background:#fff" onclick="this.select()">' +
+          '<button type="button" class="btn btn-secondary" style="padding:6px 12px;font-size:0.82rem" onclick="copiarLinkFP(this)">Copiar</button>' +
+          '<a href="' + url + '" target="_blank" rel="noopener" class="btn btn-secondary" style="padding:6px 12px;font-size:0.82rem">Abrir</a>' +
+        '</div>';
+      box.style.display = 'block';
+    }
+
+    function copiarLinkFP(btn) {
+      var inp = document.getElementById('fpLinkInput');
+      if (!inp) return;
+      inp.select();
+      function ok() { var t = btn.textContent; btn.textContent = 'Copiado!'; setTimeout(function () { btn.textContent = t; }, 1500); }
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(inp.value).then(ok).catch(function () { try { document.execCommand('copy'); ok(); } catch (e) {} });
+      } else { try { document.execCommand('copy'); ok(); } catch (e) {} }
     }
 
     async function submitForm() {
@@ -17935,10 +18106,6 @@ window.Shell = {
             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="opacity:0.4;flex-shrink:0"><polyline points="6 9 12 15 18 9"/></svg>
           </div>
           <div class="app-user-dropdown" id="appUserDropdown" style="display:none">
-            <a href="/index.html" class="app-dropdown-item">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-              Home
-            </a>
             <a href="/solicitacoes.html" class="app-dropdown-item">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
               Fazer solicitações
@@ -17960,13 +18127,6 @@ window.Shell = {
 
   _buildSidebar(activeRoute, role) {
     const nav = [
-      {
-        route: 'home',
-        href: '/index.html',
-        icon: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 9.5L12 3l9 6.5"/><path d="M5 9v11a1 1 0 001 1h12a1 1 0 001-1V9"/><path d="M9 21v-6h6v6"/></svg>',
-        label: 'Home',
-        roles: ['admin', 'gestor', 'capital_humano'],
-      },
       {
         route: 'solicitacoes',
         href: '/solicitacoes.html',
@@ -23743,6 +23903,8 @@ window.Modal = (function () {
 
     <div class="va-tabs" id="vaTabs"></div>
 
+    <div class="va-funil" id="vaFunil"></div>
+
     <div class="va-toolbar">
       <div class="search-bar">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--ink-40,#9c978e)" stroke-width="2" style="flex-shrink:0"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
@@ -23760,7 +23922,7 @@ window.Modal = (function () {
           </div>
           <div class="filter-panel-row">
             <span class="filter-panel-label">Unidade</span>
-            <div class="filter-panel-chips"><select class="select" id="vaFilterUnidade" onchange="setUnidade(this.value)"><option value="">Todas</option></select></div>
+            <div class="filter-panel-chips" id="vaUnidadeChips"></div>
           </div>
           <div class="filter-panel-row" style="justify-content:flex-end;border-top:1px solid var(--border-light);padding-top:10px;margin-top:4px">
             <button class="filter-clear-btn" id="vaFilterClear" style="display:none" onclick="limparFiltros()">Limpar filtros</button>
@@ -23770,7 +23932,6 @@ window.Modal = (function () {
       <span class="va-count" id="vaCount"></span>
     </div>
 
-    <div class="va-funil" id="vaFunil"></div>
     <div class="va-grid" id="vaGrid"></div>
     <div id="vaEmpty" style="display:none;text-align:center;padding:50px 0;color:var(--ink-50)">Nenhum registro nesta aba.</div>
   </div>
@@ -23813,6 +23974,7 @@ window.Modal = (function () {
     let fUnidade = '';
     let detalheId = null;
 
+    function fmtData(v) { if (!v) return ''; try { return new Date(v).toLocaleDateString('pt-BR'); } catch (e) { return ''; } }
     function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
     function badge(status) { const s = STATUS[status] || { label: status, bg: '#eee', fg: '#333' }; return '<span class="va-badge" style="background:' + s.bg + ';color:' + s.fg + '">' + esc(s.label) + '</span>'; }
     function catAtual() { return CATEGORIAS.find(c => c.id === fCategoria) || CATEGORIAS[0]; }
@@ -23857,8 +24019,9 @@ window.Modal = (function () {
     }
     function renderUnidades() {
       const uns = distintos('unidade');
-      const sel = document.getElementById('vaFilterUnidade');
-      sel.innerHTML = '<option value="">Todas</option>' + uns.map(u => '<option value="' + esc(u) + '"' + (fUnidade === u ? ' selected' : '') + '>' + esc(u) + '</option>').join('');
+      document.getElementById('vaUnidadeChips').innerHTML =
+        '<button class="filter-chip' + (fUnidade === '' ? ' active' : '') + '" onclick="setUnidade(this, \'\')">Todas</button>' +
+        uns.map(u => '<button class="filter-chip' + (fUnidade === u ? ' active' : '') + '" onclick="setUnidade(this, \'' + esc(u) + '\')">' + esc(u) + '</button>').join('');
     }
     function renderFunil() {
       const el = document.getElementById('vaFunil');
@@ -23886,7 +24049,8 @@ window.Modal = (function () {
         return '<div class="va-card" onclick="abrirDetalhe(' + l.solicitacao_id + ')">' + foto +
           '<div style="flex:1;min-width:0">' +
           '<div class="nm">' + esc(l.nome || '—') + '</div>' +
-          '<div class="sub">' + esc(l.unidade || '') + (l.codigo_assessor ? ' · ' + esc(l.codigo_assessor) : '') + '</div>' + st +
+          '<div class="sub">' + esc(l.unidade || '') + (l.codigo_assessor ? ' · ' + esc(l.codigo_assessor) : '') + '</div>' +
+          (l.criado_em ? '<div class="sub" style="opacity:0.7;font-size:0.72rem;margin-top:2px">Solicitado em ' + fmtData(l.criado_em) + '</div>' : '') + st +
           '</div></div>';
       }).join('');
     }
@@ -23895,8 +24059,8 @@ window.Modal = (function () {
     function setStatus(f) { fStatus = f; renderFunil(); renderLista(); }
     function setBusca(v) { fBusca = v; renderFunil(); renderLista(); }
     function setContrato(el, c) { fContrato = c; [...document.querySelectorAll('#vaContratoChips .filter-chip')].forEach(x => x.classList.remove('active')); el.classList.add('active'); renderFunil(); renderLista(); atualizarFilterUI(); }
-    function setUnidade(u) { fUnidade = u; renderFunil(); renderLista(); atualizarFilterUI(); }
-    function limparFiltros() { fContrato = ''; fUnidade = ''; document.getElementById('vaFilterUnidade').value = ''; renderContratoChips(); renderFunil(); renderLista(); atualizarFilterUI(); }
+    function setUnidade(el, u) { fUnidade = u; [...document.querySelectorAll('#vaUnidadeChips .filter-chip')].forEach(x => x.classList.remove('active')); el.classList.add('active'); renderFunil(); renderLista(); atualizarFilterUI(); }
+    function limparFiltros() { fContrato = ''; fUnidade = ''; renderContratoChips(); renderUnidades(); renderFunil(); renderLista(); atualizarFilterUI(); }
     function atualizarFilterUI() {
       const ativos = (fContrato ? 1 : 0) + (fUnidade ? 1 : 0);
       const badgeEl = document.getElementById('vaFilterBadge'), clear = document.getElementById('vaFilterClear'), toggle = document.getElementById('vaFilterToggle');
@@ -23928,8 +24092,8 @@ window.Modal = (function () {
         rodape = '<div class="va-actions"><span class="sub" style="font-size:0.8rem;color:var(--ink-50)">Registro sem página — apenas leitura.</span></div>';
       } else if (editavel) {
         rodape =
-          '<div style="margin-top:16px"><div style="font-size:0.72rem;color:var(--ink-50);margin-bottom:4px">Observação para o assessor</div>' +
-            '<textarea id="vaObs" style="width:100%;box-sizing:border-box;min-height:56px;font:inherit;font-size:0.85rem;padding:8px 10px;border:1px solid var(--border-light);border-radius:var(--radius-md);resize:vertical" placeholder="Obrigatória ao solicitar ajustes ou reprovar. Opcional ao aprovar."></textarea></div>' +
+          '<div style="margin-top:16px"><div style="font-size:0.72rem;color:var(--ink-50);margin-bottom:4px">Observação interna (para o marketing) <span style="opacity:0.7">— uso interno, não é enviada ao assessor</span></div>' +
+            '<textarea id="vaObs" style="width:100%;box-sizing:border-box;min-height:56px;font:inherit;font-size:0.85rem;padding:8px 10px;border:1px solid var(--border-light);border-radius:var(--radius-md);resize:vertical" placeholder="Direções para o time de marketing. Obrigatória ao solicitar ajustes ou reprovar; opcional ao aprovar."></textarea></div>' +
           '<div class="va-actions">' +
             '<button class="btn btn-primary" onclick="decidir(\'aprovado\')">Aprovar</button>' +
             '<button class="btn btn-dark" onclick="decidir(\'ajustes\')">Solicitar ajustes</button>' +
@@ -23941,7 +24105,7 @@ window.Modal = (function () {
 
       const cabecalho =
         (resumo.categoria === 'atualizacao' ? '<div style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--ruby-red);margin-bottom:8px">Atualização de página</div>' : '') +
-        (pub.observacao ? '<div class="alert-card alert-info" style="margin:0 0 12px;font-size:0.82rem"><strong>Observação anterior:</strong> ' + esc(pub.observacao) + '</div>' : '') +
+        (pub.observacao ? '<div class="alert-card alert-info" style="margin:0 0 12px;font-size:0.82rem"><strong>Observação interna anterior:</strong> ' + esc(pub.observacao) + '</div>' : '') +
         (resumo.ciclo > 1 ? '<div style="text-align:right;font-size:0.74rem;color:var(--ink-50);margin-bottom:6px">Ciclo ' + resumo.ciclo + '</div>' : '');
 
       document.getElementById('vaDetalhe').innerHTML = cabecalho +
@@ -23953,6 +24117,7 @@ window.Modal = (function () {
         { label: 'Código', value: dados.codigo_assessor },
         { label: 'Contrato', value: contratoLabel(dados.contrato_social) },
         { label: 'Unidade', value: dados.unidade },
+        { label: 'Solicitada em', value: fmtData(resumo.criado_em) },
       ];
       if (window.renderAssessorPreview) window.renderAssessorPreview(document.getElementById('vaPreview'), dados, { internos: internos, statusHtml: aprovacao ? badge(resumo.status) : '' });
     }
@@ -23962,7 +24127,7 @@ window.Modal = (function () {
       const msg = document.getElementById('vaMsg');
       if ((decisao === 'ajustes' || decisao === 'reprovado') && !obs.trim()) {
         msg.style.color = 'var(--danger)';
-        msg.textContent = decisao === 'ajustes' ? 'Descreva na observação o que precisa ser ajustado.' : 'Escreva o motivo da reprovação na observação.';
+        msg.textContent = decisao === 'ajustes' ? 'Descreva na observação o que precisa ser ajustado (para o marketing encaminhar).' : 'Escreva o motivo da reprovação na observação (uso interno).';
         return;
       }
       msg.style.color = 'var(--ink-50)'; msg.textContent = 'Salvando…';
@@ -25220,7 +25385,7 @@ app.use(
     rolling: true,
     saveUninitialized: false,
     cookie: {
-      maxAge: 24 * 60 * 60 * 1000,
+      maxAge: 30 * 24 * 60 * 60 * 1000, // 30 dias (rolling renova a cada uso)
       secure: process.env.NODE_ENV === "production",
       httpOnly: true,
       sameSite: "lax",
@@ -25253,6 +25418,8 @@ app.use("/api", router);
 app.use("/auth", authRouter);
 
 const publicDir = path.resolve(__dirname, "../public");
+// "Home" (index.html) descontinuada — a landing e a pagina de solicitacoes.
+app.get(["/", "/index.html"], (_req, res) => res.redirect("/solicitacoes.html"));
 app.use(express.static(publicDir, {
   setHeaders: (res, filePath) => {
     if (filePath.endsWith('.html')) {
@@ -25271,7 +25438,7 @@ app.use('/fonts', express.static(fontsDir, {
 }));
 
 app.get("/{*catchAll}", (_req, res) => {
-  res.sendFile(path.join(publicDir, "index.html"));
+  res.redirect("/solicitacoes.html");
 });
 
 app.use((err: Error, req: Request, res: Response, _next: NextFunction) => {
@@ -28558,7 +28725,7 @@ router.get("/me-profile", async (req, res): Promise<void> => {
     res.status(401).json({ error: "Não autenticado" });
     return;
   }
-  if (req.session.userProfile) {
+  if (req.session.userProfile && req.session.userProfile.encontrado) {
     res.json({ profile: req.session.userProfile, fonte: "sessao" });
     return;
   }
@@ -31568,13 +31735,41 @@ router.get("/admin/stats", requireAuth, async (req, res): Promise<void> => {
       res.status(403).json({ error: "Acesso negado" }); return;
     }
 
-    const dias = Math.min(365, Math.max(1, parseInt(String(req.query.dias), 10) || 7));
     const now = new Date();
-    const periodoAtual = new Date(now.getTime() - dias * 86400000);
-    const periodoAnterior = new Date(periodoAtual.getTime() - dias * 86400000);
+    const deRaw = req.query.de ? String(req.query.de) : "";
+    const ateRaw = req.query.ate ? String(req.query.ate) : "";
+    const rangeValido = /^\d{4}-\d{2}-\d{2}$/.test(deRaw) && /^\d{4}-\d{2}-\d{2}$/.test(ateRaw);
+    let dias: number, fimHoje: Date, periodoAtual: Date, periodoAnterior: Date;
+    if (rangeValido) {
+      // Intervalo personalizado: usa as datas reais ('ate' inclusivo).
+      periodoAtual = new Date(deRaw + "T00:00:00");
+      fimHoje = new Date(ateRaw + "T00:00:00"); fimHoje.setDate(fimHoje.getDate() + 1);
+      dias = Math.max(1, Math.round((fimHoje.getTime() - periodoAtual.getTime()) / 86400000));
+      periodoAnterior = new Date(periodoAtual.getTime() - dias * 86400000);
+    } else {
+      dias = Math.min(365, Math.max(1, parseInt(String(req.query.dias), 10) || 7));
+      // Períodos contam apenas DIAS CHEIOS: a janela termina no início de hoje (exclui o dia corrente).
+      fimHoje = new Date(now); fimHoje.setHours(0, 0, 0, 0);
+      periodoAtual = new Date(fimHoje.getTime() - dias * 86400000);
+      periodoAnterior = new Date(periodoAtual.getTime() - dias * 86400000);
+    }
     // registros importados da planilha histórica de cartões não entram nos contadores
     const naoImportada = sql`(${solicitacoesTable.dados} ->> '_importado_planilha') IS NULL`;
-    const noPeriodo = and(sql`${solicitacoesTable.created_at} >= ${periodoAtual.toISOString()}`, naoImportada);
+    // Escopo: todos | solicitacoes (exclui automações) | automacoes (só automações)
+    const escopoParam = String(req.query.escopo || "todos");
+    const autoTipos = Array.from(TIPOS_AUTOMACAO_SET) as string[];
+    const inAuto = inArray(solicitacoesTable.tipo_solicitacao, autoTipos);
+    const escopoCond = escopoParam === "automacoes"
+      ? inAuto
+      : escopoParam === "solicitacoes"
+      ? sql`NOT (${inAuto})`
+      : undefined;
+    const noPeriodo = and(
+      sql`${solicitacoesTable.created_at} >= ${periodoAtual.toISOString()}`,
+      sql`${solicitacoesTable.created_at} < ${fimHoje.toISOString()}`,
+      naoImportada,
+      ...(escopoCond ? [escopoCond] : [])
+    );
 
     const [atual] = await db.select({ count: sql<number>`count(*)` })
       .from(solicitacoesTable)
@@ -31585,7 +31780,8 @@ router.get("/admin/stats", requireAuth, async (req, res): Promise<void> => {
       .where(and(
         sql`${solicitacoesTable.created_at} >= ${periodoAnterior.toISOString()}`,
         sql`${solicitacoesTable.created_at} < ${periodoAtual.toISOString()}`,
-        naoImportada
+        naoImportada,
+        ...(escopoCond ? [escopoCond] : [])
       ));
 
     const porTipo = await db.select({
@@ -31616,6 +31812,27 @@ router.get("/admin/stats", requireAuth, async (req, res): Promise<void> => {
       .from(solicitacoesTable)
       .where(and(noPeriodo, sql`${solicitacoesTable.avaliacao} IS NOT NULL`));
 
+    const topSolicitantesRows = await db.select({
+      nome: usersTable.name,
+      email: solicitacoesTable.user_email,
+      count: sql<number>`count(*)`,
+    })
+      .from(solicitacoesTable)
+      .leftJoin(usersTable, eq(usersTable.email, solicitacoesTable.user_email))
+      .where(noPeriodo)
+      .groupBy(usersTable.name, solicitacoesTable.user_email)
+      .orderBy(desc(sql`count(*)`))
+      .limit(8);
+
+    const porTipoStatusRows = await db.select({
+      tipo: solicitacoesTable.tipo_solicitacao,
+      status: solicitacoesTable.status,
+      count: sql<number>`count(*)`,
+    })
+      .from(solicitacoesTable)
+      .where(noPeriodo)
+      .groupBy(solicitacoesTable.tipo_solicitacao, solicitacoesTable.status);
+
     const totalAtual = Number(atual.count);
     const totalAnterior = Number(anterior.count);
     const delta = totalAnterior === 0
@@ -31630,6 +31847,8 @@ router.get("/admin/stats", requireAuth, async (req, res): Promise<void> => {
       porStatus: porStatus.map(r => ({ status: r.status, count: Number(r.count) })),
       avaliacoes: Number(avaliacoes.count),
       mediaNotas: mediaNotas.media ? Number(mediaNotas.media).toFixed(1) : null,
+      topSolicitantes: topSolicitantesRows.map(r => ({ nome: r.nome || r.email, count: Number(r.count) })),
+      porTipoStatus: porTipoStatusRows.map(r => ({ tipo: r.tipo, status: r.status, count: Number(r.count) })),
       dias,
     });
   } catch (err) {
@@ -31811,7 +32030,7 @@ const ASSESSOR_TIPOS = ["pagina-assessores-dados", "pagina-assessores-atualizaca
 
 function assessorCategoria(sol: any, dados: any): string {
   if (sol.tipo_solicitacao === "pagina-assessores-atualizacao") return "atualizacao";
-  return String(dados?.quer_pagina || "").toLowerCase() === "sim" ? "pagina" : "sem-pagina";
+  return String(dados?.quer_pagina || "").toLowerCase() === "nao" ? "sem-pagina" : "pagina";
 }
 function assessorLinha(sol: any, pub: any) {
   const dados: any = (pub?.dados_publicacao || sol.dados) || {};

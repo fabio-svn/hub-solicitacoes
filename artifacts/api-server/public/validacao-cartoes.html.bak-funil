@@ -21,6 +21,15 @@
 
     /* ===== Funil de etapas (espinha dorsal da tela) ===== */
     /* Reaproveita o card padrão (.stat-card do style.css global) — mesma linguagem do Painel Admin. */
+    .vc-funil { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 12px; margin: 20px 0 18px; }
+    .vc-funil .stat-card { cursor: pointer; padding: 14px 16px; text-align: left; background: transparent;
+      border-color: var(--border-light); transition: background .14s, box-shadow .14s, border-color .14s; }
+    .vc-funil .stat-card:hover { background: var(--icon-bg, #f4f1ea); }
+    .vc-funil .stat-number { font-size: 1.7rem; line-height: 1; color: var(--etapa, var(--carbon-black)); margin-bottom: 3px; }
+    .vc-funil .stat-label { font-weight: 400; }
+    .vc-funil .stat-card.active { background: var(--etapa-bg, var(--icon-bg)); border-color: var(--etapa, var(--carbon-black));
+      box-shadow: 0 1px 5px rgba(34,27,25,.10); }
+    .vc-funil .stat-card.active .stat-label { color: var(--etapa, var(--carbon-black)); opacity: 1; }
 
     /* ===== Toolbar (busca + ações) ===== */
     .vc-toolbar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 8px; }

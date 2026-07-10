@@ -570,15 +570,16 @@
     function renderRecorteSelect() {
       const sel = document.getElementById('graficoRecorte');
       if (!sel || !adminGraficoData) return;
+      const esc2 = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
       const outra = adminGraficoModo === 'tipo' ? 'status' : 'tipo';
       const cross = adminGraficoModo === 'tipo' ? recorteStatus : recorteTipo;
       let html;
       if (outra === 'status') {
         const vals = (adminGraficoData.porStatus || []).map(i => i.status);
-        html = '<option value="">Todos os status</option>' + vals.map(s => '<option value="' + esc(s) + '"' + (cross === s ? ' selected' : '') + '>Status: ' + esc(getStatus(s).label) + '</option>').join('');
+        html = '<option value="">Todos os status</option>' + vals.map(s => '<option value="' + esc2(s) + '"' + (cross === s ? ' selected' : '') + '>Status: ' + esc2(getStatus(s).label) + '</option>').join('');
       } else {
         const vals = (adminGraficoData.porTipo || []).map(i => i.tipo);
-        html = '<option value="">Todos os tipos</option>' + vals.map(t => '<option value="' + esc(t) + '"' + (cross === t ? ' selected' : '') + '>Tipo: ' + esc((typeof TIPO_SOLICITACAO_LABELS !== 'undefined' && TIPO_SOLICITACAO_LABELS[t]) || t) + '</option>').join('');
+        html = '<option value="">Todos os tipos</option>' + vals.map(t => '<option value="' + esc2(t) + '"' + (cross === t ? ' selected' : '') + '>Tipo: ' + esc2((typeof TIPO_SOLICITACAO_LABELS !== 'undefined' && TIPO_SOLICITACAO_LABELS[t]) || t) + '</option>').join('');
       }
       sel.innerHTML = html;
     }
@@ -661,6 +662,7 @@
     function renderTopSolicitantes(lista) {
       const box = document.getElementById('topSolicitantesBars');
       if (!box) return;
+      const escq = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
       const arr = Array.isArray(lista) ? lista : [];
       if (!arr.length) { box.innerHTML = '<div style="font-size:0.85rem;color:var(--ink-50);padding:4px 0">Sem solicitações no período.</div>'; return; }
       const max = Math.max.apply(null, arr.map(x => x.count || 0)) || 1;
@@ -668,7 +670,7 @@
         const pct = Math.round((x.count || 0) / max * 100);
         const nome = x.nome || '—';
         return '<div style="display:flex;align-items:center;gap:12px;margin-bottom:9px">' +
-          '<div style="width:160px;flex-shrink:0;font-size:0.85rem;color:var(--carbon-black);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="' + esc(nome) + '">' + esc(nome) + '</div>' +
+          '<div style="width:160px;flex-shrink:0;font-size:0.85rem;color:var(--carbon-black);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="' + escq(nome) + '">' + escq(nome) + '</div>' +
           '<div style="flex:1;min-width:60px;background:var(--icon-bg);border-radius:var(--radius-pill);height:22px;overflow:hidden">' +
             '<div style="width:' + pct + '%;height:100%;background:var(--ruby-red);border-radius:var(--radius-pill);min-width:3px;transition:width .3s"></div>' +
           '</div>' +

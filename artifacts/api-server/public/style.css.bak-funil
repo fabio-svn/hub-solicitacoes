@@ -708,22 +708,6 @@ input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
 }
 .stat-card .stat-label { font-size: 0.8rem; opacity: 0.7; }
 
-/* Funil de status - compartilhado por validacao-assessores (.va-funil) e
-   validacao-cartoes (.vc-funil). Antes duplicado em cada pagina; centralizado
-   aqui. As diferencas de cada pagina ficam nos overrides ao final do bloco. */
-.va-funil, .vc-funil { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin: 0 0 16px; }
-.va-funil .stat-card, .vc-funil .stat-card { cursor: pointer; padding: 14px 16px; background: transparent; border-color: var(--border-light); transition: background .14s, box-shadow .14s, border-color .14s; }
-.va-funil .stat-card:hover, .vc-funil .stat-card:hover { background: var(--icon-bg); }
-.va-funil .stat-number, .vc-funil .stat-number { font-size: 1.7rem; line-height: 1; color: var(--etapa, var(--carbon-black)); margin-bottom: 3px; }
-.va-funil .stat-label, .vc-funil .stat-label { font-weight: 400; }
-.va-funil .stat-card.active, .vc-funil .stat-card.active { background: var(--etapa-bg, var(--icon-bg)); border-color: var(--etapa, var(--carbon-black)); box-shadow: 0 1px 5px rgba(34,27,25,.10); }
-.va-funil .stat-card.active .stat-label, .vc-funil .stat-card.active .stat-label { color: var(--etapa, var(--carbon-black)); opacity: 1; }
-/* overrides por pagina */
-.va-funil .stat-label { font-size: 0.82rem; }
-.vc-funil { grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); margin: 20px 0 18px; }
-.vc-funil .stat-card { text-align: left; }
-
-
 /* Tabs */
 .tabs { display: flex; border-bottom: 1px solid var(--border-light); margin-bottom: 20px; }
 .tab {
