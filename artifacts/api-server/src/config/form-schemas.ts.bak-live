@@ -569,7 +569,6 @@ export const FORM_SCHEMAS: Record<string, FormSchema> = {
       { name: 'endereco',         label: 'Endereco (presencial)',      type: 'textarea' },
       { name: 'plataforma',       label: 'Plataforma (online)',        type: 'select',
         options: [
-          { value: 'live',    label: 'Live' },
           { value: 'youtube', label: 'YouTube' },
           { value: 'zoom',    label: 'Zoom' },
           { value: 'meet',    label: 'Meet' }

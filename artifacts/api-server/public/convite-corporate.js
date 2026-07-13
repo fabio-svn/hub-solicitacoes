@@ -15,6 +15,7 @@
   var libAlvo = null;      // palestrante que abriu o modal
   var previewSeq = 0;      // descarta respostas fora de ordem
   var formatoPreview = 'feed';
+  var ehAdmin = false;      // só admin pode apagar fotos da biblioteca
 
   var MESES = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho',
                'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
@@ -160,11 +161,78 @@
       return;
     }
     box.innerHTML = '<div class="cc-lib-grid">' + biblioteca.map(function (f) {
-      return '<div class="cc-lib-item" onclick="escolherFoto(\'' + esc(f.url) + '\')" title="' + esc(f.filename) + '">' +
-               '<img src="' + esc(f.url) + '" alt="' + esc(f.filename) + '" loading="lazy">' +
-               '<div class="cc-lib-nome">' + esc(f.filename) + '</div>' +
+      return '<div class="cc-lib-item" id="libItem' + f.id + '">' +
+               '<div class="cc-lib-thumb">' +
+                 '<img src="' + esc(f.url) + '" alt="' + esc(f.filename) + '" loading="lazy" ' +
+                      'onclick="escolherFoto(\'' + esc(f.url) + '\')" title="' + esc(f.filename) + '">' +
+                 (ehAdmin
+                   ? '<button type="button" class="cc-lib-del" title="Excluir foto" onclick="excluirFoto(' + f.id + ')">&times;</button>'
+                   : '') +
+               '</div>' +
+               '<div class="cc-lib-nome-row" id="libNome' + f.id + '">' +
+                 '<span class="cc-lib-nome">' + esc(f.filename) + '</span>' +
+                 '<button type="button" class="cc-lib-edit" title="Renomear" onclick="editarNomeFoto(' + f.id + ')">✎</button>' +
+               '</div>' +
              '</div>';
     }).join('') + '</div>';
+  };
+
+  /** troca o rótulo por um input inline para renomear a foto */
+  window.editarNomeFoto = function (id) {
+    var foto = biblioteca.filter(function (f) { return f.id === id; })[0];
+    if (!foto) return;
+    var row = document.getElementById('libNome' + id);
+    row.innerHTML = '<input class="cc-lib-nome-input" id="libInput' + id + '" value="' + esc(foto.filename) + '" ' +
+                    'onkeydown="if(event.key===\'Enter\')salvarNomeFoto(' + id + ');if(event.key===\'Escape\')abrirBiblioteca(libAlvoAtual())" ' +
+                    'onblur="salvarNomeFoto(' + id + ')">';
+    var input = document.getElementById('libInput' + id);
+    input.focus();
+    input.select();
+  };
+
+  window.libAlvoAtual = function () { return libAlvo; };
+
+  window.salvarNomeFoto = async function (id) {
+    var input = document.getElementById('libInput' + id);
+    if (!input) return;                       // já salvo (evita disparo duplo do blur)
+    var novo = String(input.value || '').trim();
+    var foto = biblioteca.filter(function (f) { return f.id === id; })[0];
+    input.id = '';                            // impede reentrada pelo blur
+
+    if (!novo || !foto || novo === foto.filename) {
+      abrirBiblioteca(libAlvo);
+      return;
+    }
+    try {
+      var res = await fetch('/api/corporate/fotos/' + id, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nome: novo }),
+      });
+      var d = await res.json().catch(function () { return {}; });
+      if (!res.ok) throw new Error(d.error || 'Falha ao renomear');
+      showToast('Foto renomeada para "' + novo + '".', 'success');
+      await carregarBiblioteca();
+    } catch (e) {
+      showToast(e.message || 'Não foi possível renomear.', 'error');
+    }
+    abrirBiblioteca(libAlvo);
+  };
+
+  window.excluirFoto = async function (id) {
+    var foto = biblioteca.filter(function (f) { return f.id === id; })[0];
+    var nome = foto ? foto.filename : 'esta foto';
+    if (!confirm('Excluir a foto de "' + nome + '" da biblioteca? Esta ação não pode ser desfeita.')) return;
+    try {
+      var res = await fetch('/api/corporate/fotos/' + id, { method: 'DELETE' });
+      var d = await res.json().catch(function () { return {}; });
+      if (!res.ok) throw new Error(d.error || 'Falha ao excluir');
+      showToast('Foto removida.', 'success');
+      await carregarBiblioteca();
+      if (libAlvo) abrirBiblioteca(libAlvo);
+    } catch (e) {
+      showToast(e.message || 'Não foi possível excluir a foto.', 'error');
+    }
   };
 
   window.escolherFoto = function (url) {
@@ -194,8 +262,10 @@
     }
 
     var btn = document.getElementById('btnUpload');
+    var htmlOriginal = btn.innerHTML;
     btn.disabled = true;
-    btn.innerHTML = '<span class="cc-spinner cc-spinner--sm"></span>Enviando…';
+    btn.innerHTML = '<span class="cc-spinner cc-spinner--sm"></span>' +
+                    '<span class="cc-dropzone-txt"><strong>Enviando…</strong></span>';
 
     try {
       var fd = new FormData();
@@ -218,7 +288,7 @@
       showToast(e.message || 'Não foi possível enviar a foto.', 'error');
     } finally {
       btn.disabled = false;
-      btn.textContent = 'Enviar nova foto';
+      btn.innerHTML = htmlOriginal;
     }
   }
 
@@ -316,6 +386,7 @@
       return;
     }
     var role = Auth.getUserRole();
+    ehAdmin = role === 'admin';
     if (role !== 'admin' && role !== 'corporate') {
       window.location.href = '/dashboard.html';
       return;

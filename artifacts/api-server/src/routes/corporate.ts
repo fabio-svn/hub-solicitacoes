@@ -14,7 +14,7 @@
  * alteração de schema.
  */
 import { Router } from "express";
-import { PutObjectCommand } from "@aws-sdk/client-s3";
+import { PutObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
 import { getR2Client, R2_BUCKET } from "../lib/r2-client";
 import multer from "multer";
 import sharp from "sharp";
@@ -27,6 +27,7 @@ import { eq, desc, sql } from "drizzle-orm";
 import { requireAuth, requireRole } from "../middleware/auth.middleware";
 import { logger } from "../lib/logger";
 import { gerarArteBuffer, gerarKitConvite } from "../services/art-generator";
+import { logAtividadeBg } from "../services/activity-log";
 import { uploadToR2 } from "./r2";
 import JSZip from "jszip";
 
@@ -159,6 +160,20 @@ router.post("/corporate/convite/gerar", requireAuth, requireRole(...CORPORATE_RO
     );
 
     logger.info({ urls, user: req.session?.user?.email }, "[corporate] kit de convite gerado");
+    logAtividadeBg({
+      userEmail: req.session?.user?.email,
+      userName: req.session?.user?.name,
+      tipo: "corporate_convite_gerado",
+      titulo: String(dados.titulo ?? ""),
+      detalhe: `Convite de evento online gerado (${formatos.length} formatos) — plataforma: ${dados.plataforma ?? "-"}`,
+      metadata: {
+        plataforma: dados.plataforma,
+        num_palestrantes: dados.num_palestrantes,
+        data: dados.data,
+        horario: dados.horario,
+        urls,
+      },
+    });
     res.json({ urls });
   } catch (err: any) {
     logger.error({ err }, "[corporate] erro ao gerar convite");
@@ -263,11 +278,131 @@ router.post(
 
       await cleanup();
       logger.info({ key, user: email }, "[corporate] foto de palestrante enviada");
+      logAtividadeBg({
+        userEmail: email,
+        userName: req.session?.user?.name,
+        tipo: "corporate_foto_enviada",
+        titulo: row?.filename,
+        detalhe: `Foto de palestrante enviada para a biblioteca: ${row?.filename}`,
+        metadata: { asset_id: row?.id, url: row?.url },
+      });
       res.json({ foto: row });
     } catch (err: any) {
       await cleanup();
       logger.error({ err }, "[corporate] erro no upload de foto");
       res.status(500).json({ error: "Não foi possível enviar a foto." });
+    }
+  },
+);
+
+// ── DELETE /corporate/fotos/:id ───────────────────────────────────
+// Só admin: remove a foto do R2 e da biblioteca.
+router.delete(
+  "/corporate/fotos/:id",
+  requireAuth,
+  requireRole("admin"),
+  async (req, res): Promise<void> => {
+    try {
+      const id = Number(req.params.id);
+      if (!Number.isInteger(id) || id <= 0) {
+        res.status(400).json({ error: "ID inválido." });
+        return;
+      }
+
+      const [foto] = await db
+        .select({ id: artAssetsTable.id, storage_key: artAssetsTable.storage_key, filename: artAssetsTable.filename })
+        .from(artAssetsTable)
+        .where(eq(artAssetsTable.id, id));
+
+      if (!foto) {
+        res.status(404).json({ error: "Foto não encontrada." });
+        return;
+      }
+      // proteção: só apaga o que é da biblioteca de palestrantes
+      if (!String(foto.storage_key).startsWith(FOTOS_PREFIX)) {
+        res.status(403).json({ error: "Este asset não pertence à biblioteca de palestrantes." });
+        return;
+      }
+
+      const client = getR2Client();
+      if (client && R2_BUCKET) {
+        try {
+          await client.send(new DeleteObjectCommand({ Bucket: R2_BUCKET, Key: foto.storage_key }));
+        } catch (err) {
+          // o registro sai da biblioteca mesmo que o arquivo já não exista no R2
+          logger.warn({ err, key: foto.storage_key }, "[corporate] falha ao apagar do R2");
+        }
+      }
+
+      await db.delete(artAssetsTable).where(eq(artAssetsTable.id, id));
+      logger.info({ id, nome: foto.filename, user: req.session?.user?.email }, "[corporate] foto removida");
+      logAtividadeBg({
+        userEmail: req.session?.user?.email,
+        userName: req.session?.user?.name,
+        tipo: "corporate_foto_removida",
+        nivel: "warn",
+        titulo: foto.filename,
+        detalhe: `Foto removida da biblioteca de palestrantes: ${foto.filename}`,
+        metadata: { asset_id: id, storage_key: foto.storage_key },
+      });
+      res.json({ ok: true });
+    } catch (err: any) {
+      logger.error({ err }, "[corporate] erro ao remover foto");
+      res.status(500).json({ error: "Não foi possível remover a foto." });
+    }
+  },
+);
+
+// ── PATCH /corporate/fotos/:id ────────────────────────────────────
+// Renomeia a foto (o nome e a chave usada para reencontra-la depois).
+router.patch(
+  "/corporate/fotos/:id",
+  requireAuth, requireRole(...CORPORATE_ROLES),
+  async (req, res): Promise<void> => {
+    try {
+      const id = Number(req.params.id);
+      const nome = String((req.body as any)?.nome ?? "").trim();
+      if (!Number.isInteger(id) || id <= 0) {
+        res.status(400).json({ error: "ID inválido." });
+        return;
+      }
+      if (!nome) {
+        res.status(400).json({ error: "Informe o novo nome." });
+        return;
+      }
+
+      const [foto] = await db
+        .select({ id: artAssetsTable.id, storage_key: artAssetsTable.storage_key, filename: artAssetsTable.filename })
+        .from(artAssetsTable)
+        .where(eq(artAssetsTable.id, id));
+
+      if (!foto) {
+        res.status(404).json({ error: "Foto não encontrada." });
+        return;
+      }
+      if (!String(foto.storage_key).startsWith(FOTOS_PREFIX)) {
+        res.status(403).json({ error: "Este asset não pertence à biblioteca de palestrantes." });
+        return;
+      }
+
+      const antigo = foto.filename;
+      await db
+        .update(artAssetsTable)
+        .set({ filename: nome.slice(0, 300) })
+        .where(eq(artAssetsTable.id, id));
+
+      logAtividadeBg({
+        userEmail: req.session?.user?.email,
+        userName: req.session?.user?.name,
+        tipo: "corporate_foto_renomeada",
+        titulo: nome,
+        detalhe: `Foto de palestrante renomeada: "${antigo}" -> "${nome}"`,
+        metadata: { asset_id: id, nome_anterior: antigo, nome_novo: nome },
+      });
+      res.json({ ok: true, filename: nome });
+    } catch (err: any) {
+      logger.error({ err }, "[corporate] erro ao renomear foto");
+      res.status(500).json({ error: "Não foi possível renomear a foto." });
     }
   },
 );

@@ -522,28 +522,13 @@ async function renderShape(
     return;
   }
 
-  // Sombra: a area desenhada precisa ser MAIOR que a forma, senao a sombra
-  // seria cortada na borda. 'pad' e essa folga (desfoque + deslocamento).
-  const sh = layer.shadow;
-  const shBlur = Math.max(0, Number(sh?.blur ?? 0));
-  const shDx = Number(sh?.offset_x ?? 0);
-  const shDy = Number(sh?.offset_y ?? 0);
-  const temSombra = !!sh && shBlur > 0;
-  const pad = temSombra
-    ? Math.ceil(shBlur * 2 + Math.max(Math.abs(shDx), Math.abs(shDy)))
-    : 0;
-
-  // origem da area desenhada (a forma fica deslocada 'pad' dentro dela)
-  const ox = layer.x - pad;
-  const oy = layer.y - pad;
-
   // desenha no tamanho pretendido e recorta o excedente fora do canvas (igual renderImage)
-  const fullW = layer.w + 2 * pad;
-  const fullH = layer.h + 2 * pad;
-  const cropLeft = ox < 0 ? Math.min(-ox, fullW) : 0;
-  const cropTop  = oy < 0 ? Math.min(-oy, fullH) : 0;
-  const visW = Math.min(fullW - cropLeft, bgWidth  - Math.max(ox, 0));
-  const visH = Math.min(fullH - cropTop,  bgHeight - Math.max(oy, 0));
+  const fullW = layer.w;
+  const fullH = layer.h;
+  const cropLeft = layer.x < 0 ? Math.min(-layer.x, fullW) : 0;
+  const cropTop  = layer.y < 0 ? Math.min(-layer.y, fullH) : 0;
+  const visW = Math.min(fullW - cropLeft, bgWidth  - Math.max(layer.x, 0));
+  const visH = Math.min(fullH - cropTop,  bgHeight - Math.max(layer.y, 0));
   if (visW <= 0 || visH <= 0) return;
 
   const fill = layer.fill || 'none';
@@ -553,44 +538,26 @@ async function renderShape(
 
   let shapeEl: string;
   if (layer.shape === 'ellipse') {
-    const cx = pad + layer.w / 2;
-    const cy = pad + layer.h / 2;
-    const rx = Math.max(0, (layer.w / 2) - inset);
-    const ry = Math.max(0, (layer.h / 2) - inset);
+    const cx = fullW / 2;
+    const cy = fullH / 2;
+    const rx = Math.max(0, (fullW / 2) - inset);
+    const ry = Math.max(0, (fullH / 2) - inset);
     shapeEl = `<ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}" fill="${fill}" stroke="${stroke}" stroke-width="${strokeWidth}"/>`;
   } else {
-    const x = pad + inset;
-    const y = pad + inset;
-    const w = Math.max(0, layer.w - strokeWidth);
-    const h = Math.max(0, layer.h - strokeWidth);
+    const x = inset;
+    const y = inset;
+    const w = Math.max(0, fullW - strokeWidth);
+    const h = Math.max(0, fullH - strokeWidth);
     const rx = Math.min(layer.border_radius || 0, w / 2, h / 2);
     shapeEl = `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${rx}" ry="${rx}" fill="${fill}" stroke="${stroke}" stroke-width="${strokeWidth}"/>`;
   }
 
-  // Filtro de sombra em SVG 1.1 (compativel com o rasterizador do sharp).
-  let defs = '';
-  let corpo = shapeEl;
-  if (temSombra) {
-    const cor = sh?.color || '#000000';
-    const op = Math.min(1, Math.max(0, Number(sh?.opacity ?? 0.35)));
-    const std = shBlur / 2; // stdDeviation ~ metade do raio de desfoque
-    const fid = `sh-${layer.id}`;
-    defs = `<defs><filter id="${fid}" x="-50%" y="-50%" width="200%" height="200%">` +
-      `<feGaussianBlur in="SourceAlpha" stdDeviation="${std}" result="b"/>` +
-      `<feOffset in="b" dx="${shDx}" dy="${shDy}" result="o"/>` +
-      `<feFlood flood-color="${cor}" flood-opacity="${op}" result="c"/>` +
-      `<feComposite in="c" in2="o" operator="in" result="s"/>` +
-      `<feMerge><feMergeNode in="s"/><feMergeNode in="SourceGraphic"/></feMerge>` +
-      `</filter></defs>`;
-    corpo = `<g filter="url(#${fid})">${shapeEl}</g>`;
-  }
-
   // viewport = regiao visivel; o translate desloca a forma para RECORTAR (nao encolher)
-  const svg = `<svg width="${visW}" height="${visH}" xmlns="http://www.w3.org/2000/svg">${defs}<g transform="translate(${-cropLeft},${-cropTop})">${corpo}</g></svg>`;
+  const svg = `<svg width="${visW}" height="${visH}" xmlns="http://www.w3.org/2000/svg"><g transform="translate(${-cropLeft},${-cropTop})">${shapeEl}</g></svg>`;
   composites.push({
     input: Buffer.from(svg), // SVG cru: rasterizado no composite final
-    left: Math.round(Math.max(ox, 0)),
-    top: Math.round(Math.max(oy, 0)),
+    left: Math.round(Math.max(layer.x, 0)),
+    top: Math.round(Math.max(layer.y, 0)),
   });
 }
 

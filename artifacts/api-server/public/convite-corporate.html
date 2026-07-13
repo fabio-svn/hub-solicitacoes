@@ -23,7 +23,7 @@
       background: var(--icon-bg); border: 1px dashed var(--border-light); border-radius: var(--radius-lg);
       min-height: 380px; display: flex; align-items: center; justify-content: center; overflow: hidden; padding: 10px;
     }
-    .cc-preview-box img { max-width: 100%; max-height: 520px; border-radius: var(--radius-sm); box-shadow: 0 2px 12px rgba(34,27,25,.12); }
+    .cc-preview-box img { max-width: 100%; max-height: 520px; border-radius: var(--radius-sm); box-shadow: 0 2px 12px rgba(34, 27, 25, .12); }
     .cc-preview-empty { font-size: 0.8rem; color: var(--ink-50); text-align: center; padding: 0 20px; line-height: 1.5; }
     .cc-preview-hint { font-size: 0.72rem; color: var(--ink-50); margin-top: 10px; text-align: center; }
 
@@ -46,11 +46,47 @@
 
     .cc-lib-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 12px; max-height: 300px; overflow-y: auto; padding: 4px; }
     .cc-lib-item { cursor: pointer; text-align: center; }
-    .cc-lib-item img { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: var(--radius-md); border: 2px solid transparent; background: var(--icon-bg); display: block; }
+    .cc-lib-thumb { position: relative; }
+    .cc-lib-item img { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: var(--radius-md); border: 2px solid transparent; background: var(--icon-bg); display: block; cursor: pointer; }
     .cc-lib-item:hover img { border-color: var(--ruby-red); }
+    .cc-lib-del {
+      position: absolute; top: 4px; right: 4px; width: 22px; height: 22px; border-radius: 50%;
+      border: 0; background: var(--carbon-black);
+      opacity: .82; color: var(--paper-white); font-size: 15px; line-height: 1;
+      cursor: pointer; display: none; align-items: center; justify-content: center; padding: 0;
+    }
+    .cc-lib-thumb:hover .cc-lib-del { display: flex; }
+    .cc-lib-del:hover { background: var(--ruby-red); }
     .cc-lib-nome { font-size: 0.72rem; color: var(--ink-60); margin-top: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .cc-lib-empty { font-size: 0.82rem; color: var(--ink-50); text-align: center; padding: 26px 0; line-height: 1.5; }
     .cc-upload-box { border-top: 1px solid var(--border-light); margin-top: 16px; padding-top: 16px; }
+
+    /* área de envio: visual de upload, não de botão comum */
+    .cc-dropzone {
+      width: 100%; display: flex; align-items: center; gap: 12px;
+      padding: 14px 16px; border: 1.5px dashed var(--border-warm, var(--border-light));
+      border-radius: var(--radius-lg); background: var(--icon-bg);
+      color: var(--ink-60); cursor: pointer; font-family: inherit; text-align: left;
+      transition: border-color .15s, background .15s, color .15s;
+    }
+    .cc-dropzone:hover { border-color: var(--ruby-red); color: var(--ruby-red); background: var(--card-white); }
+    .cc-dropzone:disabled { opacity: .6; cursor: default; }
+    .cc-dropzone-txt { display: flex; flex-direction: column; line-height: 1.35; }
+    .cc-dropzone-txt strong { font-size: 0.86rem; font-weight: 600; color: var(--carbon-black); }
+    .cc-dropzone:hover .cc-dropzone-txt strong { color: var(--ruby-red); }
+    .cc-dropzone-txt small { font-size: 0.72rem; color: var(--ink-50); }
+
+    /* editar o nome da foto */
+    .cc-lib-nome-row { display: flex; align-items: center; justify-content: center; gap: 4px; margin-top: 5px; }
+    .cc-lib-edit {
+      border: 0; background: transparent; color: var(--ink-40); cursor: pointer; padding: 0 2px;
+      font-size: 0.72rem; line-height: 1; flex-shrink: 0;
+    }
+    .cc-lib-edit:hover { color: var(--ruby-red); }
+    .cc-lib-nome-input {
+      width: 100%; font-size: 0.72rem; padding: 3px 6px; font-family: inherit;
+      border: 1px solid var(--ruby-red); border-radius: var(--radius-sm); background: var(--card-white); color: var(--carbon-black);
+    }
 
     .cc-result { display: none; margin-top: 16px; }
     .cc-result.show { display: block; }
@@ -152,8 +188,8 @@
 
   <div class="modal-overlay" id="libModal" onclick="fecharBiblioteca(event)">
     <div class="modal-card" style="max-width: 580px" onclick="event.stopPropagation()">
-      <div class="modal-head">
-        <h3 style="margin: 0; font-size: 1.05rem;">Escolher foto</h3>
+      <div class="modal-header">
+        <h3 class="modal-title">Escolher foto</h3>
         <button type="button" class="modal-close" onclick="fecharBiblioteca()" aria-label="Fechar">&times;</button>
       </div>
       <div class="modal-body">
@@ -167,11 +203,19 @@
               A foto fica salva com esse nome — na próxima vez que você digitar o mesmo nome, ela carrega sozinha.
             </small>
           </div>
-          <button type="button" class="btn btn-secondary" id="btnUpload">Enviar nova foto</button>
+
+          <button type="button" class="cc-dropzone" id="btnUpload">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="17 8 12 3 7 8"/>
+              <line x1="12" y1="3" x2="12" y2="15"/>
+            </svg>
+            <span class="cc-dropzone-txt"><strong>Enviar nova foto</strong><small>PNG, JPG ou WEBP · até 10 MB</small></span>
+          </button>
           <input type="file" id="fileUpload" accept="image/png,image/jpeg,image/webp" style="display:none">
         </div>
       </div>
-      <div class="modal-foot">
+      <div class="modal-footer">
         <button type="button" class="btn btn-secondary" onclick="fecharBiblioteca()">Cancelar</button>
       </div>
     </div>

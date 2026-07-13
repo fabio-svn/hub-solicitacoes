@@ -65,8 +65,6 @@ export type TextBlockLayer = LayerBase & {
   auto_fit?: {
     enabled?: boolean;
     min_font_size?: number;
-    /** Se definido e o texto couber, a fonte cresce ate este tamanho. */
-    max_font_size?: number;
   };
 };
 

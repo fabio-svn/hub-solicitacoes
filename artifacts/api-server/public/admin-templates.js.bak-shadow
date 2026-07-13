@@ -1187,13 +1187,7 @@
         }
         const svgWrap = document.createElement('div');
         svgWrap.className = 'layer-content-preview';
-        let _css = 'position:absolute;inset:0;pointer-events:none';
-        const _sh = layer.shadow;
-        if (_sh && (_sh.blur || 0) > 0) {
-          const _o = (_sh.opacity == null ? 0.35 : _sh.opacity);
-          _css += ';filter:drop-shadow(' + ((_sh.offset_x||0)*SCALE) + 'px ' + ((_sh.offset_y||0)*SCALE) + 'px ' + ((_sh.blur||0)*SCALE) + 'px ' + _hexToRgba(_sh.color||'#000000', _o) + ')';
-        }
-        svgWrap.style.cssText = _css;
+        svgWrap.style.cssText = 'position:absolute;inset:0;pointer-events:none';
         svgWrap.innerHTML = shapeHtml;
         div.appendChild(svgWrap);
       } else if (layer.type === 'text-line' || layer.type === 'text-block') {
@@ -1976,25 +1970,6 @@
         <input class="props-input" type="number" min="0" value="${layer.border_radius||0}" onchange="updLayerN('${id}','border_radius',this.value)">
         `:''}
       </div>
-      <div class="props-section">
-        <div class="props-label">Sombra (drop shadow)</div>
-        <div class="props-label" style="margin-top:6px;font-size:.72rem;opacity:.75">Desfoque (px) — 0 desliga</div>
-        <input class="props-input" type="number" min="0" value="${(layer.shadow&&layer.shadow.blur)||0}" onchange="updShadow('${id}','blur',+this.value)">
-        <div style="display:flex;gap:8px;margin-top:8px">
-          <div style="flex:1">
-            <div class="props-label" style="font-size:.72rem;opacity:.75">Desloc. X</div>
-            <input class="props-input" type="number" value="${(layer.shadow&&layer.shadow.offset_x)||0}" onchange="updShadow('${id}','offset_x',+this.value)">
-          </div>
-          <div style="flex:1">
-            <div class="props-label" style="font-size:.72rem;opacity:.75">Desloc. Y</div>
-            <input class="props-input" type="number" value="${(layer.shadow&&layer.shadow.offset_y)||0}" onchange="updShadow('${id}','offset_y',+this.value)">
-          </div>
-        </div>
-        <div class="props-label" style="margin-top:8px;font-size:.72rem;opacity:.75">Opacidade (0 a 1)</div>
-        <input class="props-input" type="number" min="0" max="1" step="0.05" value="${(layer.shadow&&layer.shadow.opacity!=null)?layer.shadow.opacity:0.35}" onchange="updShadow('${id}','opacity',+this.value)">
-        <div class="props-label" style="margin-top:8px;font-size:.72rem;opacity:.75">Cor da sombra</div>
-        ${renderColorPickerWithSwatches(`shcolor-${id}`, (layer.shadow&&layer.shadow.color)||'#000000', `updShadow('${id}','color',this.value)`)}
-      </div>
   </div>
 </details>`;
     }
@@ -2061,28 +2036,6 @@
     scheduleLivePreview(NORMAL_DEBOUNCE);
   }
   function updLayerN(id, key, value) { updLayer(id, key, parseFloat(value) || 0); }
-
-  // ── Sombra (drop shadow) de layers 'shape' ──
-  function _hexToRgba(hex, alpha) {
-    const h = String(hex || '#000000').replace('#', '');
-    const full = h.length === 3 ? h.split('').map(c => c + c).join('') : h;
-    const n = parseInt(full, 16);
-    if (isNaN(n)) return 'rgba(0,0,0,' + alpha + ')';
-    return 'rgba(' + ((n >> 16) & 255) + ',' + ((n >> 8) & 255) + ',' + (n & 255) + ',' + alpha + ')';
-  }
-  function updShadow(id, campo, valor) {
-    const layer = getLayer(id);
-    if (!layer) return;
-    const s = Object.assign({ color: '#000000', blur: 0, offset_x: 0, offset_y: 0, opacity: 0.35 }, layer.shadow || {});
-    s[campo] = valor;
-    // sem desfoque nao ha sombra: remove a propriedade para nao sujar o template
-    if (!s.blur) delete layer.shadow;
-    else layer.shadow = s;
-    markDirty();
-    debouncedPushHistory();
-    renderCanvas();
-    scheduleLivePreview(NORMAL_DEBOUNCE);
-  }
 
   // Define a transformação de caixa (text_transform) do layer de texto: 'none',
   // 'uppercase' (TUDO MAIÚSCULO) ou 'capitalize-first' (só a 1ª letra). Não destrói o
