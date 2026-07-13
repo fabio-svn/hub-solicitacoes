@@ -95,7 +95,6 @@
                 <option value="colaborador">Colaborador</option>
                 <option value="gestor">Gestor</option>
                 <option value="capital_humano">Capital Humano</option>
-                <option value="corporate">Corporate</option>
                 <option value="admin">Admin</option>
               </select>
             </div>
@@ -172,7 +171,6 @@
                 <option value="colaborador">Colaborador</option>
                 <option value="gestor">Gestor</option>
                 <option value="capital_humano">Capital Humano</option>
-                <option value="corporate">Corporate</option>
                 <option value="admin">Admin</option>
               </select>
             </div>
@@ -202,14 +200,12 @@
 
     const ROLE_LABELS = {
       capital_humano: 'Capital Humano',
-      corporate: 'Corporate',
       admin: 'Admin',
       gestor: 'Gestor',
       colaborador: 'Colaborador',
     };
     const ROLE_COLORS = {
       capital_humano: 'rgba(99,102,241,0.1);color:#4f46e5',
-      corporate: 'rgba(111,135,123,0.12);color:var(--sage-green)',
       admin: 'rgba(159,63,55,0.1);color:var(--ruby-red)',
       gestor: 'rgba(111,135,123,0.1);color:var(--sage-green)',
       colaborador: 'var(--ink-08);color:var(--ink-50)',
@@ -238,7 +234,7 @@
       { f: 'created_at', label: 'Cadastro', w: 130, sort: true },
       { f: '_acoes', label: 'Ações', w: 160, sort: false, center: true },
     ];
-    const ROLE_ORDER = ['admin', 'gestor', 'capital_humano', 'corporate'];
+    const ROLE_ORDER = ['admin', 'gestor', 'capital_humano'];
     let uSort = { field: 'name', dir: 1 };
     let uColWidths = {};
     let uResizing = false;
