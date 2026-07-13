@@ -4,18 +4,21 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Convites de Evento — SVN</title>
-  <link rel="icon" type="image/png" href="/favicon.png">
   <link rel="stylesheet" href="style.css?v=20260713a">
   <script>(function(){try{const s=JSON.parse(localStorage.getItem('svn_layout_state')||'{}');if(s.isAdmin)document.documentElement.dataset.preShell='admin';}catch(e){}})()</script>
   <style>
-    /* Layout: formulário à esquerda, prévia fixa à direita */
     .cc-split { display: grid; grid-template-columns: minmax(0, 1fr) 420px; gap: 24px; align-items: start; }
     @media (max-width: 1000px) { .cc-split { grid-template-columns: 1fr; } }
 
     .cc-preview-col { position: sticky; top: 84px; }
     .cc-preview-card { padding: 18px; }
-    .cc-preview-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+    .cc-preview-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 12px; flex-wrap: wrap; }
     .cc-preview-title { font-size: 0.82rem; font-weight: 600; color: var(--ink-60); }
+
+    .cc-seg { display: inline-flex; border: 1px solid var(--border-light); border-radius: var(--radius-pill); overflow: hidden; background: var(--card-white); }
+    .cc-seg button { border: 0; background: transparent; padding: 5px 12px; font-size: 0.74rem; font-weight: 600; color: var(--ink-60); cursor: pointer; font-family: inherit; }
+    .cc-seg button.active { background: var(--ruby-red); color: var(--paper-white); }
+
     .cc-preview-box {
       background: var(--icon-bg); border: 1px dashed var(--border-light); border-radius: var(--radius-lg);
       min-height: 380px; display: flex; align-items: center; justify-content: center; overflow: hidden; padding: 10px;
@@ -24,42 +27,38 @@
     .cc-preview-empty { font-size: 0.8rem; color: var(--ink-50); text-align: center; padding: 0 20px; line-height: 1.5; }
     .cc-preview-hint { font-size: 0.72rem; color: var(--ink-50); margin-top: 10px; text-align: center; }
 
-    /* Palestrantes */
+    .cc-spinner {
+      width: 24px; height: 24px; border-radius: 50%;
+      border: 2px solid var(--border-light); border-top-color: var(--ruby-red);
+      animation: ccspin 0.7s linear infinite; display: inline-block; vertical-align: middle;
+    }
+    .cc-spinner--sm { width: 14px; height: 14px; margin-right: 7px; }
+    @keyframes ccspin { to { transform: rotate(360deg); } }
+    .cc-loading { display: flex; flex-direction: column; align-items: center; gap: 12px; color: var(--ink-50); font-size: 0.8rem; }
+
     .cc-palestrante { border: 1px solid var(--border-light); border-radius: var(--radius-lg); padding: 16px; margin-bottom: 12px; background: var(--card-white); }
-    .cc-palestrante-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
-    .cc-palestrante-num { font-size: 0.78rem; font-weight: 700; color: var(--ruby-red); letter-spacing: .04em; text-transform: uppercase; }
-
+    .cc-palestrante-num { font-size: 0.78rem; font-weight: 700; color: var(--ruby-red); letter-spacing: .04em; text-transform: uppercase; display: block; margin-bottom: 12px; }
     .cc-foto-row { display: flex; gap: 12px; align-items: center; }
-    .cc-foto-thumb {
-      width: 62px; height: 62px; border-radius: 50%; object-fit: cover; flex: 0 0 auto;
-      border: 1px solid var(--border-light); background: var(--icon-bg);
-    }
-    .cc-foto-placeholder {
-      width: 62px; height: 62px; border-radius: 50%; flex: 0 0 auto;
-      border: 1px dashed var(--border-light); background: var(--icon-bg);
-      display: flex; align-items: center; justify-content: center; color: var(--ink-40); font-size: 0.68rem;
-    }
-    .cc-foto-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+    .cc-foto-thumb { width: 62px; height: 62px; border-radius: 50%; object-fit: cover; flex: 0 0 auto; border: 1px solid var(--border-light); background: var(--icon-bg); }
+    .cc-foto-placeholder { width: 62px; height: 62px; border-radius: 50%; flex: 0 0 auto; border: 1px dashed var(--border-light); background: var(--icon-bg); display: flex; align-items: center; justify-content: center; color: var(--ink-40); font-size: 0.66rem; text-align: center; line-height: 1.2; }
+    .cc-foto-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+    .cc-foto-auto { font-size: 0.72rem; color: var(--sage-green); font-weight: 600; }
 
-    /* Biblioteca de fotos (modal) */
-    .cc-lib-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 10px; max-height: 380px; overflow-y: auto; padding: 4px; }
-    .cc-lib-item { border: 2px solid transparent; border-radius: var(--radius-md); overflow: hidden; cursor: pointer; background: var(--icon-bg); aspect-ratio: 1; }
-    .cc-lib-item img { width: 100%; height: 100%; object-fit: cover; display: block; }
-    .cc-lib-item:hover { border-color: var(--border-warm); }
-    .cc-lib-item.selected { border-color: var(--ruby-red); }
-    .cc-lib-empty { font-size: 0.82rem; color: var(--ink-50); text-align: center; padding: 30px 0; }
+    .cc-lib-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 12px; max-height: 300px; overflow-y: auto; padding: 4px; }
+    .cc-lib-item { cursor: pointer; text-align: center; }
+    .cc-lib-item img { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: var(--radius-md); border: 2px solid transparent; background: var(--icon-bg); display: block; }
+    .cc-lib-item:hover img { border-color: var(--ruby-red); }
+    .cc-lib-nome { font-size: 0.72rem; color: var(--ink-60); margin-top: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .cc-lib-empty { font-size: 0.82rem; color: var(--ink-50); text-align: center; padding: 26px 0; line-height: 1.5; }
+    .cc-upload-box { border-top: 1px solid var(--border-light); margin-top: 16px; padding-top: 16px; }
 
-    /* Resultado */
     .cc-result { display: none; margin-top: 16px; }
     .cc-result.show { display: block; }
     .cc-links { display: flex; flex-direction: column; gap: 8px; }
-    .cc-link {
-      display: flex; align-items: center; justify-content: space-between; gap: 10px;
-      padding: 10px 14px; border: 1px solid var(--border-light); border-radius: var(--radius-md);
-      background: var(--card-white); text-decoration: none; color: var(--carbon-black); font-size: 0.84rem; font-weight: 600;
-    }
+    .cc-link { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 14px; border: 1px solid var(--border-light); border-radius: var(--radius-md); background: var(--card-white); text-decoration: none; color: var(--carbon-black); font-size: 0.84rem; font-weight: 600; }
     .cc-link:hover { border-color: var(--ruby-red); }
-    .cc-link small { font-weight: 400; color: var(--ink-50); }
+    .cc-link small { font-weight: 600; color: var(--ink-50); }
+    .cc-link--zip { border-color: var(--ruby-red); background: var(--icon-bg); }
   </style>
 </head>
 <body class="page-light">
@@ -72,7 +71,6 @@
     </div>
 
     <div class="cc-split">
-      <!-- ───────────── Formulário ───────────── -->
       <div>
         <div class="form-card" style="margin-bottom: 16px;">
           <h2 style="font-size: 1rem; margin: 0 0 16px;">Sobre o evento</h2>
@@ -82,7 +80,7 @@
             <input type="text" id="titulo" placeholder="Ex.: Perspectivas para o 2º semestre" required>
           </div>
 
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px;">
             <div class="field">
               <label for="data">Data&nbsp;<span aria-hidden="true" style="color:var(--ruby-red)">*</span></label>
               <input type="date" id="data" required>
@@ -91,22 +89,13 @@
               <label for="horario">Horário&nbsp;<span aria-hidden="true" style="color:var(--ruby-red)">*</span></label>
               <input type="time" id="horario" required>
             </div>
-          </div>
-
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
             <div class="field">
               <label for="plataforma">Plataforma&nbsp;<span aria-hidden="true" style="color:var(--ruby-red)">*</span></label>
               <select id="plataforma" required>
+                <option value="live" selected>Live</option>
                 <option value="youtube">YouTube</option>
                 <option value="zoom">Zoom</option>
                 <option value="meet">Meet</option>
-              </select>
-            </div>
-            <div class="field">
-              <label for="horario_brasilia">Mostrar "Horário de Brasília"</label>
-              <select id="horario_brasilia">
-                <option value="sim">Sim</option>
-                <option value="nao">Não</option>
               </select>
             </div>
           </div>
@@ -124,7 +113,6 @@
               </select>
             </div>
           </div>
-
           <div id="palestrantesContainer"></div>
         </div>
 
@@ -141,36 +129,46 @@
         </div>
       </div>
 
-      <!-- ───────────── Prévia ───────────── -->
       <div class="cc-preview-col">
         <div class="form-card cc-preview-card">
           <div class="cc-preview-head">
-            <span class="cc-preview-title">Prévia (formato feed)</span>
-            <span id="previewStatus" style="font-size: 0.72rem; color: var(--ink-50);"></span>
+            <span class="cc-preview-title">Prévia</span>
+            <div class="cc-seg" id="previewFormatos">
+              <button type="button" data-fmt="stories">Stories</button>
+              <button type="button" data-fmt="feed" class="active">Feed</button>
+              <button type="button" data-fmt="quadrado">Quadrado</button>
+            </div>
           </div>
           <div class="cc-preview-box" id="previewBox">
             <div class="cc-preview-empty">
               Preencha o nome do evento e clique em<br><strong>Atualizar prévia</strong>
             </div>
           </div>
-          <div class="cc-preview-hint">
-            A prévia usa o mesmo motor da arte final — o que você vê é o que será gerado.
-          </div>
+          <div class="cc-preview-hint">A prévia usa o mesmo motor da arte final.</div>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Modal: biblioteca de fotos -->
   <div class="modal-overlay" id="libModal" onclick="fecharBiblioteca(event)">
-    <div class="modal-card" style="max-width: 560px" onclick="event.stopPropagation()">
+    <div class="modal-card" style="max-width: 580px" onclick="event.stopPropagation()">
       <div class="modal-head">
         <h3 style="margin: 0; font-size: 1.05rem;">Escolher foto</h3>
         <button type="button" class="modal-close" onclick="fecharBiblioteca()" aria-label="Fechar">&times;</button>
       </div>
       <div class="modal-body">
-        <div id="libContent">
-          <div class="cc-lib-empty">Carregando…</div>
+        <div id="libContent"><div class="cc-lib-empty">Carregando…</div></div>
+
+        <div class="cc-upload-box">
+          <div class="field" style="margin-bottom: 10px;">
+            <label for="uploadNome">Nome do palestrante</label>
+            <input type="text" id="uploadNome" placeholder="Ex.: Fernando Silva">
+            <small style="color: var(--ink-50); font-size: 0.72rem; display: block; margin-top: 4px;">
+              A foto fica salva com esse nome — na próxima vez que você digitar o mesmo nome, ela carrega sozinha.
+            </small>
+          </div>
+          <button type="button" class="btn btn-secondary" id="btnUpload">Enviar nova foto</button>
+          <input type="file" id="fileUpload" accept="image/png,image/jpeg,image/webp" style="display:none">
         </div>
       </div>
       <div class="modal-foot">
@@ -184,6 +182,6 @@
   <script src="config.js?v=20260615a"></script>
   <script src="auth.js?v=20260611f"></script>
   <script src="shell.js?v=20260611f"></script>
-  <script src="convite-corporate.js?v=20260713a"></script>
+  <script src="convite-corporate.js?v=20260713b"></script>
 </body>
 </html>

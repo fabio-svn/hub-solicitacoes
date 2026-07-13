@@ -28,6 +28,7 @@ import { requireAuth, requireRole } from "../middleware/auth.middleware";
 import { logger } from "../lib/logger";
 import { gerarArteBuffer, gerarKitConvite } from "../services/art-generator";
 import { uploadToR2 } from "./r2";
+import JSZip from "jszip";
 
 const router = Router();
 
@@ -69,6 +70,15 @@ function montarDados(body: Record<string, unknown>): Record<string, unknown> {
   };
 }
 
+const FORMATOS_VALIDOS = new Set(["stories", "feed", "quadrado"]);
+
+function slug(s: string): string {
+  return String(s || "convite")
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "")
+    .slice(0, 60) || "convite";
+}
+
 // ── POST /corporate/convite/preview ───────────────────────────────
 // Renderiza só o formato "feed" e devolve como data URI, sem subir nada no R2.
 router.post("/corporate/convite/preview", requireAuth, requireRole(...CORPORATE_ROLES), async (req, res): Promise<void> => {
@@ -80,19 +90,22 @@ router.post("/corporate/convite/preview", requireAuth, requireRole(...CORPORATE_
     }
 
     const num = String(dados.num_palestrantes ?? "1");
+    const pedido = String((req.body as any)?.formato ?? "feed");
+    const formato = FORMATOS_VALIDOS.has(pedido) ? pedido : "feed";
+
     const art = await gerarArteBuffer("convite-evento", {
       ...dados,
-      _variante_convite: `${num}-feed`,
+      _variante_convite: `${num}-${formato}`,
     });
 
     if (!art) {
-      res.status(404).json({ error: `Nenhum template ativo para a variante ${num}-feed.` });
+      res.status(404).json({ error: `Nenhum template ativo para a variante ${num}-${formato}.` });
       return;
     }
 
     res.json({
       preview: `data:${art.mimetype};base64,${art.buffer.toString("base64")}`,
-      formato: "feed",
+      formato,
     });
   } catch (err: any) {
     logger.error({ err }, "[corporate] erro ao gerar prévia do convite");
@@ -117,7 +130,10 @@ router.post("/corporate/convite/gerar", requireAuth, requireRole(...CORPORATE_RO
       return;
     }
 
+    const base = slug(String(dados.titulo ?? "convite"));
     const urls: Record<string, string> = {};
+    const zip = new JSZip();
+
     for (const formato of formatos) {
       const { buffer, ext, mimetype } = kit[formato];
       const filename = `convite-${formato}-${Date.now()}.${ext}`;
@@ -128,7 +144,19 @@ router.post("/corporate/convite/gerar", requireAuth, requireRole(...CORPORATE_RO
         0,
         "convite",
       );
+      // o .zip reaproveita os buffers já renderizados (não gera arte de novo)
+      zip.file(`${base}-${formato}.${ext}`, buffer);
     }
+
+    // pacote com os 3 formatos
+    const zipBuffer = await zip.generateAsync({ type: "nodebuffer" });
+    const zipTmp = path.join(os.tmpdir(), `convite-${Date.now()}.zip`);
+    await fs.promises.writeFile(zipTmp, zipBuffer);
+    urls.zip = await uploadToR2(
+      { path: zipTmp, originalname: `${base}.zip`, mimetype: "application/zip" },
+      0,
+      "convite",
+    );
 
     logger.info({ urls, user: req.session?.user?.email }, "[corporate] kit de convite gerado");
     res.json({ urls });
@@ -211,10 +239,14 @@ router.post(
         ? await db.select({ id: usersTable.id }).from(usersTable).where(eq(usersTable.email, email))
         : [];
 
+      // o nome do palestrante é o rótulo da foto na biblioteca — é por ele que a
+      // foto é reencontrada automaticamente nos próximos convites.
+      const nomeInformado = String((req.body as any)?.nome ?? "").trim();
+
       const [row] = await db
         .insert(artAssetsTable)
         .values({
-          filename: file.originalname.slice(0, 300),
+          filename: (nomeInformado || file.originalname).slice(0, 300),
           storage_key: key,
           url,
           mime_type: file.mimetype,
