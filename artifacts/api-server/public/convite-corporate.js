@@ -18,12 +18,35 @@
     return el ? String(el.value || '').trim() : '';
   }
 
+  var MESES = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho',
+               'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
+
+  /** '2026-07-24' -> '24 de julho' (formato usado na arte). */
+  function formatarData(iso) {
+    if (!iso) return '';
+    var p = iso.split('-');
+    if (p.length !== 3) return iso;
+    var mes = MESES[parseInt(p[1], 10) - 1];
+    if (!mes) return iso;
+    return parseInt(p[2], 10) + ' de ' + mes;
+  }
+
+  /** '19:00' -> '19h'  |  '19:30' -> '19h30' (formato usado na arte). */
+  function formatarHorario(hhmm) {
+    if (!hhmm) return '';
+    var p = hhmm.split(':');
+    if (p.length < 2) return hhmm;
+    var h = parseInt(p[0], 10);
+    var m = p[1];
+    return m === '00' ? h + 'h' : h + 'h' + m;
+  }
+
   function coletarDados() {
     var num = parseInt(val('num_palestrantes'), 10) || 1;
     var dados = {
       titulo: val('titulo'),
-      data: val('data'),
-      horario: val('horario'),
+      data: formatarData(val('data')),
+      horario: formatarHorario(val('horario')),
       plataforma: val('plataforma'),
       horario_brasilia: val('horario_brasilia'),
       num_palestrantes: String(num),
