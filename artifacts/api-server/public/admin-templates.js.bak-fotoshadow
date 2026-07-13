@@ -1251,14 +1251,7 @@
       } else if (layer.type === 'image') {
         const imgWrap = document.createElement('div');
         imgWrap.className = 'layer-content-preview';
-        let _icss = 'position:absolute;inset:0;pointer-events:none;overflow:hidden;display:flex;align-items:center;justify-content:center;';
-        const _ish = layer.shadow;
-        if (_ish && (_ish.blur || 0) > 0) {
-          const _io = (_ish.opacity == null ? 0.35 : _ish.opacity);
-          const _irgba = (typeof _hexToRgba === 'function') ? _hexToRgba(_ish.color || '#000000', _io) : 'rgba(0,0,0,' + _io + ')';
-          _icss += ';filter:drop-shadow(' + ((_ish.offset_x||0)*SCALE) + 'px ' + ((_ish.offset_y||0)*SCALE) + 'px ' + ((_ish.blur||0)*SCALE) + 'px ' + _irgba + ')';
-        }
-        imgWrap.style.cssText = _icss;
+        imgWrap.style.cssText = 'position:absolute;inset:0;pointer-events:none;overflow:hidden;display:flex;align-items:center;justify-content:center;';
         const src = (layer.source && (layer.source.url || layer.source.static_url)) || layer.url || '';
         if (src) {
           const im = document.createElement('img');
@@ -1956,25 +1949,6 @@
           <div><div class="props-label">Cor</div>${renderColorPickerWithSwatches(`border-color-${id}`, layer.border?.color||'#ffffff', `updLayerBorderColor('${id}',this.value)`)}</div>
         </div>
       </div>
-      <div class="props-section">
-        <div class="props-label">Sombra (drop shadow)</div>
-        <div class="props-label" style="margin-top:6px;font-size:.72rem;opacity:.75">Desfoque (px) — 0 desliga</div>
-        <input class="props-input" type="number" min="0" value="${(layer.shadow&&layer.shadow.blur)||0}" onchange="updImgShadow('${id}','blur',+this.value)">
-        <div style="display:flex;gap:8px;margin-top:8px">
-          <div style="flex:1">
-            <div class="props-label" style="font-size:.72rem;opacity:.75">Desloc. X</div>
-            <input class="props-input" type="number" value="${(layer.shadow&&layer.shadow.offset_x)||0}" onchange="updImgShadow('${id}','offset_x',+this.value)">
-          </div>
-          <div style="flex:1">
-            <div class="props-label" style="font-size:.72rem;opacity:.75">Desloc. Y</div>
-            <input class="props-input" type="number" value="${(layer.shadow&&layer.shadow.offset_y)||0}" onchange="updImgShadow('${id}','offset_y',+this.value)">
-          </div>
-        </div>
-        <div class="props-label" style="margin-top:8px;font-size:.72rem;opacity:.75">Opacidade (0 a 1)</div>
-        <input class="props-input" type="number" min="0" max="1" step="0.05" value="${(layer.shadow&&layer.shadow.opacity!=null)?layer.shadow.opacity:0.35}" onchange="updImgShadow('${id}','opacity',+this.value)">
-        <div class="props-label" style="margin-top:8px;font-size:.72rem;opacity:.75">Cor da sombra</div>
-        ${renderColorPickerWithSwatches(`ishcolor-${id}`, (layer.shadow&&layer.shadow.color)||'#000000', `updImgShadow('${id}','color',this.value)`)}
-      </div>
   </div>
 </details>`;
     }
@@ -2087,20 +2061,6 @@
     scheduleLivePreview(NORMAL_DEBOUNCE);
   }
   function updLayerN(id, key, value) { updLayer(id, key, parseFloat(value) || 0); }
-
-  // Sombra de layers 'image' (a foto circular). Mesma forma da sombra de shape.
-  function updImgShadow(id, campo, valor) {
-    const layer = getLayer(id);
-    if (!layer) return;
-    const s = Object.assign({ color: '#000000', blur: 0, offset_x: 0, offset_y: 0, opacity: 0.35 }, layer.shadow || {});
-    s[campo] = valor;
-    if (!s.blur) delete layer.shadow;
-    else layer.shadow = s;
-    markDirty();
-    debouncedPushHistory();
-    renderCanvas();
-    scheduleLivePreview(NORMAL_DEBOUNCE);
-  }
 
   // ── Sombra (drop shadow) de layers 'shape' ──
   function _hexToRgba(hex, alpha) {

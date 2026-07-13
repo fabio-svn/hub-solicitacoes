@@ -499,52 +499,6 @@ async function renderImage(
   if (layer.blend_mode && layer.blend_mode !== 'normal') {
     composite.blend = layer.blend_mode as sharp.Blend;
   }
-
-  // ── Sombra da foto ──────────────────────────────────────────────
-  // A imagem ja foi recortada numa forma conhecida (circulo ou retangulo), entao a
-  // sombra e a sombra DESSA forma: desenhamos a forma preenchida e borrada ATRAS da
-  // imagem. Nao e preciso borrar a imagem em si.
-  const imgSh = layer.shadow;
-  const iBlur = Math.max(0, Number(imgSh?.blur ?? 0));
-  if (imgSh && iBlur > 0) {
-    const iDx = Number(imgSh.offset_x ?? 0);
-    const iDy = Number(imgSh.offset_y ?? 0);
-    const iCor = imgSh.color || '#000000';
-    const iOp = Math.min(1, Math.max(0, Number(imgSh.opacity ?? 0.35)));
-    const iPad = Math.ceil(iBlur * 2 + Math.max(Math.abs(iDx), Math.abs(iDy)));
-
-    // area expandida (a sombra vaza para fora da forma)
-    const iOx = _cx - iPad;
-    const iOy = _cy - iPad;
-    const iW = safeW + 2 * iPad;
-    const iH = safeH + 2 * iPad;
-    const iCropL = iOx < 0 ? Math.min(-iOx, iW) : 0;
-    const iCropT = iOy < 0 ? Math.min(-iOy, iH) : 0;
-    const iVisW = Math.min(iW - iCropL, bgWidth  - Math.max(iOx, 0));
-    const iVisH = Math.min(iH - iCropT, bgHeight - Math.max(iOy, 0));
-
-    if (iVisW > 0 && iVisH > 0) {
-      const forma = isCircle
-        ? `<circle cx="${iPad + safeW / 2}" cy="${iPad + safeH / 2}" r="${Math.min(safeW, safeH) / 2}" fill="${iCor}" fill-opacity="${iOp}"/>`
-        : `<rect x="${iPad}" y="${iPad}" width="${safeW}" height="${safeH}" fill="${iCor}" fill-opacity="${iOp}"/>`;
-      const fid = `ish-${layer.id}`;
-      const shSvg =
-        `<svg width="${iVisW}" height="${iVisH}" xmlns="http://www.w3.org/2000/svg">` +
-        `<defs><filter id="${fid}" x="-50%" y="-50%" width="200%" height="200%">` +
-        `<feGaussianBlur stdDeviation="${iBlur / 2}" result="b"/>` +
-        `<feOffset in="b" dx="${iDx}" dy="${iDy}"/>` +
-        `</filter></defs>` +
-        `<g transform="translate(${-iCropL},${-iCropT})"><g filter="url(#${fid})">${forma}</g></g>` +
-        `</svg>`;
-      // entra ANTES da imagem no array -> fica atras dela
-      composites.push({
-        input: Buffer.from(shSvg),
-        left: Math.round(Math.max(iOx, 0)),
-        top: Math.round(Math.max(iOy, 0)),
-      });
-    }
-  }
-
   composites.push(composite);
 
   const border = layer.border;

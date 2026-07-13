@@ -92,14 +92,6 @@ export type ImageLayer = LayerBase & {
     width: number;
     color: string;
   };
-  /** Sombra projetada da forma que recorta a imagem. Ausente = sem sombra. */
-  shadow?: {
-    color?: string;
-    blur?: number;       // 0 = sem sombra
-    offset_x?: number;
-    offset_y?: number;
-    opacity?: number;    // 0..1 (default 0.35)
-  };
 };
 
 export type ShapeLayer = LayerBase & {
