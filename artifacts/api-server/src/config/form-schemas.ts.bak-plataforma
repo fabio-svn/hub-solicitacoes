@@ -561,18 +561,8 @@ export const FORM_SCHEMAS: Record<string, FormSchema> = {
         options: [ { value: 'sim', label: 'Sim' }, { value: 'nao', label: 'Nao' } ] },
       { name: 'data',             label: 'Data',                type: 'text',   required: true },
       { name: 'horario',          label: 'Horario',             type: 'text',   required: true },
-      // Presencial: local_nome + endereco. Online: plataforma (logo).
-      // Nao sao obrigatorios porque dependem do tipo_evento — em online os campos
-      // de local vem vazios (as text layers somem sozinhas) e a logo e resolvida
-      // pela image layer 'variant' via variant_source: 'plataforma'.
-      { name: 'local_nome',       label: 'Nome do local (presencial)', type: 'text' },
-      { name: 'endereco',         label: 'Endereco (presencial)',      type: 'textarea' },
-      { name: 'plataforma',       label: 'Plataforma (online)',        type: 'select',
-        options: [
-          { value: 'youtube', label: 'YouTube' },
-          { value: 'zoom',    label: 'Zoom' },
-          { value: 'meet',    label: 'Meet' }
-        ] },
+      { name: 'local_nome',       label: 'Nome do local',       type: 'text',   required: true },
+      { name: 'endereco',         label: 'Endereco',            type: 'textarea' },
       { name: 'palestrante_1_nome',  label: 'Palestrante 1 - Nome',  type: 'text' },
       { name: 'palestrante_1_cargo', label: 'Palestrante 1 - Cargo', type: 'text' },
       { name: 'palestrante_1_foto',  label: 'Palestrante 1 - Foto',  type: 'file' },
