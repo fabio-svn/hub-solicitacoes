@@ -544,52 +544,25 @@
     }
   }
 
-  // Previa REAL do template: renderiza no servidor com os dados de exemplo do tipo,
-  // igual ao live preview do editor. (Antes isso so mostrava a imagem de fundo.)
-  let previewModalUrl = null;
   async function abrirPreviewModal(id) {
+    const overlay = document.getElementById('previewModalOverlay');
     const content = document.getElementById('previewModalContent');
     const title = document.getElementById('previewModalTitle');
-    content.innerHTML = '<span style="opacity:0.5;font-size:0.9rem">Renderizando prévia…</span>';
+    content.innerHTML = '<span style="opacity:0.5;font-size:0.9rem">Carregando…</span>';
     Modal.open('previewModalOverlay');
     try {
       const res = await fetch(`/api/admin/art-templates/${id}`);
-      if (!res.ok) throw new Error('Não foi possível carregar o template.');
+      if (!res.ok) throw new Error('Erro');
       const t = await res.json();
       title.textContent = t.name;
-
-      // dados de exemplo do tipo (mesmo endpoint que o editor usa)
-      let dados = {};
-      try {
-        const rs = await fetch(`/api/admin/art-templates/sample-data/${t.tipo}`);
-        if (rs.ok) dados = await rs.json();
-      } catch { /* sem dados de exemplo: renderiza com os placeholders vazios */ }
-
-      // preenche os campos de variante (plataforma, etc.) com a 1a opção
-      const cfg = t.config || {};
-      for (const layer of (cfg.layers || [])) {
-        const vs = layer?.source?.variant_source;
-        if (layer.type === 'image' && layer.source?.type === 'variant' && vs && !dados[vs]) {
-          dados[vs] = Object.keys(layer.source.variants || {})[0] || '';
-        }
+      const bgUrl = t.config?.bg?.url || t.config?.background_image_url;
+      if (bgUrl) {
+        content.innerHTML = `<img src="${bgUrl}" style="max-width:100%;max-height:70vh;border-radius:var(--radius-sm);display:block">`;
+      } else {
+        content.innerHTML = `<div style="padding:40px;opacity:0.5;font-size:0.9rem;text-align:center">Nenhum background configurado ainda.<br>Abra o editor para pré-visualizar o template.</div>`;
       }
-
-      const rp = await fetch('/api/admin/art-templates/preview', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ config: cfg, data: dados }),
-      });
-      if (!rp.ok) throw new Error('Falha ao renderizar a prévia.');
-      const blob = await rp.blob();
-
-      if (previewModalUrl) URL.revokeObjectURL(previewModalUrl);
-      previewModalUrl = URL.createObjectURL(blob);
-      content.innerHTML = `<img src="${previewModalUrl}" alt="Prévia de ${esc(t.name)}" ` +
-        `style="max-width:100%;max-height:70vh;border-radius:var(--radius-sm);display:block;margin:0 auto">`;
-    } catch (err) {
-      content.innerHTML = `<div style="padding:32px;opacity:.6;font-size:.9rem;text-align:center">` +
-        `${esc(err.message || 'Erro ao carregar a prévia.')}</div>`;
+    } catch {
+      content.innerHTML = '<span style="opacity:0.5;font-size:0.9rem;padding:24px">Erro ao carregar preview.</span>';
     }
   }
 
@@ -1876,27 +1849,11 @@
           <button type="button" class="align-btn${layer.text_transform==='uppercase'?' active':''}" onclick="setTextTransform('${id}','uppercase')" title="TUDO MAIÚSCULO (all caps)" style="letter-spacing:0.08em;font-weight:700">AA</button>
           <button type="button" class="align-btn${layer.text_transform==='capitalize-first'?' active':''}" onclick="setTextTransform('${id}','capitalize-first')" title="Apenas a primeira letra maiúscula">Ab</button>
         </div>
-        <div class="props-label" style="margin-top:10px;display:flex;align-items:center;justify-content:space-between">
-          <span>Ajustar tamanho ao espaço</span>
-          <button type="button" class="align-btn${layer.auto_fit?' active':''}" style="padding:2px 10px;font-size:.7rem"
-                  onclick="toggleAutoFit('${id}')">${layer.auto_fit?'Ligado':'Desligado'}</button>
-        </div>
         ${layer.auto_fit?`
-        <div style="font-size:.7rem;opacity:.7;margin-bottom:6px;line-height:1.35">
-          Texto longo encolhe até o mínimo; texto curto cresce até o máximo.
-        </div>
-        <div class="props-grid-2">
-          <div>
-            <div class="props-label">Mínimo</div>
-            <input class="props-input" type="number" min="1" value="${layer.auto_fit.min_font_size||0}"
-                   onchange="updAutoFit('${id}','min_font_size',+this.value)">
-          </div>
-          <div>
-            <div class="props-label">Máximo</div>
-            <input class="props-input" type="number" min="0" value="${layer.auto_fit.max_font_size||0}"
-                   onchange="updAutoFit('${id}','max_font_size',+this.value)">
-          </div>
-        </div>
+        <div class="props-label" style="margin-top:8px">Auto-fit min</div>
+        <input class="props-input" type="number" value="${layer.auto_fit.min_font_size}" onchange="updLayer('${id}','auto_fit',{enabled:true,min_font_size:+this.value,max_font_size:layer.auto_fit.max_font_size||0})">
+        <div class="props-label" style="margin-top:8px">Auto-fit max (0 = nao cresce)</div>
+        <input class="props-input" type="number" value="${layer.auto_fit.max_font_size || 0}" onchange="updLayer('${id}','auto_fit',{enabled:true,min_font_size:layer.auto_fit.min_font_size,max_font_size:+this.value})">
         `:''}
       </div>
       <div class="props-section">
@@ -2130,45 +2087,6 @@
     scheduleLivePreview(NORMAL_DEBOUNCE);
   }
   function updLayerN(id, key, value) { updLayer(id, key, parseFloat(value) || 0); }
-
-  // ── Auto-fit (encolhe/cresce a fonte para caber na caixa) ──
-  // Ligar ja preenche min/max com valores sensatos, derivados do tamanho atual:
-  // o usuario nao precisa adivinhar numero nenhum.
-  function toggleAutoFit(id) {
-    const layer = getLayer(id);
-    if (!layer) return;
-    if (layer.auto_fit) {
-      delete layer.auto_fit;
-    } else {
-      const base = layer.font_size || 16;
-      layer.auto_fit = {
-        enabled: true,
-        min_font_size: Math.max(8, Math.round(base * 0.65)),
-        max_font_size: Math.round(base * 1.5),
-      };
-    }
-    markDirty();
-    debouncedPushHistory();
-    renderCanvas();
-    renderProps();
-    scheduleLivePreview(NORMAL_DEBOUNCE);
-  }
-  function updAutoFit(id, campo, valor) {
-    const layer = getLayer(id);
-    if (!layer || !layer.auto_fit) return;
-    const base = layer.font_size || 16;
-    const af = Object.assign(
-      { enabled: true, min_font_size: Math.round(base * 0.65), max_font_size: 0 },
-      layer.auto_fit
-    );
-    af[campo] = valor;
-    if (!af.min_font_size) af.min_font_size = Math.max(8, Math.round(base * 0.65));
-    layer.auto_fit = af;
-    markDirty();
-    debouncedPushHistory();
-    renderCanvas();
-    scheduleLivePreview(NORMAL_DEBOUNCE);
-  }
 
   // Sombra de layers 'image' (a foto circular). Mesma forma da sombra de shape.
   function updImgShadow(id, campo, valor) {

@@ -59,6 +59,20 @@
     .cc-lib-del:hover { background: var(--ruby-red); }
     .cc-lib-nome { font-size: 0.72rem; color: var(--ink-60); margin-top: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .cc-lib-empty { font-size: 0.82rem; color: var(--ink-50); text-align: center; padding: 26px 0; line-height: 1.5; }
+    /* dica contextual abaixo de um grupo de campos */
+    .cc-hint {
+      margin: 12px 0 0;
+      padding: 10px 12px;
+      background: var(--icon-bg);
+      border-left: 2px solid var(--sage-green);
+      border-radius: var(--radius-sm);
+      font-size: 0.78rem;
+      line-height: 1.45;
+      color: var(--ink-60);
+    }
+    .cc-hint strong { color: var(--carbon-black); font-weight: 600; }
+    .cc-hint em { font-style: normal; color: var(--carbon-black); }
+
     .cc-upload-box { border-top: 1px solid var(--border-light); margin-top: 16px; padding-top: 16px; }
 
     /* área de envio: visual de upload, não de botão comum */
@@ -135,6 +149,11 @@
               </select>
             </div>
           </div>
+
+          <p class="cc-hint">
+            Na arte, data e horário saem no formato <strong>24 de julho · 19h</strong>.
+            Se a plataforma de transmissão ainda não estiver definida, escolha <strong>Live</strong>.
+          </p>
         </div>
 
         <div class="form-card">
@@ -149,6 +168,12 @@
               </select>
             </div>
           </div>
+
+          <p class="cc-hint">
+            <strong>Fotos:</strong> ao digitar o nome de alguém que já está na biblioteca, a foto entra sozinha.
+            Se enviar uma nova foto para o mesmo nome, ela passa a ser a usada daí em diante.
+            Você também pode escolher outra manualmente em <em>Escolher foto</em>.
+          </p>
           <div id="palestrantesContainer"></div>
         </div>
 
