@@ -92,7 +92,7 @@
       'ajustes-solicitados':  { label: 'Ajustes solicitados',  bg: '#dbeafe', fg: '#1e40af', accent: '#1e40af' },
       'aprovado':             { label: 'Aprovado',             bg: '#dcfce7', fg: '#166534', accent: '#15803d' },
       'reprovado':            { label: 'Reprovado',            bg: '#fee2e2', fg: '#991b1b', accent: '#dc2626' },
-      'publicado':            { label: 'Concluído',            bg: '#dcfce7', fg: '#14532d', accent: '#14532d' },
+      'publicado':            { label: 'Publicado',            bg: '#e5e7eb', fg: '#374151', accent: '#374151' },
       'registrado':           { label: 'Registrado',           bg: '#eef2f7', fg: '#475569', accent: '#475569' },
     };
     const CATEGORIAS = [
@@ -100,13 +100,7 @@
       { id: 'atualizacao', label: 'Atualização',        aprovacao: true },
       { id: 'sem-pagina',  label: 'Sem Página',         aprovacao: false },
     ];
-    const FUNIL = ['todos', 'aguardando-validacao', 'ajustes-solicitados', 'aprovado', 'publicado', 'reprovado'];
-    // Concluir (= publicado no site) e do marketing: gestor e admin.
-    // Capital Humano valida, mas nao conclui.
-    function podePublicar() {
-      const r = (typeof Auth !== 'undefined' && Auth.getUserRole) ? Auth.getUserRole() : '';
-      return r === 'gestor' || r === 'admin';
-    }
+    const FUNIL = ['todos', 'aguardando-validacao', 'ajustes-solicitados', 'aprovado', 'reprovado'];
     const CONTRATO_LABELS = { 'svn-capital': 'SVN Capital', 'svn-connect': 'SVN Connect', 'svn-investimentos': 'SVN Investimentos' };
     function contratoLabel(c) { return CONTRATO_LABELS[c] || c || '—'; }
 
@@ -242,13 +236,6 @@
             '<button class="btn btn-primary" onclick="decidir(\'aprovado\')">Aprovar</button>' +
             '<button class="btn btn-dark" onclick="decidir(\'ajustes\')">Solicitar ajustes</button>' +
             '<button class="btn btn-secondary" style="color:var(--danger);border-color:var(--danger)" onclick="decidir(\'reprovado\')">Reprovar</button>' +
-          '</div><div id="vaMsg" style="margin-top:10px;font-size:0.82rem"></div>';
-      } else if (resumo.status === 'aprovado' && podePublicar()) {
-        // Aprovado = liberado para o marketing publicar. Concluído = já está no ar.
-        rodape =
-          '<div class="va-actions" style="align-items:center">' +
-            '<span class="sub" style="font-size:0.8rem;color:var(--ink-50);margin-right:auto">Aprovado para publicação. Marque como concluído assim que a página estiver no ar.</span>' +
-            '<button class="btn btn-primary" onclick="decidir(&#39;publicado&#39;)">Marcar como concluído</button>' +
           '</div><div id="vaMsg" style="margin-top:10px;font-size:0.82rem"></div>';
       } else {
         rodape = '<div class="va-actions"><span class="sub" style="font-size:0.8rem;color:var(--ink-50)">Perfil já ' + (STATUS[resumo.status] ? STATUS[resumo.status].label.toLowerCase() : resumo.status) + '.</span></div>';

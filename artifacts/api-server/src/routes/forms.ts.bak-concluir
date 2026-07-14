@@ -1516,13 +1516,6 @@ router.post("/assessor-aprovacoes/:id/decisao", requireAuth, async (req, res): P
     // "Concluído" = publicado no site. So faz sentido depois de aprovado e nao e uma
     // decisao de validacao: nao mexe em decidido_por/decidido_em nem nos ajustes.
     if (novoStatus === "publicado") {
-      // Concluir = "ja esta publicado no site". Quem publica e o marketing.
-      // Capital Humano valida, mas nao conclui.
-      const PUBLICA_ROLES = ["gestor", "admin"];
-      if (!PUBLICA_ROLES.includes(role)) {
-        res.status(403).json({ error: "Apenas o marketing pode concluir uma página." });
-        return;
-      }
       if (!pub || pub.status !== "aprovado") {
         res.status(400).json({ error: "Só é possível concluir um perfil que está aprovado." });
         return;

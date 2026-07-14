@@ -48,12 +48,7 @@
       </div>
       <div class="field">
         <label>Código do assessor <span class="text-ruby">*</span></label>
-        <div class="cod-assessor">
-            <span class="cod-assessor-prefixo" aria-hidden="true">A</span>
-            <input type="text" id="codigoAssessor" inputmode="numeric" autocomplete="off"
-                   placeholder="12345" maxlength="10" required
-                   oninput="this.value = this.value.replace(/\D/g, '')">
-          </div>
+        <input type="text" id="codigoAssessor" placeholder="Ex: 12345" required>
       </div>
       <div class="field" id="field-nomeAssinatura">
         <label>Nome para assinatura <span class="text-ruby">*</span></label>
@@ -91,13 +86,6 @@
   <script src="shell.js?v=20260611f"></script>
   <script src="form-core.js?v=20260611f"></script>
   <script>
-
-    /** Monta o codigo do assessor no formato final: A + digitos. Vazio continua vazio. */
-    function codigoAssessorFmt() {
-      var el = document.getElementById('codigoAssessor');
-      var num = ((el && el.value) || '').replace(/\D/g, '');
-      return num ? 'A' + num : '';
-    }
 
     const TIPO = 'convite-fp';
 
@@ -146,7 +134,7 @@
 
     function gerarLinkFP() {
       var err = document.getElementById('submitError');
-      var codigo = codigoAssessorFmt();
+      var codigo = (document.getElementById('codigoAssessor').value || '').trim();
       var contrato = document.getElementById('contratoSocial').value || '';
       if (!codigo || !contrato) {
         err.textContent = 'Preencha o código do assessor e o contrato social para gerar o link.';
@@ -186,7 +174,7 @@
       var dados = {
         nome: Auth.getUserName(),
         telefone: document.getElementById('telefone').value,
-        codigo_assessor: codigoAssessorFmt(),
+        codigo_assessor: document.getElementById('codigoAssessor').value,
         nome_assinatura: document.getElementById('nomeAssinatura').value,
         cargo: document.getElementById('cargo').value,
         contrato_social: document.getElementById('contratoSocial').value,

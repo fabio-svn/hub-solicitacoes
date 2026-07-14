@@ -92,13 +92,6 @@
   <script src="form-core.js?v=20260611f"></script>
   <script>
 
-    /** Monta o codigo do assessor no formato final: A + digitos. Vazio continua vazio. */
-    function codigoAssessorFmt() {
-      var el = document.getElementById('codigoAssessor');
-      var num = ((el && el.value) || '').replace(/\D/g, '');
-      return num ? 'A' + num : '';
-    }
-
     const TIPO = 'convite-fp';
 
     async function init() {
@@ -146,7 +139,7 @@
 
     function gerarLinkFP() {
       var err = document.getElementById('submitError');
-      var codigo = codigoAssessorFmt();
+      var codigo = (document.getElementById('codigoAssessor').value || '').trim();
       var contrato = document.getElementById('contratoSocial').value || '';
       if (!codigo || !contrato) {
         err.textContent = 'Preencha o código do assessor e o contrato social para gerar o link.';
@@ -186,7 +179,7 @@
       var dados = {
         nome: Auth.getUserName(),
         telefone: document.getElementById('telefone').value,
-        codigo_assessor: codigoAssessorFmt(),
+        codigo_assessor: document.getElementById('codigoAssessor').value,
         nome_assinatura: document.getElementById('nomeAssinatura').value,
         cargo: document.getElementById('cargo').value,
         contrato_social: document.getElementById('contratoSocial').value,

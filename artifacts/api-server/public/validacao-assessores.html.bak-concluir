@@ -101,12 +101,6 @@
       { id: 'sem-pagina',  label: 'Sem Página',         aprovacao: false },
     ];
     const FUNIL = ['todos', 'aguardando-validacao', 'ajustes-solicitados', 'aprovado', 'publicado', 'reprovado'];
-    // Concluir (= publicado no site) e do marketing: gestor e admin.
-    // Capital Humano valida, mas nao conclui.
-    function podePublicar() {
-      const r = (typeof Auth !== 'undefined' && Auth.getUserRole) ? Auth.getUserRole() : '';
-      return r === 'gestor' || r === 'admin';
-    }
     const CONTRATO_LABELS = { 'svn-capital': 'SVN Capital', 'svn-connect': 'SVN Connect', 'svn-investimentos': 'SVN Investimentos' };
     function contratoLabel(c) { return CONTRATO_LABELS[c] || c || '—'; }
 
@@ -243,7 +237,7 @@
             '<button class="btn btn-dark" onclick="decidir(\'ajustes\')">Solicitar ajustes</button>' +
             '<button class="btn btn-secondary" style="color:var(--danger);border-color:var(--danger)" onclick="decidir(\'reprovado\')">Reprovar</button>' +
           '</div><div id="vaMsg" style="margin-top:10px;font-size:0.82rem"></div>';
-      } else if (resumo.status === 'aprovado' && podePublicar()) {
+      } else if (resumo.status === 'aprovado') {
         // Aprovado = liberado para o marketing publicar. Concluído = já está no ar.
         rodape =
           '<div class="va-actions" style="align-items:center">' +

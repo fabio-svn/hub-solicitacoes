@@ -665,20 +665,6 @@ router.get("/solicitacoes/:id", requireAuth, async (req, res): Promise<void> => 
 
     const arquivos = await db.select().from(arquivosTable).where(eq(arquivosTable.solicitacao_id, id));
 
-    // Paginas de assessor: o status que vale e o da validacao/publicacao, nao o do
-    // ClickUp. Sobrescreve para o resumo do pedido nao mostrar uma etapa que nao existe.
-    let statusPagina: string | null = null;
-    if (["pagina-assessores-dados", "pagina-assessores-atualizacao"].includes(solicitacao.tipo_solicitacao)) {
-      try {
-        const [pubRow] = await db
-          .select({ status: assessorPublicacoesTable.status })
-          .from(assessorPublicacoesTable)
-          .where(eq(assessorPublicacoesTable.solicitacao_id, id));
-        statusPagina = pubRow?.status ?? "aguardando-validacao";
-        (solicitacao as any).status = statusPagina;
-      } catch { /* sem registro: mantem o status atual */ }
-    }
-
     // Nome do solicitante (a partir do cadastro de usuários, pelo e-mail)
     let solicitanteNome: string | null = null;
     if (solicitacao.user_email) {
@@ -1490,7 +1476,7 @@ router.post("/assessor-aprovacoes/:id/decisao", requireAuth, async (req, res): P
     const id = parseInt(String(req.params.id), 10);
     if (Number.isNaN(id)) { res.status(400).json({ error: "ID inválido" }); return; }
     const b = req.body || {};
-    const MAP: Record<string, string> = { aprovado: "aprovado", ajustes: "ajustes-solicitados", reprovado: "reprovado", publicado: "publicado" };
+    const MAP: Record<string, string> = { aprovado: "aprovado", ajustes: "ajustes-solicitados", reprovado: "reprovado" };
     const novoStatus = MAP[String(b.decisao || "")];
     if (!novoStatus) { res.status(400).json({ error: "Decisão inválida" }); return; }
     const [sol] = await db.select().from(solicitacoesTable).where(eq(solicitacoesTable.id, id));
@@ -1512,28 +1498,6 @@ router.post("/assessor-aprovacoes/:id/decisao", requireAuth, async (req, res): P
       atualizado_em: new Date(),
     };
     if (novoStatus === "ajustes-solicitados") setFields.ciclo = (pub?.ciclo || 1) + 1;
-
-    // "Concluído" = publicado no site. So faz sentido depois de aprovado e nao e uma
-    // decisao de validacao: nao mexe em decidido_por/decidido_em nem nos ajustes.
-    if (novoStatus === "publicado") {
-      // Concluir = "ja esta publicado no site". Quem publica e o marketing.
-      // Capital Humano valida, mas nao conclui.
-      const PUBLICA_ROLES = ["gestor", "admin"];
-      if (!PUBLICA_ROLES.includes(role)) {
-        res.status(403).json({ error: "Apenas o marketing pode concluir uma página." });
-        return;
-      }
-      if (!pub || pub.status !== "aprovado") {
-        res.status(400).json({ error: "Só é possível concluir um perfil que está aprovado." });
-        return;
-      }
-      delete setFields.decidido_por;
-      delete setFields.decidido_em;
-      delete setFields.ajustes;
-      setFields.observacao = pub.observacao ?? null;
-      setFields.publicado_por = u?.id ?? null;
-      setFields.publicado_em = new Date();
-    }
 
     if (pub) {
       await db.update(assessorPublicacoesTable).set(setFields).where(eq(assessorPublicacoesTable.solicitacao_id, id));
