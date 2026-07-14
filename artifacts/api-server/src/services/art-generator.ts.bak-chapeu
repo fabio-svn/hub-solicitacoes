@@ -178,13 +178,6 @@ export async function gerarArteBuffer(
   const formSchema = FORM_SCHEMAS[tipo];
   const resolvedDados = addOptionLabels(resolveComputed(dados, formSchema), formSchema);
 
-  // Texto do topo do convite. Quem nao mandar 'chapeu' (ex.: o formulario de
-  // eventos) continua imprimindo o texto de sempre: "evento presencial/online".
-  // O Corporate manda "Hora do Corporate" e sobrescreve isso.
-  if (!resolvedDados.chapeu && resolvedDados.tipo_evento) {
-    resolvedDados.chapeu = `evento ${resolvedDados.tipo_evento}`;
-  }
-
   const variantField = formSchema?.template_variant_field;
   const variantValue = variantField && resolvedDados[variantField] != null
     ? String(resolvedDados[variantField])
@@ -251,13 +244,6 @@ export async function gerarArteParaSolicitacao(
   const formSchema = FORM_SCHEMAS[tipo];
 
   const resolvedDados = addOptionLabels(resolveComputed(dados, formSchema), formSchema);
-
-  // Texto do topo do convite. Quem nao mandar 'chapeu' (ex.: o formulario de
-  // eventos) continua imprimindo o texto de sempre: "evento presencial/online".
-  // O Corporate manda "Hora do Corporate" e sobrescreve isso.
-  if (!resolvedDados.chapeu && resolvedDados.tipo_evento) {
-    resolvedDados.chapeu = `evento ${resolvedDados.tipo_evento}`;
-  }
 
 
   const variantField = formSchema?.template_variant_field;

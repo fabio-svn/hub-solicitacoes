@@ -540,9 +540,6 @@ export const FORM_SCHEMAS: Record<string, FormSchema> = {
       { name: 'tipo_evento',      label: 'Tipo de evento',      type: 'select', required: true,
         options: [ { value: 'presencial', label: 'Presencial' }, { value: 'online', label: 'Online' } ] },
       { name: 'titulo',           label: 'Titulo do evento',    type: 'text',   required: true },
-      // Texto do topo da arte. Se vazio, o art-generator preenche com "evento {tipo}".
-      // O Corporate manda "Hora do Corporate".
-      { name: 'chapeu',           label: 'Texto do topo (auto)', type: 'text' },
       { name: 'num_palestrantes', label: 'Numero de palestrantes', type: 'select', required: true,
         options: [ { value: '1', label: '1' }, { value: '2', label: '2' }, { value: '3', label: '3' }, { value: '4', label: '4' } ] },
       { name: '_variante_convite', label: 'Variante (auto)', type: 'select',

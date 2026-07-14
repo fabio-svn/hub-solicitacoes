@@ -142,9 +142,9 @@
             <div class="field">
               <label for="plataforma">Plataforma&nbsp;<span aria-hidden="true" style="color:var(--ruby-red)">*</span></label>
               <select id="plataforma" required>
-                <option value="live">Live</option>
+                <option value="live" selected>Live</option>
                 <option value="youtube">YouTube</option>
-                <option value="zoom" selected>Zoom</option>
+                <option value="zoom">Zoom</option>
                 <option value="meet">Meet</option>
               </select>
             </div>

@@ -259,7 +259,7 @@
   <script src="auth.js?v=20260611f"></script>
   <script src="shell.js?v=20260611f"></script>
   <script src="icons.js?v=20260623a"></script>
-  <script src="admin-templates.js?v=20260714a"></script>
+  <script src="admin-templates.js"></script>
   <!-- Preview Modal -->
   <div class="modal-overlay" id="previewModalOverlay" onclick="Modal.close('previewModalOverlay', event)">
     <div class="modal-card" style="max-width:90vw">

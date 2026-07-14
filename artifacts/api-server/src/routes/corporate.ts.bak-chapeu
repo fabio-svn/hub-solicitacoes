@@ -64,8 +64,6 @@ function montarDados(body: Record<string, unknown>): Record<string, unknown> {
   return {
     ...body,
     tipo_evento: "online",
-    // texto do topo da arte (substitui o "evento online" dos convites comuns)
-    chapeu: "Hora do Corporate",
     num_palestrantes: num,
     // presencial não se aplica: garante que as text layers de local/endereço fiquem vazias
     local_nome: "",
