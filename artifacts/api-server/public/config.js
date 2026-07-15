@@ -571,9 +571,7 @@ const FLUXOS_ETAPAS = {
     { id: "ajustes-solicitados",  label: "Ajustes solicitados",  visivel: false },
     { id: "reprovado",            label: "Reprovado",            visivel: false },
   ],
-  "pagina-assessores-dados--registro": [
-    { id: "concluido",            label: "Concluído",            visivel: true  },
-  ],
+  "pagina-assessores-dados--registro": [],
   "pagina-assessores-atualizacao": [
     { id: "aguardando-validacao", label: "Aguardando validação", visivel: true  },
     { id: "aprovado",             label: "Aprovado",             visivel: true  },
@@ -581,9 +579,7 @@ const FLUXOS_ETAPAS = {
     { id: "ajustes-solicitados",  label: "Ajustes solicitados",  visivel: false },
     { id: "reprovado",            label: "Reprovado",            visivel: false },
   ],
-  "pagina-assessores-atualizacao--registro": [
-    { id: "concluido",            label: "Concluído",            visivel: true  },
-  ],
+  "pagina-assessores-atualizacao--registro": [],
   "eventos": [
     { id: "recebido",               label: "Recebido",                  visivel: true  },
     { id: "alinhamentos",           label: "Alinhamentos",              visivel: true  },
