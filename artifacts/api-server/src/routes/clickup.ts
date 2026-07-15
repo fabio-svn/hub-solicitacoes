@@ -108,10 +108,20 @@ function gerarIdSolicitacao(dados: FormDados, tipo: string): string {
     : "S";
   const setor = str(dados.setor as string);
   const setorCode = SETOR_CODIGO_MAP[setor] || "GRL";
-  const now = new Date();
-  const ano = now.getFullYear();
-  const mes = String(now.getMonth() + 1).padStart(2, "0");
-  const dia = String(now.getDate()).padStart(2, "0");
+
+  // A parte da data do ID: para eventos, usa a DATA DO EVENTO (nao a de criacao).
+  // O ID e apenas informativo — nao afeta prazo/start_date da task.
+  let dataParaId = new Date();
+  if (tipo === "eventos") {
+    const evRaw = str(dados.dataEvento as string);
+    if (evRaw) {
+      const ev = new Date(evRaw + "T12:00:00-03:00");
+      if (!isNaN(ev.getTime())) dataParaId = ev;
+    }
+  }
+  const ano = dataParaId.getFullYear();
+  const mes = String(dataParaId.getMonth() + 1).padStart(2, "0");
+  const dia = String(dataParaId.getDate()).padStart(2, "0");
   const rand = String(randomInt(1000, 9999));
   return `${tipoCode}-${setorCode}-${ano}-${mes}-${dia}-${rand}`;
 }

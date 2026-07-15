@@ -1,10 +1,3619 @@
 # Pack do Projeto Hub SVN
 
-Gerado em: 2026-07-10 17:07:00
+Gerado em: 2026-07-15 14:43:25
 
 Roots: artifacts/api-server lib scripts
 
 ---
+
+
+## File: artifacts/api-server/backup-convite-templates-1783947796614.json
+
+```
+[
+  {
+    "id": 38,
+    "variant_value": "1-quadrado",
+    "name": "1 Palestrante - Quadrado (600x400)",
+    "config": {
+      "bg": {
+        "url": "https://solicitacoes.portalsvn.com.br/assets/2026-07/pvnqru9Y-mail.png",
+        "type": "static"
+      },
+      "tipo": "convite-evento",
+      "canvas": {
+        "width": 600,
+        "height": 400
+      },
+      "layers": [
+        {
+          "h": 23,
+          "w": 336,
+          "x": 45,
+          "y": 50,
+          "id": "tipo-evento",
+          "name": "Tipo de Evento",
+          "type": "text-block",
+          "align": "left",
+          "color": "#fff8f3",
+          "content": "Evento {{tipo_evento}}",
+          "font_size": 7,
+          "font_family": "Roobert PRO TRIAL Light",
+          "line_height": 1.4,
+          "letter_spacing": 10,
+          "text_transform": "uppercase",
+          "vertical_align": "top",
+          "paragraph_spacing": 0
+        },
+        {
+          "h": 0.5,
+          "w": 244,
+          "x": 301,
+          "y": 56,
+          "id": "linha-tipo",
+          "fill": "#fff8f3",
+          "name": "Forma",
+          "type": "shape",
+          "shape": "rectangle",
+          "stroke": "",
+          "stroke_width": 0,
+          "border_radius": 0
+        },
+        {
+          "h": 199,
+          "w": 312,
+          "x": 45,
+          "y": 116,
+          "id": "titulo",
+          "name": "Título",
+          "type": "text-block",
+          "align": "left",
+          "color": "#ffffff",
+          "content": "{{titulo}}",
+          "font_size": 32,
+          "font_family": "Ivy Journal Light",
+          "line_height": 1.4,
+          "vertical_align": "middle",
+          "paragraph_spacing": 0
+        },
+        {
+          "h": 20,
+          "w": 150,
+          "x": 410,
+          "y": 233,
+          "id": "nome-palestrante1",
+          "name": "Nome 1",
+          "type": "text-block",
+          "align": "center",
+          "color": "#fff8f3",
+          "content": "{{palestrante_1_nome}}",
+          "font_size": 14,
+          "font_family": "Roobert PRO TRIAL SemiBold",
+          "line_height": 1.4,
+          "vertical_align": "top",
+          "paragraph_spacing": 0
+        },
+        {
+          "h": 20,
+          "w": 150,
+          "x": 410,
+          "y": 253,
+          "id": "cargo-palestrante1",
+          "name": "Cargo 1",
+          "type": "text-block",
+          "align": "center",
+          "color": "#fff8f3",
+          "content": "{{palestrante_1_cargo}}",
+          "font_size": 12,
+          "font_family": "Roobert PRO TRIAL Light",
+          "line_height": 1.4,
+          "vertical_align": "top",
+          "paragraph_spacing": 0
+        },
+        {
+          "h": 70,
+          "w": 70,
+          "x": 450,
+          "y": 158,
+          "id": "foto-palestrante1",
+          "name": "Foto 1",
+          "type": "image",
+          "shape": "circle",
+          "border": {
+            "color": "#ffffff",
+            "width": 1
+          },
+          "source": {
+            "type": "placeholder",
+            "field": "palestrante_1_foto"
+          },
+          "blend_mode": "normal",
+          "crop_focus": "attention",
+          "resize_mode": "contain"
+        }
+      ]
+    }
+  },
+  {
+    "id": 34,
+    "variant_value": "3-stories",
+    "name": "3 Palestrantes - Stories (1080x1920)",
+    "config": {
+      "bg": {
+        "url": "https://solicitacoes.portalsvn.com.br/assets/2026-07/4cx5Tuuq-bg2.png",
+        "type": "static"
+      },
+      "tipo": "convite-evento",
+      "canvas": {
+        "width": 1080,
+        "height": 1920
+      },
+      "layers": [
+        {
+          "h": 56,
+          "w": 635,
+          "x": 223,
+          "y": 108,
+          "id": "tipo-evento",
+          "name": "Tipo de Evento",
+          "type": "text-block",
+          "align": "center",
+          "color": "#fff8f3",
+          "content": "evento {{tipo_evento}}",
+          "font_size": 28,
+          "font_family": "Roobert PRO TRIAL Light",
+          "line_height": 1.4,
+          "letter_spacing": 20,
+          "text_transform": "uppercase",
+          "vertical_align": "top",
+          "paragraph_spacing": 0
+        },
+        {
+          "h": 216,
+          "w": 781,
+          "x": 150,
+          "y": 244,
+          "id": "titulo",
+          "name": "Título",
+          "type": "text-block",
+          "align": "center",
+          "color": "#fff8f3",
+          "content": "{{titulo}}",
+          "font_size": 56,
+          "font_family": "Ivy Journal Light",
+          "line_height": 1.4,
+          "vertical_align": "top",
+          "paragraph_spacing": 0
+        },
+        {
+          "h": 56,
+          "w": 400,
+          "x": 416,
+          "y": 540,
+          "id": "nome-palestrante1",
+          "name": "Nome 1",
+          "type": "text-block",
+          "align": "left",
+          "color": "#fff8f3",
+          "content": "{{palestrante_1_nome}}",
+          "font_size": 38,
+          "font_family": "Roobert PRO TRIAL Medium",
+          "line_height": 1.4,
+          "vertical_align": "top",
+          "paragraph_spacing": 0
+        },
+        {
+          "h": 71,
+          "w": 400,
+          "x": 416,
+          "y": 604,
+          "id": "cargo-palestrante1",
+          "name": "Cargo 1",
+          "type": "text-block",
+          "align": "left",
+          "color": "#fff8f3",
+          "content": "{{palestrante_1_cargo}}",
+          "font_size": 28,
+          "font_family": "Roobert PRO TRIAL Light",
+          "line_height": 1.4,
+          "vertical_align": "top",
+          "paragraph_spacing": 0
+        },
+        {
+          "h": 214,
+          "w": 214,
+          "x": 163,
+          "y": 488,
+          "id": "foto-palestrante1",
+          "name": "Foto 1",
+          "type": "image",
+          "shape": "circle",
+          "border": {
+            "color": "#8e7b7b",
+            "width": 2
+          },
+          "source": {
+            "type": "placeholder",
+            "field": "palestrante_1_foto"
+          },
+          "blend_mode": "normal",
+          "crop_focus": "attention",
+          "resize_mode": "contain"
+        },
+        {
+          "h": 56,
+          "w": 400,
+          "x": 265,
+          "y": 769,
+          "id": "nome-palestrante2",
+          "name": "Nome 2",
+          "type": "text-block",
+          "align": "left",
+          "color": "#fff8f3",
+          "content": "{{palestrante_2_nome}}",
+          "font_size": 38,
+          "font_family": "Roobert PRO TRIAL Medium",
+          "line_height": 1.4,
+          "vertical_align": "top",
+          "paragraph_spacing": 0
+        },
+        {
+          "h": 71,
+          "w": 400,
+          "x": 265,
+          "y": 833,
+          "id": "cargo-palestrante2",
+          "name": "Cargo 2",
+          "type": "text-block",
+          "align": "left",
+          "color": "#fff8f3",
+          "content": "{{palestrante_2_cargo}}",
+          "font_size": 28,
+          "font_family": "Roobert PRO TRIAL Light",
+          "line_height": 1.4,
+          "vertical_align": "top",
+          "paragraph_spacing": 0
+        },
+        {
+          "h": 214,
+          "w": 214,
+          "x": 704,
+          "y": 717,
+          "id": "foto-palestrante2",
+          "name": "Foto 2",
+          "type": "image",
+          "shape": "circle",
+          "border": {
+            "color": "#8e7b7b",
+            "width": 2
+          },
+          "source": {
+            "type": "placeholder",
+            "field": "palestrante_2_foto"
+          },
+          "blend_mode": "normal",
+          "crop_focus": "attention",
+          "resize_mode": "contain"
+        },
+        {
+          "h": 56,
+          "w": 400,
+          "x": 416,
+          "y": 998,
+          "id": "nome-palestrante3",
+          "name": "Nome 3",
+          "type": "text-block",
+          "align": "left",
+          "color": "#fff8f3",
+          "content": "{{palestrante_3_nome}}",
+          "font_size": 38,
+          "font_family": "Roobert PRO TRIAL Medium",
+          "line_height": 1.4,
+          "vertical_align": "top",
+          "paragraph_spacing": 0
+        },
+        {
+          "h": 71,
+          "w": 400,
+          "x": 416,
+          "y": 1062,
+          "id": "cargo-palestrante3",
+          "name": "Cargo 3",
+          "type": "text-block",
+          "align": "left",
+          "color": "#fff8f3",
+          "content": "{{palestrante_3_cargo}}",
+          "font_size": 28,
+          "font_family": "Roobert PRO TRIAL Light",
+          "line_height": 1.4,
+          "vertical_align": "top",
+          "paragraph_spacing": 0
+        },
+        {
+          "h": 214,
+          "w": 214,
+          "x": 163,
+          "y": 946,
+          "id": "foto-palestrante3",
+          "name": "Foto 3",
+          "type": "image",
+          "shape": "circle",
+          "border": {
+            "color": "#8e7b7b",
+            "width": 2
+          },
+          "source": {
+            "type": "placeholder",
+            "field": "palestrante_3_foto"
+          },
+          "blend_mode": "normal",
+          "crop_focus": "attention",
+          "resize_mode": "contain"
+        },
+        {
+          "h": 85,
+          "w": 178,
+          "x": 326,
+          "y": 1220,
+          "id": "data",
+          "name": "Data",
+          "type": "text-block",
+          "align": "right",
+          "color": "#fff8f3",
+          "content": "{{data}}",
+          "font_size": 32,
+          "font_family": "Roobert PRO TRIAL Light",
+          "line_height": 1.4,
+          "vertical_align": "top",
+          "paragraph_spacing": 0
+        },
+        {
+          "h": 85,
+          "w": 400,
+          "x": 340,
+          "y": 1220,
+          "id": "separador-data-hora",
+          "name": "Separador",
+          "type": "text-block",
+          "align": "center",
+          "color": "#fff8f3",
+          "content": ".",
+          "font_size": 32,
+          "font_family": "Roobert PRO TRIAL Heavy",
+          "line_height": 1.4,
+          "vertical_align": "middle",
+          "paragraph_spacing": 0
+        },
+        {
+          "h": 85,
+          "w": 148,
+          "x": 586,
+          "y": 1220,
+          "id": "hora",
+          "name": "Hora",
+          "type": "text-block",
+          "align": "left",
+          "color": "#fff8f3",
+          "content": "{{horario}}",
+          "font_size": 32,
+          "font_family": "Roobert PRO TRIAL Light",
+          "line_height": 1.4,
+          "vertical_align": "top",
+          "paragraph_spacing": 0
+        },
+        {
+          "h": 64,
+          "w": 725,
+          "x": 178,
+          "y": 1365,
+          "id": "nome-local",
+          "name": "Nome do local",
+          "type": "text-block",
+          "align": "center",
+          "color": "#fff8f3",
+          "content": "{{local_nome}}",
+          "font_size": 34,
+          "font_family": "Roobert PRO TRIAL SemiBold",
+          "line_height": 1.4,
+          "vertical_align": "top",
+          "paragraph_spacing": 0
+        },
+        {
+          "h": 137,
+          "w": 530,
+          "x": 275,
+          "y": 1430,
+          "id": "endereco",
+          "name": "Endereço",
+          "type": "text-block",
+          "align": "center",
+          "color": "#fff8f3",
+          "content": "{{endereco}}",
+          "font_size": 32,
+          "font_family": "Roobert PRO TRIAL Light",
+          "line_height": 1.4,
+          "vertical_align": "top",
+          "paragraph_spacing": 0
+        },
+        {
+          "h": 200,
+          "w": 200,
+          "x": 440,
+          "y": 1629,
+          "id": "logo",
+          "name": "Logo",
+          "type": "image",
+          "source": {
+            "url": "https://solicitacoes.portalsvn.com.br/assets/2026-05/ogXfMae7-logo-svn.png",
+            "type": "static"
+          },
+          "blend_mode": "normal",
+          "resize_mode": "contain"
+        },
+        {
+          "h": 67,
+          "w": 729,
+          "x": 176,
+          "y": 86,
+          "id": "shape-pill-topo",
+          "fill": "#221b19",
+          "name": "Forma (topo)",
+          "type": "shape",
+          "shape": "rectangle",
+          "stroke": "#fff8f3",
+          "stroke_width": 0.1,
+          "border_radius": 20
+        },
+        {
+          "h": 207,
+          "w": 659,
+          "x": 259,
+          "y": 490,
+          "id": "card-palestrante1",
+          "fill": "#221b19",
+          "name": "Card 1",
+          "type": "shape",
+          "shape": "rectangle",
+          "stroke": "#8e7b7b",
+          "stroke_width": 1,
+          "border_radius": 60
+        },
+        {
+          "h": 207,
+          "w": 659,
+          "x": 163,
+          "y": 719,
+          "id": "card-palestrante2",
+          "fill": "#221b19",
+          "name": "Card 2",
+          "type": "shape",
+          "shape": "rectangle",
+          "stroke": "#8e7b7b",
+          "stroke_width": 1,
+          "border_radius": 60
+        },
+        {
+          "h": 207,
+          "w": 659,
+          "x": 259,
+          "y": 948,
+          "id": "card-palestrante3",
+          "fill": "#221b19",
+          "name": "Card 3",
+          "type": "shape",
+          "shape": "rectangle",
+          "stroke": "#8e7b7b",
+          "stroke_width": 1,
+          "border_radius": 60
+        },
+        {
+          "h": 67,
+          "w": 600,
+          "x": 240,
+          "y": 1200,
+          "id": "shape-pill-data",
+          "fill": "#221b19",
+          "name": "Forma (data/hora)",
+          "type": "shape",
+          "shape": "rectangle",
+          "stroke": "#fff8f3",
+          "stroke_width": 0.1,
+          "border_radius": 20
+        }
+      ]
+    }
+  },
+  {
+    "id": 35,
+    "variant_value": "4-stories",
+    "name": "4 Palestrantes - Stories (1080x1920)",
+    "config": {
+      "bg": {
+        "url": "https://solicitacoes.portalsvn.com.br/assets/2026-07/4cx5Tuuq-bg2.png",
+        "type": "static"
+      },
+      "tipo": "convite-evento",
+      "canvas": {
+        "width": 1080,
+        "height": 1920
+      },
+      "layers": [
+        {
+          "h": 56,
+          "w": 635,
+          "x": 223,
+          "y": 105,
+          "id": "tipo-evento",
+          "name": "Tipo de Evento",
+          "type": "text-block",
+          "align": "center",
+          "color": "#fff8f3",
+          "content": "evento {{tipo_evento}}",
+          "font_size": 26,
+          "font_family": "Roobert PRO TRIAL Light",
+          "line_height": 1.4,
+          "letter_spacing": 20,
+          "text_transform": "uppercase",
+          "vertical_align": "top",
+          "paragraph_spacing": 0
+        },
+        {
+          "h": 168,
+          "w": 835,
+          "x": 123,
+          "y": 244,
+          "id": "titulo",
+          "name": "Título",
+          "type": "text-block",
+          "align": "center",
+          "color": "#fff8f3",
+          "content": "{{titulo}}",
+          "font_size": 56,
+          "font_family": "Ivy Journal Light",
+          "line_height": 1.4,
+          "vertical_align": "top",
+          "paragraph_spacing": 0
+        },
+        {
+          "h": 56,
+          "w": 400,
+          "x": 416,
+          "y": 484,
+          "id": "nome-palestrante1",
+          "name": "Nome 1",
+          "type": "text-block",
+          "align": "left",
+          "color": "#fff8f3",
+          "content": "{{palestrante_1_nome}}",
+          "font_size": 38,
+          "font_family": "Roobert PRO TRIAL Medium",
+          "line_height": 1.4,
+          "vertical_align": "top",
+          "paragraph_spacing": 0
+        },
+        {
+          "h": 71,
+          "w": 400,
+          "x": 416,
+          "y": 548,
+          "id": "cargo-palestrante1",
+          "name": "Cargo 1",
+          "type": "text-block",
+          "align": "left",
+          "color": "#fff8f3",
+          "content": "{{palestrante_1_cargo}}",
+          "font_size": 28,
+          "font_family": "Roobert PRO TRIAL Light",
+          "line_height": 1.4,
+          "vertical_align": "top",
+          "paragraph_spacing": 0
+        },
+        {
+          "h": 214,
+          "w": 214,
+          "x": 163,
+          "y": 432,
+          "id": "foto-palestrante1",
+          "name": "Foto 1",
+          "type": "image",
+          "shape": "circle",
+          "border": {
+            "color": "#8e7b7b",
+            "width": 2
+          },
+          "source": {
+            "type": "placeholder",
+            "field": "palestrante_1_foto"
+          },
+          "blend_mode": "normal",
+          "crop_focus": "attention",
+          "resize_mode": "contain"
+        },
+        {
+          "h": 56,
+          "w": 400,
+          "x": 265,
+          "y": 713,
+          "id": "nome-palestrante2",
+          "name": "Nome 2",
+          "type": "text-block",
+          "align": "left",
+          "color": "#fff8f3",
+          "content": "{{palestrante_2_nome}}",
+          "font_size": 38,
+          "font_family": "Roobert PRO TRIAL Medium",
+          "line_height": 1.4,
+          "vertical_align": "top",
+          "paragraph_spacing": 0
+        },
+        {
+          "h": 71,
+          "w": 400,
+          "x": 265,
+          "y": 777,
+          "id": "cargo-palestrante2",
+          "name": "Cargo 2",
+          "type": "text-block",
+          "align": "left",
+          "color": "#fff8f3",
+          "content": "{{palestrante_2_cargo}}",
+          "font_size": 28,
+          "font_family": "Roobert PRO TRIAL Light",
+          "line_height": 1.4,
+          "vertical_align": "top",
+          "paragraph_spacing": 0
+        },
+        {
+          "h": 214,
+          "w": 214,
+          "x": 704,
+          "y": 661,
+          "id": "foto-palestrante2",
+          "name": "Foto 2",
+          "type": "image",
+          "shape": "circle",
+          "border": {
+            "color": "#8e7b7b",
+            "width": 2
+          },
+          "source": {
+            "type": "placeholder",
+            "field": "palestrante_2_foto"
+          },
+          "blend_mode": "normal",
+          "crop_focus": "attention",
+          "resize_mode": "contain"
+        },
+        {
+          "h": 56,
+          "w": 400,
+          "x": 416,
+          "y": 942,
+          "id": "nome-palestrante3",
+          "name": "Nome 3",
+          "type": "text-block",
+          "align": "left",
+          "color": "#fff8f3",
+          "content": "{{palestrante_3_nome}}",
+          "font_size": 38,
+          "font_family": "Roobert PRO TRIAL Medium",
+          "line_height": 1.4,
+          "vertical_align": "top",
+          "paragraph_spacing": 0
+        },
+        {
+          "h": 71,
+          "w": 400,
+          "x": 416,
+          "y": 1006,
+          "id": "cargo-palestrante3",
+          "name": "Cargo 3",
+          "type": "text-block",
+          "align": "left",
+          "color": "#fff8f3",
+          "content": "{{palestrante_3_cargo}}",
+          "font_size": 28,
+          "font_family": "Roobert PRO TRIAL Light",
+          "line_height": 1.4,
+          "vertical_align": "top",
+          "paragraph_spacing": 0
+        },
+        {
+          "h": 214,
+          "w": 214,
+          "x": 163,
+          "y": 890,
+          "id": "foto-palestrante3",
+          "name": "Foto 3",
+          "type": "image",
+          "shape": "circle",
+          "border": {
+            "color": "#8e7b7b",
+            "width": 2
+          },
+          "source": {
+            "type": "placeholder",
+            "field": "palestrante_3_foto"
+          },
+          "blend_mode": "normal",
+          "crop_focus": "attention",
+          "resize_mode": "contain"
+        },
+        {
+          "h": 56,
+          "w": 400,
+          "x": 265,
+          "y": 1171,
+          "id": "nome-palestrante4",
+          "name": "Nome 4",
+          "type": "text-block",
+          "align": "left",
+          "color": "#fff8f3",
+          "content": "{{palestrante_4_nome}}",
+          "font_size": 38,
+          "font_family": "Roobert PRO TRIAL Medium",
+          "line_height": 1.4,
+          "vertical_align": "top",
+          "paragraph_spacing": 0
+        },
+        {
+          "h": 71,
+          "w": 400,
+          "x": 265,
+          "y": 1235,
+          "id": "cargo-palestrante4",
+          "name": "Cargo 4",
+          "type": "text-block",
+          "align": "left",
+          "color": "#fff8f3",
+          "content": "{{palestrante_4_cargo}}",
+          "font_size": 28,
+          "font_family": "Roobert PRO TRIAL Light",
+          "line_height": 1.4,
+          "vertical_align": "top",
+          "paragraph_spacing": 0
+        },
+        {
+          "h": 214,
+          "w": 214,
+          "x": 704,
+          "y": 1119,
+          "id": "foto-palestrante4",
+          "name": "Foto 4",
+          "type": "image",
+          "shape": "circle",
+          "border": {
+            "color": "#8e7b7b",
+            "width": 2
+          },
+          "source": {
+            "type": "placeholder",
+            "field": "palestrante_4_foto"
+          },
+          "blend_mode": "normal",
+          "crop_focus": "attention",
+          "resize_mode": "contain"
+        },
+        {
+          "h": 85,
+          "w": 178,
+          "x": 326,
+          "y": 1369,
+          "id": "data",
+          "name": "Data",
+          "type": "text-block",
+          "align": "right",
+          "color": "#fff8f3",
+          "content": "{{data}}",
+          "font_size": 32,
+          "font_family": "Roobert PRO TRIAL Light",
+          "line_height": 1.4,
+          "vertical_align": "top",
+          "paragraph_spacing": 0
+        },
+        {
+          "h": 64,
+          "w": 397,
+          "x": 342,
+          "y": 1367,
+          "id": "separador-data-hora",
+          "name": "Separador",
+          "type": "text-block",
+          "align": "center",
+          "color": "#fff8f3",
+          "content": ".",
+          "font_size": 32,
+          "font_family": "Roobert PRO TRIAL Heavy",
+          "line_height": 1.4,
+          "vertical_align": "middle",
+          "paragraph_spacing": 0
+        },
+        {
+          "h": 85,
+          "w": 148,
+          "x": 586,
+          "y": 1369,
+          "id": "hora",
+          "name": "Hora",
+          "type": "text-block",
+          "align": "left",
+          "color": "#fff8f3",
+          "content": "{{horario}}",
+          "font_size": 32,
+          "font_family": "Roobert PRO TRIAL Light",
+          "line_height": 1.4,
+          "vertical_align": "top",
+          "paragraph_spacing": 0
+        },
+        {
+          "h": 64,
+          "w": 725,
+          "x": 178,
+          "y": 1489,
+          "id": "nome-local",
+          "name": "Nome do local",
+          "type": "text-block",
+          "align": "center",
+          "color": "#fff8f3",
+          "content": "{{local_nome}}",
+          "font_size": 34,
+          "font_family": "Roobert PRO TRIAL SemiBold",
+          "line_height": 1.4,
+          "vertical_align": "top",
+          "paragraph_spacing": 0
+        },
+        {
+          "h": 115,
+          "w": 639,
+          "x": 221,
+          "y": 1586,
+          "id": "endereco",
+          "name": "Endereço",
+          "type": "text-block",
+          "align": "center",
+          "color": "#fff8f3",
+          "content": "{{endereco}}",
+          "font_size": 32,
+          "font_family": "Roobert PRO TRIAL Light",
+          "line_height": 1.4,
+          "vertical_align": "top",
+          "paragraph_spacing": 0
+        },
+        {
+          "h": 200,
+          "w": 200,
+          "x": 440,
+          "y": 1702,
+          "id": "logo",
+          "name": "Logo",
+          "type": "image",
+          "source": {
+            "url": "https://solicitacoes.portalsvn.com.br/assets/2026-05/ogXfMae7-logo-svn.png",
+            "type": "static"
+          },
+          "blend_mode": "normal",
+          "resize_mode": "contain"
+        },
+        {
+          "h": 67,
+          "w": 729,
+          "x": 176,
+          "y": 86,
+          "id": "shape-pill-topo",
+          "fill": "#221b19",
+          "name": "Forma (topo)",
+          "type": "shape",
+          "shape": "rectangle",
+          "stroke": "#fff8f3",
+          "stroke_width": 0.1,
+          "border_radius": 20
+        },
+        {
+          "h": 207,
+          "w": 659,
+          "x": 259,
+          "y": 434,
+          "id": "card-palestrante1",
+          "fill": "#221b19",
+          "name": "Card 1",
+          "type": "shape",
+          "shape": "rectangle",
+          "stroke": "#8e7b7b",
+          "stroke_width": 1,
+          "border_radius": 60
+        },
+        {
+          "h": 207,
+          "w": 659,
+          "x": 163,
+          "y": 663,
+          "id": "card-palestrante2",
+          "fill": "#221b19",
+          "name": "Card 2",
+          "type": "shape",
+          "shape": "rectangle",
+          "stroke": "#8e7b7b",
+          "stroke_width": 1,
+          "border_radius": 60
+        },
+        {
+          "h": 207,
+          "w": 659,
+          "x": 259,
+          "y": 892,
+          "id": "card-palestrante3",
+          "fill": "#221b19",
+          "name": "Card 3",
+          "type": "shape",
+          "shape": "rectangle",
+          "stroke": "#8e7b7b",
+          "stroke_width": 1,
+          "border_radius": 60
+        },
+        {
+          "h": 207,
+          "w": 659,
+          "x": 163,
+          "y": 1121,
+          "id": "card-palestrante4",
+          "fill": "#221b19",
+          "name": "Card 4",
+          "type": "shape",
+          "shape": "rectangle",
+          "stroke": "#8e7b7b",
+          "stroke_width": 1,
+          "border_radius": 60
+        },
+        {
+          "h": 67,
+          "w": 600,
+          "x": 240,
+          "y": 1360,
+          "id": "shape-pill-data",
+          "fill": "#221b19",
+          "name": "Forma (data/hora)",
+          "type": "shape",
+          "shape": "rectangle",
+          "stroke": "#fff8f3",
+          "stroke_width": 0.1,
+          "border_radius": 20
+        }
+      ]
+    }
+  },
+  {
+    "id": 31,
+    "variant_value": "2-feed",
+    "name": "2 Palestrantes - Feed (1080x1920)",
+    "config": {
+      "bg": {
+        "url": "https://solicitacoes.portalsvn.com.br/assets/2026-07/8SztD2cH-bg-feed.png",
+        "type": "static"
+      },
+      "tipo": "convite-evento",
+      "canvas": {
+        "width": 1080,
+        "height": 1350
+      },
+      "layers": [
+        {
+          "h": 56,
+          "w": 635,
+          "x": 223,
+          "y": 108,
+          "id": "tipo-evento",
+          "name": "Tipo de Evento",
+          "type": "text-block",
+          "align": "center",
+          "color": "#fff8f3",
+          "content": "evento {{tipo_evento}}",
+          "font_size": 25,
+          "font_family": "Roobert PRO TRIAL Light",
+          "line_height": 1.4,
+          "letter_spacing": 20,
+          "text_transform": "uppercase",
+          "vertical_align": "top",
+          "paragraph_spacing": 0
+        },
+        {
+          "h": 67,
+          "w": 729,
+          "x": 176,
+          "y": 86,
+          "id": "shape-pill-topo",
+          "fill": "#221b19",
+          "name": "Forma",
+          "type": "shape",
+          "shape": "rectangle",
+          "stroke": "#fff8f3",
+          "stroke_width": 0.1,
+          "border_radius": 20
+        },
+        {
+          "h": 163,
+          "w": 717,
+          "x": 182,
+          "y": 200,
+          "id": "titulo",
+          "name": "Título",
+          "type": "text-block",
+          "align": "center",
+          "color": "#fff8f3",
+          "content": "{{titulo}}",
+          "font_size": 56,
+          "font_family": "Ivy Journal Light",
+          "line_height": 1.4,
+          "vertical_align": "top",
+          "paragraph_spacing": 0
+        },
+        {
+          "h": 180,
+          "w": 180,
+          "x": 162,
+          "y": 390,
+          "id": "foto-palestrante1",
+          "name": "Foto 1",
+          "type": "image",
+          "shape": "circle",
+          "source": {
+            "type": "placeholder",
+            "field": "palestrante_1_foto"
+          },
+          "blend_mode": "normal",
+          "crop_focus": "attention",
+          "resize_mode": "contain"
+        },
+        {
+          "h": 56,
+          "w": 400,
+          "x": 427,
+          "y": 435,
+          "id": "nome-palestrante1",
+          "name": "Nome 1",
+          "type": "text-block",
+          "align": "left",
+          "color": "#fff8f3",
+          "content": "{{palestrante_1_nome}}",
+          "font_size": 38,
+          "font_family": "Roobert PRO TRIAL Medium",
+          "line_height": 1.4,
+          "vertical_align": "top",
+          "paragraph_spacing": 0
+        },
+        {
+          "h": 71,
+          "w": 400,
+          "x": 427,
+          "y": 490,
+          "id": "cargo-palestrante1",
+          "name": "Cargo 1",
+          "type": "text-block",
+          "align": "left",
+          "color": "#fff8f3",
+          "content": "{{palestrante_1_cargo}}",
+          "font_size": 26,
+          "font_family": "Roobert PRO TRIAL Light",
+          "line_height": 1.4,
+          "vertical_align": "top",
+          "paragraph_spacing": 0
+        },
+        {
+          "h": 180,
+          "w": 703,
+          "x": 215,
+          "y": 390,
+          "id": "card-palestrante1",
+          "fill": "#221b19",
+          "name": "Forma",
+          "type": "shape",
+          "shape": "rectangle",
+          "stroke": "#8e7b7b",
+          "stroke_width": 1,
+          "border_radius": 60
+        },
+        {
+          "h": 180,
+          "w": 180,
+          "x": 738,
+          "y": 610,
+          "id": "foto-palestrante2",
+          "name": "Foto 2",
+          "type": "image",
+          "shape": "circle",
+          "source": {
+            "type": "placeholder",
+            "field": "palestrante_2_foto"
+          },
+          "blend_mode": "normal",
+          "crop_focus": "attention",
+          "resize_mode": "contain"
+        },
+        {
+          "h": 56,
+          "w": 400,
+          "x": 253,
+          "y": 655,
+          "id": "nome-palestrante2",
+          "name": "Nome 2",
+          "type": "text-block",
+          "align": "left",
+          "color": "#fff8f3",
+          "content": "{{palestrante_2_nome}}",
+          "font_size": 38,
+          "font_family": "Roobert PRO TRIAL Medium",
+          "line_height": 1.4,
+          "vertical_align": "top",
+          "paragraph_spacing": 0
+        },
+        {
+          "h": 71,
+          "w": 400,
+          "x": 253,
+          "y": 710,
+          "id": "cargo-palestrante2",
+          "name": "Cargo 2",
+          "type": "text-block",
+          "align": "left",
+          "color": "#fff8f3",
+          "content": "{{palestrante_2_cargo}}",
+          "font_size": 26,
+          "font_family": "Roobert PRO TRIAL Light",
+          "line_height": 1.4,
+          "vertical_align": "top",
+          "paragraph_spacing": 0
+        },
+        {
+          "h": 180,
+          "w": 703,
+          "x": 162,
+          "y": 610,
+          "id": "card-palestrante2",
+          "fill": "#221b19",
+          "name": "Forma (cópia)",
+          "type": "shape",
+          "shape": "rectangle",
+          "stroke": "#8e7b7b",
+          "stroke_width": 1,
+          "border_radius": 60
+        },
+        {
+          "h": 85,
+          "w": 178,
+          "x": 326,
+          "y": 850,
+          "id": "data",
+          "name": "Data",
+          "type": "text-block",
+          "align": "right",
+          "color": "#fff8f3",
+          "content": "{{data}}",
+          "font_size": 27,
+          "font_family": "Roobert PRO TRIAL Light",
+          "line_height": 1.4,
+          "vertical_align": "top",
+          "paragraph_spacing": 0
+        },
+        {
+          "h": 85,
+          "w": 148,
+          "x": 586,
+          "y": 850,
+          "id": "hora",
+          "name": "Hora",
+          "type": "text-block",
+          "align": "left",
+          "color": "#fff8f3",
+          "content": "{{horario}}",
+          "font_size": 27,
+          "font_family": "Roobert PRO TRIAL Light",
+          "line_height": 1.4,
+          "vertical_align": "top",
+          "paragraph_spacing": 0
+        },
+        {
+          "h": 67,
+          "w": 600,
+          "x": 240,
+          "y": 830,
+          "id": "shape-pill-data",
+          "fill": "#221b19",
+          "name": "Forma (cópia)",
+          "type": "shape",
+          "shape": "rectangle",
+          "stroke": "#fff8f3",
+          "stroke_width": 0.1,
+          "border_radius": 20
+        },
+        {
+          "h": 75,
+          "w": 500,
+          "x": 290,
+          "y": 940,
+          "id": "nome-local",
+          "name": "Nome do Local",
+          "type": "text-block",
+          "align": "center",
+          "color": "#fff8f3",
+          "content": "{{local_nome}}",
+          "font_size": 32,
+          "font_family": "Roobert PRO TRIAL SemiBold",
+          "line_height": 1.4,
+          "vertical_align": "top",
+          "paragraph_spacing": 0
+        },
+        {
+          "h": 137,
+          "w": 530,
+          "x": 275,
+          "y": 1020,
+          "id": "endereco",
+          "name": "Endereço",
+          "type": "text-block",
+          "align": "center",
+          "color": "#fff8f3",
+          "content": "{{endereco}}",
+          "font_size": 30,
+          "font_family": "Roobert PRO TRIAL Light",
+          "line_height": 1.4,
+          "vertical_align": "top",
+          "paragraph_spacing": 0
+        },
+        {
+          "h": 150,
+          "w": 150,
+          "x": 465,
+          "y": 1150,
+          "id": "logo",
+          "name": "Logo",
+          "type": "image",
+          "source": {
+            "url": "https://solicitacoes.portalsvn.com.br/assets/2026-05/ogXfMae7-logo-svn.png",
+            "type": "static"
+          },
+          "blend_mode": "normal",
+          "resize_mode": "contain"
+        }
+      ]
+    }
+  },
+  {
+    "id": 39,
+    "variant_value": "4-feed",
+    "name": "4 Palestrante - Feed (1080x1350)",
+    "config": {
+      "bg": {
+        "url": "https://solicitacoes.portalsvn.com.br/assets/2026-07/8SztD2cH-bg-feed.png",
+        "type": "static"
+      },
+      "tipo": "convite-evento",
+      "canvas": {
+        "width": 1080,
+        "height": 1350
+      },
+      "layers": [
+        {
+          "h": 56,
+          "w": 635,
+          "x": 223,
+          "y": 108,
+          "id": "tipo-evento",
+          "name": "Tipo de Evento",
+          "type": "text-block",
+          "align": "center",
+          "color": "#fff8f3",
+          "content": "evento {{tipo_evento}}",
+          "font_size": 25,
+          "font_family": "Roobert PRO TRIAL Light",
+          "line_height": 1.4,
+          "letter_spacing": 20,
+          "text_transform": "uppercase",
+          "vertical_align": "top",
+          "paragraph_spacing": 0
+        },
+        {
+          "h": 140,
+          "w": 717,
+          "x": 182,
+          "y": 190,
+          "id": "titulo",
+          "name": "Título",
+          "type": "text-block",
+          "align": "center",
+          "color": "#fff8f3",
+          "content": "{{titulo}}",
+          "font_size": 56,
+          "font_family": "Ivy Journal Light",
+          "line_height": 1.4,
+          "vertical_align": "top",
+          "paragraph_spacing": 0
+        },
+        {
+          "h": 56,
+          "w": 400,
+          "x": 427,
+          "y": 375,
+          "id": "nome-palestrante1",
+          "name": "Nome 1",
+          "type": "text-block",
+          "align": "left",
+          "color": "#fff8f3",
+          "content": "{{palestrante_1_nome}}",
+          "font_size": 36,
+          "font_family": "Roobert PRO TRIAL Medium",
+          "line_height": 1.4,
+          "vertical_align": "top",
+          "paragraph_spacing": 0
+        },
+        {
+          "h": 71,
+          "w": 400,
+          "x": 427,
+          "y": 425,
+          "id": "cargo-palestrante1",
+          "name": "Cargo 1",
+          "type": "text-block",
+          "align": "left",
+          "color": "#fff8f3",
+          "content": "{{palestrante_1_cargo}}",
+          "font_size": 24,
+          "font_family": "Roobert PRO TRIAL Light",
+          "line_height": 1.4,
+          "vertical_align": "top",
+          "paragraph_spacing": 0
+        },
+        {
+          "h": 150,
+          "w": 150,
+          "x": 162,
+          "y": 340,
+          "id": "foto-palestrante1",
+          "name": "Foto 1",
+          "type": "image",
+          "shape": "circle",
+          "source": {
+            "type": "placeholder",
+            "field": "palestrante_1_foto"
+          },
+          "blend_mode": "normal",
+          "crop_focus": "attention",
+          "resize_mode": "contain"
+        },
+        {
+          "h": 56,
+          "w": 400,
+          "x": 253,
+          "y": 535,
+          "id": "nome-palestrante2",
+          "name": "Nome 2",
+          "type": "text-block",
+          "align": "left",
+          "color": "#fff8f3",
+          "content": "{{palestrante_2_nome}}",
+          "font_size": 36,
+          "font_family": "Roobert PRO TRIAL Medium",
+          "line_height": 1.4,
+          "vertical_align": "top",
+          "paragraph_spacing": 0
+        },
+        {
+          "h": 71,
+          "w": 400,
+          "x": 253,
+          "y": 585,
+          "id": "cargo-palestrante2",
+          "name": "Cargo 2",
+          "type": "text-block",
+          "align": "left",
+          "color": "#fff8f3",
+          "content": "{{palestrante_2_cargo}}",
+          "font_size": 24,
+          "font_family": "Roobert PRO TRIAL Light",
+          "line_height": 1.4,
+          "vertical_align": "top",
+          "paragraph_spacing": 0
+        },
+        {
+          "h": 150,
+          "w": 150,
+          "x": 768,
+          "y": 500,
+          "id": "foto-palestrante2",
+          "name": "Foto 2",
+          "type": "image",
+          "shape": "circle",
+          "source": {
+            "type": "placeholder",
+            "field": "palestrante_2_foto"
+          },
+          "blend_mode": "normal",
+          "crop_focus": "attention",
+          "resize_mode": "contain"
+        },
+        {
+          "h": 56,
+          "w": 400,
+          "x": 427,
+          "y": 695,
+          "id": "nome-palestrante3",
+          "name": "Nome 3",
+          "type": "text-block",
+          "align": "left",
+          "color": "#fff8f3",
+          "content": "{{palestrante_3_nome}}",
+          "font_size": 36,
+          "font_family": "Roobert PRO TRIAL Medium",
+          "line_height": 1.4,
+          "vertical_align": "top",
+          "paragraph_spacing": 0
+        },
+        {
+          "h": 71,
+          "w": 400,
+          "x": 427,
+          "y": 745,
+          "id": "cargo-palestrante3",
+          "name": "Cargo 3",
+          "type": "text-block",
+          "align": "left",
+          "color": "#fff8f3",
+          "content": "{{palestrante_3_cargo}}",
+          "font_size": 24,
+          "font_family": "Roobert PRO TRIAL Light",
+          "line_height": 1.4,
+          "vertical_align": "top",
+          "paragraph_spacing": 0
+        },
+        {
+          "h": 150,
+          "w": 150,
+          "x": 162,
+          "y": 660,
+          "id": "foto-palestrante3",
+          "name": "Foto 3",
+          "type": "image",
+          "shape": "circle",
+          "source": {
+            "type": "placeholder",
+            "field": "palestrante_3_foto"
+          },
+          "blend_mode": "normal",
+          "crop_focus": "attention",
+          "resize_mode": "contain"
+        },
+        {
+          "h": 56,
+          "w": 400,
+          "x": 253,
+          "y": 855,
+          "id": "nome-palestrante4",
+          "name": "Nome 4",
+          "type": "text-block",
+          "align": "left",
+          "color": "#fff8f3",
+          "content": "{{palestrante_4_nome}}",
+          "font_size": 36,
+          "font_family": "Roobert PRO TRIAL Medium",
+          "line_height": 1.4,
+          "vertical_align": "top",
+          "paragraph_spacing": 0
+        },
+        {
+          "h": 71,
+          "w": 400,
+          "x": 253,
+          "y": 905,
+          "id": "cargo-palestrante4",
+          "name": "Cargo 4",
+          "type": "text-block",
+          "align": "left",
+          "color": "#fff8f3",
+          "content": "{{palestrante_4_cargo}}",
+          "font_size": 24,
+          "font_family": "Roobert PRO TRIAL Light",
+          "line_height": 1.4,
+          "vertical_align": "top",
+          "paragraph_spacing": 0
+        },
+        {
+          "h": 150,
+          "w": 150,
+          "x": 768,
+          "y": 820,
+          "id": "foto-palestrante4",
+          "name": "Foto 4",
+          "type": "image",
+          "shape": "circle",
+          "source": {
+            "type": "placeholder",
+            "field": "palestrante_4_foto"
+          },
+          "blend_mode": "normal",
+          "crop_focus": "attention",
+          "resize_mode": "contain"
+        },
+        {
+          "h": 85,
+          "w": 178,
+          "x": 326,
+          "y": 1000,
+          "id": "data",
+          "name": "Data",
+          "type": "text-block",
+          "align": "right",
+          "color": "#fff8f3",
+          "content": "{{data}}",
+          "font_size": 27,
+          "font_family": "Roobert PRO TRIAL Light",
+          "line_height": 1.4,
+          "vertical_align": "top",
+          "paragraph_spacing": 0
+        },
+        {
+          "h": 85,
+          "w": 400,
+          "x": 340,
+          "y": 1000,
+          "id": "separador-data-hora",
+          "name": "Separador",
+          "type": "text-block",
+          "align": "center",
+          "color": "#fff8f3",
+          "content": ".",
+          "font_size": 27,
+          "font_family": "Roobert PRO TRIAL Heavy",
+          "line_height": 1.4,
+          "vertical_align": "middle",
+          "paragraph_spacing": 0
+        },
+        {
+          "h": 85,
+          "w": 148,
+          "x": 586,
+          "y": 1000,
+          "id": "hora",
+          "name": "Hora",
+          "type": "text-block",
+          "align": "left",
+          "color": "#fff8f3",
+          "content": "{{horario}}",
+          "font_size": 27,
+          "font_family": "Roobert PRO TRIAL Light",
+          "line_height": 1.4,
+          "vertical_align": "top",
+          "paragraph_spacing": 0
+        },
+        {
+          "h": 75,
+          "w": 500,
+          "x": 290,
+          "y": 1078,
+          "id": "nome-local",
+          "name": "Nome do Local",
+          "type": "text-block",
+          "align": "center",
+          "color": "#fff8f3",
+          "content": "{{local_nome}}",
+          "font_size": 32,
+          "font_family": "Roobert PRO TRIAL SemiBold",
+          "line_height": 1.4,
+          "vertical_align": "top",
+          "paragraph_spacing": 0
+        },
+        {
+          "h": 90,
+          "w": 530,
+          "x": 275,
+          "y": 1140,
+          "id": "endereco",
+          "name": "Endereço",
+          "type": "text-block",
+          "align": "center",
+          "color": "#fff8f3",
+          "content": "{{endereco}}",
+          "font_size": 30,
+          "font_family": "Roobert PRO TRIAL Light",
+          "line_height": 1.4,
+          "vertical_align": "top",
+          "paragraph_spacing": 0
+        },
+        {
+          "h": 120,
+          "w": 120,
+          "x": 465,
+          "y": 1215,
+          "id": "logo",
+          "name": "Logo",
+          "type": "image",
+          "source": {
+            "url": "https://solicitacoes.portalsvn.com.br/assets/2026-05/ogXfMae7-logo-svn.png",
+            "type": "static"
+          },
+          "blend_mode": "normal",
+          "resize_mode": "contain"
+        },
+        {
+          "h": 67,
+          "w": 729,
+          "x": 176,
+          "y": 86,
+          "id": "shape-pill-topo",
+          "fill": "#221b19",
+          "name": "Forma (topo)",
+          "type": "shape",
+          "shape": "rectangle",
+          "stroke": "#fff8f3",
+          "stroke_width": 0.1,
+          "border_radius": 20
+        },
+        {
+          "h": 140,
+          "w": 703,
+          "x": 215,
+          "y": 345,
+          "id": "card-palestrante1",
+          "fill": "#221b19",
+          "name": "Card 1",
+          "type": "shape",
+          "shape": "rectangle",
+          "stroke": "#8e7b7b",
+          "stroke_width": 1,
+          "border_radius": 60
+        },
+        {
+          "h": 140,
+          "w": 703,
+          "x": 162,
+          "y": 505,
+          "id": "card-palestrante2",
+          "fill": "#221b19",
+          "name": "Card 2",
+          "type": "shape",
+          "shape": "rectangle",
+          "stroke": "#8e7b7b",
+          "stroke_width": 1,
+          "border_radius": 60
+        },
+        {
+          "h": 140,
+          "w": 703,
+          "x": 215,
+          "y": 665,
+          "id": "card-palestrante3",
+          "fill": "#221b19",
+          "name": "Card 3",
+          "type": "shape",
+          "shape": "rectangle",
+          "stroke": "#8e7b7b",
+          "stroke_width": 1,
+          "border_radius": 60
+        },
+        {
+          "h": 140,
+          "w": 703,
+          "x": 162,
+          "y": 825,
+          "id": "card-palestrante4",
+          "fill": "#221b19",
+          "name": "Card 4",
+          "type": "shape",
+          "shape": "rectangle",
+          "stroke": "#8e7b7b",
+          "stroke_width": 1,
+          "border_radius": 60
+        },
+        {
+          "h": 67,
+          "w": 600,
+          "x": 240,
+          "y": 985,
+          "id": "shape-pill-data",
+          "fill": "#221b19",
+          "name": "Forma (data/hora)",
+          "type": "shape",
+          "shape": "rectangle",
+          "stroke": "#fff8f3",
+          "stroke_width": 0.1,
+          "border_radius": 20
+        }
+      ]
+    }
+  },
+  {
+    "id": 32,
+    "variant_value": "2-quadrado",
+    "name": "2 Palestrantes - E-mail",
+    "config": {
+      "bg": {
+        "url": "https://solicitacoes.portalsvn.com.br/assets/2026-07/pvnqru9Y-mail.png",
+        "type": "static"
+      },
+      "tipo": "convite-evento",
+      "canvas": {
+        "width": 600,
+        "height": 400
+      },
+      "layers": [
+        {
+          "h": 23,
+          "w": 336,
+          "x": 45,
+          "y": 50,
+          "id": "tipo-evento",
+          "name": "Tipo de Evento",
+          "type": "text-block",
+          "align": "left",
+          "color": "#fff8f3",
+          "content": "Evento {{tipo_evento}}",
+          "font_size": 7,
+          "font_family": "Roobert PRO TRIAL Light",
+          "line_height": 1.4,
+          "letter_spacing": 10,
+          "text_transform": "uppercase",
+          "vertical_align": "top",
+          "paragraph_spacing": 0
+        },
+        {
+          "h": 0.5,
+          "w": 244,
+          "x": 301,
+          "y": 56,
+          "id": "linha-tipo",
+          "fill": "#fff8f3",
+          "name": "Forma",
+          "type": "shape",
+          "shape": "rectangle",
+          "stroke": "",
+          "stroke_width": 0,
+          "border_radius": 0
+        },
+        {
+          "h": 70,
+          "w": 70,
+          "x": 450,
+          "y": 100,
+          "id": "foto-palestrante1",
+          "name": "Foto 1",
+          "type": "image",
+          "shape": "circle",
+          "border": {
+            "color": "#ffffff",
+            "width": 1
+          },
+          "source": {
+            "type": "placeholder",
+            "field": "palestrante_1_foto"
+          },
+          "blend_mode": "normal",
+          "crop_focus": "attention",
+          "resize_mode": "contain"
+        },
+        {
+          "h": 199,
+          "w": 312,
+          "x": 45,
+          "y": 116,
+          "id": "titulo",
+          "name": "Título",
+          "type": "text-block",
+          "align": "left",
+          "color": "#ffffff",
+          "content": "{{titulo}}",
+          "font_size": 32,
+          "font_family": "Ivy Journal Light",
+          "line_height": 1.4,
+          "vertical_align": "middle",
+          "paragraph_spacing": 0
+        },
+        {
+          "h": 20,
+          "w": 150,
+          "x": 410,
+          "y": 175,
+          "id": "nome-palestrante1",
+          "name": "Nome 1",
+          "type": "text-block",
+          "align": "center",
+          "color": "#fff8f3",
+          "content": "{{palestrante_1_nome}}",
+          "font_size": 14,
+          "font_family": "Roobert PRO TRIAL SemiBold",
+          "line_height": 1.4,
+          "vertical_align": "top",
+          "paragraph_spacing": 0
+        },
+        {
+          "h": 20,
+          "w": 150,
+          "x": 410,
+          "y": 195,
+          "id": "cargo-palestrante1",
+          "name": "Cargo 1",
+          "type": "text-block",
+          "align": "center",
+          "color": "#fff8f3",
+          "content": "{{palestrante_1_cargo}}",
+          "font_size": 12,
+          "font_family": "Roobert PRO TRIAL Light",
+          "line_height": 1.4,
+          "vertical_align": "top",
+          "paragraph_spacing": 0
+        },
+        {
+          "h": 70,
+          "w": 70,
+          "x": 450,
+          "y": 220,
+          "id": "foto-palestrante2",
+          "name": "Foto 2",
+          "type": "image",
+          "shape": "circle",
+          "border": {
+            "color": "#ffffff",
+            "width": 1
+          },
+          "source": {
+            "type": "placeholder",
+            "field": "palestrante_2_foto"
+          },
+          "blend_mode": "normal",
+          "crop_focus": "attention",
+          "resize_mode": "contain"
+        },
+        {
+          "h": 20,
+          "w": 150,
+          "x": 410,
+          "y": 295,
+          "id": "nome-palestrante2",
+          "name": "Nome 2",
+          "type": "text-block",
+          "align": "center",
+          "color": "#fff8f3",
+          "content": "{{palestrante_2_nome}}",
+          "font_size": 14,
+          "font_family": "Roobert PRO TRIAL SemiBold",
+          "line_height": 1.4,
+          "vertical_align": "top",
+          "paragraph_spacing": 0
+        },
+        {
+          "h": 20,
+          "w": 150,
+          "x": 410,
+          "y": 315,
+          "id": "cargo-palestrante2",
+          "name": "Cargo 2",
+          "type": "text-block",
+          "align": "center",
+          "color": "#fff8f3",
+          "content": "{{palestrante_2_cargo}}",
+          "font_size": 12,
+          "font_family": "Roobert PRO TRIAL Light",
+          "line_height": 1.4,
+          "vertical_align": "top",
+          "paragraph_spacing": 0
+        }
+      ]
+    }
+  },
+  {
+    "id": 40,
+    "variant_value": "4-quadrado",
+    "name": "4 Palestrantes - Quadrado (600x400)",
+    "config": {
+      "bg": {
+        "url": "https://solicitacoes.portalsvn.com.br/assets/2026-07/pvnqru9Y-mail.png",
+        "type": "static"
+      },
+      "tipo": "convite-evento",
+      "canvas": {
+        "width": 600,
+        "height": 400
+      },
+      "layers": [
+        {
+          "h": 23,
+          "w": 336,
+          "x": 45,
+          "y": 50,
+          "id": "tipo-evento",
+          "name": "Tipo de Evento",
+          "type": "text-block",
+          "align": "left",
+          "color": "#fff8f3",
+          "content": "Evento {{tipo_evento}}",
+          "font_size": 7,
+          "font_family": "Roobert PRO TRIAL Light",
+          "line_height": 1.4,
+          "letter_spacing": 10,
+          "text_transform": "uppercase",
+          "vertical_align": "top",
+          "paragraph_spacing": 0
+        },
+        {
+          "h": 0.5,
+          "w": 244,
+          "x": 301,
+          "y": 56,
+          "id": "linha-tipo",
+          "fill": "#fff8f3",
+          "name": "Forma",
+          "type": "shape",
+          "shape": "rectangle",
+          "stroke": "",
+          "stroke_width": 0,
+          "border_radius": 0
+        },
+        {
+          "h": 199,
+          "w": 312,
+          "x": 45,
+          "y": 116,
+          "id": "titulo",
+          "name": "Título",
+          "type": "text-block",
+          "align": "left",
+          "color": "#ffffff",
+          "content": "{{titulo}}",
+          "font_size": 32,
+          "font_family": "Ivy Journal Light",
+          "line_height": 1.4,
+          "vertical_align": "middle",
+          "paragraph_spacing": 0
+        },
+        {
+          "h": 20,
+          "w": 150,
+          "x": 410,
+          "y": 85,
+          "id": "nome-palestrante1",
+          "name": "Nome 1",
+          "type": "text-block",
+          "align": "center",
+          "color": "#fff8f3",
+          "content": "{{palestrante_1_nome}}",
+          "font_size": 11,
+          "font_family": "Roobert PRO TRIAL SemiBold",
+          "line_height": 1.4,
+          "vertical_align": "top",
+          "paragraph_spacing": 0
+        },
+        {
+          "h": 20,
+          "w": 150,
+          "x": 410,
+          "y": 105,
+          "id": "cargo-palestrante1",
+          "name": "Cargo 1",
+          "type": "text-block",
+          "align": "center",
+          "color": "#fff8f3",
+          "content": "{{palestrante_1_cargo}}",
+          "font_size": 9,
+          "font_family": "Roobert PRO TRIAL Light",
+          "line_height": 1.4,
+          "vertical_align": "top",
+          "paragraph_spacing": 0
+        },
+        {
+          "h": 52,
+          "w": 52,
+          "x": 459,
+          "y": 28,
+          "id": "foto-palestrante1",
+          "name": "Foto 1",
+          "type": "image",
+          "shape": "circle",
+          "border": {
+            "color": "#ffffff",
+            "width": 1
+          },
+          "source": {
+            "type": "placeholder",
+            "field": "palestrante_1_foto"
+          },
+          "blend_mode": "normal",
+          "crop_focus": "attention",
+          "resize_mode": "contain"
+        },
+        {
+          "h": 20,
+          "w": 150,
+          "x": 410,
+          "y": 173,
+          "id": "nome-palestrante2",
+          "name": "Nome 2",
+          "type": "text-block",
+          "align": "center",
+          "color": "#fff8f3",
+          "content": "{{palestrante_2_nome}}",
+          "font_size": 11,
+          "font_family": "Roobert PRO TRIAL SemiBold",
+          "line_height": 1.4,
+          "vertical_align": "top",
+          "paragraph_spacing": 0
+        },
+        {
+          "h": 20,
+          "w": 150,
+          "x": 410,
+          "y": 193,
+          "id": "cargo-palestrante2",
+          "name": "Cargo 2",
+          "type": "text-block",
+          "align": "center",
+          "color": "#fff8f3",
+          "content": "{{palestrante_2_cargo}}",
+          "font_size": 9,
+          "font_family": "Roobert PRO TRIAL Light",
+          "line_height": 1.4,
+          "vertical_align": "top",
+          "paragraph_spacing": 0
+        },
+        {
+          "h": 52,
+          "w": 52,
+          "x": 459,
+          "y": 116,
+          "id": "foto-palestrante2",
+          "name": "Foto 2",
+          "type": "image",
+          "shape": "circle",
+          "border": {
+            "color": "#ffffff",
+            "width": 1
+          },
+          "source": {
+            "type": "placeholder",
+            "field": "palestrante_2_foto"
+          },
+          "blend_mode": "normal",
+          "crop_focus": "attention",
+          "resize_mode": "contain"
+        },
+        {
+          "h": 20,
+          "w": 150,
+          "x": 410,
+          "y": 261,
+          "id": "nome-palestrante3",
+          "name": "Nome 3",
+          "type": "text-block",
+          "align": "center",
+          "color": "#fff8f3",
+          "content": "{{palestrante_3_nome}}",
+          "font_size": 11,
+          "font_family": "Roobert PRO TRIAL SemiBold",
+          "line_height": 1.4,
+          "vertical_align": "top",
+          "paragraph_spacing": 0
+        },
+        {
+          "h": 20,
+          "w": 150,
+          "x": 410,
+          "y": 281,
+          "id": "cargo-palestrante3",
+          "name": "Cargo 3",
+          "type": "text-block",
+          "align": "center",
+          "color": "#fff8f3",
+          "content": "{{palestrante_3_cargo}}",
+          "font_size": 9,
+          "font_family": "Roobert PRO TRIAL Light",
+          "line_height": 1.4,
+          "vertical_align": "top",
+          "paragraph_spacing": 0
+        },
+        {
+          "h": 52,
+          "w": 52,
+          "x": 459,
+          "y": 204,
+          "id": "foto-palestrante3",
+          "name": "Foto 3",
+          "type": "image",
+          "shape": "circle",
+          "border": {
+            "color": "#ffffff",
+            "width": 1
+          },
+          "source": {
+            "type": "placeholder",
+            "field": "palestrante_3_foto"
+          },
+          "blend_mode": "normal",
+          "crop_focus": "attention",
+          "resize_mode": "contain"
+        },
+        {
+          "h": 20,
+          "w": 150,
+          "x": 410,
+          "y": 349,
+          "id": "nome-palestrante4",
+          "name": "Nome 4",
+          "type": "text-block",
+          "align": "center",
+          "color": "#fff8f3",
+          "content": "{{palestrante_4_nome}}",
+          "font_size": 11,
+          "font_family": "Roobert PRO TRIAL SemiBold",
+          "line_height": 1.4,
+          "vertical_align": "top",
+          "paragraph_spacing": 0
+        },
+        {
+          "h": 20,
+          "w": 150,
+          "x": 410,
+          "y": 369,
+          "id": "cargo-palestrante4",
+          "name": "Cargo 4",
+          "type": "text-block",
+          "align": "center",
+          "color": "#fff8f3",
+          "content": "{{palestrante_4_cargo}}",
+          "font_size": 9,
+          "font_family": "Roobert PRO TRIAL Light",
+          "line_height": 1.4,
+          "vertical_align": "top",
+          "paragraph_spacing": 0
+        },
+        {
+          "h": 52,
+          "w": 52,
+          "x": 459,
+          "y": 292,
+          "id": "foto-palestrante4",
+          "name": "Foto 4",
+          "type": "image",
+          "shape": "circle",
+          "border": {
+            "color": "#ffffff",
+            "width": 1
+          },
+          "source": {
+            "type": "placeholder",
+            "field": "palestrante_4_foto"
+          },
+          "blend_mode": "normal",
+          "crop_focus": "attention",
+          "resize_mode": "contain"
+        }
+      ]
+    }
+  },
+  {
+    "id": 36,
+    "variant_value": "1-stories",
+    "name": "1 Palestrante - Stories (1080x1920)",
+    "config": {
+      "bg": {
+        "url": "https://solicitacoes.portalsvn.com.br/assets/2026-07/4cx5Tuuq-bg2.png",
+        "type": "static"
+      },
+      "tipo": "convite-evento",
+      "canvas": {
+        "width": 1080,
+        "height": 1920
+      },
+      "layers": [
+        {
+          "h": 56,
+          "w": 635,
+          "x": 223,
+          "y": 108,
+          "id": "tipo-evento",
+          "name": "Tipo de Evento",
+          "type": "text-block",
+          "align": "center",
+          "color": "#fff8f3",
+          "content": "evento {{tipo_evento}}",
+          "font_size": 28,
+          "font_family": "Roobert PRO TRIAL Light",
+          "line_height": 1.4,
+          "letter_spacing": 20,
+          "text_transform": "uppercase",
+          "vertical_align": "top",
+          "paragraph_spacing": 0
+        },
+        {
+          "h": 216,
+          "w": 781,
+          "x": 150,
+          "y": 244,
+          "id": "titulo",
+          "name": "Título",
+          "type": "text-block",
+          "align": "center",
+          "color": "#fff8f3",
+          "content": "{{titulo}}",
+          "font_size": 56,
+          "font_family": "Ivy Journal Light",
+          "line_height": 1.4,
+          "vertical_align": "top",
+          "paragraph_spacing": 0
+        },
+        {
+          "h": 56,
+          "w": 400,
+          "x": 416,
+          "y": 777,
+          "id": "nome-palestrante1",
+          "name": "Nome 1",
+          "type": "text-block",
+          "align": "left",
+          "color": "#fff8f3",
+          "content": "{{palestrante_1_nome}}",
+          "font_size": 38,
+          "font_family": "Roobert PRO TRIAL Medium",
+          "line_height": 1.4,
+          "vertical_align": "top",
+          "paragraph_spacing": 0
+        },
+        {
+          "h": 71,
+          "w": 400,
+          "x": 416,
+          "y": 841,
+          "id": "cargo-palestrante1",
+          "name": "Cargo 1",
+          "type": "text-block",
+          "align": "left",
+          "color": "#fff8f3",
+          "content": "{{palestrante_1_cargo}}",
+          "font_size": 28,
+          "font_family": "Roobert PRO TRIAL Light",
+          "line_height": 1.4,
+          "vertical_align": "top",
+          "paragraph_spacing": 0
+        },
+        {
+          "h": 214,
+          "w": 214,
+          "x": 163,
+          "y": 725,
+          "id": "foto-palestrante1",
+          "name": "Foto 1",
+          "type": "image",
+          "shape": "circle",
+          "border": {
+            "color": "#8e7b7b",
+            "width": 2
+          },
+          "source": {
+            "type": "placeholder",
+            "field": "palestrante_1_foto"
+          },
+          "blend_mode": "normal",
+          "crop_focus": "attention",
+          "resize_mode": "contain"
+        },
+        {
+          "h": 85,
+          "w": 178,
+          "x": 326,
+          "y": 1220,
+          "id": "data",
+          "name": "Data",
+          "type": "text-block",
+          "align": "right",
+          "color": "#fff8f3",
+          "content": "{{data}}",
+          "font_size": 32,
+          "font_family": "Roobert PRO TRIAL Light",
+          "line_height": 1.4,
+          "vertical_align": "top",
+          "paragraph_spacing": 0
+        },
+        {
+          "h": 85,
+          "w": 400,
+          "x": 340,
+          "y": 1220,
+          "id": "separador-data-hora",
+          "name": "Separador",
+          "type": "text-block",
+          "align": "center",
+          "color": "#fff8f3",
+          "content": ".",
+          "font_size": 32,
+          "font_family": "Roobert PRO TRIAL Heavy",
+          "line_height": 1.4,
+          "vertical_align": "middle",
+          "paragraph_spacing": 0
+        },
+        {
+          "h": 85,
+          "w": 148,
+          "x": 586,
+          "y": 1220,
+          "id": "hora",
+          "name": "Hora",
+          "type": "text-block",
+          "align": "left",
+          "color": "#fff8f3",
+          "content": "{{horario}}",
+          "font_size": 32,
+          "font_family": "Roobert PRO TRIAL Light",
+          "line_height": 1.4,
+          "vertical_align": "top",
+          "paragraph_spacing": 0
+        },
+        {
+          "h": 64,
+          "w": 725,
+          "x": 178,
+          "y": 1365,
+          "id": "nome-local",
+          "name": "Nome do local",
+          "type": "text-block",
+          "align": "center",
+          "color": "#fff8f3",
+          "content": "{{local_nome}}",
+          "font_size": 34,
+          "font_family": "Roobert PRO TRIAL SemiBold",
+          "line_height": 1.4,
+          "vertical_align": "top",
+          "paragraph_spacing": 0
+        },
+        {
+          "h": 137,
+          "w": 530,
+          "x": 275,
+          "y": 1430,
+          "id": "endereco",
+          "name": "Endereço",
+          "type": "text-block",
+          "align": "center",
+          "color": "#fff8f3",
+          "content": "{{endereco}}",
+          "font_size": 32,
+          "font_family": "Roobert PRO TRIAL Light",
+          "line_height": 1.4,
+          "vertical_align": "top",
+          "paragraph_spacing": 0
+        },
+        {
+          "h": 200,
+          "w": 200,
+          "x": 440,
+          "y": 1629,
+          "id": "logo",
+          "name": "Logo",
+          "type": "image",
+          "source": {
+            "url": "https://solicitacoes.portalsvn.com.br/assets/2026-05/ogXfMae7-logo-svn.png",
+            "type": "static"
+          },
+          "blend_mode": "normal",
+          "resize_mode": "contain"
+        },
+        {
+          "h": 67,
+          "w": 729,
+          "x": 176,
+          "y": 86,
+          "id": "shape-pill-topo",
+          "fill": "#221b19",
+          "name": "Forma (topo)",
+          "type": "shape",
+          "shape": "rectangle",
+          "stroke": "#fff8f3",
+          "stroke_width": 0.1,
+          "border_radius": 20
+        },
+        {
+          "h": 207,
+          "w": 659,
+          "x": 259,
+          "y": 727,
+          "id": "card-palestrante1",
+          "fill": "#221b19",
+          "name": "Card 1",
+          "type": "shape",
+          "shape": "rectangle",
+          "stroke": "#8e7b7b",
+          "stroke_width": 1,
+          "border_radius": 60
+        },
+        {
+          "h": 67,
+          "w": 600,
+          "x": 240,
+          "y": 1200,
+          "id": "shape-pill-data",
+          "fill": "#221b19",
+          "name": "Forma (data/hora)",
+          "type": "shape",
+          "shape": "rectangle",
+          "stroke": "#fff8f3",
+          "stroke_width": 0.1,
+          "border_radius": 20
+        }
+      ]
+    }
+  },
+  {
+    "id": 41,
+    "variant_value": "3-feed",
+    "name": "3 Palestrantes - Feed (1080x1350)",
+    "config": {
+      "bg": {
+        "url": "https://solicitacoes.portalsvn.com.br/assets/2026-07/8SztD2cH-bg-feed.png",
+        "type": "static"
+      },
+      "tipo": "convite-evento",
+      "canvas": {
+        "width": 1080,
+        "height": 1350
+      },
+      "layers": [
+        {
+          "h": 56,
+          "w": 635,
+          "x": 223,
+          "y": 108,
+          "id": "tipo-evento",
+          "name": "Tipo de Evento",
+          "type": "text-block",
+          "align": "center",
+          "color": "#fff8f3",
+          "content": "evento {{tipo_evento}}",
+          "font_size": 25,
+          "font_family": "Roobert PRO TRIAL Light",
+          "line_height": 1.4,
+          "letter_spacing": 20,
+          "text_transform": "uppercase",
+          "vertical_align": "top",
+          "paragraph_spacing": 0
+        },
+        {
+          "h": 163,
+          "w": 717,
+          "x": 182,
+          "y": 200,
+          "id": "titulo",
+          "name": "Título",
+          "type": "text-block",
+          "align": "center",
+          "color": "#fff8f3",
+          "content": "{{titulo}}",
+          "font_size": 56,
+          "font_family": "Ivy Journal Light",
+          "line_height": 1.4,
+          "vertical_align": "top",
+          "paragraph_spacing": 0
+        },
+        {
+          "h": 56,
+          "w": 400,
+          "x": 427,
+          "y": 420,
+          "id": "nome-palestrante1",
+          "name": "Nome 1",
+          "type": "text-block",
+          "align": "left",
+          "color": "#fff8f3",
+          "content": "{{palestrante_1_nome}}",
+          "font_size": 38,
+          "font_family": "Roobert PRO TRIAL Medium",
+          "line_height": 1.4,
+          "vertical_align": "top",
+          "paragraph_spacing": 0
+        },
+        {
+          "h": 71,
+          "w": 400,
+          "x": 427,
+          "y": 475,
+          "id": "cargo-palestrante1",
+          "name": "Cargo 1",
+          "type": "text-block",
+          "align": "left",
+          "color": "#fff8f3",
+          "content": "{{palestrante_1_cargo}}",
+          "font_size": 26,
+          "font_family": "Roobert PRO TRIAL Light",
+          "line_height": 1.4,
+          "vertical_align": "top",
+          "paragraph_spacing": 0
+        },
+        {
+          "h": 180,
+          "w": 180,
+          "x": 162,
+          "y": 375,
+          "id": "foto-palestrante1",
+          "name": "Foto 1",
+          "type": "image",
+          "shape": "circle",
+          "source": {
+            "type": "placeholder",
+            "field": "palestrante_1_foto"
+          },
+          "blend_mode": "normal",
+          "crop_focus": "attention",
+          "resize_mode": "contain"
+        },
+        {
+          "h": 56,
+          "w": 400,
+          "x": 253,
+          "y": 620,
+          "id": "nome-palestrante2",
+          "name": "Nome 2",
+          "type": "text-block",
+          "align": "left",
+          "color": "#fff8f3",
+          "content": "{{palestrante_2_nome}}",
+          "font_size": 38,
+          "font_family": "Roobert PRO TRIAL Medium",
+          "line_height": 1.4,
+          "vertical_align": "top",
+          "paragraph_spacing": 0
+        },
+        {
+          "h": 71,
+          "w": 400,
+          "x": 253,
+          "y": 675,
+          "id": "cargo-palestrante2",
+          "name": "Cargo 2",
+          "type": "text-block",
+          "align": "left",
+          "color": "#fff8f3",
+          "content": "{{palestrante_2_cargo}}",
+          "font_size": 26,
+          "font_family": "Roobert PRO TRIAL Light",
+          "line_height": 1.4,
+          "vertical_align": "top",
+          "paragraph_spacing": 0
+        },
+        {
+          "h": 180,
+          "w": 180,
+          "x": 738,
+          "y": 575,
+          "id": "foto-palestrante2",
+          "name": "Foto 2",
+          "type": "image",
+          "shape": "circle",
+          "source": {
+            "type": "placeholder",
+            "field": "palestrante_2_foto"
+          },
+          "blend_mode": "normal",
+          "crop_focus": "attention",
+          "resize_mode": "contain"
+        },
+        {
+          "h": 56,
+          "w": 400,
+          "x": 427,
+          "y": 820,
+          "id": "nome-palestrante3",
+          "name": "Nome 3",
+          "type": "text-block",
+          "align": "left",
+          "color": "#fff8f3",
+          "content": "{{palestrante_3_nome}}",
+          "font_size": 38,
+          "font_family": "Roobert PRO TRIAL Medium",
+          "line_height": 1.4,
+          "vertical_align": "top",
+          "paragraph_spacing": 0
+        },
+        {
+          "h": 71,
+          "w": 400,
+          "x": 427,
+          "y": 875,
+          "id": "cargo-palestrante3",
+          "name": "Cargo 3",
+          "type": "text-block",
+          "align": "left",
+          "color": "#fff8f3",
+          "content": "{{palestrante_3_cargo}}",
+          "font_size": 26,
+          "font_family": "Roobert PRO TRIAL Light",
+          "line_height": 1.4,
+          "vertical_align": "top",
+          "paragraph_spacing": 0
+        },
+        {
+          "h": 180,
+          "w": 180,
+          "x": 162,
+          "y": 775,
+          "id": "foto-palestrante3",
+          "name": "Foto 3",
+          "type": "image",
+          "shape": "circle",
+          "source": {
+            "type": "placeholder",
+            "field": "palestrante_3_foto"
+          },
+          "blend_mode": "normal",
+          "crop_focus": "attention",
+          "resize_mode": "contain"
+        },
+        {
+          "h": 85,
+          "w": 178,
+          "x": 326,
+          "y": 988,
+          "id": "data",
+          "name": "Data",
+          "type": "text-block",
+          "align": "right",
+          "color": "#fff8f3",
+          "content": "{{data}}",
+          "font_size": 27,
+          "font_family": "Roobert PRO TRIAL Light",
+          "line_height": 1.4,
+          "vertical_align": "top",
+          "paragraph_spacing": 0
+        },
+        {
+          "h": 85,
+          "w": 400,
+          "x": 340,
+          "y": 988,
+          "id": "separador-data-hora",
+          "name": "Separador",
+          "type": "text-block",
+          "align": "center",
+          "color": "#fff8f3",
+          "content": ".",
+          "font_size": 27,
+          "font_family": "Roobert PRO TRIAL Heavy",
+          "line_height": 1.4,
+          "vertical_align": "middle",
+          "paragraph_spacing": 0
+        },
+        {
+          "h": 85,
+          "w": 148,
+          "x": 586,
+          "y": 988,
+          "id": "hora",
+          "name": "Hora",
+          "type": "text-block",
+          "align": "left",
+          "color": "#fff8f3",
+          "content": "{{horario}}",
+          "font_size": 27,
+          "font_family": "Roobert PRO TRIAL Light",
+          "line_height": 1.4,
+          "vertical_align": "top",
+          "paragraph_spacing": 0
+        },
+        {
+          "h": 75,
+          "w": 500,
+          "x": 290,
+          "y": 1058,
+          "id": "nome-local",
+          "name": "Nome do Local",
+          "type": "text-block",
+          "align": "center",
+          "color": "#fff8f3",
+          "content": "{{local_nome}}",
+          "font_size": 32,
+          "font_family": "Roobert PRO TRIAL SemiBold",
+          "line_height": 1.4,
+          "vertical_align": "top",
+          "paragraph_spacing": 0
+        },
+        {
+          "h": 90,
+          "w": 530,
+          "x": 275,
+          "y": 1135,
+          "id": "endereco",
+          "name": "Endereço",
+          "type": "text-block",
+          "align": "center",
+          "color": "#fff8f3",
+          "content": "{{endereco}}",
+          "font_size": 30,
+          "font_family": "Roobert PRO TRIAL Light",
+          "line_height": 1.4,
+          "vertical_align": "top",
+          "paragraph_spacing": 0
+        },
+        {
+          "h": 110,
+          "w": 140,
+          "x": 470,
+          "y": 1230,
+          "id": "logo",
+          "name": "Logo",
+          "type": "image",
+          "source": {
+            "url": "https://solicitacoes.portalsvn.com.br/assets/2026-05/ogXfMae7-logo-svn.png",
+            "type": "static"
+          },
+          "blend_mode": "normal",
+          "resize_mode": "contain"
+        },
+        {
+          "h": 67,
+          "w": 729,
+          "x": 176,
+          "y": 86,
+          "id": "shape-pill-topo",
+          "fill": "#221b19",
+          "name": "Forma (topo)",
+          "type": "shape",
+          "shape": "rectangle",
+          "stroke": "#fff8f3",
+          "stroke_width": 0.1,
+          "border_radius": 20
+        },
+        {
+          "h": 180,
+          "w": 703,
+          "x": 215,
+          "y": 375,
+          "id": "card-palestrante1",
+          "fill": "#221b19",
+          "name": "Card 1",
+          "type": "shape",
+          "shape": "rectangle",
+          "stroke": "#8e7b7b",
+          "stroke_width": 1,
+          "border_radius": 60
+        },
+        {
+          "h": 180,
+          "w": 703,
+          "x": 162,
+          "y": 575,
+          "id": "card-palestrante2",
+          "fill": "#221b19",
+          "name": "Card 2",
+          "type": "shape",
+          "shape": "rectangle",
+          "stroke": "#8e7b7b",
+          "stroke_width": 1,
+          "border_radius": 60
+        },
+        {
+          "h": 180,
+          "w": 703,
+          "x": 215,
+          "y": 775,
+          "id": "card-palestrante3",
+          "fill": "#221b19",
+          "name": "Card 3",
+          "type": "shape",
+          "shape": "rectangle",
+          "stroke": "#8e7b7b",
+          "stroke_width": 1,
+          "border_radius": 60
+        },
+        {
+          "h": 67,
+          "w": 600,
+          "x": 240,
+          "y": 970,
+          "id": "shape-pill-data",
+          "fill": "#221b19",
+          "name": "Forma (data/hora)",
+          "type": "shape",
+          "shape": "rectangle",
+          "stroke": "#fff8f3",
+          "stroke_width": 0.1,
+          "border_radius": 20
+        }
+      ]
+    }
+  },
+  {
+    "id": 37,
+    "variant_value": "1-feed",
+    "name": "1 Palestrante - Feed (1080x1350)",
+    "config": {
+      "bg": {
+        "url": "https://solicitacoes.portalsvn.com.br/assets/2026-07/8SztD2cH-bg-feed.png",
+        "type": "static"
+      },
+      "tipo": "convite-evento",
+      "canvas": {
+        "width": 1080,
+        "height": 1350
+      },
+      "layers": [
+        {
+          "h": 56,
+          "w": 635,
+          "x": 223,
+          "y": 108,
+          "id": "tipo-evento",
+          "name": "Tipo de Evento",
+          "type": "text-block",
+          "align": "center",
+          "color": "#fff8f3",
+          "content": "evento {{tipo_evento}}",
+          "font_size": 25,
+          "font_family": "Roobert PRO TRIAL Light",
+          "line_height": 1.4,
+          "letter_spacing": 20,
+          "text_transform": "uppercase",
+          "vertical_align": "top",
+          "paragraph_spacing": 0
+        },
+        {
+          "h": 163,
+          "w": 717,
+          "x": 182,
+          "y": 200,
+          "id": "titulo",
+          "name": "Título",
+          "type": "text-block",
+          "align": "center",
+          "color": "#fff8f3",
+          "content": "{{titulo}}",
+          "font_size": 56,
+          "font_family": "Ivy Journal Light",
+          "line_height": 1.4,
+          "vertical_align": "top",
+          "paragraph_spacing": 0
+        },
+        {
+          "h": 56,
+          "w": 400,
+          "x": 427,
+          "y": 552,
+          "id": "nome-palestrante1",
+          "name": "Nome 1",
+          "type": "text-block",
+          "align": "left",
+          "color": "#fff8f3",
+          "content": "{{palestrante_1_nome}}",
+          "font_size": 38,
+          "font_family": "Roobert PRO TRIAL Medium",
+          "line_height": 1.4,
+          "vertical_align": "top",
+          "paragraph_spacing": 0
+        },
+        {
+          "h": 71,
+          "w": 400,
+          "x": 427,
+          "y": 607,
+          "id": "cargo-palestrante1",
+          "name": "Cargo 1",
+          "type": "text-block",
+          "align": "left",
+          "color": "#fff8f3",
+          "content": "{{palestrante_1_cargo}}",
+          "font_size": 26,
+          "font_family": "Roobert PRO TRIAL Light",
+          "line_height": 1.4,
+          "vertical_align": "top",
+          "paragraph_spacing": 0
+        },
+        {
+          "h": 180,
+          "w": 180,
+          "x": 162,
+          "y": 507,
+          "id": "foto-palestrante1",
+          "name": "Foto 1",
+          "type": "image",
+          "shape": "circle",
+          "source": {
+            "type": "placeholder",
+            "field": "palestrante_1_foto"
+          },
+          "blend_mode": "normal",
+          "crop_focus": "attention",
+          "resize_mode": "contain"
+        },
+        {
+          "h": 85,
+          "w": 178,
+          "x": 326,
+          "y": 850,
+          "id": "data",
+          "name": "Data",
+          "type": "text-block",
+          "align": "right",
+          "color": "#fff8f3",
+          "content": "{{data}}",
+          "font_size": 27,
+          "font_family": "Roobert PRO TRIAL Light",
+          "line_height": 1.4,
+          "vertical_align": "top",
+          "paragraph_spacing": 0
+        },
+        {
+          "h": 85,
+          "w": 400,
+          "x": 340,
+          "y": 850,
+          "id": "separador-data-hora",
+          "name": "Separador",
+          "type": "text-block",
+          "align": "center",
+          "color": "#fff8f3",
+          "content": ".",
+          "font_size": 27,
+          "font_family": "Roobert PRO TRIAL Heavy",
+          "line_height": 1.4,
+          "vertical_align": "middle",
+          "paragraph_spacing": 0
+        },
+        {
+          "h": 85,
+          "w": 148,
+          "x": 586,
+          "y": 850,
+          "id": "hora",
+          "name": "Hora",
+          "type": "text-block",
+          "align": "left",
+          "color": "#fff8f3",
+          "content": "{{horario}}",
+          "font_size": 27,
+          "font_family": "Roobert PRO TRIAL Light",
+          "line_height": 1.4,
+          "vertical_align": "top",
+          "paragraph_spacing": 0
+        },
+        {
+          "h": 75,
+          "w": 500,
+          "x": 290,
+          "y": 940,
+          "id": "nome-local",
+          "name": "Nome do Local",
+          "type": "text-block",
+          "align": "center",
+          "color": "#fff8f3",
+          "content": "{{local_nome}}",
+          "font_size": 32,
+          "font_family": "Roobert PRO TRIAL SemiBold",
+          "line_height": 1.4,
+          "vertical_align": "top",
+          "paragraph_spacing": 0
+        },
+        {
+          "h": 137,
+          "w": 530,
+          "x": 275,
+          "y": 1020,
+          "id": "endereco",
+          "name": "Endereço",
+          "type": "text-block",
+          "align": "center",
+          "color": "#fff8f3",
+          "content": "{{endereco}}",
+          "font_size": 30,
+          "font_family": "Roobert PRO TRIAL Light",
+          "line_height": 1.4,
+          "vertical_align": "top",
+          "paragraph_spacing": 0
+        },
+        {
+          "h": 150,
+          "w": 150,
+          "x": 465,
+          "y": 1150,
+          "id": "logo",
+          "name": "Logo",
+          "type": "image",
+          "source": {
+            "url": "https://solicitacoes.portalsvn.com.br/assets/2026-05/ogXfMae7-logo-svn.png",
+            "type": "static"
+          },
+          "blend_mode": "normal",
+          "resize_mode": "contain"
+        },
+        {
+          "h": 67,
+          "w": 729,
+          "x": 176,
+          "y": 86,
+          "id": "shape-pill-topo",
+          "fill": "#221b19",
+          "name": "Forma (topo)",
+          "type": "shape",
+          "shape": "rectangle",
+          "stroke": "#fff8f3",
+          "stroke_width": 0.1,
+          "border_radius": 20
+        },
+        {
+          "h": 180,
+          "w": 703,
+          "x": 215,
+          "y": 507,
+          "id": "card-palestrante1",
+          "fill": "#221b19",
+          "name": "Card 1",
+          "type": "shape",
+          "shape": "rectangle",
+          "stroke": "#8e7b7b",
+          "stroke_width": 1,
+          "border_radius": 60
+        },
+        {
+          "h": 67,
+          "w": 600,
+          "x": 240,
+          "y": 830,
+          "id": "shape-pill-data",
+          "fill": "#221b19",
+          "name": "Forma (data/hora)",
+          "type": "shape",
+          "shape": "rectangle",
+          "stroke": "#fff8f3",
+          "stroke_width": 0.1,
+          "border_radius": 20
+        }
+      ]
+    }
+  },
+  {
+    "id": 42,
+    "variant_value": "3-quadrado",
+    "name": "3 Palestrantes - Quadrado (600x400)",
+    "config": {
+      "bg": {
+        "url": "https://solicitacoes.portalsvn.com.br/assets/2026-07/pvnqru9Y-mail.png",
+        "type": "static"
+      },
+      "tipo": "convite-evento",
+      "canvas": {
+        "width": 600,
+        "height": 400
+      },
+      "layers": [
+        {
+          "h": 23,
+          "w": 336,
+          "x": 45,
+          "y": 50,
+          "id": "tipo-evento",
+          "name": "Tipo de Evento",
+          "type": "text-block",
+          "align": "left",
+          "color": "#fff8f3",
+          "content": "Evento {{tipo_evento}}",
+          "font_size": 7,
+          "font_family": "Roobert PRO TRIAL Light",
+          "line_height": 1.4,
+          "letter_spacing": 10,
+          "text_transform": "uppercase",
+          "vertical_align": "top",
+          "paragraph_spacing": 0
+        },
+        {
+          "h": 0.5,
+          "w": 244,
+          "x": 301,
+          "y": 56,
+          "id": "linha-tipo",
+          "fill": "#fff8f3",
+          "name": "Forma",
+          "type": "shape",
+          "shape": "rectangle",
+          "stroke": "",
+          "stroke_width": 0,
+          "border_radius": 0
+        },
+        {
+          "h": 199,
+          "w": 312,
+          "x": 45,
+          "y": 116,
+          "id": "titulo",
+          "name": "Título",
+          "type": "text-block",
+          "align": "left",
+          "color": "#ffffff",
+          "content": "{{titulo}}",
+          "font_size": 32,
+          "font_family": "Ivy Journal Light",
+          "line_height": 1.4,
+          "vertical_align": "middle",
+          "paragraph_spacing": 0
+        },
+        {
+          "h": 60,
+          "w": 60,
+          "x": 455,
+          "y": 43,
+          "id": "foto-palestrante1",
+          "name": "Foto 1",
+          "type": "image",
+          "shape": "circle",
+          "border": {
+            "color": "#ffffff",
+            "width": 1
+          },
+          "source": {
+            "type": "placeholder",
+            "field": "palestrante_1_foto"
+          },
+          "blend_mode": "normal",
+          "crop_focus": "attention",
+          "resize_mode": "contain"
+        },
+        {
+          "h": 20,
+          "w": 150,
+          "x": 410,
+          "y": 108,
+          "id": "nome-palestrante1",
+          "name": "Nome 1",
+          "type": "text-block",
+          "align": "center",
+          "color": "#fff8f3",
+          "content": "{{palestrante_1_nome}}",
+          "font_size": 12,
+          "font_family": "Roobert PRO TRIAL SemiBold",
+          "line_height": 1.4,
+          "vertical_align": "top",
+          "paragraph_spacing": 0
+        },
+        {
+          "h": 20,
+          "w": 150,
+          "x": 410,
+          "y": 128,
+          "id": "cargo-palestrante1",
+          "name": "Cargo 1",
+          "type": "text-block",
+          "align": "center",
+          "color": "#fff8f3",
+          "content": "{{palestrante_1_cargo}}",
+          "font_size": 10,
+          "font_family": "Roobert PRO TRIAL Light",
+          "line_height": 1.4,
+          "vertical_align": "top",
+          "paragraph_spacing": 0
+        },
+        {
+          "h": 60,
+          "w": 60,
+          "x": 455,
+          "y": 148,
+          "id": "foto-palestrante2",
+          "name": "Foto 2",
+          "type": "image",
+          "shape": "circle",
+          "border": {
+            "color": "#ffffff",
+            "width": 1
+          },
+          "source": {
+            "type": "placeholder",
+            "field": "palestrante_2_foto"
+          },
+          "blend_mode": "normal",
+          "crop_focus": "attention",
+          "resize_mode": "contain"
+        },
+        {
+          "h": 20,
+          "w": 150,
+          "x": 410,
+          "y": 213,
+          "id": "nome-palestrante2",
+          "name": "Nome 2",
+          "type": "text-block",
+          "align": "center",
+          "color": "#fff8f3",
+          "content": "{{palestrante_2_nome}}",
+          "font_size": 12,
+          "font_family": "Roobert PRO TRIAL SemiBold",
+          "line_height": 1.4,
+          "vertical_align": "top",
+          "paragraph_spacing": 0
+        },
+        {
+          "h": 20,
+          "w": 150,
+          "x": 410,
+          "y": 233,
+          "id": "cargo-palestrante2",
+          "name": "Cargo 2",
+          "type": "text-block",
+          "align": "center",
+          "color": "#fff8f3",
+          "content": "{{palestrante_2_cargo}}",
+          "font_size": 10,
+          "font_family": "Roobert PRO TRIAL Light",
+          "line_height": 1.4,
+          "vertical_align": "top",
+          "paragraph_spacing": 0
+        },
+        {
+          "h": 60,
+          "w": 60,
+          "x": 455,
+          "y": 253,
+          "id": "foto-palestrante3",
+          "name": "Foto 3",
+          "type": "image",
+          "shape": "circle",
+          "border": {
+            "color": "#ffffff",
+            "width": 1
+          },
+          "source": {
+            "type": "placeholder",
+            "field": "palestrante_3_foto"
+          },
+          "blend_mode": "normal",
+          "crop_focus": "attention",
+          "resize_mode": "contain"
+        },
+        {
+          "h": 20,
+          "w": 150,
+          "x": 410,
+          "y": 318,
+          "id": "nome-palestrante3",
+          "name": "Nome 3",
+          "type": "text-block",
+          "align": "center",
+          "color": "#fff8f3",
+          "content": "{{palestrante_3_nome}}",
+          "font_size": 12,
+          "font_family": "Roobert PRO TRIAL SemiBold",
+          "line_height": 1.4,
+          "vertical_align": "top",
+          "paragraph_spacing": 0
+        },
+        {
+          "h": 20,
+          "w": 150,
+          "x": 410,
+          "y": 338,
+          "id": "cargo-palestrante3",
+          "name": "Cargo 3",
+          "type": "text-block",
+          "align": "center",
+          "color": "#fff8f3",
+          "content": "{{palestrante_3_cargo}}",
+          "font_size": 10,
+          "font_family": "Roobert PRO TRIAL Light",
+          "line_height": 1.4,
+          "vertical_align": "top",
+          "paragraph_spacing": 0
+        }
+      ]
+    }
+  },
+  {
+    "id": 30,
+    "variant_value": "2-stories",
+    "name": "2 Palestrantes - Stories (1080x1920)",
+    "config": {
+      "bg": {
+        "url": "https://solicitacoes.portalsvn.com.br/assets/2026-07/4cx5Tuuq-bg2.png",
+        "type": "static"
+      },
+      "tipo": "convite-evento",
+      "canvas": {
+        "width": 1080,
+        "height": 1920
+      },
+      "layers": [
+        {
+          "h": 56,
+          "w": 635,
+          "x": 223,
+          "y": 108,
+          "id": "tipo-evento",
+          "name": "Tipo de Evento",
+          "type": "text-block",
+          "align": "center",
+          "color": "#fff8f3",
+          "content": "evento {{tipo_evento}}",
+          "font_size": 28,
+          "font_family": "Roobert PRO TRIAL Light",
+          "line_height": 1.4,
+          "letter_spacing": 20,
+          "text_transform": "uppercase",
+          "vertical_align": "top",
+          "paragraph_spacing": 0
+        },
+        {
+          "h": 216,
+          "w": 781,
+          "x": 150,
+          "y": 244,
+          "id": "titulo",
+          "name": "Título",
+          "type": "text-block",
+          "align": "center",
+          "color": "#fff8f3",
+          "content": "{{titulo}}",
+          "font_size": 56,
+          "font_family": "Ivy Journal Light",
+          "line_height": 1.4,
+          "vertical_align": "top",
+          "paragraph_spacing": 0
+        },
+        {
+          "h": 56,
+          "w": 400,
+          "x": 416,
+          "y": 627,
+          "id": "nome-palestrante1",
+          "name": "Nome 1",
+          "type": "text-block",
+          "align": "left",
+          "color": "#fff8f3",
+          "content": "{{palestrante_1_nome}}",
+          "font_size": 38,
+          "font_family": "Roobert PRO TRIAL Medium",
+          "line_height": 1.4,
+          "vertical_align": "top",
+          "paragraph_spacing": 0
+        },
+        {
+          "h": 71,
+          "w": 400,
+          "x": 416,
+          "y": 691,
+          "id": "cargo-palestrante1",
+          "name": "Cargo 1",
+          "type": "text-block",
+          "align": "left",
+          "color": "#fff8f3",
+          "content": "{{palestrante_1_cargo}}",
+          "font_size": 28,
+          "font_family": "Roobert PRO TRIAL Light",
+          "line_height": 1.4,
+          "vertical_align": "top",
+          "paragraph_spacing": 0
+        },
+        {
+          "h": 214,
+          "w": 214,
+          "x": 163,
+          "y": 575,
+          "id": "foto-palestrante1",
+          "name": "Foto 1",
+          "type": "image",
+          "shape": "circle",
+          "border": {
+            "color": "#8e7b7b",
+            "width": 2
+          },
+          "source": {
+            "type": "placeholder",
+            "field": "palestrante_1_foto"
+          },
+          "blend_mode": "normal",
+          "crop_focus": "attention",
+          "resize_mode": "contain"
+        },
+        {
+          "h": 207,
+          "w": 659,
+          "x": 259,
+          "y": 577,
+          "id": "card-palestrante1",
+          "fill": "#221b19",
+          "name": "Forma 1",
+          "type": "shape",
+          "shape": "rectangle",
+          "stroke": "#8e7b7b",
+          "stroke_width": 1,
+          "border_radius": 60
+        },
+        {
+          "h": 214,
+          "w": 214,
+          "x": 704,
+          "y": 863,
+          "id": "foto-palestrante2",
+          "name": "Foto 2",
+          "type": "image",
+          "shape": "circle",
+          "border": {
+            "color": "#8e7b7b",
+            "width": 2
+          },
+          "source": {
+            "type": "placeholder",
+            "field": "palestrante_2_foto"
+          },
+          "blend_mode": "normal",
+          "crop_focus": "attention",
+          "resize_mode": "contain"
+        },
+        {
+          "h": 56,
+          "w": 400,
+          "x": 265,
+          "y": 915,
+          "id": "nome-palestrante2",
+          "name": "Nome 2",
+          "type": "text-block",
+          "align": "left",
+          "color": "#fff8f3",
+          "content": "{{palestrante_2_nome}}",
+          "font_size": 38,
+          "font_family": "Roobert PRO TRIAL Medium",
+          "line_height": 1.4,
+          "vertical_align": "top",
+          "paragraph_spacing": 0
+        },
+        {
+          "h": 71,
+          "w": 400,
+          "x": 265,
+          "y": 979,
+          "id": "cargo-palestrante2",
+          "name": "Cargo 2",
+          "type": "text-block",
+          "align": "left",
+          "color": "#fff8f3",
+          "content": "{{palestrante_2_cargo}}",
+          "font_size": 28,
+          "font_family": "Roobert PRO TRIAL Light",
+          "line_height": 1.4,
+          "vertical_align": "top",
+          "paragraph_spacing": 0
+        },
+        {
+          "h": 207,
+          "w": 659,
+          "x": 163,
+          "y": 865,
+          "id": "card-palestrante2",
+          "fill": "#221b19",
+          "name": "Forma 2",
+          "type": "shape",
+          "shape": "rectangle",
+          "stroke": "#8e7b7b",
+          "stroke_width": 1,
+          "border_radius": 60
+        },
+        {
+          "h": 85,
+          "w": 178,
+          "x": 326,
+          "y": 1220,
+          "id": "data",
+          "name": "Data",
+          "type": "text-block",
+          "align": "right",
+          "color": "#fff8f3",
+          "content": "{{data}}",
+          "font_size": 32,
+          "font_family": "Roobert PRO TRIAL Light",
+          "line_height": 1.4,
+          "vertical_align": "top",
+          "paragraph_spacing": 0
+        },
+        {
+          "h": 85,
+          "w": 400,
+          "x": 340,
+          "y": 1220,
+          "id": "separador-data-hora",
+          "name": "Separador",
+          "type": "text-block",
+          "align": "center",
+          "color": "#fff8f3",
+          "content": ".",
+          "font_size": 32,
+          "font_family": "Roobert PRO TRIAL Heavy",
+          "line_height": 1.4,
+          "vertical_align": "middle",
+          "paragraph_spacing": 0
+        },
+        {
+          "h": 85,
+          "w": 148,
+          "x": 586,
+          "y": 1220,
+          "id": "hora",
+          "name": "Hora",
+          "type": "text-block",
+          "align": "left",
+          "color": "#fff8f3",
+          "content": "{{horario}}",
+          "font_size": 32,
+          "font_family": "Roobert PRO TRIAL Light",
+          "line_height": 1.4,
+          "vertical_align": "top",
+          "paragraph_spacing": 0
+        },
+        {
+          "h": 64,
+          "w": 725,
+          "x": 178,
+          "y": 1365,
+          "id": "nome-local",
+          "name": "Nome do local",
+          "type": "text-block",
+          "align": "center",
+          "color": "#fff8f3",
+          "content": "{{local_nome}}",
+          "font_size": 34,
+          "font_family": "Roobert PRO TRIAL SemiBold",
+          "line_height": 1.4,
+          "vertical_align": "top",
+          "paragraph_spacing": 0
+        },
+        {
+          "h": 137,
+          "w": 530,
+          "x": 275,
+          "y": 1430,
+          "id": "endereco",
+          "name": "Endereço",
+          "type": "text-block",
+          "align": "center",
+          "color": "#fff8f3",
+          "content": "{{endereco}}",
+          "font_size": 32,
+          "font_family": "Roobert PRO TRIAL Light",
+          "line_height": 1.4,
+          "vertical_align": "top",
+          "paragraph_spacing": 0
+        },
+        {
+          "h": 200,
+          "w": 200,
+          "x": 440,
+          "y": 1629,
+          "id": "logo",
+          "name": "Logo",
+          "type": "image",
+          "source": {
+            "url": "https://solicitacoes.portalsvn.com.br/assets/2026-05/ogXfMae7-logo-svn.png",
+            "type": "static"
+          },
+          "blend_mode": "normal",
+          "resize_mode": "contain"
+        },
+        {
+          "h": 67,
+          "w": 729,
+          "x": 176,
+          "y": 86,
+          "id": "shape-pill-topo",
+          "fill": "#221b19",
+          "name": "Forma",
+          "type": "shape",
+          "shape": "rectangle",
+          "stroke": "#fff8f3",
+          "stroke_width": 0.1,
+          "border_radius": 20
+        },
+        {
+          "h": 67,
+          "w": 600,
+          "x": 240,
+          "y": 1200,
+          "id": "shape-pill-data",
+          "fill": "#221b19",
+          "name": "Forma (data/hora)",
+          "type": "shape",
+          "shape": "rectangle",
+          "stroke": "#fff8f3",
+          "stroke_width": 0.1,
+          "border_radius": 20
+        }
+      ]
+    }
+  }
+]
+```
 
 
 ## File: artifacts/api-server/build.mjs
@@ -3824,16 +7433,15 @@ MYSQL_CONTATOS=                                              # [opcional]
     function renderRecorteSelect() {
       const sel = document.getElementById('graficoRecorte');
       if (!sel || !adminGraficoData) return;
-      const esc2 = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
       const outra = adminGraficoModo === 'tipo' ? 'status' : 'tipo';
       const cross = adminGraficoModo === 'tipo' ? recorteStatus : recorteTipo;
       let html;
       if (outra === 'status') {
         const vals = (adminGraficoData.porStatus || []).map(i => i.status);
-        html = '<option value="">Todos os status</option>' + vals.map(s => '<option value="' + esc2(s) + '"' + (cross === s ? ' selected' : '') + '>Status: ' + esc2(getStatus(s).label) + '</option>').join('');
+        html = '<option value="">Todos os status</option>' + vals.map(s => '<option value="' + esc(s) + '"' + (cross === s ? ' selected' : '') + '>Status: ' + esc(getStatus(s).label) + '</option>').join('');
       } else {
         const vals = (adminGraficoData.porTipo || []).map(i => i.tipo);
-        html = '<option value="">Todos os tipos</option>' + vals.map(t => '<option value="' + esc2(t) + '"' + (cross === t ? ' selected' : '') + '>Tipo: ' + esc2((typeof TIPO_SOLICITACAO_LABELS !== 'undefined' && TIPO_SOLICITACAO_LABELS[t]) || t) + '</option>').join('');
+        html = '<option value="">Todos os tipos</option>' + vals.map(t => '<option value="' + esc(t) + '"' + (cross === t ? ' selected' : '') + '>Tipo: ' + esc((typeof TIPO_SOLICITACAO_LABELS !== 'undefined' && TIPO_SOLICITACAO_LABELS[t]) || t) + '</option>').join('');
       }
       sel.innerHTML = html;
     }
@@ -3916,7 +7524,6 @@ MYSQL_CONTATOS=                                              # [opcional]
     function renderTopSolicitantes(lista) {
       const box = document.getElementById('topSolicitantesBars');
       if (!box) return;
-      const escq = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
       const arr = Array.isArray(lista) ? lista : [];
       if (!arr.length) { box.innerHTML = '<div style="font-size:0.85rem;color:var(--ink-50);padding:4px 0">Sem solicitações no período.</div>'; return; }
       const max = Math.max.apply(null, arr.map(x => x.count || 0)) || 1;
@@ -3924,7 +7531,7 @@ MYSQL_CONTATOS=                                              # [opcional]
         const pct = Math.round((x.count || 0) / max * 100);
         const nome = x.nome || '—';
         return '<div style="display:flex;align-items:center;gap:12px;margin-bottom:9px">' +
-          '<div style="width:160px;flex-shrink:0;font-size:0.85rem;color:var(--carbon-black);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="' + escq(nome) + '">' + escq(nome) + '</div>' +
+          '<div style="width:160px;flex-shrink:0;font-size:0.85rem;color:var(--carbon-black);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="' + esc(nome) + '">' + esc(nome) + '</div>' +
           '<div style="flex:1;min-width:60px;background:var(--icon-bg);border-radius:var(--radius-pill);height:22px;overflow:hidden">' +
             '<div style="width:' + pct + '%;height:100%;background:var(--ruby-red);border-radius:var(--radius-pill);min-width:3px;transition:width .3s"></div>' +
           '</div>' +
@@ -5053,7 +8660,7 @@ input.props-input[type="color"] { padding: 2px 4px; height: 30px; }
   <script src="auth.js?v=20260611f"></script>
   <script src="shell.js?v=20260611f"></script>
   <script src="icons.js?v=20260623a"></script>
-  <script src="admin-templates.js"></script>
+  <script src="admin-templates.js?v=20260714a"></script>
   <!-- Preview Modal -->
   <div class="modal-overlay" id="previewModalOverlay" onclick="Modal.close('previewModalOverlay', event)">
     <div class="modal-card" style="max-width:90vw">
@@ -5622,25 +9229,81 @@ input.props-input[type="color"] { padding: 2px 4px; height: 30px; }
     }
   }
 
+  // Previa REAL do template: renderiza no servidor com os dados de exemplo do tipo,
+  // igual ao live preview do editor. (Antes isso so mostrava a imagem de fundo.)
+  let previewModalUrl = null;
   async function abrirPreviewModal(id) {
-    const overlay = document.getElementById('previewModalOverlay');
+    console.log('[preview] clique no olho — template', id);
     const content = document.getElementById('previewModalContent');
     const title = document.getElementById('previewModalTitle');
-    content.innerHTML = '<span style="opacity:0.5;font-size:0.9rem">Carregando…</span>';
+    if (!content) { alert('Modal de prévia não encontrado na página.'); return; }
+
+    content.innerHTML = '<span style="opacity:.5;font-size:.9rem">Renderizando prévia…</span>';
+    if (typeof Modal === 'undefined' || !Modal.open) {
+      content.innerHTML = '<span style="opacity:.6">Modal indisponível.</span>';
+      console.error('[preview] window.Modal não existe');
+      return;
+    }
     Modal.open('previewModalOverlay');
+
+    const falhar = (msg, extra) => {
+      console.error('[preview]', msg, extra || '');
+      content.innerHTML = '<div style="padding:32px;text-align:center;font-size:.85rem;line-height:1.5">' +
+        '<div style="color:var(--ruby-red);font-weight:600;margin-bottom:6px">Não foi possível gerar a prévia</div>' +
+        '<div style="opacity:.65">' + String(msg) + '</div></div>';
+    };
+
     try {
-      const res = await fetch(`/api/admin/art-templates/${id}`);
-      if (!res.ok) throw new Error('Erro');
-      const t = await res.json();
-      title.textContent = t.name;
-      const bgUrl = t.config?.bg?.url || t.config?.background_image_url;
-      if (bgUrl) {
-        content.innerHTML = `<img src="${bgUrl}" style="max-width:100%;max-height:70vh;border-radius:var(--radius-sm);display:block">`;
-      } else {
-        content.innerHTML = `<div style="padding:40px;opacity:0.5;font-size:0.9rem;text-align:center">Nenhum background configurado ainda.<br>Abra o editor para pré-visualizar o template.</div>`;
+      // 1) template
+      const r1 = await fetch('/api/admin/art-templates/' + id, { credentials: 'include' });
+      console.log('[preview] GET template ->', r1.status);
+      if (!r1.ok) return falhar('Erro ' + r1.status + ' ao buscar o template.');
+      const t = await r1.json();
+      if (title) title.textContent = t.name || 'Prévia';
+
+      const cfg = t.config;
+      if (!cfg || !Array.isArray(cfg.layers)) return falhar('Este template ainda não tem layers configuradas.');
+
+      // 2) dados de exemplo do tipo
+      let dados = {};
+      try {
+        const r2 = await fetch('/api/admin/art-templates/sample-data/' + t.tipo, { credentials: 'include' });
+        console.log('[preview] GET sample-data ->', r2.status);
+        if (r2.ok) dados = await r2.json();
+      } catch (e) { console.warn('[preview] sample-data falhou, seguindo sem dados', e); }
+
+      // campos de variante (plataforma etc.): usa a 1a opcao para a logo aparecer
+      for (const layer of cfg.layers) {
+        const vs = layer && layer.source && layer.source.variant_source;
+        if (layer.type === 'image' && layer.source?.type === 'variant' && vs && !dados[vs]) {
+          dados[vs] = Object.keys(layer.source.variants || {})[0] || '';
+        }
       }
-    } catch {
-      content.innerHTML = '<span style="opacity:0.5;font-size:0.9rem;padding:24px">Erro ao carregar preview.</span>';
+
+      // 3) render
+      const r3 = await fetch('/api/admin/art-templates/preview', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ config: cfg, data: dados }),
+      });
+      console.log('[preview] POST render ->', r3.status);
+      if (!r3.ok) {
+        let det = '';
+        try { const j = await r3.json(); det = j.error || ''; } catch {}
+        return falhar('O servidor não conseguiu renderizar (erro ' + r3.status + '). ' + det);
+      }
+
+      const blob = await r3.blob();
+      if (!blob || !blob.size) return falhar('O servidor devolveu uma imagem vazia.');
+
+      if (previewModalUrl) URL.revokeObjectURL(previewModalUrl);
+      previewModalUrl = URL.createObjectURL(blob);
+      content.innerHTML = '<img src="' + previewModalUrl + '" alt="Prévia" ' +
+        'style="max-width:100%;max-height:70vh;border-radius:var(--radius-sm);display:block;margin:0 auto">';
+      console.log('[preview] ok —', Math.round(blob.size / 1024), 'KB');
+    } catch (err) {
+      falhar(err && err.message ? err.message : 'Erro inesperado.', err);
     }
   }
 
@@ -6222,6 +9885,53 @@ input.props-input[type="color"] { padding: 2px 4px; height: 30px; }
     const wrap = document.getElementById('canvasWrap');
     return wrap.offsetWidth / currentTemplate.canvas.width;
   }
+  // ── Simulacao do auto-fit para o PREVIEW do editor ──────────────
+  // O render final (servidor) e a verdade; aqui so aproximamos com Canvas 2D
+  // para que mexer nos valores tenha efeito imediato na tela.
+  const _afCanvas = document.createElement('canvas');
+  const _afCtx = _afCanvas.getContext('2d');
+
+  function _afQuebraLinhas(texto, fs, fontCss, maxW) {
+    _afCtx.font = `${fontCss.weight} ${fs}px ${fontCss.family}`;
+    const linhas = [];
+    for (const paragrafo of String(texto).split('\n')) {
+      const palavras = paragrafo.split(/\s+/).filter(Boolean);
+      if (!palavras.length) { linhas.push(''); continue; }
+      let atual = palavras[0];
+      for (let i = 1; i < palavras.length; i++) {
+        const teste = atual + ' ' + palavras[i];
+        if (_afCtx.measureText(teste).width <= maxW) atual = teste;
+        else { linhas.push(atual); atual = palavras[i]; }
+      }
+      linhas.push(atual);
+    }
+    return linhas;
+  }
+
+  /** Devolve o tamanho de fonte que o auto-fit usaria (em px do template). */
+  function _autoFitPreview(layer, texto, fontCss) {
+    const base = layer.font_size || 24;
+    if (!layer.auto_fit || !texto) return base;
+    const lhMult = layer.line_height || 1.2;
+    const cabe = (fs) => {
+      const linhas = _afQuebraLinhas(texto, fs, fontCss, layer.w);
+      const alturaLinha = Math.max(fs * lhMult, fs * 1.2);
+      if (linhas.length * alturaLinha > layer.h) return false;
+      _afCtx.font = `${fontCss.weight} ${fs}px ${fontCss.family}`;
+      return linhas.every(l => _afCtx.measureText(l).width <= layer.w);
+    };
+
+    const min = Math.max(4, layer.auto_fit.min_font_size || Math.round(base * 0.65));
+    const max = layer.auto_fit.max_font_size || 0;
+
+    let fs = base;
+    while (fs > min && !cabe(fs)) fs -= 1;          // encolhe
+    if (max > base && fs === base) {                 // cresce (so se nao encolheu)
+      while (fs < max && cabe(fs + 1)) fs += 1;
+    }
+    return fs;
+  }
+
   function renderCanvas() {
     if (!currentTemplate) return;
     updateBgImage();
@@ -6265,13 +9975,19 @@ input.props-input[type="color"] { padding: 2px 4px; height: 30px; }
         }
         const svgWrap = document.createElement('div');
         svgWrap.className = 'layer-content-preview';
-        svgWrap.style.cssText = 'position:absolute;inset:0;pointer-events:none';
+        let _css = 'position:absolute;inset:0;pointer-events:none';
+        const _sh = layer.shadow;
+        if (_sh && (_sh.blur || 0) > 0) {
+          const _o = (_sh.opacity == null ? 0.35 : _sh.opacity);
+          _css += ';filter:drop-shadow(' + ((_sh.offset_x||0)*SCALE) + 'px ' + ((_sh.offset_y||0)*SCALE) + 'px ' + ((_sh.blur||0)*SCALE) + 'px ' + _hexToRgba(_sh.color||'#000000', _o) + ')';
+        }
+        svgWrap.style.cssText = _css;
         svgWrap.innerHTML = shapeHtml;
         div.appendChild(svgWrap);
       } else if (layer.type === 'text-line' || layer.type === 'text-block') {
         const txtPreview = document.createElement('div');
         txtPreview.className = 'layer-content-preview';
-        const scaledSize = Math.max(8, Math.min((layer.font_size || 24) * SCALE, h * 0.85));
+        let scaledSize = Math.max(8, Math.min((layer.font_size || 24) * SCALE, h * 0.85));
         const align = layer.align || layer.text_align || 'left';
         const valign = layer.vertical_align || 'top';
         const vAlignMap = { top: 'flex-start', middle: 'center', bottom: 'flex-end' };
@@ -6318,12 +10034,25 @@ input.props-input[type="color"] { padding: 2px 4px; height: 30px; }
         });
         if (layer.text_transform === 'uppercase') preview = preview.toUpperCase();
         else if (layer.text_transform === 'capitalize-first' && preview) preview = preview.charAt(0).toUpperCase() + preview.slice(1);
+        // auto-fit: recalcula o tamanho com base no TEXTO REAL que sera renderizado
+        if (layer.auto_fit && preview) {
+          const _fs = _autoFitPreview(layer, preview, { family: _pf.fam || 'sans-serif', weight: _pf.w || 400 });
+          scaledSize = Math.max(8, _fs * SCALE);
+          txtPreview.style.fontSize = scaledSize + 'px';
+        }
         txtPreview.textContent = preview || '(texto vazio)';
         div.appendChild(txtPreview);
       } else if (layer.type === 'image') {
         const imgWrap = document.createElement('div');
         imgWrap.className = 'layer-content-preview';
-        imgWrap.style.cssText = 'position:absolute;inset:0;pointer-events:none;overflow:hidden;display:flex;align-items:center;justify-content:center;';
+        let _icss = 'position:absolute;inset:0;pointer-events:none;overflow:hidden;display:flex;align-items:center;justify-content:center;';
+        const _ish = layer.shadow;
+        if (_ish && (_ish.blur || 0) > 0) {
+          const _io = (_ish.opacity == null ? 0.35 : _ish.opacity);
+          const _irgba = (typeof _hexToRgba === 'function') ? _hexToRgba(_ish.color || '#000000', _io) : 'rgba(0,0,0,' + _io + ')';
+          _icss += ';filter:drop-shadow(' + ((_ish.offset_x||0)*SCALE) + 'px ' + ((_ish.offset_y||0)*SCALE) + 'px ' + ((_ish.blur||0)*SCALE) + 'px ' + _irgba + ')';
+        }
+        imgWrap.style.cssText = _icss;
         const src = (layer.source && (layer.source.url || layer.source.static_url)) || layer.url || '';
         if (src) {
           const im = document.createElement('img');
@@ -6914,9 +10643,27 @@ input.props-input[type="color"] { padding: 2px 4px; height: 30px; }
           <button type="button" class="align-btn${layer.text_transform==='uppercase'?' active':''}" onclick="setTextTransform('${id}','uppercase')" title="TUDO MAIÚSCULO (all caps)" style="letter-spacing:0.08em;font-weight:700">AA</button>
           <button type="button" class="align-btn${layer.text_transform==='capitalize-first'?' active':''}" onclick="setTextTransform('${id}','capitalize-first')" title="Apenas a primeira letra maiúscula">Ab</button>
         </div>
+        <div class="props-label" style="margin-top:10px;display:flex;align-items:center;justify-content:space-between">
+          <span>Ajustar tamanho ao espaço</span>
+          <button type="button" class="align-btn${layer.auto_fit?' active':''}" style="padding:2px 10px;font-size:.7rem"
+                  onclick="toggleAutoFit('${id}')">${layer.auto_fit?'Ligado':'Desligado'}</button>
+        </div>
         ${layer.auto_fit?`
-        <div class="props-label" style="margin-top:8px">Auto-fit min</div>
-        <input class="props-input" type="number" value="${layer.auto_fit.min_font_size}" onchange="updLayer('${id}','auto_fit',{enabled:true,min_font_size:+this.value})">
+        <div style="font-size:.7rem;opacity:.7;margin-bottom:6px;line-height:1.35">
+          Texto longo encolhe até o mínimo; texto curto cresce até o máximo.
+        </div>
+        <div class="props-grid-2">
+          <div>
+            <div class="props-label">Mínimo</div>
+            <input class="props-input" type="number" min="1" value="${layer.auto_fit.min_font_size||0}"
+                   onchange="updAutoFit('${id}','min_font_size',+this.value)">
+          </div>
+          <div>
+            <div class="props-label">Máximo</div>
+            <input class="props-input" type="number" min="0" value="${layer.auto_fit.max_font_size||0}"
+                   onchange="updAutoFit('${id}','max_font_size',+this.value)">
+          </div>
+        </div>
         `:''}
       </div>
       <div class="props-section">
@@ -7019,6 +10766,25 @@ input.props-input[type="color"] { padding: 2px 4px; height: 30px; }
           <div><div class="props-label">Cor</div>${renderColorPickerWithSwatches(`border-color-${id}`, layer.border?.color||'#ffffff', `updLayerBorderColor('${id}',this.value)`)}</div>
         </div>
       </div>
+      <div class="props-section">
+        <div class="props-label">Sombra (drop shadow)</div>
+        <div class="props-label" style="margin-top:6px;font-size:.72rem;opacity:.75">Desfoque (px) — 0 desliga</div>
+        <input class="props-input" type="number" min="0" value="${(layer.shadow&&layer.shadow.blur)||0}" onchange="updImgShadow('${id}','blur',+this.value)">
+        <div style="display:flex;gap:8px;margin-top:8px">
+          <div style="flex:1">
+            <div class="props-label" style="font-size:.72rem;opacity:.75">Desloc. X</div>
+            <input class="props-input" type="number" value="${(layer.shadow&&layer.shadow.offset_x)||0}" onchange="updImgShadow('${id}','offset_x',+this.value)">
+          </div>
+          <div style="flex:1">
+            <div class="props-label" style="font-size:.72rem;opacity:.75">Desloc. Y</div>
+            <input class="props-input" type="number" value="${(layer.shadow&&layer.shadow.offset_y)||0}" onchange="updImgShadow('${id}','offset_y',+this.value)">
+          </div>
+        </div>
+        <div class="props-label" style="margin-top:8px;font-size:.72rem;opacity:.75">Opacidade (0 a 1)</div>
+        <input class="props-input" type="number" min="0" max="1" step="0.05" value="${(layer.shadow&&layer.shadow.opacity!=null)?layer.shadow.opacity:0.35}" onchange="updImgShadow('${id}','opacity',+this.value)">
+        <div class="props-label" style="margin-top:8px;font-size:.72rem;opacity:.75">Cor da sombra</div>
+        ${renderColorPickerWithSwatches(`ishcolor-${id}`, (layer.shadow&&layer.shadow.color)||'#000000', `updImgShadow('${id}','color',this.value)`)}
+      </div>
   </div>
 </details>`;
     }
@@ -7045,6 +10811,25 @@ input.props-input[type="color"] { padding: 2px 4px; height: 30px; }
         <div class="props-label" style="margin-top:8px">Arredondamento dos cantos (px)</div>
         <input class="props-input" type="number" min="0" value="${layer.border_radius||0}" onchange="updLayerN('${id}','border_radius',this.value)">
         `:''}
+      </div>
+      <div class="props-section">
+        <div class="props-label">Sombra (drop shadow)</div>
+        <div class="props-label" style="margin-top:6px;font-size:.72rem;opacity:.75">Desfoque (px) — 0 desliga</div>
+        <input class="props-input" type="number" min="0" value="${(layer.shadow&&layer.shadow.blur)||0}" onchange="updShadow('${id}','blur',+this.value)">
+        <div style="display:flex;gap:8px;margin-top:8px">
+          <div style="flex:1">
+            <div class="props-label" style="font-size:.72rem;opacity:.75">Desloc. X</div>
+            <input class="props-input" type="number" value="${(layer.shadow&&layer.shadow.offset_x)||0}" onchange="updShadow('${id}','offset_x',+this.value)">
+          </div>
+          <div style="flex:1">
+            <div class="props-label" style="font-size:.72rem;opacity:.75">Desloc. Y</div>
+            <input class="props-input" type="number" value="${(layer.shadow&&layer.shadow.offset_y)||0}" onchange="updShadow('${id}','offset_y',+this.value)">
+          </div>
+        </div>
+        <div class="props-label" style="margin-top:8px;font-size:.72rem;opacity:.75">Opacidade (0 a 1)</div>
+        <input class="props-input" type="number" min="0" max="1" step="0.05" value="${(layer.shadow&&layer.shadow.opacity!=null)?layer.shadow.opacity:0.35}" onchange="updShadow('${id}','opacity',+this.value)">
+        <div class="props-label" style="margin-top:8px;font-size:.72rem;opacity:.75">Cor da sombra</div>
+        ${renderColorPickerWithSwatches(`shcolor-${id}`, (layer.shadow&&layer.shadow.color)||'#000000', `updShadow('${id}','color',this.value)`)}
       </div>
   </div>
 </details>`;
@@ -7112,6 +10897,81 @@ input.props-input[type="color"] { padding: 2px 4px; height: 30px; }
     scheduleLivePreview(NORMAL_DEBOUNCE);
   }
   function updLayerN(id, key, value) { updLayer(id, key, parseFloat(value) || 0); }
+
+  // ── Auto-fit (encolhe/cresce a fonte para caber na caixa) ──
+  // Ligar ja preenche min/max com valores sensatos, derivados do tamanho atual:
+  // o usuario nao precisa adivinhar numero nenhum.
+  function toggleAutoFit(id) {
+    const layer = getLayer(id);
+    if (!layer) return;
+    if (layer.auto_fit) {
+      delete layer.auto_fit;
+    } else {
+      const base = layer.font_size || 16;
+      layer.auto_fit = {
+        enabled: true,
+        min_font_size: Math.max(8, Math.round(base * 0.65)),
+        max_font_size: Math.round(base * 1.5),
+      };
+    }
+    markDirty();
+    debouncedPushHistory();
+    renderCanvas();
+    showProps(id);
+    scheduleLivePreview(NORMAL_DEBOUNCE);
+  }
+  function updAutoFit(id, campo, valor) {
+    const layer = getLayer(id);
+    if (!layer || !layer.auto_fit) return;
+    const base = layer.font_size || 16;
+    const af = Object.assign(
+      { enabled: true, min_font_size: Math.round(base * 0.65), max_font_size: 0 },
+      layer.auto_fit
+    );
+    af[campo] = valor;
+    if (!af.min_font_size) af.min_font_size = Math.max(8, Math.round(base * 0.65));
+    layer.auto_fit = af;
+    markDirty();
+    debouncedPushHistory();
+    renderCanvas();
+    scheduleLivePreview(NORMAL_DEBOUNCE);
+  }
+
+  // Sombra de layers 'image' (a foto circular). Mesma forma da sombra de shape.
+  function updImgShadow(id, campo, valor) {
+    const layer = getLayer(id);
+    if (!layer) return;
+    const s = Object.assign({ color: '#000000', blur: 0, offset_x: 0, offset_y: 0, opacity: 0.35 }, layer.shadow || {});
+    s[campo] = valor;
+    if (!s.blur) delete layer.shadow;
+    else layer.shadow = s;
+    markDirty();
+    debouncedPushHistory();
+    renderCanvas();
+    scheduleLivePreview(NORMAL_DEBOUNCE);
+  }
+
+  // ── Sombra (drop shadow) de layers 'shape' ──
+  function _hexToRgba(hex, alpha) {
+    const h = String(hex || '#000000').replace('#', '');
+    const full = h.length === 3 ? h.split('').map(c => c + c).join('') : h;
+    const n = parseInt(full, 16);
+    if (isNaN(n)) return 'rgba(0,0,0,' + alpha + ')';
+    return 'rgba(' + ((n >> 16) & 255) + ',' + ((n >> 8) & 255) + ',' + (n & 255) + ',' + alpha + ')';
+  }
+  function updShadow(id, campo, valor) {
+    const layer = getLayer(id);
+    if (!layer) return;
+    const s = Object.assign({ color: '#000000', blur: 0, offset_x: 0, offset_y: 0, opacity: 0.35 }, layer.shadow || {});
+    s[campo] = valor;
+    // sem desfoque nao ha sombra: remove a propriedade para nao sujar o template
+    if (!s.blur) delete layer.shadow;
+    else layer.shadow = s;
+    markDirty();
+    debouncedPushHistory();
+    renderCanvas();
+    scheduleLivePreview(NORMAL_DEBOUNCE);
+  }
 
   // Define a transformação de caixa (text_transform) do layer de texto: 'none',
   // 'uppercase' (TUDO MAIÚSCULO) ou 'capitalize-first' (só a 1ª letra). Não destrói o
@@ -8332,6 +12192,7 @@ input.props-input[type="color"] { padding: 2px 4px; height: 30px; }
                 <option value="colaborador">Colaborador</option>
                 <option value="gestor">Gestor</option>
                 <option value="capital_humano">Capital Humano</option>
+                <option value="corporate">Corporate</option>
                 <option value="admin">Admin</option>
               </select>
             </div>
@@ -8408,6 +12269,7 @@ input.props-input[type="color"] { padding: 2px 4px; height: 30px; }
                 <option value="colaborador">Colaborador</option>
                 <option value="gestor">Gestor</option>
                 <option value="capital_humano">Capital Humano</option>
+                <option value="corporate">Corporate</option>
                 <option value="admin">Admin</option>
               </select>
             </div>
@@ -8437,12 +12299,14 @@ input.props-input[type="color"] { padding: 2px 4px; height: 30px; }
 
     const ROLE_LABELS = {
       capital_humano: 'Capital Humano',
+      corporate: 'Corporate',
       admin: 'Admin',
       gestor: 'Gestor',
       colaborador: 'Colaborador',
     };
     const ROLE_COLORS = {
       capital_humano: 'rgba(99,102,241,0.1);color:#4f46e5',
+      corporate: 'rgba(111,135,123,0.12);color:var(--sage-green)',
       admin: 'rgba(159,63,55,0.1);color:var(--ruby-red)',
       gestor: 'rgba(111,135,123,0.1);color:var(--sage-green)',
       colaborador: 'var(--ink-08);color:var(--ink-50)',
@@ -8471,7 +12335,7 @@ input.props-input[type="color"] { padding: 2px 4px; height: 30px; }
       { f: 'created_at', label: 'Cadastro', w: 130, sort: true },
       { f: '_acoes', label: 'Ações', w: 160, sort: false, center: true },
     ];
-    const ROLE_ORDER = ['admin', 'gestor', 'capital_humano'];
+    const ROLE_ORDER = ['admin', 'gestor', 'capital_humano', 'corporate'];
     let uSort = { field: 'name', dir: 1 };
     let uColWidths = {};
     let uResizing = false;
@@ -10029,6 +13893,695 @@ const FLUXOS_ETAPAS = {
     { id: "em-espera",    label: "Em espera",             visivel: false },
   ],
 };
+```
+
+
+## File: artifacts/api-server/public/convite-corporate.html
+
+```
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Convites de Evento — SVN</title>
+  <link rel="stylesheet" href="style.css?v=20260713a">
+  <script>(function(){try{const s=JSON.parse(localStorage.getItem('svn_layout_state')||'{}');if(s.isAdmin)document.documentElement.dataset.preShell='admin';}catch(e){}})()</script>
+  <style>
+    .cc-split { display: grid; grid-template-columns: minmax(0, 1fr) 420px; gap: 24px; align-items: start; }
+    @media (max-width: 1000px) { .cc-split { grid-template-columns: 1fr; } }
+
+    .cc-preview-col { position: sticky; top: 84px; }
+    .cc-preview-card { padding: 18px; }
+    .cc-preview-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 12px; flex-wrap: wrap; }
+    .cc-preview-title { font-size: 0.82rem; font-weight: 600; color: var(--ink-60); }
+
+    .cc-seg { display: inline-flex; border: 1px solid var(--border-light); border-radius: var(--radius-pill); overflow: hidden; background: var(--card-white); }
+    .cc-seg button { border: 0; background: transparent; padding: 5px 12px; font-size: 0.74rem; font-weight: 600; color: var(--ink-60); cursor: pointer; font-family: inherit; }
+    .cc-seg button.active { background: var(--ruby-red); color: var(--paper-white); }
+
+    .cc-preview-box {
+      background: var(--icon-bg); border: 1px dashed var(--border-light); border-radius: var(--radius-lg);
+      min-height: 380px; display: flex; align-items: center; justify-content: center; overflow: hidden; padding: 10px;
+    }
+    .cc-preview-box img { max-width: 100%; max-height: 520px; border-radius: var(--radius-sm); box-shadow: 0 2px 12px rgba(34, 27, 25, .12); }
+    .cc-preview-empty { font-size: 0.8rem; color: var(--ink-50); text-align: center; padding: 0 20px; line-height: 1.5; }
+    .cc-preview-hint { font-size: 0.72rem; color: var(--ink-50); margin-top: 10px; text-align: center; }
+
+    .cc-spinner {
+      width: 24px; height: 24px; border-radius: 50%;
+      border: 2px solid var(--border-light); border-top-color: var(--ruby-red);
+      animation: ccspin 0.7s linear infinite; display: inline-block; vertical-align: middle;
+    }
+    .cc-spinner--sm { width: 14px; height: 14px; margin-right: 7px; }
+    @keyframes ccspin { to { transform: rotate(360deg); } }
+    .cc-loading { display: flex; flex-direction: column; align-items: center; gap: 12px; color: var(--ink-50); font-size: 0.8rem; }
+
+    .cc-palestrante { border: 1px solid var(--border-light); border-radius: var(--radius-lg); padding: 16px; margin-bottom: 12px; background: var(--card-white); }
+    .cc-palestrante-num { font-size: 0.78rem; font-weight: 700; color: var(--ruby-red); letter-spacing: .04em; text-transform: uppercase; display: block; margin-bottom: 12px; }
+    .cc-foto-row { display: flex; gap: 12px; align-items: center; }
+    .cc-foto-thumb { width: 62px; height: 62px; border-radius: 50%; object-fit: cover; flex: 0 0 auto; border: 1px solid var(--border-light); background: var(--icon-bg); }
+    .cc-foto-placeholder { width: 62px; height: 62px; border-radius: 50%; flex: 0 0 auto; border: 1px dashed var(--border-light); background: var(--icon-bg); display: flex; align-items: center; justify-content: center; color: var(--ink-40); font-size: 0.66rem; text-align: center; line-height: 1.2; }
+    .cc-foto-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+    .cc-foto-auto { font-size: 0.72rem; color: var(--sage-green); font-weight: 600; }
+
+    .cc-lib-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 12px; max-height: 300px; overflow-y: auto; padding: 4px; }
+    .cc-lib-item { cursor: pointer; text-align: center; }
+    .cc-lib-thumb { position: relative; }
+    .cc-lib-item img { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: var(--radius-md); border: 2px solid transparent; background: var(--icon-bg); display: block; cursor: pointer; }
+    .cc-lib-item:hover img { border-color: var(--ruby-red); }
+    .cc-lib-del {
+      position: absolute; top: 4px; right: 4px; width: 22px; height: 22px; border-radius: 50%;
+      border: 0; background: var(--carbon-black);
+      opacity: .82; color: var(--paper-white); font-size: 15px; line-height: 1;
+      cursor: pointer; display: none; align-items: center; justify-content: center; padding: 0;
+    }
+    .cc-lib-thumb:hover .cc-lib-del { display: flex; }
+    .cc-lib-del:hover { background: var(--ruby-red); }
+    .cc-lib-nome { font-size: 0.72rem; color: var(--ink-60); margin-top: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .cc-lib-empty { font-size: 0.82rem; color: var(--ink-50); text-align: center; padding: 26px 0; line-height: 1.5; }
+    /* dica contextual abaixo de um grupo de campos */
+    .cc-hint {
+      margin: 12px 0 0;
+      padding: 10px 12px;
+      background: var(--icon-bg);
+      border-left: 2px solid var(--sage-green);
+      border-radius: var(--radius-sm);
+      font-size: 0.78rem;
+      line-height: 1.45;
+      color: var(--ink-60);
+    }
+    .cc-hint strong { color: var(--carbon-black); font-weight: 600; }
+    .cc-hint em { font-style: normal; color: var(--carbon-black); }
+
+    .cc-upload-box { border-top: 1px solid var(--border-light); margin-top: 16px; padding-top: 16px; }
+
+    /* área de envio: visual de upload, não de botão comum */
+    .cc-dropzone {
+      width: 100%; display: flex; align-items: center; gap: 12px;
+      padding: 14px 16px; border: 1.5px dashed var(--border-warm, var(--border-light));
+      border-radius: var(--radius-lg); background: var(--icon-bg);
+      color: var(--ink-60); cursor: pointer; font-family: inherit; text-align: left;
+      transition: border-color .15s, background .15s, color .15s;
+    }
+    .cc-dropzone:hover { border-color: var(--ruby-red); color: var(--ruby-red); background: var(--card-white); }
+    .cc-dropzone:disabled { opacity: .6; cursor: default; }
+    .cc-dropzone-txt { display: flex; flex-direction: column; line-height: 1.35; }
+    .cc-dropzone-txt strong { font-size: 0.86rem; font-weight: 600; color: var(--carbon-black); }
+    .cc-dropzone:hover .cc-dropzone-txt strong { color: var(--ruby-red); }
+    .cc-dropzone-txt small { font-size: 0.72rem; color: var(--ink-50); }
+
+    /* editar o nome da foto */
+    .cc-lib-nome-row { display: flex; align-items: center; justify-content: center; gap: 4px; margin-top: 5px; }
+    .cc-lib-edit {
+      border: 0; background: transparent; color: var(--ink-40); cursor: pointer; padding: 0 2px;
+      font-size: 0.72rem; line-height: 1; flex-shrink: 0;
+    }
+    .cc-lib-edit:hover { color: var(--ruby-red); }
+    .cc-lib-nome-input {
+      width: 100%; font-size: 0.72rem; padding: 3px 6px; font-family: inherit;
+      border: 1px solid var(--ruby-red); border-radius: var(--radius-sm); background: var(--card-white); color: var(--carbon-black);
+    }
+
+    .cc-result { display: none; margin-top: 16px; }
+    .cc-result.show { display: block; }
+    .cc-links { display: flex; flex-direction: column; gap: 8px; }
+    .cc-link { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 14px; border: 1px solid var(--border-light); border-radius: var(--radius-md); background: var(--card-white); text-decoration: none; color: var(--carbon-black); font-size: 0.84rem; font-weight: 600; }
+    .cc-link:hover { border-color: var(--ruby-red); }
+    .cc-link small { font-weight: 600; color: var(--ink-50); }
+    .cc-link--zip { border-color: var(--ruby-red); background: var(--icon-bg); }
+  </style>
+</head>
+<body class="page-light">
+  <div class="page-container page-container--wide" id="pageRoot" style="display:none">
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">Convites de Evento</h1>
+        <p class="page-subtitle">Gere os convites do evento online. A prévia mostra exatamente como a arte vai ficar.</p>
+      </div>
+    </div>
+
+    <div class="cc-split">
+      <div>
+        <div class="form-card" style="margin-bottom: 16px;">
+          <h2 style="font-size: 1rem; margin: 0 0 16px;">Sobre o evento</h2>
+
+          <div class="field">
+            <label for="titulo">Nome do evento&nbsp;<span aria-hidden="true" style="color:var(--ruby-red)">*</span></label>
+            <input type="text" id="titulo" placeholder="Ex.: Perspectivas para o 2º semestre" required>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px;">
+            <div class="field">
+              <label for="data">Data&nbsp;<span aria-hidden="true" style="color:var(--ruby-red)">*</span></label>
+              <input type="date" id="data" required>
+            </div>
+            <div class="field">
+              <label for="horario">Horário&nbsp;<span aria-hidden="true" style="color:var(--ruby-red)">*</span></label>
+              <input type="time" id="horario" required>
+            </div>
+            <div class="field">
+              <label for="plataforma">Plataforma&nbsp;<span aria-hidden="true" style="color:var(--ruby-red)">*</span></label>
+              <select id="plataforma" required>
+                <option value="live">Live</option>
+                <option value="youtube">YouTube</option>
+                <option value="zoom" selected>Zoom</option>
+                <option value="meet">Meet</option>
+              </select>
+            </div>
+          </div>
+
+          <p class="cc-hint">
+            Na arte, data e horário saem no formato <strong>24 de julho · 19h</strong>.
+            Se a plataforma de transmissão ainda não estiver definida, escolha <strong>Live</strong>.
+          </p>
+        </div>
+
+        <div class="form-card">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
+            <h2 style="font-size: 1rem; margin: 0;">Palestrantes</h2>
+            <div class="field" style="margin: 0; min-width: 150px;">
+              <select id="num_palestrantes" aria-label="Quantidade de palestrantes">
+                <option value="1">1 palestrante</option>
+                <option value="2">2 palestrantes</option>
+                <option value="3">3 palestrantes</option>
+                <option value="4">4 palestrantes</option>
+              </select>
+            </div>
+          </div>
+
+          <p class="cc-hint">
+            <strong>Fotos:</strong> ao digitar o nome de alguém que já está na biblioteca, a foto entra sozinha.
+            Se enviar uma nova foto para o mesmo nome, ela passa a ser a usada daí em diante.
+            Você também pode escolher outra manualmente em <em>Escolher foto</em>.
+          </p>
+          <div id="palestrantesContainer"></div>
+        </div>
+
+        <div style="display: flex; gap: 10px; margin-top: 18px;">
+          <button type="button" class="btn btn-primary" id="btnGerar">Gerar convite</button>
+          <button type="button" class="btn btn-secondary" id="btnPreview">Atualizar prévia</button>
+        </div>
+
+        <div class="cc-result" id="resultBox">
+          <div class="form-card" style="margin-top: 16px;">
+            <h2 style="font-size: 1rem; margin: 0 0 12px;">Convite gerado</h2>
+            <div class="cc-links" id="resultLinks"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="cc-preview-col">
+        <div class="form-card cc-preview-card">
+          <div class="cc-preview-head">
+            <span class="cc-preview-title">Prévia</span>
+            <div class="cc-seg" id="previewFormatos">
+              <button type="button" data-fmt="stories">Stories</button>
+              <button type="button" data-fmt="feed" class="active">Feed</button>
+              <button type="button" data-fmt="quadrado">Quadrado</button>
+            </div>
+          </div>
+          <div class="cc-preview-box" id="previewBox">
+            <div class="cc-preview-empty">
+              Preencha o nome do evento e clique em<br><strong>Atualizar prévia</strong>
+            </div>
+          </div>
+          <div class="cc-preview-hint">A prévia usa o mesmo motor da arte final.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="libModal" onclick="fecharBiblioteca(event)">
+    <div class="modal-card" style="max-width: 580px" onclick="event.stopPropagation()">
+      <div class="modal-header">
+        <h3 class="modal-title">Escolher foto</h3>
+        <button type="button" class="modal-close" onclick="fecharBiblioteca()" aria-label="Fechar">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div id="libContent"><div class="cc-lib-empty">Carregando…</div></div>
+
+        <div class="cc-upload-box">
+          <div class="field" style="margin-bottom: 10px;">
+            <label for="uploadNome">Nome do palestrante</label>
+            <input type="text" id="uploadNome" placeholder="Ex.: Fernando Silva">
+            <small style="color: var(--ink-50); font-size: 0.72rem; display: block; margin-top: 4px;">
+              A foto fica salva com esse nome — na próxima vez que você digitar o mesmo nome, ela carrega sozinha.
+            </small>
+          </div>
+
+          <button type="button" class="cc-dropzone" id="btnUpload">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="17 8 12 3 7 8"/>
+              <line x1="12" y1="3" x2="12" y2="15"/>
+            </svg>
+            <span class="cc-dropzone-txt"><strong>Enviar nova foto</strong><small>PNG, JPG ou WEBP · até 10 MB</small></span>
+          </button>
+          <input type="file" id="fileUpload" accept="image/png,image/jpeg,image/webp" style="display:none">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="fecharBiblioteca()">Cancelar</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="utils.js?v=20260615d"></script>
+  <script src="toast.js?v=20260603"></script>
+  <script src="config.js?v=20260615a"></script>
+  <script src="auth.js?v=20260611f"></script>
+  <script src="shell.js?v=20260611f"></script>
+  <script src="convite-corporate.js?v=20260713b"></script>
+</body>
+</html>
+```
+
+
+## File: artifacts/api-server/public/convite-corporate.js
+
+```
+/**
+ * Convites de Evento — área Corporate.
+ * O evento é sempre ONLINE: o backend fixa tipo_evento e limpa local/endereço.
+ *
+ * Biblioteca de fotos: cada foto é salva com o NOME do palestrante. Quando o
+ * mesmo nome é digitado de novo, a foto mais recente daquele nome é carregada
+ * automaticamente (e pode ser trocada a qualquer momento).
+ */
+(function () {
+  'use strict';
+
+  var fotos = {};          // { 1: 'https://...' } -> foto escolhida por palestrante
+  var fotoAuto = {};       // { 1: true } -> veio do preenchimento automático (pode ser sobrescrita)
+  var biblioteca = [];     // [{ id, filename, url, uploaded_at }] ordenada da mais recente p/ a mais antiga
+  var libAlvo = null;      // palestrante que abriu o modal
+  var previewSeq = 0;      // descarta respostas fora de ordem
+  var formatoPreview = 'feed';
+  var ehAdmin = false;      // só admin pode apagar fotos da biblioteca
+
+  var MESES = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho',
+               'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
+
+  function val(id) {
+    var el = document.getElementById(id);
+    return el ? String(el.value || '').trim() : '';
+  }
+
+  /** '2026-07-24' -> '24 de julho' (formato usado na arte). */
+  function formatarData(iso) {
+    if (!iso) return '';
+    var p = iso.split('-');
+    if (p.length !== 3) return iso;
+    var mes = MESES[parseInt(p[1], 10) - 1];
+    return mes ? parseInt(p[2], 10) + ' de ' + mes : iso;
+  }
+
+  /** '19:00' -> '19h' | '19:30' -> '19h30'. */
+  function formatarHorario(hhmm) {
+    if (!hhmm) return '';
+    var p = hhmm.split(':');
+    if (p.length < 2) return hhmm;
+    var h = parseInt(p[0], 10);
+    return p[1] === '00' ? h + 'h' : h + 'h' + p[1];
+  }
+
+  /** normaliza para comparar nomes: sem acento, sem caixa, sem espaços extras */
+  function chaveNome(s) {
+    return String(s || '')
+      .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase().replace(/\s+/g, ' ').trim();
+  }
+
+  function coletarDados() {
+    var num = parseInt(val('num_palestrantes'), 10) || 1;
+    var dados = {
+      titulo: val('titulo'),
+      data: formatarData(val('data')),
+      horario: formatarHorario(val('horario')),
+      plataforma: val('plataforma'),
+      num_palestrantes: String(num),
+    };
+    for (var i = 1; i <= num; i++) {
+      dados['palestrante_' + i + '_nome'] = val('p' + i + '_nome');
+      dados['palestrante_' + i + '_cargo'] = val('p' + i + '_cargo');
+      if (fotos[i]) dados['palestrante_' + i + '_foto'] = fotos[i];
+    }
+    return dados;
+  }
+
+  // ── biblioteca de fotos ─────────────────────────────────────────
+  async function carregarBiblioteca() {
+    try {
+      var res = await fetch('/api/corporate/fotos');
+      var d = await res.json();
+      biblioteca = d.fotos || [];   // já vem da mais recente para a mais antiga
+    } catch (e) {
+      biblioteca = [];
+    }
+  }
+
+  /** foto mais recente cadastrada com aquele nome (ou null) */
+  function fotoDoNome(nome) {
+    var k = chaveNome(nome);
+    if (!k) return null;
+    for (var i = 0; i < biblioteca.length; i++) {
+      if (chaveNome(biblioteca[i].filename) === k) return biblioteca[i].url;
+    }
+    return null;
+  }
+
+  /** ao digitar o nome, puxa a foto já cadastrada — sem sobrescrever escolha manual */
+  window.aoMudarNome = function (i) {
+    if (fotos[i] && !fotoAuto[i]) return;      // o usuário escolheu na mão: respeita
+    var url = fotoDoNome(val('p' + i + '_nome'));
+    if (url) {
+      fotos[i] = url;
+      fotoAuto[i] = true;
+    } else if (fotoAuto[i]) {
+      delete fotos[i];                          // o nome mudou e não há foto: limpa a automática
+      delete fotoAuto[i];
+    } else {
+      return;
+    }
+    renderPalestrantes();
+  };
+
+  // ── campos dos palestrantes ─────────────────────────────────────
+  function renderPalestrantes() {
+    var num = parseInt(val('num_palestrantes'), 10) || 1;
+    var html = '';
+
+    for (var i = 1; i <= num; i++) {
+      var foto = fotos[i];
+      html +=
+        '<div class="cc-palestrante">' +
+          '<span class="cc-palestrante-num">Palestrante ' + i + '</span>' +
+          '<div class="field">' +
+            '<label for="p' + i + '_nome">Nome</label>' +
+            '<input type="text" id="p' + i + '_nome" value="' + esc(val('p' + i + '_nome')) + '" ' +
+                   'placeholder="Nome do palestrante" onchange="aoMudarNome(' + i + ')" onblur="aoMudarNome(' + i + ')">' +
+          '</div>' +
+          '<div class="field">' +
+            '<label for="p' + i + '_cargo">Cargo</label>' +
+            '<input type="text" id="p' + i + '_cargo" value="' + esc(val('p' + i + '_cargo')) + '" placeholder="Ex.: Estrategista-chefe">' +
+          '</div>' +
+          '<div class="cc-foto-row">' +
+            (foto
+              ? '<img class="cc-foto-thumb" src="' + esc(foto) + '" alt="Foto do palestrante ' + i + '">'
+              : '<div class="cc-foto-placeholder">sem<br>foto</div>') +
+            '<div class="cc-foto-actions">' +
+              '<button type="button" class="btn btn-secondary" style="padding:6px 12px;font-size:0.78rem" onclick="abrirBiblioteca(' + i + ')">' +
+                (foto ? 'Trocar foto' : 'Escolher foto') +
+              '</button>' +
+              (foto ? '<button type="button" class="btn btn-secondary" style="padding:6px 12px;font-size:0.78rem" onclick="removerFoto(' + i + ')">Remover</button>' : '') +
+              (fotoAuto[i] ? '<span class="cc-foto-auto">✓ foto do cadastro</span>' : '') +
+            '</div>' +
+          '</div>' +
+        '</div>';
+    }
+    document.getElementById('palestrantesContainer').innerHTML = html;
+  }
+
+  window.removerFoto = function (i) {
+    delete fotos[i];
+    delete fotoAuto[i];
+    renderPalestrantes();
+  };
+
+  // ── modal da biblioteca ─────────────────────────────────────────
+  window.abrirBiblioteca = async function (i) {
+    libAlvo = i;
+    document.getElementById('libModal').classList.add('visible');
+    document.getElementById('uploadNome').value = val('p' + i + '_nome');
+
+    var box = document.getElementById('libContent');
+    box.innerHTML = '<div class="cc-lib-empty"><span class="cc-spinner"></span></div>';
+
+    await carregarBiblioteca();
+    if (biblioteca.length === 0) {
+      box.innerHTML = '<div class="cc-lib-empty">Nenhuma foto cadastrada ainda.<br>Envie a primeira abaixo.</div>';
+      return;
+    }
+    box.innerHTML = '<div class="cc-lib-grid">' + biblioteca.map(function (f) {
+      return '<div class="cc-lib-item" id="libItem' + f.id + '">' +
+               '<div class="cc-lib-thumb">' +
+                 '<img src="' + esc(f.url) + '" alt="' + esc(f.filename) + '" loading="lazy" ' +
+                      'onclick="escolherFoto(\'' + esc(f.url) + '\')" title="' + esc(f.filename) + '">' +
+                 (ehAdmin
+                   ? '<button type="button" class="cc-lib-del" title="Excluir foto" onclick="excluirFoto(' + f.id + ')">&times;</button>'
+                   : '') +
+               '</div>' +
+               '<div class="cc-lib-nome-row" id="libNome' + f.id + '">' +
+                 '<span class="cc-lib-nome">' + esc(f.filename) + '</span>' +
+                 '<button type="button" class="cc-lib-edit" title="Renomear" onclick="editarNomeFoto(' + f.id + ')">✎</button>' +
+               '</div>' +
+             '</div>';
+    }).join('') + '</div>';
+  };
+
+  /** troca o rótulo por um input inline para renomear a foto */
+  window.editarNomeFoto = function (id) {
+    var foto = biblioteca.filter(function (f) { return f.id === id; })[0];
+    if (!foto) return;
+    var row = document.getElementById('libNome' + id);
+    row.innerHTML = '<input class="cc-lib-nome-input" id="libInput' + id + '" value="' + esc(foto.filename) + '" ' +
+                    'onkeydown="if(event.key===\'Enter\')salvarNomeFoto(' + id + ');if(event.key===\'Escape\')abrirBiblioteca(libAlvoAtual())" ' +
+                    'onblur="salvarNomeFoto(' + id + ')">';
+    var input = document.getElementById('libInput' + id);
+    input.focus();
+    input.select();
+  };
+
+  window.libAlvoAtual = function () { return libAlvo; };
+
+  window.salvarNomeFoto = async function (id) {
+    var input = document.getElementById('libInput' + id);
+    if (!input) return;                       // já salvo (evita disparo duplo do blur)
+    var novo = String(input.value || '').trim();
+    var foto = biblioteca.filter(function (f) { return f.id === id; })[0];
+    input.id = '';                            // impede reentrada pelo blur
+
+    if (!novo || !foto || novo === foto.filename) {
+      abrirBiblioteca(libAlvo);
+      return;
+    }
+    try {
+      var res = await fetch('/api/corporate/fotos/' + id, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nome: novo }),
+      });
+      var d = await res.json().catch(function () { return {}; });
+      if (!res.ok) throw new Error(d.error || 'Falha ao renomear');
+      showToast('Foto renomeada para "' + novo + '".', 'success');
+      await carregarBiblioteca();
+    } catch (e) {
+      showToast(e.message || 'Não foi possível renomear.', 'error');
+    }
+    abrirBiblioteca(libAlvo);
+  };
+
+  window.excluirFoto = async function (id) {
+    var foto = biblioteca.filter(function (f) { return f.id === id; })[0];
+    var nome = foto ? foto.filename : 'esta foto';
+    if (!confirm('Excluir a foto de "' + nome + '" da biblioteca? Esta ação não pode ser desfeita.')) return;
+    try {
+      var res = await fetch('/api/corporate/fotos/' + id, { method: 'DELETE' });
+      var d = await res.json().catch(function () { return {}; });
+      if (!res.ok) throw new Error(d.error || 'Falha ao excluir');
+      showToast('Foto removida.', 'success');
+      await carregarBiblioteca();
+      if (libAlvo) abrirBiblioteca(libAlvo);
+    } catch (e) {
+      showToast(e.message || 'Não foi possível excluir a foto.', 'error');
+    }
+  };
+
+  window.escolherFoto = function (url) {
+    if (libAlvo) {
+      fotos[libAlvo] = url;
+      delete fotoAuto[libAlvo];   // escolha manual: não é mais automática
+    }
+    fecharBiblioteca();
+    renderPalestrantes();
+  };
+
+  window.fecharBiblioteca = function (ev) {
+    if (ev && ev.target !== ev.currentTarget) return;
+    document.getElementById('libModal').classList.remove('visible');
+    libAlvo = null;
+  };
+
+  async function enviarFoto(input) {
+    var file = input.files && input.files[0];
+    if (!file) return;
+    input.value = '';
+
+    var nome = val('uploadNome');
+    if (!nome) {
+      showToast('Informe o nome do palestrante antes de enviar a foto.', 'error');
+      return;
+    }
+
+    var btn = document.getElementById('btnUpload');
+    var htmlOriginal = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<span class="cc-spinner cc-spinner--sm"></span>' +
+                    '<span class="cc-dropzone-txt"><strong>Enviando…</strong></span>';
+
+    try {
+      var fd = new FormData();
+      fd.append('file', file);
+      fd.append('nome', nome);
+
+      var res = await fetch('/api/corporate/fotos/upload', { method: 'POST', body: fd });
+      var d = await res.json().catch(function () { return {}; });
+      if (!res.ok) throw new Error(d.error || 'Falha no upload');
+
+      if (libAlvo) {
+        fotos[libAlvo] = d.foto.url;
+        delete fotoAuto[libAlvo];
+      }
+      await carregarBiblioteca();
+      fecharBiblioteca();
+      renderPalestrantes();
+      showToast('Foto de ' + nome + ' salva na biblioteca.', 'success');
+    } catch (e) {
+      showToast(e.message || 'Não foi possível enviar a foto.', 'error');
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = htmlOriginal;
+    }
+  }
+
+  // ── prévia ──────────────────────────────────────────────────────
+  async function atualizarPreview() {
+    var dados = coletarDados();
+    dados.formato = formatoPreview;
+
+    var box = document.getElementById('previewBox');
+    if (!dados.titulo) {
+      box.innerHTML = '<div class="cc-preview-empty">Preencha o nome do evento e clique em<br><strong>Atualizar prévia</strong></div>';
+      return;
+    }
+
+    var seq = ++previewSeq;
+    box.innerHTML = '<div class="cc-loading"><span class="cc-spinner"></span><span>Gerando prévia…</span></div>';
+
+    try {
+      var res = await fetch('/api/corporate/convite/preview', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(dados),
+      });
+      var d = await res.json().catch(function () { return {}; });
+      if (seq !== previewSeq) return;
+      if (!res.ok) throw new Error(d.error || 'Falha ao gerar a prévia');
+
+      box.innerHTML = '<img src="' + d.preview + '" alt="Prévia do convite">';
+    } catch (e) {
+      if (seq !== previewSeq) return;
+      box.innerHTML = '<div class="cc-preview-empty">' + esc(e.message || 'Não foi possível gerar a prévia.') + '</div>';
+    }
+  }
+
+  function trocarFormato(fmt) {
+    formatoPreview = fmt;
+    var botoes = document.querySelectorAll('#previewFormatos button');
+    for (var i = 0; i < botoes.length; i++) {
+      botoes[i].classList.toggle('active', botoes[i].getAttribute('data-fmt') === fmt);
+    }
+    if (val('titulo')) atualizarPreview();
+  }
+
+  // ── geração ─────────────────────────────────────────────────────
+  async function gerarConvite() {
+    var dados = coletarDados();
+    if (!dados.titulo || !dados.data || !dados.horario) {
+      showToast('Preencha nome do evento, data e horário.', 'error');
+      return;
+    }
+
+    var btn = document.getElementById('btnGerar');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="cc-spinner cc-spinner--sm"></span>Gerando…';
+
+    try {
+      var res = await fetch('/api/corporate/convite/gerar', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(dados),
+      });
+      var d = await res.json().catch(function () { return {}; });
+      if (!res.ok) throw new Error(d.error || 'Falha ao gerar o convite');
+
+      var urls = d.urls || {};
+      var rotulos = { stories: 'Stories (1080×1920)', feed: 'Feed (1080×1350)', quadrado: 'Quadrado / e-mail' };
+      var html = '';
+
+      ['stories', 'feed', 'quadrado'].forEach(function (fmt) {
+        if (!urls[fmt]) return;
+        html += '<a class="cc-link" href="' + esc(urls[fmt]) + '" target="_blank" rel="noopener" download>' +
+                  '<span>' + esc(rotulos[fmt]) + '</span><small>Abrir / Baixar</small></a>';
+      });
+      if (urls.zip) {
+        html += '<a class="cc-link cc-link--zip" href="' + esc(urls.zip) + '" download>' +
+                  '<span>Baixar tudo (.zip)</span><small>3 formatos</small></a>';
+      }
+
+      document.getElementById('resultLinks').innerHTML = html;
+      document.getElementById('resultBox').classList.add('show');
+      showToast('Convite gerado!', 'success');
+    } catch (e) {
+      showToast(e.message || 'Não foi possível gerar o convite.', 'error');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Gerar convite';
+    }
+  }
+
+  // ── init ────────────────────────────────────────────────────────
+  async function init() {
+    await Auth.init();
+    if (!Auth.isAuthenticated()) {
+      window.location.href = '/auth/login?redirect=/convite-corporate.html';
+      return;
+    }
+    var role = Auth.getUserRole();
+    ehAdmin = role === 'admin';
+    if (role !== 'admin' && role !== 'corporate') {
+      window.location.href = '/dashboard.html';
+      return;
+    }
+
+    if (typeof Shell !== 'undefined' && Shell.render) {
+      Shell.render({ activeRoute: 'convite-corporate', contentEl: document.getElementById('pageRoot') });
+    }
+    document.getElementById('pageRoot').style.display = '';
+
+    renderPalestrantes();
+    carregarBiblioteca();   // em segundo plano: habilita o preenchimento automático pelo nome
+
+    document.getElementById('num_palestrantes').addEventListener('change', renderPalestrantes);
+    document.getElementById('btnPreview').addEventListener('click', atualizarPreview);
+    document.getElementById('btnGerar').addEventListener('click', gerarConvite);
+    document.getElementById('btnUpload').addEventListener('click', function () {
+      document.getElementById('fileUpload').click();
+    });
+    document.getElementById('fileUpload').addEventListener('change', function () { enviarFoto(this); });
+    document.getElementById('previewFormatos').addEventListener('click', function (ev) {
+      var b = ev.target.closest('button[data-fmt]');
+      if (b) trocarFormato(b.getAttribute('data-fmt'));
+    });
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+})();
 ```
 
 
@@ -12936,7 +17489,12 @@ window.FilterPanel = (function () {
       </div>
       <div class="field">
         <label>Código do assessor <span class="text-ruby">*</span></label>
-        <input type="text" id="codigoAssessor" placeholder="Ex: 12345" required>
+        <div class="cod-assessor">
+            <span class="cod-assessor-prefixo" aria-hidden="true">A</span>
+            <input type="text" id="codigoAssessor" inputmode="numeric" autocomplete="off"
+                   placeholder="12345" maxlength="10" required
+                   oninput="this.value = this.value.replace(/\D/g, '')">
+          </div>
       </div>
       <div class="field" id="field-nomeAssinatura">
         <label>Nome para assinatura <span class="text-ruby">*</span></label>
@@ -12974,6 +17532,13 @@ window.FilterPanel = (function () {
   <script src="shell.js?v=20260611f"></script>
   <script src="form-core.js?v=20260611f"></script>
   <script>
+
+    /** Monta o codigo do assessor no formato final: A + digitos. Vazio continua vazio. */
+    function codigoAssessorFmt() {
+      var el = document.getElementById('codigoAssessor');
+      var num = ((el && el.value) || '').replace(/\D/g, '');
+      return num ? 'A' + num : '';
+    }
 
     const TIPO = 'convite-fp';
 
@@ -13022,7 +17587,7 @@ window.FilterPanel = (function () {
 
     function gerarLinkFP() {
       var err = document.getElementById('submitError');
-      var codigo = (document.getElementById('codigoAssessor').value || '').trim();
+      var codigo = codigoAssessorFmt();
       var contrato = document.getElementById('contratoSocial').value || '';
       if (!codigo || !contrato) {
         err.textContent = 'Preencha o código do assessor e o contrato social para gerar o link.';
@@ -13062,7 +17627,7 @@ window.FilterPanel = (function () {
       var dados = {
         nome: Auth.getUserName(),
         telefone: document.getElementById('telefone').value,
-        codigo_assessor: document.getElementById('codigoAssessor').value,
+        codigo_assessor: codigoAssessorFmt(),
         nome_assinatura: document.getElementById('nomeAssinatura').value,
         cargo: document.getElementById('cargo').value,
         contrato_social: document.getElementById('contratoSocial').value,
@@ -16388,7 +20953,12 @@ Muito obrigado(a), e conte sempre comigo!</textarea>
         </div>
         <div class="field" id="field_codigoAssessor" style="display:none">
           <label>Código de assessor</label>
-          <input type="text" id="codigoAssessor" placeholder="Código do assessor">
+          <div class="cod-assessor">
+            <span class="cod-assessor-prefixo" aria-hidden="true">A</span>
+            <input type="text" id="codigoAssessor" inputmode="numeric" autocomplete="off"
+                   placeholder="12345" maxlength="10"
+                   oninput="this.value = this.value.replace(/\D/g, '')">
+          </div>
         </div>
         <div class="field" id="field_unidade">
           <label>Unidade</label>
@@ -16546,6 +21116,13 @@ Muito obrigado(a), e conte sempre comigo!</textarea>
   <script src="shell.js?v=20260611f"></script>
   <script src="form-core.js?v=20260611f"></script>
   <script>
+
+    /** Monta o codigo do assessor no formato final: A + digitos. Vazio continua vazio. */
+    function codigoAssessorFmt() {
+      var el = document.getElementById('codigoAssessor');
+      var num = ((el && el.value) || '').replace(/\D/g, '');
+      return num ? 'A' + num : '';
+    }
     const params = new URLSearchParams(window.location.search);
     let subtipo = params.get('subtipo') || '';
     let isAtualizacao = subtipo === 'atualizacao';
@@ -16870,7 +21447,7 @@ Muito obrigado(a), e conte sempre comigo!</textarea>
         telefone: document.getElementById('telefone').value,
         nome_completo: document.getElementById('nomeCompleto').value,
         eh_assessor: ehAssessorSel ? ehAssessorSel.value : '',
-        codigo_assessor: document.getElementById('codigoAssessor').value,
+        codigo_assessor: codigoAssessorFmt(),
         unidade: document.getElementById('unidade').value,
         contrato_social: document.getElementById('contratoSocial').value,
         quer_pagina: querPagina ? 'sim' : 'nao',
@@ -17780,132 +22357,6 @@ const IBGELoader = {
 ```
 
 
-## File: artifacts/api-server/public/index.html
-
-```
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-  <meta charset="UTF-8">
-  <link rel="icon" type="image/x-icon" href="/favicon.ico" />
-  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
-  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
-  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
-  <link rel="manifest" href="/site.webmanifest" />
-  <meta name="theme-color" content="#AC3631" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Hub de Solicitações SVN</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap">
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap" media="print" onload="this.media='all'">
-  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap"></noscript>
-  <link rel="stylesheet" href="style.css?v=20260615c">
-  <style>
-    .home-card {
-      background: rgba(20, 12, 10, 0.45);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-      border: 1px solid rgba(255, 248, 243, 0.1);
-      border-radius: var(--radius-2xl);
-      padding: 52px 48px;
-      max-width: 560px;
-      width: 100%;
-      text-align: center;
-      opacity: 0;
-      transform: scale(0.97);
-    }
-    .home-card.visible { opacity: 1; transform: scale(1); transition: all 0.5s ease; }
-    .home-question {
-      font-family: 'Nunito Sans', sans-serif;
-      font-weight: 300;
-      font-size: 1.1rem;
-      color: #ffffff;
-      opacity: 1;
-      margin-bottom: 28px;
-      letter-spacing: 0.02em;
-    }
-    .home-btn {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 10px;
-      width: 100%;
-      padding: 16px 24px;
-      border-radius: var(--radius-xl);
-      font-family: 'Nunito Sans', sans-serif;
-      font-weight: 600;
-      font-size: 0.95rem;
-      color: var(--paper-white);
-      border: 1px solid rgba(255, 248, 243, 0.18);
-      background: rgba(56, 24, 17, 0.5);
-      backdrop-filter: blur(4px);
-      -webkit-backdrop-filter: blur(4px);
-      cursor: pointer;
-      transition: all 0.2s ease;
-      text-decoration: none;
-      margin-bottom: 12px;
-    }
-    .home-btn:last-of-type { margin-bottom: 0; }
-    .home-btn:hover { background: rgba(56,24,17,0.75); border-color: rgba(255,248,243,0.35); transform: translateY(-2px); text-decoration: none; }
-    .home-btn.red:hover { border-color: var(--ruby-red); }
-    .home-btn.green:hover { border-color: var(--sage-green); }
-    .home-btn svg { flex-shrink: 0; }
-    .home-logo { margin-top: 40px; opacity: 0; transition: opacity 0.4s ease; }
-    .home-logo.visible { opacity: 1; }
-    .error-msg { display:none; margin-top:16px; background:rgba(159,63,55,0.15); border:1px solid var(--ruby-red); border-radius:var(--radius-md); padding:12px 16px; font-size:0.85rem; color:var(--paper-white); max-width:500px; text-align:center; }
-    @media (max-width: 480px) { .home-card { padding: 36px 24px; } }
-  </style>
-</head>
-<body class="page-dark">
-  <video autoplay loop muted playsinline style="position:fixed;inset:0;width:100%;height:100%;object-fit:cover;z-index:0" id="bgVideo"></video>
-  <div style="position:fixed;inset:0;background:rgba(20,12,10,0.72);mix-blend-mode:multiply;z-index:0"></div>
-  <div style="min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;z-index:1;padding:24px">
-    <div class="home-card" id="homeCard">
-      <p class="home-question">O que você gostaria de fazer?</p>
-      <button class="home-btn red" onclick="goTo('solicitacoes.html')">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
-        Quero fazer uma solicitação
-      </button>
-      <button class="home-btn green" onclick="goTo('dashboard.html')">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
-        Quero acompanhar uma solicitação
-      </button>
-    </div>
-    <div class="home-logo" id="logoWrap">
-      <img id="logoBottom" alt="SVN" style="height:26px;opacity:1">
-    </div>
-    <div class="error-msg" id="errorMsg"></div>
-  </div>
-  <script src="config.js?v=20260615a"></script>
-  <script src="auth.js?v=20260611f"></script>
-  <script>
-    document.getElementById('bgVideo').src = URL_VIDEO_HERO;
-    document.getElementById('logoBottom').src = URL_LOGO_BRANCA;
-    setTimeout(() => document.getElementById('homeCard').classList.add('visible'), 100);
-    setTimeout(() => document.getElementById('logoWrap').classList.add('visible'), 500);
-    const params = new URLSearchParams(window.location.search);
-    const error = params.get('error');
-    if (error) {
-      const el = document.getElementById('errorMsg');
-      el.style.display = 'block';
-      if (error === 'domain_not_allowed') el.textContent = 'Apenas contas @svninvest.com.br são aceitas. Por favor, use seu e-mail corporativo.';
-      else if (error === 'login_failed' || error === 'auth_failed') el.textContent = 'Falha na autenticação. Tente novamente.';
-      else el.textContent = 'Ocorreu um erro (' + error + '). Tente novamente.';
-    }
-    async function goTo(page) {
-      document.querySelectorAll('.home-btn').forEach(b => { b.style.opacity = '0.5'; b.style.pointerEvents = 'none'; });
-      await Auth.init();
-      if (!Auth.isAuthenticated()) { window.location.href = '/auth/login?redirect=/' + page; return; }
-      window.location.href = '/' + page;
-    }
-  </script>
-</body>
-</html>
-
-```
-
-
 ## File: artifacts/api-server/public/prazo.js
 
 ```
@@ -18140,6 +22591,13 @@ window.Shell = {
         icon: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="13" y2="16"/></svg>',
         label: 'Minhas solicitações',
         roles: ['admin', 'gestor', 'capital_humano'],
+      },
+      {
+        route: 'convite-corporate',
+        href: '/convite-corporate.html',
+        icon: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M22 7l-10 6L2 7"/></svg>',
+        label: 'Convites',
+        roles: ['admin', 'corporate'],
       },
       {
         route: 'capital-humano',
@@ -19122,7 +23580,67 @@ window.Shell = {
   <script src="config.js?v=20260615a"></script>
   <script src="auth.js?v=20260611f"></script>
   <script src="shell.js?v=20260611f"></script>
-  <script>
+  <script src="solicitacao.js?v=20260710"></script>
+<div class="modal-overlay" id="avaliacaoModal" onclick="fecharModalAvaliacao(event)">
+  <div class="modal-card" style="max-width:460px" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <h3 class="modal-title">Avaliação recebida</h3>
+      <button class="modal-close" onclick="fecharModalAvaliacao()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div id="avaliacaoModalContent"></div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-primary" onclick="fecharModalAvaliacao()">Fechar</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="deleteModal" onclick="cancelarExcluir()">
+  <div class="modal-card" style="max-width:420px" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <div>
+        <h3 class="modal-title">Excluir solicitação?</h3>
+        <p class="modal-subtitle">Esta ação é permanente e não pode ser desfeita.</p>
+      </div>
+      <button class="modal-close" onclick="cancelarExcluir()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div style="background:rgba(172,54,49,0.07);border:1px solid rgba(172,54,49,0.22);border-radius:var(--radius-md);padding:11px 14px;font-size:0.82rem;color:var(--ruby-dark)">Todos os arquivos vinculados também serão excluídos.</div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-secondary" onclick="cancelarExcluir()">Cancelar</button>
+      <button type="button" id="btnConfirmarExcluir" class="btn btn-primary" onclick="confirmarExcluir()">Excluir permanentemente</button>
+    </div>
+  </div>
+</div>
+  <div class="modal-overlay" id="cancelarModal" onclick="fecharCancelarModal(event)">
+    <div class="modal-card" style="max-width:480px" onclick="event.stopPropagation()">
+      <div class="modal-header">
+        <div>
+          <h3 class="modal-title">Cancelar solicitação</h3>
+          <p class="modal-subtitle">Explique o motivo do cancelamento. A justificativa será registrada como comentário na tarefa do ClickUp para o time.</p>
+        </div>
+        <button class="modal-close" onclick="fecharCancelarModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <textarea id="cancelarJustificativa" placeholder="Motivo do cancelamento..." style="width:100%;min-height:96px;padding:12px;border:1px solid var(--border-light);border-radius:var(--radius-md);font-family:inherit;font-size:0.9rem;resize:vertical;box-sizing:border-box"></textarea>
+        <div id="cancelarErro" style="display:none;color:var(--ruby-red);font-size:0.8rem;margin-top:8px"></div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="fecharCancelarModal()">Voltar</button>
+        <button type="button" id="cancelarConfirmBtn" class="btn btn-primary" onclick="confirmarCancelamento()">Confirmar cancelamento</button>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
+```
+
+
+## File: artifacts/api-server/public/solicitacao.js
+
+```
     const CLICKUP_ICON = getClickupIcon();
 
     function isTipoAutomacao(tipo) {
@@ -20810,61 +25328,7 @@ window.Shell = {
     }
 
     init();
-  </script>
-<div class="modal-overlay" id="avaliacaoModal" onclick="fecharModalAvaliacao(event)">
-  <div class="modal-card" style="max-width:460px" onclick="event.stopPropagation()">
-    <div class="modal-header">
-      <h3 class="modal-title">Avaliação recebida</h3>
-      <button class="modal-close" onclick="fecharModalAvaliacao()">&times;</button>
-    </div>
-    <div class="modal-body">
-      <div id="avaliacaoModalContent"></div>
-    </div>
-    <div class="modal-footer">
-      <button type="button" class="btn btn-primary" onclick="fecharModalAvaliacao()">Fechar</button>
-    </div>
-  </div>
-</div>
 
-<div class="modal-overlay" id="deleteModal" onclick="cancelarExcluir()">
-  <div class="modal-card" style="max-width:420px" onclick="event.stopPropagation()">
-    <div class="modal-header">
-      <div>
-        <h3 class="modal-title">Excluir solicitação?</h3>
-        <p class="modal-subtitle">Esta ação é permanente e não pode ser desfeita.</p>
-      </div>
-      <button class="modal-close" onclick="cancelarExcluir()">&times;</button>
-    </div>
-    <div class="modal-body">
-      <div style="background:rgba(172,54,49,0.07);border:1px solid rgba(172,54,49,0.22);border-radius:var(--radius-md);padding:11px 14px;font-size:0.82rem;color:var(--ruby-dark)">Todos os arquivos vinculados também serão excluídos.</div>
-    </div>
-    <div class="modal-footer">
-      <button type="button" class="btn btn-secondary" onclick="cancelarExcluir()">Cancelar</button>
-      <button type="button" id="btnConfirmarExcluir" class="btn btn-primary" onclick="confirmarExcluir()">Excluir permanentemente</button>
-    </div>
-  </div>
-</div>
-  <div class="modal-overlay" id="cancelarModal" onclick="fecharCancelarModal(event)">
-    <div class="modal-card" style="max-width:480px" onclick="event.stopPropagation()">
-      <div class="modal-header">
-        <div>
-          <h3 class="modal-title">Cancelar solicitação</h3>
-          <p class="modal-subtitle">Explique o motivo do cancelamento. A justificativa será registrada como comentário na tarefa do ClickUp para o time.</p>
-        </div>
-        <button class="modal-close" onclick="fecharCancelarModal()">&times;</button>
-      </div>
-      <div class="modal-body">
-        <textarea id="cancelarJustificativa" placeholder="Motivo do cancelamento..." style="width:100%;min-height:96px;padding:12px;border:1px solid var(--border-light);border-radius:var(--radius-md);font-family:inherit;font-size:0.9rem;resize:vertical;box-sizing:border-box"></textarea>
-        <div id="cancelarErro" style="display:none;color:var(--ruby-red);font-size:0.8rem;margin-top:8px"></div>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" onclick="fecharCancelarModal()">Voltar</button>
-        <button type="button" id="cancelarConfirmBtn" class="btn btn-primary" onclick="confirmarCancelamento()">Confirmar cancelamento</button>
-      </div>
-    </div>
-  </div>
-</body>
-</html>
 ```
 
 
@@ -21800,6 +26264,22 @@ input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
   font-size: 2rem;
 }
 .stat-card .stat-label { font-size: 0.8rem; opacity: 0.7; }
+
+/* Funil de status - compartilhado por validacao-assessores (.va-funil) e
+   validacao-cartoes (.vc-funil). Antes duplicado em cada pagina; centralizado
+   aqui. As diferencas de cada pagina ficam nos overrides ao final do bloco. */
+.va-funil, .vc-funil { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin: 0 0 16px; }
+.va-funil .stat-card, .vc-funil .stat-card { cursor: pointer; padding: 14px 16px; background: transparent; border-color: var(--border-light); transition: background .14s, box-shadow .14s, border-color .14s; }
+.va-funil .stat-card:hover, .vc-funil .stat-card:hover { background: var(--icon-bg); }
+.va-funil .stat-number, .vc-funil .stat-number { font-size: 1.7rem; line-height: 1; color: var(--etapa, var(--carbon-black)); margin-bottom: 3px; }
+.va-funil .stat-label, .vc-funil .stat-label { font-weight: 400; }
+.va-funil .stat-card.active, .vc-funil .stat-card.active { background: var(--etapa-bg, var(--icon-bg)); border-color: var(--etapa, var(--carbon-black)); box-shadow: 0 1px 5px rgba(34,27,25,.10); }
+.va-funil .stat-card.active .stat-label, .vc-funil .stat-card.active .stat-label { color: var(--etapa, var(--carbon-black)); opacity: 1; }
+/* overrides por pagina */
+.va-funil .stat-label { font-size: 0.82rem; }
+.vc-funil { grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); margin: 20px 0 18px; }
+.vc-funil .stat-card { text-align: left; }
+
 
 /* Tabs */
 .tabs { display: flex; border-bottom: 1px solid var(--border-light); margin-bottom: 20px; }
@@ -23875,13 +28355,6 @@ window.Modal = (function () {
     .va-toolbar .search-bar { flex: 1 1 300px; min-width: 220px; margin-bottom: 0; }
     .btn.has-filters { border-color: var(--ruby-red); color: var(--ruby-red); }
     .va-count { font-size: 0.82rem; color: var(--ink-50); margin-left: auto; }
-    .va-funil { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin: 0 0 16px; }
-    .va-funil .stat-card { cursor: pointer; padding: 14px 16px; background: transparent; border-color: var(--border-light); transition: background .14s, box-shadow .14s, border-color .14s; }
-    .va-funil .stat-card:hover { background: var(--icon-bg); }
-    .va-funil .stat-number { font-size: 1.7rem; line-height: 1; color: var(--etapa, var(--carbon-black)); margin-bottom: 3px; }
-    .va-funil .stat-label { font-weight: 400; font-size: 0.82rem; }
-    .va-funil .stat-card.active { background: var(--etapa-bg, var(--icon-bg)); border-color: var(--etapa, var(--carbon-black)); box-shadow: 0 1px 5px rgba(34,27,25,.10); }
-    .va-funil .stat-card.active .stat-label { color: var(--etapa, var(--carbon-black)); opacity: 1; }
     .va-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; }
     .va-card { border: 1px solid var(--border-light); border-radius: var(--radius-xl); padding: 14px; background: var(--card-white, #fff); cursor: pointer; display: flex; gap: 12px; align-items: center; transition: box-shadow .14s, border-color .14s; }
     .va-card:hover { box-shadow: 0 2px 10px rgba(34,27,25,.08); border-color: #d8d0c5; }
@@ -23954,7 +28427,7 @@ window.Modal = (function () {
       'ajustes-solicitados':  { label: 'Ajustes solicitados',  bg: '#dbeafe', fg: '#1e40af', accent: '#1e40af' },
       'aprovado':             { label: 'Aprovado',             bg: '#dcfce7', fg: '#166534', accent: '#15803d' },
       'reprovado':            { label: 'Reprovado',            bg: '#fee2e2', fg: '#991b1b', accent: '#dc2626' },
-      'publicado':            { label: 'Publicado',            bg: '#e5e7eb', fg: '#374151', accent: '#374151' },
+      'publicado':            { label: 'Concluído',            bg: '#dcfce7', fg: '#14532d', accent: '#14532d' },
       'registrado':           { label: 'Registrado',           bg: '#eef2f7', fg: '#475569', accent: '#475569' },
     };
     const CATEGORIAS = [
@@ -23962,7 +28435,13 @@ window.Modal = (function () {
       { id: 'atualizacao', label: 'Atualização',        aprovacao: true },
       { id: 'sem-pagina',  label: 'Sem Página',         aprovacao: false },
     ];
-    const FUNIL = ['todos', 'aguardando-validacao', 'ajustes-solicitados', 'aprovado', 'reprovado'];
+    const FUNIL = ['todos', 'aguardando-validacao', 'ajustes-solicitados', 'aprovado', 'publicado', 'reprovado'];
+    // Concluir (= publicado no site) e do marketing: gestor e admin.
+    // Capital Humano valida, mas nao conclui.
+    function podePublicar() {
+      const r = (typeof Auth !== 'undefined' && Auth.getUserRole) ? Auth.getUserRole() : '';
+      return r === 'gestor' || r === 'admin';
+    }
     const CONTRATO_LABELS = { 'svn-capital': 'SVN Capital', 'svn-connect': 'SVN Connect', 'svn-investimentos': 'SVN Investimentos' };
     function contratoLabel(c) { return CONTRATO_LABELS[c] || c || '—'; }
 
@@ -24099,6 +28578,13 @@ window.Modal = (function () {
             '<button class="btn btn-dark" onclick="decidir(\'ajustes\')">Solicitar ajustes</button>' +
             '<button class="btn btn-secondary" style="color:var(--danger);border-color:var(--danger)" onclick="decidir(\'reprovado\')">Reprovar</button>' +
           '</div><div id="vaMsg" style="margin-top:10px;font-size:0.82rem"></div>';
+      } else if (resumo.status === 'aprovado' && podePublicar()) {
+        // Aprovado = liberado para o marketing publicar. Concluído = já está no ar.
+        rodape =
+          '<div class="va-actions" style="align-items:center">' +
+            '<span class="sub" style="font-size:0.8rem;color:var(--ink-50);margin-right:auto">Aprovado para publicação. Marque como concluído assim que a página estiver no ar.</span>' +
+            '<button class="btn btn-primary" onclick="decidir(&#39;publicado&#39;)">Marcar como concluído</button>' +
+          '</div><div id="vaMsg" style="margin-top:10px;font-size:0.82rem"></div>';
       } else {
         rodape = '<div class="va-actions"><span class="sub" style="font-size:0.8rem;color:var(--ink-50)">Perfil já ' + (STATUS[resumo.status] ? STATUS[resumo.status].label.toLowerCase() : resumo.status) + '.</span></div>';
       }
@@ -24193,15 +28679,6 @@ window.Modal = (function () {
 
     /* ===== Funil de etapas (espinha dorsal da tela) ===== */
     /* Reaproveita o card padrão (.stat-card do style.css global) — mesma linguagem do Painel Admin. */
-    .vc-funil { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 12px; margin: 20px 0 18px; }
-    .vc-funil .stat-card { cursor: pointer; padding: 14px 16px; text-align: left; background: transparent;
-      border-color: var(--border-light); transition: background .14s, box-shadow .14s, border-color .14s; }
-    .vc-funil .stat-card:hover { background: var(--icon-bg, #f4f1ea); }
-    .vc-funil .stat-number { font-size: 1.7rem; line-height: 1; color: var(--etapa, var(--carbon-black)); margin-bottom: 3px; }
-    .vc-funil .stat-label { font-weight: 400; }
-    .vc-funil .stat-card.active { background: var(--etapa-bg, var(--icon-bg)); border-color: var(--etapa, var(--carbon-black));
-      box-shadow: 0 1px 5px rgba(34,27,25,.10); }
-    .vc-funil .stat-card.active .stat-label { color: var(--etapa, var(--carbon-black)); opacity: 1; }
 
     /* ===== Toolbar (busca + ações) ===== */
     .vc-toolbar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 8px; }
@@ -26271,6 +30748,9 @@ export const FORM_SCHEMAS: Record<string, FormSchema> = {
       { name: 'tipo_evento',      label: 'Tipo de evento',      type: 'select', required: true,
         options: [ { value: 'presencial', label: 'Presencial' }, { value: 'online', label: 'Online' } ] },
       { name: 'titulo',           label: 'Titulo do evento',    type: 'text',   required: true },
+      // Texto do topo da arte. Se vazio, o art-generator preenche com "evento {tipo}".
+      // O Corporate manda "Hora do Corporate".
+      { name: 'chapeu',           label: 'Texto do topo (auto)', type: 'text' },
       { name: 'num_palestrantes', label: 'Numero de palestrantes', type: 'select', required: true,
         options: [ { value: '1', label: '1' }, { value: '2', label: '2' }, { value: '3', label: '3' }, { value: '4', label: '4' } ] },
       { name: '_variante_convite', label: 'Variante (auto)', type: 'select',
@@ -26292,8 +30772,19 @@ export const FORM_SCHEMAS: Record<string, FormSchema> = {
         options: [ { value: 'sim', label: 'Sim' }, { value: 'nao', label: 'Nao' } ] },
       { name: 'data',             label: 'Data',                type: 'text',   required: true },
       { name: 'horario',          label: 'Horario',             type: 'text',   required: true },
-      { name: 'local_nome',       label: 'Nome do local',       type: 'text',   required: true },
-      { name: 'endereco',         label: 'Endereco',            type: 'textarea' },
+      // Presencial: local_nome + endereco. Online: plataforma (logo).
+      // Nao sao obrigatorios porque dependem do tipo_evento — em online os campos
+      // de local vem vazios (as text layers somem sozinhas) e a logo e resolvida
+      // pela image layer 'variant' via variant_source: 'plataforma'.
+      { name: 'local_nome',       label: 'Nome do local (presencial)', type: 'text' },
+      { name: 'endereco',         label: 'Endereco (presencial)',      type: 'textarea' },
+      { name: 'plataforma',       label: 'Plataforma (online)',        type: 'select',
+        options: [
+          { value: 'live',    label: 'Live' },
+          { value: 'youtube', label: 'YouTube' },
+          { value: 'zoom',    label: 'Zoom' },
+          { value: 'meet',    label: 'Meet' }
+        ] },
       { name: 'palestrante_1_nome',  label: 'Palestrante 1 - Nome',  type: 'text' },
       { name: 'palestrante_1_cargo', label: 'Palestrante 1 - Cargo', type: 'text' },
       { name: 'palestrante_1_foto',  label: 'Palestrante 1 - Foto',  type: 'file' },
@@ -27005,6 +31496,55 @@ export async function buscarContato(email: string): Promise<PerfilContato> {
 ```
 
 
+## File: artifacts/api-server/src/lib/normalize.ts
+
+```
+// Normalizacao de dados de formulario -> forma canonica snake_case.
+// Funcao PURA (sem banco/perfil): renomeia chaves camelCase->snake_case,
+// converte is_private_key (sim/nao) e os campos palSvn (selos). Testavel isolada.
+export function normalizeFormDados(
+  _tipo: string,
+  dados: Record<string, unknown>
+): Record<string, unknown> {
+  const out = { ...dados };
+
+  const KEY_MAP: Record<string, string> = {
+    isPrivate:     "is_private_key",
+    modeloCartao:  "modelo_cartao",
+    modeloArte:    "modelo_arte",
+    contratoSocial:"contrato_social",
+    nomeCliente:   "nome_cliente",
+    nomeAssinatura: "nome_assinatura",
+    nomeCompleto:      "nome_completo",
+    codigoAssessor:    "codigo_assessor",
+    fotoPerfilDigital: "foto_perfil",
+  };
+  for (const [camel, snake] of Object.entries(KEY_MAP)) {
+    if (camel in out) {
+      if (!(snake in out)) out[snake] = out[camel];
+      delete out[camel];
+    }
+  }
+
+  if (out.is_private_key === "sim")       out.is_private_key = "private";
+  else if (out.is_private_key === "nao")  out.is_private_key = "padrao";
+
+  for (let i = 1; i <= 4; i++) {
+    const k = "palSvn" + i;
+    const v = out[k];
+    if (typeof v === "string") {
+      const lower = v.toLowerCase();
+      if (lower === "sim")              out[k] = "Sim";
+      else if (lower === "nao" || lower === "não") out[k] = "Não";
+    }
+  }
+
+  return out;
+}
+
+```
+
+
 ## File: artifacts/api-server/src/lib/r2-client.ts
 
 ```
@@ -27096,6 +31636,156 @@ export function requireRole(...roles: string[]) {
     });
   };
 }
+
+```
+
+
+## File: artifacts/api-server/src/routes/admin-stats.ts
+
+```
+// Painel Admin — endpoint de metricas (/admin/stats).
+// Extraido do forms.ts para reduzir o arquivo. Montado em routes/index.ts
+// logo apos o formsRouter (mesmo path base), preservando a ordem de match.
+import { Router } from "express";
+import { db, solicitacoesTable, usersTable } from "@workspace/db";
+import { and, eq, desc, inArray, sql } from "drizzle-orm";
+import { requireAuth } from "../middleware/auth.middleware";
+import { TIPOS_AUTOMACAO_SET } from "../config/tipos";
+import { logger } from "../lib/logger";
+
+const router = Router();
+
+router.get("/admin/stats", requireAuth, async (req, res): Promise<void> => {
+  try {
+    const user = req.session.user!;
+    if (user.role !== "admin" && user.role !== "gestor") {
+      res.status(403).json({ error: "Acesso negado" }); return;
+    }
+
+    const now = new Date();
+    const deRaw = req.query.de ? String(req.query.de) : "";
+    const ateRaw = req.query.ate ? String(req.query.ate) : "";
+    const rangeValido = /^\d{4}-\d{2}-\d{2}$/.test(deRaw) && /^\d{4}-\d{2}-\d{2}$/.test(ateRaw);
+    let dias: number, fimHoje: Date, periodoAtual: Date, periodoAnterior: Date;
+    if (rangeValido) {
+      // Intervalo personalizado: usa as datas reais ('ate' inclusivo).
+      periodoAtual = new Date(deRaw + "T00:00:00");
+      fimHoje = new Date(ateRaw + "T00:00:00"); fimHoje.setDate(fimHoje.getDate() + 1);
+      dias = Math.max(1, Math.round((fimHoje.getTime() - periodoAtual.getTime()) / 86400000));
+      periodoAnterior = new Date(periodoAtual.getTime() - dias * 86400000);
+    } else {
+      dias = Math.min(365, Math.max(1, parseInt(String(req.query.dias), 10) || 7));
+      // Períodos contam apenas DIAS CHEIOS: a janela termina no início de hoje (exclui o dia corrente).
+      fimHoje = new Date(now); fimHoje.setHours(0, 0, 0, 0);
+      periodoAtual = new Date(fimHoje.getTime() - dias * 86400000);
+      periodoAnterior = new Date(periodoAtual.getTime() - dias * 86400000);
+    }
+    // registros importados da planilha histórica de cartões não entram nos contadores
+    const naoImportada = sql`(${solicitacoesTable.dados} ->> '_importado_planilha') IS NULL`;
+    // Escopo: todos | solicitacoes (exclui automações) | automacoes (só automações)
+    const escopoParam = String(req.query.escopo || "todos");
+    const autoTipos = Array.from(TIPOS_AUTOMACAO_SET) as string[];
+    const inAuto = inArray(solicitacoesTable.tipo_solicitacao, autoTipos);
+    const escopoCond = escopoParam === "automacoes"
+      ? inAuto
+      : escopoParam === "solicitacoes"
+      ? sql`NOT (${inAuto})`
+      : undefined;
+    const noPeriodo = and(
+      sql`${solicitacoesTable.created_at} >= ${periodoAtual.toISOString()}`,
+      sql`${solicitacoesTable.created_at} < ${fimHoje.toISOString()}`,
+      naoImportada,
+      ...(escopoCond ? [escopoCond] : [])
+    );
+
+    const [atual] = await db.select({ count: sql<number>`count(*)` })
+      .from(solicitacoesTable)
+      .where(noPeriodo);
+
+    const [anterior] = await db.select({ count: sql<number>`count(*)` })
+      .from(solicitacoesTable)
+      .where(and(
+        sql`${solicitacoesTable.created_at} >= ${periodoAnterior.toISOString()}`,
+        sql`${solicitacoesTable.created_at} < ${periodoAtual.toISOString()}`,
+        naoImportada,
+        ...(escopoCond ? [escopoCond] : [])
+      ));
+
+    const porTipo = await db.select({
+      tipo: solicitacoesTable.tipo_solicitacao,
+      count: sql<number>`count(*)`
+    })
+      .from(solicitacoesTable)
+      .where(noPeriodo)
+      .groupBy(solicitacoesTable.tipo_solicitacao)
+      .orderBy(desc(sql`count(*)`));
+
+    const porStatus = await db.select({
+      status: solicitacoesTable.status,
+      count: sql<number>`count(*)`
+    })
+      .from(solicitacoesTable)
+      .where(noPeriodo)
+      .groupBy(solicitacoesTable.status)
+      .orderBy(desc(sql`count(*)`));
+
+    const [avaliacoes] = await db.select({ count: sql<number>`count(*)` })
+      .from(solicitacoesTable)
+      .where(and(noPeriodo, sql`${solicitacoesTable.avaliacao} IS NOT NULL`));
+
+    const [mediaNotas] = await db.select({
+      media: sql<number>`avg((avaliacao->>'nota')::numeric)`
+    })
+      .from(solicitacoesTable)
+      .where(and(noPeriodo, sql`${solicitacoesTable.avaliacao} IS NOT NULL`));
+
+    const topSolicitantesRows = await db.select({
+      nome: usersTable.name,
+      email: solicitacoesTable.user_email,
+      count: sql<number>`count(*)`,
+    })
+      .from(solicitacoesTable)
+      .leftJoin(usersTable, eq(usersTable.email, solicitacoesTable.user_email))
+      .where(noPeriodo)
+      .groupBy(usersTable.name, solicitacoesTable.user_email)
+      .orderBy(desc(sql`count(*)`))
+      .limit(8);
+
+    const porTipoStatusRows = await db.select({
+      tipo: solicitacoesTable.tipo_solicitacao,
+      status: solicitacoesTable.status,
+      count: sql<number>`count(*)`,
+    })
+      .from(solicitacoesTable)
+      .where(noPeriodo)
+      .groupBy(solicitacoesTable.tipo_solicitacao, solicitacoesTable.status);
+
+    const totalAtual = Number(atual.count);
+    const totalAnterior = Number(anterior.count);
+    const delta = totalAnterior === 0
+      ? (totalAtual > 0 ? 100 : 0)
+      : Math.round(((totalAtual - totalAnterior) / totalAnterior) * 100);
+
+    res.json({
+      total: totalAtual,
+      delta,
+      deltaPositivo: totalAtual >= totalAnterior,
+      porTipo: porTipo.map(r => ({ tipo: r.tipo, count: Number(r.count) })),
+      porStatus: porStatus.map(r => ({ status: r.status, count: Number(r.count) })),
+      avaliacoes: Number(avaliacoes.count),
+      mediaNotas: mediaNotas.media ? Number(mediaNotas.media).toFixed(1) : null,
+      topSolicitantes: topSolicitantesRows.map(r => ({ nome: r.nome || r.email, count: Number(r.count) })),
+      porTipoStatus: porTipoStatusRows.map(r => ({ tipo: r.tipo, status: r.status, count: Number(r.count) })),
+      dias,
+    });
+  } catch (err) {
+    logger.error({ err }, "Erro ao buscar stats admin");
+    res.status(500).json({ error: "Erro ao buscar estatísticas" });
+  }
+});
+
+
+export default router;
 
 ```
 
@@ -30447,6 +35137,424 @@ export default router;
 ```
 
 
+## File: artifacts/api-server/src/routes/corporate.ts
+
+```
+/**
+ * Área Corporate — geração de convites de eventos ONLINE.
+ *
+ * Acesso: roles "corporate" e "admin".
+ *
+ * Endpoints (montados sob /api):
+ *   POST /corporate/convite/preview  -> renderiza 1 formato (feed) e devolve data URI (não sobe no R2)
+ *   POST /corporate/convite/gerar    -> gera o kit (stories/feed/quadrado), sobe no R2, devolve as URLs
+ *   GET  /corporate/fotos            -> biblioteca de fotos de palestrantes já enviadas
+ *   POST /corporate/fotos/upload     -> envia uma nova foto de palestrante (vai para a biblioteca)
+ *
+ * As fotos ficam na tabela art_assets (reaproveitada) sob o prefixo de chave
+ * "palestrantes/", o que separa a biblioteca dos demais assets sem exigir
+ * alteração de schema.
+ */
+import { Router } from "express";
+import { PutObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
+import { getR2Client, R2_BUCKET } from "../lib/r2-client";
+import multer from "multer";
+import sharp from "sharp";
+import os from "os";
+import fs from "fs";
+import path from "path";
+import crypto from "crypto";
+import { db, artAssetsTable, usersTable } from "@workspace/db";
+import { eq, desc, sql } from "drizzle-orm";
+import { requireAuth, requireRole } from "../middleware/auth.middleware";
+import { logger } from "../lib/logger";
+import { gerarArteBuffer, gerarKitConvite } from "../services/art-generator";
+import { logAtividadeBg } from "../services/activity-log";
+import { uploadToR2 } from "./r2";
+import JSZip from "jszip";
+
+const router = Router();
+
+const R2_PUBLIC_URL = (process.env.R2_PUBLIC_URL || "").replace(/\/*$/, "/");
+const ALLOWED_MIME = new Set(["image/png", "image/jpeg", "image/webp"]);
+const MAX_BYTES = 10 * 1024 * 1024; // 10 MB
+const FOTOS_PREFIX = "palestrantes/";
+
+const upload = multer({ dest: os.tmpdir(), limits: { fileSize: MAX_BYTES, files: 1 } });
+
+/** Roles que podem usar a área Corporate. */
+const CORPORATE_ROLES = ["corporate", "admin"] as const;
+
+function sanitizeFilename(name: string): string {
+  return name
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-zA-Z0-9._-]/g, "_")
+    .replace(/_+/g, "_")
+    .slice(0, 200);
+}
+
+function nanoid8() {
+  return crypto.randomBytes(6).toString("base64url");
+}
+
+/**
+ * Monta os dados do convite a partir do corpo da requisição.
+ * `tipo_evento` é sempre "online" nesta área — é o propósito da página.
+ */
+function montarDados(body: Record<string, unknown>): Record<string, unknown> {
+  const num = String(body.num_palestrantes ?? "1").trim() || "1";
+  return {
+    ...body,
+    tipo_evento: "online",
+    // texto do topo da arte (substitui o "evento online" dos convites comuns)
+    chapeu: "Hora do Corporate",
+    num_palestrantes: num,
+    // presencial não se aplica: garante que as text layers de local/endereço fiquem vazias
+    local_nome: "",
+    endereco: "",
+  };
+}
+
+const FORMATOS_VALIDOS = new Set(["stories", "feed", "quadrado"]);
+
+function slug(s: string): string {
+  return String(s || "convite")
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "")
+    .slice(0, 60) || "convite";
+}
+
+// ── POST /corporate/convite/preview ───────────────────────────────
+// Renderiza só o formato "feed" e devolve como data URI, sem subir nada no R2.
+router.post("/corporate/convite/preview", requireAuth, requireRole(...CORPORATE_ROLES), async (req, res): Promise<void> => {
+  try {
+    const dados = montarDados((req.body ?? {}) as Record<string, unknown>);
+    if (!dados.titulo) {
+      res.status(400).json({ error: "Informe o título do evento para ver a prévia." });
+      return;
+    }
+
+    const num = String(dados.num_palestrantes ?? "1");
+    const pedido = String((req.body as any)?.formato ?? "feed");
+    const formato = FORMATOS_VALIDOS.has(pedido) ? pedido : "feed";
+
+    const art = await gerarArteBuffer("convite-evento", {
+      ...dados,
+      _variante_convite: `${num}-${formato}`,
+    });
+
+    if (!art) {
+      res.status(404).json({ error: `Nenhum template ativo para a variante ${num}-${formato}.` });
+      return;
+    }
+
+    res.json({
+      preview: `data:${art.mimetype};base64,${art.buffer.toString("base64")}`,
+      formato,
+    });
+  } catch (err: any) {
+    logger.error({ err }, "[corporate] erro ao gerar prévia do convite");
+    res.status(500).json({ error: "Não foi possível gerar a prévia." });
+  }
+});
+
+// ── POST /corporate/convite/gerar ─────────────────────────────────
+// Gera o kit completo (stories/feed/quadrado), sobe no R2 e devolve as URLs.
+router.post("/corporate/convite/gerar", requireAuth, requireRole(...CORPORATE_ROLES), async (req, res): Promise<void> => {
+  try {
+    const dados = montarDados((req.body ?? {}) as Record<string, unknown>);
+    if (!dados.titulo) {
+      res.status(400).json({ error: "Campo 'titulo' é obrigatório." });
+      return;
+    }
+
+    const kit = await gerarKitConvite(dados);
+    const formatos = Object.keys(kit);
+    if (formatos.length === 0) {
+      res.status(404).json({ error: "Nenhum template ativo encontrado para convite-evento." });
+      return;
+    }
+
+    const base = slug(String(dados.titulo ?? "convite"));
+    const urls: Record<string, string> = {};
+    const zip = new JSZip();
+
+    for (const formato of formatos) {
+      const { buffer, ext, mimetype } = kit[formato];
+      const filename = `convite-${formato}-${Date.now()}.${ext}`;
+      const tmpPath = path.join(os.tmpdir(), filename);
+      await fs.promises.writeFile(tmpPath, buffer);
+      urls[formato] = await uploadToR2(
+        { path: tmpPath, originalname: `convite-${formato}.${ext}`, mimetype },
+        0,
+        "convite",
+      );
+      // o .zip reaproveita os buffers já renderizados (não gera arte de novo)
+      zip.file(`${base}-${formato}.${ext}`, buffer);
+    }
+
+    // pacote com os 3 formatos
+    const zipBuffer = await zip.generateAsync({ type: "nodebuffer" });
+    const zipTmp = path.join(os.tmpdir(), `convite-${Date.now()}.zip`);
+    await fs.promises.writeFile(zipTmp, zipBuffer);
+    urls.zip = await uploadToR2(
+      { path: zipTmp, originalname: `${base}.zip`, mimetype: "application/zip" },
+      0,
+      "convite",
+    );
+
+    logger.info({ urls, user: req.session?.user?.email }, "[corporate] kit de convite gerado");
+    logAtividadeBg({
+      userEmail: req.session?.user?.email,
+      userName: req.session?.user?.name,
+      tipo: "corporate_convite_gerado",
+      titulo: String(dados.titulo ?? ""),
+      detalhe: `Convite de evento online gerado (${formatos.length} formatos) — plataforma: ${dados.plataforma ?? "-"}`,
+      metadata: {
+        plataforma: dados.plataforma,
+        num_palestrantes: dados.num_palestrantes,
+        data: dados.data,
+        horario: dados.horario,
+        urls,
+      },
+    });
+    res.json({ urls });
+  } catch (err: any) {
+    logger.error({ err }, "[corporate] erro ao gerar convite");
+    res.status(500).json({ error: "Não foi possível gerar o convite." });
+  }
+});
+
+// ── GET /corporate/fotos ──────────────────────────────────────────
+// Biblioteca de fotos de palestrantes (assets sob o prefixo "palestrantes/").
+router.get("/corporate/fotos", requireAuth, requireRole(...CORPORATE_ROLES), async (_req, res): Promise<void> => {
+  try {
+    const rows = await db
+      .select({
+        id: artAssetsTable.id,
+        filename: artAssetsTable.filename,
+        url: artAssetsTable.url,
+        uploaded_at: artAssetsTable.uploaded_at,
+      })
+      .from(artAssetsTable)
+      .where(sql`${artAssetsTable.storage_key} LIKE ${FOTOS_PREFIX + "%"}`)
+      .orderBy(desc(artAssetsTable.uploaded_at))
+      .limit(200);
+
+    res.json({ fotos: rows });
+  } catch (err: any) {
+    logger.error({ err }, "[corporate] erro ao listar fotos");
+    res.status(500).json({ error: "Não foi possível carregar a biblioteca de fotos." });
+  }
+});
+
+// ── POST /corporate/fotos/upload ──────────────────────────────────
+router.post(
+  "/corporate/fotos/upload",
+  requireAuth, requireRole(...CORPORATE_ROLES),
+  upload.single("file"),
+  async (req, res): Promise<void> => {
+    const file = req.file;
+    if (!file) {
+      res.status(400).json({ error: "Nenhum arquivo enviado." });
+      return;
+    }
+
+    const cleanup = () => fs.promises.unlink(file.path).catch(() => {});
+
+    try {
+      if (!ALLOWED_MIME.has(file.mimetype)) {
+        await cleanup();
+        res.status(400).json({ error: "Tipo inválido. Use PNG, JPG ou WEBP." });
+        return;
+      }
+
+      const buffer = await fs.promises.readFile(file.path);
+      const meta = await sharp(buffer).metadata();
+
+      const yyyyMM = new Date().toISOString().slice(0, 7);
+      const safe = sanitizeFilename(file.originalname);
+      const key = `${FOTOS_PREFIX}${yyyyMM}/${nanoid8()}-${safe}`;
+
+      const client = getR2Client();
+      if (!client || !R2_BUCKET) {
+        await cleanup();
+        res.status(500).json({ error: "Armazenamento de arquivos não configurado." });
+        return;
+      }
+
+      await client.send(
+        new PutObjectCommand({
+          Bucket: R2_BUCKET,
+          Key: key,
+          Body: buffer,
+          ContentType: file.mimetype,
+        }),
+      );
+
+      const url = `${R2_PUBLIC_URL}${key}`;
+      const email = req.session?.user?.email ?? "";
+      const [userRow] = email
+        ? await db.select({ id: usersTable.id }).from(usersTable).where(eq(usersTable.email, email))
+        : [];
+
+      // o nome do palestrante é o rótulo da foto na biblioteca — é por ele que a
+      // foto é reencontrada automaticamente nos próximos convites.
+      const nomeInformado = String((req.body as any)?.nome ?? "").trim();
+
+      const [row] = await db
+        .insert(artAssetsTable)
+        .values({
+          filename: (nomeInformado || file.originalname).slice(0, 300),
+          storage_key: key,
+          url,
+          mime_type: file.mimetype,
+          size_bytes: buffer.length,
+          width: meta.width ?? null,
+          height: meta.height ?? null,
+          uploaded_by: userRow?.id ?? null,
+        })
+        .returning({
+          id: artAssetsTable.id,
+          filename: artAssetsTable.filename,
+          url: artAssetsTable.url,
+        });
+
+      await cleanup();
+      logger.info({ key, user: email }, "[corporate] foto de palestrante enviada");
+      logAtividadeBg({
+        userEmail: email,
+        userName: req.session?.user?.name,
+        tipo: "corporate_foto_enviada",
+        titulo: row?.filename,
+        detalhe: `Foto de palestrante enviada para a biblioteca: ${row?.filename}`,
+        metadata: { asset_id: row?.id, url: row?.url },
+      });
+      res.json({ foto: row });
+    } catch (err: any) {
+      await cleanup();
+      logger.error({ err }, "[corporate] erro no upload de foto");
+      res.status(500).json({ error: "Não foi possível enviar a foto." });
+    }
+  },
+);
+
+// ── DELETE /corporate/fotos/:id ───────────────────────────────────
+// Só admin: remove a foto do R2 e da biblioteca.
+router.delete(
+  "/corporate/fotos/:id",
+  requireAuth,
+  requireRole("admin"),
+  async (req, res): Promise<void> => {
+    try {
+      const id = Number(req.params.id);
+      if (!Number.isInteger(id) || id <= 0) {
+        res.status(400).json({ error: "ID inválido." });
+        return;
+      }
+
+      const [foto] = await db
+        .select({ id: artAssetsTable.id, storage_key: artAssetsTable.storage_key, filename: artAssetsTable.filename })
+        .from(artAssetsTable)
+        .where(eq(artAssetsTable.id, id));
+
+      if (!foto) {
+        res.status(404).json({ error: "Foto não encontrada." });
+        return;
+      }
+      // proteção: só apaga o que é da biblioteca de palestrantes
+      if (!String(foto.storage_key).startsWith(FOTOS_PREFIX)) {
+        res.status(403).json({ error: "Este asset não pertence à biblioteca de palestrantes." });
+        return;
+      }
+
+      const client = getR2Client();
+      if (client && R2_BUCKET) {
+        try {
+          await client.send(new DeleteObjectCommand({ Bucket: R2_BUCKET, Key: foto.storage_key }));
+        } catch (err) {
+          // o registro sai da biblioteca mesmo que o arquivo já não exista no R2
+          logger.warn({ err, key: foto.storage_key }, "[corporate] falha ao apagar do R2");
+        }
+      }
+
+      await db.delete(artAssetsTable).where(eq(artAssetsTable.id, id));
+      logger.info({ id, nome: foto.filename, user: req.session?.user?.email }, "[corporate] foto removida");
+      logAtividadeBg({
+        userEmail: req.session?.user?.email,
+        userName: req.session?.user?.name,
+        tipo: "corporate_foto_removida",
+        nivel: "warn",
+        titulo: foto.filename,
+        detalhe: `Foto removida da biblioteca de palestrantes: ${foto.filename}`,
+        metadata: { asset_id: id, storage_key: foto.storage_key },
+      });
+      res.json({ ok: true });
+    } catch (err: any) {
+      logger.error({ err }, "[corporate] erro ao remover foto");
+      res.status(500).json({ error: "Não foi possível remover a foto." });
+    }
+  },
+);
+
+// ── PATCH /corporate/fotos/:id ────────────────────────────────────
+// Renomeia a foto (o nome e a chave usada para reencontra-la depois).
+router.patch(
+  "/corporate/fotos/:id",
+  requireAuth, requireRole(...CORPORATE_ROLES),
+  async (req, res): Promise<void> => {
+    try {
+      const id = Number(req.params.id);
+      const nome = String((req.body as any)?.nome ?? "").trim();
+      if (!Number.isInteger(id) || id <= 0) {
+        res.status(400).json({ error: "ID inválido." });
+        return;
+      }
+      if (!nome) {
+        res.status(400).json({ error: "Informe o novo nome." });
+        return;
+      }
+
+      const [foto] = await db
+        .select({ id: artAssetsTable.id, storage_key: artAssetsTable.storage_key, filename: artAssetsTable.filename })
+        .from(artAssetsTable)
+        .where(eq(artAssetsTable.id, id));
+
+      if (!foto) {
+        res.status(404).json({ error: "Foto não encontrada." });
+        return;
+      }
+      if (!String(foto.storage_key).startsWith(FOTOS_PREFIX)) {
+        res.status(403).json({ error: "Este asset não pertence à biblioteca de palestrantes." });
+        return;
+      }
+
+      const antigo = foto.filename;
+      await db
+        .update(artAssetsTable)
+        .set({ filename: nome.slice(0, 300) })
+        .where(eq(artAssetsTable.id, id));
+
+      logAtividadeBg({
+        userEmail: req.session?.user?.email,
+        userName: req.session?.user?.name,
+        tipo: "corporate_foto_renomeada",
+        titulo: nome,
+        detalhe: `Foto de palestrante renomeada: "${antigo}" -> "${nome}"`,
+        metadata: { asset_id: id, nome_anterior: antigo, nome_novo: nome },
+      });
+      res.json({ ok: true, filename: nome });
+    } catch (err: any) {
+      logger.error({ err }, "[corporate] erro ao renomear foto");
+      res.status(500).json({ error: "Não foi possível renomear a foto." });
+    }
+  },
+);
+
+export default router;
+```
+
+
 ## File: artifacts/api-server/src/routes/forms.ts
 
 ```
@@ -30462,6 +35570,7 @@ import { eq, desc, and, ne, sql, inArray } from "drizzle-orm";
 import { requireAuth, requireRole } from "../middleware/auth.middleware";
 import { createClickUpTask, getClickUpTaskStatus, getClickUpTaskSnapshot, setClickUpTaskStatus, calcularPrazo, getPrazoDiasUteis, PRAZO_DIAS_UTEIS, APRESENTACAO_TIERS, CLICKUP_STATUS_EM_REVISAO, CLICKUP_STATUS_CONCLUIDO, notificarCartaoValidadoChat, type ArquivosMap } from "./clickup";
 import { holidaysList } from "../lib/holidays";
+import { normalizeFormDados } from "../lib/normalize";
 import { FORM_SCHEMAS } from "../config/form-schemas";
 import { uploadToR2, deleteFromR2 } from "./r2";
 import { gerarArteParaSolicitacao, gerarCartaoFisicoPdf } from "../services/art-generator";
@@ -30574,52 +35683,12 @@ const REQUIRED_FIELDS: Record<string, string[]> = {
   "outro":                 ["nome", "titulo", "finalidade", "descricao"],
   "cartao-comemorativo":   ["nome", "nome_aniversariante", "modelo_cartao", "mensagem", "assinatura", "email_destinatario"],
   "brindes":               ["nome", "titulo", "finalidade", "dataEntrega", "itens"],
-  "patrocinio":            ["nome", "tituloEvento", "marcasParceiras", "dataEvento", "horario", "local", "estado", "cidade", "tipoEvento", "publico", "explicacao", "centroCusto", "valorCota", "orcamentoTotal", "expectativaRetorno"],
+  "patrocinio":            ["nome", "tituloEvento", "marcasParceiras", "dataEvento", "horario", "local", "estado", "cidade", "tipoEvento", "publico", "explicacao", "centroCusto", "valorCota", "orcamentoTotal"],
   "email-marketing":       ["nome", "assunto", "finalidade", "tema", "dataDisparo", "assinaturaEmail"],
   "producao-video":        ["nome", "titulo", "ideia", "formato"],
   "sessao-fotos":          ["nome", "objetivo", "qtdParticipantes", "localSessao"],
   "materiais-impressos":   ["nome", "tipoMaterial"],
 };
-
-function normalizeFormDados(
-  _tipo: string,
-  dados: Record<string, unknown>
-): Record<string, unknown> {
-  const out = { ...dados };
-
-  const KEY_MAP: Record<string, string> = {
-    isPrivate:     "is_private_key",
-    modeloCartao:  "modelo_cartao",
-    modeloArte:    "modelo_arte",
-    contratoSocial:"contrato_social",
-    nomeCliente:   "nome_cliente",
-    nomeAssinatura: "nome_assinatura",
-    nomeCompleto:      "nome_completo",
-    codigoAssessor:    "codigo_assessor",
-    fotoPerfilDigital: "foto_perfil",
-  };
-  for (const [camel, snake] of Object.entries(KEY_MAP)) {
-    if (camel in out) {
-      if (!(snake in out)) out[snake] = out[camel];
-      delete out[camel];
-    }
-  }
-
-  if (out.is_private_key === "sim")       out.is_private_key = "private";
-  else if (out.is_private_key === "nao")  out.is_private_key = "padrao";
-
-  for (let i = 1; i <= 4; i++) {
-    const k = "palSvn" + i;
-    const v = out[k];
-    if (typeof v === "string") {
-      const lower = v.toLowerCase();
-      if (lower === "sim")              out[k] = "Sim";
-      else if (lower === "nao" || lower === "não") out[k] = "Não";
-    }
-  }
-
-  return out;
-}
 
 function validateFormDados(tipo: string, dados: Record<string, unknown>): string | null {
   const required = REQUIRED_FIELDS[tipo];
@@ -31155,6 +36224,20 @@ router.get("/solicitacoes/:id", requireAuth, async (req, res): Promise<void> => 
     }
 
     const arquivos = await db.select().from(arquivosTable).where(eq(arquivosTable.solicitacao_id, id));
+
+    // Paginas de assessor: o status que vale e o da validacao/publicacao, nao o do
+    // ClickUp. Sobrescreve para o resumo do pedido nao mostrar uma etapa que nao existe.
+    let statusPagina: string | null = null;
+    if (["pagina-assessores-dados", "pagina-assessores-atualizacao"].includes(solicitacao.tipo_solicitacao)) {
+      try {
+        const [pubRow] = await db
+          .select({ status: assessorPublicacoesTable.status })
+          .from(assessorPublicacoesTable)
+          .where(eq(assessorPublicacoesTable.solicitacao_id, id));
+        statusPagina = pubRow?.status ?? "aguardando-validacao";
+        (solicitacao as any).status = statusPagina;
+      } catch { /* sem registro: mantem o status atual */ }
+    }
 
     // Nome do solicitante (a partir do cadastro de usuários, pelo e-mail)
     let solicitanteNome: string | null = null;
@@ -31728,135 +36811,6 @@ router.post("/solicitacoes/:id/cancelar", requireAuth, async (req, res): Promise
   }
 });
 
-router.get("/admin/stats", requireAuth, async (req, res): Promise<void> => {
-  try {
-    const user = req.session.user!;
-    if (user.role !== "admin" && user.role !== "gestor") {
-      res.status(403).json({ error: "Acesso negado" }); return;
-    }
-
-    const now = new Date();
-    const deRaw = req.query.de ? String(req.query.de) : "";
-    const ateRaw = req.query.ate ? String(req.query.ate) : "";
-    const rangeValido = /^\d{4}-\d{2}-\d{2}$/.test(deRaw) && /^\d{4}-\d{2}-\d{2}$/.test(ateRaw);
-    let dias: number, fimHoje: Date, periodoAtual: Date, periodoAnterior: Date;
-    if (rangeValido) {
-      // Intervalo personalizado: usa as datas reais ('ate' inclusivo).
-      periodoAtual = new Date(deRaw + "T00:00:00");
-      fimHoje = new Date(ateRaw + "T00:00:00"); fimHoje.setDate(fimHoje.getDate() + 1);
-      dias = Math.max(1, Math.round((fimHoje.getTime() - periodoAtual.getTime()) / 86400000));
-      periodoAnterior = new Date(periodoAtual.getTime() - dias * 86400000);
-    } else {
-      dias = Math.min(365, Math.max(1, parseInt(String(req.query.dias), 10) || 7));
-      // Períodos contam apenas DIAS CHEIOS: a janela termina no início de hoje (exclui o dia corrente).
-      fimHoje = new Date(now); fimHoje.setHours(0, 0, 0, 0);
-      periodoAtual = new Date(fimHoje.getTime() - dias * 86400000);
-      periodoAnterior = new Date(periodoAtual.getTime() - dias * 86400000);
-    }
-    // registros importados da planilha histórica de cartões não entram nos contadores
-    const naoImportada = sql`(${solicitacoesTable.dados} ->> '_importado_planilha') IS NULL`;
-    // Escopo: todos | solicitacoes (exclui automações) | automacoes (só automações)
-    const escopoParam = String(req.query.escopo || "todos");
-    const autoTipos = Array.from(TIPOS_AUTOMACAO_SET) as string[];
-    const inAuto = inArray(solicitacoesTable.tipo_solicitacao, autoTipos);
-    const escopoCond = escopoParam === "automacoes"
-      ? inAuto
-      : escopoParam === "solicitacoes"
-      ? sql`NOT (${inAuto})`
-      : undefined;
-    const noPeriodo = and(
-      sql`${solicitacoesTable.created_at} >= ${periodoAtual.toISOString()}`,
-      sql`${solicitacoesTable.created_at} < ${fimHoje.toISOString()}`,
-      naoImportada,
-      ...(escopoCond ? [escopoCond] : [])
-    );
-
-    const [atual] = await db.select({ count: sql<number>`count(*)` })
-      .from(solicitacoesTable)
-      .where(noPeriodo);
-
-    const [anterior] = await db.select({ count: sql<number>`count(*)` })
-      .from(solicitacoesTable)
-      .where(and(
-        sql`${solicitacoesTable.created_at} >= ${periodoAnterior.toISOString()}`,
-        sql`${solicitacoesTable.created_at} < ${periodoAtual.toISOString()}`,
-        naoImportada,
-        ...(escopoCond ? [escopoCond] : [])
-      ));
-
-    const porTipo = await db.select({
-      tipo: solicitacoesTable.tipo_solicitacao,
-      count: sql<number>`count(*)`
-    })
-      .from(solicitacoesTable)
-      .where(noPeriodo)
-      .groupBy(solicitacoesTable.tipo_solicitacao)
-      .orderBy(desc(sql`count(*)`));
-
-    const porStatus = await db.select({
-      status: solicitacoesTable.status,
-      count: sql<number>`count(*)`
-    })
-      .from(solicitacoesTable)
-      .where(noPeriodo)
-      .groupBy(solicitacoesTable.status)
-      .orderBy(desc(sql`count(*)`));
-
-    const [avaliacoes] = await db.select({ count: sql<number>`count(*)` })
-      .from(solicitacoesTable)
-      .where(and(noPeriodo, sql`${solicitacoesTable.avaliacao} IS NOT NULL`));
-
-    const [mediaNotas] = await db.select({
-      media: sql<number>`avg((avaliacao->>'nota')::numeric)`
-    })
-      .from(solicitacoesTable)
-      .where(and(noPeriodo, sql`${solicitacoesTable.avaliacao} IS NOT NULL`));
-
-    const topSolicitantesRows = await db.select({
-      nome: usersTable.name,
-      email: solicitacoesTable.user_email,
-      count: sql<number>`count(*)`,
-    })
-      .from(solicitacoesTable)
-      .leftJoin(usersTable, eq(usersTable.email, solicitacoesTable.user_email))
-      .where(noPeriodo)
-      .groupBy(usersTable.name, solicitacoesTable.user_email)
-      .orderBy(desc(sql`count(*)`))
-      .limit(8);
-
-    const porTipoStatusRows = await db.select({
-      tipo: solicitacoesTable.tipo_solicitacao,
-      status: solicitacoesTable.status,
-      count: sql<number>`count(*)`,
-    })
-      .from(solicitacoesTable)
-      .where(noPeriodo)
-      .groupBy(solicitacoesTable.tipo_solicitacao, solicitacoesTable.status);
-
-    const totalAtual = Number(atual.count);
-    const totalAnterior = Number(anterior.count);
-    const delta = totalAnterior === 0
-      ? (totalAtual > 0 ? 100 : 0)
-      : Math.round(((totalAtual - totalAnterior) / totalAnterior) * 100);
-
-    res.json({
-      total: totalAtual,
-      delta,
-      deltaPositivo: totalAtual >= totalAnterior,
-      porTipo: porTipo.map(r => ({ tipo: r.tipo, count: Number(r.count) })),
-      porStatus: porStatus.map(r => ({ status: r.status, count: Number(r.count) })),
-      avaliacoes: Number(avaliacoes.count),
-      mediaNotas: mediaNotas.media ? Number(mediaNotas.media).toFixed(1) : null,
-      topSolicitantes: topSolicitantesRows.map(r => ({ nome: r.nome || r.email, count: Number(r.count) })),
-      porTipoStatus: porTipoStatusRows.map(r => ({ tipo: r.tipo, status: r.status, count: Number(r.count) })),
-      dias,
-    });
-  } catch (err) {
-    logger.error({ err }, "Erro ao buscar stats admin");
-    res.status(500).json({ error: "Erro ao buscar estatísticas" });
-  }
-});
-
 router.post("/solicitacoes/bulk-delete", requireRole("admin"), async (req, res): Promise<void> => {
   try {
     const user = req.session.user!;
@@ -32096,7 +37050,7 @@ router.post("/assessor-aprovacoes/:id/decisao", requireAuth, async (req, res): P
     const id = parseInt(String(req.params.id), 10);
     if (Number.isNaN(id)) { res.status(400).json({ error: "ID inválido" }); return; }
     const b = req.body || {};
-    const MAP: Record<string, string> = { aprovado: "aprovado", ajustes: "ajustes-solicitados", reprovado: "reprovado" };
+    const MAP: Record<string, string> = { aprovado: "aprovado", ajustes: "ajustes-solicitados", reprovado: "reprovado", publicado: "publicado" };
     const novoStatus = MAP[String(b.decisao || "")];
     if (!novoStatus) { res.status(400).json({ error: "Decisão inválida" }); return; }
     const [sol] = await db.select().from(solicitacoesTable).where(eq(solicitacoesTable.id, id));
@@ -32118,6 +37072,28 @@ router.post("/assessor-aprovacoes/:id/decisao", requireAuth, async (req, res): P
       atualizado_em: new Date(),
     };
     if (novoStatus === "ajustes-solicitados") setFields.ciclo = (pub?.ciclo || 1) + 1;
+
+    // "Concluído" = publicado no site. So faz sentido depois de aprovado e nao e uma
+    // decisao de validacao: nao mexe em decidido_por/decidido_em nem nos ajustes.
+    if (novoStatus === "publicado") {
+      // Concluir = "ja esta publicado no site". Quem publica e o marketing.
+      // Capital Humano valida, mas nao conclui.
+      const PUBLICA_ROLES = ["gestor", "admin"];
+      if (!PUBLICA_ROLES.includes(role)) {
+        res.status(403).json({ error: "Apenas o marketing pode concluir uma página." });
+        return;
+      }
+      if (!pub || pub.status !== "aprovado") {
+        res.status(400).json({ error: "Só é possível concluir um perfil que está aprovado." });
+        return;
+      }
+      delete setFields.decidido_por;
+      delete setFields.decidido_em;
+      delete setFields.ajustes;
+      setFields.observacao = pub.observacao ?? null;
+      setFields.publicado_por = u?.id ?? null;
+      setFields.publicado_em = new Date();
+    }
 
     if (pub) {
       await db.update(assessorPublicacoesTable).set(setFields).where(eq(assessorPublicacoesTable.solicitacao_id, id));
@@ -32419,6 +37395,8 @@ export default router;
 import { Router, type IRouter } from "express";
 import healthRouter from "./health";
 import formsRouter from "./forms";
+import adminStatsRouter from "./admin-stats";
+import corporateRouter from "./corporate";
 import adminRouter from "./admin";
 import assetsRouter from "./assets";
 import webhookRouter from "./webhook";
@@ -32428,6 +37406,8 @@ const router: IRouter = Router();
 
 router.use(healthRouter);
 router.use(formsRouter);
+router.use(adminStatsRouter);
+router.use(corporateRouter);
 router.use("/admin", adminRouter);
 router.use("/admin/assets", assetsRouter);
 router.use(webhookRouter);
@@ -32689,6 +37669,245 @@ router.post(
 );
 
 export default router;
+```
+
+
+## File: artifacts/api-server/src/scripts/add-plataforma-convite.ts
+
+```
+/**
+ * Adiciona a layer da logo da plataforma (online) aos templates de "convite-evento".
+ *
+ * COMO FUNCIONA
+ *   Presencial -> as text layers {{local_nome}}/{{endereco}} têm valor e aparecem;
+ *                 a layer da logo é pulada (campo `plataforma` vazio -> renderImage dá return).
+ *   Online     -> local_nome/endereco vêm vazios (as text layers somem sozinhas);
+ *                 `plataforma` = youtube|zoom|meet -> a image layer 'variant' resolve a logo.
+ *   Nenhuma condicional nova: o renderer já ignora placeholder vazio e variant sem dado.
+ *
+ * USO
+ *   1) Preencha LOGOS abaixo com as URLs do R2.
+ *   2) Dry-run (não grava):   pnpm --filter @workspace/api-server exec tsx src/scripts/add-plataforma-convite.ts
+ *   3) Aplicar de verdade:    pnpm --filter @workspace/api-server exec tsx src/scripts/add-plataforma-convite.ts --apply
+ *
+ * Idempotente: se a layer já existe no template, ele é pulado.
+ * A posição é derivada das layers de endereço/local de cada template — depois é só
+ * ajustar no editor de arte se quiser refinar (drag & drop).
+ */
+import { db, artTemplatesTable } from "@workspace/db";
+import { eq } from "drizzle-orm";
+import fs from "node:fs";
+
+// >>> PREENCHA COM AS URLs DO R2 <<<
+const LOGOS: Record<string, string> = {
+  youtube: "https://solicitacoes.portalsvn.com.br/assets/2026-07/38CLCdFZ-YouTube_Logo1.png",
+  zoom:    "https://solicitacoes.portalsvn.com.br/assets/2026-07/RbX0oAfo-Zoom-Logo.png",
+  meet:    "https://solicitacoes.portalsvn.com.br/assets/2026-07/Y4lrCZcY-google-meet1.png",
+  // "live" nao esta no select do form (e usado em outros contextos), mas fica mapeado:
+  // se algum payload enviar plataforma: "live", a logo resolve normalmente.
+  live:    "https://solicitacoes.portalsvn.com.br/assets/2026-07/z0vCDXlP-live-logo-01.png",
+};
+
+const LAYER_ID = "logo_plataforma";
+const APPLY = process.argv.includes("--apply");
+
+type AnyLayer = Record<string, any>;
+
+/** Acha as layers de texto que referenciam local/endereço e devolve o bounding box. */
+function regiaoDoEndereco(layers: AnyLayer[]): { x: number; y: number; w: number; h: number } | null {
+  const alvos = layers.filter(
+    (l) =>
+      (l.type === "text-line" || l.type === "text-block") &&
+      typeof l.content === "string" &&
+      /\{\{\s*(local_nome|endereco)\s*\}\}/.test(l.content)
+  );
+  if (alvos.length === 0) return null;
+
+  const x = Math.min(...alvos.map((l) => Number(l.x) || 0));
+  const y = Math.min(...alvos.map((l) => Number(l.y) || 0));
+  const right = Math.max(...alvos.map((l) => (Number(l.x) || 0) + (Number(l.w) || 0)));
+  // altura: text-block tem h; text-line usa font_size como aproximação
+  const bottom = Math.max(
+    ...alvos.map((l) => (Number(l.y) || 0) + (Number(l.h) || Number(l.font_size) || 40))
+  );
+  return { x, y, w: Math.max(right - x, 1), h: Math.max(bottom - y, 1) };
+}
+
+function novaLayerLogo(regiao: { x: number; y: number; w: number; h: number }): AnyLayer {
+  // A logo ocupa a mesma faixa horizontal do endereço, com altura da própria região
+  // (mínimo de 48px para não ficar ilegível). resize_mode 'contain' preserva o aspecto.
+  const h = Math.max(regiao.h, 48);
+  return {
+    id: LAYER_ID,
+    name: "Logo da plataforma (online)",
+    type: "image",
+    x: regiao.x,
+    y: regiao.y,
+    w: regiao.w,
+    h,
+    source: {
+      type: "variant",
+      variant_source: "plataforma",
+      variants: { ...LOGOS },
+    },
+    resize_mode: "contain",
+  };
+}
+
+async function main() {
+  const faltando = Object.entries(LOGOS).filter(([, url]) => !url.trim()).map(([k]) => k);
+  if (faltando.length > 0) {
+    console.error(`\n✗ Preencha as URLs do R2 em LOGOS: ${faltando.join(", ")}\n`);
+    process.exit(1);
+  }
+
+  const templates = await db
+    .select()
+    .from(artTemplatesTable)
+    .where(eq(artTemplatesTable.tipo, "convite-evento"));
+
+  if (templates.length === 0) {
+    console.error("✗ Nenhum template 'convite-evento' encontrado.");
+    process.exit(1);
+  }
+
+  // deixa explicito em qual banco estamos mexendo (dev x producao)
+  const dbUrl = process.env.DATABASE_URL ?? "";
+  const dbHost = dbUrl ? (dbUrl.split("@")[1] ?? "").split("/")[0] : "(DATABASE_URL vazia)";
+  console.log(`\nBanco: ${dbHost}`);
+  console.log(`${APPLY ? "APLICANDO" : "DRY-RUN (nada será gravado)"} — ${templates.length} template(s)\n`);
+
+  // backup dos configs originais antes de qualquer escrita
+  if (APPLY) {
+    const arquivo = `backup-convite-templates-${Date.now()}.json`;
+    const dump = templates.map((t) => ({ id: t.id, variant_value: t.variant_value, name: t.name, config: t.config }));
+    fs.writeFileSync(arquivo, JSON.stringify(dump, null, 2));
+    console.log(`  Backup dos configs originais: ${arquivo}\n`);
+  }
+
+  let alterados = 0;
+  let pulados = 0;
+  let semRegiao = 0;
+
+  for (const t of templates) {
+    const config = t.config as AnyLayer;
+    const layers: AnyLayer[] = Array.isArray(config?.layers) ? config.layers : [];
+    const rotulo = `${t.variant_value ?? "-"} (id ${t.id}) "${t.name}"`;
+
+    if (layers.some((l) => l.id === LAYER_ID)) {
+      console.log(`  = ${rotulo}: já tem a layer — pulado`);
+      pulados++;
+      continue;
+    }
+
+    const regiao = regiaoDoEndereco(layers);
+    if (!regiao) {
+      console.log(`  ! ${rotulo}: não achei layer com {{local_nome}}/{{endereco}} — pulado (posicione manualmente no editor)`);
+      semRegiao++;
+      continue;
+    }
+
+    const layer = novaLayerLogo(regiao);
+    // índice 0 = mais à frente no render (o renderer inverte o array antes de compor)
+    const novoConfig = { ...config, layers: [layer, ...layers] };
+
+    console.log(
+      `  + ${rotulo}: logo em x=${layer.x} y=${layer.y} w=${layer.w} h=${layer.h}`
+    );
+
+    if (APPLY) {
+      await db
+        .update(artTemplatesTable)
+        .set({ config: novoConfig, updated_at: new Date() })
+        .where(eq(artTemplatesTable.id, t.id));
+    }
+    alterados++;
+  }
+
+  console.log(
+    `\n${APPLY ? "Gravado" : "Simulado"}: ${alterados} alterado(s), ${pulados} já ok, ${semRegiao} sem região.\n` +
+      (APPLY ? "" : "Rode de novo com --apply para gravar.\n")
+  );
+  process.exit(0);
+}
+
+main().catch((err) => {
+  console.error("Erro:", err);
+  process.exit(1);
+});
+```
+
+
+## File: artifacts/api-server/src/scripts/diag-art-templates.ts
+
+```
+/**
+ * Diagnóstico: mostra o que existe de fato na tabela art_templates.
+ * Serve para descobrir sob qual `tipo` os templates de convite foram salvos
+ * (e confirmar que o script está falando com o banco certo).
+ *
+ * Uso:
+ *   pnpm --filter @workspace/api-server exec tsx src/scripts/diag-art-templates.ts
+ */
+import { db, artTemplatesTable } from "@workspace/db";
+
+async function main() {
+  // pista 1: em qual banco/host estamos?
+  const url = process.env.DATABASE_URL ?? "";
+  const host = url ? (url.split("@")[1] ?? "").split("/")[0] : "(DATABASE_URL vazia!)";
+  console.log(`\nBanco: ${host}\n`);
+
+  const rows = await db.select().from(artTemplatesTable);
+  console.log(`Total de templates: ${rows.length}\n`);
+
+  if (rows.length === 0) {
+    console.log("Tabela art_templates VAZIA — provavelmente é outro banco (dev x prod).");
+    process.exit(0);
+  }
+
+  // agrupa por tipo
+  const porTipo = new Map<string, { total: number; variantes: string[] }>();
+  for (const r of rows) {
+    const t = r.tipo;
+    if (!porTipo.has(t)) porTipo.set(t, { total: 0, variantes: [] });
+    const e = porTipo.get(t)!;
+    e.total++;
+    e.variantes.push(String(r.variant_value ?? "-"));
+  }
+
+  console.log("Tipos encontrados:");
+  for (const [tipo, e] of [...porTipo.entries()].sort()) {
+    console.log(`  ${tipo}  (${e.total})  variantes: ${e.variantes.join(", ")}`);
+  }
+
+  // detalha o que parecer convite
+  const convites = rows.filter((r) => r.tipo.toLowerCase().includes("convite"));
+  if (convites.length > 0) {
+    console.log(`\nTemplates com "convite" no tipo (${convites.length}):`);
+    for (const c of convites) {
+      const cfg = c.config as any;
+      const layers = Array.isArray(cfg?.layers) ? cfg.layers : [];
+      const temEndereco = layers.some(
+        (l: any) =>
+          typeof l?.content === "string" && /\{\{\s*(local_nome|endereco)\s*\}\}/.test(l.content)
+      );
+      console.log(
+        `  id=${c.id} tipo="${c.tipo}" variant="${c.variant_value ?? "-"}" ativo=${c.is_active}` +
+          ` layers=${layers.length} temLayerEndereco=${temEndereco ? "SIM" : "NAO"} nome="${c.name}"`
+      );
+    }
+  } else {
+    console.log('\nNenhum template com "convite" no tipo.');
+  }
+
+  process.exit(0);
+}
+
+main().catch((err) => {
+  console.error("Erro:", err);
+  process.exit(1);
+});
+
 ```
 
 
@@ -33191,6 +38410,114 @@ seed().catch((err) => {
 ```
 
 
+## File: artifacts/api-server/src/scripts/set-chapeu.ts
+
+```
+/**
+ * Troca o conteudo da layer do topo dos templates de convite:
+ *   "evento {{tipo_evento}}"  ->  "{{chapeu}}"
+ *
+ * Texto do topo passa a ser controlado por quem gera a arte:
+ *   - Corporate       -> "Hora do Corporate"
+ *   - Form de eventos -> "evento presencial" / "evento online"  (default do art-generator)
+ *
+ * Rodar de dentro de artifacts/api-server:
+ *   npx tsx src/scripts/set-chapeu.ts            # simula
+ *   npx tsx src/scripts/set-chapeu.ts --apply    # grava
+ */
+import { db, artTemplatesTable } from "@workspace/db";
+import { eq } from "drizzle-orm";
+
+const APLICAR = process.argv.includes("--apply");
+
+function hostDoBanco(): string {
+  const url = process.env.DATABASE_URL || "";
+  try {
+    const u = new URL(url);
+    return `${u.hostname}${u.port ? ":" + u.port : ""}${u.pathname}`; // sem usuario/senha
+  } catch {
+    return url ? "(DATABASE_URL ilegivel)" : "(DATABASE_URL nao definida)";
+  }
+}
+
+async function main() {
+  console.log(`\nBanco: ${hostDoBanco()}`);
+
+  // quantos templates existem ao todo? ajuda a perceber banco vazio/errado
+  const todos = await db.select().from(artTemplatesTable);
+  console.log(`Total de art_templates neste banco: ${todos.length}`);
+  if (todos.length) {
+    const porTipo = todos.reduce((acc: Record<string, number>, r: any) => {
+      acc[r.tipo] = (acc[r.tipo] || 0) + 1;
+      return acc;
+    }, {});
+    console.log("Por tipo:", porTipo);
+  }
+
+  const rows = todos.filter((r: any) => r.tipo === "convite-evento");
+
+  if (rows.length === 0) {
+    console.error(
+      "\n✗ Nenhum template 'convite-evento' aqui.\n" +
+        "  Este provavelmente NAO e o banco de producao.\n" +
+        "  Rode apontando para a base certa, por exemplo:\n" +
+        '    DATABASE_URL="$DATABASE_PUBLIC_URL" npx tsx src/scripts/set-chapeu.ts\n' +
+        "  ou:  railway run npx tsx src/scripts/set-chapeu.ts\n",
+    );
+    process.exit(1);
+  }
+
+  console.log(`\n${rows.length} template(s) de convite-evento.`);
+  console.log(APLICAR ? "MODO: aplicando alteracoes\n" : "MODO: simulacao (use --apply para gravar)\n");
+
+  let alterados = 0;
+  let jaOk = 0;
+
+  for (const row of rows) {
+    const config = row.config as any;
+    const layers = config?.layers;
+    if (!Array.isArray(layers)) {
+      console.log(`  [${row.id}] ${row.name}: config sem layers — pulado`);
+      continue;
+    }
+
+    const layer = layers.find(
+      (l: any) => l?.id === "tipo-evento" || /tipo.?evento/i.test(String(l?.id ?? "")),
+    );
+    if (!layer) {
+      console.log(`  [${row.id}] ${row.name}: sem layer de topo — pulado`);
+      continue;
+    }
+    if (layer.content === "{{chapeu}}") {
+      jaOk++;
+      continue;
+    }
+
+    const antes = layer.content;
+    layer.content = "{{chapeu}}";
+
+    if (APLICAR) {
+      await db.update(artTemplatesTable).set({ config }).where(eq(artTemplatesTable.id, row.id));
+    }
+    console.log(`  [${row.id}] ${row.name}: "${antes}"  ->  "{{chapeu}}"`);
+    alterados++;
+  }
+
+  console.log(
+    `\n${alterados} a alterar | ${jaOk} ja ok` +
+      (APLICAR ? "\n✓ gravado no banco." : "\n(nada foi gravado — rode com --apply)"),
+  );
+  process.exit(0);
+}
+
+main().catch((err) => {
+  console.error("Falhou:", err);
+  process.exit(1);
+});
+
+```
+
+
 ## File: artifacts/api-server/src/services/activity-log.ts
 
 ```
@@ -33509,6 +38836,13 @@ export async function gerarArteBuffer(
   const formSchema = FORM_SCHEMAS[tipo];
   const resolvedDados = addOptionLabels(resolveComputed(dados, formSchema), formSchema);
 
+  // Texto do topo do convite. Quem nao mandar 'chapeu' (ex.: o formulario de
+  // eventos) continua imprimindo o texto de sempre: "evento presencial/online".
+  // O Corporate manda "Hora do Corporate" e sobrescreve isso.
+  if (!resolvedDados.chapeu && resolvedDados.tipo_evento) {
+    resolvedDados.chapeu = `evento ${resolvedDados.tipo_evento}`;
+  }
+
   const variantField = formSchema?.template_variant_field;
   const variantValue = variantField && resolvedDados[variantField] != null
     ? String(resolvedDados[variantField])
@@ -33575,6 +38909,13 @@ export async function gerarArteParaSolicitacao(
   const formSchema = FORM_SCHEMAS[tipo];
 
   const resolvedDados = addOptionLabels(resolveComputed(dados, formSchema), formSchema);
+
+  // Texto do topo do convite. Quem nao mandar 'chapeu' (ex.: o formulario de
+  // eventos) continua imprimindo o texto de sempre: "evento presencial/online".
+  // O Corporate manda "Hora do Corporate" e sobrescreve isso.
+  if (!resolvedDados.chapeu && resolvedDados.tipo_evento) {
+    resolvedDados.chapeu = `evento ${resolvedDados.tipo_evento}`;
+  }
 
 
   const variantField = formSchema?.template_variant_field;
@@ -34161,18 +39502,25 @@ function getFont(family: string): any {
 }
 
 class BoundedCache<K, V> {
-  private _map = new Map<K, V>();
-  constructor(private readonly _max: number) {}
-  get(key: K): V | undefined { return this._map.get(key); }
+  private _map = new Map<K, { v: V; exp: number }>();
+  constructor(private readonly _max: number, private readonly _ttlMs = 0) {}
+  get(key: K): V | undefined {
+    const e = this._map.get(key);
+    if (!e) return undefined;
+    if (this._ttlMs > 0 && Date.now() > e.exp) { this._map.delete(key); return undefined; }
+    return e.v;
+  }
   set(key: K, value: V): void {
     if (this._map.has(key)) this._map.delete(key);
     else if (this._map.size >= this._max) this._map.delete(this._map.keys().next().value!);
-    this._map.set(key, value);
+    this._map.set(key, { v: value, exp: this._ttlMs > 0 ? Date.now() + this._ttlMs : Infinity });
   }
 }
 
 const DEBUG_RENDER = process.env.DEBUG_RENDER === '1';
-const assetCache = new BoundedCache<string, Buffer>(100);
+// TTL para assets: um logo trocado no R2 (mesma URL) propaga em ate ASSET_CACHE_TTL_MS (default 10 min).
+const ASSET_CACHE_TTL_MS = Number(process.env.ASSET_CACHE_TTL_MS) || 10 * 60 * 1000;
+const assetCache = new BoundedCache<string, Buffer>(100, ASSET_CACHE_TTL_MS);
 
 function isImageBuffer(buf: Buffer): boolean {
   if (buf.length < 4) return false;
@@ -34405,6 +39753,29 @@ async function renderTextBlock(
     allLines = buildLines(fontSize);
   }
 
+  // Crescimento: se o texto e curto e coube sem encolher, aumenta ate max_font_size.
+  // (titulo curto fica maior; titulo longo permanece menor)
+  const maxFont = layer.auto_fit?.max_font_size ?? 0;
+  if (maxFont > layer.font_size && fontSize === layer.font_size) {
+    const cabe = (fs: number, linhas: string[]): boolean => {
+      const nlh = ((font.ascent + Math.abs(font.descent)) / font.unitsPerEm) * fs;
+      const lh = Math.max(layer.line_height * (fs / layer.font_size), nlh);
+      if (linhas.length * lh > layer.h) return false;
+      const mw = linhas.reduce(
+        (max, l) => (l ? Math.max(max, measureTextWidth(font, l, fs, letterSpacing)) : max),
+        0
+      );
+      return mw <= layer.w;
+    };
+    while (fontSize < maxFont) {
+      const tentativa = Math.min(fontSize + 2, maxFont);
+      const linhas = buildLines(tentativa);
+      if (!cabe(tentativa, linhas)) break;
+      fontSize = tentativa;
+      allLines = linhas;
+    }
+  }
+
   const naturalLh = ((font.ascent + Math.abs(font.descent)) / font.unitsPerEm) * fontSize;
   const lineHeight = Math.max(layer.line_height * (fontSize / layer.font_size), naturalLh);
   const contentHeight = allLines.length * lineHeight;
@@ -34551,6 +39922,52 @@ async function renderImage(
   if (layer.blend_mode && layer.blend_mode !== 'normal') {
     composite.blend = layer.blend_mode as sharp.Blend;
   }
+
+  // ── Sombra da foto ──────────────────────────────────────────────
+  // A imagem ja foi recortada numa forma conhecida (circulo ou retangulo), entao a
+  // sombra e a sombra DESSA forma: desenhamos a forma preenchida e borrada ATRAS da
+  // imagem. Nao e preciso borrar a imagem em si.
+  const imgSh = layer.shadow;
+  const iBlur = Math.max(0, Number(imgSh?.blur ?? 0));
+  if (imgSh && iBlur > 0) {
+    const iDx = Number(imgSh.offset_x ?? 0);
+    const iDy = Number(imgSh.offset_y ?? 0);
+    const iCor = imgSh.color || '#000000';
+    const iOp = Math.min(1, Math.max(0, Number(imgSh.opacity ?? 0.35)));
+    const iPad = Math.ceil(iBlur * 2 + Math.max(Math.abs(iDx), Math.abs(iDy)));
+
+    // area expandida (a sombra vaza para fora da forma)
+    const iOx = _cx - iPad;
+    const iOy = _cy - iPad;
+    const iW = safeW + 2 * iPad;
+    const iH = safeH + 2 * iPad;
+    const iCropL = iOx < 0 ? Math.min(-iOx, iW) : 0;
+    const iCropT = iOy < 0 ? Math.min(-iOy, iH) : 0;
+    const iVisW = Math.min(iW - iCropL, bgWidth  - Math.max(iOx, 0));
+    const iVisH = Math.min(iH - iCropT, bgHeight - Math.max(iOy, 0));
+
+    if (iVisW > 0 && iVisH > 0) {
+      const forma = isCircle
+        ? `<circle cx="${iPad + safeW / 2}" cy="${iPad + safeH / 2}" r="${Math.min(safeW, safeH) / 2}" fill="${iCor}" fill-opacity="${iOp}"/>`
+        : `<rect x="${iPad}" y="${iPad}" width="${safeW}" height="${safeH}" fill="${iCor}" fill-opacity="${iOp}"/>`;
+      const fid = `ish-${layer.id}`;
+      const shSvg =
+        `<svg width="${iVisW}" height="${iVisH}" xmlns="http://www.w3.org/2000/svg">` +
+        `<defs><filter id="${fid}" x="-50%" y="-50%" width="200%" height="200%">` +
+        `<feGaussianBlur stdDeviation="${iBlur / 2}" result="b"/>` +
+        `<feOffset in="b" dx="${iDx}" dy="${iDy}"/>` +
+        `</filter></defs>` +
+        `<g transform="translate(${-iCropL},${-iCropT})"><g filter="url(#${fid})">${forma}</g></g>` +
+        `</svg>`;
+      // entra ANTES da imagem no array -> fica atras dela
+      composites.push({
+        input: Buffer.from(shSvg),
+        left: Math.round(Math.max(iOx, 0)),
+        top: Math.round(Math.max(iOy, 0)),
+      });
+    }
+  }
+
   composites.push(composite);
 
   const border = layer.border;
@@ -34574,13 +39991,28 @@ async function renderShape(
     return;
   }
 
+  // Sombra: a area desenhada precisa ser MAIOR que a forma, senao a sombra
+  // seria cortada na borda. 'pad' e essa folga (desfoque + deslocamento).
+  const sh = layer.shadow;
+  const shBlur = Math.max(0, Number(sh?.blur ?? 0));
+  const shDx = Number(sh?.offset_x ?? 0);
+  const shDy = Number(sh?.offset_y ?? 0);
+  const temSombra = !!sh && shBlur > 0;
+  const pad = temSombra
+    ? Math.ceil(shBlur * 2 + Math.max(Math.abs(shDx), Math.abs(shDy)))
+    : 0;
+
+  // origem da area desenhada (a forma fica deslocada 'pad' dentro dela)
+  const ox = layer.x - pad;
+  const oy = layer.y - pad;
+
   // desenha no tamanho pretendido e recorta o excedente fora do canvas (igual renderImage)
-  const fullW = layer.w;
-  const fullH = layer.h;
-  const cropLeft = layer.x < 0 ? Math.min(-layer.x, fullW) : 0;
-  const cropTop  = layer.y < 0 ? Math.min(-layer.y, fullH) : 0;
-  const visW = Math.min(fullW - cropLeft, bgWidth  - Math.max(layer.x, 0));
-  const visH = Math.min(fullH - cropTop,  bgHeight - Math.max(layer.y, 0));
+  const fullW = layer.w + 2 * pad;
+  const fullH = layer.h + 2 * pad;
+  const cropLeft = ox < 0 ? Math.min(-ox, fullW) : 0;
+  const cropTop  = oy < 0 ? Math.min(-oy, fullH) : 0;
+  const visW = Math.min(fullW - cropLeft, bgWidth  - Math.max(ox, 0));
+  const visH = Math.min(fullH - cropTop,  bgHeight - Math.max(oy, 0));
   if (visW <= 0 || visH <= 0) return;
 
   const fill = layer.fill || 'none';
@@ -34590,26 +40022,44 @@ async function renderShape(
 
   let shapeEl: string;
   if (layer.shape === 'ellipse') {
-    const cx = fullW / 2;
-    const cy = fullH / 2;
-    const rx = Math.max(0, (fullW / 2) - inset);
-    const ry = Math.max(0, (fullH / 2) - inset);
+    const cx = pad + layer.w / 2;
+    const cy = pad + layer.h / 2;
+    const rx = Math.max(0, (layer.w / 2) - inset);
+    const ry = Math.max(0, (layer.h / 2) - inset);
     shapeEl = `<ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}" fill="${fill}" stroke="${stroke}" stroke-width="${strokeWidth}"/>`;
   } else {
-    const x = inset;
-    const y = inset;
-    const w = Math.max(0, fullW - strokeWidth);
-    const h = Math.max(0, fullH - strokeWidth);
+    const x = pad + inset;
+    const y = pad + inset;
+    const w = Math.max(0, layer.w - strokeWidth);
+    const h = Math.max(0, layer.h - strokeWidth);
     const rx = Math.min(layer.border_radius || 0, w / 2, h / 2);
     shapeEl = `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${rx}" ry="${rx}" fill="${fill}" stroke="${stroke}" stroke-width="${strokeWidth}"/>`;
   }
 
+  // Filtro de sombra em SVG 1.1 (compativel com o rasterizador do sharp).
+  let defs = '';
+  let corpo = shapeEl;
+  if (temSombra) {
+    const cor = sh?.color || '#000000';
+    const op = Math.min(1, Math.max(0, Number(sh?.opacity ?? 0.35)));
+    const std = shBlur / 2; // stdDeviation ~ metade do raio de desfoque
+    const fid = `sh-${layer.id}`;
+    defs = `<defs><filter id="${fid}" x="-50%" y="-50%" width="200%" height="200%">` +
+      `<feGaussianBlur in="SourceAlpha" stdDeviation="${std}" result="b"/>` +
+      `<feOffset in="b" dx="${shDx}" dy="${shDy}" result="o"/>` +
+      `<feFlood flood-color="${cor}" flood-opacity="${op}" result="c"/>` +
+      `<feComposite in="c" in2="o" operator="in" result="s"/>` +
+      `<feMerge><feMergeNode in="s"/><feMergeNode in="SourceGraphic"/></feMerge>` +
+      `</filter></defs>`;
+    corpo = `<g filter="url(#${fid})">${shapeEl}</g>`;
+  }
+
   // viewport = regiao visivel; o translate desloca a forma para RECORTAR (nao encolher)
-  const svg = `<svg width="${visW}" height="${visH}" xmlns="http://www.w3.org/2000/svg"><g transform="translate(${-cropLeft},${-cropTop})">${shapeEl}</g></svg>`;
+  const svg = `<svg width="${visW}" height="${visH}" xmlns="http://www.w3.org/2000/svg">${defs}<g transform="translate(${-cropLeft},${-cropTop})">${corpo}</g></svg>`;
   composites.push({
     input: Buffer.from(svg), // SVG cru: rasterizado no composite final
-    left: Math.round(Math.max(layer.x, 0)),
-    top: Math.round(Math.max(layer.y, 0)),
+    left: Math.round(Math.max(ox, 0)),
+    top: Math.round(Math.max(oy, 0)),
   });
 }
 
@@ -34736,6 +40186,8 @@ export type TextLineLayer = LayerBase & {
   auto_fit?: {
     enabled: boolean;
     min_font_size: number;
+    /** Se definido e o texto couber, a fonte cresce ate este tamanho. */
+    max_font_size?: number;
   };
 };
 
@@ -34756,6 +40208,8 @@ export type TextBlockLayer = LayerBase & {
   auto_fit?: {
     enabled?: boolean;
     min_font_size?: number;
+    /** Se definido e o texto couber, a fonte cresce ate este tamanho. */
+    max_font_size?: number;
   };
 };
 
@@ -34781,6 +40235,14 @@ export type ImageLayer = LayerBase & {
     width: number;
     color: string;
   };
+  /** Sombra projetada da forma que recorta a imagem. Ausente = sem sombra. */
+  shadow?: {
+    color?: string;
+    blur?: number;       // 0 = sem sombra
+    offset_x?: number;
+    offset_y?: number;
+    opacity?: number;    // 0..1 (default 0.35)
+  };
 };
 
 export type ShapeLayer = LayerBase & {
@@ -34792,6 +40254,14 @@ export type ShapeLayer = LayerBase & {
   stroke?: string;
   stroke_width?: number;
   border_radius?: number;
+  /** Sombra projetada. Ausente = sem sombra (comportamento padrao). */
+  shadow?: {
+    color?: string;      // default '#000000'
+    blur?: number;       // raio do desfoque em px (default 0 = sem sombra)
+    offset_x?: number;   // deslocamento horizontal (default 0)
+    offset_y?: number;   // deslocamento vertical (default 0)
+    opacity?: number;    // 0..1 (default 0.35)
+  };
 };
 
 export const AVAILABLE_FONTS = [

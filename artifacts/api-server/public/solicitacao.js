@@ -337,8 +337,17 @@
       const card = document.getElementById('fluxoCard');
       if (isTipoAutomacao(item.tipo_solicitacao)) { card.style.display = 'none'; return; }
       const tipoKey = item.tipo_solicitacao === 'eventos' ? 'eventos' : '_default';
+      // Paginas de assessor sem pedido de pagina sao so registro: fluxo enxuto (Concluído).
+      let chaveFluxo = item.tipo_solicitacao;
+      if (
+        (item.tipo_solicitacao === 'pagina-assessores-dados' ||
+         item.tipo_solicitacao === 'pagina-assessores-atualizacao') &&
+        item.querPagina === 'nao'
+      ) {
+        chaveFluxo = item.tipo_solicitacao + '--registro';
+      }
       const fluxo = (typeof FLUXOS_ETAPAS !== 'undefined')
-        ? (FLUXOS_ETAPAS[item.tipo_solicitacao] || FLUXOS_ETAPAS[tipoKey] || [])
+        ? (FLUXOS_ETAPAS[chaveFluxo] || FLUXOS_ETAPAS[item.tipo_solicitacao] || FLUXOS_ETAPAS[tipoKey] || [])
         : [];
       const etapasVis = fluxo.filter(e => e.visivel);
       let excepcional = fluxo.find(e => !e.visivel && e.id === item.status);

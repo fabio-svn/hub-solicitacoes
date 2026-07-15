@@ -92,7 +92,7 @@
       'ajustes-solicitados':  { label: 'Ajustes solicitados',  bg: '#dbeafe', fg: '#1e40af', accent: '#1e40af' },
       'aprovado':             { label: 'Aprovado',             bg: '#dcfce7', fg: '#166534', accent: '#15803d' },
       'reprovado':            { label: 'Reprovado',            bg: '#fee2e2', fg: '#991b1b', accent: '#dc2626' },
-      'publicado':            { label: 'Concluído',            bg: '#dcfce7', fg: '#14532d', accent: '#14532d' },
+      'publicado':            { label: 'Concluído',            bg: '#dbeafe', fg: '#1e40af', accent: '#1d4ed8' },
       'registrado':           { label: 'Registrado',           bg: '#eef2f7', fg: '#475569', accent: '#475569' },
     };
     const CATEGORIAS = [
@@ -224,6 +224,7 @@
       let data;
       try { const r = await fetch('/api/assessor-aprovacoes/' + id); data = await r.json(); }
       catch (e) { document.getElementById('vaDetalhe').innerHTML = '<div style="padding:30px;text-align:center;color:var(--danger)">Erro ao carregar.</div>'; return; }
+      window._vaDados = data;   // guarda para a edição
       const resumo = data.resumo || {};
       const pub = data.publicacao || {};
       const dados = data.dados || {};
@@ -254,6 +255,16 @@
         rodape = '<div class="va-actions"><span class="sub" style="font-size:0.8rem;color:var(--ink-50)">Perfil já ' + (STATUS[resumo.status] ? STATUS[resumo.status].label.toLowerCase() : resumo.status) + '.</span></div>';
       }
 
+      // Admin pode corrigir os dados do perfil (ex.: contrato social errado),
+      // independente do status — a correcao reflete nos filtros.
+      const ehAdmin = (typeof Auth !== 'undefined' && Auth.getUserRole && Auth.getUserRole() === 'admin');
+      if (aprovacao && ehAdmin) {
+        rodape =
+          '<div style="text-align:right;margin-bottom:8px">' +
+            '<button class="btn btn-secondary" style="padding:4px 12px;font-size:0.78rem" onclick="abrirEdicao()">Editar dados</button>' +
+          '</div>' + rodape;
+      }
+
       const cabecalho =
         (resumo.categoria === 'atualizacao' ? '<div style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--ruby-red);margin-bottom:8px">Atualização de página</div>' : '') +
         (pub.observacao ? '<div class="alert-card alert-info" style="margin:0 0 12px;font-size:0.82rem"><strong>Observação interna anterior:</strong> ' + esc(pub.observacao) + '</div>' : '') +
@@ -271,6 +282,67 @@
         { label: 'Solicitada em', value: fmtData(resumo.criado_em) },
       ];
       if (window.renderAssessorPreview) window.renderAssessorPreview(document.getElementById('vaPreview'), dados, { internos: internos, statusHtml: aprovacao ? badge(resumo.status) : '' });
+    }
+
+    function abrirEdicao() {
+      const d = (window._vaDados && window._vaDados.dados) || {};
+      const contratos = (window._svnFormSchemas && window._svnFormSchemas.contratos) || [];
+      const unidades = (typeof UNIDADES_SVN !== 'undefined' ? UNIDADES_SVN : []);
+      const optSel = (arr, val, getV, getL) =>
+        arr.map(function (o) {
+          const vv = getV(o), ll = getL(o);
+          return '<option value="' + esc(vv) + '"' + (String(vv) === String(val) ? ' selected' : '') + '>' + esc(ll) + '</option>';
+        }).join('');
+
+      const contratoOpts = '<option value="">Selecione</option>' +
+        optSel(contratos, d.contrato_social, function (o) { return o.value != null ? o.value : o; }, function (o) { return o.label != null ? o.label : o; });
+      const unidadeOpts = '<option value="">Selecione</option>' +
+        optSel(unidades, d.unidade, function (o) { return o.nome != null ? o.nome : o; }, function (o) { return o.nome != null ? o.nome : o; });
+
+      const campo = (lab, html) =>
+        '<div style="margin-bottom:12px"><label style="display:block;font-size:0.74rem;color:var(--ink-50);margin-bottom:4px">' + lab + '</label>' + html + '</div>';
+      const inp = (id, val) =>
+        '<input id="' + id + '" style="width:100%;box-sizing:border-box;font:inherit;font-size:0.88rem;padding:8px 10px;border:1px solid var(--border-light);border-radius:var(--radius-md)" value="' + esc(val || '') + '">';
+      const sel = (id, opts, extra) =>
+        '<select id="' + id + '"' + (extra || '') + ' style="width:100%;box-sizing:border-box;font:inherit;font-size:0.88rem;padding:8px 10px;border:1px solid var(--border-light);border-radius:var(--radius-md)">' + opts + '</select>';
+
+      const codAtual = String(d.codigo_assessor || '').replace(/^A/i, '');
+
+      document.getElementById('vaDetalhe').innerHTML =
+        '<div style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--ruby-red);margin-bottom:12px">Editar dados do perfil</div>' +
+        campo('Nome completo', inp('edNome', d.nome_completo || d.nome)) +
+        campo('Código do assessor', '<div style="display:flex;align-items:stretch"><span style="display:flex;align-items:center;padding:0 10px;border:1px solid var(--border-light);border-right:0;border-radius:var(--radius-md) 0 0 var(--radius-md);background:var(--icon-bg);color:var(--ink-60);font-weight:600">A</span><input id="edCodigo" inputmode="numeric" style="flex:1;min-width:0;font:inherit;font-size:0.88rem;padding:8px 10px;border:1px solid var(--border-light);border-radius:0 var(--radius-md) var(--radius-md) 0" value="' + esc(codAtual) + '" oninput="this.value=this.value.replace(/\\D/g,\'\')"></div>') +
+        campo('Contrato social', sel('edContrato', contratoOpts)) +
+        campo('Unidade', sel('edUnidade', unidadeOpts)) +
+        '<div class="va-actions">' +
+          '<button class="btn btn-primary" onclick="salvarEdicao()">Salvar correções</button>' +
+          '<button class="btn btn-secondary" onclick="abrirDetalhe(detalheId)">Cancelar</button>' +
+        '</div><div id="vaEditMsg" style="margin-top:10px;font-size:0.82rem"></div>';
+      window._vaEditar = true;
+    }
+
+    async function salvarEdicao() {
+      const msg = document.getElementById('vaEditMsg');
+      msg.style.color = 'var(--ink-50)'; msg.textContent = 'Salvando…';
+      const num = (document.getElementById('edCodigo').value || '').replace(/\D/g, '');
+      const payload = {
+        nome: document.getElementById('edNome').value,
+        codigo_assessor: num ? 'A' + num : '',
+        contrato_social: document.getElementById('edContrato').value,
+        unidade: document.getElementById('edUnidade').value,
+      };
+      try {
+        const r = await fetch('/api/assessor-aprovacoes/' + detalheId, {
+          method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        const j = await r.json().catch(function () { return {}; });
+        if (!r.ok) throw new Error(j.error || 'Falha ao salvar.');
+        await abrirDetalhe(detalheId);   // recarrega com os dados novos
+        await carregar();                // atualiza a lista/filtros
+      } catch (e) {
+        msg.style.color = 'var(--danger)'; msg.textContent = e.message || 'Erro ao salvar.';
+      }
     }
 
     async function decidir(decisao) {

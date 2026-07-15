@@ -561,6 +561,29 @@ const FORM_ROUTES = {
 };
 
 const FLUXOS_ETAPAS = {
+  // Paginas de assessor NAO seguem o ClickUp. Ha dois casos:
+  //  - quer pagina  -> passa por validacao do RH e publicacao do marketing
+  //  - so registro  -> nao ha aprovacao, ja entra como concluido
+  "pagina-assessores-dados": [
+    { id: "aguardando-validacao", label: "Aguardando validação", visivel: true  },
+    { id: "aprovado",             label: "Aprovado",             visivel: true  },
+    { id: "publicado",            label: "Concluído",            visivel: true  },
+    { id: "ajustes-solicitados",  label: "Ajustes solicitados",  visivel: false },
+    { id: "reprovado",            label: "Reprovado",            visivel: false },
+  ],
+  "pagina-assessores-dados--registro": [
+    { id: "concluido",            label: "Concluído",            visivel: true  },
+  ],
+  "pagina-assessores-atualizacao": [
+    { id: "aguardando-validacao", label: "Aguardando validação", visivel: true  },
+    { id: "aprovado",             label: "Aprovado",             visivel: true  },
+    { id: "publicado",            label: "Concluído",            visivel: true  },
+    { id: "ajustes-solicitados",  label: "Ajustes solicitados",  visivel: false },
+    { id: "reprovado",            label: "Reprovado",            visivel: false },
+  ],
+  "pagina-assessores-atualizacao--registro": [
+    { id: "concluido",            label: "Concluído",            visivel: true  },
+  ],
   "eventos": [
     { id: "recebido",               label: "Recebido",                  visivel: true  },
     { id: "alinhamentos",           label: "Alinhamentos",              visivel: true  },

@@ -667,16 +667,22 @@ router.get("/solicitacoes/:id", requireAuth, async (req, res): Promise<void> => 
 
     // Paginas de assessor: o status que vale e o da validacao/publicacao, nao o do
     // ClickUp. Sobrescreve para o resumo do pedido nao mostrar uma etapa que nao existe.
-    let statusPagina: string | null = null;
+    // Paginas de assessor: o status vem da validacao/publicacao, nao do ClickUp.
+    // E quem NAO quer pagina (so registro) nao passa por aprovacao: ja e "concluido".
     if (["pagina-assessores-dados", "pagina-assessores-atualizacao"].includes(solicitacao.tipo_solicitacao)) {
       try {
         const [pubRow] = await db
           .select({ status: assessorPublicacoesTable.status })
           .from(assessorPublicacoesTable)
           .where(eq(assessorPublicacoesTable.solicitacao_id, id));
-        statusPagina = pubRow?.status ?? "aguardando-validacao";
-        (solicitacao as any).status = statusPagina;
-      } catch { /* sem registro: mantem o status atual */ }
+        if (pubRow) {
+          (solicitacao as any).status = pubRow.status;      // fluxo de validacao/publicacao
+          (solicitacao as any).querPagina = "sim";
+        } else {
+          (solicitacao as any).status = "concluido";         // so registro, sem aprovacao
+          (solicitacao as any).querPagina = "nao";
+        }
+      } catch { /* em caso de erro, mantem o status atual */ }
     }
 
     // Nome do solicitante (a partir do cadastro de usuários, pelo e-mail)
@@ -1480,6 +1486,59 @@ router.get("/assessor-aprovacoes/:id", requireAuth, async (req, res): Promise<vo
   } catch (err) {
     logger.error({ err }, "Erro no detalhe de assessor-aprovacao");
     res.status(500).json({ error: "Erro ao buscar" });
+  }
+});
+
+// PATCH /assessor-aprovacoes/:id — admin corrige os dados do perfil (ex.: contrato
+// social errado). Atualiza as COLUNAS (que os filtros leem) e o dados_publicacao.
+router.patch("/assessor-aprovacoes/:id", requireAuth, requireRole("admin"), async (req, res): Promise<void> => {
+  try {
+    const id = Number(req.params.id);
+    if (!Number.isInteger(id) || id <= 0) { res.status(400).json({ error: "ID inválido." }); return; }
+
+    const [sol] = await db.select().from(solicitacoesTable).where(eq(solicitacoesTable.id, id));
+    if (!sol) { res.status(404).json({ error: "Solicitação não encontrada." }); return; }
+
+    const [pub] = await db.select().from(assessorPublicacoesTable).where(eq(assessorPublicacoesTable.solicitacao_id, id));
+    if (!pub) { res.status(400).json({ error: "Este registro não passa por aprovação (sem página)." }); return; }
+
+    const body = (req.body ?? {}) as Record<string, unknown>;
+    const limpa = (v: unknown, max: number) => {
+      const s = String(v ?? "").trim();
+      return s ? s.slice(0, max) : null;
+    };
+
+    // so os campos que fazem sentido corrigir (e que afetam filtros)
+    const nome = limpa(body.nome, 255);
+    const codigo = limpa(body.codigo_assessor, 40);
+    const unidade = limpa(body.unidade, 120);
+    const contrato = limpa(body.contrato_social, 60);
+    const foto = limpa(body.foto_url, 2000);
+
+    // o dados_publicacao e a fonte da previa: mantem coerente com as colunas
+    const dadosAtual = (pub.dados_publicacao || sol.dados || {}) as Record<string, any>;
+    const dadosNovo = {
+      ...dadosAtual,
+      ...(nome !== null ? { nome_completo: nome, nome } : {}),
+      ...(codigo !== null ? { codigo_assessor: codigo } : {}),
+      ...(unidade !== null ? { unidade } : {}),
+      ...(contrato !== null ? { contrato_social: contrato } : {}),
+      ...(foto !== null ? { foto_url: foto, foto_perfil: foto } : {}),
+    };
+
+    await db.update(assessorPublicacoesTable).set({
+      nome, codigo_assessor: codigo, unidade, contrato_social: contrato,
+      ...(foto !== null ? { foto_url: foto } : {}),
+      dados_publicacao: dadosNovo,
+      editado_por_rh: true,
+      atualizado_em: new Date(),
+    }).where(eq(assessorPublicacoesTable.solicitacao_id, id));
+
+    logger.info({ id, user: req.session?.user?.email }, "[assessor] perfil editado por admin");
+    res.json({ ok: true });
+  } catch (err: any) {
+    logger.error({ err }, "[assessor] erro ao editar perfil");
+    res.status(500).json({ error: "Não foi possível salvar as correções." });
   }
 });
 
