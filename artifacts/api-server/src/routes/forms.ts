@@ -249,14 +249,20 @@ router.post("/solicitacoes", requireAuth, upload.any(), async (req, res): Promis
       return;
     }
 
-    const prazoInicial = calcularPrazo(tipo_solicitacao, parsedDados).date;
+    // Registro de assessor sem pagina: nao ha entrega nem aprovacao. Ja nasce
+    // "concluido" e sem prazo (o resumo esconde o card de prazo quando nao ha prazo).
+    const ehRegistroSemPagina =
+      ["pagina-assessores-dados", "pagina-assessores-atualizacao"].includes(tipo_solicitacao) &&
+      String((parsedDados as any).quer_pagina || "").toLowerCase() === "nao";
+
+    const prazoInicial = ehRegistroSemPagina ? null : calcularPrazo(tipo_solicitacao, parsedDados).date;
     const [solicitacao] = await db.insert(solicitacoesTable).values({
       user_email: user.email,
       tipo_solicitacao,
       subtipo: subtipo || null,
       maturidade: maturidade ? parseInt(maturidade, 10) : null,
       dados: parsedDados,
-      status: "recebido",
+      status: ehRegistroSemPagina ? "concluido" : "recebido",
       prazo: prazoInicial || undefined,
     }).returning();
 
@@ -1593,6 +1599,24 @@ router.post("/assessor-aprovacoes/:id/decisao", requireAuth, async (req, res): P
       setFields.publicado_por = u?.id ?? null;
       setFields.publicado_em = new Date();
     }
+
+    // Mantem solicitacoes.status em sincronia com a validacao, para a lista e o
+    // painel (que contam pela coluna) refletirem a realidade — nao so o resumo.
+    // Traduz para status genericos que a coluna ja aceita (VALID_STATUSES).
+    const SYNC_STATUS_SOLICITACAO: Record<string, string> = {
+      "aguardando-validacao": "aguardando-validacao",
+      "ajustes-solicitados":  "em-revisao",
+      "aprovado":             "em-aprovacao",
+      "publicado":            "concluido",
+      "reprovado":            "reprovado",
+    };
+    const statusSolic = SYNC_STATUS_SOLICITACAO[novoStatus];
+    if (statusSolic) {
+      await db.update(solicitacoesTable)
+        .set({ status: statusSolic, updated_at: new Date() })
+        .where(eq(solicitacoesTable.id, id));
+    }
+
 
     if (pub) {
       await db.update(assessorPublicacoesTable).set(setFields).where(eq(assessorPublicacoesTable.solicitacao_id, id));

@@ -73,44 +73,80 @@ pnpm exec tsc -b lib/db lib/api-zod >/tmp/_libbuild 2>&1 || { echo "  ⚠ falha 
 ### 8. Drift schema Drizzle x DDL (DB_STATEMENTS) ###
 python3 - << 'PY'
 import re, sys
-SCHEMA="lib/db/src/schema/index.ts"
-DDL="artifacts/api-server/src/index.ts"
+SCHEMA = "lib/db/src/schema/index.ts"
+DDL    = "artifacts/api-server/src/index.ts"
+IGNORAR = {"session"}  # gerida pelo express-session, so existe no DDL
 try:
-    schema=open(SCHEMA,encoding="utf-8").read(); ddl=open(DDL,encoding="utf-8").read()
+    schema = open(SCHEMA, encoding="utf-8").read()
+    ddl    = open(DDL,    encoding="utf-8").read()
 except FileNotFoundError as e:
-    print(f"  (pulado: {e.filename} não encontrado)"); sys.exit(0)
+    print(f"  (pulado: {e.filename} nao encontrado)"); sys.exit(0)
 
-sch={}; cur=None
-for line in schema.split("\n"):
-    mt=re.search(r'=\s*pgTable\(\s*"([^"]+)"', line)
-    if mt: cur=mt.group(1); sch[cur]=set(); continue
-    if cur and re.match(r'^\s*\}\)\s*;?\s*$', line): cur=None; continue
-    if cur:
-        cm=re.match(r'\s*([a-zA-Z_][a-zA-Z0-9_]*)\s*:\s*[a-zA-Z]+\(', line)
-        if cm:
-            q=re.search(r'\(\s*"([^"]+)"', line)
-            sch[cur].add(q.group(1) if q else cm.group(1))
+def corpo_balanceado(src, idx, abre, fecha):
+    """Do primeiro `abre` apos idx ate o `fecha` que zera a contagem."""
+    i = src.find(abre, idx)
+    if i < 0: return None
+    nivel = 0
+    for j in range(i, len(src)):
+        if src[j] == abre: nivel += 1
+        elif src[j] == fecha:
+            nivel -= 1
+            if nivel == 0: return src[i+1:j]
+    return None
 
-dd={}
-for m in re.finditer(r'CREATE TABLE IF NOT EXISTS\s+"([^"]+)"\s*\((.*?)\)\s*`', ddl, re.S):
-    t,body=m.group(1),m.group(2); cols=set()
-    for ln in body.split("\n"):
-        cm=re.match(r'\s*"?([a-zA-Z_][a-zA-Z0-9_]*)"?\s+\S', ln)
-        if cm and cm.group(1).upper() not in ("CONSTRAINT","PRIMARY","UNIQUE","FOREIGN","CHECK"):
-            cols.add(cm.group(1))
-    dd[t]=cols
-for m in re.finditer(r'ALTER TABLE\s+"?([a-zA-Z_]+)"?\s+ADD COLUMN IF NOT EXISTS\s+"?([a-zA-Z_]+)"?', ddl):
-    dd.setdefault(m.group(1),set()).add(m.group(2))
+# ---- Drizzle: pgTable("nome", { ... }) equilibrando chaves ----
+sch = {}
+for m in re.finditer(r'pgTable\(\s*"([^"]+)"\s*,', schema):
+    corpo = corpo_balanceado(schema, m.end(), "{", "}")
+    if corpo is None: continue
+    cols = set()
+    for ln in corpo.split("\n"):
+        t = ln.strip()
+        if not t or t.startswith("//"): continue
+        cm = re.match(r'(\w+)\s*:\s*\w+\(\s*"([^"]+)"', t)
+        if cm: cols.add(cm.group(2)); continue
+        km = re.match(r'(\w+)\s*:\s*\w+\(', t)
+        if km: cols.add(km.group(1))
+    sch[m.group(1)] = cols
 
-prob=0
-for t in sorted(sch):
-    miss=sch[t]-dd.get(t,set())
+# ---- DDL: CREATE TABLE equilibrando parenteses + ALTER ADD COLUMN ----
+dd = {}
+for m in re.finditer(r'CREATE TABLE IF NOT EXISTS\s+"([^"]+)"', ddl):
+    corpo = corpo_balanceado(ddl, m.end(), "(", ")")
+    if corpo is None: continue
+    # separa por virgula de topo (nivel 0)
+    partes, nivel, atual = [], 0, ""
+    for ch in corpo:
+        if ch == "(": nivel += 1
+        elif ch == ")": nivel -= 1
+        if ch == "," and nivel == 0: partes.append(atual); atual = ""
+        else: atual += ch
+    if atual.strip(): partes.append(atual)
+    cols = set()
+    for parte in partes:
+        t = parte.strip()
+        if not t or re.match(r'(CONSTRAINT|PRIMARY|FOREIGN|UNIQUE|CHECK)\b', t, re.I): continue
+        cm = re.match(r'"([^"]+)"', t)
+        if cm: cols.add(cm.group(1))
+    dd[m.group(1)] = cols
+for m in re.finditer(r'ALTER TABLE\s+"([^"]+)"\s+ADD COLUMN IF NOT EXISTS\s+"([^"]+)"', ddl):
+    dd.setdefault(m.group(1), set()).add(m.group(2))
+
+# ---- comparacao nos DOIS sentidos ----
+prob = 0
+for t in sorted(set(sch) | set(dd)):
+    if t in IGNORAR: continue
     if t not in dd:
-        print(f"  \u26a0 tabela '{t}' no schema mas SEM CREATE/ALTER no DDL"); prob+=1
-    elif miss:
-        print(f"  \u26a0 '{t}': colunas no schema e FALTANDO no DDL: {sorted(miss)}"); prob+=1
-if prob==0:
-    print("  (sem \u26a0 = schema e DDL batem coluna-a-coluna)")
+        print(f"  \u26a0 tabela '{t}' no Drizzle mas SEM CREATE/ALTER no DDL"); prob += 1; continue
+    if t not in sch:
+        print(f"  \u26a0 tabela '{t}' no DDL mas SEM pgTable no Drizzle"); prob += 1; continue
+    so_ddl = sch[t] - dd[t]      # no Drizzle, falta no DDL
+    so_sch = dd[t] - sch[t]      # no DDL, falta no Drizzle
+    if so_ddl: print(f"  \u26a0 '{t}': no Drizzle e FALTANDO no DDL: {sorted(so_ddl)}"); prob += 1
+    if so_sch: print(f"  \u26a0 '{t}': no DDL e FALTANDO no Drizzle: {sorted(so_sch)}"); prob += 1
+
+if prob == 0:
+    print(f"  (sem \u26a0 = {len(set(sch)|set(dd))-len(IGNORAR & (set(sch)|set(dd)))} tabelas batem coluna-a-coluna, nos dois sentidos)")
 PY
 
 echo; echo "==================== FIM ===================="

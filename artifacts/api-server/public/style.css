@@ -2120,3 +2120,26 @@ input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
   letter-spacing: 0.01em;
 }
 .log-sol-link:hover { text-decoration: underline; }
+
+
+/* Código do assessor: o "A" é um prefixo fixo à esquerda do input.
+   (usado em form-pagina-assessores e form-convite-fp; espelha o modal de edição) */
+.cod-assessor { display: flex; align-items: stretch; }
+.cod-assessor-prefixo {
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  border: 1px solid var(--border-light);
+  border-right: 0;
+  border-radius: var(--radius-md) 0 0 var(--radius-md);
+  background: var(--icon-bg);
+  color: var(--ink-60);
+  font-weight: 600;
+  user-select: none;
+}
+.cod-assessor input {
+  flex: 1;
+  min-width: 0;
+  border-top-left-radius: 0 !important;
+  border-bottom-left-radius: 0 !important;
+}

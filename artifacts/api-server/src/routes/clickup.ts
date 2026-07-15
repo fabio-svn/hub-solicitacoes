@@ -1251,7 +1251,11 @@ export interface PrazoCalc {
 
 // Fonte única do cálculo de prazo (usada na criação da task e no endpoint /api/prazo).
 export function calcularPrazo(tipo: string, dados?: Record<string, unknown>, from: Date = new Date()): PrazoCalc {
-  if (tipo === "cartao-visita-fisico") {
+  if (
+    tipo === "cartao-visita-fisico" ||
+    tipo === "pagina-assessores-dados" ||
+    tipo === "pagina-assessores-atualizacao"
+  ) {
     const d = proximaQuartaUtil(from); d.setHours(12, 0, 0, 0);
     return { modo: "data", date: d, regra: "Próxima quarta-feira útil" };
   }
@@ -1297,7 +1301,11 @@ export async function createClickUpTask(
 
   const tipo = solicitacao.tipo_solicitacao;
 
-  if (FORM_SCHEMAS[tipo]?.has_clickup === false) {
+  // Tipos de assessor: o novo sistema de aprovacoes cobre tudo que se fazia no
+  // ClickUp, entao nao criamos task. (Esses tipos nao estao em FORM_SCHEMAS, por
+  // isso a checagem generica abaixo nao os pegava.)
+  const ASSESSOR_SEM_CLICKUP = ["pagina-assessores-dados", "pagina-assessores-atualizacao"];
+  if (ASSESSOR_SEM_CLICKUP.includes(tipo) || FORM_SCHEMAS[tipo]?.has_clickup === false) {
     logger.info({ tipo }, "ClickUp: tipo sem integração, pulando");
     return { taskId: null, taskName: "", responsavel: "" };
   }
