@@ -14,11 +14,6 @@
       });
     }
     function catSelos() { return (typeof SELOS_ASSESSOR !== "undefined") ? SELOS_ASSESSOR : (window.SELOS_ASSESSOR || []); }
-    function shortUrl(u) { return String(u || "").replace(/^https?:\/\/(www\.)?/i, "").replace(/\/$/, ""); }
-    function igUrl(ig) { ig = String(ig || "").trim(); return ig.indexOf("http") === 0 ? ig : "https://instagram.com/" + ig.replace(/^@/, ""); }
-
-    var LINKEDIN_SVG = '<svg width="12" height="12" viewBox="0 0 24 24" fill="white"><path d="M16 8a6 6 0 016 6v7h-4v-7a2 2 0 00-2-2 2 2 0 00-2 2v7h-4v-7a6 6 0 016-6z"/><rect x="2" y="9" width="4" height="12" fill="white"/><circle cx="4" cy="4" r="2" fill="white"/></svg>';
-    var INSTA_SVG = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.6"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1.5" fill="white" stroke="none"/></svg>';
     var EXTLINK_SVG = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><path d="M15 3h6v6"/><path d="M10 14L21 3"/></svg>';
     var HR = '<div style="height:1px;background:var(--border-light);margin:18px 0"></div>';
 
@@ -32,15 +27,12 @@
           : '<span style="background:var(--icon-bg);border:1px solid var(--border-light);padding:3px 9px;border-radius:var(--radius-sm,6px);font-size:0.72rem;font-weight:600">' + esc(label) + "</span>";
       }).join("");
     }
-    function socialBadge(href, iconBg, iconSvg, text) {
-      return '<a href="' + esc(href) + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:7px;max-width:100%;background:var(--icon-bg);border:1px solid var(--border-light);border-radius:var(--radius-pill);padding:4px 12px 4px 5px;text-decoration:none;color:var(--carbon-black);font-size:0.76rem">' +
-        '<span style="display:inline-flex;width:22px;height:22px;border-radius:5px;background:' + iconBg + ';align-items:center;justify-content:center;flex-shrink:0">' + iconSvg + "</span>" +
-        '<span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + esc(text) + "</span></a>";
-    }
+    /* Os chips vem do componente compartilhado (utils.js) — o mesmo do resumo
+       da solicitacao. Antes cada tela desenhava o seu. */
     function socialHtml(d) {
       var out = [];
-      if (d.linkedin) out.push(socialBadge(d.linkedin, "#0A66C2", LINKEDIN_SVG, shortUrl(d.linkedin)));
-      if (d.instagram) { var href = igUrl(d.instagram); out.push(socialBadge(href, "linear-gradient(135deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888)", INSTA_SVG, shortUrl(href))); }
+      if (d.linkedin)  out.push(SvnChip.html(d.linkedin, null, "linkedin"));
+      if (d.instagram) out.push(SvnChip.html(SvnChip.instagramUrl(d.instagram), null, "instagram"));
       if (!out.length) return "";
       return '<div style="display:flex;flex-wrap:wrap;gap:8px">' + out.join("") + "</div>";
     }

@@ -5,7 +5,7 @@ import { db, usersTable, userTipoAssignmentsTable, tipoClickupListTable } from "
 import { eq } from "drizzle-orm";
 import { mapClickUpStatus } from "../config/clickup-status";
 import { UNIDADES_ENDERECOS } from "../config/unidades";
-import { FORM_SCHEMAS, SETOR_CODIGO_MAP, TIPOS_COM_CLICKUP, SELOS_LABELS } from "../config/form-schemas";
+import { FORM_SCHEMAS, SETOR_CODIGO_MAP, TIPOS_COM_CLICKUP, SELOS_LABELS, labelDoTipo } from "../config/form-schemas";
 import { buscarContato } from "../lib/mysqlContatos";
 import { addBusinessDays, proximaQuarta as proximaQuartaUtil } from "../lib/holidays";
 
@@ -322,9 +322,13 @@ function getUserDepartment(user: UserData, dados: FormDados): string {
 }
 
 function humanizeRequestType(tipo: string): string {
-  return FORM_SCHEMAS[tipo]?.label
-    || TIPOS_COM_CLICKUP.find(t => t.tipo === tipo)?.label
-    || tipo;
+  // labelDoTipo cobre FORM_SCHEMAS + os tipos sem schema; a lista do ClickUp
+  // continua como ultimo recurso antes de cair no slug.
+  const porSchema = FORM_SCHEMAS[tipo]?.label;
+  if (porSchema) return porSchema;
+  const porClickup = TIPOS_COM_CLICKUP.find(t => t.tipo === tipo)?.label;
+  if (porClickup) return porClickup;
+  return labelDoTipo(tipo);
 }
 
 function humanizeSlug(raw: string): string {

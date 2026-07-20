@@ -20,6 +20,21 @@
   --success-soft: rgba(22, 163, 74, 0.10);
   --warning: #c2410c;
   --warning-soft: rgba(234, 88, 12, 0.10);
+
+  /* Pares fundo/texto dos estados (badges). Valores identicos aos que ja
+     estavam espalhados pelos arquivos — a mudanca e ter um lugar so.
+     Contraste conferido: todos passam WCAG AA (>= 4.5:1). */
+  --state-ok-bg:       #dcfce7;   /* aprovado            6.49:1 */
+  --state-ok-fg:       #166534;
+  --state-info-bg:     #dbeafe;   /* concluido/publicado 7.15:1 */
+  --state-info-fg:     #1e40af;
+  --state-warn-bg:     #fef3c7;   /* aguardando          6.37:1 */
+  --state-warn-fg:     #92400e;
+  --state-danger-bg:   #fee2e2;   /* reprovado/ajustes   6.80:1 */
+  --state-danger-fg:   #991b1b;
+  --state-neutral-bg:  #eef2f7;   /* sem estado definido        */
+  --state-neutral-fg:  #475569;
+  --state-done:        #0A9060;   /* verde solido de "concluido" */
   --dark-bg-from: #221B19;
   --dark-bg-to: #0d0a09;
   --ruby-dark: #8f2c28;    /* hover do ruby — unifica #7a2e28/#8f2c28/#8e2f2a */
@@ -2104,10 +2119,20 @@ input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
 .alert-card.alert-warning { --alert-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='9'/%3E%3Cpath d='M12 7v5l3 2'/%3E%3C/svg%3E"); }
 .alert-card.alert-info    { --alert-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='9'/%3E%3Cpath d='M12 11v5'/%3E%3Cpath d='M12 8h.01'/%3E%3C/svg%3E"); }
 
-/* Stepper compacto (5+ etapas): só rótulo da etapa ativa e da última */
-.svn-stepper--compact .svn-step-label { display: none; }
-.svn-stepper--compact .svn-step.is-active .svn-step-label,
-.svn-stepper--compact .svn-step:last-child .svn-step-label { display: inline; }
+/* Stepper compacto (5+ etapas): rotulos menores em vez de escondidos.
+   Antes so o ativo e o ultimo apareciam — num fluxo de 6 passos a pessoa nao
+   fazia ideia do que vinha depois. Cabem todos reduzindo corpo e espacamento. */
+.svn-stepper--compact { gap: 6px; }
+.svn-stepper--compact .svn-step { gap: 6px; }
+.svn-stepper--compact .svn-step-num { width: 26px; height: 26px; font-size: 12px; }
+.svn-stepper--compact .svn-step-label { display: inline; font-size: 11.5px; }
+.svn-stepper--compact .svn-step-line { min-width: 10px; }
+
+/* No celular nao ha espaco: volta a mostrar so a etapa atual. */
+@media (max-width: 520px) {
+  .svn-stepper--compact .svn-step-label { display: none; }
+  .svn-stepper--compact .svn-step.is-active .svn-step-label { display: inline; }
+}
 
 /* Link de solicitação no Log de Atividade */
 .log-sol-link {
@@ -2143,3 +2168,47 @@ input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
   border-top-left-radius: 0 !important;
   border-bottom-left-radius: 0 !important;
 }
+
+
+/* Radios e checkboxes nativos herdam a cor da marca.
+   Os que usam .radio-option + .radio-custom seguem com o visual customizado
+   (o input nativo fica oculto ali); esta regra cobre os demais, que antes
+   apareciam no azul padrao do navegador. */
+input[type="radio"],
+input[type="checkbox"] {
+  accent-color: var(--ruby-red);
+}
+
+
+/* Chip de link (SvnChip) — resumo da solicitação e modal de validação.
+   Só o que é clicável vira chip: assim o formato continua querendo dizer
+   "dá para abrir". */
+.svn-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  max-width: 100%;
+  padding: 4px 12px 4px 5px;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-pill);
+  background: var(--icon-bg);
+  color: var(--carbon-black);
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: border-color .15s, background .15s;
+}
+.svn-chip:hover { border-color: var(--ink-30); background: var(--card-white); }
+.svn-chip__marca {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 5px;
+  flex-shrink: 0;
+}
+.svn-chip__marca svg { width: 12px; height: 12px; display: block; }
+.svn-chip__traco { width: 16px; height: 16px; margin-left: 5px; flex-shrink: 0; color: var(--ink-50); }
+.svn-chip__txt { overflow: hidden; text-overflow: ellipsis; }

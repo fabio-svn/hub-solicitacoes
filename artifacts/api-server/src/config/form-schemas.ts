@@ -572,8 +572,6 @@ export const FORM_SCHEMAS: Record<string, FormSchema> = {
       { name: 'endereco',         label: 'Endereco (presencial)',      type: 'textarea' },
       { name: 'plataforma',       label: 'Plataforma (online)',        type: 'select',
         options: [
-          { value: 'live',    label: 'Live' },
-          { value: 'youtube', label: 'YouTube' },
           { value: 'zoom',    label: 'Zoom' },
           { value: 'meet',    label: 'Meet' }
         ] },
@@ -701,4 +699,28 @@ export function getFormSchemaList() {
       ],
     };
   });
+}
+
+
+/* Tipos que existem no sistema mas nao tem entrada em FORM_SCHEMAS — as paginas
+   de assessor seguem outro fluxo (validacao interna, sem task no ClickUp).
+   Sem isso, `FORM_SCHEMAS[tipo]?.label || tipo` devolvia o slug e ele chegava a
+   sair em notificacao para o assessor. Os textos batem com o
+   TIPO_SOLICITACAO_LABELS do config.js, que o front ja usa. */
+export const LABELS_EXTRA: Record<string, string> = {
+  'pagina-assessores':                     'Página de Assessores',
+  'pagina-assessores-dados':               'Página de Assessores — Dados',
+  'pagina-assessores-atualizacao':         'Página de Assessores — Atualização',
+  'pagina-assessores-registro':            'Registro de Assessor',
+  'pagina-assessores-dados--registro':     'Registro de Assessor',
+  'pagina-assessores-atualizacao--registro': 'Registro de Assessor',
+};
+
+/* Rotulo legivel de um tipo de solicitacao. Use SEMPRE que o texto for aparecer
+   para uma pessoa — tela, e-mail, WhatsApp, titulo de task.
+   Ordem: schema do formulario -> labels extras -> o proprio slug. */
+export function labelDoTipo(tipo: string): string {
+  const t = String(tipo || '').trim();
+  if (!t) return '';
+  return FORM_SCHEMAS[t]?.label || LABELS_EXTRA[t] || t;
 }

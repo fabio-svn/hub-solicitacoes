@@ -122,13 +122,20 @@
       if (item.prazo) {
         const pd = new Date(item.prazo);
         const fmt = String(pd.getDate()).padStart(2,'0') + '/' + String(pd.getMonth()+1).padStart(2,'0') + '/' + pd.getFullYear();
-        const finalizado = ['concluido','cancelado','reprovado'].includes(item.status);
+        const finalizado = ['concluido','publicado','cancelado','reprovado'].includes(item.status);
         const hoje = new Date(); hoje.setHours(0,0,0,0);
         const alvo = new Date(pd); alvo.setHours(0,0,0,0);
         const diff = Math.round((alvo - hoje) / 86400000);
         let bg, fg, br, rel;
         if (finalizado) { bg='var(--ink-05)'; fg='var(--ink-70)'; br='var(--ink-12)'; rel=''; }
-        else if (diff < 0) { bg='rgba(220,38,38,0.08)'; fg='var(--danger-strong)'; br='rgba(220,38,38,0.25)'; rel='atrasado há ' + Math.abs(diff) + (Math.abs(diff)===1?' dia':' dias'); }
+        // Ja aprovado e so aguardando publicacao: vencido e pendencia, nao alarme.
+        else if (diff < 0) {
+          const prazoVencidoSuave = ['aprovado','em-aprovacao','validado'].includes(item.status);
+          bg = prazoVencidoSuave ? 'rgba(234,88,12,0.08)' : 'rgba(220,38,38,0.08)';
+          fg = prazoVencidoSuave ? 'var(--warning)' : 'var(--danger-strong)';
+          br = prazoVencidoSuave ? 'rgba(234,88,12,0.25)' : 'rgba(220,38,38,0.25)';
+          rel = 'atrasado há ' + Math.abs(diff) + (Math.abs(diff)===1?' dia':' dias');
+        }
         else if (diff === 0) { bg='rgba(220,38,38,0.08)'; fg='var(--danger-strong)'; br='rgba(220,38,38,0.25)'; rel='é hoje'; }
         else if (diff <= 2) { bg='rgba(234,88,12,0.08)'; fg='var(--warning)'; br='rgba(234,88,12,0.25)'; rel='em ' + diff + (diff===1?' dia':' dias'); }
         else { bg='rgba(22,163,74,0.08)'; fg='var(--success)'; br='rgba(22,163,74,0.22)'; rel='em ' + diff + ' dias'; }
@@ -171,6 +178,14 @@
         || (item.user_email || '—');
       elSolic.textContent = nomeSolic;
       if (item.user_email) elSolic.title = item.user_email;
+
+      // Quando solicitante e responsavel sao a mesma pessoa, um card basta.
+      const cellSolic = document.getElementById('factSolic');
+      if (cellSolic) {
+        const norm = (x) => String(x || '').trim().toLowerCase();
+        const mesmaPessoa = respNome && norm(respNome) === norm(nomeSolic);
+        cellSolic.style.display = mesmaPessoa ? 'none' : 'block';
+      }
 
       // ── Aberto em ──
       const dt = new Date(item.created_at);
@@ -281,7 +296,10 @@
 
       const statusBadge = '<span class="sol-status-badge" id="solStatus" style="background:' + (statusObj.bg||'#f1f5f9') + ';color:' + (statusObj.text||'#475569') + '">' + esc(statusObj.label) + '</span>';
 
-      const clickupBtn = (isStaff && item.clickup_url ? `
+      // Paginas de assessor nao usam mais ClickUp — o fluxo e a validacao interna.
+      const TIPOS_SEM_CLICKUP = ['pagina-assessores-dados', 'pagina-assessores-atualizacao'];
+      const mostraClickup = isStaff && item.clickup_url && !TIPOS_SEM_CLICKUP.includes(item.tipo_solicitacao);
+      const clickupBtn = (mostraClickup ? `
           <a href="${esc(item.clickup_url)}" target="_blank" rel="noopener" title="Abrir no ClickUp"
              style="display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:var(--radius-md);background:rgba(137,48,253,0.08);text-decoration:none;transition:background 0.15s"
              onmouseover="this.style.background='rgba(137,48,253,0.15)'" onmouseout="this.style.background='rgba(137,48,253,0.08)'">
@@ -333,6 +351,29 @@
     }
 
     /* ── renderFluxo (horizontal rail) ─────────── */
+    /* O rotulo da etapa atual fica sobre fundo claro, mas sObj.text e a cor do
+       texto DENTRO do badge (fundo escuro) — "#FFFFFF" em 15 dos 23 status, o que
+       deixava o rotulo invisivel. Escolhe entre bg e text o tom mais escuro; se
+       nenhum servir, cai no carbon-black. */
+    function corLegivelSobreClaro(sObj) {
+      const lum = (hex) => {
+        const m = String(hex || '').trim().match(/^#([0-9a-f]{6})$/i);
+        if (!m) return null;
+        const n = parseInt(m[1], 16);
+        const c = [(n >> 16) & 255, (n >> 8) & 255, n & 255].map(v => {
+          const x = v / 255;
+          return x <= 0.03928 ? x / 12.92 : Math.pow((x + 0.055) / 1.055, 2.4);
+        });
+        return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
+      };
+      const cands = [sObj && sObj.text, sObj && sObj.bg]
+        .map(h => ({ hex: h, l: lum(h) }))
+        .filter(o => o.l !== null && o.l < 0.45);   // precisa contrastar com fundo claro
+      if (!cands.length) return 'var(--carbon-black)';
+      cands.sort((a, b) => a.l - b.l);
+      return cands[0].hex;
+    }
+
     function renderFluxo(item) {
       const card = document.getElementById('fluxoCard');
       if (isTipoAutomacao(item.tipo_solicitacao)) { card.style.display = 'none'; return; }
@@ -401,7 +442,7 @@
         const lineRightClass = isLast ? 'invisible' : isConcluida ? 'done' : '';
 
         const lblClass = isConcluida ? 'done' : isAtual ? 'current' : '';
-        const lblStyle = isAtual ? `style="--current-color:${sObj.text || '#3B82F6'}"` : '';
+        const lblStyle = isAtual ? `style="--current-color:${corLegivelSobreClaro(sObj)}"` : '';
 
         return `
           <div class="status-step">
@@ -1508,11 +1549,50 @@
     }
 
     /* URLs viram link clicável e enxuto; resto continua texto. */
-    function fieldValueHtml(val) {
+    /* Tira os parametros de rastreio do ROTULO (o href continua inteiro).
+       Um link de LinkedIn vindo do app traz utm_source/utm_content/utm_medium e
+       estourava duas linhas na tela. */
+    function limparRastreio(url) {
+      try {
+        const u = new URL(url);
+        const lixo = [];
+        u.searchParams.forEach((_, k) => {
+          if (/^(utm_|fbclid|gclid|mc_|ref$|source$)/i.test(k)) lixo.push(k);
+        });
+        lixo.forEach(k => u.searchParams.delete(k));
+        let out = u.host.replace(/^www\./i, '') + u.pathname.replace(/\/+$/, '');
+        const resto = u.searchParams.toString();
+        if (resto) out += '?' + resto;
+        return out || url;
+      } catch { return url; }
+    }
+
+    /* Chips vem de window.SvnChip (utils.js), compartilhado com o modal
+       de validacao. As tabelas de icone e a escolha de tipo vivem la. */
+    const CAMPOS_SOCIAIS = ['linkedin', 'instagram', 'facebook', 'youtube', 'twitter', 'x', 'tiktok', 'site', 'website'];
+
+    function chipDeLink(url, texto, key) {
+      return SvnChip.html(url, texto, key);
+    }
+
+    function rotuloDeLink(url) { return SvnChip.rotulo(url); }
+
+    function fieldValueHtml(val, key) {
       const s = String(val).trim();
+
+      // @usuario do Instagram vira link, como o LinkedIn ja era
+      if (/^@[A-Za-z0-9._]{2,30}$/.test(s)) {
+        const user = s.slice(1);
+        return chipDeLink('https://instagram.com/' + user, s, 'instagram');
+      }
+
       if (/^https?:\/\/\S+$/i.test(s)) {
-        const label = s.replace(/^https?:\/\//i, '').replace(/^www\./i, '').replace(/\/+$/, '');
-        return `<a class="dados-link" href="${esc(s)}" target="_blank" rel="noopener noreferrer">${esc(label)}</a>`;
+        // imagem: mostra a miniatura. Sem quebras de linha no HTML —
+        // .dados-value usa white-space:pre-wrap e a indentacao viraria espaco.
+        if (/\.(jpe?g|png|webp|gif|avif)(\?|$)/i.test(s)) {
+          return `<a class="dados-thumb" href="${esc(s)}" target="_blank" rel="noopener noreferrer" title="Abrir em tamanho real"><img src="${esc(s)}" alt="Pré-visualização" loading="lazy"></a>`;
+        }
+        return chipDeLink(s, rotuloDeLink(s), key);
       }
       return esc(String(val));
     }
@@ -1527,10 +1607,12 @@
       const container = document.getElementById('dadosContent');
       const palProcessed = new Set();
       let gridFields = '';
+      let socialChips = '';
       let palestrantesBlock = '';
       let hasContent = false;
 
-      const FIELD_PRIORITY = ['nomeEvento','tituloEvento','dataEvento','horario','origem','tipoEvento','publico','localEvento','unidadeSVN','localNome','localEndereco','estado','cidade','convidados','descricao','objetivos'];
+      // Identificacao primeiro, depois contato, depois conteudo.
+      const FIELD_PRIORITY = ['nome_completo','nomeCompleto','foto_perfil','fotoPerfil','codigo_assessor','unidade','contrato_social','eh_assessor','quer_pagina','telefone','email','linkedin','instagram','selos','mini_bio','depoimentos','nomeEvento','tituloEvento','dataEvento','horario','origem','tipoEvento','publico','localEvento','unidadeSVN','localNome','localEndereco','estado','cidade','convidados','descricao','objetivos'];
       const _entries = Object.entries(dados).sort((a, b) => {
         const ra = FIELD_PRIORITY.indexOf(a[0]); const rb = FIELD_PRIORITY.indexOf(b[0]);
         return (ra === -1 ? 999 : ra) - (rb === -1 ? 999 : rb);
@@ -1590,15 +1672,27 @@
           } else {
             const val = value.map(v => humanizeValue(key, v)).join(', ');
             const wideAuto = (val.length > 70 || /\n/.test(val)) ? ' dados-grid-wide' : '';
-            gridFields += `<div class="dados-field${wideAuto}"><div class="dados-label">${esc(label)}</div><div class="dados-value">${fieldValueHtml(val)}</div></div>`;
+            gridFields += `<div class="dados-field${wideAuto}"><div class="dados-label">${esc(label)}</div><div class="dados-value">${fieldValueHtml(val, key)}</div></div>`;
 
           }
           continue;
         }
         if (typeof value === 'object') continue;
+        // rede social vai para o bloco agrupado do fim, sem rotulo
+        if (CAMPOS_SOCIAIS.some(s => String(key).toLowerCase().includes(s))) {
+          const bruto = String(value).trim();
+          if (bruto) {
+            const href = /^https?:\/\//i.test(bruto)
+              ? bruto
+              : (bruto.startsWith('@') ? 'https://instagram.com/' + bruto.slice(1) : 'https://' + bruto);
+            socialChips += chipDeLink(href, rotuloDeLink(href), key);
+            hasContent = true;
+          }
+          continue;
+        }
         const val = String(humanizeValue(key, value));
         const wideAuto = (val.length > 70 || /\n/.test(val)) ? ' dados-grid-wide' : '';
-        gridFields += `<div class="dados-field${wideAuto}"><div class="dados-label">${esc(label)}</div><div class="dados-value">${fieldValueHtml(val)}</div></div>`;
+        gridFields += `<div class="dados-field${wideAuto}"><div class="dados-label">${esc(label)}</div><div class="dados-value">${fieldValueHtml(val, key)}</div></div>`;
         hasContent = true;
       }
 
@@ -1608,6 +1702,9 @@
       }
 
       let html = `<div class="dados-grid">${gridFields}`;
+      if (socialChips) {
+        html += `<div class="dados-grid-wide dados-chips-social">${socialChips}</div>`;
+      }
       if (palestrantesBlock) {
         html += `<div class="dados-grid-wide" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px;padding:14px;background:var(--icon-bg);border-radius:var(--radius-lg)">
           ${palestrantesBlock}

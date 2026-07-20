@@ -461,6 +461,18 @@ router.get("/solicitacoes", requireAuth, async (req, res) => {
       }
     }
 
+    // avaliacao=com|sem|baixa — "baixa" e nota <= 3, o caso que interessa investigar
+    if (req.query.avaliacao) {
+      const av = String(req.query.avaliacao);
+      if (av === "com") {
+        conditions.push(sql`${solicitacoesTable.avaliacao} IS NOT NULL`);
+      } else if (av === "sem") {
+        conditions.push(sql`${solicitacoesTable.avaliacao} IS NULL`);
+      } else if (av === "baixa") {
+        conditions.push(sql`(${solicitacoesTable.avaliacao}->>'nota')::int <= 3`);
+      }
+    }
+
     if (req.query.busca) {
       const searchTerm = `%${String(req.query.busca).replace(/%/g, "\\%")}%`;
       conditions.push(sql`(${solicitacoesTable.dados}::text ILIKE ${searchTerm})`);

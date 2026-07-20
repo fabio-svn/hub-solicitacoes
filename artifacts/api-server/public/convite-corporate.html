@@ -4,6 +4,11 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Convites de Evento — SVN</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap" media="print" onload="this.media='all'">
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap"></noscript>
   <link rel="stylesheet" href="style.css?v=20260713a">
   <script>(function(){try{const s=JSON.parse(localStorage.getItem('svn_layout_state')||'{}');if(s.isAdmin)document.documentElement.dataset.preShell='admin';}catch(e){}})()</script>
   <style>
@@ -142,8 +147,6 @@
             <div class="field">
               <label for="plataforma">Plataforma&nbsp;<span aria-hidden="true" style="color:var(--ruby-red)">*</span></label>
               <select id="plataforma" required>
-                <option value="live">Live</option>
-                <option value="youtube">YouTube</option>
                 <option value="zoom" selected>Zoom</option>
                 <option value="meet">Meet</option>
               </select>
@@ -152,7 +155,7 @@
 
           <p class="cc-hint">
             Na arte, data e horário saem no formato <strong>24 de julho · 19h</strong>.
-            Se a plataforma de transmissão ainda não estiver definida, escolha <strong>Live</strong>.
+            A plataforma define a logo que aparece no convite.
           </p>
         </div>
 

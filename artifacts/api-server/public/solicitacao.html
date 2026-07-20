@@ -602,7 +602,7 @@
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
       grid-auto-flow: row dense;
-      gap: 16px 24px;
+      gap: 12px 20px;
     }
     .dados-grid-wide {
       grid-column: 1 / -1;
@@ -616,6 +616,32 @@
       color: var(--carbon-black);
       opacity: 0.38;
     }
+    /* O visual do chip vive em style.css (.svn-chip), compartilhado. */
+    .dados-chips-social {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 4px;
+      padding-top: 14px;
+      border-top: 1px solid var(--border-light);
+    }
+
+    /* Miniatura de imagem: fora do fluxo de texto, para o pre-wrap do
+       .dados-value nao empurrar a foto com os espacos da indentacao. */
+    .dados-thumb {
+      display: block;
+      width: 96px;
+      height: 96px;
+      margin-top: 2px;
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      border: 1px solid var(--border-light);
+      background: var(--ink-05);
+      line-height: 0;
+    }
+    .dados-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .dados-thumb:hover { border-color: var(--ink-30); }
+
     .dados-value {
       font-size: 0.875rem;
       font-weight: 600;

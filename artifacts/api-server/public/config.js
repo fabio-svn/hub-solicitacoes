@@ -324,8 +324,8 @@ const DRAWER_FIELD_LABELS = {
   nome_completo:       { label: "Nome completo" },
   codigo_assessor:     { label: "Código do assessor" },
   foto_perfil:         { label: "Foto de perfil" },
-  eh_assessor:         { label: "É assessor?" },
-  quer_pagina:         { label: "Quer página?" },
+  eh_assessor:         { label: "Assessor" },
+  quer_pagina:         { label: "Página no site" },
 };
 
 const DRAWER_FIELD_LABELS_FLAT = Object.fromEntries(
@@ -344,30 +344,41 @@ const SELOS_ASSESSOR = [
   { id: "palestrante-svn", label: "Palestrante SVN", icon_url: "https://pub-a2132f9b61f940659cc98265acfcf64c.r2.dev/palestrante_certificado.webp" },
 ];
 
+// Badges em estilo pastel unificado (fundo claro + texto escuro do mesmo matiz).
+// Antes conviviam solidos escuros e pastel — pesos visuais diferentes para a
+// mesma coisa. Contraste de todos os pares conferido: WCAG AA.
 const STATUS_SOLICITACAO = [
-  { id: "recebido",               label: "Recebido",                   bg: "#4D545F", text: "#FFFFFF"  },
-  { id: "alinhamentos",           label: "Alinhamentos",               bg: "#2563C0", text: "#FFFFFF"    },
-  { id: "em-analise",             label: "Em análise",                 bg: "#C98A00", text: "#FFFFFF"      },
-  { id: "em-andamento",           label: "Em andamento",               bg: "#C98A00", text: "#FFFFFF" },
-  { id: "em-producao",            label: "Em produção",                bg: "#C85C00", text: "#FFFFFF"      },
-  { id: "em-revisao",             label: "Em revisão",                 bg: "#7438B0", text: "#FFFFFF" },
-  { id: "em-aprovacao",           label: "Em aprovação",               bg: "#2563C0", text: "#FFFFFF"    },
-  { id: "cotacao-aprovacao",      label: "Em cotação / aprovação",     bg: "#2563C0", text: "#FFFFFF" },
-  { id: "aguardando",             label: "Aguardando informação",      bg: "#8A6040", text: "#FFFFFF" },
-  { id: "aguardando-rh",          label: "Aguardando aprovação do RH", bg: "#8A6040", text: "#FFFFFF" },
-  { id: "aguardando-pagamento",   label: "Aguardando pagamento",       bg: "#8A6040", text: "#FFFFFF" },
-  { id: "aguardando-finalizacao", label: "Aguardando finalização",     bg: "#7438B0", text: "#FFFFFF" },
-  { id: "concluido",              label: "Concluído",                  bg: "#0A9060", text: "#FFFFFF"    },
-  { id: "cancelado",              label: "Cancelado",                  bg: "#C82828", text: "#FFFFFF"  },
-  { id: "em-espera",              label: "Em espera",                  bg: "#4D545F", text: "#FFFFFF"  },
+  { id: "recebido",               label: "Recebido",                   bg: "#eef2f7", text: "#475569"  },
+  { id: "alinhamentos",           label: "Alinhamentos",               bg: "#dbeafe", text: "#1e40af"    },
+  { id: "em-analise",             label: "Em análise",                 bg: "#fef3c7", text: "#92400e"      },
+  { id: "em-andamento",           label: "Em andamento",               bg: "#fef3c7", text: "#92400e" },
+  { id: "em-producao",            label: "Em produção",                bg: "#ffedd5", text: "#9a3412"      },
+  { id: "em-revisao",             label: "Em revisão",                 bg: "#ede9fe", text: "#5b21b6" },
+  { id: "em-aprovacao",           label: "Em aprovação",               bg: "#dbeafe", text: "#1e40af"    },
+  { id: "cotacao-aprovacao",      label: "Em cotação / aprovação",     bg: "#dbeafe", text: "#1e40af" },
+  { id: "aguardando",             label: "Aguardando informação",      bg: "#f5ede6", text: "#7c4a24" },
+  { id: "aguardando-rh",          label: "Aguardando aprovação do RH", bg: "#f5ede6", text: "#7c4a24" },
+  { id: "aguardando-pagamento",   label: "Aguardando pagamento",       bg: "#f5ede6", text: "#7c4a24" },
+  { id: "aguardando-finalizacao", label: "Aguardando finalização",     bg: "#ede9fe", text: "#5b21b6" },
+  { id: "concluido",              label: "Concluído",                  bg: "#dcfce7", text: "#166534"    },
+  // paginas de assessor terminam como "publicado" (vem de assessor_publicacoes).
+  // E o mesmo estado final de "concluido" — mesmo rotulo, mesma cor.
+  { id: "publicado",              label: "Concluído",                  bg: "#dcfce7", text: "#166534"    },
+  // aprovado pelo RH, aguardando o marketing publicar (vem de assessor_publicacoes)
+  { id: "aprovado",               label: "Aprovado",                   bg: "#dbeafe", text: "#1e40af"    },
+  // usados na validacao de assessores; ficam aqui para haver uma fonte unica dos status
+  { id: "ajustes-solicitados",    label: "Ajustes solicitados",        bg: "#ffedd5", text: "#9a3412"    },
+  { id: "registrado",             label: "Registrado",                 bg: "#eef2f7", text: "#475569"    },
+  { id: "cancelado",              label: "Cancelado",                  bg: "#fee2e2", text: "#991b1b"  },
+  { id: "em-espera",              label: "Em espera",                  bg: "#eef2f7", text: "#475569"  },
   { id: "gerando",                label: "Gerando arte",               bg: "#dbeafe", text: "#1e40af" },
   { id: "erro",                   label: "Erro",                       bg: "#fee2e2", text: "#991b1b" },
-  { id: "aguardando-validacao",   label: "Aguardando validação",       bg: "#eef2f7", text: "#475569" },
+  { id: "aguardando-validacao",   label: "Aguardando validação",       bg: "#fef3c7", text: "#92400e" },
   { id: "aguardando-contrato",    label: "Aguardando contrato",        bg: "#fef3e2", text: "var(--warning)" },
   { id: "validado",               label: "Validado",                   bg: "#dbeafe", text: "#1d4ed8" },
   { id: "envio-grafica",          label: "Envio gráfica",              bg: "#e6e9ff", text: "#4338ca" },
   { id: "envio-assessor",         label: "Envio assessor",             bg: "#dcfce7", text: "var(--success)" },
-  { id: "reprovado",              label: "Reprovado",                  bg: "#fee2e2", text: "var(--danger)" },
+  { id: "reprovado",              label: "Reprovado",                  bg: "#fee2e2", text: "#991b1b" },
 ];
 
 const STATUS_MAP = Object.fromEntries(STATUS_SOLICITACAO.map(s => [s.id, s]));
@@ -452,7 +463,7 @@ const ORIGENS_EVENTO_ONLINE = [
   "Parceria", "Independente", "Universidade SVN",
 ];
 
-const CANAIS_TRANSMISSAO = ["Selecione o canal", "Meet", "YouTube", "Zoom"];
+const CANAIS_TRANSMISSAO = ["Selecione o canal", "Meet", "Zoom"];
 const CANAIS_SEM_LINK_OBRIGATORIO = ["Meet", "Zoom"];
 
 const TIPOS_EVENTO = [

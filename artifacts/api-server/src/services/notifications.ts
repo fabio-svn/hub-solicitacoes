@@ -3,7 +3,7 @@ import { TIPOS_AUTOMACAO_SET } from "../config/tipos";
 import { fetchWithTimeout } from "../lib/http";
 import { eq, sql } from "drizzle-orm";
 import { logger } from "../lib/logger";
-import { FORM_SCHEMAS } from "../config/form-schemas";
+import { FORM_SCHEMAS, labelDoTipo } from "../config/form-schemas";
 import { logEventoBg, logAtividadeBg } from "./activity-log";
 
 const WEBHOOK_URL = process.env.N8N_NOTIFICATIONS_WEBHOOK_URL;
@@ -48,7 +48,7 @@ export async function notificarMarco(solicitacaoId: number, marco: Marco): Promi
 
     const dados: any = sol.dados || {};
     const userName = String(dados.nome || sol.user_email?.split("@")[0] || "").trim();
-    const tipoLabel = FORM_SCHEMAS[tipo]?.label || tipo;
+    const tipoLabel = labelDoTipo(tipo);
 
     const payload = {
       marco,

@@ -599,7 +599,7 @@
         <div class="field"><label>Público do evento</label><select id="publico"><option>Selecione</option><option>Fechado para convidados</option><option>Aberto ao público em geral</option></select></div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
           <div class="field"><label>Estado</label><select id="estado" onchange="loadCidades()"><option>Carregando...</option></select></div>
-          <div class="field"><label>Cidade</label><select id="cidade" disabled><option>Selecione o estado</option></select></div>
+          <div class="field"><label>Cidade</label><select id="cidade" disabled><option>Escolha o estado primeiro</option></select></div>
         </div>
         <div class="field"><label>Local do evento</label><select id="localEvento" onchange="handleLocal()"><option>Selecione</option><option value="unidade">Unidade SVN</option><option value="externo">Local externo</option><option value="nao-definido">Local ainda não definido</option></select></div>
         <div id="localConditional"></div>
@@ -627,7 +627,7 @@
         <div class="field"><label>Ideia de quando realizar (opcional)</label><input type="text" id="ideaQuando" placeholder="Ex.: segundo semestre, próximo trimestre..."></div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
           <div class="field"><label>Estado (opcional)</label><select id="estado" onchange="loadCidades()"><option>Selecione</option></select></div>
-          <div class="field"><label>Cidade (opcional)</label><select id="cidade" disabled><option>Selecione o estado</option></select></div>
+          <div class="field"><label>Cidade (opcional)</label><select id="cidade" disabled><option>Escolha o estado primeiro</option></select></div>
         </div>
         <div class="field"><label>Número esperado de convidados (opcional)</label><input type="number" id="convidados" min="1"></div>
       `;
@@ -660,7 +660,7 @@
     }
 
     function buildOnline3Fields() {
-      const tiposOnline = ['Webinar','Live no YouTube','Aula online','Reunião aberta','Transmissão de evento presencial','Workshop online','Painel de discussão','Outro'];
+      const tiposOnline = ['Webinar','Aula online','Reunião aberta','Transmissão de evento presencial','Workshop online','Painel de discussão','Outro'];
       return `
         <div class="field"><label>Descrição</label><textarea id="descricao" placeholder="Descreva sua ideia..."></textarea></div>
         <div class="field"><label>Tipo online aproximado</label>
@@ -710,7 +710,7 @@
     async function loadCidades(cidadeParaRestaurar) {
       const estadoId = document.getElementById('estado').value;
       const cidSel = document.getElementById('cidade');
-      if (!estadoId || estadoId === 'Selecione') { cidSel.disabled = true; cidSel.innerHTML = '<option>Selecione o estado</option>'; return; }
+      if (!estadoId || estadoId === 'Selecione') { cidSel.disabled = true; cidSel.innerHTML = '<option>Escolha o estado primeiro</option>'; return; }
       cidSel.innerHTML = '<option>Carregando...</option>';
       try {
         const cidades = await IBGELoader.loadCidades(estadoId);
@@ -790,7 +790,7 @@
         case 'origem': return `<div class="field"><label>${campo.label}</label><select id="origem">${(formState.natureza==='online'?ORIGENS_EVENTO_ONLINE:ORIGENS_EVENTO).map(o=>`<option>${o}</option>`).join('')}</select></div>`;
         case 'tipo-evento': return `<div class="field"><label>${campo.label}</label><select id="tipoEvento">${TIPOS_EVENTO.map(t=>`<option>${t}</option>`).join('')}</select></div>`;
         case 'publico': return `<div class="field"><label>${campo.label}</label><select id="publico"><option>Selecione</option><option>Fechado para convidados</option><option>Aberto ao público em geral</option></select></div>`;
-        case 'estado-cidade': return `<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px"><div class="field"><label>Estado</label><select id="estado" onchange="loadCidades()"><option>Carregando...</option></select></div><div class="field"><label>Cidade</label><select id="cidade" disabled><option>Selecione o estado</option></select></div></div>`;
+        case 'estado-cidade': return `<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px"><div class="field"><label>Estado</label><select id="estado" onchange="loadCidades()"><option>Carregando...</option></select></div><div class="field"><label>Cidade</label><select id="cidade" disabled><option>Escolha o estado primeiro</option></select></div></div>`;
         case 'local': return `<div class="field"><label>${campo.label}</label><select id="localEvento" onchange="handleLocal()"><option>Selecione</option><option value="unidade">Unidade SVN</option><option value="externo">Local externo</option><option value="nao-definido">Não definido</option></select></div><div id="localConditional"></div>`;
         case 'convidados': return `<div class="field"><label>${campo.label}</label><input type="number" id="convidados" min="1"></div>`;
         case 'objetivos': return `<div class="field"><label>${campo.label}</label><textarea id="objetivos"></textarea></div>`;

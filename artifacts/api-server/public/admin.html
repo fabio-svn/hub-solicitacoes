@@ -25,7 +25,19 @@
     .bulk-del-btn { background:var(--danger); color:#fff; border:1px solid var(--danger); }
     .bulk-del-btn:hover { background:var(--danger-strong); border-color:var(--danger-strong); }
     .admin-table input[type=checkbox] { width:16px; height:16px; accent-color:var(--ruby-red); cursor:pointer; vertical-align:middle; margin:0; }
-  </style>
+      /* Pilula da nota na listagem: a nota fica visivel, o comentario vem no popup. */
+    .aval-pill {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 3px 10px; border: 1px solid var(--border-light);
+      border-radius: var(--radius-pill); background: var(--card-white);
+      color: var(--carbon-black); font: inherit; font-size: 0.8rem; font-weight: 700;
+      cursor: pointer; transition: border-color .15s, background .15s;
+    }
+    .aval-pill:hover { border-color: var(--ink-30); background: var(--icon-bg); }
+    .aval-estrela { color: #C98A00; font-size: 0.9rem; line-height: 1; }
+    .aval-tem-txt { color: var(--ink-30); font-size: 0.5rem; margin-left: 2px; }
+    .aval-nota-grande { font-size: 2rem; font-weight: 300; line-height: 1; }
+</style>
 </head>
 <body class="page-light">
   <div id="pageContent">
@@ -170,6 +182,15 @@
               <button class="filter-chip" data-filter="status" data-value="concluido" data-label="Concluído" onclick="toggleFilter(this,'eventos','status')">Concluído</button>
             </div>
           </div>
+          <div class="filter-panel-row">
+            <span class="filter-panel-label">Avaliação</span>
+            <div class="filter-panel-chips">
+              <button class="filter-chip active" data-filter="avaliacao" data-value="" data-label="Todas" onclick="toggleFilter(this,'eventos','avaliacao')">Todas</button>
+              <button class="filter-chip" data-filter="avaliacao" data-value="com" data-label="Com avaliação" onclick="toggleFilter(this,'eventos','avaliacao')">Com avaliação</button>
+              <button class="filter-chip" data-filter="avaliacao" data-value="sem" data-label="Sem avaliação" onclick="toggleFilter(this,'eventos','avaliacao')">Sem avaliação</button>
+              <button class="filter-chip" data-filter="avaliacao" data-value="baixa" data-label="Nota até 3" onclick="toggleFilter(this,'eventos','avaliacao')">Nota até 3</button>
+            </div>
+          </div>
         </div>
         </div>
         <div class="search-bar" style="flex:1;margin-bottom:0;height:32px;padding:0 14px;border-radius:var(--radius-md)">
@@ -214,6 +235,15 @@
               <button class="filter-chip" data-filter="status" data-value="em-revisao" data-label="Em revisão" onclick="toggleFilter(this,'geral','status')">Em revisão</button>
               <button class="filter-chip" data-filter="status" data-value="em-aprovacao" data-label="Em aprovação" onclick="toggleFilter(this,'geral','status')">Em aprovação</button>
               <button class="filter-chip" data-filter="status" data-value="concluido" data-label="Concluído" onclick="toggleFilter(this,'geral','status')">Concluído</button>
+            </div>
+          </div>
+          <div class="filter-panel-row">
+            <span class="filter-panel-label">Avaliação</span>
+            <div class="filter-panel-chips">
+              <button class="filter-chip active" data-filter="avaliacao" data-value="" data-label="Todas" onclick="toggleFilter(this,'geral','avaliacao')">Todas</button>
+              <button class="filter-chip" data-filter="avaliacao" data-value="com" data-label="Com avaliação" onclick="toggleFilter(this,'geral','avaliacao')">Com avaliação</button>
+              <button class="filter-chip" data-filter="avaliacao" data-value="sem" data-label="Sem avaliação" onclick="toggleFilter(this,'geral','avaliacao')">Sem avaliação</button>
+              <button class="filter-chip" data-filter="avaliacao" data-value="baixa" data-label="Nota até 3" onclick="toggleFilter(this,'geral','avaliacao')">Nota até 3</button>
             </div>
           </div>
         </div>
@@ -303,6 +333,7 @@
       params.set('tipo_solicitacao', tab === 'eventos' ? 'eventos' : 'geral');
       if (adminFilters[tab].periodo) params.set('periodo', adminFilters[tab].periodo);
       if (adminFilters[tab].status) params.set('status', adminFilters[tab].status);
+      if (adminFilters[tab].avaliacao) params.set('avaliacao', adminFilters[tab].avaliacao);
       const search = document.getElementById(tab === 'eventos' ? 'searchEventos' : 'searchGeral');
       if (search && search.value.trim()) params.set('busca', search.value.trim());
 
@@ -311,6 +342,33 @@
         const data = await res.json();
         renderTable(tab, data);
       } catch (e) { console.error(e); }
+    }
+
+
+    /* Popup da avaliacao. Le do que ja veio na listagem — nao refaz request. */
+    var _avalCache = {};
+    function abrirAvaliacao(id) {
+      const av = _avalCache[id];
+      const alvo = document.getElementById('avalModalContent');
+      if (!av) { alvo.innerHTML = '<p style="opacity:0.5">Avaliação não encontrada.</p>'; }
+      else {
+        const data = av.data ? new Date(av.data).toLocaleDateString('pt-BR') : '';
+        alvo.innerHTML =
+          '<div style="display:flex;align-items:baseline;gap:8px;margin-bottom:10px">'
+          + '<span class="aval-nota-grande">' + esc(String(av.nota)) + '</span>'
+          + '<span style="opacity:0.5;font-size:0.85rem">de 5</span>'
+          + (data ? '<span style="margin-left:auto;opacity:0.5;font-size:0.8rem">' + esc(data) + '</span>' : '')
+          + '</div>'
+          + (av.comentario
+              ? '<div style="background:var(--icon-bg);border-radius:var(--radius-md);padding:12px 14px;font-size:0.9rem;line-height:1.5">' + esc(av.comentario) + '</div>'
+              : '<p style="opacity:0.45;font-size:0.85rem;margin:0">Sem comentário.</p>')
+          + '<div style="margin-top:16px"><a href="/solicitacao.html?id=' + id + '" style="font-size:0.85rem;color:var(--ruby-red);font-weight:600;text-decoration:none">Abrir solicitação &rarr;</a></div>';
+      }
+      document.getElementById('avalModal').classList.add('visible');
+    }
+    function fecharAvaliacao(ev) {
+      if (ev && ev.target !== document.getElementById('avalModal')) return;
+      document.getElementById('avalModal').classList.remove('visible');
     }
 
     function renderTable(tab, data) {
@@ -333,6 +391,7 @@
         + (isAdmin ? '<th style="width:34px;text-align:center"><input type="checkbox" class="bulk-all" onclick="bulkToggleAll(\'' + tab + '\', this)" title="Selecionar todos"></th>' : '')
         + '<th>Tipo</th><th>Título</th><th>Solicitante</th><th>Data</th>'
         + '<th style="min-width:140px">Status</th>'
+        + '<th style="min-width:96px;text-align:center">Avaliação</th>'
         + (isAdmin ? '<th style="min-width:100px;text-align:center">Ações</th>' : '')
         + '</tr></thead><tbody>';
       data.data.forEach((item) => {
@@ -351,10 +410,20 @@
               </button>
             </td>`
           : '';
+        const _av = item.avaliacao && typeof item.avaliacao === 'object' ? item.avaliacao : null;
+        if (_av) _avalCache[item.id] = _av;
+        const avaliacaoCell = _av && _av.nota
+          ? `<td style="text-align:center" onclick="event.stopPropagation()">
+               <button class="aval-pill" onclick="abrirAvaliacao(${item.id})" title="Ver avaliação">
+                 <span class="aval-estrela">&#9733;</span>${esc(String(_av.nota))}${_av.comentario ? '<span class="aval-tem-txt" title="Tem comentário">&#9679;</span>' : ''}
+               </button>
+             </td>`
+          : '<td style="text-align:center;opacity:0.28">&mdash;</td>';
         html += `<tr onclick="window.location.href='/solicitacao.html?id=${item.id}'" style="cursor:pointer">
           ${isAdmin ? `<td style="text-align:center" onclick="event.stopPropagation()"><input type="checkbox" class="bulk-cb" data-id="${item.id}" onchange="bulkUpdate('${tab}')"></td>` : ''}
           <td>${esc(tipoLabel)}</td><td>${esc(titulo)}</td><td>${esc(item.user_email)}</td><td>${esc(date)}</td>
           <td><span class="badge" style="background:${statusObj.bg || '#f1f5f9'};color:${statusObj.text || '#475569'};white-space:nowrap">${esc(statusObj.label)}</span></td>
+          ${avaliacaoCell}
           ${acoesCell}
         </tr>`;
       });
@@ -868,5 +937,15 @@
   </script>
 <div id="graficoDropdownTipo" style="display:none;position:fixed;z-index:500;background:var(--card-white);border:1px solid var(--border-light);border-radius:var(--radius-lg);box-shadow:0 4px 20px rgba(0,0,0,.12);padding:8px;min-width:280px"></div>
 <div id="graficoDropdownStatus" style="display:none;position:fixed;z-index:500;background:var(--card-white);border:1px solid var(--border-light);border-radius:var(--radius-lg);box-shadow:0 4px 20px rgba(0,0,0,.12);padding:8px;min-width:280px"></div>
+
+<div class="modal-overlay" id="avalModal" onclick="fecharAvaliacao(event)">
+  <div class="modal-card" style="max-width:440px" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <h3 class="modal-title">Avaliação recebida</h3>
+      <button class="modal-close" onclick="fecharAvaliacao()">&times;</button>
+    </div>
+    <div class="modal-body"><div id="avalModalContent"></div></div>
+  </div>
+</div>
 </body>
 </html>

@@ -248,3 +248,127 @@ window.Modal = (function () {
   }
   return { open: open, close: close };
 })();
+
+
+/* ─────────────────────────────────────────────────────────────────────────
+   SvnChip — chip de link, usado no resumo da solicitacao E no modal de
+   validacao. Antes cada tela tinha a sua versao; a informacao e a mesma,
+   entao o desenho tambem deve ser.
+
+   Redes sociais levam a cor da marca (reconhecimento imediato, e sao poucas).
+   Arquivos ficam no traco monocromatico do sistema: sao muitos formatos e
+   nenhum tem cor que se reconheca de relance.
+
+     SvnChip.html(url, texto, chaveDoCampo)  -> <a class="svn-chip">...</a>
+     SvnChip.rotulo(url)                     -> texto curto, sem UTM
+     SvnChip.instagramUrl('@fulano')         -> https://instagram.com/fulano
+   ───────────────────────────────────────────────────────────────────────── */
+window.SvnChip = (function () {
+  var MARCAS = {
+    linkedin: {
+      fundo: '#0A66C2',
+      svg: '<svg viewBox="0 0 24 24" fill="#fff"><path d="M16 8a6 6 0 016 6v7h-4v-7a2 2 0 00-2-2 2 2 0 00-2 2v7h-4v-7a6 6 0 016-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>'
+    },
+    instagram: {
+      fundo: 'linear-gradient(135deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888)',
+      svg: '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1.3" fill="#fff" stroke="none"/></svg>'
+    },
+    facebook: {
+      fundo: '#1877F2',
+      svg: '<svg viewBox="0 0 24 24" fill="#fff"><path d="M13.5 21v-8h2.7l.4-3h-3.1V8.2c0-.9.2-1.5 1.5-1.5H17V4.1C16.7 4 15.8 4 14.8 4c-2.1 0-3.6 1.3-3.6 3.7V10H8.5v3h2.7v8h2.3z"/></svg>'
+    },
+    youtube: {
+      fundo: '#FF0000',
+      svg: '<svg viewBox="0 0 24 24" fill="#fff"><path d="M21.6 7.2a2.5 2.5 0 00-1.7-1.8C18.3 5 12 5 12 5s-6.3 0-7.9.4A2.5 2.5 0 002.4 7.2C2 8.8 2 12 2 12s0 3.2.4 4.8a2.5 2.5 0 001.7 1.8C5.7 19 12 19 12 19s6.3 0 7.9-.4a2.5 2.5 0 001.7-1.8c.4-1.6.4-4.8.4-4.8s0-3.2-.4-4.8zM10 15V9l5.2 3-5.2 3z"/></svg>'
+    }
+  };
+
+  /* Arquivos e links genericos: traco 1.5, como os demais icones do Hub. */
+  var TRACOS = {
+    planilha: '<path d="M6 2h9l5 5v15a1 1 0 01-1 1H6a1 1 0 01-1-1V3a1 1 0 011-1z"/><path d="M14 2v6h6"/><path d="M8 13h8M8 17h8M12 13v4"/>',
+    pdf:      '<path d="M6 2h9l5 5v15a1 1 0 01-1 1H6a1 1 0 01-1-1V3a1 1 0 011-1z"/><path d="M14 2v6h6"/><path d="M8 15h1.5a1.5 1.5 0 000-3H8v6M13 12v6h1.5a1.5 1.5 0 001.5-1.5v-3A1.5 1.5 0 0014.5 12H13z"/>',
+    doc:      '<path d="M6 2h9l5 5v15a1 1 0 01-1 1H6a1 1 0 01-1-1V3a1 1 0 011-1z"/><path d="M14 2v6h6"/><path d="M8 13h8M8 17h5"/>',
+    slides:   '<path d="M6 2h9l5 5v15a1 1 0 01-1 1H6a1 1 0 01-1-1V3a1 1 0 011-1z"/><path d="M14 2v6h6"/><rect x="8" y="12" width="8" height="6" rx="1"/>',
+    imagem:   '<rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9.5" r="1.5"/><path d="M21 16l-5-5-6 6-3-3-4 4"/>',
+    arquivo:  '<path d="M21.4 11.05L12.25 20.2a5 5 0 01-7.07-7.07l9.19-9.19a3.33 3.33 0 014.71 4.71l-9.2 9.19a1.67 1.67 0 01-2.35-2.36l8.49-8.48"/>',
+    site:     '<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a15 15 0 010 18a15 15 0 010-18z"/>',
+    link:     '<path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/>'
+  };
+
+  var CHAVES_SOCIAIS = ['linkedin','instagram','facebook','youtube','twitter','x','tiktok','site','website'];
+
+  function esc(s) {
+    return (window.esc ? window.esc(s) : String(s == null ? '' : s)
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'));
+  }
+
+  /* Rotulo curto: sem esquema, sem www, sem parametros de rastreio.
+     Arquivo com nome tecnico (UUID) vira "Abrir arquivo .ext". */
+  function rotulo(url) {
+    var s = String(url || '');
+    var arq = s.match(/\/([^\/?#]+)\.([a-z0-9]{2,5})(?:[?#]|$)/i);
+    if (arq && (/^[0-9a-f]{8}-[0-9a-f-]{8,}$/i.test(arq[1]) || arq[1].length > 32)) {
+      return 'Abrir arquivo .' + arq[2].toLowerCase();
+    }
+    var limpo = s;
+    try {
+      var u = new URL(s);
+      var lixo = [];
+      u.searchParams.forEach(function (_, k) {
+        if (/^(utm_|fbclid|gclid|mc_|ref$|source$)/i.test(k)) lixo.push(k);
+      });
+      lixo.forEach(function (k) { u.searchParams.delete(k); });
+      limpo = u.host.replace(/^www\./i, '') + u.pathname.replace(/\/+$/, '');
+      var resto = u.searchParams.toString();
+      if (resto) limpo += '?' + resto;
+    } catch (e) {
+      limpo = s.replace(/^https?:\/\//i, '').replace(/^www\./i, '').replace(/\/+$/, '');
+    }
+    return limpo.length > 52 ? limpo.slice(0, 51) + '\u2026' : limpo;
+  }
+
+  function instagramUrl(v) {
+    var s = String(v || '').trim();
+    if (/^https?:\/\//i.test(s)) return s;
+    return 'https://instagram.com/' + s.replace(/^@/, '');
+  }
+
+  /* Descobre o tipo pelo nome do campo e, se nao der, pela extensao/host. */
+  function tipo(url, chave) {
+    var k = String(chave || '').toLowerCase();
+    for (var i = 0; i < CHAVES_SOCIAIS.length; i++) {
+      var s = CHAVES_SOCIAIS[i];
+      if (k.indexOf(s) !== -1) return s === 'website' ? 'site' : s;
+    }
+    var host = (String(url).match(/^https?:\/\/([^\/]+)/i) || [])[1] || '';
+    if (/linkedin\./i.test(host))  return 'linkedin';
+    if (/instagram\./i.test(host)) return 'instagram';
+    if (/facebook\./i.test(host))  return 'facebook';
+    if (/youtu\.?be/i.test(host))  return 'youtube';
+    var ext = (String(url).match(/\.([a-z0-9]{2,5})(?:[?#]|$)/i) || [])[1];
+    if (ext) {
+      var e = ext.toLowerCase();
+      if (['xlsx','xls','csv','ods'].indexOf(e) !== -1)                 return 'planilha';
+      if (e === 'pdf')                                                   return 'pdf';
+      if (['doc','docx','odt','txt','rtf'].indexOf(e) !== -1)            return 'doc';
+      if (['ppt','pptx','odp'].indexOf(e) !== -1)                        return 'slides';
+      if (['jpg','jpeg','png','webp','gif','avif','svg'].indexOf(e) !== -1) return 'imagem';
+      if (['zip','rar','7z'].indexOf(e) !== -1)                          return 'arquivo';
+    }
+    return 'link';
+  }
+
+  /* Uma linha so: o .dados-value do resumo usa white-space:pre-wrap e
+     qualquer indentacao viraria espaco visivel. */
+  function html(url, texto, chave) {
+    var t = tipo(url, chave);
+    var marca = MARCAS[t];
+    var txt = texto || rotulo(url);
+    var icone = marca
+      ? '<span class="svn-chip__marca" style="background:' + marca.fundo + '">' + marca.svg + '</span>'
+      : '<svg class="svn-chip__traco" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">' + (TRACOS[t] || TRACOS.link) + '</svg>';
+    return '<a class="svn-chip" href="' + esc(url) + '" target="_blank" rel="noopener noreferrer" title="' + esc(url) + '">' + icone + '<span class="svn-chip__txt">' + esc(txt) + '</span></a>';
+  }
+
+  return { html: html, rotulo: rotulo, tipo: tipo, instagramUrl: instagramUrl };
+})();
