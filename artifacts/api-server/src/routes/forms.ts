@@ -1604,6 +1604,27 @@ router.post("/assessor-aprovacoes/:id/decisao", requireAuth, async (req, res): P
         res.status(400).json({ error: "Só é possível concluir um perfil que está aprovado." });
         return;
       }
+
+      // A pagina so esta "concluida" quando esta no ar em algum endereco. Exigir a
+      // URL aqui garante que o link fique registrado e possa ir no e-mail ao assessor.
+      const urlPublicada = String((b as any).url_publicada || "").trim();
+      if (!urlPublicada) {
+        res.status(400).json({ error: "Informe o link da página publicada para concluir." });
+        return;
+      }
+      let urlValida: string;
+      try {
+        const u = new URL(urlPublicada);
+        if (u.protocol !== "http:" && u.protocol !== "https:") throw new Error("protocolo");
+        urlValida = u.toString();
+      } catch {
+        res.status(400).json({ error: "O link da página precisa ser uma URL válida (começando com https://)." });
+        return;
+      }
+      // entrega_links e o campo que o resumo ja mostra ao solicitante
+      await db.update(solicitacoesTable)
+        .set({ entrega_links: [{ label: "Página no site", url: urlValida }], updated_at: new Date() })
+        .where(eq(solicitacoesTable.id, id));
       delete setFields.decidido_por;
       delete setFields.decidido_em;
       delete setFields.ajustes;
@@ -1627,6 +1648,11 @@ router.post("/assessor-aprovacoes/:id/decisao", requireAuth, async (req, res): P
       await db.update(solicitacoesTable)
         .set({ status: statusSolic, updated_at: new Date() })
         .where(eq(solicitacoesTable.id, id));
+    }
+
+    // Unico aviso que o assessor recebe depois do "recebida": a pagina esta no ar.
+    if (novoStatus === "publicado") {
+      notificarMarcoBg(id, "publicada");
     }
 
 

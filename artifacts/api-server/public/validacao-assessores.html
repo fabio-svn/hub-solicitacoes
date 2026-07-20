@@ -287,8 +287,12 @@
         // Aprovado = liberado para o marketing publicar. Concluído = já está no ar.
         rodape =
           '<div class="va-actions" style="align-items:center">' +
-            '<span class="sub" style="font-size:0.8rem;color:var(--ink-50);margin-right:auto">Aprovado para publicação. Marque como concluído assim que a página estiver no ar.</span>' +
-            '<button class="btn btn-primary" onclick="decidir(&#39;publicado&#39;)">Marcar como concluído</button>' +
+            '<div style="width:100%;margin-bottom:10px">' +
+              '<label for="vaUrlPublicada" style="display:block;font-size:0.78rem;color:var(--ink-60);margin-bottom:4px">Link da página publicada</label>' +
+              '<input id="vaUrlPublicada" type="url" inputmode="url" placeholder="https://svninvestimentos.com.br/assessores/..." style="width:100%;box-sizing:border-box;font:inherit;font-size:0.85rem;padding:8px 10px;border:1px solid var(--border-light);border-radius:var(--radius-md)">' +
+            '</div>' +
+            '<span class="sub" style="font-size:0.8rem;color:var(--ink-50);margin-right:auto">Assim que a página estiver no ar, cole o link e marque como concluído.</span>' +
+            '<button class="btn btn-primary" onclick="concluirPagina()">Marcar como concluído</button>' +
           '</div><div id="vaMsg" style="margin-top:10px;font-size:0.82rem"></div>';
       } else {
         rodape = '<div class="va-actions"><span class="sub" style="font-size:0.8rem;color:var(--ink-50)">Perfil já ' + (STATUS[resumo.status] ? STATUS[resumo.status].label.toLowerCase() : resumo.status) + '.</span></div>';
@@ -400,7 +404,21 @@
       }
     }
 
-    async function decidir(decisao) {
+    /* Concluir exige o link: sem ele a pagina "no ar" nao fica registrada em
+       lugar nenhum, e o e-mail ao assessor nao teria para onde apontar. */
+    function concluirPagina() {
+      const campo = document.getElementById('vaUrlPublicada');
+      const msg = document.getElementById('vaMsg');
+      const url = (campo && campo.value || '').trim();
+      const erro = (t) => { if (msg) { msg.style.color = 'var(--danger)'; msg.textContent = t; } if (campo) campo.focus(); };
+      if (!url) return erro('Cole o link da página publicada antes de concluir.');
+      let ok = false;
+      try { const u = new URL(url); ok = (u.protocol === 'http:' || u.protocol === 'https:'); } catch (e) { ok = false; }
+      if (!ok) return erro('O link precisa ser um endereço válido, começando com https://');
+      decidir('publicado', { url_publicada: url });
+    }
+
+    async function decidir(decisao, extra) {
       const obs = (document.getElementById('vaObs') || {}).value || '';
       const msg = document.getElementById('vaMsg');
       if ((decisao === 'ajustes' || decisao === 'reprovado') && !obs.trim()) {
@@ -412,7 +430,7 @@
       try {
         const r = await fetch('/api/assessor-aprovacoes/' + detalheId + '/decisao', {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ decisao, observacao: obs, ajustes: [] }),
+          body: JSON.stringify({ decisao, observacao: obs, ajustes: [], ...(extra || {}) }),
         });
         if (!r.ok) throw new Error('falha');
         fecharDetalhe();

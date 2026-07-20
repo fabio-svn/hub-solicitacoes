@@ -19,7 +19,7 @@ export const TIPOS_COM_APROVACAO = new Set([
   "apresentacao-atualizar",
 ]);
 
-export type Marco = "recebida" | "aprovacao" | "reaprovacao" | "concluida" | "prazo_alterado";
+export type Marco = "recebida" | "aprovacao" | "reaprovacao" | "concluida" | "prazo_alterado" | "publicada";
 
 export async function notificarMarco(solicitacaoId: number, marco: Marco): Promise<void> {
   if (!WEBHOOK_URL) {
@@ -65,6 +65,9 @@ export async function notificarMarco(solicitacaoId: number, marco: Marco): Promi
       prazo_anterior: sol.prazo_anterior,
       prazo_motivo: sol.prazo_motivo,
       link: `${HUB_URL}/solicitacao.html?id=${sol.id}`,
+      // primeiro link de entrega (ex.: a pagina publicada do assessor), para o
+      // e-mail poder apontar direto para o resultado e nao so para o Hub
+      entrega_url: (Array.isArray((sol as any).entrega_links) && (sol as any).entrega_links[0]?.url) || null,
       created_at: sol.created_at,
     };
 

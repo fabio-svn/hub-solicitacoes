@@ -708,12 +708,30 @@ export function getFormSchemaList() {
    sair em notificacao para o assessor. Os textos batem com o
    TIPO_SOLICITACAO_LABELS do config.js, que o front ja usa. */
 export const LABELS_EXTRA: Record<string, string> = {
-  'pagina-assessores':                     'Página de Assessores',
-  'pagina-assessores-dados':               'Página de Assessores — Dados',
-  'pagina-assessores-atualizacao':         'Página de Assessores — Atualização',
-  'pagina-assessores-registro':            'Registro de Assessor',
-  'pagina-assessores-dados--registro':     'Registro de Assessor',
-  'pagina-assessores-atualizacao--registro': 'Registro de Assessor',
+  'apresentacao':                           'Apresentação',
+  'artes-divulgacao':                       'Arte de Divulgação',
+  'atualizacao-material':                   'Atualização de Material',
+  'brindes':                                'Brindes',
+  'cartao-visita':                          'Cartão de Visita',
+  'ch-aniversariantes':                     'Aniversariantes do Mês',
+  'ch-arte-divulgacao':                     'Arte de Divulgação (CH)',
+  'ch-atualizacao-books':                   'Atualização de Books',
+  'ch-atualizacao-pessoas':                 'Atualização de Pessoas nos Sites',
+  'ch-conteudo-pdf':                        'Conteúdo em PDF (CH)',
+  'ch-kit-onboarding':                      'Kit Onboarding',
+  'ch-linha-do-tempo':                      'Linha do Tempo',
+  'conteudo-pdf':                           'Conteúdo em PDF',
+  'conteudo-pdf-ebook':                     'PDF — Ebook',
+  'conteudo-pdf-informativo':               'PDF — Informativo',
+  'email-marketing':                        'E-mail Marketing',
+  'outro':                                  'Outro',
+  'pagina-assessores':                      'Página de Assessores',
+  'pagina-assessores-atualizacao':          'Página de Assessores — Atualização',
+  'pagina-assessores-atualizacao--registro':'Registro de Assessor',
+  'pagina-assessores-dados':                'Página de Assessores — Dados',
+  'pagina-assessores-dados--registro':      'Registro de Assessor',
+  'pagina-assessores-registro':             'Registro de Assessor',
+  'pagina-online':                          'Página Online',
 };
 
 /* Rotulo legivel de um tipo de solicitacao. Use SEMPRE que o texto for aparecer
