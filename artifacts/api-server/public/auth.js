@@ -305,7 +305,7 @@ window._impersonar = async function() {
       const dropdown = document.getElementById('userDropdown');
       if (dropdown) dropdown.style.display = 'none';
       try { sessionStorage.removeItem('svn_auth_cache'); localStorage.removeItem('svn_layout_state'); } catch {}
-      window.location.reload();
+      window.location.href = '/solicitacoes.html';
     } else {
       window.showToast ? showToast('Não foi possível entrar como esse usuário.', 'error') : alert('Não foi possível entrar como esse usuário.');
     }

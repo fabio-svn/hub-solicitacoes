@@ -1581,7 +1581,11 @@ input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
 .app-shell.no-sidebar .app-sidebar,
 .app-shell:not([data-is-admin]) .app-sidebar { display: none; }
 
-.app-shell.sidebar-collapsed {
+/* O colapso so vale quando existe sidebar: a classe vem do localStorage e
+   continuava aplicada ao impersonar alguem sem sidebar, deixando o grid com
+   columns de 2 faixas e areas de 1 — o conteudo inteiro era espremido nos
+   56px e quebrava palavra por palavra. */
+.app-shell.sidebar-collapsed[data-is-admin]:not(.no-sidebar) {
   grid-template-columns: 56px 1fr;
 }
 .app-shell.sidebar-collapsed .sidebar-label,

@@ -13,7 +13,7 @@
   <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap"></noscript>
   <link rel="stylesheet" href="style.css?v=20260615c">
   <style>
-    .page-container--wide { max-width: min(1500px, 96vw); }
+    .page-container--wide { max-width: min(1500px, 100%); }  /* 100%, nao 96vw: vw ignora os 232px da sidebar e o excesso era cortado */
     .tomb-tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--border-light); margin: 8px 0 24px; }
     .tomb-tab { padding: 10px 18px; border: none; background: transparent; font-family: 'Nunito Sans', sans-serif; font-size: 0.9rem; font-weight: 700; color: var(--ink-50); cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; }
     .tomb-tab.active { color: var(--carbon-black); border-bottom-color: var(--ruby-red); }
