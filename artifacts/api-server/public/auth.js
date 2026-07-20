@@ -84,8 +84,6 @@ const Auth = {
       sessionStorage.removeItem('svn_post_impersonate');
       sessionStorage.removeItem('svn_auth_cache');
       localStorage.removeItem('svn_layout_state');
-      location.reload();
-      return null;
     }
 
     if (this.initialized) return this.user;
