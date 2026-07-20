@@ -418,6 +418,7 @@
         });
         if (res.ok) {
           sessionStorage.setItem('svn_impersonate', email);
+          try { sessionStorage.setItem('svn_post_impersonate', '1'); sessionStorage.removeItem('svn_auth_cache'); localStorage.removeItem('svn_layout_state'); } catch {}
           window.location.href = '/solicitacoes.html';
         } else {
           showToast('Não foi possível logar como esse usuário', 'error');

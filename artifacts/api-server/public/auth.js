@@ -80,6 +80,14 @@ const Auth = {
   },
 
   async init() {
+    if (sessionStorage.getItem('svn_post_impersonate')) {
+      sessionStorage.removeItem('svn_post_impersonate');
+      sessionStorage.removeItem('svn_auth_cache');
+      localStorage.removeItem('svn_layout_state');
+      location.reload();
+      return null;
+    }
+
     if (this.initialized) return this.user;
 
     // Tentar cache de sessionStorage primeiro (revalidação background)
@@ -304,7 +312,7 @@ window._impersonar = async function() {
       sessionStorage.setItem('svn_impersonate', email);
       const dropdown = document.getElementById('userDropdown');
       if (dropdown) dropdown.style.display = 'none';
-      try { sessionStorage.removeItem('svn_auth_cache'); localStorage.removeItem('svn_layout_state'); } catch {}
+      try { sessionStorage.setItem('svn_post_impersonate', '1'); sessionStorage.removeItem('svn_auth_cache'); localStorage.removeItem('svn_layout_state'); } catch {}
       window.location.href = '/solicitacoes.html';
     } else {
       window.showToast ? showToast('Não foi possível entrar como esse usuário.', 'error') : alert('Não foi possível entrar como esse usuário.');
