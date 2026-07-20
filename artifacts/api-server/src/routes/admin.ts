@@ -564,6 +564,10 @@ router.post("/impersonate", requireRole("admin", "gestor"), async (req, res): Pr
       metadata: { admin: req.session.user?.email, alvo: targetUser.email } as any,
     }).catch(() => {});
     req.session.adminOriginal = req.session.user;
+    // O perfil do MySQL (telefone, cargo, unidade) fica cacheado na sessao e a
+    // sessao nao muda ao impersonar — sem descartar aqui, os formularios
+    // preencheriam com os dados de quem impersonou.
+    delete req.session.userProfile;
     req.session.user = {
       email: targetUser.email,
       name: targetUser.name || email.split("@")[0],
@@ -598,6 +602,8 @@ router.post("/impersonate/stop", requireAuth, async (req, res): Promise<void> =>
       }).catch(() => {});
       req.session.user = req.session.adminOriginal;
       delete req.session.adminOriginal;
+      // mesma razao da entrada: o cache agora e do usuario impersonado
+      delete req.session.userProfile;
     }
     req.session.save((err) => {
       if (err) {
