@@ -37,10 +37,11 @@
     .aval-estrela { color: #C98A00; font-size: 0.9rem; line-height: 1; }
     .aval-tem-txt { color: var(--ink-30); font-size: 0.5rem; margin-left: 2px; }
     .aval-nota-grande { font-size: 2rem; font-weight: 300; line-height: 1; }
-    .admin-table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-    /* A tabela escapa do limite do container e usa a largura util da janela.
-       So ela — cards e grafico acima continuam no grid normal. */
+    /* Rola de lado quando precisa e escapa do limite do container para usar a
+       largura util da janela — so a tabela; cards e grafico seguem no grid. */
     .admin-table-scroll {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
       width: calc(100vw - var(--shell-sidebar, 232px) - 48px);
       max-width: none;
       margin-left: calc((100% - (100vw - var(--shell-sidebar, 232px) - 48px)) / 2);

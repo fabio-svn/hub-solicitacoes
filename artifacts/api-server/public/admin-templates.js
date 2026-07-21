@@ -8,20 +8,9 @@
     'cartao-comemorativo':   ['telefone','nome_aniversariante','modelo_cartao','mensagem','assinatura','email_destinatario'],
   };
 
-  const TIPO_LABELS = {
-    'cartao-boas-vindas':           'Cartão de Boas-vindas',
-    'assinatura-email':             'Assinatura de E-mail',
-    'cartao-comemorativo':          'Cartão Comemorativo',
-    'cartao-visita-fisico':         'Cartão de Visita — Físico',
-    'cartao-visita-digital':        'Cartão de Visita — Digital',
-    'apresentacao-nova':            'Apresentação — Nova',
-    'apresentacao-atualizar':       'Apresentação — Atualização',
-    'artes-divulgacao':             'Arte de Divulgação',
-    'divulgacao-nps':               'Arte NPS',
-    'convite-fp':                   'Convite Financial Planning',
-    'pagina-assessores-dados':      'Página de Assessores — Dados',
-    'pagina-assessores-atualizacao':'Página de Assessores — Atualização',
-  };
+/* Os rotulos vivem no config.js (TIPO_SOLICITACAO_LABELS), carregado antes
+   deste arquivo. O mapa local repetia as mesmas 12 entradas — mesma
+   duplicacao que ja tinha divergido no art-generator. */
 
   const KNOWN_TIPOS = [
     { value: 'cartao-boas-vindas',            label: 'Cartão de Boas-vindas' },
@@ -174,7 +163,8 @@
 
   // ── Helpers ──────────────────────────────────────────────────
   function humanizeTipo(tipo) {
-    return TIPO_LABELS[tipo] || tipo.replace(/-/g,' ').replace(/\b\w/g, c=>c.toUpperCase());
+    var mapa = (typeof TIPO_SOLICITACAO_LABELS !== 'undefined') ? TIPO_SOLICITACAO_LABELS : {};
+    return mapa[tipo] || tipo.replace(/-/g,' ').replace(/\b\w/g, c=>c.toUpperCase());
   }
   function timeAgo(dateStr) {
     if (!dateStr) return '—';
