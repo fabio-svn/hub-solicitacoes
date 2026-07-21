@@ -53,6 +53,22 @@
       capital_humano: 'Capital Humano', colaborador: 'Colaborador',
     };
 
+    /* O campo telefone do cadastro as vezes ja traz o DDD dentro, as vezes nao —
+       por isso o numero saia como "(44) (44) 99999-8888". Aqui tudo vira digito,
+       o DDD repetido cai fora e a formatacao acontece uma vez so. */
+    function formatarTelefone(ddd, telefone) {
+      var d = String(ddd || '').replace(/\D/g, '');
+      var t = String(telefone || '').replace(/\D/g, '');
+      if (!t) return '';
+      // telefone ja comeca com o proprio DDD: nao prefixa de novo
+      if (d && t.indexOf(d) === 0 && t.length > d.length) t = t.slice(d.length);
+      var full = d ? d + t : t;
+      if (full.length === 11) return '(' + full.slice(0,2) + ') ' + full.slice(2,7) + '-' + full.slice(7);
+      if (full.length === 10) return '(' + full.slice(0,2) + ') ' + full.slice(2,6) + '-' + full.slice(6);
+      // formato fora do padrao: devolve o que veio, sem inventar recorte
+      return String(telefone || '').trim();
+    }
+
     function item(label, valor) {
       const vazio = valor === null || valor === undefined || String(valor).trim() === '';
       return '<div class="md-item"><p class="md-label">' + window.esc(label) + '</p>'
@@ -64,22 +80,25 @@
       await Auth.init();
       Shell.render({ activeRoute: 'meus-dados', contentEl: document.getElementById('pageContent') });
 
-      const u = Auth.getUser() || {};
+      // O Auth expoe campos avulsos, nao um objeto de usuario — nao existe getUser().
       document.getElementById('mdConta').innerHTML =
-        item('Nome', u.name) + item('E-mail', u.email) +
-        item('Função no Hub', ROLE_LABEL[u.role] || u.role) +
-        item('ID do ClickUp', u.clickup_id);
+        item('Nome', Auth.getUserName()) +
+        item('E-mail', Auth.getUserEmail()) +
+        item('Perfil', ROLE_LABEL[Auth.getUserRole()] || Auth.getUserRole());
 
-      const p = Auth.getProfile();
-      if (!p || !p.encontrado) {
+      // Helpers prontos do Auth, em vez de ler getProfile() na mao.
+      if (!Auth.perfilEncontrado()) {
         document.getElementById('mdPerfil').style.display = 'none';
         document.getElementById('mdSemPerfil').style.display = '';
       } else {
-        const tel = p.telefone ? ((p.ddd ? '(' + p.ddd + ') ' : '') + p.telefone) : '';
+        var p = Auth.getProfile() || {};
+          var tel = formatarTelefone(p.ddd, Auth.getTelefone());
         document.getElementById('mdPerfil').innerHTML =
-          item('Cargo', p.cargo) + item('Unidade', p.unidade) +
-          item('Escritório', p.escritorio) + item('Telefone', tel) +
-          item('Código Ancord', p.cd_ancord);
+          item('Cargo', Auth.getCargo()) +
+          item('Unidade', Auth.getUnidade()) +
+          item('Escritório', Auth.getEscritorio()) +
+          item('Telefone', tel) +
+          item('Código Ancord', Auth.getCdAncord());
       }
     })();
   </script>

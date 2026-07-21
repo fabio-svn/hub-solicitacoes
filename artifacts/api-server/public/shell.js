@@ -401,6 +401,13 @@ window.Shell = {
      "cartao-visita"), entao nao ha lista para manter: tipo novo entra sozinho.
      O usuario digita "digital" e chega em Cartao de Visita, que e onde a opcao
      de fato existe. */
+  /* "fisico" tem que achar "Físico". Normaliza para comparar; o texto exibido
+     continua sendo o original, com acento. */
+  function semAcento(t) {
+    return String(t == null ? '' : t)
+      .normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+  }
+
   function subtiposDe(id) {
     if (typeof TIPO_SOLICITACAO_LABELS === 'undefined') return [];
     var out = [];
@@ -462,12 +469,13 @@ window.Shell = {
   function filtrar(termo) {
     var t = String(termo || '').trim().toLowerCase();
     var todos = catalogo();
+    var tn = semAcento(t);
     itens = t ? todos.filter(function (x) {
-      if (x.label.toLowerCase().indexOf(t) >= 0) return true;
-      if (x.categoria && x.categoria.toLowerCase().indexOf(t) >= 0) return true;
-      return (x.termos || []).some(function (s2) { return s2.toLowerCase().indexOf(t) >= 0; });
+      if (semAcento(x.label).indexOf(tn) >= 0) return true;
+      if (x.categoria && semAcento(x.categoria).indexOf(tn) >= 0) return true;
+      return (x.termos || []).some(function (s2) { return semAcento(s2).indexOf(tn) >= 0; });
     }) : todos.slice(0, 8);
-    termoAtual = t;
+    termoAtual = tn;
     idx = 0;
     pintar();
   }
@@ -485,14 +493,14 @@ window.Shell = {
       var achado = null;
       if (termoAtual) {
         achado = (x.termos || []).filter(function (s2) {
-          return s2.toLowerCase().indexOf(termoAtual) >= 0;
+          return semAcento(s2).indexOf(termoAtual) >= 0;
         })[0] || null;
       }
       var cat = '';
       if (achado) {
         // destaca o pedaco digitado dentro da opcao encontrada
         var e = window.esc ? window.esc(achado) : achado;
-        var pos = e.toLowerCase().indexOf(termoAtual);
+        var pos = semAcento(e).indexOf(termoAtual);
         var marcado = pos < 0 ? e
           : e.slice(0, pos)
             + '<mark style="background:rgba(172,54,49,0.14);color:var(--ruby-red,#AC3631);'

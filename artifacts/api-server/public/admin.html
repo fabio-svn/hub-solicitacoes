@@ -37,40 +37,25 @@
     .aval-estrela { color: #C98A00; font-size: 0.9rem; line-height: 1; }
     .aval-tem-txt { color: var(--ink-30); font-size: 0.5rem; margin-left: 2px; }
     .aval-nota-grande { font-size: 2rem; font-weight: 300; line-height: 1; }
-    /* Rola de lado quando precisa e escapa do limite do container para usar a
-       largura util da janela — so a tabela; cards e grafico seguem no grid. */
+    /* Cards, grafico e tabela na mesma largura: quem se alarga e o container do
+       painel, nao mais so a tabela — que voltou a ocupar 100% dele. */
+    .page-container--wide.painel-largo {
+      max-width: calc(100vw - var(--shell-sidebar, 232px) - 48px);
+    }
     .admin-table-scroll {
       overflow-x: auto;
       -webkit-overflow-scrolling: touch;
-      width: calc(100vw - var(--shell-sidebar, 232px) - 48px);
-      max-width: none;
-      margin-left: calc((100% - (100vw - var(--shell-sidebar, 232px) - 48px)) / 2);
-    }
-    @media (max-width: 900px) {
-      .admin-table-scroll { width: 100%; margin-left: 0; }
+      width: 100%;
     }
     .admin-table-scroll > .admin-table { min-width: 1096px; }
 </style>
 </head>
 <body class="page-light">
   <div id="pageContent">
-  <div class="page-container page-container--wide">
+  <div class="page-container page-container--wide painel-largo">
     <div class="page-header">
       <h1 class="page-title">Painel Administrativo</h1>
     </div>
-
-    <!-- So aparece quando ha algo parado; sem gargalo, sem ruido na tela. -->
-    <button id="avisoTravadas" onclick="verTravadas()" style="display:none;width:100%;text-align:left;
-      margin:0 0 16px;padding:12px 16px;border-radius:var(--radius-lg);cursor:pointer;font:inherit;
-      background:rgba(234,88,12,0.07);border:1px solid rgba(234,88,12,0.22);color:var(--carbon-black)">
-      <span style="display:flex;align-items:center;gap:10px">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--warning)" stroke-width="1.5">
-          <circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>
-        </svg>
-        <span id="avisoTravadasTxt" style="font-size:0.88rem;font-weight:600"></span>
-        <span style="margin-left:auto;font-size:0.8rem;color:var(--ink-50)">ver &rarr;</span>
-      </span>
-    </button>
 
     <div class="stats-row" style="grid-template-columns:repeat(3,1fr)" id="adminStats">
       <div class="stat-card" style="border-color:var(--border-light)">
@@ -336,17 +321,6 @@
         const res = await fetch('/api/solicitacoes/stats');
         const data = await res.json();
         animateNum('statTotal', data.total);
-        (function () {
-          const n = Number(data.travadas || 0);
-          const box = document.getElementById('avisoTravadas');
-          if (!box) return;
-          if (!n) { box.style.display = 'none'; return; }
-          const dias = Number(data.travadasDias || 5);
-          document.getElementById('avisoTravadasTxt').textContent =
-            n + (n === 1 ? ' solicitação parada' : ' solicitações paradas') +
-            ' há mais de ' + dias + (dias === 1 ? ' dia' : ' dias');
-          box.style.display = '';
-        })();
         animateNum('statActive', data.active);
         animateNum('statCompleted', data.completed);
       } catch (e) { console.error(e); }
@@ -406,17 +380,6 @@
     function fecharAvaliacao(ev) {
       if (ev && ev.target !== document.getElementById('avalModal')) return;
       document.getElementById('avalModal').classList.remove('visible');
-    }
-
-    /* Leva para a lista ja filtrada pelo que esta parado. */
-    function verTravadas() {
-      const el = document.getElementById('adminBusca') || document.querySelector('#tabGeral input[type=search]');
-      const alvo = document.getElementById('tabGeral') || document.getElementById('adminStats');
-      if (alvo && alvo.scrollIntoView) alvo.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      if (typeof adminFilters !== 'undefined' && adminFilters.geral) {
-        adminFilters.geral.status = 'recebido';
-        if (typeof loadTable === 'function') { adminPages.geral = 1; loadTable('geral'); }
-      }
     }
 
     function renderTable(tab, data) {
