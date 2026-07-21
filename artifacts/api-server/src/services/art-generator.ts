@@ -8,7 +8,7 @@ import { uploadToR2, deleteFromR2 } from "../routes/r2";
 import { logger } from "../lib/logger";
 import { renderFromTemplate } from "./template-renderer";
 import { renderTemplateToPdf } from "./pdf-renderer";
-import { FORM_SCHEMAS, FormSchema } from "../config/form-schemas";
+import { FORM_SCHEMAS, FormSchema, labelDoTipo } from "../config/form-schemas";
 import { notificarMarcoBg } from "./notifications";
 import { logEventoBg } from "./activity-log";
 import { logAtividadeBg } from "./activity-log";
@@ -69,15 +69,9 @@ function resolveComputed(
   return result;
 }
 
-const TIPO_LABELS: Record<string, string> = {
-  "cartao-comemorativo":   "Cartão Comemorativo",
-  "cartao-visita-fisico":  "Cartão de Visita",
-  "cartao-visita-digital": "Cartão Digital",
-  "divulgacao-nps":        "Arte NPS",
-  "convite-fp":            "Convite FP",
-  "cartao-boas-vindas":    "Cartão de Boas-vindas",
-  "assinatura-email":      "Assinatura de E-mail",
-};
+/* O mapa proprio daqui divergia do front em 3 tipos ("Cartao Digital" vs
+   "Cartao de Visita — Digital", etc). labelDoTipo e a mesma fonte que ja
+   alimenta e-mail e ClickUp. */
 
 /**
  * Gera o PDF do cartão de visita físico a partir dos campos já informados (ex.: corrigidos
@@ -108,7 +102,7 @@ export async function gerarCartaoFisicoPdf(
     try {
       await db.update(solicitacoesTable)
         .set({
-          entrega_links: [{ label: TIPO_LABELS["cartao-visita-fisico"], url }],
+          entrega_links: [{ label: labelDoTipo("cartao-visita-fisico"), url }],
           erro_geracao: null,
           updated_at: new Date(),
         })
@@ -325,7 +319,7 @@ export async function gerarArteParaSolicitacao(
 
     logger.info({ solicitacaoId, tipo, url }, "[r2] upload OK");
 
-    const label = TIPO_LABELS[tipo] || tipo;
+    const label = labelDoTipo(tipo) || tipo;
     try {
       await db.update(solicitacoesTable)
         .set({

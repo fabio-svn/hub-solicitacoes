@@ -228,7 +228,7 @@
       document.getElementById('vaCount').textContent = arr.length + ' registro(s)';
       grid.innerHTML = arr.map(l => {
         const foto = l.foto_url ? '<img class="va-thumb" src="' + esc(l.foto_url) + '" alt="">' : '<div class="va-thumb"></div>';
-        const st = catAtual().aprovacao ? (' <div style="margin-top:6px">' + badge(l.status) + (l.ciclo > 1 ? ' <span class="sub">ciclo ' + l.ciclo + '</span>' : '') + '</div>') : '';
+        const st = catAtual().aprovacao ? (' <div style="margin-top:6px">' + badge(l.status) + (l.ciclo > 1 ? ' <span class="sub">' + l.ciclo + '\u00AA rodada de ajustes</span>' : '') + '</div>') : '';
         return '<div class="va-card" onclick="abrirDetalhe(' + l.solicitacao_id + ')">' + foto +
           '<div style="flex:1;min-width:0">' +
           '<div class="nm">' + esc(l.nome || '—') + '</div>' +
@@ -311,7 +311,7 @@
       const cabecalho =
         (resumo.categoria === 'atualizacao' ? '<div style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--ruby-red);margin-bottom:8px">Atualização de página</div>' : '') +
         (pub.observacao ? '<div class="alert-card alert-info" style="margin:0 0 12px;font-size:0.82rem"><strong>Observação interna anterior:</strong> ' + esc(pub.observacao) + '</div>' : '') +
-        (resumo.ciclo > 1 ? '<div style="text-align:right;font-size:0.74rem;color:var(--ink-50);margin-bottom:6px">Ciclo ' + resumo.ciclo + '</div>' : '');
+        (resumo.ciclo > 1 ? '<div style="text-align:right;font-size:0.74rem;color:var(--ink-50);margin-bottom:6px">' + resumo.ciclo + '\u00AA rodada de ajustes</div>' : '');
 
       document.getElementById('vaDetalhe').innerHTML = cabecalho +
         '<div id="vaPreview"></div>' +

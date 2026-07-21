@@ -264,7 +264,9 @@ window.Modal = (function () {
      SvnChip.instagramUrl('@fulano')         -> https://instagram.com/fulano
    ───────────────────────────────────────────────────────────────────────── */
 window.SvnChip = (function () {
-  var MARCAS = {
+  // Redes sociais (LinkedIn, Instagram...). Nome era MARCAS e colidia com as
+  // marcas SVN de contrato/assinatura, que sao outra coisa.
+  var REDES = {
     linkedin: {
       fundo: '#0A66C2',
       svg: '<svg viewBox="0 0 24 24" fill="#fff"><path d="M16 8a6 6 0 016 6v7h-4v-7a2 2 0 00-2-2 2 2 0 00-2 2v7h-4v-7a6 6 0 016-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>'
@@ -362,7 +364,7 @@ window.SvnChip = (function () {
      qualquer indentacao viraria espaco visivel. */
   function html(url, texto, chave) {
     var t = tipo(url, chave);
-    var marca = MARCAS[t];
+    var marca = REDES[t];
     var txt = texto || rotulo(url);
     var icone = marca
       ? '<span class="svn-chip__marca" style="background:' + marca.fundo + '">' + marca.svg + '</span>'

@@ -4,7 +4,9 @@ import { logger } from "../lib/logger";
 import { logAtividade } from "./activity-log";
 
 // Status terminais — não contam como "travado".
-const STATUS_FINAIS = ["concluido", "cancelado", "reprovado", "erro", "envio-assessor"];
+// "publicado" entrou depois que este monitor foi escrito: uma pagina de assessor
+// no ar ha 10 dias vinha sendo logada como travada.
+const STATUS_FINAIS = ["concluido", "publicado", "cancelado", "reprovado", "erro", "envio-assessor"];
 
 // Dias (corridos) sem atualização para considerar uma solicitação parada.
 const STUCK_DAYS = parseInt(process.env.STUCK_DAYS || "5", 10);

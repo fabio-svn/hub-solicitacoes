@@ -95,6 +95,18 @@ window.Shell = {
         </a>
       </div>
       <div class="app-header-right">
+        <button id="shellBuscaBtn" type="button" onclick="window.SvnBuscaRapida && window.SvnBuscaRapida.abrir()"
+            title="Buscar formulário (Ctrl+K)" aria-label="Buscar formulário"
+            style="display:inline-flex;align-items:center;gap:7px;margin-right:12px;padding:6px 11px;
+                   background:transparent;border:1px solid var(--border-light,#e8e0d8);
+                   border-radius:var(--radius-pill,999px);cursor:pointer;color:var(--ink-60,#5A544F);font:inherit">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/>
+            </svg>
+            <span style="font-size:0.8rem">Buscar</span>
+            <kbd id="shellBuscaKbd" style="font:inherit;font-size:0.68rem;font-weight:700;padding:1px 5px;
+                 border-radius:4px;background:var(--icon-bg,#f4ece1);color:var(--ink-50,#8A8580)">⌘K</kbd>
+          </button>
         <div class="app-user-menu" id="appUserMenu">
           <div class="app-user-trigger" id="appUserTrigger" onclick="Shell.toggleUserMenu()">
             <div class="app-avatar" id="appAvatarEl">
@@ -113,6 +125,10 @@ window.Shell = {
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/></svg>
               Minhas solicitações
               <span id="shellNotifBadgeMenu" class="notif-badge-menu" style="display:none"></span>
+            </a>
+            <a href="/meus-dados.html" class="app-dropdown-item">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+              Meus dados
             </a>
             <a href="/auth/logout" class="app-dropdown-item" style="border-top:1px solid var(--border-light)">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
@@ -366,4 +382,179 @@ window.Shell = {
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', _injectWhatsappFloat);
   else _injectWhatsappFloat();
+})();
+
+
+/* ── Busca rapida (Ctrl+K / Cmd+K) ───────────────────────────────────────────
+   Atalho para quem ja sabe o que quer: em vez de percorrer os cards da home,
+   digita duas letras e vai direto ao formulario. Usa TIPO_SOLICITACAO_LABELS,
+   entao qualquer tipo novo aparece aqui sem alteracao. */
+(function () {
+  var aberto = false, itens = [], idx = 0, termoAtual = '';
+
+  /* Mesma lista que monta os cards da home. TIPO_SOLICITACAO_LABELS nao serve
+     aqui: inclui subtipos de etapa ("Pagina de Assessores — Dados") que nao tem
+     formulario proprio — o subtipo e escolhido DENTRO do form. Apontar para
+     /form-pagina-assessores-dados.html dava 404. */
+  /* Rotulos dos subtipos deste formulario, para servirem de termo de busca.
+     Os ids de subtipo comecam com o id do pai ("cartao-visita-digital" nasce de
+     "cartao-visita"), entao nao ha lista para manter: tipo novo entra sozinho.
+     O usuario digita "digital" e chega em Cartao de Visita, que e onde a opcao
+     de fato existe. */
+  function subtiposDe(id) {
+    if (typeof TIPO_SOLICITACAO_LABELS === 'undefined') return [];
+    var out = [];
+    Object.keys(TIPO_SOLICITACAO_LABELS).forEach(function (t) {
+      if (t !== id && t.indexOf(id + '-') === 0) {
+        var lbl = TIPO_SOLICITACAO_LABELS[t];
+        // guarda so o que vem depois do travessao: "Cartao de Visita — Digital" -> "Digital"
+        var parte = String(lbl).split(/\s+[—-]\s+/).pop();
+        if (parte && out.indexOf(parte) < 0) out.push(parte);
+      }
+    });
+    return out;
+  }
+
+  function catalogo() {
+    if (typeof CATEGORIAS_SOLICITACAO === 'undefined') return [];
+    var out = [];
+    CATEGORIAS_SOLICITACAO.forEach(function (cat) {
+      (cat.itens || []).forEach(function (it) {
+        if (it.ativo === false) return;
+        // FORM_ROUTES e o mapa que a home usa no clique do card. Nem todo id bate
+        // com o nome do arquivo ("apresentacao" -> form-apresentacoes.html), entao
+        // montar a URL pelo id daria 404 em alguns.
+        var rota = (typeof FORM_ROUTES !== 'undefined') ? FORM_ROUTES[it.id] : null;
+        if (!rota) return;
+        out.push({
+          tipo: it.id,
+          label: it.label,
+          categoria: cat.categoria || '',
+          url: '/' + String(rota).replace(/^[/]/, ''),
+          termos: subtiposDe(it.id).concat(it.busca || []),
+        });
+      });
+    });
+    return out;
+  }
+
+  function montar() {
+    if (document.getElementById('svnBuscaRapida')) return;
+    var el = document.createElement('div');
+    el.id = 'svnBuscaRapida';
+    el.setAttribute('role', 'dialog');
+    el.style.cssText = 'position:fixed;inset:0;z-index:10000;display:none;' +
+      'background:rgba(34,27,25,0.38);backdrop-filter:blur(2px);padding:14vh 16px 16px';
+    el.innerHTML =
+      '<div style="max-width:520px;margin:0 auto;background:var(--card-white,#FFFFFE);' +
+      'border-radius:var(--radius-lg,14px);box-shadow:0 18px 50px rgba(34,27,25,0.28);overflow:hidden">' +
+        '<input id="svnBuscaInput" type="text" autocomplete="off" placeholder="Buscar formulário..." ' +
+        'style="width:100%;box-sizing:border-box;border:none;outline:none;font:inherit;' +
+        'font-size:1rem;padding:16px 18px;border-bottom:1px solid var(--border-light,#e8e0d8)">' +
+        '<div id="svnBuscaLista" style="max-height:46vh;overflow-y:auto"></div>' +
+      '</div>';
+    document.body.appendChild(el);
+
+    el.addEventListener('click', function (ev) { if (ev.target === el) fechar(); });
+    document.getElementById('svnBuscaInput').addEventListener('input', function () { filtrar(this.value); });
+  }
+
+  function filtrar(termo) {
+    var t = String(termo || '').trim().toLowerCase();
+    var todos = catalogo();
+    itens = t ? todos.filter(function (x) {
+      if (x.label.toLowerCase().indexOf(t) >= 0) return true;
+      if (x.categoria && x.categoria.toLowerCase().indexOf(t) >= 0) return true;
+      return (x.termos || []).some(function (s2) { return s2.toLowerCase().indexOf(t) >= 0; });
+    }) : todos.slice(0, 8);
+    termoAtual = t;
+    idx = 0;
+    pintar();
+  }
+
+  function pintar() {
+    var lista = document.getElementById('svnBuscaLista');
+    if (!lista) return;
+    if (!itens.length) {
+      lista.innerHTML = '<p style="margin:0;padding:18px;font-size:0.88rem;color:var(--ink-50,#8A8580)">Nada encontrado.</p>';
+      return;
+    }
+    lista.innerHTML = itens.map(function (x, i) {
+      // se o termo casou com um subtipo, mostra qual — assim fica claro por que
+      // este formulario apareceu.
+      var achado = null;
+      if (termoAtual) {
+        achado = (x.termos || []).filter(function (s2) {
+          return s2.toLowerCase().indexOf(termoAtual) >= 0;
+        })[0] || null;
+      }
+      var cat = '';
+      if (achado) {
+        // destaca o pedaco digitado dentro da opcao encontrada
+        var e = window.esc ? window.esc(achado) : achado;
+        var pos = e.toLowerCase().indexOf(termoAtual);
+        var marcado = pos < 0 ? e
+          : e.slice(0, pos)
+            + '<mark style="background:rgba(172,54,49,0.14);color:var(--ruby-red,#AC3631);'
+            + 'font-weight:700;border-radius:3px;padding:0 2px">' + e.slice(pos, pos + termoAtual.length) + '</mark>'
+            + e.slice(pos + termoAtual.length);
+        cat = '<span style="display:block;font-size:0.76rem;color:var(--ink-60,#5A544F);margin-top:3px">'
+            + 'tem a opção ' + marcado + '</span>';
+      } else if (x.categoria) {
+        cat = '<span style="display:block;font-size:0.72rem;color:var(--ink-50,#8A8580);margin-top:2px">'
+            + (window.esc ? window.esc(x.categoria) : x.categoria) + '</span>';
+      }
+      return '<button data-i="' + i + '" style="display:block;width:100%;text-align:left;border:none;' +
+        'font:inherit;font-size:0.92rem;padding:11px 18px;cursor:pointer;' +
+        'background:' + (i === idx ? 'var(--icon-bg,#f4ece1)' : 'transparent') + ';' +
+        'color:var(--carbon-black,#221B19)">' + (window.esc ? window.esc(x.label) : x.label) + cat + '</button>';
+    }).join('');
+    Array.prototype.forEach.call(lista.querySelectorAll('button'), function (b) {
+      b.addEventListener('click', function () { ir(parseInt(b.dataset.i, 10)); });
+      b.addEventListener('mousemove', function () { idx = parseInt(b.dataset.i, 10); pintar(); });
+    });
+  }
+
+  function ir(i) {
+    var alvo = itens[i];
+    if (alvo) window.location.href = alvo.url;
+  }
+
+  function abrir() {
+    montar();
+    var el = document.getElementById('svnBuscaRapida');
+    el.style.display = '';
+    aberto = true;
+    var inp = document.getElementById('svnBuscaInput');
+    inp.value = '';
+    filtrar('');
+    setTimeout(function () { inp.focus(); }, 0);
+  }
+
+  function fechar() {
+    var el = document.getElementById('svnBuscaRapida');
+    if (el) el.style.display = 'none';
+    aberto = false;
+  }
+
+  document.addEventListener('keydown', function (e) {
+    var k = (e.key || '').toLowerCase();
+    if ((e.ctrlKey || e.metaKey) && k === 'k') { e.preventDefault(); aberto ? fechar() : abrir(); return; }
+    if (!aberto) return;
+    if (k === 'escape') { e.preventDefault(); fechar(); }
+    else if (k === 'arrowdown') { e.preventDefault(); idx = Math.min(idx + 1, itens.length - 1); pintar(); }
+    else if (k === 'arrowup') { e.preventDefault(); idx = Math.max(idx - 1, 0); pintar(); }
+    else if (k === 'enter') { e.preventDefault(); ir(idx); }
+  });
+
+  // Windows mostra Ctrl, Mac mostra Cmd
+  try {
+    var ehMac = /Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent || '');
+    document.addEventListener('DOMContentLoaded', function () {
+      var k = document.getElementById('shellBuscaKbd');
+      if (k) k.textContent = ehMac ? '\u2318K' : 'Ctrl K';
+    });
+  } catch (_) {}
+
+  window.SvnBuscaRapida = { abrir: abrir, fechar: fechar };
 })();

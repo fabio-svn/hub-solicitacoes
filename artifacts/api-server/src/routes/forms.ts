@@ -6,7 +6,7 @@ import os from "os";
 import fs from "fs";
 import { db } from "@workspace/db";
 import { solicitacoesTable, arquivosTable, cartaoAprovacoesTable, usersTable, activityLogTable } from "@workspace/db";
-import { eq, desc, and, ne, sql, inArray } from "drizzle-orm";
+import { eq, desc, and, ne, sql, inArray, lt, notInArray } from "drizzle-orm";
 import { requireAuth, requireRole } from "../middleware/auth.middleware";
 import { createClickUpTask, getClickUpTaskStatus, getClickUpTaskSnapshot, setClickUpTaskStatus, calcularPrazo, getPrazoDiasUteis, PRAZO_DIAS_UTEIS, APRESENTACAO_TIERS, CLICKUP_STATUS_EM_REVISAO, CLICKUP_STATUS_CONCLUIDO, notificarCartaoValidadoChat, type ArquivosMap } from "./clickup";
 import { holidaysList } from "../lib/holidays";
@@ -506,9 +506,19 @@ router.get("/solicitacoes", requireAuth, async (req, res) => {
 
     const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
 
+    // Ordenar no banco, nao no front: com paginacao, ordenar so a pagina atual
+    // devolveria uma lista errada. NULLS LAST deixa quem nao avaliou no fim.
+    const ordenarPor = String(req.query.ordenar || "");
+    const ordem =
+      ordenarPor === "nota-asc"
+        ? sql`(${solicitacoesTable.avaliacao}->>'nota')::int ASC NULLS LAST`
+        : ordenarPor === "nota-desc"
+        ? sql`(${solicitacoesTable.avaliacao}->>'nota')::int DESC NULLS LAST`
+        : desc(solicitacoesTable.created_at);
+
     const results = await db.select().from(solicitacoesTable)
       .where(whereClause)
-      .orderBy(desc(solicitacoesTable.created_at))
+      .orderBy(ordem)
       .limit(limit)
       .offset(offset);
 
@@ -605,11 +615,27 @@ router.get("/solicitacoes/stats", requireAuth, async (req, res) => {
       .from(solicitacoesTable)
       .where(and(naoImportada, ...monthConditions));
 
+    // Mesma regra do stuck-monitor, porem ao vivo: o monitor roda a cada 6h e so
+    // escreve no log de atividade, onde ninguem olha. Aqui vira numero no painel.
+    const STUCK_DIAS = parseInt(process.env.STUCK_DAYS || "5", 10);
+    const STATUS_FINAIS_STUCK = ["concluido", "publicado", "cancelado", "reprovado", "erro", "envio-assessor"];
+    const cutoffStuck = new Date(Date.now() - STUCK_DIAS * 86400000);
+    const [travadasCount] = await db.select({ count: sql<number>`count(*)` })
+      .from(solicitacoesTable)
+      .where(and(
+        naoImportada,
+        notInArray(solicitacoesTable.status, STATUS_FINAIS_STUCK),
+        lt(solicitacoesTable.updated_at, cutoffStuck),
+        ...(baseCondition ? [baseCondition] : []),
+      ));
+
     res.json({
       active: Number(activeCount.count),
       completed: Number(completedCount.count),
       total: Number(totalCount.count),
       thisMonth: Number(monthCount.count),
+      travadas: Number(travadasCount.count),
+      travadasDias: STUCK_DIAS,
     });
   } catch (err) {
     logger.error({ err }, "Error getting stats");

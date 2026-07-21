@@ -282,6 +282,7 @@
       } else {
         renderAprovacao(item, dados);
       }
+      pesquisaSeAplicavel(item);
       renderDados(dados, item);
 
       const isAdm = isCurrentUserAdmin();
@@ -655,6 +656,29 @@
     }
 
     /* ── renderAprovacao v2 ── */
+
+    /* A pesquisa de satisfacao vivia so dentro do chat de aprovacao, entao
+       aparecia para uma fatia pequena dos tipos — o painel mostrava 157
+       concluidas e nenhuma nota. Aqui ela passa a valer para qualquer
+       solicitacao concluida em que alguem do time trabalhou.
+
+       Fica DE FORA a automacao: o sistema gera sozinho, nao ha atendimento a
+       avaliar, e perguntar a cada pedido gera fadiga — alem de inflar a media
+       e esconder os casos que importam. */
+    function pesquisaSeAplicavel(item) {
+      if (!item) return;
+      var status = String(item.status || '');
+      if (status !== 'concluido' && status !== 'publicado') return;
+      if (isTipoAutomacao(item.tipo_solicitacao)) return;
+      if (item.avaliacao && item.avaliacao.nota) return;
+      // so quem abriu a solicitacao avalia
+      try {
+        var meu = (typeof Auth !== 'undefined' && Auth.getUserEmail && Auth.getUserEmail()) || '';
+        if (!meu || String(item.user_email || '').toLowerCase() !== meu.toLowerCase()) return;
+      } catch (_) { return; }
+      if (typeof renderPesquisaSatisfacao === 'function') renderPesquisaSatisfacao(item.id);
+    }
+
     async function renderAprovacao(item, dados) {
       const card = document.getElementById('aprovacaoCard');
 

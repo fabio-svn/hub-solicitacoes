@@ -156,6 +156,15 @@ app.use(express.static(publicDir, {
     }
   },
 }));
+// Rota que nao casou com nada: se for pedido de pagina, devolve o 404 do Hub em
+// vez do "Cannot GET /xyz" cru do Express. Requisicoes de API seguem em JSON.
+app.use((req, res, next) => {
+  if (req.method !== "GET") return next();
+  if (req.path.startsWith("/api/") || req.path.startsWith("/auth/")) return next();
+  if (req.path.includes(".") && !req.path.endsWith(".html")) return next();
+  res.status(404).sendFile(path.join(publicDir, "404.html"));
+});
+
 
 const fontsDir = path.resolve(__dirname, "../assets/fonts");
 app.use('/fonts', express.static(fontsDir, {

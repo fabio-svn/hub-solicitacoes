@@ -78,7 +78,7 @@ const CATEGORIAS_SOLICITACAO = [
   {
     categoria: "Eventos e relacionamento",
     itens: [
-      { id: "eventos", label: "Eventos", icon: "icon-calendar", ativo: true },
+      { id: "eventos", label: "Eventos", icon: "icon-calendar", ativo: true, busca: ["presencial", "online"] },
       { id: "patrocinio", label: "Patrocínio", icon: "icon-flag", ativo: true },
       { id: "brindes", label: "Brindes", icon: "icon-gift", ativo: true },
       { id: "pagina-online", label: "Página Online", icon: "icon-globe", ativo: true },
