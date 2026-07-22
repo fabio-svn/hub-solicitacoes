@@ -9,6 +9,7 @@ import { gerarArteParaSolicitacao, gerarArteBuffer } from "../services/art-gener
 import JSZip from "jszip";
 import { AVAILABLE_FONTS } from "../types/art-template";
 import { FORM_SCHEMAS, getFormSchemaList, TIPOS_COM_CLICKUP } from "../config/form-schemas";
+import { isRole } from "../config/roles";
 import { validateClickUpList } from "./clickup";
 import { logAtividadeBg } from "../services/activity-log";
 import multer from "multer";
@@ -17,6 +18,7 @@ import * as XLSX from "xlsx";
 const TIPOS_COM_CLICKUP_SET = new Set(TIPOS_COM_CLICKUP.map(t => t.tipo));
 
 const router = Router();
+
 
 // ───────────── Tombamentos: leitura da planilha (Fase 1) ─────────────
 const uploadPlanilha = multer({ storage: multer.memoryStorage(), limits: { fileSize: 15 * 1024 * 1024 } });
@@ -510,7 +512,7 @@ router.put("/users/:id/role", requireRole("admin"), async (req, res): Promise<vo
     const { role } = req.body as { role: string };
     const currentUser = req.session.user!;
 
-    if (!["colaborador", "gestor", "admin"].includes(role)) {
+    if (!isRole(role)) {
       res.status(400).json({ error: "Role inválida" });
       return;
     }
@@ -978,7 +980,7 @@ router.post("/users", requireRole("admin"), async (req, res): Promise<void> => {
     if (!name || !name.trim()) {
       res.status(400).json({ error: "name obrigatório" }); return;
     }
-    if (!["colaborador", "gestor", "admin"].includes(role)) {
+    if (!isRole(role)) {
       res.status(400).json({ error: "Role inválida" }); return;
     }
 
