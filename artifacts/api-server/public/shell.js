@@ -143,49 +143,35 @@ window.Shell = {
   _buildSidebar(activeRoute, role) {
     const nav = [
       {
-        route: 'solicitacoes',
-        href: '/solicitacoes.html',
-        icon: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><line x1="12" y1="11" x2="12" y2="17"/><line x1="9" y1="14" x2="15" y2="14"/></svg>',
-        label: 'Solicitações',
-        roles: ['admin', 'gestor', 'capital_humano'],
-      },
-      {
-        route: 'dashboard',
-        href: '/dashboard.html',
-        icon: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="13" y2="16"/></svg>',
-        label: 'Minhas solicitações',
-        roles: ['admin', 'gestor', 'capital_humano'],
-      },
-      {
-        route: 'convite-corporate',
+        route: 'convite-corporate', section: 'corporate',
         href: '/convite-corporate.html',
         icon: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M22 7l-10 6L2 7"/></svg>',
         label: 'Convites',
         roles: ['admin', 'corporate'],
       },
       {
-        route: 'capital-humano',
+        route: 'capital-humano', section: 'capital_humano',
         href: '/capital-humano.html',
         icon: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>',
-        label: 'Capital Humano',
+        label: 'Solicitações',
         roles: ['admin', 'capital_humano'],
       },
       {
-        route: 'validacao-cartoes',
+        route: 'validacao-cartoes', section: 'capital_humano',
         href: '/validacao-cartoes.html',
         icon: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/><line x1="6" y1="15" x2="12" y2="15"/></svg>',
         label: 'Validação de Cartões',
         roles: ['admin', 'capital_humano', 'gestor'],
       },
       {
-        route: 'validacao-assessores',
+        route: 'validacao-assessores', section: 'capital_humano',
         href: '/validacao-assessores.html',
         icon: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 11l-3 3-1.5-1.5"/></svg>',
         label: 'Validação de Assessores',
         roles: ['admin', 'capital_humano', 'gestor'],
       },
       {
-        route: 'admin-tombamentos',
+        route: 'admin-tombamentos', section: 'capital_humano',
         href: '/admin-tombamentos.html',
         icon: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="4" width="18" height="4" rx="1"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/></svg>',
         label: 'Tombamentos',
@@ -195,42 +181,42 @@ window.Shell = {
 
     const adminItems = [
       {
-        route: 'admin-painel',
+        route: 'admin-painel', section: 'gestao',
         href: '/admin.html',
         icon: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>',
         label: 'Painel Admin',
         roles: ['admin', 'gestor'],
       },
       {
-        route: 'admin-log',
+        route: 'admin-log', section: 'gestao',
         href: '/admin-log.html',
         icon: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>',
         label: 'Log de atividade',
         roles: ['admin', 'gestor'],
       },
       {
-        route: 'admin-templates',
+        route: 'admin-templates', section: 'config',
         href: '/admin-templates.html',
         icon: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>',
         label: 'Templates de arte',
         roles: ['admin'],
       },
       {
-        route: 'admin-assets',
+        route: 'admin-assets', section: 'config',
         href: '/admin-assets.html',
         icon: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>',
-        label: 'Assets',
+        label: 'Biblioteca',
         roles: ['admin'],
       },
       {
-        route: 'admin-usuarios',
+        route: 'admin-usuarios', section: 'config',
         href: '/admin-usuarios.html',
         icon: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>',
         label: 'Usuários',
         roles: ['admin'],
       },
       {
-        route: 'admin-clickup-lists',
+        route: 'admin-clickup-lists', section: 'config',
         href: '/admin-clickup-lists.html',
         icon: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>',
         label: 'Listas do ClickUp',
@@ -238,8 +224,15 @@ window.Shell = {
       },
     ];
 
-    const visibleNav = nav.filter(it => !it.roles || it.roles.includes(role));
-    const visibleAdminItems = adminItems.filter(it => !it.roles || it.roles.includes(role));
+    // Ordem e titulo das secoes. Uma secao so aparece se a role tiver item nela.
+    const SIDEBAR_SECOES = [
+      { id: 'capital_humano', titulo: 'Capital Humano' },
+      { id: 'corporate',      titulo: 'Corporate' },
+      { id: 'gestao',         titulo: 'Gestão' },
+      { id: 'config',         titulo: 'Configurações' },
+    ];
+
+    const todos = nav.concat(adminItems).filter(it => !it.roles || it.roles.includes(role));
 
     const buildLink = (item) => {
       const isActive = item.route === activeRoute;
@@ -249,13 +242,22 @@ window.Shell = {
       </a>`;
     };
 
+    const secoesHtml = SIDEBAR_SECOES.map(sec => {
+      const itensSec = todos.filter(it => it.section === sec.id);
+      if (!itensSec.length) return '';
+      return `<div class="sidebar-section">
+        <div class="sidebar-section-title">${window.esc(sec.titulo)}</div>
+        ${itensSec.map(buildLink).join('')}
+      </div>`;
+    }).join('');
+
+    // Itens sem secao (se houver) vao soltos no topo, antes das secoes.
+    const soltos = todos.filter(it => !it.section);
+
     return `<aside class="app-sidebar" id="appSidebar">
       <nav class="sidebar-nav">
-        ${visibleNav.map(buildLink).join('')}
-        ${visibleAdminItems.length ? `<div class="sidebar-section">
-          <div class="sidebar-section-title">Administração</div>
-          ${visibleAdminItems.map(buildLink).join('')}
-        </div>` : ''}
+        ${soltos.map(buildLink).join('')}
+        ${secoesHtml}
       </nav>
     </aside>`;
   },

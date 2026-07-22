@@ -240,7 +240,7 @@ const Auth = {
   },
   hasSidebar() {
     const r = this.user?.role;
-    return r === 'admin' || r === 'gestor' || r === 'capital_humano';
+    return r === 'admin' || r === 'gestor' || r === 'capital_humano' || r === 'corporate';
   },
 
   getInitials() {
