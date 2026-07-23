@@ -39,8 +39,13 @@
     .aval-nota-grande { font-size: 2rem; font-weight: 300; line-height: 1; }
     /* Cards, grafico e tabela na mesma largura: quem se alarga e o container do
        painel, nao mais so a tabela — que voltou a ocupar 100% dele. */
-    .page-container--wide.painel-largo {
-      max-width: calc(100vw - var(--shell-sidebar, 232px) - 48px);
+    /* So faz sentido com a sidebar ocupando coluna: no celular ela vira gaveta e
+       nao toma espaco, mas o calculo continuava descontando 232px — em 390px o
+       container ficava com ~110px. */
+    @media (min-width: 769px) {
+      .page-container--wide.painel-largo {
+        max-width: calc(100vw - var(--shell-sidebar, 232px) - 48px);
+      }
     }
     .admin-table-scroll {
       overflow-x: auto;

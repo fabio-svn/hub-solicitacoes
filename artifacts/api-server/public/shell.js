@@ -103,7 +103,7 @@ window.Shell = {
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
               <circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/>
             </svg>
-            <span style="font-size:0.8rem">Buscar</span>
+            <span id="shellBuscaTxt" style="font-size:0.8rem">Buscar</span>
             <kbd id="shellBuscaKbd" style="font:inherit;font-size:0.68rem;font-weight:700;padding:1px 5px;
                  border-radius:4px;background:var(--icon-bg,#f4ece1);color:var(--ink-50,#8A8580)">⌘K</kbd>
           </button>

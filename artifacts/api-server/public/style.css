@@ -1406,7 +1406,20 @@ input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
 }
 
 @media (max-width: 768px) {
-  .selection-grid { grid-template-columns: 1fr; }
+  /* duas colunas tambem no celular: sete cards empilhados davam uma pagina longa
+     demais so para escolher o tipo. Abaixo de 360px volta a uma, porque cada
+     card ficaria com menos de ~140px e o rotulo nao caberia. */
+  .selection-grid { grid-template-columns: repeat(2, 1fr); }
+  /* a altura fixa de 100px estoura quando o rotulo quebra em 3 linhas nessa
+     largura ("Convite Financial Planning"); vira altura minima. */
+  .selection-btn {
+    height: auto;
+    min-height: 100px;
+    padding: 14px 10px;
+    gap: 8px;
+  }
+  .selection-btn .btn-icon { font-size: 24px; }
+  .selection-btn .btn-label { font-size: 0.82rem; line-height: 1.25; }
   .radio-cards { flex-wrap: wrap !important; gap: 8px !important; flex-direction: row !important; }
   .radio-cards > * { flex: 1 1 calc(50% - 4px) !important; min-width: 0 !important; max-width: 100% !important; }
   /* Maturidade (cards numerados): empilhar coluna, cada card vira linha horizontal */
@@ -2225,3 +2238,16 @@ input[type="checkbox"] {
 .svn-chip__marca svg { width: 12px; height: 12px; display: block; }
 .svn-chip__traco { width: 16px; height: 16px; margin-left: 5px; flex-shrink: 0; color: var(--ink-50); }
 .svn-chip__txt { overflow: hidden; text-overflow: ellipsis; }
+
+/* No celular o botao de busca vira so a lupa: o rotulo e o atalho de teclado
+   (que nem se aplica em telefone) liberam espaco no header, que ja e apertado. */
+@media (max-width: 600px) {
+  #shellBuscaTxt, #shellBuscaKbd { display: none !important; }
+  #shellBuscaBtn { padding: 6px 9px !important; margin-right: 8px !important; }
+}
+
+/* Telas muito estreitas (< 360px): duas colunas deixariam cada card com menos
+   de 140px, estreito demais para o rotulo. */
+@media (max-width: 359px) {
+  .selection-grid { grid-template-columns: 1fr; }
+}
