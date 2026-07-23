@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+  <link rel="manifest" href="/site.webmanifest" />
+  <meta name="theme-color" content="#AC3631" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script>(function(){try{const s=JSON.parse(localStorage.getItem('svn_layout_state')||'{}');if(s.isAdmin)document.documentElement.dataset.preShell='admin';}catch(e){}})()</script>
+  <title>Assets de Templates — SVN</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@300;400;600;700;900&display=swap">
+  <link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+  <script src="config.js?v=20260615a"></script>
+  <script src="auth.js?v=20260611f"></script>
+  <script src="shell.js?v=20260611f"></script>
+  <script src="utils.js?v=20260615d"></script>
+  <script src="toast.js?v=20260603"></script>
+  <script src="icons.js?v=20260623a"></script>
+  <link rel="stylesheet" href="style.css?v=20260615c">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Nunito Sans', sans-serif; color: var(--carbon-black); }
+    .header { background: var(--card-white); border-bottom: 1px solid var(--border-light); padding: 0 24px; height: 58px; }
+    .header-inner { display: flex; align-items: center; justify-content: space-between; height: 100%; max-width: 1400px; margin: 0 auto; }
+    .header-logo img { display: block; }
+    .avatar { width: 34px; height: 34px; border-radius: var(--radius-round); background: var(--ruby-red); color: #fff; font-size: 0.78rem; font-weight: 700; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+    .user-name { font-size: 0.82rem; font-weight: 600; }
+    .notif-badge { position: absolute; top: -3px; right: -3px; background: var(--danger); color: #fff; border-radius: var(--radius-round); width: 16px; height: 16px; font-size: 0.6rem; display: flex; align-items: center; justify-content: center; font-weight: 700; }
+    .notif-badge-menu { background: var(--danger); color: #fff; border-radius: var(--radius-xs); padding: 1px 5px; font-size: 0.65rem; font-weight: 700; margin-left: auto; }
+    .stats-bar { display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
+    .stat-pill { background: var(--card-white); border: 1px solid var(--border-light); border-radius: var(--radius-md); padding: 8px 14px; font-size: 0.78rem; font-weight: 600; color: var(--ink-60); }
+    .stat-pill strong { color: var(--carbon-black); }
+    .asset-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 14px; }
+    .asset-card { overflow: hidden; transition: box-shadow 0.15s, border-color 0.15s; }
+    .asset-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.08); border-color: #d0cac4; }
+    .asset-card.selected { border-color: var(--ruby-red); box-shadow: 0 0 0 2px rgba(159,63,55,0.2); }
+    .asset-thumb { width: 100%; aspect-ratio: 1; background: var(--surface-warm); display: flex; align-items: center; justify-content: center; overflow: hidden; cursor: pointer; position: relative; }
+    .asset-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .asset-thumb .no-thumb { font-size: 2rem; opacity: 0.2; }
+    .asset-thumb .overlay { position: absolute; inset: 0; background: rgba(159,63,55,0.7); display: none; align-items: center; justify-content: center; gap: 8px; }
+    .asset-card:hover .overlay { display: flex; }
+    .overlay-btn { background: #fff; border: none; border-radius: var(--radius-sm); padding: 6px 12px; font-size: 0.75rem; font-weight: 700; cursor: pointer; font-family: 'Nunito Sans', sans-serif; transition: background 0.12s; }
+    .overlay-btn:hover { background: var(--bg-light); }
+    .asset-info { padding: 10px 12px; }
+    .asset-name { font-size: 0.78rem; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-bottom: 3px; }
+    .asset-meta { font-size: 0.68rem; color: var(--ink-40); display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+    .asset-actions { padding: 0 10px 10px; display: flex; gap: 6px; }
+    .asset-act-btn { flex: 1; padding: 5px; font-size: 0.72rem; border-radius: var(--radius-sm); border: 1px solid var(--border-light); background: var(--icon-bg); cursor: pointer; font-family: 'Nunito Sans', sans-serif; text-align: center; transition: background 0.12s; }
+    .asset-act-btn:hover { background: var(--border-warm); }
+    .asset-act-btn.danger { color: var(--danger); border-color: var(--danger-border); }
+    .asset-act-btn.danger:hover { background: var(--danger-soft); }
+    .loading-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 14px; }
+    .skeleton { background: linear-gradient(90deg, #f0ece8 25%, #e8e2dc 50%, #f0ece8 75%); background-size: 200% 100%; animation: shimmer 1.4s infinite; border-radius: var(--radius-xl); aspect-ratio: 1; }
+    @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+    .pagination { display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 28px; padding-bottom: 40px; }
+    .page-btn { padding: 6px 12px; border: 1.5px solid var(--border-light); border-radius: var(--radius-sm); background: var(--card-white); font-family: 'Nunito Sans', sans-serif; font-size: 0.78rem; cursor: pointer; transition: background 0.12s; }
+    .page-btn:hover { background: var(--bg-light); }
+    .page-btn.active { background: var(--ruby-red); color: #fff; border-color: var(--ruby-red); }
+    .page-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+    /* Upload drop zone */
+    .upload-zone { border: 2px dashed var(--border-light); border-radius: var(--radius-xl); padding: 16px 20px; text-align: center; margin-bottom: 16px; cursor: pointer; transition: border-color 0.15s, background 0.15s; display: flex; align-items: center; justify-content: center; gap: 10px; min-height: 56px; }
+    .upload-zone svg { flex-shrink: 0; width: 20px; height: 20px; opacity: 0.5; }
+    .upload-zone:hover, .upload-zone.drag-over { border-color: var(--ruby-red); background: rgba(159,63,55,0.04); }
+    .upload-zone:hover svg, .upload-zone.drag-over svg { opacity: 1; color: var(--ruby-red); }
+    .upload-zone p { font-size: 0.82rem; color: var(--ink-50); margin: 0; }
+    .upload-zone strong { color: var(--ruby-red); }
+    .upload-progress { height: 4px; background: var(--surface-warm); border-radius: var(--radius-xs); margin-top: 10px; overflow: hidden; display: none; }
+    .upload-progress-bar { height: 100%; background: var(--ruby-red); transition: width 0.3s; }
+  </style>
+</head>
+<body class="page-light">
+
+
+<div id="pageContent">
+  <div class="page-container page-container--standard">
+
+    <div class="page-header">
+      <h1 class="page-title">Assets de Templates <span id="totalCount"></span></h1>
+    </div>
+    <p class="page-subtitle" style="margin-bottom:16px">Imagens e recursos visuais usados nos templates de geração automática de materiais.</p>
+
+    <div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:0">
+      <input type="text" id="searchInput" class="input" style="min-width:220px" placeholder="Buscar por nome do arquivo…" oninput="debounceSearch()">
+  </div>
+
+  <!-- Drop zone -->
+  <div class="upload-zone" id="uploadZone" onclick="document.getElementById('uploadInput').click()">
+    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--ink-30)" stroke-width="1.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+    <div>
+      <p>Arraste imagens aqui ou <strong>clique para selecionar</strong></p>
+      <p style="font-size:0.72rem;margin-top:2px">PNG, JPG, WebP — máx. 5MB por arquivo</p>
+    </div>
+    <div class="upload-progress" id="uploadProgress">
+      <div class="upload-progress-bar" id="uploadProgressBar" style="width:0%"></div>
+    </div>
+  </div>
+  <input type="file" id="uploadInput" accept="image/png,image/jpeg,image/webp" multiple style="display:none">
+
+  <!-- Stats -->
+  <div class="stats-bar" id="statsBar"></div>
+
+  <!-- Grid -->
+  <div id="assetsContainer">
+    <div class="loading-grid" id="loadingSkeleton">
+      <div class="skeleton"></div>
+      <div class="skeleton"></div>
+      <div class="skeleton"></div>
+      <div class="skeleton"></div>
+      <div class="skeleton"></div>
+      <div class="skeleton"></div>
+      <div class="skeleton"></div>
+      <div class="skeleton"></div>
+    </div>
+  </div>
+
+  <!-- Pagination -->
+  <div class="pagination" id="pagination"></div>
+  </div>
+</div>
+
+<script>
+  let allAssets = [];
+  let filteredAssets = [];
+  let currentPage = 1;
+  const PAGE_SIZE = 40;
+  let searchTimer = null;
+
+  window.handleAssetImgError = function(img) {
+    const parent = img.parentElement;
+    if (parent) parent.innerHTML = '<div class="no-thumb">' + icon('image', { size: 32 }) + '</div>';
+  };
+
+  async function init() {
+    if (typeof _configReady !== 'undefined') await _configReady;
+    await Auth.init();
+    if (!Auth.isAuthenticated()) { window.location.href = '/auth/login?redirect=' + encodeURIComponent(window.location.pathname); return; }
+    if (!Auth.isAdmin()) { window.location.href = '/solicitacoes.html'; return; }
+    Shell.render({ activeRoute: 'admin-assets', contentEl: document.getElementById('pageContent') });
+    await loadAssets();
+    setupDropZone();
+  }
+
+  async function loadAssets() {
+    document.getElementById('assetsContainer').innerHTML = '<div class="loading-grid" id="loadingSkeleton">' + Array(8).fill('<div class="skeleton"></div>').join('') + '</div>';
+    try {
+      const r = await fetch('/api/admin/assets?');
+      if (!r.ok) { document.getElementById('assetsContainer').innerHTML = '<div class="empty-state"><h3>Erro ao carregar assets.</h3></div>'; return; }
+      allAssets = (await r.json()).assets || [];
+      applySearch();
+    } catch(e) {
+      console.error('Erro em loadAssets():', e);
+      document.getElementById('assetsContainer').innerHTML = '<div class="empty-state"><h3>Erro de rede.</h3></div>';
+    }
+  }
+
+  function debounceSearch() {
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(applySearch, 250);
+  }
+
+  function applySearch() {
+    const el = document.getElementById('searchInput');
+    const q = (el ? el.value : '').trim().toLowerCase();
+    filteredAssets = q ? allAssets.filter(a => a.filename.toLowerCase().includes(q)) : [...allAssets];
+    currentPage = 1;
+    renderStats();
+    renderGrid();
+    renderPagination();
+  }
+
+  function renderStats() {
+    const total = filteredAssets.length;
+    document.getElementById('totalCount').textContent = `(${total})`;
+    document.getElementById('statsBar').innerHTML = `
+      <div class="stat-pill"><strong>${total}</strong> assets</div>
+    `;
+  }
+
+  function renderGrid() {
+    const container = document.getElementById('assetsContainer');
+    const start = (currentPage - 1) * PAGE_SIZE;
+    const page = filteredAssets.slice(start, start + PAGE_SIZE);
+    if (!page.length) {
+      container.innerHTML = `<div class="empty-state">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+        <h3>Nenhum asset encontrado</h3>
+        <p>Faça upload de imagens usando o botão acima ou arrastando para a área de upload.</p>
+      </div>`;
+      return;
+    }
+    container.innerHTML = `<div class="asset-grid">${page.map(a => {
+      const sizeKb = Math.round(a.size_bytes / 1024);
+      const sizeStr = sizeKb >= 1024 ? (sizeKb/1024).toFixed(1) + 'MB' : sizeKb + 'KB';
+      return `<div class="card asset-card" id="ac-${a.id}">
+        <div class="asset-thumb" onclick="previewAsset('${esc(a.url)}')">
+          <img src="${esc(a.url)}" alt="${esc(a.filename)}" loading="lazy" onerror="window.handleAssetImgError(this)">
+          <div class="overlay">
+            <button class="overlay-btn" onclick="event.stopPropagation();copyUrl('${esc(a.url)}')">Copiar URL</button>
+            <button class="overlay-btn" onclick="event.stopPropagation();deleteAsset(${a.id})">Deletar</button>
+          </div>
+        </div>
+        <div class="asset-info">
+          <div class="asset-name" title="${esc(a.filename)}">${esc(a.filename)}</div>
+          <div class="asset-meta">
+            <span>${sizeStr}</span>
+            ${a.width ? `<span>${a.width}×${a.height}</span>` : ''}
+          </div>
+        </div>
+        <div class="asset-actions">
+          <button class="asset-act-btn" onclick="copyUrl('${esc(a.url)}')">Copiar URL</button>
+          <button class="asset-act-btn danger" onclick="deleteAsset(${a.id})">Deletar</button>
+        </div>
+      </div>`;
+    }).join('')}</div>`;
+  }
+
+  function renderPagination() {
+    const total = filteredAssets.length;
+    const pages = Math.ceil(total / PAGE_SIZE);
+    if (pages <= 1) { document.getElementById('pagination').innerHTML = ''; return; }
+    let html = `<button class="page-btn" onclick="goPage(${currentPage-1})" ${currentPage===1?'disabled':''}>← Ant.</button>`;
+    for (let i = 1; i <= pages; i++) {
+      if (i === 1 || i === pages || Math.abs(i - currentPage) <= 2) {
+        html += `<button class="page-btn ${i===currentPage?'active':''}" onclick="goPage(${i})">${i}</button>`;
+      } else if (Math.abs(i - currentPage) === 3) {
+        html += `<span style="padding:6px 4px;font-size:0.78rem;opacity:0.4">…</span>`;
+      }
+    }
+    html += `<button class="page-btn" onclick="goPage(${currentPage+1})" ${currentPage===pages?'disabled':''}>Próx. →</button>`;
+    document.getElementById('pagination').innerHTML = html;
+  }
+
+  function goPage(p) {
+    currentPage = p;
+    renderGrid();
+    renderPagination();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function copyUrl(url) {
+    navigator.clipboard.writeText(url).then(() => showToast('URL copiada!', 'success')).catch(() => {
+      const inp = document.createElement('input');
+      inp.value = url; document.body.appendChild(inp); inp.select(); document.execCommand('copy'); inp.remove();
+      showToast('URL copiada!', 'success');
+    });
+  }
+
+  function previewAsset(url) {
+    const overlay = document.createElement('div');
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:9000;display:flex;align-items:center;justify-content:center;cursor:zoom-out';
+    overlay.onclick = () => overlay.remove();
+    const img = document.createElement('img');
+    img.src = url;
+    img.style.cssText = 'max-width:90vw;max-height:90vh;border-radius:var(--radius-md);box-shadow:0 20px 60px rgba(0,0,0,0.5)';
+    overlay.appendChild(img);
+    document.body.appendChild(overlay);
+  }
+
+  async function deleteAsset(id) {
+    const ok = await showConfirm('Deletar este asset permanentemente? Esta ação não pode ser desfeita.', { danger: true, okLabel: 'Excluir' });
+    if (!ok) return;
+    const r = await fetch(`/api/admin/assets/${id}`, { method: 'DELETE' });
+    if (!r.ok) { const d = await r.json().catch(()=>({})); showToast(d.error || 'Erro ao deletar.', 'error'); return; }
+    showToast('Asset deletado.', 'success');
+    allAssets = allAssets.filter(a => a.id !== id);
+    applySearch();
+  }
+
+  async function uploadFiles(files) {
+    if (!files || !files.length) return;
+    const arr = Array.from(files);
+    const progressWrap = document.getElementById('uploadProgress');
+    const progressBar = document.getElementById('uploadProgressBar');
+    progressWrap.style.display = 'block';
+    let done = 0;
+    const results = [];
+
+    // Upload com concorrência limitada (3 simultâneos)
+    const uploadOne = async (file) => {
+      if (file.size > 5 * 1024 * 1024) {
+        showToast(`${file.name}: arquivo muito grande (máx. 5MB)`, 'error');
+        return null;
+      }
+      const fd = new FormData(); fd.append('file', file);
+      try {
+        const r = await fetch('/api/admin/assets/upload', { method: 'POST', body: fd });
+        const d = await r.json();
+        if (!r.ok) {
+          showToast(`${file.name}: ${d.error || 'Erro'}`, 'error');
+          return null;
+        }
+        return d;
+      } catch (err) {
+        console.error('[admin-assets/upload]', file.name, err);
+        showToast(`${file.name}: erro de rede.`, 'error');
+        return null;
+      }
+    };
+
+    const CONCURRENCY = 3;
+    for (let i = 0; i < arr.length; i += CONCURRENCY) {
+      const batch = arr.slice(i, i + CONCURRENCY);
+      const batchResults = await Promise.all(batch.map(uploadOne));
+      for (const r of batchResults) {
+        done++;
+        if (r) results.push(r);
+      }
+      progressBar.style.width = (done/arr.length*100)+'%';
+    }
+    setTimeout(() => { progressWrap.style.display = 'none'; progressBar.style.width = '0%'; }, 600);
+    if (results.length) {
+      showToast(`${results.length} arquivo${results.length>1?'s':''} enviado${results.length>1?'s':''}`, 'success');
+      await loadAssets();
+    }
+    document.getElementById('uploadInput').value = '';
+  }
+
+  function setupDropZone() {
+    const zone = document.getElementById('uploadZone');
+    const input = document.getElementById('uploadInput');
+    if (input) input.addEventListener('change', e => { uploadFiles(e.target.files); });
+    zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag-over'); });
+    zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
+    zone.addEventListener('drop', e => {
+      e.preventDefault();
+      zone.classList.remove('drag-over');
+      uploadFiles(e.dataTransfer.files);
+    });
+  }
+
+  init();
+</script>
+</body>
+</html>

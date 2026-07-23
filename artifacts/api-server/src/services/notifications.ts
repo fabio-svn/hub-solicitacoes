@@ -10,7 +10,7 @@ const WEBHOOK_URL = process.env.N8N_NOTIFICATIONS_WEBHOOK_URL;
 const HUB_URL = process.env.HUB_PUBLIC_URL || "https://hub.portalsvn.com.br";
 
 
-export const TIPOS_COM_APROVACAO = new Set([
+/* interno */ const TIPOS_COM_APROVACAO = new Set([
   "eventos",
   "artes-divulgacao",
   "atualizacao-material",
@@ -21,7 +21,7 @@ export const TIPOS_COM_APROVACAO = new Set([
 
 export type Marco = "recebida" | "aprovacao" | "reaprovacao" | "concluida" | "prazo_alterado" | "publicada";
 
-export async function notificarMarco(solicitacaoId: number, marco: Marco): Promise<void> {
+/* interno */ async function notificarMarco(solicitacaoId: number, marco: Marco): Promise<void> {
   if (!WEBHOOK_URL) {
     logger.warn({ solicitacaoId, marco }, "N8N_NOTIFICATIONS_WEBHOOK_URL ausente — pulando");
     logAtividadeBg({

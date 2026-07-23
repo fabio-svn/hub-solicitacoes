@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+  <link rel="manifest" href="/site.webmanifest" />
+  <meta name="theme-color" content="#AC3631" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Solicitação Enviada - Hub SVN</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap" media="print" onload="this.media='all'">
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap"></noscript>
+  <link rel="stylesheet" href="style.css?v=20260615c">
+</head>
+<body class="page-dark">
+  <video autoplay loop muted playsinline style="position:fixed;inset:0;width:100%;height:100%;object-fit:cover;z-index:0" id="bgVideo"></video>
+  <div style="position:fixed;inset:0;background:rgba(20,12,10,0.80);mix-blend-mode:multiply;z-index:0"></div>
+
+  <div style="min-height:100vh;display:flex;align-items:center;justify-content:center;position:relative;z-index:1;padding:24px">
+    <div class="thankyou-card" style="opacity:0" id="card">
+      <div class="check-icon" id="checkIcon">
+        <svg width="56" height="56" viewBox="0 0 56 56" fill="none">
+          <circle cx="28" cy="28" r="26" stroke="#AC3631" stroke-width="2" stroke-dasharray="164" stroke-dashoffset="164" id="checkCircle"/>
+          <polyline points="18 28 25 35 38 22" stroke="#AC3631" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="40" stroke-dashoffset="40" id="checkMark"/>
+        </svg>
+      </div>
+      <h1 style="font-weight:700;font-size:1.6rem;margin-bottom:12px;opacity:0;hyphens:none;-webkit-hyphens:none;word-break:keep-all;overflow-wrap:break-word" id="title"></h1>
+      <p style="font-weight:400;opacity:0;color:rgba(255,248,243,0.95);margin-bottom:28px;hyphens:none;-webkit-hyphens:none;word-break:keep-all;overflow-wrap:break-word" id="subtitle"></p>
+      <div id="artefatoCard" style="display:none;margin-top:28px;margin-bottom:48px;width:100%">
+        <div style="border-top:1px solid rgba(255,248,243,0.12);padding-top:24px">
+          <div id="artefatoPolling" style="text-align:center;padding:16px 0">
+            <div style="display:inline-block;width:20px;height:20px;border:2px solid rgba(255,248,243,0.3);border-top-color:var(--gold-soft);border-radius:var(--radius-round);animation:spin 0.9s linear infinite"></div>
+            <p style="margin-top:10px;font-size:0.8rem;color:rgba(255,248,243,0.6)">Gerando seu material…</p>
+          </div>
+          <div id="artefatoReady" style="display:none">
+            <p style="font-size:0.7rem;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:rgba(255,248,243,0.6);margin-bottom:14px">Material disponível</p>
+            <div id="artefatoLinks"></div>
+          </div>
+        </div>
+      </div>
+      <div style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center" id="ctaBtns">
+        <a href="/dashboard.html" class="btn btn-primary" id="ctaBtn" style="opacity:0"></a>
+        <a href="/solicitacoes.html" class="btn btn-primary" id="ctaBtn2" style="opacity:0">Nova solicitação</a>
+      </div>
+      <div id="resumoCard" style="opacity:0;margin-top:28px;text-align:left;width:100%">
+        <div style="border-top:1px solid rgba(255,248,243,0.12);padding-top:24px;margin-bottom:16px">
+          <p style="font-size:0.7rem;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;opacity:0.6;margin-bottom:12px;color:var(--paper-white)">Resumo da solicitação</p>
+          <div id="resumoItens"></div>
+        </div>
+      </div>
+      <div style="margin-top:40px;opacity:0" id="logoWrap">
+        <img id="logo" style="height:24px;opacity:1" alt="SVN">
+      </div>
+    </div>
+  </div>
+  <style>
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+
+  <script src="config.js?v=20260615a"></script>
+  <script>
+    function isTipoComArtefato(tipoId) {
+      if (window._svnFormSchemas?.tipos) {
+        return window._svnFormSchemas.tipos.some(t => t.id === tipoId && t.is_automation);
+      }
+      return ['assinatura-email','cartao-visita-digital','cartao-boas-vindas',
+              'divulgacao-nps','convite-fp','cartao-comemorativo'].includes(tipoId);
+    }
+
+    let _artefatoPollingTimer = null;
+    function iniciarPollingArtefato(solicitacaoId) {
+      const card = document.getElementById('artefatoCard');
+      if (card) card.style.display = 'block';
+
+      let tentativas = 0;
+      const MAX_TENTATIVAS = 30;
+
+      function poll() {
+        fetch('/api/solicitacoes/' + solicitacaoId + '/artefato', { credentials: 'include' })
+          .then(r => r.json())
+          .then(data => {
+            if (data.status === 'erro') {
+              if (_artefatoPollingTimer) clearTimeout(_artefatoPollingTimer);
+              const pollingEl = document.getElementById('artefatoPolling');
+              if (pollingEl) pollingEl.style.display = 'none';
+              const readyEl = document.getElementById('artefatoReady');
+              if (readyEl) {
+                readyEl.innerHTML = `
+                  <div style="color:var(--danger);padding:16px;background:rgba(220,38,38,0.08);border-radius:var(--radius-md);text-align:center">
+                    <strong>Erro na geração</strong>
+                    <p style="margin-top:8px;font-size:0.85rem;opacity:0.8">
+                      Houve um problema ao gerar seu material. Entre em contato com o time de Marketing.
+                    </p>
+                  </div>`;
+                readyEl.style.display = 'block';
+              }
+              return;
+            }
+            if (data.ready && data.links && data.links.length > 0) {
+              document.getElementById('artefatoPolling').style.display = 'none';
+              const readyEl = document.getElementById('artefatoReady');
+              const linksEl = document.getElementById('artefatoLinks');
+              if (readyEl && linksEl) {
+                linksEl.innerHTML = data.links.map(link =>
+                  `<a href="${link.url}" download target="_blank" rel="noopener" class="btn btn-primary btn-submit-gold" style="display:inline-flex;align-items:center;justify-content:center;text-decoration:none;gap:8px">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                    ${link.label || 'Fazer download'}
+                  </a>`
+                ).join('');
+                readyEl.style.display = 'block';
+              }
+            } else {
+              tentativas++;
+              if (tentativas < MAX_TENTATIVAS) {
+                _artefatoPollingTimer = setTimeout(poll, 4000);
+              } else {
+                const pollingEl = document.getElementById('artefatoPolling');
+                if (pollingEl) pollingEl.innerHTML = '<p style="font-size:0.8rem;color:rgba(255,248,243,0.5)">Material em geração — verifique sua solicitação em breve.</p>';
+              }
+            }
+          })
+          .catch(() => {
+            tentativas++;
+            if (tentativas < MAX_TENTATIVAS) _artefatoPollingTimer = setTimeout(poll, 4000);
+          });
+      }
+      setTimeout(poll, 2000);
+    }
+
+    document.getElementById('bgVideo').src = URL_VIDEO_HERO;
+    document.getElementById('logo').src = URL_LOGO_BRANCA;
+
+    let titulo = (typeof MSG_THANKYOU_TITULO !== 'undefined' ? MSG_THANKYOU_TITULO : null) || 'Solicitação enviada com sucesso!';
+    let subtitulo = (typeof MSG_THANKYOU_SUBTITULO !== 'undefined' ? MSG_THANKYOU_SUBTITULO : null) || 'Nossa equipe de marketing irá analisar e entrar em contato em breve.';
+    const _botaoLabel = (typeof MSG_THANKYOU_BOTAO !== 'undefined' ? MSG_THANKYOU_BOTAO : null) || 'Ver minhas solicitações';
+
+    try {
+      const raw = sessionStorage.getItem('svn_ultimo_resumo');
+      if (!raw) throw new Error('sem resumo');
+      const resumo = JSON.parse(raw);
+
+      if (resumo.tipo_id && TIPOS_AUTOMACAO.includes(resumo.tipo_id)) {
+        titulo = 'Solicitação enviada com sucesso!';
+        subtitulo = 'Seu material está sendo gerado e ficará disponível para download em instantes.';
+      }
+
+      if (resumo.tipo_id && isTipoComArtefato(resumo.tipo_id) && resumo.id) {
+        iniciarPollingArtefato(resumo.id);
+      }
+
+      document.getElementById('title').textContent = titulo;
+      document.getElementById('subtitle').textContent = subtitulo;
+      if (resumo.id) {
+        document.getElementById('ctaBtn').href = '/solicitacao.html?id=' + resumo.id;
+        document.getElementById('ctaBtn').textContent = 'Ver solicitação';
+      } else {
+        document.getElementById('ctaBtn').textContent = _botaoLabel;
+      }
+
+      const itens = [];
+      if (resumo.tipo)        itens.push({ label: 'Tipo',             valor: resumo.tipo });
+      if (resumo.titulo)      itens.push({ label: 'Identificação',    valor: resumo.titulo });
+      if (resumo.natureza) {
+        const naturezaMap = { presencial: 'Presencial', online: 'Online', patrocinio: 'Patrocínio' };
+        itens.push({ label: 'Natureza', valor: naturezaMap[resumo.natureza] || resumo.natureza });
+      }
+      if (resumo.solicitante) itens.push({ label: 'Solicitante',      valor: resumo.solicitante });
+      if (resumo.setor)       itens.push({ label: 'Setor',            valor: resumo.setor });
+      if (resumo.data)        itens.push({ label: 'Enviado em',       valor: resumo.data + ' às ' + resumo.hora });
+      if (resumo.materiais?.length > 0)
+        itens.push({ label: 'Itens solicitados', valor: resumo.materiais.length + ' item(ns)' });
+
+      if (itens.length > 0) {
+        document.getElementById('resumoItens').innerHTML = itens.map(item => `
+          <div style="display:flex;justify-content:space-between;align-items:baseline;padding:7px 0;border-bottom:1px solid rgba(255,248,243,0.07);font-size:0.82rem">
+            <span style="color:rgba(255,248,243,0.7);font-weight:400">${item.label}</span>
+            <span style="color:var(--paper-white);font-weight:600;text-align:right;max-width:60%">${item.valor}</span>
+          </div>
+        `).join('');
+        setTimeout(() => {
+          const card = document.getElementById('resumoCard');
+          card.style.transition = 'opacity 0.4s ease';
+          card.style.opacity = '1';
+        }, 1200);
+      }
+
+    } catch {
+      document.getElementById('title').textContent = titulo;
+      document.getElementById('subtitle').textContent = subtitulo;
+      document.getElementById('ctaBtn').textContent = _botaoLabel;
+    } finally {
+      try { sessionStorage.removeItem('svn_ultimo_resumo'); } catch {}
+    }
+
+    setTimeout(() => {
+      const card = document.getElementById('card');
+      card.style.transition = 'opacity 0.5s ease';
+      card.style.opacity = '1';
+    }, 100);
+
+    setTimeout(() => {
+      document.getElementById('checkCircle').style.transition = 'stroke-dashoffset 0.8s ease';
+      document.getElementById('checkCircle').style.strokeDashoffset = '0';
+    }, 400);
+
+    setTimeout(() => {
+      document.getElementById('checkMark').style.transition = 'stroke-dashoffset 0.4s ease';
+      document.getElementById('checkMark').style.strokeDashoffset = '0';
+    }, 800);
+
+    ['title', 'subtitle', 'ctaBtn', 'ctaBtn2', 'logoWrap'].forEach((id, i) => {
+      setTimeout(() => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.style.transition = 'opacity 0.4s ease';
+        el.style.opacity = '1';
+      }, 700 + i * 200);
+    });
+  </script>
+<a href="https://wa.me/5544991689207" target="_blank" rel="noopener"
+   class="float-whatsapp" title="Falar com o time de Marketing">
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg">
+    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/>
+    <path d="M11.999 2C6.477 2 2 6.484 2 12.017c0 1.99.521 3.86 1.43 5.484L2 22l4.644-1.414A9.96 9.96 0 0011.999 22C17.523 22 22 17.516 22 11.983 22 6.472 17.523 2 11.999 2zm0 18.15a8.124 8.124 0 01-4.162-1.145l-.299-.178-3.088.941.923-3.121-.196-.32A8.185 8.185 0 013.85 11.983c0-4.51 3.644-8.183 8.15-8.183 4.507 0 8.152 3.672 8.152 8.183 0 4.51-3.645 8.167-8.153 8.167z"/>
+  </svg>
+</a>
+
+</body>
+</html>

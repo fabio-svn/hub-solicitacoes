@@ -374,3 +374,23 @@ window.SvnChip = (function () {
 
   return { html: html, rotulo: rotulo, tipo: tipo, instagramUrl: instagramUrl };
 })();
+
+/* statusBadgeHtml — pilula de status. As cores ja vinham do getStatus/getStatusVisual
+   do config.js, mas a montagem do <span> estava copiada em tres telas; mudar o
+   visual do badge exigia achar as tres. Aceita o id do status ou o objeto ja
+   resolvido (util quando a tela usa getStatusVisual, que trata "em alteracao").
+
+     statusBadgeHtml('concluido')
+     statusBadgeHtml(getStatusVisual(item), { classe: 'sol-status-badge', id: 'solStatus' })
+*/
+function statusBadgeHtml(status, opts) {
+  var o = opts || {};
+  var s = (status && typeof status === 'object')
+    ? status
+    : (typeof getStatus === 'function' ? getStatus(status) : { label: String(status) });
+  var attrId = o.id ? ' id="' + esc(o.id) + '"' : '';
+  var extra = o.style ? ';' + o.style : '';
+  return '<span class="' + esc(o.classe || 'badge') + '"' + attrId
+    + ' style="background:' + (s.bg || '#f1f5f9') + ';color:' + (s.text || '#475569') + extra + '">'
+    + esc(s.label) + '</span>';
+}

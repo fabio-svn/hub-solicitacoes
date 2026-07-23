@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <script>(function(){try{const s=JSON.parse(localStorage.getItem('svn_layout_state')||'{}');if(s.isAdmin)document.documentElement.dataset.preShell='admin';}catch(e){}})()</script>
+  <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+  <link rel="manifest" href="/site.webmanifest" />
+  <meta name="theme-color" content="#AC3631" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Artes de Divulgação - Hub SVN</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap" media="print" onload="this.media='all'">
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap"></noscript>
+  <link rel="stylesheet" href="style.css?v=20260615c">
+</head>
+<body class="page-light">
+  <div id="pageContent">
+  <div class="page-container page-container--narrow">
+    <div class="form-card">
+      <div class="svn-stepper" id="formStepper"></div>
+      <div class="flex-between">
+        <h2 class="text-md-medium">Arte de Divulgação</h2>
+      </div>
+      <hr class="sep">
+
+      <div class="alert-card alert-danger">
+        <div class="alert-title">Atenção</div>
+        <div class="alert-text">Este formulário é para artes institucionais e de comunicação interna. Convites de eventos (online ou presenciais) vão no formulário de <strong>Eventos</strong>.</div>
+      </div>
+      <div class="alert-card alert-warning">
+        <div class="alert-title">Prazos de entrega</div>
+        <div class="alert-text">Prazo de produção: <strong id="prazoHintDias">3 dias úteis</strong>. Urgência? Alinhe com o marketing antes de enviar.</div>
+      </div>
+
+      <div class="form-step active" id="step1">
+        <h2 style="font-weight:600;font-size:1.1rem;margin-bottom:20px">Informações do material</h2>
+        <div class="field">
+          <label>Telefone <span class="text-ruby">*</span></label>
+          <input type="tel" id="telefone" placeholder="(00) 00000-0000" oninput="mascaraTelefone(this)" required>
+        </div>
+        <div class="field">
+          <label>Setor <span class="text-ruby">*</span></label>
+          <select id="setor" required>
+            <option value="">Selecione seu setor</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Título do material <span class="text-ruby">*</span></label>
+          <input type="text" id="titulo" placeholder="Nome ou título da arte" required>
+        </div>
+        <div class="field">
+          <label>Finalidade da arte <span class="text-ruby">*</span></label>
+          <textarea id="finalidade" placeholder="Para que será utilizada? O que deseja comunicar?" required></textarea>
+        </div>
+        <div class="field">
+          <label>Canal de compartilhamento</label>
+          <div class="checkbox-group" id="canais">
+            <label class="checkbox-option"><input type="checkbox" name="canais" value="E-mail" required><span class="checkbox-custom"></span><span>E-mail</span></label>
+            <label class="checkbox-option"><input type="checkbox" name="canais" value="Feed do Instagram"><span class="checkbox-custom"></span><span>Feed do Instagram</span></label>
+            <label class="checkbox-option"><input type="checkbox" name="canais" value="LinkedIn"><span class="checkbox-custom"></span><span>LinkedIn</span></label>
+            <label class="checkbox-option"><input type="checkbox" name="canais" value="Stories"><span class="checkbox-custom"></span><span>Stories</span></label>
+            <label class="checkbox-option"><input type="checkbox" name="canais" value="WhatsApp"><span class="checkbox-custom"></span><span>WhatsApp</span></label>
+            <label class="checkbox-option"><input type="checkbox" name="canais" value="Outro" id="canalOutroCheck"><span class="checkbox-custom"></span><span>Outro</span></label>
+          </div>
+          <div id="canalOutroField" style="display:none;margin-top:8px">
+            <input type="text" id="canalOutro" placeholder="Qual canal?">
+          </div>
+        </div>
+        <div class="field">
+          <label>Conteúdo que deve estar presente na arte <span class="text-ruby">*</span></label>
+          <textarea id="conteudo" placeholder="Descreva o texto e informações que devem aparecer na arte..." required></textarea>
+        </div>
+        <div class="field">
+          <label>Arquivos de apoio ou referências (opcional)</label>
+          <div class="file-input-wrapper">
+            <label class="file-input-btn" for="arquivoApoio">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+              Escolher arquivo
+            </label>
+            <input type="file" id="arquivoApoio">
+            <div class="file-name" id="arquivoApoioName"></div>
+          </div>
+        </div>
+        <div class="form-nav">
+          <button class="btn btn-primary" onclick="validateStep1() && goStep(2)">Continuar →</button>
+        </div>
+      </div>
+
+      <div class="form-step" id="step2">
+        <button type="button" onclick="goStep(1)" class="btn-voltar">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="15 18 9 12 15 6"/></svg>
+          Voltar
+        </button>
+
+        <div class="alert-card alert-danger">
+          <div class="alert-title">Atenção</div>
+          <div class="alert-text">O prazo de entrega pode variar conforme a complexidade do material.</div>
+        </div>
+        <h2 style="font-weight:600;font-size:1.1rem;margin-bottom:20px">Informações adicionais</h2>
+        <div class="field">
+          <label>Público-alvo</label>
+          <div class="checkbox-group" id="publico">
+            <label class="checkbox-option"><input type="checkbox" name="publico" value="Clientes" required><span class="checkbox-custom"></span><span>Clientes</span></label>
+            <label class="checkbox-option"><input type="checkbox" name="publico" value="Parceiros"><span class="checkbox-custom"></span><span>Parceiros</span></label>
+            <label class="checkbox-option"><input type="checkbox" name="publico" value="Interno"><span class="checkbox-custom"></span><span>Interno</span></label>
+            <label class="checkbox-option"><input type="checkbox" name="publico" value="Leads"><span class="checkbox-custom"></span><span>Leads</span></label>
+            <label class="checkbox-option"><input type="checkbox" name="publico" value="Divulgação externa em massa"><span class="checkbox-custom"></span><span>Divulgação externa em massa</span></label>
+          </div>
+        </div>
+        <div class="field">
+          <label>Prazo desejado para entrega <span class="text-ruby">*</span></label>
+          <input type="date" id="prazoEntrega" required>
+          <div class="field-hint">Prazo mínimo: <span id="prazoHintDias2">3 dias úteis</span></div>
+        </div>
+        <div class="field">
+          <label>Observações finais (opcional)</label>
+          <textarea id="observacoes" placeholder="Informações adicionais..."></textarea>
+        </div>
+        <div class="section-divider">
+          <div id="submitError" class="alert-card alert-danger" style="display:none;margin-bottom:16px"></div>
+        <div id="formStatusArea" style="display:none;margin-top:16px"></div>
+          <div class="form-nav">
+            
+            <button class="btn btn-primary btn-submit-gold" id="btnSubmit" onclick="submitForm()">Enviar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  </div>
+  <script src="utils.js?v=20260615d"></script>
+  <script src="upload-feedback.js?v=20260615e"></script>
+  <script src="config.js?v=20260615a"></script>
+  <script src="auth.js?v=20260611f"></script>
+  <script src="shell.js?v=20260611f"></script>
+  <script src="form-core.js?v=20260611f"></script>
+  <script>
+
+    const TIPO = 'artes-divulgacao';
+
+    const STEPS = ['Informações', 'Detalhes e envio'];
+
+    async function init() {
+      await FormCore.initForm({
+        stepper: { el: 'formStepper', steps: STEPS },
+        tipo: TIPO,
+        draft: true,
+        onReady: function() {
+          document.getElementById('canalOutroCheck').addEventListener('change', function() {
+            document.getElementById('canalOutroField').style.display = document.getElementById('canalOutroCheck').checked ? 'block' : 'none';
+          });
+          FileUpload.bind('arquivoApoio', 'arquivoApoioName');
+        },
+      });
+    }
+
+    function validateStep1() {
+      document.querySelectorAll('#step1 .field-invalid').forEach(function(el) { el.classList.remove('field-invalid'); });
+      var errors = [];
+      ['titulo', 'finalidade', 'conteudo'].forEach(function(id) {
+        var el = document.getElementById(id);
+        if (el && !el.value.trim()) {
+          var fieldEl = el.closest('.field');
+          if (fieldEl) { fieldEl.classList.add('field-invalid'); errors.push(fieldEl); }
+        }
+      });
+      var canaisChecked = [...document.querySelectorAll('#canais input:checked')];
+      if (canaisChecked.length === 0) {
+        var fieldEl = document.getElementById('canais').closest('.field');
+        if (fieldEl) { fieldEl.classList.add('field-invalid'); errors.push(fieldEl); }
+      }
+      if (errors.length > 0) { errors[0].scrollIntoView({ behavior: 'smooth', block: 'center' }); return false; }
+      return true;
+    }
+
+    function goStep(step) {
+      document.querySelectorAll('.form-step').forEach(function(s) { s.classList.remove('active'); });
+      document.getElementById('step' + step).classList.add('active');
+      FormCore.renderStepper(document.getElementById('formStepper'), STEPS, step);
+      window.scrollTo(0, 0);
+    }
+
+    async function submitForm() {
+      if (!FormCore.validateRequired()) return;
+      var canais = [...document.querySelectorAll('#canais input:checked')].map(function(c) { return c.value; });
+      var publico = [...document.querySelectorAll('#publico input:checked')].map(function(c) { return c.value; });
+      var dados = {
+        nome: Auth.getUserName(),
+        telefone: document.getElementById('telefone').value,
+        setor: document.getElementById('setor') ? document.getElementById('setor').value : '',
+        titulo: document.getElementById('titulo').value,
+        finalidade: document.getElementById('finalidade').value,
+        canais: canais.join(', '),
+        canalOutro: document.getElementById('canalOutro') ? document.getElementById('canalOutro').value : '',
+        conteudo: document.getElementById('conteudo').value,
+        publicoAlvo: publico.join(', '),
+        prazoEntrega: document.getElementById('prazoEntrega').value,
+        observacoes: document.getElementById('observacoes').value,
+      };
+      await FormCore.submit({ tipo: TIPO, dados: dados, files: ['arquivoApoio'] });
+    }
+
+    init();
+  </script>
+
+  <script src="prazo.js?v=20260619a"></script>
+  <script>
+    (function(){ if(!window.Prazo) return; var TIPO="artes-divulgacao";
+      Prazo.ready.then(function(){
+        var dias = Prazo.diasUteis(TIPO);
+        var txt = dias!=null ? (dias + (dias===1?" dia útil":" dias úteis")) : "";
+        ["prazoHintDias","prazoHintDias2"].forEach(function(id){ var e=document.getElementById(id); if(e&&txt) e.textContent=txt; });
+        document.querySelectorAll(".prazoHintAV").forEach(function(e){ if(txt) e.textContent=txt; });
+        var p=document.getElementById("prazoEntrega"); if(p){ var m=Prazo.minISO(TIPO); if(m){ p.min=m; if(p.value&&p.value<m)p.value=""; } }
+      });
+    })();
+  </script>
+</body>
+</html>

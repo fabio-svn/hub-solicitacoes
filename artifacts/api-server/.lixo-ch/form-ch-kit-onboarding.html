@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+  <meta name="theme-color" content="#AC3631" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script>(function(){try{const s=JSON.parse(localStorage.getItem('svn_layout_state')||'{}');if(s.isAdmin)document.documentElement.dataset.preShell='admin';}catch(e){}})()</script>
+  <title>Kit Onboarding — Hub SVN</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="page-light">
+  <div id="pageContent">
+  <div class="page-container page-container--narrow">
+    <div class="form-card">
+      <div class="form-progress"><div class="form-progress-bar" style="width:100%"></div></div>
+      <div class="flex-between">
+        <h2 class="text-md-medium">Kit Onboarding</h2>
+      </div>
+      <hr class="sep">
+
+      <div class="field">
+        <label>Qual unidade receberá o kit? <span class="text-ruby">*</span></label>
+        <select id="unidade" required>
+          <option value="">Selecione a unidade…</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label>Quantidade de kits que deverão ser enviados para a unidade <span class="text-ruby">*</span></label>
+        <input type="number" id="quantidade" min="1" step="1" placeholder="Ex.: 5" required>
+      </div>
+
+      <div class="field">
+        <label>Qual a data prevista para a entrega desses kits? <span class="text-ruby">*</span></label>
+        <input type="date" id="dataEntrega" required>
+      </div>
+
+      <div class="section-divider">
+        <div id="submitError" class="alert-card alert-danger" style="display:none;margin-bottom:16px"></div>
+        <div class="form-nav" style="justify-content:flex-end">
+          <button class="btn btn-primary btn-submit-gold" id="btnSubmit" onclick="submitForm()">Enviar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  </div>
+
+  <script src="config.js"></script>
+  <script src="auth.js"></script>
+  <script src="utils.js"></script>
+  <script src="shell.js"></script>
+  <script src="form-core.js"></script>
+  <script>
+
+    const TIPO = 'ch-kit-onboarding';
+
+    async function init() {
+      await FormCore.initForm({
+        tipo: TIPO,
+        activeRoute: 'capital-humano',
+        onReady: function() {
+          var role = Auth.getUserRole();
+          if (role !== 'capital_humano' && role !== 'admin') { window.location.href = '/dashboard.html'; return; }
+          var sel = document.getElementById('unidade');
+          var unidades = (typeof UNIDADES_SVN !== 'undefined' && Array.isArray(UNIDADES_SVN)) ? UNIDADES_SVN : [];
+          unidades.forEach(function(u) {
+            var nome = typeof u === 'string' ? u : (u.nome || u.label || u.value || '');
+            if (!nome) return;
+            var o = document.createElement('option'); o.value = nome; o.textContent = nome; sel.appendChild(o);
+          });
+        },
+      });
+    }
+
+    async function submitForm() {
+      if (!FormCore.validateRequired()) return;
+      var dados = {
+        nome: Auth.getUserName(),
+        unidade: document.getElementById('unidade').value,
+        quantidade: document.getElementById('quantidade').value,
+        dataEntrega: document.getElementById('dataEntrega').value,
+      };
+      await FormCore.submit({ tipo: TIPO, dados: dados });
+    }
+
+    init();
+  </script>
+</body>
+</html>

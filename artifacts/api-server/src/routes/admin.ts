@@ -12,6 +12,7 @@ import { FORM_SCHEMAS, getFormSchemaList, TIPOS_COM_CLICKUP } from "../config/fo
 import { isRole } from "../config/roles";
 import { validateClickUpList } from "./clickup";
 import { logAtividadeBg } from "../services/activity-log";
+import { atualizarRoleNasSessoes } from "../lib/sessions";
 import multer from "multer";
 import * as XLSX from "xlsx";
 
@@ -530,14 +531,32 @@ router.put("/users/:id/role", requireRole("admin"), async (req, res): Promise<vo
 
     await db.update(usersTable).set({ role }).where(eq(usersTable.id, userId));
 
+    // WRITE-THROUGH-SESSAO: a sessao guarda o papel desde o login, entao mudar
+    // so a tabela deixava a pessoa com o acesso antigo ate ela carregar uma
+    // pagina nova (quando o /auth/me reconcilia). Propagando aqui, vale na
+    // requisicao seguinte dela — o que importa sobretudo ao rebaixar alguem.
+    let sessoesAtualizadas = 0;
+    try {
+      sessoesAtualizadas = await atualizarRoleNasSessoes(targetUser.email, role);
+    } catch (err) {
+      // A troca de papel nao pode falhar por causa da propagacao: usersTable ja
+      // foi atualizada e o /auth/me continua sendo a rede de seguranca.
+      req.log.error({ err, email: targetUser.email }, "Erro ao propagar papel para as sessoes");
+    }
+
     logAtividadeBg({
       userEmail: currentUser.email, userName: currentUser.name,
       tipo: "usuario_papel_alterado", nivel: "warn",
       detalhe: `${currentUser.email} alterou o papel de ${targetUser.email}: "${targetUser.role || "colaborador"}" → "${role}"`,
-      metadata: { targetEmail: targetUser.email, de: targetUser.role || "colaborador", para: role },
+      metadata: {
+        targetEmail: targetUser.email,
+        de: targetUser.role || "colaborador",
+        para: role,
+        sessoesAtualizadas,
+      },
     });
 
-    res.json({ success: true });
+    res.json({ success: true, sessoesAtualizadas });
   } catch (err: any) {
     req.log.error({ err, body: req.body }, "Erro ao alterar role");
     res.status(500).json({ error: "Erro ao alterar role", code: err.code });

@@ -137,11 +137,7 @@ export const AVAILABLE_FONTS = [
   { family: 'Roobert PRO TRIAL Heavy',    file: 'RoobertPROTRIAL-Heavy.otf' },
 ];
 
-export const PLACEHOLDERS_BY_TIPO: Record<string, string[]> = {
-  'assinatura-email':      ['nome', 'cargo', 'telefone', 'email', 'marca_label', 'tem_cfp', 'marca'],
-  'cartao-boas-vindas':    ['telefone', 'nome_cliente', 'nome_assinatura', 'unidade', 'contrato_social', 'is_private_key', 'contrato_label'],
-  'cartao-visita-digital': ['nome', 'telefone', 'email', 'contrato_social', 'foto_perfil', 'contrato_label', 'telefone_digits', 'site_url'],
-  'divulgacao-nps':        ['telefone', 'nome_assinatura', 'cargo', 'agradecimento', 'modelo_arte', 'foto_perfil'],
-  'convite-fp':            ['telefone', 'codigo_assessor', 'nome_assinatura', 'cargo', 'contrato_social', 'contrato_label'],
-  'cartao-comemorativo':   ['telefone', 'nome_aniversariante', 'modelo_cartao', 'mensagem', 'assinatura', 'email_destinatario'],
-};
+/* PLACEHOLDERS-REMOVIDO: a lista de placeholders por tipo vivia aqui sem
+   nenhum importador, e o admin-templates.js mantinha uma copia propria.
+   A fonte viva e getFormSchemaList(), que ja devolve `placeholders` por tipo
+   (campos + computed) no /api/form-schemas. */

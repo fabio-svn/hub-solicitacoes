@@ -425,9 +425,9 @@ window.Shell = {
   }
 
   function catalogo() {
-    if (typeof CATEGORIAS_SOLICITACAO === 'undefined') return [];
+    if (typeof categoriasVisiveis !== 'function') return [];
     var out = [];
-    CATEGORIAS_SOLICITACAO.forEach(function (cat) {
+    categoriasVisiveis().forEach(function (cat) {
       (cat.itens || []).forEach(function (it) {
         if (it.ativo === false) return;
         // FORM_ROUTES e o mapa que a home usa no clique do card. Nem todo id bate

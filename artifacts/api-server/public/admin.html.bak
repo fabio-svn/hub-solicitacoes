@@ -1,0 +1,969 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+  <link rel="manifest" href="/site.webmanifest" />
+  <meta name="theme-color" content="#AC3631" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script>(function(){try{const s=JSON.parse(localStorage.getItem('svn_layout_state')||'{}');if(s.isAdmin)document.documentElement.dataset.preShell='admin';}catch(e){}})()</script>
+  <title>Painel Administrativo - Hub SVN</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap" media="print" onload="this.media='all'">
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap"></noscript>
+  <link rel="stylesheet" href="style.css?v=20260615c">
+  <style>
+    .bulk-bar { display:flex; align-items:center; justify-content:space-between; gap:12px; background:var(--icon-bg); border:1px solid var(--border-light); border-radius:var(--radius-lg); padding:10px 14px; margin-bottom:12px; }
+    .bulk-bar .bulk-count { font-weight:700; font-size:0.85rem; color:var(--carbon-black); }
+    .bulk-bar .bulk-actions { display:flex; gap:8px; }
+    .btn-sm { padding:7px 14px; font-size:0.82rem; }
+    .bulk-del-btn { background:var(--danger); color:#fff; border:1px solid var(--danger); }
+    .bulk-del-btn:hover { background:var(--danger-strong); border-color:var(--danger-strong); }
+    .admin-table input[type=checkbox] { width:16px; height:16px; accent-color:var(--ruby-red); cursor:pointer; vertical-align:middle; margin:0; }
+      /* Pilula da nota na listagem: a nota fica visivel, o comentario vem no popup. */
+    .aval-pill {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 3px 10px; border: 1px solid var(--border-light);
+      border-radius: var(--radius-pill); background: var(--card-white);
+      color: var(--carbon-black); font: inherit; font-size: 0.8rem; font-weight: 700;
+      cursor: pointer; transition: border-color .15s, background .15s;
+    }
+    .aval-pill:hover { border-color: var(--ink-30); background: var(--icon-bg); }
+    .aval-estrela { color: #C98A00; font-size: 0.9rem; line-height: 1; }
+    .aval-tem-txt { color: var(--ink-30); font-size: 0.5rem; margin-left: 2px; }
+    .aval-nota-grande { font-size: 2rem; font-weight: 300; line-height: 1; }
+    /* Cards, grafico e tabela na mesma largura: quem se alarga e o container do
+       painel, nao mais so a tabela — que voltou a ocupar 100% dele. */
+    /* So faz sentido com a sidebar ocupando coluna: no celular ela vira gaveta e
+       nao toma espaco, mas o calculo continuava descontando 232px — em 390px o
+       container ficava com ~110px. */
+    @media (min-width: 769px) {
+      .page-container--wide.painel-largo {
+        max-width: calc(100vw - var(--shell-sidebar, 232px) - 48px);
+      }
+    }
+    .admin-table-scroll {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      width: 100%;
+    }
+    .admin-table-scroll > .admin-table { min-width: 1096px; }
+</style>
+</head>
+<body class="page-light">
+  <div id="pageContent">
+  <div class="page-container page-container--wide painel-largo">
+    <div class="page-header">
+      <h1 class="page-title">Painel Administrativo</h1>
+    </div>
+
+    <div class="stats-row" style="grid-template-columns:repeat(3,1fr)" id="adminStats">
+      <div class="stat-card" style="border-color:var(--border-light)">
+        <div class="stat-number" id="statTotal">0</div>
+        <div class="stat-label">Total</div>
+      </div>
+      <div class="stat-card" style="background:rgba(159,63,55,0.06);border-color:rgba(159,63,55,0.15)">
+        <div class="stat-number" class="text-ruby" id="statActive">0</div>
+        <div class="stat-label">Em andamento</div>
+      </div>
+      <div class="stat-card" style="background:rgba(111,135,123,0.06);border-color:rgba(111,135,123,0.15)">
+        <div class="stat-number" style="color:var(--sage-green)" id="statCompleted">0</div>
+        <div class="stat-label">Concluídas</div>
+      </div>
+    </div>
+
+    <!-- Filtro de período para o gráfico -->
+    <div style="display:flex;align-items:center;gap:10px;margin-top:24px;flex-wrap:wrap;position:relative">
+      <span style="font-size:0.8rem;font-weight:600;opacity:0.5">Período:</span>
+      <div style="display:flex;gap:6px;flex-wrap:wrap" id="adminPeriodoBtns">
+        <button class="filter-chip active" data-dias="7" onclick="setAdminPeriodo(this)">7 dias</button>
+        <button class="filter-chip" data-dias="14" onclick="setAdminPeriodo(this)">14 dias</button>
+        <button class="filter-chip" data-dias="30" onclick="setAdminPeriodo(this)">30 dias</button>
+        <button class="filter-chip" data-dias="90" onclick="setAdminPeriodo(this)">90 dias</button>
+        <button class="filter-chip" id="customPeriodoBtn" onclick="toggleCustomPeriodo()">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:4px"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          Personalizado
+        </button>
+      </div>
+
+      <div id="customPeriodoPopover" style="display:none;position:absolute;top:calc(100% + 8px);left:0;background:var(--card-white);border:1px solid var(--border-light);border-radius:var(--radius-xl);padding:14px 16px;box-shadow:0 8px 24px rgba(0,0,0,0.12);z-index:50;min-width:280px">
+        <div style="font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;opacity:0.5;margin-bottom:8px">Intervalo personalizado</div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <input type="date" id="adminDe" style="flex:1;padding:6px 10px;border:1px solid var(--border-light);border-radius:var(--radius-sm);font-size:0.82rem;font-family:'Nunito Sans', sans-serif" onchange="setAdminCustomPeriodo()">
+          <span style="font-size:0.78rem;opacity:0.5">até</span>
+          <input type="date" id="adminAte" style="flex:1;padding:6px 10px;border:1px solid var(--border-light);border-radius:var(--radius-sm);font-size:0.82rem;font-family:'Nunito Sans', sans-serif" onchange="setAdminCustomPeriodo()">
+        </div>
+        <div style="display:flex;justify-content:flex-end;margin-top:10px">
+          <button onclick="closeCustomPeriodo()" style="font-size:0.78rem;color:var(--ink-50);background:none;border:none;cursor:pointer;font-weight:600;font-family:'Nunito Sans', sans-serif">Fechar</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Cards de resumo do período -->
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-top:16px;margin-bottom:24px">
+      <div class="stat-card">
+        <div class="stat-number" id="adminTotal">—</div>
+        <div class="stat-label" id="adminTotalLabel">Solicitações</div>
+        <div id="adminDelta" style="font-size:0.75rem;margin-top:4px;font-weight:600"></div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number" id="adminAvaliacoes">—</div>
+        <div class="stat-label">Com avaliação</div>
+        <div id="adminMediaNota" style="font-size:0.75rem;margin-top:4px;font-weight:600;opacity:0.6"></div>
+      </div>
+    </div>
+
+    <div style="display:flex;align-items:center;gap:10px;margin:16px 0 24px;flex-wrap:wrap">
+      <span style="font-size:0.8rem;font-weight:600;opacity:0.5">Escopo:</span>
+      <div style="display:flex;gap:6px;flex-wrap:wrap" id="adminEscopoBtns">
+        <button class="filter-chip active" data-escopo="todos" onclick="setAdminEscopo(this)">Todos</button>
+        <button class="filter-chip" data-escopo="solicitacoes" onclick="setAdminEscopo(this)">Solicitações</button>
+        <button class="filter-chip" data-escopo="automacoes" onclick="setAdminEscopo(this)">Automações</button>
+      </div>
+    </div>
+
+    <!-- Gráfico de distribuição (donut) -->
+    <div class="form-card" style="padding:20px;margin-bottom:28px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px">
+        <span style="font-size:0.8rem;font-weight:700;opacity:0.5;text-transform:uppercase;letter-spacing:0.06em">Distribuição</span>
+        <div style="display:flex;gap:6px">
+          <div style="position:relative" id="graficoDropdownTipoWrap">
+            <button id="graficoBtnTipo" onclick="toggleGraficoDropdown('tipo')" style="display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:var(--radius-md);border:1px solid var(--border-light);background:var(--carbon-black);color:white;font-family:'Nunito Sans', sans-serif;font-size:0.8rem;font-weight:600;cursor:pointer;white-space:nowrap;transition:all 0.15s">
+              Por tipo
+              <svg id="graficoChevronTipo" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="transition:transform 0.2s"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+          </div>
+          <div style="position:relative" id="graficoDropdownStatusWrap">
+            <button id="graficoBtnStatus" onclick="toggleGraficoDropdown('status')" style="display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:var(--radius-md);border:1px solid var(--border-light);background:var(--card-white);color:var(--carbon-black);font-family:'Nunito Sans', sans-serif;font-size:0.8rem;font-weight:600;cursor:pointer;white-space:nowrap;transition:all 0.15s">
+              Por status
+              <svg id="graficoChevronStatus" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="transition:transform 0.2s"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+          </div>
+          <select id="graficoRecorte" onchange="setRecorte(this.value)" title="Recortar pela outra dimensão" style="padding:5px 10px;border-radius:var(--radius-md);border:1px solid var(--border-light);background:var(--card-white);font-family:'Nunito Sans',sans-serif;font-size:0.8rem;color:var(--carbon-black);cursor:pointer;max-width:200px"></select>
+        </div>
+      </div>
+      <div id="graficoContainer" style="display:flex;gap:24px;align-items:center;flex-wrap:wrap">
+        <canvas id="adminPizza" width="200" height="200" style="flex-shrink:0;max-width:200px"></canvas>
+        <div id="adminLegenda" style="flex:1;min-width:180px;display:flex;flex-direction:column;gap:8px"></div>
+      </div>
+    </div>
+
+    <div id="topSolicitantesCard" class="form-card" style="padding:20px;margin-bottom:28px">
+      <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:16px">
+        <h3 style="margin:0;font-size:1rem;font-weight:700;color:var(--carbon-black)">Solicitantes mais ativos</h3>
+        <span style="font-size:0.72rem;color:var(--ink-50)">no período selecionado</span>
+      </div>
+      <div id="topSolicitantesBars"></div>
+    </div>
+
+    <div class="tabs">
+      <button class="tab active" data-tab="geral" onclick="switchTab('geral')">Solicitações gerais</button>
+      <button class="tab" data-tab="eventos" onclick="switchTab('eventos')">Eventos</button>
+    </div>
+
+    <div class="tab-content" id="tab-eventos">
+      <div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:0">
+        <div style="position:relative;flex-shrink:0">
+          <div class="filter-bar" id="filterBarEventos">
+            <button class="filter-toggle-btn" id="filterToggleEventos" onclick="toggleFilterPanel('eventos')">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+              Filtrar
+              <span class="filter-count-badge" id="filterCountEventos" style="display:none">0</span>
+            </button>
+            <div id="filterActiveBadgesEventos" style="display:contents"></div>
+            <button class="filter-clear-btn" id="filterClearEventos" style="display:none" onclick="clearAllFilters('eventos')">Limpar tudo</button>
+          </div>
+        <div class="filter-panel" id="filterPanelEventos">
+          <div class="filter-panel-row">
+            <span class="filter-panel-label">Período</span>
+            <div class="filter-panel-chips">
+              <button class="filter-chip active" data-filter="periodo" data-value="" data-label="Todos os períodos" onclick="toggleFilter(this,'eventos','periodo')">Todos</button>
+              <button class="filter-chip" data-filter="periodo" data-value="hoje" data-label="Hoje" onclick="toggleFilter(this,'eventos','periodo')">Hoje</button>
+              <button class="filter-chip" data-filter="periodo" data-value="7dias" data-label="7 dias" onclick="toggleFilter(this,'eventos','periodo')">7 dias</button>
+              <button class="filter-chip" data-filter="periodo" data-value="30dias" data-label="30 dias" onclick="toggleFilter(this,'eventos','periodo')">30 dias</button>
+            </div>
+          </div>
+          <div class="filter-panel-row">
+            <span class="filter-panel-label">Status</span>
+            <div class="filter-panel-chips">
+              <button class="filter-chip active" data-filter="status" data-value="" data-label="Todos os status" onclick="toggleFilter(this,'eventos','status')">Todos</button>
+              <button class="filter-chip" data-filter="status" data-value="recebido" data-label="Recebido" onclick="toggleFilter(this,'eventos','status')">Recebido</button>
+              <button class="filter-chip" data-filter="status" data-value="em-producao" data-label="Em produção" onclick="toggleFilter(this,'eventos','status')">Em produção</button>
+              <button class="filter-chip" data-filter="status" data-value="aguardando" data-label="Aguardando" onclick="toggleFilter(this,'eventos','status')">Aguardando</button>
+              <button class="filter-chip" data-filter="status" data-value="concluido" data-label="Concluído" onclick="toggleFilter(this,'eventos','status')">Concluído</button>
+            </div>
+          </div>
+          <div class="filter-panel-row">
+            <span class="filter-panel-label">Avaliação</span>
+            <div class="filter-panel-chips">
+              <button class="filter-chip active" data-filter="avaliacao" data-value="" data-label="Todas" onclick="toggleFilter(this,'eventos','avaliacao')">Todas</button>
+              <button class="filter-chip" data-filter="avaliacao" data-value="com" data-label="Com avaliação" onclick="toggleFilter(this,'eventos','avaliacao')">Com avaliação</button>
+              <button class="filter-chip" data-filter="avaliacao" data-value="sem" data-label="Sem avaliação" onclick="toggleFilter(this,'eventos','avaliacao')">Sem avaliação</button>
+              <button class="filter-chip" data-filter="avaliacao" data-value="baixa" data-label="Nota até 3" onclick="toggleFilter(this,'eventos','avaliacao')">Nota até 3</button>
+            </div>
+          </div>
+        </div>
+        </div>
+        <div class="search-bar" style="flex:1;margin-bottom:0;height:32px;padding:0 14px;border-radius:var(--radius-md)">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" opacity="0.4"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" placeholder="Buscar..." id="searchEventos" oninput="debounceLoad('eventos')">
+        </div>
+      </div>
+      <div id="tableEventos"></div>
+      <div class="pagination" id="paginationEventos"></div>
+    </div>
+
+    <div class="tab-content active" id="tab-geral">
+      <div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:0">
+        <div style="position:relative;flex-shrink:0">
+          <div class="filter-bar" id="filterBarGeral">
+            <button class="filter-toggle-btn" id="filterToggleGeral" onclick="toggleFilterPanel('geral')">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+              Filtrar
+              <span class="filter-count-badge" id="filterCountGeral" style="display:none">0</span>
+            </button>
+            <div id="filterActiveBadgesGeral" style="display:contents"></div>
+            <button class="filter-clear-btn" id="filterClearGeral" style="display:none" onclick="clearAllFilters('geral')">Limpar tudo</button>
+          </div>
+        <div class="filter-panel" id="filterPanelGeral">
+          <div class="filter-panel-row">
+            <span class="filter-panel-label">Período</span>
+            <div class="filter-panel-chips">
+              <button class="filter-chip active" data-filter="periodo" data-value="" data-label="Todos os períodos" onclick="toggleFilter(this,'geral','periodo')">Todos</button>
+              <button class="filter-chip" data-filter="periodo" data-value="hoje" data-label="Hoje" onclick="toggleFilter(this,'geral','periodo')">Hoje</button>
+              <button class="filter-chip" data-filter="periodo" data-value="7dias" data-label="7 dias" onclick="toggleFilter(this,'geral','periodo')">7 dias</button>
+              <button class="filter-chip" data-filter="periodo" data-value="30dias" data-label="30 dias" onclick="toggleFilter(this,'geral','periodo')">30 dias</button>
+            </div>
+          </div>
+          <div class="filter-panel-row">
+            <span class="filter-panel-label">Status</span>
+            <div class="filter-panel-chips">
+              <button class="filter-chip active" data-filter="status" data-value="" data-label="Todos os status" onclick="toggleFilter(this,'geral','status')">Todos</button>
+              <button class="filter-chip" data-filter="status" data-value="recebido" data-label="Recebido" onclick="toggleFilter(this,'geral','status')">Recebido</button>
+              <button class="filter-chip" data-filter="status" data-value="em-analise" data-label="Em análise" onclick="toggleFilter(this,'geral','status')">Em análise</button>
+              <button class="filter-chip" data-filter="status" data-value="aguardando" data-label="Aguardando" onclick="toggleFilter(this,'geral','status')">Aguardando</button>
+              <button class="filter-chip" data-filter="status" data-value="em-producao" data-label="Em produção" onclick="toggleFilter(this,'geral','status')">Em produção</button>
+              <button class="filter-chip" data-filter="status" data-value="em-revisao" data-label="Em revisão" onclick="toggleFilter(this,'geral','status')">Em revisão</button>
+              <button class="filter-chip" data-filter="status" data-value="em-aprovacao" data-label="Em aprovação" onclick="toggleFilter(this,'geral','status')">Em aprovação</button>
+              <button class="filter-chip" data-filter="status" data-value="concluido" data-label="Concluído" onclick="toggleFilter(this,'geral','status')">Concluído</button>
+            </div>
+          </div>
+          <div class="filter-panel-row">
+            <span class="filter-panel-label">Avaliação</span>
+            <div class="filter-panel-chips">
+              <button class="filter-chip active" data-filter="avaliacao" data-value="" data-label="Todas" onclick="toggleFilter(this,'geral','avaliacao')">Todas</button>
+              <button class="filter-chip" data-filter="avaliacao" data-value="com" data-label="Com avaliação" onclick="toggleFilter(this,'geral','avaliacao')">Com avaliação</button>
+              <button class="filter-chip" data-filter="avaliacao" data-value="sem" data-label="Sem avaliação" onclick="toggleFilter(this,'geral','avaliacao')">Sem avaliação</button>
+              <button class="filter-chip" data-filter="avaliacao" data-value="baixa" data-label="Nota até 3" onclick="toggleFilter(this,'geral','avaliacao')">Nota até 3</button>
+            </div>
+          </div>
+        </div>
+        </div>
+        <div class="search-bar" style="flex:1;margin-bottom:0;height:32px;padding:0 14px;border-radius:var(--radius-md)">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" opacity="0.4"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" placeholder="Buscar..." id="searchGeral" oninput="debounceLoad('geral')">
+        </div>
+      </div>
+      <div id="tableGeral"></div>
+      <div class="pagination" id="paginationGeral"></div>
+    </div>
+
+  </div>
+
+  </div>
+  <script src="utils.js?v=20260615d"></script>
+  <script src="toast.js?v=20260603"></script>
+  <script src="config.js?v=20260615a"></script>
+  <script src="auth.js?v=20260611f"></script>
+  <script src="shell.js?v=20260611f"></script>
+  <script src="filters.js?v=20260616a"></script>
+  <script>
+    let currentTab = 'geral';
+    let adminFilters = { eventos: { periodo: '', status: '' }, geral: { periodo: '', status: '' } };
+    let adminPages = { eventos: 1, geral: 1 };
+
+    // Filtros: engine compartilhado (filters.js). Cada aba é uma instância; adminFilters[tab]
+    // é passado como state (alias vivo — loadTable lê adminFilters[tab].periodo/.status).
+    FilterPanel.register('Eventos', { state: adminFilters.eventos, onChange: () => { adminPages.eventos = 1; loadTable('eventos'); } });
+    FilterPanel.register('Geral',   { state: adminFilters.geral,   onChange: () => { adminPages.geral = 1;   loadTable('geral'); } });
+    let searchTimeout;
+    const CLICKUP_ICON = getClickupIcon();
+
+    // ── Gráfico / Stats ─────────────────────────────────────────
+    let adminDias = 7;
+    let adminGraficoModo = 'tipo';
+    let adminGraficoData = null;
+    let graficoFiltrosAtivos = null;
+    let adminEscopo = 'todos';
+    let recorteTipo = null;
+    let recorteStatus = null;
+
+    async function init() {
+      await _configReady;
+      await Auth.init();
+      if (!Auth.isAuthenticated()) {
+        window.location.href = '/auth/login?redirect=/admin.html';
+        return;
+      }
+      if (Auth.getUserRole() === 'colaborador') {
+        window.location.href = '/dashboard.html';
+        return;
+      }
+      Shell.render({ activeRoute: 'admin-painel', contentEl: document.getElementById('pageContent') });
+      loadStats();
+      loadAdminStats();
+      loadTable('geral');
+      loadTable('eventos');
+    }
+
+    async function loadStats() {
+      try {
+        const res = await fetch('/api/solicitacoes/stats');
+        const data = await res.json();
+        animateNum('statTotal', data.total);
+        animateNum('statActive', data.active);
+        animateNum('statCompleted', data.completed);
+      } catch (e) { console.error(e); }
+    }
+
+    function animateNum(id, target) {
+      const el = document.getElementById(id);
+      let c = 0;
+      const s = Math.max(target / 37, 1);
+      const t = setInterval(() => {
+        c += s;
+        if (c >= target) { c = target; clearInterval(t); }
+        el.textContent = Math.round(c);
+      }, 16);
+    }
+
+    async function loadTable(tab) {
+      const params = new URLSearchParams();
+      params.set('page', adminPages[tab]);
+      params.set('limit', '20');
+      params.set('tipo_solicitacao', tab === 'eventos' ? 'eventos' : 'geral');
+      if (adminFilters[tab].periodo) params.set('periodo', adminFilters[tab].periodo);
+      if (adminFilters[tab].status) params.set('status', adminFilters[tab].status);
+      if (adminFilters[tab].avaliacao) params.set('avaliacao', adminFilters[tab].avaliacao);
+      const search = document.getElementById(tab === 'eventos' ? 'searchEventos' : 'searchGeral');
+      if (search && search.value.trim()) params.set('busca', search.value.trim());
+
+      try {
+        const res = await fetch('/api/solicitacoes?' + params.toString());
+        const data = await res.json();
+        renderTable(tab, data);
+      } catch (e) { console.error(e); }
+    }
+
+
+    /* Popup da avaliacao. Le do que ja veio na listagem — nao refaz request. */
+    var _avalCache = {};
+    function abrirAvaliacao(id) {
+      const av = _avalCache[id];
+      const alvo = document.getElementById('avalModalContent');
+      if (!av) { alvo.innerHTML = '<p style="opacity:0.5">Avaliação não encontrada.</p>'; }
+      else {
+        const data = av.data ? new Date(av.data).toLocaleDateString('pt-BR') : '';
+        alvo.innerHTML =
+          '<div style="display:flex;align-items:baseline;gap:8px;margin-bottom:10px">'
+          + '<span class="aval-nota-grande">' + esc(String(av.nota)) + '</span>'
+          + '<span style="opacity:0.5;font-size:0.85rem">de 5</span>'
+          + (data ? '<span style="margin-left:auto;opacity:0.5;font-size:0.8rem">' + esc(data) + '</span>' : '')
+          + '</div>'
+          + (av.comentario
+              ? '<div style="background:var(--icon-bg);border-radius:var(--radius-md);padding:12px 14px;font-size:0.9rem;line-height:1.5">' + esc(av.comentario) + '</div>'
+              : '<p style="opacity:0.45;font-size:0.85rem;margin:0">Sem comentário.</p>')
+          + '<div style="margin-top:16px"><a href="/solicitacao.html?id=' + id + '" style="font-size:0.85rem;color:var(--ruby-red);font-weight:600;text-decoration:none">Abrir solicitação &rarr;</a></div>';
+      }
+      document.getElementById('avalModal').classList.add('visible');
+    }
+    function fecharAvaliacao(ev) {
+      if (ev && ev.target !== document.getElementById('avalModal')) return;
+      document.getElementById('avalModal').classList.remove('visible');
+    }
+
+    function renderTable(tab, data) {
+      const container = document.getElementById(tab === 'eventos' ? 'tableEventos' : 'tableGeral');
+      if (!data.data || data.data.length === 0) {
+        container.innerHTML = '<div class="empty-state"><p>Nenhuma solicitação encontrada.</p></div>';
+        return;
+      }
+      const isAdmin = Auth.getUserRole() === 'admin';
+      const bulkBar = isAdmin
+        ? `<div class="bulk-bar" id="bulkBar_${tab}" style="display:none">
+             <span class="bulk-count" id="bulkCount_${tab}"></span>
+             <div class="bulk-actions">
+               <button class="btn btn-secondary btn-sm" onclick="bulkClear('${tab}')">Limpar seleção</button>
+               <button class="btn bulk-del-btn btn-sm" onclick="bulkDelete('${tab}')">Excluir selecionadas</button>
+             </div>
+           </div>`
+        : '';
+      // As larguras minimas somam ~1096px: em telas de 13" faltava espaco e as
+      // celulas quebravam em varias linhas. O wrapper deixa a tabela rolar.
+      let html = '<div class="admin-table-scroll"><table class="admin-table"><thead><tr>'
+        + (isAdmin ? '<th style="width:34px;text-align:center"><input type="checkbox" class="bulk-all" onclick="bulkToggleAll(\'' + tab + '\', this)" title="Selecionar todos"></th>' : '')
+        + '<th>Tipo</th><th>Título</th><th>Solicitante</th><th>Data</th>'
+        + '<th style="min-width:140px">Status</th>'
+        + '<th style="min-width:96px;text-align:center">Avaliação</th>'
+        + (isAdmin ? '<th style="min-width:100px;text-align:center">Ações</th>' : '')
+        + '</tr></thead><tbody>';
+      data.data.forEach((item) => {
+        const dados = typeof item.dados === 'string' ? JSON.parse(item.dados) : (item.dados || {});
+        const titulo = item.titulo || dados.nomeEvento || dados.tituloEvento || dados.titulo || dados.nome_completo || dados.nomeCompleto || '-';
+        const tipoLabel = TIPO_SOLICITACAO_LABELS[item.tipo_solicitacao] || item.tipo_solicitacao;
+        const statusObj = getStatusVisual(item);
+        const date = new Date(item.created_at).toLocaleDateString('pt-BR');
+        const acoesCell = isAdmin
+          ? `<td onclick="event.stopPropagation()" style="text-align:center;white-space:nowrap">
+              ${item.clickup_url ? `<a href="${esc(item.clickup_url)}" target="_blank" rel="noopener" title="Abrir no ClickUp" class="action-btn action-clickup">
+                ${CLICKUP_ICON}
+              </a>` : ''}
+              <button onclick="deleteSol(${item.id}, event)" title="Excluir solicitação" class="action-btn action-delete">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>
+              </button>
+            </td>`
+          : '';
+        const _av = item.avaliacao && typeof item.avaliacao === 'object' ? item.avaliacao : null;
+        if (_av) _avalCache[item.id] = _av;
+        const avaliacaoCell = _av && _av.nota
+          ? `<td style="text-align:center" onclick="event.stopPropagation()">
+               <button class="aval-pill" onclick="abrirAvaliacao(${item.id})" title="Ver avaliação">
+                 <span class="aval-estrela">&#9733;</span>${esc(String(_av.nota))}${_av.comentario ? '<span class="aval-tem-txt" title="Tem comentário">&#9679;</span>' : ''}
+               </button>
+             </td>`
+          : '<td style="text-align:center;opacity:0.28">&mdash;</td>';
+        html += `<tr onclick="window.location.href='/solicitacao.html?id=${item.id}'" style="cursor:pointer">
+          ${isAdmin ? `<td style="text-align:center" onclick="event.stopPropagation()"><input type="checkbox" class="bulk-cb" data-id="${item.id}" onchange="bulkUpdate('${tab}')"></td>` : ''}
+          <td>${esc(tipoLabel)}</td><td>${esc(titulo)}</td><td>${esc(item.user_email)}</td><td>${esc(date)}</td>
+          <td><span class="badge" style="background:${statusObj.bg || '#f1f5f9'};color:${statusObj.text || '#475569'};white-space:nowrap">${esc(statusObj.label)}</span></td>
+          ${avaliacaoCell}
+          ${acoesCell}
+        </tr>`;
+      });
+      html += '</tbody></table></div>';
+      container.innerHTML = bulkBar + html;
+
+      const pgContainer = document.getElementById(tab === 'eventos' ? 'paginationEventos' : 'paginationGeral');
+      if (data.totalPages > 1) {
+        let pg = `<button ${data.page<=1?'disabled':''} onclick="goPage('${tab}',${data.page-1})">&laquo;</button>`;
+        for (let i = 1; i <= data.totalPages; i++) pg += `<button class="${i===data.page?'active':''}" onclick="goPage('${tab}',${i})">${i}</button>`;
+        pg += `<button ${data.page>=data.totalPages?'disabled':''} onclick="goPage('${tab}',${data.page+1})">&raquo;</button>`;
+        pgContainer.innerHTML = pg;
+      } else pgContainer.innerHTML = '';
+    }
+
+    function goPage(tab, page) { adminPages[tab] = page; loadTable(tab); }
+
+    /* ── Seleção / exclusão em massa (admin) ── */
+    function bulkScope(tab) { return document.getElementById(tab === 'eventos' ? 'tableEventos' : 'tableGeral'); }
+    function bulkSelectedIds(tab) {
+      const scope = bulkScope(tab); if (!scope) return [];
+      return Array.from(scope.querySelectorAll('.bulk-cb:checked')).map(cb => parseInt(cb.dataset.id, 10)).filter(n => !isNaN(n));
+    }
+    function bulkUpdate(tab) {
+      const scope = bulkScope(tab); if (!scope) return;
+      const all = scope.querySelectorAll('.bulk-cb');
+      const sel = scope.querySelectorAll('.bulk-cb:checked');
+      const bar = document.getElementById('bulkBar_' + tab);
+      if (bar) {
+        bar.style.display = sel.length ? 'flex' : 'none';
+        const c = document.getElementById('bulkCount_' + tab);
+        if (c) c.textContent = sel.length + (sel.length === 1 ? ' solicitação selecionada' : ' solicitações selecionadas');
+      }
+      const master = scope.querySelector('.bulk-all');
+      if (master) {
+        master.checked = all.length > 0 && sel.length === all.length;
+        master.indeterminate = sel.length > 0 && sel.length < all.length;
+      }
+    }
+    function bulkToggleAll(tab, master) {
+      bulkScope(tab).querySelectorAll('.bulk-cb').forEach(cb => { cb.checked = master.checked; });
+      bulkUpdate(tab);
+    }
+    function bulkClear(tab) {
+      bulkScope(tab).querySelectorAll('.bulk-cb').forEach(cb => { cb.checked = false; });
+      bulkUpdate(tab);
+    }
+    async function bulkDelete(tab) {
+      const ids = bulkSelectedIds(tab);
+      if (!ids.length) return;
+      const ok = await showConfirm(
+        `Excluir ${ids.length} ${ids.length === 1 ? 'solicitação selecionada' : 'solicitações selecionadas'}? Esta ação não pode ser desfeita.`,
+        { danger: true, okLabel: 'Excluir' }
+      );
+      if (!ok) return;
+      try {
+        const res = await fetch('/api/solicitacoes/bulk-delete', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ids }),
+        });
+        const d = await res.json().catch(() => ({}));
+        if (!res.ok) { showToast('Erro ao excluir: ' + (d.error || res.statusText), 'error'); return; }
+        showToast((d.deleted || ids.length) + ' solicitação(ões) excluída(s).', 'success');
+        loadTable(currentTab);
+        loadStats();
+        loadAdminStats();
+      } catch (e) {
+        console.error(e);
+        showToast('Erro de rede ao excluir em massa', 'error');
+      }
+    }
+
+    async function deleteSol(id, ev) {
+      if (ev) ev.stopPropagation();
+      const ok = await showConfirm('Tem certeza que deseja excluir essa solicitação? Esta ação não pode ser desfeita.', { danger: true, okLabel: 'Excluir' });
+      if (!ok) return;
+      try {
+        const res = await fetch(`/api/solicitacoes/${id}`, { method: 'DELETE' });
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          showToast('Erro ao excluir: ' + (err.error || res.statusText), 'error');
+          return;
+        }
+        loadTable(currentTab);
+        loadStats();
+        loadAdminStats();
+      } catch (e) {
+        console.error(e);
+        showToast('Erro de rede ao excluir solicitação', 'error');
+      }
+    }
+
+    function switchTab(tab) {
+      currentTab = tab;
+      document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
+      document.querySelectorAll('.tab-content').forEach(c => c.classList.toggle('active', c.id === 'tab-' + tab));
+    }
+
+    function capitalize(str) { return str.charAt(0).toUpperCase() + str.slice(1); }
+    function toggleFilterPanel(tab) { FilterPanel.toggle(capitalize(tab)); }
+    function toggleFilter(btn, tab, key) { FilterPanel.set(capitalize(tab), btn, key); }
+    function clearAllFilters(tab) { FilterPanel.clear(capitalize(tab)); }
+
+
+    function debounceLoad(tab) {
+      clearTimeout(searchTimeout);
+      searchTimeout = setTimeout(() => { adminPages[tab] = 1; loadTable(tab); }, 300);
+    }
+
+    // ── Gráfico de distribuição ──────────────────────────────────
+    function setAdminPeriodo(btn) {
+      document.querySelectorAll('#adminPeriodoBtns .filter-chip').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      adminDias = parseInt(btn.dataset.dias);
+      document.getElementById('adminDe').value = '';
+      document.getElementById('adminAte').value = '';
+      loadAdminStats();
+    }
+
+    function setAdminCustomPeriodo() {
+      document.querySelectorAll('#adminPeriodoBtns .filter-chip').forEach(b => b.classList.remove('active'));
+      document.getElementById('customPeriodoBtn').classList.add('active');
+      adminDias = null;
+      loadAdminStats();
+    }
+
+    function toggleCustomPeriodo() {
+      const pop = document.getElementById('customPeriodoPopover');
+      const isOpen = pop.style.display === 'block';
+      pop.style.display = isOpen ? 'none' : 'block';
+      if (!isOpen) {
+        setTimeout(() => {
+          document.addEventListener('click', closeCustomPeriodoOnOutside, { once: true });
+        }, 0);
+      }
+    }
+
+    function closeCustomPeriodoOnOutside(e) {
+      const pop = document.getElementById('customPeriodoPopover');
+      const btn = document.getElementById('customPeriodoBtn');
+      if (!pop.contains(e.target) && !btn.contains(e.target)) {
+        pop.style.display = 'none';
+      } else {
+        setTimeout(() => {
+          document.addEventListener('click', closeCustomPeriodoOnOutside, { once: true });
+        }, 0);
+      }
+    }
+
+    function closeCustomPeriodo() {
+      document.getElementById('customPeriodoPopover').style.display = 'none';
+    }
+
+    async function loadAdminStats() {
+      try {
+        let url = '/api/admin/stats';
+        const de = document.getElementById('adminDe').value;
+        const ate = document.getElementById('adminAte').value;
+        if (de && ate) {
+          url += '?de=' + de + '&ate=' + ate;
+        } else {
+          url += '?dias=' + (adminDias || 7);
+        }
+        url += '&escopo=' + adminEscopo;
+        const res = await fetch(url);
+        const data = await res.json();
+
+        document.getElementById('adminTotal').textContent = data.total;
+        { const _lbl = document.getElementById('adminTotalLabel'); if (_lbl) _lbl.textContent = adminEscopo === 'todos' ? 'Total' : adminEscopo === 'automacoes' ? 'Automações' : 'Solicitações'; }
+        document.getElementById('adminAvaliacoes').textContent = data.avaliacoes;
+        document.getElementById('adminMediaNota').textContent =
+          data.mediaNotas ? 'Média: ' + data.mediaNotas + '/10' : 'Sem notas ainda';
+
+        const deltaEl = document.getElementById('adminDelta');
+        if (data.delta !== undefined) {
+          const sinal = data.deltaPositivo ? '+' : '';
+          const cor = data.delta === 0 ? 'var(--ink-40)' : data.deltaPositivo ? '#16a34a' : 'var(--danger)';
+          deltaEl.innerHTML = '<span style="color:' + cor + '">' + sinal + data.delta + '% vs período anterior</span>';
+        }
+
+        adminGraficoData = data;
+        renderTopSolicitantes(data.topSolicitantes);
+        renderRecorteSelect();
+        renderAdminGrafico();
+      } catch (e) { console.error(e); }
+    }
+
+    function setAdminEscopo(btn) {
+      document.querySelectorAll('#adminEscopoBtns .filter-chip').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      adminEscopo = btn.dataset.escopo;
+      loadAdminStats();
+    }
+
+    // Base da pizza: cruza tipo x status quando há recorte pela outra dimensão.
+    function getGraficoBase(modo) {
+      const data = adminGraficoData || {};
+      const cross = modo === 'tipo' ? recorteStatus : recorteTipo;
+      if (cross && Array.isArray(data.porTipoStatus)) {
+        const acc = {};
+        data.porTipoStatus.forEach(r => {
+          const other = modo === 'tipo' ? r.status : r.tipo;
+          if (other !== cross) return;
+          const key = modo === 'tipo' ? r.tipo : r.status;
+          acc[key] = (acc[key] || 0) + (r.count || 0);
+        });
+        return Object.keys(acc).map(k => modo === 'tipo' ? { tipo: k, count: acc[k] } : { status: k, count: acc[k] });
+      }
+      return (modo === 'tipo' ? data.porTipo : data.porStatus) || [];
+    }
+
+    function renderRecorteSelect() {
+      const sel = document.getElementById('graficoRecorte');
+      if (!sel || !adminGraficoData) return;
+      const outra = adminGraficoModo === 'tipo' ? 'status' : 'tipo';
+      const cross = adminGraficoModo === 'tipo' ? recorteStatus : recorteTipo;
+      let html;
+      if (outra === 'status') {
+        const vals = (adminGraficoData.porStatus || []).map(i => i.status);
+        html = '<option value="">Todos os status</option>' + vals.map(s => '<option value="' + esc(s) + '"' + (cross === s ? ' selected' : '') + '>Status: ' + esc(getStatus(s).label) + '</option>').join('');
+      } else {
+        const vals = (adminGraficoData.porTipo || []).map(i => i.tipo);
+        html = '<option value="">Todos os tipos</option>' + vals.map(t => '<option value="' + esc(t) + '"' + (cross === t ? ' selected' : '') + '>Tipo: ' + esc((typeof TIPO_SOLICITACAO_LABELS !== 'undefined' && TIPO_SOLICITACAO_LABELS[t]) || t) + '</option>').join('');
+      }
+      sel.innerHTML = html;
+    }
+
+    function setRecorte(val) {
+      if (adminGraficoModo === 'tipo') recorteStatus = val || null;
+      else recorteTipo = val || null;
+      graficoFiltrosAtivos = null;
+      renderAdminGrafico();
+      renderGraficoDropdown(adminGraficoModo);
+    }
+
+    function switchGrafico(modo) {
+      adminGraficoModo = modo;
+      graficoFiltrosAtivos = null;
+      recorteTipo = null; recorteStatus = null;
+      renderRecorteSelect();
+      const btnTipo = document.getElementById('graficoBtnTipo');
+      const btnStatus = document.getElementById('graficoBtnStatus');
+      if (btnTipo) { btnTipo.style.background = modo === 'tipo' ? 'var(--carbon-black)' : 'var(--card-white)'; btnTipo.style.color = modo === 'tipo' ? 'white' : 'var(--carbon-black)'; }
+      if (btnStatus) { btnStatus.style.background = modo === 'status' ? 'var(--carbon-black)' : 'var(--card-white)'; btnStatus.style.color = modo === 'status' ? 'white' : 'var(--carbon-black)'; }
+      renderAdminGrafico();
+    }
+
+    function toggleGraficoFiltro(id) {
+      if (!graficoFiltrosAtivos) return;
+      if (graficoFiltrosAtivos.has(id)) { graficoFiltrosAtivos.delete(id); } else { graficoFiltrosAtivos.add(id); }
+      renderAdminGrafico();
+      renderGraficoDropdown(adminGraficoModo);
+    }
+
+    function resetGraficoFiltros() {
+      graficoFiltrosAtivos = null;
+      renderAdminGrafico();
+      renderGraficoDropdown(adminGraficoModo);
+    }
+
+    function toggleGraficoDropdown(modo) {
+      const ddTipo     = document.getElementById('graficoDropdownTipo');
+      const ddStatus   = document.getElementById('graficoDropdownStatus');
+      const chevTipo   = document.getElementById('graficoChevronTipo');
+      const chevStatus = document.getElementById('graficoChevronStatus');
+      const btnTipo    = document.getElementById('graficoBtnTipo');
+      const btnStatus  = document.getElementById('graficoBtnStatus');
+
+      function posicionarDropdown(dd, btn) {
+        const rect = btn.getBoundingClientRect();
+        const ddWidth = 280;
+        let left = rect.right - ddWidth;
+        if (left < 8) left = 8;
+        dd.style.top  = (rect.bottom + 6) + 'px';
+        dd.style.left = left + 'px';
+      }
+
+      if (modo === 'tipo') {
+        const isOpen = ddTipo.style.display === 'block';
+        ddTipo.style.display   = isOpen ? 'none' : 'block';
+        ddStatus.style.display = 'none';
+        chevTipo.style.transform   = isOpen ? 'rotate(0)' : 'rotate(180deg)';
+        chevStatus.style.transform = 'rotate(0)';
+        if (!isOpen) {
+          posicionarDropdown(ddTipo, btnTipo);
+          if (adminGraficoModo !== 'tipo') switchGrafico('tipo');
+          renderGraficoDropdown('tipo');
+        }
+      } else {
+        const isOpen = ddStatus.style.display === 'block';
+        ddStatus.style.display = isOpen ? 'none' : 'block';
+        ddTipo.style.display   = 'none';
+        chevStatus.style.transform = isOpen ? 'rotate(0)' : 'rotate(180deg)';
+        chevTipo.style.transform   = 'rotate(0)';
+        if (!isOpen) {
+          posicionarDropdown(ddStatus, btnStatus);
+          if (adminGraficoModo !== 'status') switchGrafico('status');
+          renderGraficoDropdown('status');
+        }
+      }
+    }
+
+    function renderTopSolicitantes(lista) {
+      const box = document.getElementById('topSolicitantesBars');
+      if (!box) return;
+      const arr = Array.isArray(lista) ? lista : [];
+      if (!arr.length) { box.innerHTML = '<div style="font-size:0.85rem;color:var(--ink-50);padding:4px 0">Sem solicitações no período.</div>'; return; }
+      const max = Math.max.apply(null, arr.map(x => x.count || 0)) || 1;
+      box.innerHTML = arr.map(x => {
+        const pct = Math.round((x.count || 0) / max * 100);
+        const nome = x.nome || '—';
+        return '<div style="display:flex;align-items:center;gap:12px;margin-bottom:9px">' +
+          '<div style="width:160px;flex-shrink:0;font-size:0.85rem;color:var(--carbon-black);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="' + esc(nome) + '">' + esc(nome) + '</div>' +
+          '<div style="flex:1;min-width:60px;background:var(--icon-bg);border-radius:var(--radius-pill);height:22px;overflow:hidden">' +
+            '<div style="width:' + pct + '%;height:100%;background:var(--ruby-red);border-radius:var(--radius-pill);min-width:3px;transition:width .3s"></div>' +
+          '</div>' +
+          '<div style="width:34px;flex-shrink:0;text-align:right;font-weight:700;font-size:0.9rem;color:var(--carbon-black)">' + (x.count || 0) + '</div>' +
+        '</div>';
+      }).join('');
+    }
+
+    function renderGraficoDropdown(modo) {
+      if (!adminGraficoData) return;
+      const container = document.getElementById(modo === 'tipo' ? 'graficoDropdownTipo' : 'graficoDropdownStatus');
+      if (!container) return;
+      const CORES = ['#AC3631','#221B19','#4a7c2f','#1e40af','#9333ea','#ea580c','#0891b2','#be123c','#854d0e','#166534'];
+      const todosItens = modo === 'tipo'
+        ? getGraficoBase('tipo').map(i => ({ id: i.tipo, label: (typeof TIPO_SOLICITACAO_LABELS !== 'undefined' && TIPO_SOLICITACAO_LABELS[i.tipo]) || i.tipo, value: i.count }))
+        : getGraficoBase('status').map(i => ({ id: i.status, label: getStatus(i.status).label, value: i.count, cor: getStatus(i.status).bg || null }));
+
+      const header = document.createElement('div');
+      header.style.cssText = 'display:flex;justify-content:space-between;align-items:center;padding:4px 6px 8px;border-bottom:1px solid var(--border-light);margin-bottom:4px';
+      header.innerHTML = '<span style="font-size:0.72rem;font-weight:700;opacity:0.4;text-transform:uppercase;letter-spacing:0.05em">Filtrar</span>' +
+        '<button onclick="resetGraficoFiltros()" style="font-size:0.75rem;color:var(--ruby-red);background:none;border:none;cursor:pointer;font-family:\'Nunito Sans\', sans-serif;font-weight:600;padding:0">Todos</button>';
+      container.innerHTML = '';
+      container.appendChild(header);
+
+      todosItens.forEach((item, i) => {
+        const isAtivo = graficoFiltrosAtivos ? graficoFiltrosAtivos.has(item.id) : true;
+        const cor = item.cor || CORES[i % CORES.length];
+        const label = document.createElement('label');
+        label.className = 'dropdown-checkbox-label';
+        label.innerHTML = '<input type="checkbox" ' + (isAtivo ? 'checked' : '') + ' style="accent-color:' + cor + '">' +
+          '<span style="width:8px;height:8px;border-radius:var(--radius-xs);background:' + cor + ';flex-shrink:0;display:inline-block"></span>' +
+          '<span style="flex:1">' + esc(item.label) + '</span>' +
+          '<span style="font-size:0.72rem;opacity:0.4;margin-left:4px">' + item.value + '</span>';
+        label.querySelector('input').addEventListener('change', () => toggleGraficoFiltro(item.id));
+        container.appendChild(label);
+      });
+    }
+
+    function renderAdminGrafico() {
+      if (!adminGraficoData) return;
+
+      const todosItens = adminGraficoModo === 'tipo'
+        ? getGraficoBase('tipo')
+            .filter(i => i.count > 0)
+            .sort((a, b) => b.count - a.count)
+            .map(i => ({
+              id: i.tipo,
+              label: (typeof TIPO_SOLICITACAO_LABELS !== 'undefined' && TIPO_SOLICITACAO_LABELS[i.tipo]) || i.tipo,
+              value: i.count
+            }))
+        : getGraficoBase('status')
+            .filter(i => i.count > 0)
+            .sort((a, b) => b.count - a.count)
+            .map(i => ({
+              id: i.status,
+              label: getStatus(i.status).label,
+              value: i.count,
+              cor: getStatus(i.status).bg || null,
+            }));
+
+      if (graficoFiltrosAtivos === null) {
+        graficoFiltrosAtivos = new Set(todosItens.map(i => i.id));
+      }
+
+      const itens = todosItens.filter(i => graficoFiltrosAtivos.has(i.id));
+      const canvas = document.getElementById('adminPizza');
+      const legenda = document.getElementById('adminLegenda');
+
+      canvas.style.transition = 'opacity 0.18s ease';
+      legenda.style.transition = 'opacity 0.18s ease';
+      canvas.style.opacity = '0';
+      legenda.style.opacity = '0';
+
+      setTimeout(() => {
+        const total = itens.reduce((a, b) => a + b.value, 0);
+        if (total === 0) {
+          legenda.innerHTML = '<p style="opacity:0.4;font-size:0.85rem">Nenhuma solicitação no período.</p>';
+          const ctx = canvas.getContext('2d');
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          canvas.style.opacity = '1';
+          legenda.style.opacity = '1';
+          return;
+        }
+
+        const CORES = ['#AC3631','#221B19','#4a7c2f','#1e40af','#9333ea','#ea580c','#0891b2','#be123c','#854d0e','#166534'];
+        const DPR = window.devicePixelRatio || 1;
+        const SIZE = 200;
+        canvas.width = SIZE * DPR;
+        canvas.height = SIZE * DPR;
+        canvas.style.width = SIZE + 'px';
+        canvas.style.height = SIZE + 'px';
+        const ctx = canvas.getContext('2d');
+        ctx.scale(DPR, DPR);
+        const cx = 100, cy = 100, r = 85, rInner = 50;
+
+        const slices = itens.map((item, i) => ({
+          angle: (item.value / total) * 2 * Math.PI,
+          cor: item.cor || CORES[i % CORES.length],
+        }));
+
+        const duration = 350;
+        const startTime = performance.now();
+
+        function drawFrame(now) {
+          const elapsed = now - startTime;
+          const progress = Math.min(elapsed / duration, 1);
+          const ease = 1 - Math.pow(1 - progress, 3);
+
+          ctx.clearRect(0, 0, 200, 200);
+
+          let sa = -Math.PI / 2;
+          slices.forEach(slice => {
+            const ang = slice.angle * ease;
+            ctx.beginPath();
+            ctx.moveTo(cx, cy);
+            ctx.arc(cx, cy, r, sa, sa + ang);
+            ctx.closePath();
+            ctx.fillStyle = slice.cor;
+            ctx.fill();
+            sa += ang;
+          });
+
+          ctx.beginPath();
+          ctx.arc(cx, cy, rInner, 0, 2 * Math.PI);
+          ctx.fillStyle = getComputedStyle(document.body).getPropertyValue('--paper-white').trim() || '#FFF8F3';
+          ctx.fill();
+
+          if (progress > 0.6) {
+            const alpha = Math.min((progress - 0.6) / 0.4, 1);
+            ctx.globalAlpha = alpha;
+            ctx.fillStyle = '#221B19';
+            ctx.font = 'bold 24px "Nunito Sans", sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(total, cx, cy - 6);
+            ctx.font = '11px "Nunito Sans", sans-serif';
+            ctx.fillStyle = 'var(--ink-40)';
+            ctx.fillText('total', cx, cy + 14);
+            ctx.globalAlpha = 1;
+          }
+
+          if (progress < 1) requestAnimationFrame(drawFrame);
+        }
+
+        requestAnimationFrame(drawFrame);
+
+        legenda.innerHTML = itens.map((item, i) => {
+          const pct = Math.round((item.value / total) * 100);
+          const cor = item.cor || CORES[i % CORES.length];
+          return '<div style="display:flex;align-items:center;gap:8px">' +
+            '<div style="width:10px;height:10px;border-radius:var(--radius-xs);background:' + cor + ';flex-shrink:0"></div>' +
+            '<span style="font-size:0.8rem;flex:1;line-height:1.3">' + esc(item.label) + '</span>' +
+            '<span style="font-size:0.8rem;font-weight:700;opacity:0.7">' + pct + '%</span>' +
+            '<span style="font-size:0.75rem;opacity:0.4">' + item.value + '</span>' +
+            '</div>';
+        }).join('');
+
+        canvas.style.opacity = '1';
+        legenda.style.opacity = '1';
+      }, 180);
+    }
+
+    window.addEventListener('scroll', () => {
+      const ddT = document.getElementById('graficoDropdownTipo');
+      const ddS = document.getElementById('graficoDropdownStatus');
+      if (ddT) ddT.style.display = 'none';
+      if (ddS) ddS.style.display = 'none';
+      const cT = document.getElementById('graficoChevronTipo');
+      const cS = document.getElementById('graficoChevronStatus');
+      if (cT) cT.style.transform = 'rotate(0)';
+      if (cS) cS.style.transform = 'rotate(0)';
+    }, { passive: true });
+
+    document.addEventListener('click', e => {
+      if (!e.target || !document.contains(e.target)) return;
+      const ddTipo   = document.getElementById('graficoDropdownTipo');
+      const ddStatus = document.getElementById('graficoDropdownStatus');
+      const btnTipo   = document.getElementById('graficoBtnTipo');
+      const btnStatus = document.getElementById('graficoBtnStatus');
+      if (ddTipo && ddTipo.style.display === 'block') {
+        if (!btnTipo?.contains(e.target) && !ddTipo.contains(e.target)) {
+          ddTipo.style.display = 'none';
+          const chev = document.getElementById('graficoChevronTipo');
+          if (chev) chev.style.transform = 'rotate(0)';
+        }
+      }
+      if (ddStatus && ddStatus.style.display === 'block') {
+        if (!btnStatus?.contains(e.target) && !ddStatus.contains(e.target)) {
+          ddStatus.style.display = 'none';
+          const chev = document.getElementById('graficoChevronStatus');
+          if (chev) chev.style.transform = 'rotate(0)';
+        }
+      }
+    });
+
+    init();
+  </script>
+<div id="graficoDropdownTipo" style="display:none;position:fixed;z-index:500;background:var(--card-white);border:1px solid var(--border-light);border-radius:var(--radius-lg);box-shadow:0 4px 20px rgba(0,0,0,.12);padding:8px;min-width:280px"></div>
+<div id="graficoDropdownStatus" style="display:none;position:fixed;z-index:500;background:var(--card-white);border:1px solid var(--border-light);border-radius:var(--radius-lg);box-shadow:0 4px 20px rgba(0,0,0,.12);padding:8px;min-width:280px"></div>
+
+<div class="modal-overlay" id="avalModal" onclick="fecharAvaliacao(event)">
+  <div class="modal-card" style="max-width:440px" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <h3 class="modal-title">Avaliação recebida</h3>
+      <button class="modal-close" onclick="fecharAvaliacao()">&times;</button>
+    </div>
+    <div class="modal-body"><div id="avalModalContent"></div></div>
+  </div>
+</div>
+</body>
+</html>

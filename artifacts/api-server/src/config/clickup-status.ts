@@ -6,7 +6,7 @@ function normalizeStatusKey(raw: string): string {
     .trim();
 }
 
-export const CLICKUP_STATUS_MAP: Record<string, string> = {
+/* interno */ const CLICKUP_STATUS_MAP: Record<string, string> = {
   "to do":                      "recebido",
   "recebido":                   "recebido",
   "in progress":                "em-producao",

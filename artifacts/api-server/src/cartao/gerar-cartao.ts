@@ -112,7 +112,7 @@ interface DadosCartao {
  * Gera o SVG do verso com os textos já convertidos em <path> (curvas).
  * Retorna string SVG pronta para preview no browser OU para virar PDF.
  */
-export function gerarVersoSvg(dados: DadosCartao): string {
+/* interno */ function gerarVersoSvg(dados: DadosCartao): string {
   const template = fs.readFileSync(path.join(ASSETS_CARTAO, "verso.svg"), "utf8");
 
   // 1) Remove os <text>...</text> do template (ficam só defs + rect divisória).

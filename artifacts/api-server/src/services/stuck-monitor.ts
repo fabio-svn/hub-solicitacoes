@@ -15,7 +15,7 @@ const DEDUP_DAYS = parseInt(process.env.STUCK_DEDUP_DAYS || "7", 10);
 // Intervalo entre verificações (default 6h).
 const CHECK_INTERVAL_MS = parseInt(process.env.STUCK_CHECK_INTERVAL_MS || String(6 * 60 * 60 * 1000), 10);
 
-export async function checkStuckRequests(): Promise<void> {
+/* interno */ async function checkStuckRequests(): Promise<void> {
   try {
     const cutoff = new Date(Date.now() - STUCK_DAYS * 86400000);
 

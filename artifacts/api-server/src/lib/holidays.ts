@@ -33,7 +33,7 @@ function addDays(d: Date, n: number): Date {
 // Cache por ano: Set de strings 'YYYY-MM-DD'
 const cache = new Map<number, Set<string>>();
 
-export function holidaysForYear(year: number): Set<string> {
+/* interno */ function holidaysForYear(year: number): Set<string> {
   const cached = cache.get(year);
   if (cached) return cached;
 
@@ -60,11 +60,11 @@ export function holidaysForYear(year: number): Set<string> {
   return set;
 }
 
-export function isHoliday(date: Date): boolean {
+/* interno */ function isHoliday(date: Date): boolean {
   return holidaysForYear(date.getFullYear()).has(ymd(date));
 }
 
-export function isBusinessDay(date: Date): boolean {
+/* interno */ function isBusinessDay(date: Date): boolean {
   const w = date.getDay();
   if (w === 0 || w === 6) return false; // domingo/sábado
   return !isHoliday(date);

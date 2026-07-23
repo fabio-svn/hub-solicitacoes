@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <script>(function(){try{const s=JSON.parse(localStorage.getItem('svn_layout_state')||'{}');if(s.isAdmin)document.documentElement.dataset.preShell='admin';}catch(e){}})()</script>
+  <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+  <link rel="manifest" href="/site.webmanifest" />
+  <meta name="theme-color" content="#AC3631" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cartão de Visita - Hub SVN</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap" media="print" onload="this.media='all'">
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap"></noscript>
+  <link rel="stylesheet" href="style.css?v=20260615c">
+  <style>
+    .tipo-option {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 16px 18px;
+      border: 1.5px solid var(--border-light);
+      border-radius: var(--radius-xl);
+      cursor: pointer;
+      transition: border-color .15s, background .15s;
+      margin-bottom: 10px;
+      background: var(--surface);
+    }
+    .tipo-option:hover { border-color: var(--gold-primary); background: var(--icon-bg); }
+    .tipo-option.selected { border-color: var(--gold-primary); background: rgba(193,162,90,.07); }
+    .tipo-option .tipo-icon { width: 38px; height: 38px; border-radius: var(--radius-md); background: var(--icon-bg); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .tipo-option .tipo-label { font-weight: 600; font-size: 0.92rem; }
+    .tipo-option .tipo-desc { font-size: 0.79rem; opacity: 0.6; margin-top: 2px; }
+    .form-step { display: none; }
+    .form-step.active { display: block; }
+  </style>
+</head>
+<body class="page-light">
+  <div id="pageContent">
+  <div class="page-container page-container--narrow">
+
+    <div class="form-card">
+      <div class="svn-stepper" id="formStepper" data-steps="Tipo|Detalhes"></div>
+      <div class="form-progress" style="display:none"><div class="form-progress-bar" id="progressBar" style="width:50%"></div></div>
+      <div class="flex-between">
+        <h2 class="text-md-medium">Cartão de Visita</h2>
+        <span id="stepLabel" style="display:none">Passo 1 de 2</span>
+      </div>
+      <hr class="sep">
+
+      <!-- Passo 1: Escolha do tipo -->
+      <div class="form-step active" id="step1">
+        <h2 style="font-weight:600;font-size:1.1rem;margin-bottom:20px">Qual tipo de cartão você precisa?</h2>
+        <div class="radio-cards step1-escolha">
+          <div class="radio-card" onclick="selectTipo('fisico')" id="cardFisico">
+            <div class="card-icon">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <rect x="1" y="4" width="22" height="16" rx="2" ry="2"/>
+                <line x1="1" y1="10" x2="23" y2="10"/>
+              </svg>
+            </div>
+            <div class="card-label">Cartão Físico</div>
+            <div class="card-desc">Cartão impresso para uso presencial</div>
+          </div>
+          <div class="radio-card" onclick="selectTipo('digital')" id="cardDigital">
+            <div class="card-icon">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+                <line x1="8" y1="21" x2="16" y2="21"/>
+                <line x1="12" y1="17" x2="12" y2="21"/>
+              </svg>
+            </div>
+            <div class="card-label">Cartão Digital</div>
+            <div class="card-desc">Cartão digital enviado por e-mail</div>
+          </div>
+        </div>
+        <div class="form-nav" style="margin-top:24px">
+          <button class="btn btn-primary" id="btnNext1" disabled onclick="irParaPasso2()">Próximo</button>
+        </div>
+      </div>
+
+      <!-- Passo 2: Físico -->
+      <div class="form-step" id="step2Fisico">
+        <button type="button" onclick="voltarPasso1()" class="btn-voltar">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="15 18 9 12 15 6"/></svg>
+          Voltar
+        </button>
+
+        <div class="field" id="fisicoGate">
+          <label>Você é Assessor de Investimentos? <span class="text-ruby">*</span></label>
+          <div style="display:flex;gap:18px;margin-top:6px">
+            <label style="display:flex;align-items:center;gap:7px;cursor:pointer;font-size:0.92rem"><input type="radio" name="ehAssessor" value="sim" onchange="onAssessorChange()"> Sim</label>
+            <label style="display:flex;align-items:center;gap:7px;cursor:pointer;font-size:0.92rem"><input type="radio" name="ehAssessor" value="nao" onchange="onAssessorChange()"> Não</label>
+          </div>
+        </div>
+        <div id="fisicoBloqueado" class="alert-card alert-danger" style="display:none;margin-bottom:16px">
+          <div class="alert-text">Este formulário é de uso exclusivo para Assessores de Investimentos.</div>
+        </div>
+
+        <div id="fisicoFormBody" style="display:none">
+        <div class="alert-card alert-info">
+          <div class="alert-title">Cartão físico</div>
+          <div class="alert-text">Preencha os dados exatamente da forma em que devem constar no cartão impresso.</div>
+        </div>
+
+        <div class="field">
+          <label>Nome no cartão <span class="text-ruby">*</span></label>
+          <input type="text" id="nomeCartaoFisico" placeholder="Nome exatamente como deve aparecer" required>
+        </div>
+        <div class="field">
+          <label>WhatsApp <span class="text-ruby">*</span></label>
+          <input type="tel" id="whatsappFisico" placeholder="(00) 00000-0000" oninput="mascaraTelefone(this)" required>
+        </div>
+        <div class="field">
+          <label>E-mail <span class="text-ruby">*</span></label>
+          <p style="font-size:0.78rem;opacity:0.55;margin:-12px 0 8px">Use o e-mail de assessor (AAI)</p>
+          <input type="email" id="emailCorporativoFisico" placeholder="seu@svninvestimentos.com.br, seu@svncapital.com.br, seu@svnconnect.com.br" required>
+        </div>
+        <div class="field">
+          <label>Unidade <span class="text-ruby">*</span></label>
+          <select id="unidadeFisico" required>
+            <option value="">Selecione a unidade</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Contrato social <span class="text-ruby">*</span></label>
+          <select id="contratoSocialFisico" required>
+            <option value="">Selecione</option>
+          </select>
+        </div>
+        <div class="section-divider">
+          <div id="submitErrorFisico" class="alert-card alert-danger" style="display:none;margin-bottom:16px"></div>
+          <div class="form-nav" style="justify-content:flex-end">
+            <button class="btn btn-primary btn-submit-gold" id="btnSubmitFisico" onclick="submitFormFisico()">Enviar</button>
+          </div>
+        </div>
+        </div>
+      </div>
+
+      <!-- Passo 2: Digital -->
+      <div class="form-step" id="step2Digital">
+        <button type="button" onclick="voltarPasso1()" class="btn-voltar">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="15 18 9 12 15 6"/></svg>
+          Voltar
+        </button>
+
+        <div class="alert-card alert-info">
+          <div class="alert-title">Cartão digital</div>
+          <div class="alert-text">Preencha os dados para criação do cartão digital. O cartão será gerado e entregue automaticamente.</div>
+        </div>
+
+        <div class="field">
+          <label>Nome completo <span class="text-ruby">*</span></label>
+          <input type="text" id="nomeCompletoDigital" placeholder="Seu nome completo" required>
+        </div>
+        <div class="field">
+          <label>Telefone / WhatsApp <span class="text-ruby">*</span></label>
+          <input type="tel" id="telefoneDigital" placeholder="(00) 00000-0000" oninput="mascaraTelefone(this)" required>
+        </div>
+        <div class="field">
+          <label>E-mail <span class="text-ruby">*</span></label>
+          <p style="font-size:0.78rem;opacity:0.55;margin:-12px 0 8px">Use o e-mail de assessor (AAI) ou o corporativo (time interno)</p>
+          <input type="email" id="emailCorporativoDigital" placeholder="seu@svninvest.com.br" required>
+        </div>
+        <div class="field">
+          <label>Contrato social <span class="text-ruby">*</span></label>
+          <select id="contratoSocial" required>
+            <option value="">Selecione</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Foto de perfil <span class="text-ruby">*</span></label>
+          <div style="font-size:0.78rem;opacity:0.55;margin-bottom:8px">Usada na geração do cartão. JPG ou PNG, fundo neutro preferencialmente.</div>
+          <div class="file-input-wrapper">
+            <label class="file-input-btn" for="fotoPerfilDigital">Escolher foto</label>
+            <input type="file" id="fotoPerfilDigital" name="fotoPerfilDigital" accept=".jpg,.jpeg,.png,.webp" required>
+            <div class="file-name" id="fotoPerfilDigitalName"></div>
+          </div>
+        </div>
+        <div class="section-divider">
+          <div id="submitErrorDigital" class="alert-card alert-danger" style="display:none;margin-bottom:16px"></div>
+          <div class="form-nav" style="justify-content:flex-end">
+            <button class="btn btn-primary btn-submit-gold" id="btnSubmitDigital" onclick="submitFormDigital()">Enviar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+
+  </div>
+  <script src="utils.js?v=20260615d"></script>
+  <script src="upload-feedback.js?v=20260615e"></script>
+  <script src="config.js?v=20260615a"></script>
+  <script src="auth.js?v=20260611f"></script>
+  <script src="shell.js?v=20260611f"></script>
+  <script src="form-core.js?v=20260611f"></script>
+  <script>
+    let tipoSelecionado = null;
+
+    function init() {
+      FormCore.initForm({
+        tipo: 'cartao-visita',
+        redirectPath: '/form-cartao-visita.html',
+        activeRoute: 'nova-solicitacao',
+        onReady: function () {
+          const unidadeSel = document.getElementById('unidadeFisico');
+          if (unidadeSel) { UNIDADES_SVN.forEach(u => { const o = document.createElement('option'); o.value = u.nome; o.textContent = u.nome; unidadeSel.appendChild(o); }); }
+
+          const contratosOpts = window._svnFormSchemas?.contratos || [];
+          ['contratoSocialFisico', 'contratoSocial'].forEach(id => {
+            const sel = document.getElementById(id);
+            if (!sel) return;
+            contratosOpts.forEach(c => {
+              const o = document.createElement('option');
+              o.value = c.value;
+              o.textContent = c.label;
+              sel.appendChild(o);
+            });
+          });
+
+          Auth.aplicarPerfilNoCampo('whatsappFisico', Auth.getTelefone());
+          Auth.aplicarPerfilNoCampo('unidadeFisico', Auth.getUnidade());
+          Auth.aplicarPerfilNoCampo('telefoneDigital', Auth.getTelefone());
+
+          FileUpload.bind('fotoPerfilDigital', 'fotoPerfilDigitalName', { accept: '.jpg,.jpeg,.png,.webp', maxMB: 10 });
+        }
+      });
+    }
+
+    function selectTipo(tipo) {
+      tipoSelecionado = tipo;
+      document.getElementById('cardFisico').className = 'radio-card' + (tipo === 'fisico' ? ' selected' : '');
+      document.getElementById('cardDigital').className = 'radio-card' + (tipo === 'digital' ? ' selected' : '');
+      document.getElementById('btnNext1').disabled = false;
+    }
+
+    function selecionarTipo(tipo) { selectTipo(tipo); }
+
+    function irParaPasso2() {
+      if (!tipoSelecionado) return;
+      document.getElementById('step1').classList.remove('active');
+      document.getElementById('step2Fisico').classList.remove('active');
+      document.getElementById('step2Digital').classList.remove('active');
+      document.getElementById('progressBar').style.width = '100%';
+      document.getElementById('stepLabel').textContent = 'Passo 2 de 2';
+      if (tipoSelecionado === 'fisico') {
+        document.getElementById('step2Fisico').classList.add('active');
+      } else {
+        document.getElementById('step2Digital').classList.add('active');
+      }
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function voltarPasso1() {
+      document.getElementById('step2Fisico').classList.remove('active');
+      document.getElementById('step2Digital').classList.remove('active');
+      document.getElementById('step1').classList.add('active');
+      document.getElementById('progressBar').style.width = '50%';
+      document.getElementById('stepLabel').textContent = 'Passo 1 de 2';
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function validateStep(stepId) {
+      return FormCore.validateRequired(null, document.getElementById(stepId));
+    }
+
+    function onAssessorChange() {
+      const val = (document.querySelector('input[name="ehAssessor"]:checked') || {}).value;
+      const body = document.getElementById('fisicoFormBody');
+      const warn = document.getElementById('fisicoBloqueado');
+      body.style.display = (val === 'sim') ? '' : 'none';
+      warn.style.display = (val === 'nao') ? '' : 'none';
+    }
+
+    function submitFormFisico() {
+      if ((document.querySelector('input[name="ehAssessor"]:checked') || {}).value !== 'sim') return;
+      if (!validateStep('step2Fisico')) return;
+      const errEl = document.getElementById('submitErrorFisico');
+      const email = document.getElementById('emailCorporativoFisico').value.trim().toLowerCase();
+      const dominiosOk = ['@svninvestimentos.com.br', '@svncapital.com.br', '@svnconnect.com.br'];
+      if (!dominiosOk.some(function (d) { return email.endsWith(d); })) {
+        errEl.textContent = 'Use um e-mail terminando em @svninvestimentos.com.br, @svncapital.com.br ou @svnconnect.com.br.';
+        errEl.style.display = '';
+        document.getElementById('emailCorporativoFisico').focus();
+        return;
+      }
+      errEl.style.display = 'none';
+      const dados = {
+        nome: Auth.getUserName(),
+        subTipo: 'físico',
+        nomeCartao: document.getElementById('nomeCartaoFisico').value,
+        whatsapp: document.getElementById('whatsappFisico').value,
+        emailCorporativo: document.getElementById('emailCorporativoFisico').value,
+        unidade: document.getElementById('unidadeFisico').value,
+        contrato_social: document.getElementById('contratoSocialFisico').value,
+      };
+      FormCore.submit({ tipo: 'cartao-visita-fisico', dados: dados, btnId: 'btnSubmitFisico' });
+    }
+
+    function submitFormDigital() {
+      if (!validateStep('step2Digital')) return;
+      const dados = {
+        nome: document.getElementById('nomeCompletoDigital').value,
+        telefone: document.getElementById('telefoneDigital').value,
+        email: document.getElementById('emailCorporativoDigital').value,
+        contrato_social: document.getElementById('contratoSocial').value,
+      };
+      FormCore.submit({
+        tipo: 'cartao-visita-digital',
+        dados: dados,
+        files: [{ inputId: 'fotoPerfilDigital', field: 'fotoPerfilDigital' }],
+        btnId: 'btnSubmitDigital',
+      });
+    }
+
+    init();
+  </script>
+</body>
+</html>

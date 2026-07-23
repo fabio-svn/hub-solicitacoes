@@ -53,18 +53,26 @@ export const CARGOS_OPTS = [
   { value: 'socia-assessora', label: 'Sócia e Assessora de Investimentos' },
 ];
 
-// Mantido em espelho com SELOS_ASSESSOR em public/config.js — atualize os dois juntos.
-export const SELOS_LABELS: Record<string, string> = {
-  "ancord": "Ancord",
-  "cea": "CEA",
-  "cfp": "CFP",
-  "cga": "CGA",
-  "cnpi": "CNPI",
-  "cpa10": "CPA-10",
-  "cpa20": "CPA-20",
-  "xp-private": "XP Private",
-  "palestrante-svn": "Palestrante SVN",
-};
+/* SELOS-FONTE-UNICA: era um espelho manual do SELOS_ASSESSOR do config.js — o
+   proprio comentario aqui pedia para atualizar os dois juntos. Agora a lista
+   completa (com icone) mora aqui, vai no payload do /api/form-schemas e o front
+   adota; a lista do config.js fica so como fallback offline. */
+const R2 = "https://pub-a2132f9b61f940659cc98265acfcf64c.r2.dev";
+
+export const SELOS_OPTS: Array<{ id: string; label: string; icon_url: string }> = [
+  { id: "ancord",          label: "Ancord",          icon_url: `${R2}/ancord.webp` },
+  { id: "cea",             label: "CEA",             icon_url: `${R2}/cea.webp` },
+  { id: "cfp",             label: "CFP",             icon_url: `${R2}/CFP-Logo.webp` },
+  { id: "cga",             label: "CGA",             icon_url: `${R2}/cga.webp` },
+  { id: "cnpi",            label: "CNPI",            icon_url: `${R2}/cnpj.webp` },
+  { id: "cpa10",           label: "CPA-10",          icon_url: `${R2}/cpa10.avif` },
+  { id: "cpa20",           label: "CPA-20",          icon_url: `${R2}/cpa20.webp` },
+  { id: "xp-private",      label: "XP Private",      icon_url: `${R2}/xp-private-24.webp` },
+  { id: "palestrante-svn", label: "Palestrante SVN", icon_url: `${R2}/palestrante_certificado.webp` },
+];
+
+export const SELOS_LABELS: Record<string, string> =
+  Object.fromEntries(SELOS_OPTS.map(s => [s.id, s.label]));
 
 // Fonte única de setores: nome (exibição/dropdown) + code (geração de ID no ClickUp).
 // Adicione um setor novo APENAS aqui — a lista de nomes e o mapa de códigos
@@ -647,69 +655,18 @@ export const VALID_TIPOS: string[] = [
   "ch-aniversariantes",
 ];
 
-export const TIPOS_COM_CLICKUP: Array<{ tipo: string; label: string }> = [
-  { tipo: "ch-kit-onboarding",      label: "Kit Onboarding" },
-  { tipo: "ch-atualizacao-pessoas", label: "Atualização de Pessoas nos Sites" },
-  { tipo: "ch-atualizacao-books",   label: "Atualização de Books" },
-  { tipo: "ch-linha-do-tempo",      label: "Linha do Tempo" },
-  { tipo: "ch-aniversariantes",     label: "Aniversariantes do Mês" },
-  { tipo: "eventos",                       label: "Eventos" },
-  { tipo: "artes-divulgacao",              label: "Artes de Divulgação" },
-  { tipo: "atualizacao-material",          label: "Atualização de Material" },
-  { tipo: "conteudo-pdf-informativo",      label: "PDF — Informativo" },
-  { tipo: "apresentacao-nova",             label: "Apresentação — Nova" },
-  { tipo: "apresentacao-atualizar",        label: "Apresentação — Atualização" },
-  { tipo: "pagina-assessores-dados",       label: "Página de Assessores — Dados" },
-  { tipo: "pagina-assessores-atualizacao", label: "Página de Assessores — Atualização" },
-  { tipo: "cartao-visita-fisico",          label: "Cartão de Visita — Físico" },
-  { tipo: "pagina-online",                 label: "Página Online" },
-  { tipo: "outro",                         label: "Outro" },
-  { tipo: "brindes",                       label: "Brindes" },
-  { tipo: "patrocinio",                    label: "Patrocínio" },
-  { tipo: "email-marketing",               label: "E-mail Marketing" },
-  { tipo: "producao-video",                label: "Produção de Vídeo" },
-  { tipo: "sessao-fotos",                  label: "Sessão de Fotos" },
-  { tipo: "materiais-impressos",           label: "Materiais Impressos" },
-];
-
-export function getFormSchemaList() {
-  return Object.values(FORM_SCHEMAS).map(s => {
-    const variantField = s.template_variant_field;
-    const variantOptions = variantField
-      ? (s.fields.find(f => f.name === variantField)?.options ?? [])
-      : [];
-    return {
-      tipo: s.tipo,
-      label: s.label,
-      description: s.description,
-      template_variant_field: variantField ?? null,
-      template_variant_options: variantOptions,
-      field_options: Object.fromEntries(
-        s.fields
-          .filter(fl => Array.isArray(fl.options) && fl.options.length > 0)
-          .map(fl => [fl.name, Object.fromEntries((fl.options ?? []).map(o => [o.value, o.label]))]),
-      ),
-      is_automation: s.is_automation,
-      has_clickup: s.has_clickup,
-      has_approval_flow: s.has_approval_flow,
-      has_downloadable_artifact: s.has_downloadable_artifact,
-      placeholders: [
-        ...s.fields.map(f => f.name),
-        ...(s.computed || []).map(c => c.name),
-      ],
-    };
-  });
-}
-
-
 /* Tipos que existem no sistema mas nao tem entrada em FORM_SCHEMAS — as paginas
    de assessor seguem outro fluxo (validacao interna, sem task no ClickUp).
    Sem isso, `FORM_SCHEMAS[tipo]?.label || tipo` devolvia o slug e ele chegava a
-   sair em notificacao para o assessor. Os textos batem com o
-   TIPO_SOLICITACAO_LABELS do config.js, que o front ja usa. */
+   sair em notificacao para o assessor.
+
+   LABEL-FONTE-UNICA: este mapa agora vai no payload do /api/form-schemas, entao
+   o TIPO_SOLICITACAO_LABELS do config.js e so fallback — o rotulo de um tipo se
+   escreve AQUI, num lugar so. Por isso o bloco subiu no arquivo: o
+   TIPOS_COM_CLICKUP abaixo deriva dele via labelDoTipo(). */
 export const LABELS_EXTRA: Record<string, string> = {
   'apresentacao':                           'Apresentação',
-  'artes-divulgacao':                       'Arte de Divulgação',
+  'artes-divulgacao':                       'Artes de Divulgação',
   'atualizacao-material':                   'Atualização de Material',
   'brindes':                                'Brindes',
   'cartao-visita':                          'Cartão de Visita',
@@ -742,3 +699,65 @@ export function labelDoTipo(tipo: string): string {
   if (!t) return '';
   return FORM_SCHEMAS[t]?.label || LABELS_EXTRA[t] || t;
 }
+
+/* Quais tipos abrem task no ClickUp. So a lista — o rotulo vem de labelDoTipo,
+   senao a mesma solicitacao saia com um nome na tela e outro no titulo da task
+   (era o caso de "artes-divulgacao"). */
+const TIPOS_COM_CLICKUP_IDS: string[] = [
+  "ch-kit-onboarding",
+  "ch-atualizacao-pessoas",
+  "ch-atualizacao-books",
+  "ch-linha-do-tempo",
+  "ch-aniversariantes",
+  "eventos",
+  "artes-divulgacao",
+  "atualizacao-material",
+  "conteudo-pdf-informativo",
+  "apresentacao-nova",
+  "apresentacao-atualizar",
+  "pagina-assessores-dados",
+  "pagina-assessores-atualizacao",
+  "cartao-visita-fisico",
+  "pagina-online",
+  "outro",
+  "brindes",
+  "patrocinio",
+  "email-marketing",
+  "producao-video",
+  "sessao-fotos",
+  "materiais-impressos",
+];
+
+export const TIPOS_COM_CLICKUP: Array<{ tipo: string; label: string }> =
+  TIPOS_COM_CLICKUP_IDS.map(tipo => ({ tipo, label: labelDoTipo(tipo) }));
+
+export function getFormSchemaList() {
+  return Object.values(FORM_SCHEMAS).map(s => {
+    const variantField = s.template_variant_field;
+    const variantOptions = variantField
+      ? (s.fields.find(f => f.name === variantField)?.options ?? [])
+      : [];
+    return {
+      tipo: s.tipo,
+      label: s.label,
+      description: s.description,
+      template_variant_field: variantField ?? null,
+      template_variant_options: variantOptions,
+      field_options: Object.fromEntries(
+        s.fields
+          .filter(fl => Array.isArray(fl.options) && fl.options.length > 0)
+          .map(fl => [fl.name, Object.fromEntries((fl.options ?? []).map(o => [o.value, o.label]))]),
+      ),
+      is_automation: s.is_automation,
+      has_clickup: s.has_clickup,
+      has_approval_flow: s.has_approval_flow,
+      has_downloadable_artifact: s.has_downloadable_artifact,
+      placeholders: [
+        ...s.fields.map(f => f.name),
+        ...(s.computed || []).map(c => c.name),
+      ],
+    };
+  });
+}
+
+

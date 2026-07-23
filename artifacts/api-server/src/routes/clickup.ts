@@ -1482,7 +1482,7 @@ const SNAPSHOT_TTL_MS = Number(process.env.CLICKUP_SNAPSHOT_TTL_MS) || 30000;
 const snapshotCache = new Map<string, { value: ClickUpSnapshot; expiresAt: number }>();
 
 /** Invalida o snapshot em cache de uma task. Chamado após o app escrever na task. */
-export function invalidateSnapshot(taskId: string): void {
+/* interno */ function invalidateSnapshot(taskId: string): void {
   snapshotCache.delete(taskId);
 }
 

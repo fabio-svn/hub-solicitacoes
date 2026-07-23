@@ -28,14 +28,9 @@ declare module "express-session" {
   }
 }
 
-export function getSessionUser(req: Request): SessionUser | undefined {
-  return req.session?.user;
-}
-
-export function isImpersonating(req: Request): boolean {
-  return !!req.session?.adminOriginal;
-}
-
+// AUTH-MW-LIMPO: getSessionUser e isImpersonating viviam aqui sem nenhum
+// chamador. Quem precisa do usuario le req.session.user direto; quem precisa
+// saber de impersonacao olha req.session.adminOriginal.
 export function requireAuth(req: Request, res: Response, next: NextFunction): void {
   if (!req.session?.user) {
     res.status(401).json({ error: "Autenticação necessária" });

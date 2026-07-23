@@ -15,7 +15,7 @@ import { FORM_SCHEMAS } from "../config/form-schemas";
 import { uploadToR2, deleteFromR2 } from "./r2";
 import { gerarArteParaSolicitacao, gerarCartaoFisicoPdf } from "../services/art-generator";
 import { logger } from "../lib/logger";
-import { CONTRATOS_OPTS, MARCAS_OPTS, CARGOS_OPTS, SETORES_LIST, getFormSchemaList, VALID_TIPOS } from "../config/form-schemas";
+import { CONTRATOS_OPTS, MARCAS_OPTS, CARGOS_OPTS, SETORES_LIST, SELOS_OPTS, LABELS_EXTRA, getFormSchemaList, VALID_TIPOS } from "../config/form-schemas";
 import { notificarMarcoBg } from "../services/notifications";
 import { logEventoBg, logAtividade, logAtividadeBg } from "../services/activity-log";
 import { eventosSolicitacaoTable, assessorPublicacoesTable } from "@workspace/db";
@@ -63,12 +63,18 @@ const upload = multer({ dest: os.tmpdir(), limits: { fileSize: 50 * 1024 * 1024,
 
 router.get("/form-schemas", (_req, res) => {
   const schemaList = getFormSchemaList();
-  const labels = Object.fromEntries(schemaList.map(s => [s.tipo, s.label]));
+  // LABELS-EXTRA-NO-PAYLOAD: antes so os tipos com schema vinham aqui, e os ~20
+  // que vivem em LABELS_EXTRA (paginas de assessor, CH, PDF) eram sincronizados
+  // na mao com o TIPO_SOLICITACAO_LABELS do config.js. Mandando os dois, o back
+  // vira fonte unica e a lista do front fica so como fallback offline.
+  // O schema tem prioridade: e o rotulo mais especifico.
+  const labels = { ...LABELS_EXTRA, ...Object.fromEntries(schemaList.map(s => [s.tipo, s.label])) };
   res.json({
     marcas:    MARCAS_OPTS,
     contratos: CONTRATOS_OPTS,
     cargos:    CARGOS_OPTS,
     setores:   SETORES_LIST,
+    selos:     SELOS_OPTS,
     tipos:     schemaList,
     labels,
   });

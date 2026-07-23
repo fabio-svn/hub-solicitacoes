@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <script>(function(){try{const s=JSON.parse(localStorage.getItem('svn_layout_state')||'{}');if(s.isAdmin)document.documentElement.dataset.preShell='admin';}catch(e){}})()</script>
+  <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+  <link rel="manifest" href="/site.webmanifest" />
+  <meta name="theme-color" content="#AC3631" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Apresentação - Hub SVN</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap" media="print" onload="this.media='all'">
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap"></noscript>
+  <link rel="stylesheet" href="style.css?v=20260615c">
+</head>
+<body class="page-light">
+  <div id="pageContent">
+  <div class="page-container page-container--narrow">
+    <div class="form-card">
+      <div class="svn-stepper" id="formStepper" data-steps="Tipo|Material|Detalhes"></div>
+      <div class="form-progress" style="display:none"><div class="form-progress-bar" id="progressBar"></div></div>
+      <div class="flex-between">
+        <h2 class="text-md-medium" id="formTitle">Apresentação</h2>
+        <span style="display:none" id="stepLabel">Etapa 1 de 3</span>
+      </div>
+      <hr class="sep">
+
+      <div class="form-step active" id="step1">
+        <h2 style="font-weight:600;font-size:1.1rem;margin-bottom:8px">Qual tipo de solicitação?</h2>
+        <div class="radio-cards step1-escolha">
+          <div class="radio-card" onclick="selectSubtipo('nova')" id="cardNova">
+            <div class="card-icon">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            </div>
+            <div class="card-label">Nova apresentação</div>
+            <div class="card-desc">Criar uma apresentação do zero ou a partir de uma base existente</div>
+          </div>
+          <div class="radio-card" onclick="selectSubtipo('atualizar')" id="cardAtualizar">
+            <div class="card-icon">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
+            </div>
+            <div class="card-label">Atualizar apresentação</div>
+            <div class="card-desc">Atualizar dados, layout ou conteúdo de uma apresentação existente</div>
+          </div>
+        </div>
+        <div class="form-nav">
+          <button class="btn btn-primary" id="btnNext1" disabled onclick="goToStep2()">Próximo</button>
+        </div>
+      </div>
+
+      <div class="form-step" id="step2">
+        <button type="button" onclick="goToStep1()" class="btn-voltar">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="15 18 9 12 15 6"/></svg>
+          Voltar
+        </button>
+
+        <h2 style="font-weight:600;font-size:1.1rem;margin-bottom:20px">Informações do material</h2>
+
+        <div id="uploadAtualizar" style="display:none">
+          <div class="field">
+            <label>Arquivo ou material atual</label>
+            <div class="file-input-wrapper">
+              <label class="file-input-btn" for="arquivoBase">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                Escolher arquivo
+              </label>
+              <input type="file" id="arquivoBase" accept=".pptx,.pdf,.key">
+              <div class="file-name" id="arquivoBaseName"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Telefone <span class="text-ruby">*</span></label>
+          <input type="tel" id="telefone" placeholder="(00) 00000-0000" oninput="mascaraTelefone(this)" required>
+        </div>
+        <div class="field">
+          <label>Setor <span class="text-ruby">*</span></label>
+          <select id="setor" required>
+            <option value="">Selecione seu setor</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Título do material</label>
+          <input type="text" id="titulo" placeholder="Título da apresentação" required>
+        </div>
+        <div class="field">
+          <label>Finalidade da apresentação</label>
+          <textarea id="finalidade" placeholder="Para que será utilizada? Ex.: apresentação para clientes, treinamento interno..." required></textarea>
+        </div>
+        <div class="field">
+          <label>Tamanho da apresentação</label>
+          <div class="radio-group">
+            <label class="radio-option"><input type="radio" name="tamanho" value="menos30" required><span class="radio-custom"></span><span>Menos de 30 páginas</span></label>
+            <label class="radio-option"><input type="radio" name="tamanho" value="menos100"><span class="radio-custom"></span><span>Menos de 100 páginas</span></label>
+            <label class="radio-option"><input type="radio" name="tamanho" value="mais100"><span class="radio-custom"></span><span>Mais de 100 páginas</span></label>
+          </div>
+          <div class="field-hint" id="slaPrazo" style="display:none"></div>
+        </div>
+        <div class="field" id="tipoCriacaoField">
+          <label>Tipo de criação</label>
+          <div class="radio-group">
+            <label class="radio-option"><input type="radio" name="tipoCriacao" value="base-existente" required><span class="radio-custom"></span><span>Já existe uma base</span></label>
+            <label class="radio-option"><input type="radio" name="tipoCriacao" value="do-zero"><span class="radio-custom"></span><span>Será criada do zero</span></label>
+          </div>
+          <div id="uploadBase" style="display:none;margin-top:12px">
+            <label>Envie o arquivo base</label>
+            <div class="file-input-wrapper">
+              <label class="file-input-btn" for="arquivoBaseNova">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                Escolher arquivo
+              </label>
+              <input type="file" id="arquivoBaseNova" accept=".pptx,.pdf,.key">
+              <div class="file-name" id="arquivoBaseNovaName"></div>
+            </div>
+          </div>
+        </div>
+        <div class="field">
+          <label>Elementos obrigatórios (opcional)</label>
+          <div class="checkbox-group" id="elementos">
+            <label class="checkbox-option"><input type="checkbox" value="Logotipos"><span class="checkbox-custom"></span><span>Logotipos</span></label>
+            <label class="checkbox-option"><input type="checkbox" value="Assinaturas"><span class="checkbox-custom"></span><span>Assinaturas</span></label>
+            <label class="checkbox-option"><input type="checkbox" value="Imagens especificas"><span class="checkbox-custom"></span><span>Imagens específicas</span></label>
+            <label class="checkbox-option"><input type="checkbox" value="Graficos"><span class="checkbox-custom"></span><span>Gráficos</span></label>
+            <label class="checkbox-option"><input type="checkbox" value="Outro"><span class="checkbox-custom"></span><span>Outro</span></label>
+          </div>
+          <div id="elementosDesc" style="display:none;margin-top:8px">
+            <textarea id="elementosDescricao" placeholder="Descreva os elementos obrigatórios..."></textarea>
+          </div>
+        </div>
+        <div class="field">
+          <label>Arquivos de apoio ou referências (opcional)</label>
+          <div class="file-input-wrapper">
+            <label class="file-input-btn" for="arquivoApoio">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+              Escolher arquivo
+            </label>
+            <input type="file" id="arquivoApoio">
+            <div class="file-name" id="arquivoApoioName"></div>
+          </div>
+        </div>
+        <div class="form-nav">
+          
+          <button class="btn btn-primary" onclick="validateStep2() && goStep(3)">Próximo</button>
+        </div>
+      </div>
+
+      <div class="form-step" id="step3">
+        <button type="button" onclick="goStep(2)" class="btn-voltar">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="15 18 9 12 15 6"/></svg>
+          Voltar
+        </button>
+
+        <div class="alert-card alert-danger">
+          <div class="alert-title">Atenção</div>
+          <div class="alert-text">O prazo de entrega pode variar conforme o tamanho e complexidade da apresentação. Em caso de dúvidas, o time entrará em contato via WhatsApp.</div>
+        </div>
+        <h2 style="font-weight:600;font-size:1.1rem;margin-bottom:20px">Informações adicionais</h2>
+        <div class="field">
+          <label>Público-alvo</label>
+          <div class="checkbox-group" id="publico">
+            <label class="checkbox-option"><input type="checkbox" name="publico" value="Clientes" required><span class="checkbox-custom"></span><span>Clientes</span></label>
+            <label class="checkbox-option"><input type="checkbox" name="publico" value="Parceiros"><span class="checkbox-custom"></span><span>Parceiros</span></label>
+            <label class="checkbox-option"><input type="checkbox" name="publico" value="Interno"><span class="checkbox-custom"></span><span>Interno</span></label>
+            <label class="checkbox-option"><input type="checkbox" name="publico" value="Leads"><span class="checkbox-custom"></span><span>Leads</span></label>
+            <label class="checkbox-option"><input type="checkbox" name="publico" value="Divulgação externa em massa"><span class="checkbox-custom"></span><span>Divulgação externa em massa</span></label>
+          </div>
+        </div>
+        <div class="field">
+          <label>Prazo desejado para entrega</label>
+          <input type="date" id="prazoEntrega" required>
+        </div>
+        <div class="field">
+          <label>Observações finais (opcional)</label>
+          <textarea id="observacoes" placeholder="Informações adicionais..."></textarea>
+        </div>
+        <div class="section-divider">
+          <div class="form-nav">
+            
+            <button class="btn btn-primary btn-submit-gold" id="btnSubmit" onclick="submitForm()">Enviar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  </div>
+  <script src="utils.js?v=20260615d"></script>
+  <script src="upload-feedback.js?v=20260615e"></script>
+  <script src="config.js?v=20260615a"></script>
+  <script src="prazo.js?v=20260619a"></script>
+  <script src="auth.js?v=20260611f"></script>
+  <script src="shell.js?v=20260611f"></script>
+  <script src="form-core.js?v=20260611f"></script>
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    let subtipo = params.get('subtipo') || '';
+    let isAtualizar = subtipo === 'atualizar';
+    const TIPOS = { nova: 'apresentacao-nova', atualizar: 'apresentacao-atualizar' };
+    function tipoAtual() { return TIPOS[subtipo] || TIPOS.nova; }
+    function aplicarPrazoMinimo(tamanho) {
+      const prazo = document.getElementById('prazoEntrega');
+      if (!prazo || !window.Prazo) return;
+      const minIso = Prazo.minISO(tipoAtual(), { tamanho: tamanho });
+      if (!minIso) return;
+      prazo.min = minIso;
+      if (prazo.value && prazo.value < minIso) prazo.value = '';
+    }
+
+    function selectSubtipo(tipo) {
+      subtipo = tipo;
+      isAtualizar = tipo === 'atualizar';
+      document.getElementById('cardNova').className = 'radio-card' + (tipo === 'nova' ? ' selected' : '');
+      document.getElementById('cardAtualizar').className = 'radio-card' + (tipo === 'atualizar' ? ' selected' : '');
+      document.getElementById('btnNext1').disabled = false;
+    }
+
+    function goToStep1() {
+      document.querySelectorAll('.form-step').forEach(s => s.classList.remove('active'));
+      document.getElementById('step1').classList.add('active');
+      document.getElementById('progressBar').style.width = '33%';
+      document.getElementById('stepLabel').textContent = 'Etapa 1 de 3';
+      window.scrollTo(0, 0);
+    }
+
+    function goToStep2() {
+      document.getElementById('step1').classList.remove('active');
+      document.getElementById('step2').classList.add('active');
+      document.getElementById('progressBar').style.width = '66%';
+      document.getElementById('stepLabel').textContent = 'Etapa 2 de 3';
+      document.getElementById('formTitle').textContent = isAtualizar ? 'Atualizar Apresentação' : 'Nova Apresentação';
+      document.getElementById('uploadAtualizar').style.display = isAtualizar ? 'block' : 'none';
+      document.getElementById('tipoCriacaoField').style.display = isAtualizar ? 'none' : 'block';
+      window.scrollTo(0, 0);
+    }
+
+    function init() {
+      FormCore.initForm({
+        tipo: 'apresentacoes',
+        draft: true,
+        redirectPath: '/form-apresentacoes.html',
+        activeRoute: 'nova-solicitacao',
+        onReady: function () {
+          if (subtipo) goToStep2();
+
+          if (window.Prazo) Prazo.ready.then(function () {
+            const sel = document.querySelector('input[name="tamanho"]:checked');
+            const el = document.getElementById('slaPrazo');
+            if (sel && el) { el.style.display = 'block'; el.textContent = 'Prazo estimado: ' + Prazo.labelDias(tipoAtual(), { tamanho: sel.value }); aplicarPrazoMinimo(sel.value); }
+          });
+
+          document.querySelectorAll('input[name="tamanho"]').forEach(r => r.addEventListener('change', () => {
+            const el = document.getElementById('slaPrazo');
+            el.style.display = 'block';
+            el.textContent = 'Prazo estimado: ' + (window.Prazo ? Prazo.labelDias(tipoAtual(), { tamanho: r.value }) : '');
+            aplicarPrazoMinimo(r.value);
+          }));
+
+          document.querySelectorAll('input[name="tipoCriacao"]').forEach(r => r.addEventListener('change', () => {
+            const checked = document.querySelector('input[name="tipoCriacao"]:checked');
+            document.getElementById('uploadBase').style.display = checked?.value === 'base-existente' ? 'block' : 'none';
+          }));
+
+          document.querySelectorAll('#elementos input').forEach(cb => cb.addEventListener('change', () => {
+            const any = [...document.querySelectorAll('#elementos input')].some(c => c.checked);
+            document.getElementById('elementosDesc').style.display = any ? 'block' : 'none';
+          }));
+
+          ['arquivoBase', 'arquivoBaseNova', 'arquivoApoio'].forEach(id => { FileUpload.bind(id, id + 'Name'); });
+        }
+      });
+    }
+
+    function validateStep2() {
+      return FormCore.validateRequired(function(inv) {
+        if (isAtualizar && !document.getElementById('arquivoBase').files[0]) {
+          FormCore.markInvalid(inv, document.getElementById('uploadAtualizar').querySelector('.field'), 'Arquivo obrigatório.');
+        }
+      }, document.getElementById('step2'));
+    }
+
+    function goStep(step) {
+      document.querySelectorAll('.form-step').forEach(s => s.classList.remove('active'));
+      document.getElementById('step' + step).classList.add('active');
+      const progress = step === 1 ? 33 : step === 2 ? 66 : 100;
+      document.getElementById('progressBar').style.width = progress + '%';
+      document.getElementById('stepLabel').textContent = `Etapa ${step} de 3`;
+      window.scrollTo(0, 0);
+    }
+
+    function validateRequiredFields() {
+      return FormCore.validateRequired(null, document.querySelector('.form-step.active'));
+    }
+
+    function submitForm() {
+      if (!validateRequiredFields()) return;
+      {
+        const _tam = document.querySelector('input[name="tamanho"]:checked')?.value;
+        const _prazo = document.getElementById('prazoEntrega');
+        const _minIso = (window.Prazo && _tam) ? Prazo.minISO(tipoAtual(), { tamanho: _tam }) : '';
+        if (_minIso && _prazo && _prazo.value) {
+          if (_prazo.value < _minIso) {
+            const _fw = _prazo.closest('.field');
+            if (_fw) {
+              _fw.classList.add('field-invalid');
+              let _er = _fw.querySelector('.field-error');
+              if (!_er) { _er = document.createElement('div'); _er.className = 'field-error'; _prazo.parentElement.appendChild(_er); }
+              const [_y,_m,_d] = _minIso.split('-');
+              _er.textContent = `Para esse tamanho, a data mínima de entrega é ${_d}/${_m}/${_y} (prazo do time).`;
+              _fw.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+            return;
+          }
+        }
+      }
+
+      const tipoCriacao = document.querySelector('input[name="tipoCriacao"]:checked')?.value;
+      if (!isAtualizar && tipoCriacao === 'base-existente' && !document.getElementById('arquivoBaseNova').files[0]) {
+        goToStep2();
+        setTimeout(() => {
+          const fieldEl = document.getElementById('uploadBase');
+          if (fieldEl) {
+            fieldEl.classList.add('field-invalid');
+            let errorEl = fieldEl.querySelector('.field-error');
+            if (!errorEl) {
+              errorEl = document.createElement('div');
+              errorEl.className = 'field-error';
+              fieldEl.appendChild(errorEl);
+            }
+            errorEl.textContent = 'Envie o arquivo base para continuar.';
+            fieldEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }
+        }, 50);
+        return;
+      }
+
+      const elementos = [...document.querySelectorAll('#elementos input:checked')].map(c => c.value);
+      const dados = {
+        nome: Auth.getUserName(),
+        telefone: document.getElementById('telefone').value,
+        setor: document.getElementById('setor')?.value || '',
+        titulo: document.getElementById('titulo').value,
+        finalidade: document.getElementById('finalidade').value,
+        tamanho: document.querySelector('input[name="tamanho"]:checked')?.value || '',
+        tipoCriacao: tipoCriacao || '',
+        elementos: elementos.join(', '),
+        elementosDescricao: document.getElementById('elementosDescricao')?.value || '',
+        publicoAlvo: [...document.querySelectorAll('#publico input:checked')].map(c => c.value).join(', '),
+        prazoEntrega: document.getElementById('prazoEntrega').value,
+        observacoes: document.getElementById('observacoes').value,
+      };
+      FormCore.submit({
+        tipo: TIPOS[subtipo] || TIPOS.nova,
+        subtipo: subtipo,
+        draftTipo: 'apresentacoes',
+        dados: dados,
+        files: [
+          { inputId: 'arquivoBase', field: 'arquivoBase' },
+          { inputId: 'arquivoBaseNova', field: 'arquivoBase' },
+          { inputId: 'arquivoApoio', field: 'arquivoApoio' },
+        ],
+        resumo: { titulo: dados.titulo, setor: dados.setor, subtipo: subtipo },
+        btnId: 'btnSubmit',
+      });
+    }
+
+    init();
+  </script>
+
+</body>
+</html>

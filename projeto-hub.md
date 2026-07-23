@@ -1,13 +1,2412 @@
 # Pack do Projeto Hub SVN
 
-Gerado em: 2026-07-23 13:34:12
+Gerado em: 2026-07-23 18:40:40
 
 Roots: artifacts/api-server lib scripts
 
 ---
 
 
-## File: artifacts/api-server/backup-convite-templates-1783947796614.json
+## File: artifacts/api-server/build.mjs
+
+```
+import { createRequire } from "node:module";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+import { build as esbuild } from "esbuild";
+import esbuildPluginPino from "esbuild-plugin-pino";
+import { rm } from "node:fs/promises";
+import { cpSync } from "node:fs";
+
+// Plugins (e.g. 'esbuild-plugin-pino') may use `require` to resolve dependencies
+globalThis.require = createRequire(import.meta.url);
+
+const artifactDir = path.dirname(fileURLToPath(import.meta.url));
+
+async function buildAll() {
+  const distDir = path.resolve(artifactDir, "dist");
+  await rm(distDir, { recursive: true, force: true });
+
+  await esbuild({
+    entryPoints: [path.resolve(artifactDir, "src/index.ts")],
+    platform: "node",
+    bundle: true,
+    format: "esm",
+    outdir: distDir,
+    outExtension: { ".js": ".mjs" },
+    logLevel: "info",
+    // Some packages may not be bundleable, so we externalize them, we can add more here as needed.
+    // Some of the packages below may not be imported or installed, but we're adding them in case they are in the future.
+    // Examples of unbundleable packages:
+    // - uses native modules and loads them dynamically (e.g. sharp)
+    // - use path traversal to read files (e.g. @google-cloud/secret-manager loads sibling .proto files)
+    external: [
+      "*.node",
+      "sharp",
+      "fontkit",
+      "pdfkit",
+      "svg-to-pdfkit",
+      "better-sqlite3",
+      "sqlite3",
+      "canvas",
+      "bcrypt",
+      "argon2",
+      "fsevents",
+      "re2",
+      "farmhash",
+      "xxhash-addon",
+      "bufferutil",
+      "utf-8-validate",
+      "ssh2",
+      "cpu-features",
+      "dtrace-provider",
+      "isolated-vm",
+      "lightningcss",
+      "pg-native",
+      "oracledb",
+      "mongodb-client-encryption",
+      "nodemailer",
+      "handlebars",
+      "knex",
+      "typeorm",
+      "protobufjs",
+      "onnxruntime-node",
+      "@tensorflow/*",
+      "@prisma/client",
+      "@mikro-orm/*",
+      "@grpc/*",
+      "@swc/*",
+      "@aws-sdk/*",
+      "@azure/*",
+      "@opentelemetry/*",
+      "@google-cloud/*",
+      "@google/*",
+      "googleapis",
+      "firebase-admin",
+      "@parcel/watcher",
+      "@sentry/profiling-node",
+      "@tree-sitter/*",
+      "aws-sdk",
+      "classic-level",
+      "dd-trace",
+      "ffi-napi",
+      "grpc",
+      "hiredis",
+      "kerberos",
+      "leveldown",
+      "miniflare",
+      "mysql2",
+      "newrelic",
+      "odbc",
+      "piscina",
+      "realm",
+      "ref-napi",
+      "rocksdb",
+      "sass-embedded",
+      "sequelize",
+      "serialport",
+      "snappy",
+      "tinypool",
+      "usb",
+      "workerd",
+      "wrangler",
+      "zeromq",
+      "zeromq-prebuilt",
+      "playwright",
+      "puppeteer",
+      "puppeteer-core",
+      "electron",
+    ],
+    sourcemap: "linked",
+    plugins: [
+      // pino relies on workers to handle logging, instead of externalizing it we use a plugin to handle it
+      esbuildPluginPino({ transports: ["pino-pretty"] })
+    ],
+    // Make sure packages that are cjs only (e.g. express) but are bundled continue to work in our esm output file
+    banner: {
+      js: `import { createRequire as __bannerCrReq } from 'node:module';
+import __bannerPath from 'node:path';
+import __bannerUrl from 'node:url';
+
+globalThis.require = __bannerCrReq(import.meta.url);
+globalThis.__filename = __bannerUrl.fileURLToPath(import.meta.url);
+globalThis.__dirname = __bannerPath.dirname(globalThis.__filename);
+    `,
+    },
+  });
+
+  // Copy assets (fonts + assinatura images) to dist so they're available at runtime
+  const assetsDir = path.resolve(artifactDir, "assets");
+  const distAssetsDir = path.resolve(distDir, "assets");
+  cpSync(assetsDir, distAssetsDir, { recursive: true });
+}
+
+buildAll().catch((err) => {
+  console.error(err);
+  process.exit(1);
+});
+
+```
+
+
+## File: artifacts/api-server/docs/admin-dashboard.md
+
+```
+# Admin & Dashboard
+
+## Páginas de acompanhamento
+
+| Página | Arquivo | Acesso | Descrição |
+|---|---|---|---|
+| Minhas solicitações | `dashboard.html` | Todos os usuários autenticados | Lista as próprias solicitações (ou todas, se gestor/admin) |
+| Painel admin | `admin.html` | `admin`, `gestor` | Visão geral de todas as solicitações |
+| Usuários | `admin-usuarios.html` | `admin` | Gerencia usuários e roles |
+| ClickUp Listas | `admin-clickup-lists.html` | `admin` | Configura qual lista ClickUp recebe cada tipo |
+| Templates de Arte | `admin-templates.html` | `admin` | Gerencia templates de geração automática |
+| Assets | `admin-assets.html` | `admin` | Biblioteca de imagens/logos usados nos templates |
+| Log de atividades | `admin-log.html` | `admin`, `gestor` | Histórico de eventos do sistema |
+| Tombamentos | `admin-tombamentos.html` | `admin` | Geração em massa de assinaturas e cartões digitais |
+| Capital Humano | `capital-humano.html` | `capital_humano`, `admin` | Seleção de formulários exclusivos do setor |
+
+---
+
+## Dashboard (`dashboard.html`)
+
+### Contadores no topo
+
+- **Em andamento** — solicitações com status diferente de `concluido` e `cancelado`
+- **Concluídas** — solicitações com status `concluido`
+
+### Abas
+
+| Aba | Conteúdo |
+|---|---|
+| **Solicitações gerais** | Todos os tipos exceto `eventos` |
+| **Eventos** | Apenas tipo `eventos` |
+
+### Filtros disponíveis
+
+- **Período:** Hoje / 7 dias / 30 dias / Todos
+- **Tipo:** lista de tipos de solicitação
+- **Status:** lista dos status (`STATUS_SOLICITACAO`)
+- **Alertas:** solicitações com pendência de aprovação
+
+Implementados via `filters.js` com estado local e callback de re-renderização.
+
+### Cards de solicitação
+
+Cada card exibe:
+- Título da solicitação
+- Tipo (label amigável)
+- Data de criação
+- Badge de status (cor conforme `STATUS_SOLICITACAO`)
+- Badge **"APROVAÇÃO"** em vermelho se status for `em-aprovacao` e não lido
+- Botão **"Baixar"** se houver `entrega_links`
+
+---
+
+## Status das solicitações
+
+Lista completa de status com seus slugs internos:
+
+| Slug | Label | Cor de fundo |
+|---|---|---|
+| `recebido` | Recebido | Cinza escuro |
+| `alinhamentos` | Alinhamentos | Azul |
+| `em-analise` | Em análise | Amarelo |
+| `em-andamento` | Em andamento | Amarelo |
+| `em-producao` | Em produção | Laranja |
+| `em-revisao` | Em revisão | Roxo |
+| `em-aprovacao` | Em aprovação | Azul |
+| `cotacao-aprovacao` | Em cotação / aprovação | Azul |
+| `aguardando` | Aguardando informação | Marrom |
+| `aguardando-rh` | Aguardando aprovação do RH | Marrom |
+| `aguardando-pagamento` | Aguardando pagamento | Marrom |
+| `aguardando-finalizacao` | Aguardando finalização | Roxo |
+| `concluido` | Concluído | Verde |
+| `cancelado` | Cancelado | Vermelho |
+| `em-espera` | Em espera | Cinza escuro |
+| `gerando` | Gerando arte | Azul claro |
+| `erro` | Erro | Vermelho claro |
+| `aguardando-validacao` | Aguardando validação | Cinza claro |
+| `aguardando-contrato` | Aguardando contrato | Âmbar claro |
+| `validado` | Validado | Azul claro |
+| `envio-grafica` | Envio gráfica | Índigo claro |
+| `envio-assessor` | Envio assessor | Verde claro |
+| `reprovado` | Reprovado | Vermelho claro |
+
+---
+
+## Gerenciamento de usuários (`admin-usuarios.html`)
+
+- **Listagem** com busca por nome/e-mail
+- **Criar usuário:** formulário com e-mail, nome, role e ClickUp user ID opcional
+- **Alterar role:** dropdown inline para cada usuário (roles: Colaborador, Capital Humano, Gestor, Admin)
+- **Impersonation:** admins e gestores podem logar como outro usuário via `POST /api/admin/impersonate`
+
+> Não é possível alterar a própria role.
+
+---
+
+## Tombamentos (`admin-tombamentos.html`)
+
+Funcionalidade para geração em lote de assinaturas de e-mail e cartões digitais a partir de uma planilha.
+
+**Fluxo:**
+1. Admin faz upload de Excel/CSV com lista de colaboradores
+2. Opcionalmente, faz upload de um ZIP com fotos de perfil (nomes de arquivo correspondendo aos nomes da planilha)
+3. O sistema processa cada linha e gera assinatura de e-mail e/ou cartão digital para cada pessoa
+4. Resultado disponível como ZIPs para download (`assinaturas_zip_url`, `cartoes_zip_url`)
+5. Links expiram conforme `expires_at`
+
+**Rotas de API envolvidas:**
+- `POST /api/admin/tombamentos` — cria um novo lote
+- `GET /api/admin/tombamentos` — lista lotes
+- `PATCH /api/admin/tombamentos/:id` — atualiza status e URLs de entrega
+- `POST /api/admin/tombamentos/parse` — valida e interpreta o arquivo de planilha
+
+---
+
+## Templates de Arte (`admin-templates.html`)
+
+Interface para criação e edição dos templates usados pela geração automática.
+
+- Templates são armazenados na tabela `art_templates`
+- Cada template tem `tipo` (tipo de solicitação) e `variant_value` (ex.: slug de marca)
+- A configuração (`config` JSONB) define camadas: imagem de fundo, textos, posições, fontes, cores
+- Templates com `is_active = false` são ignorados pela geração
+- Assets (imagens) são gerenciados separadamente em `admin-assets.html`
+
+---
+
+## Log de Atividades (`admin-log.html`)
+
+Exibe registros da tabela `activity_log` com:
+- Filtro por tipo de evento, nível, período
+- Busca por e-mail de usuário ou título de solicitação
+- Detalhes expandíveis por entrada
+
+---
+
+## Fluxo de aprovação de arte (detalhe da solicitação)
+
+Para tipos com aprovação (`solicitacao.html`):
+
+1. Quando status muda para `em-aprovacao`, a seção "Materiais para aprovação" aparece com badge **NOVO** (destacada com borda vermelha no primeiro acesso).
+2. O usuário expande o acordeão e vê links para os arquivos.
+3. Escolhe **"Aprovado"** → `POST /api/solicitacoes/:id/aprovacao` → notificação ao time.
+4. Ou escolhe **"Solicitar alterações"** → digita observações → enviadas ao time → status muda para `reprovado`.
+5. Quando o time revisa, uma nova rodada começa (novo conjunto de links na mesma solicitação).
+6. Após aprovação final, pesquisa de satisfação opcional aparece.
+
+O histórico de rodadas é armazenado localmente no `localStorage` do navegador (chave `svn_rodadas_<id>`).
+
+```
+
+
+## File: artifacts/api-server/docs/arquitetura.md
+
+```
+# Arquitetura
+
+## Stack e camadas
+
+```
+┌─────────────────────────────────────────────┐
+│  Navegador (HTML/CSS/JS vanilla)             │
+│  auth.js · shell.js · form-core.js · etc.   │
+└──────────────────┬──────────────────────────┘
+                   │ HTTP (fetch)
+┌──────────────────▼──────────────────────────┐
+│  Express 5 (Node.js ESM / TypeScript)        │
+│  src/app.ts  ←  src/routes/index.ts          │
+│  ┌──────────┐ ┌────────┐ ┌────────────────┐ │
+│  │ forms.ts │ │auth.ts │ │   admin.ts     │ │
+│  └──────────┘ └────────┘ └────────────────┘ │
+│  ┌──────────┐ ┌─────────┐ ┌─────────────┐  │
+│  │clickup.ts│ │webhook  │ │  assets.ts  │  │
+│  └──────────┘ └─────────┘ └─────────────┘  │
+└──┬──────────────────────────────────────────┘
+   │
+   ├── PostgreSQL (Drizzle ORM)  — sessions, users, solicitacoes, …
+   ├── Cloudflare R2              — arquivos de upload, artes geradas
+   ├── ClickUp API                — cria e consulta tarefas
+   ├── n8n Webhooks               — dispara automações de geração
+   └── MySQL Contatos (legado)    — perfil do usuário (telefone, unidade)
+```
+
+## Fluxo de uma solicitação (Mermaid)
+
+```mermaid
+sequenceDiagram
+    participant U as Usuário (browser)
+    participant E as Express /api/solicitacoes
+    participant DB as PostgreSQL
+    participant R2 as Cloudflare R2
+    participant CU as ClickUp API
+    participant N8N as n8n Webhook
+    participant WH as POST /webhook/clickup
+
+    U->>E: POST /api/solicitacoes (FormData)
+    E->>E: requireAuth, normalizeFormDados
+    E->>DB: INSERT solicitacoes (status=recebido)
+    E->>R2: upload arquivos anexados
+    E->>DB: INSERT arquivos (urls R2)
+    E->>CU: createTask (lista por tipo)
+    E->>DB: UPDATE clickup_task_id
+    E-->>U: 201 { id, clickup_task_id }
+
+    Note over E,N8N: Em background (não bloqueia resposta)
+    E->>N8N: POST webhook (geração automática, se tipo automação)
+
+    Note over CU,WH: Time de Marketing atualiza status no ClickUp
+    CU-->>WH: POST /webhook/clickup (status update)
+    WH->>WH: valida HMAC x-signature
+    WH->>DB: UPDATE solicitacoes.status
+    WH->>N8N: dispara notificação (se em-aprovacao ou concluido)
+
+    U->>E: GET /api/solicitacoes/:id
+    E->>DB: SELECT
+    E-->>U: { status, dados, entrega_links, … }
+```
+
+## Estrutura de pastas comentada
+
+```
+artifacts/api-server/
+├── build.mjs                   # script de build com esbuild (ESM)
+├── package.json                # dependências e scripts npm
+├── tsconfig.json               # TypeScript (compilação)
+├── tsconfig.typecheck.json     # TypeScript (type-check sem emit)
+│
+├── public/                     # arquivos estáticos servidos pelo Express
+│   ├── *.html                  # páginas (uma por tela)
+│   ├── auth.js                 # client de sessão/perfil
+│   ├── config.js               # constantes de UI (categorias, status, labels)
+│   ├── form-core.js            # engine de formulários (init/validate/submit)
+│   ├── filters.js              # painéis de filtro reutilizáveis
+│   ├── shell.js                # navbar/sidebar global
+│   ├── utils.js                # helpers (esc, humanizeValue, masks, Modal)
+│   ├── upload-feedback.js      # feedback visual em inputs de arquivo
+│   ├── toast.js                # notificações não-bloqueantes e confirmações
+│   └── ibge-loader.js          # estados/cidades via API IBGE (cache 24h)
+│
+└── src/
+    ├── app.ts                  # monta o Express (middleware, rotas, erros)
+    ├── index.ts                # entry-point: inicializa DB, sobe o servidor
+    │
+    ├── assets/                 # recursos estáticos embarcados no servidor
+    │   ├── fonts/              # IvyJournal-Light.ttf, RoobertPRO-Regular.otf
+    │   └── imagens/            # assets base para geração de assinaturas
+    │
+    ├── cartao/
+    │   └── gerar-cartao.ts     # gerador de cartão físico (PDF com fontes vetorizadas)
+    │
+    ├── config/
+    │   ├── clickup-status.ts   # mapa ClickUp status → Hub status interno
+    │   ├── form-schemas.ts     # fonte única de tipos de formulário e campos
+    │   └── unidades.ts         # endereços das unidades SVN
+    │
+    ├── lib/
+    │   ├── logger.ts           # configuração do pino
+    │   ├── mysqlContatos.ts    # pool MySQL para busca de perfil por email
+    │   └── r2-client.ts        # singleton S3Client para o R2
+    │
+    ├── middleware/
+    │   └── auth.middleware.ts  # requireAuth, requireRole
+    │
+    ├── routes/
+    │   ├── index.ts            # agrega sub-routers e define prefixos
+    │   ├── forms.ts            # CRUD de solicitações, /form-schemas
+    │   ├── admin.ts            # usuários, tombamentos, ClickUp config
+    │   ├── auth.ts             # login MSAL, callback, /me, logout
+    │   ├── clickup.ts          # criação de tarefas e consultas ClickUp
+    │   ├── webhook.ts          # recebe updates do ClickUp via HMAC
+    │   ├── r2.ts               # upload/delete no R2
+    │   ├── assets.ts           # biblioteca de assets para templates
+    │   └── health.ts           # GET /healthz
+    │
+    ├── scripts/
+    │   ├── import-cartoes.ts   # importa histórico CSV de cartões físicos
+    │   ├── migrate-assignments.ts  # migra assignees do env para o banco
+    │   └── seed-art-templates.ts   # semeie templates de arte padrão
+    │
+    ├── services/
+    │   ├── activity-log.ts     # registra eventos em eventos_solicitacao
+    │   ├── art-generator.ts    # orquestra geração automática de artes
+    │   ├── notifications.ts    # dispara webhooks n8n nos marcos do fluxo
+    │   ├── pdf-renderer.ts     # converte template para PDF via pdf-lib
+    │   └── template-renderer.ts # motor de renderização de imagem via sharp
+    │
+    ├── types/
+    │   ├── art-template.ts     # tipos do sistema de templates
+    │   ├── express.d.ts        # extensão de tipos do Express (session.user)
+    │   └── vendor-shims.d.ts   # shims de módulos sem @types
+    │
+    └── utils/
+        └── api-error.ts        # classe ApiError com factories estáticas
+```
+
+```
+
+
+## File: artifacts/api-server/docs/backend.md
+
+```
+# Backend
+
+## Montagem do servidor (`src/app.ts` / `src/index.ts`)
+
+`src/index.ts` é o entry-point: inicializa o schema do banco (tabelas `CREATE TABLE IF NOT EXISTS`) e sobe o Express. `src/app.ts` monta os middlewares e rotas.
+
+**Middlewares (em ordem):**
+
+| Middleware | Finalidade |
+|---|---|
+| `helmet` | Headers de segurança HTTP |
+| `compression` | GZIP |
+| `cors` | Restringe origens a `ALLOWED_ORIGIN` |
+| `express-rate-limit` | Limite separado para `/auth` e `/api` |
+| `pino-http` | Logging estruturado de requisições |
+| `express.json()` + `express.urlencoded()` | Parsers de body |
+| `cookie-parser` | Parsing de cookies |
+| `express-session` + `connect-pg-simple` | Sessões persistidas no PostgreSQL |
+| `multer` | Upload de arquivos multipart (configurado em `forms.ts`) |
+
+## Rotas
+
+### `POST /api/solicitacoes` — criar solicitação
+
+Fluxo completo:
+
+1. **`requireAuth`** — verifica sessão ativa.
+2. **Parse do FormData** — `multer` extrai arquivos; body JSON é parseado.
+3. **`normalizeFormDados(tipo, dados)`** — normaliza chaves para snake_case via `KEY_MAP`, remove campos vazios, aplica transformações por tipo (ex.: `cd_ancord` do perfil, contagem de selos).
+4. **`validateFormDados(tipo, dados)`** — verifica `REQUIRED_FIELDS[tipo]`; retorna 400 se faltarem campos.
+5. **INSERT em `solicitacoes`** — status inicial `recebido`.
+6. **Upload de arquivos para R2** — cada arquivo vai para `r2/<uuid>.<ext>`; URLs salvas em `arquivos`.
+7. **`createClickUpTask(tipo, dados, solicitacaoId)`** — monta descrição estruturada e cria tarefa na lista ClickUp correta (configurada em `tipo_clickup_list` ou fallback para env vars).
+8. **UPDATE `clickup_task_id`** no banco.
+9. **Resposta 201** com `{ id, clickup_task_id }`.
+10. **Background:** dispara `triggerArtGeneration(id, tipo, dados)` se for tipo de automação — não bloqueia a resposta.
+
+### `GET /api/solicitacoes` — listar
+
+- Colaboradores veem apenas as próprias. Admins/gestores veem todas.
+- Filtros: `status`, `tipo`, `search` (título), `from`/`to` (data), `page`/`limit`.
+- Retorna paginação + array de solicitações com status formatado.
+
+### `GET /api/solicitacoes/:id` — detalhe
+
+- Colaboradores só acessam as próprias (403 caso contrário).
+- Retorna todos os campos, arquivos, `entrega_links` e `avaliacao`.
+
+### `PATCH /api/solicitacoes/:id/aprovacao` — aprovar arte
+
+- Disponível para o dono da solicitação.
+- Marca a solicitação como aprovada e notifica o time via n8n.
+
+### `GET /api/solicitacoes/:id/entrega` — links de entrega
+
+- Retorna `{ links, status }` para que o frontend exiba o botão de download.
+
+### `GET /api/form-schemas` — metadados dos formulários
+
+- Não requer autenticação.
+- Retorna `{ marcas, contratos, cargos, setores, tipos, labels }`.
+- Usado pelo `config.js` do frontend na inicialização.
+
+### `GET /api/config` — configuração de UI
+
+- Não requer autenticação.
+- Retorna URLs de recursos (logo, manual, vídeo hero, email de upload, lista de unidades).
+
+---
+
+## `normalizeFormDados` e `KEY_MAP`
+
+`normalizeFormDados(tipo, dados)` é responsável por garantir que os dados cheguem ao banco e ao ClickUp sempre no formato canônico **snake_case**.
+
+```
+KEY_MAP = {
+  // camelCase legado → snake_case canônico
+  nomeCartao     → nome_cartao
+  emailCorporativo → email_corporativo
+  contratoSocial   → contrato_social
+  isPrivateKey     → is_private_key
+  modeloCartao     → modelo_cartao
+  // ... (~20 mapeamentos)
+}
+```
+
+A função percorre todas as chaves do objeto `dados`, renomeia via `KEY_MAP`, remove valores `null`/`undefined`/`""`, e aplica transformações específicas por tipo (ex.: injeta `cd_ancord` do perfil do usuário para tipos de assessor).
+
+> O campo `dados` é armazenado como `jsonb` no PostgreSQL. A convenção snake_case é a forma canônica. Dados enviados antes da migração 8.3 usavam camelCase — o script `migrate-assignments.ts` e o `normalizeFormDados` tratam ambas as formas.
+
+---
+
+## Geração de artefatos
+
+A geração automática ocorre após o `POST /api/solicitacoes` em background:
+
+```
+art-generator.ts
+  └─ busca art_templates ativos para tipo + variant (marca/contrato)
+  └─ template-renderer.ts (sharp)
+       └─ baixa assets (logos, fotos) via fetch
+       └─ compõe imagem PNG
+  └─ pdf-renderer.ts (pdf-lib)        ← se o template gera PDF
+  └─ gerar-cartao.ts (pdfkit)         ← para cartão físico (vetorizado)
+  └─ uploadToR2()
+  └─ UPDATE solicitacoes.entrega_links + status → concluido
+       └─ notifications.ts dispara webhook n8n (notificação ao usuário)
+```
+
+Se a geração falhar, `status` é atualizado para `erro` e `erro_geracao` recebe a mensagem.
+
+---
+
+## Webhook do ClickUp (`POST /webhook/clickup`)
+
+1. Valida assinatura HMAC-SHA256 no header `x-signature` usando `CLICKUP_WEBHOOK_SECRET`.
+2. Extrai `task_id` e `status` do payload.
+3. Busca `solicitacao` por `clickup_task_id`.
+4. Mapeia o status ClickUp para status interno via `CLICKUP_STATUS_MAP`.
+5. Atualiza `solicitacoes.status` no banco.
+6. Se novo status for `em-aprovacao` ou `concluido`, dispara notificação via `notifications.ts`.
+
+---
+
+## Autenticação (`src/routes/auth.ts`)
+
+Fluxo Microsoft MSAL (OAuth 2.0 Authorization Code + PKCE):
+
+```
+GET /auth/login
+  └─ MSAL gera authorization URL → redireciona para Microsoft
+
+GET /auth/callback
+  └─ MSAL troca code por token
+  └─ extrai email (@svninvest.com.br obrigatório)
+  └─ busca/cria usuário em usersTable
+  └─ busca perfil em MySQL Contatos (telefone, unidade, cargo, cd_ancord)
+  └─ popula req.session.user e req.session.userProfile
+  └─ redireciona para ?redirect= ou /
+
+GET /auth/me          → { authenticated, user, profile, pendentes }
+GET /auth/me-profile  → { profile }
+GET /auth/logout      → destrói sessão, redireciona para /
+```
+
+---
+
+## Middleware de autorização
+
+```ts
+// Verifica apenas autenticação
+requireAuth
+
+// Verifica autenticação + role
+requireRole("admin")
+requireRole("admin", "gestor")
+requireRole("capital_humano", "gestor", "admin")
+```
+
+Roles disponíveis: `colaborador` (padrão), `gestor`, `admin`, `capital_humano`.
+
+```
+
+
+## File: artifacts/api-server/docs/como-rodar.md
+
+```
+# Como Rodar
+
+## Pré-requisitos
+
+- **Node.js** 20+ (use `.nvmrc` ou o runtime configurado no Replit/Railway)
+- **pnpm** 9+ (gerenciador de pacotes do monorepo)
+- **PostgreSQL** 15+ acessível via `DATABASE_URL`
+
+## Instalação
+
+```bash
+# Na raiz do monorepo
+pnpm install
+```
+
+Isso instala as dependências de todos os pacotes do workspace (`api-server`, `db`, `api-zod`, `mockup-sandbox`).
+
+## Variáveis de ambiente
+
+Copie `.env.example` para `.env` e preencha os valores. Nunca commite `.env`.
+
+| Variável | Obrigatória | Descrição |
+|---|---|---|
+| `PORT` | Opcional | Porta Express (Railway injeta automaticamente) |
+| `NODE_ENV` | Sim | `development` ou `production` |
+| `LOG_LEVEL` | Opcional | `trace`/`debug`/`info`/`warn`/`error`/`fatal` (padrão: `info`) |
+| `ALLOWED_ORIGIN` | Sim | URL pública do app para CORS (sem barra final) |
+| `DATABASE_URL` | Sim | Connection string PostgreSQL |
+| `SESSION_SECRET` | Sim | Chave para assinar cookies de sessão (gere com `openssl rand -base64 48`) |
+| `MSAL_TENANT_ID` | Sim | Tenant ID do Azure AD |
+| `MSAL_CLIENT_ID` | Sim | Client ID do App Registration |
+| `MSAL_CLIENT_SECRET` | Sim | Client Secret do App Registration |
+| `MSAL_REDIRECT_URI` | Sim | URI de callback cadastrada no Azure (deve bater exatamente) |
+| `R2_ACCOUNT_ID` | Sim | ID da conta Cloudflare |
+| `R2_BUCKET` | Sim | Nome do bucket R2 |
+| `R2_ACCESS_KEY` | Sim | Access Key do R2 |
+| `R2_SECRET_KEY` | Sim | Secret Key do R2 |
+| `R2_PUBLIC_URL` | Sim | URL pública base do bucket (sem barra final) |
+| `CLICKUP_API_TOKEN` | Sim | Token de acesso do ClickUp |
+| `CLICKUP_WEBHOOK_SECRET` | Opcional | HMAC secret do webhook ClickUp |
+| `CLICKUP_LIST_GERAL` | Sim | ID da lista ClickUp para solicitações gerais |
+| `CLICKUP_LIST_EVENTOS` | Sim | ID da lista ClickUp para eventos |
+| `CLICKUP_LIST_BRINDES` | Sim | ID da lista ClickUp para brindes |
+| `CLICKUP_LIST_PATROCINIO` | Sim | ID da lista ClickUp para patrocínio |
+| `CLICKUP_ASSIGNEE_GERAL` | Sim | ID do usuário ClickUp responsável padrão |
+| `CLICKUP_ASSIGNEE_EVENTOS` | Sim | ID do usuário ClickUp para eventos |
+| `CLICKUP_ASSIGNEE_BRINDES` | Sim | ID do usuário ClickUp para brindes |
+| `CLICKUP_ASSIGNEE_PATROCINIO` | Sim | ID do usuário ClickUp para patrocínio |
+| `WEBHOOK_CARTAO_FISICO` | Sim | URL n8n para geração de cartão físico |
+| `WEBHOOK_CARTAO_DIGITAL` | Sim | URL n8n para geração de cartão digital |
+| `WEBHOOK_BOAS_VINDAS` | Sim | URL n8n para cartão de boas-vindas |
+| `WEBHOOK_NPS` | Sim | URL n8n para arte NPS |
+| `WEBHOOK_CONVITE_FP` | Sim | URL n8n para convite Financial Planning |
+| `WEBHOOK_CERTIFICADO` | Sim | URL n8n para certificado |
+| `WEBHOOK_COMEMORATIVO` | Sim | URL n8n para cartão comemorativo |
+| `INTERNAL_API_SECRET` | Sim | Chave HMAC para chamadas internas (n8n → API) |
+| `MYSQL_CONTATOS` | Opcional | `mysql://user:pass@host:3306/db` para perfis de assessores |
+| `URL_LOGO_BRANCA` | Opcional | URL SVG do logo branco (fallback para CDN R2) |
+| `URL_LOGO_PRETA` | Opcional | URL SVG do logo preto |
+| `URL_MANUAL` | Opcional | URL do PDF do manual de eventos |
+| `URL_TUTORIAL_TRANSMISSAO` | Opcional | URL do tutorial de transmissão |
+| `URL_VIDEO_HERO` | Opcional | URL do vídeo de fundo da tela de eventos |
+| `EMAIL_UPLOAD` | Opcional | E-mail de notificação de upload |
+
+## Comandos de desenvolvimento
+
+```bash
+# Roda o build e sobe o servidor em modo desenvolvimento
+pnpm --filter @workspace/api-server run dev
+
+# Somente build (esbuild → dist/)
+pnpm --filter @workspace/api-server run build
+
+# Somente start (precisa que dist/ já exista)
+pnpm --filter @workspace/api-server run start
+
+# Type-check sem emit
+pnpm --filter @workspace/api-server run typecheck
+```
+
+> O comando `dev` executa **build + start** em sequência. Não há watch mode — para recarregar, reinicie o processo manualmente (ou use o botão "Run" no Replit).
+
+## Rodar no Replit
+
+O Replit gerencia o processo via Workflow configurado:
+
+```
+pnpm --filter @workspace/api-server run dev
+```
+
+- O servidor escuta na porta injetada pela variável `PORT`.
+- As variáveis de ambiente são configuradas em **Secrets** no painel do Replit.
+- Para reiniciar: clique em **Run** na barra superior ou use o painel de Workflows.
+
+## Deploy no Railway
+
+1. Crie um projeto Railway e adicione um serviço **PostgreSQL** e um serviço **Node**.
+2. Conecte o repositório Git ao serviço Node.
+3. Configure o **Start Command**:
+   ```
+   pnpm --filter @workspace/api-server run start
+   ```
+4. Configure o **Build Command** (ou use o Nixpacks do Railway):
+   ```
+   pnpm install && pnpm --filter @workspace/api-server run build
+   ```
+5. Adicione todas as variáveis de ambiente em **Settings → Variables**.
+6. O Railway injeta `DATABASE_URL` automaticamente quando o banco é vinculado ao serviço.
+
+## Migrações de banco
+
+O `src/index.ts` chama `db.execute(sql`CREATE TABLE IF NOT EXISTS ...`)` na inicialização — o schema é criado automaticamente na primeira subida. Para alterações de schema, edite `packages/db/src/schema/index.ts` e suba o servidor (Drizzle não executa migrações automáticas destrutivas).
+
+> TODO: verificar se existe script de migração Drizzle (`drizzle-kit push` ou `migrate`) configurado no monorepo.
+
+## Scripts one-off
+
+```bash
+# Migrar assignees de env vars para o banco (seguro re-rodar)
+pnpm --filter @workspace/api-server run migrate-assignments
+
+# Semear templates de arte padrão (idempotente)
+pnpm --filter @workspace/api-server run seed-art-templates
+
+# Importar histórico CSV de cartões físicos (dry-run por padrão)
+pnpm tsx artifacts/api-server/src/scripts/import-cartoes.ts --csv caminho/arquivo.csv
+# Para aplicar de verdade:
+pnpm tsx artifacts/api-server/src/scripts/import-cartoes.ts --csv caminho/arquivo.csv --apply
+```
+
+Veja detalhes sobre cada script em [scripts.md](scripts.md).
+
+```
+
+
+## File: artifacts/api-server/docs/convencoes.md
+
+```
+# Convenções
+
+## Tokens de marca SVN
+
+Definidos como variáveis CSS globais no CSS compartilhado das páginas. Os valores abaixo refletem o uso no código.
+
+### Cores principais
+
+| Token CSS | Valor | Uso |
+|---|---|---|
+| `--carbon-black` | `#221b19` | Texto principal |
+| `--ruby-red` | `#AC3631` | Cor de destaque/brand (botões primários, bordas de aprovação) |
+| `--gold` | `#C98A00` (aprox.) | Status em andamento/análise; botões dourados |
+| `--icon-bg` | `rgba(34,27,25,0.06)` | Fundo de ícones e badges neutros |
+
+### Status e cores de badge
+
+Os status têm suas cores definidas em `STATUS_SOLICITACAO` no `config.js`. A convenção é sempre usar `bg` (background) e `text` (cor do texto) do objeto de status, nunca cores hardcoded por slug.
+
+```js
+const s = getStatus('em-aprovacao');
+// s.bg  = "#2563C0"
+// s.text = "#FFFFFF"
+badge.style.background = s.bg;
+badge.style.color = s.text;
+```
+
+### Tipografia
+
+- **Fonte de texto:** `RoobertPRO-Regular` (usada nos artefatos gerados; não carregada no frontend web)
+- **Fonte de títulos em artes:** `IvyJournal-Light` (usada nos artefatos gerados)
+- No frontend web: `system-ui` / stack de fontes do navegador
+
+### Classes CSS utilitárias recorrentes
+
+| Classe | Uso |
+|---|---|
+| `.page-container` | Wrapper central das páginas |
+| `.page-container--narrow` | Versão estreita para formulários |
+| `.form-card` | Card com sombra para seções do formulário |
+| `.field` | Wrapper de campo (label + input + error) |
+| `.field-error` | Mensagem de erro de validação |
+| `.required-star` | Asterisco vermelho em campos obrigatórios |
+| `.btn` | Base de botão |
+| `.btn-submit-gold` | Botão primário dourado |
+| `.btn-download-page` | Botão de download em página de detalhe |
+| `.svn-stepper` | Indicador de progresso multi-step |
+| `.form-step` | Container de uma etapa do formulário |
+| `.search-bar` | Input de busca padronizado |
+
+---
+
+## Padrões de código
+
+### TypeScript / Node.js
+
+- **Módulos:** ESM (`"type": "module"` no package.json). Use `import`/`export`, nunca `require`.
+- **Build:** esbuild via `build.mjs`. O output vai para `dist/index.mjs`. Não é necessário `tsc` para rodar — apenas para type-check.
+- **Type-check:** `pnpm typecheck` (não faz emit). Rode antes de commitar em mudanças de tipos.
+- **Async:** use `async/await`. Evite callbacks encadeados.
+- **Erros:** lance `ApiError` (de `src/utils/api-error.ts`) para erros esperados. O handler central em `app.ts` os serializa corretamente.
+- **Logging:** use `req.log` (pino injetado pelo `pino-http`) dentro de rotas. Nunca use `console.log` em produção.
+
+### Rotas Express
+
+- Todas as rotas definem o tipo de retorno explicitamente: `async (req, res): Promise<void>`.
+- O middleware de autenticação (`requireAuth` / `requireRole`) vem sempre antes da lógica de negócio.
+- Resposta de erro segue o padrão: `res.status(NNN).json({ error: "Mensagem legível" })`.
+
+### JavaScript frontend
+
+- Vanilla JS (sem framework). Módulos não são usados — os scripts são carregados via `<script>` em ordem.
+- Escaping HTML: sempre use `window.esc(str)` ao injetar conteúdo dinâmico no DOM (evita XSS).
+- Não use `innerHTML` com dados do usuário sem `esc()`.
+
+### Nomenclatura
+
+| Contexto | Convenção |
+|---|---|
+| Tipos de solicitação (`tipo_solicitacao`) | kebab-case (`assinatura-email`, `cartao-visita-digital`) |
+| Campos de formulário no banco (`dados` JSONB) | snake_case (`nome_assinatura`, `contrato_social`) |
+| Variáveis JS no frontend | camelCase |
+| Variáveis TypeScript | camelCase (objetos) / UPPER_SNAKE_CASE (constantes de módulo) |
+| IDs de elementos HTML | kebab-case |
+| Classes CSS | kebab-case |
+| Variáveis de ambiente | UPPER_SNAKE_CASE |
+
+### Banco de dados
+
+- Todas as tabelas têm `id serial PRIMARY KEY` e `created_at timestamp`.
+- Dados de formulário vão no campo `dados jsonb` — não crie colunas por campo.
+- Novos campos que precisem de indexação devem ser colunas explícitas (ex.: `status`, `tipo_solicitacao`).
+- Migrações: atualmente feitas com `CREATE TABLE IF NOT EXISTS` na inicialização. Para alterações destrutivas ou adição de índices, crie um script em `src/scripts/`.
+
+### Variáveis de ambiente
+
+- Nunca acesse `process.env` diretamente no código de rota — centralize a leitura em `src/config/` ou no topo do arquivo de inicialização.
+- Variáveis sem valor padrão razoável são `[obrigatório]` — o servidor não deve subir silenciosamente sem elas.
+- Documente toda nova variável no `.env.example` com comentário explicativo.
+
+---
+
+## Estrutura de uma nova integração
+
+Se precisar adicionar uma nova integração externa:
+
+1. Crie o cliente em `src/lib/<servico>.ts`
+2. Exponha funções nomeadas (não o cliente bruto) para os consumers
+3. Trate ausência de credenciais graciosamente (retorne `null` ou logue aviso, não lance exceção no boot)
+4. Documente as variáveis de ambiente necessárias no `.env.example`
+5. Adicione a integração em [integracoes.md](integracoes.md)
+
+```
+
+
+## File: artifacts/api-server/docs/form-schemas.md
+
+```
+# Schema de Formulários
+
+## O que é `form-schemas.ts`
+
+`src/config/form-schemas.ts` é a **fonte única de verdade** para metadados de formulários. Ele define:
+
+- Quais tipos de formulário existem
+- Quais campos cada tipo tem (nome, label, tipo de input, required, options)
+- Quais opções aparecem em selects/radios (marcas, contratos, cargos, setores)
+- Os `REQUIRED_FIELDS` validados no backend
+- Os `field_options` usados para resolver labels de valores no detalhe da solicitação
+
+O endpoint `GET /api/form-schemas` expõe esses dados ao frontend. O `config.js` faz fetch desse endpoint na inicialização e popula `window._svnFormSchemas` e `window._svnFieldLabels`.
+
+> **Não edite os fallbacks em `config.js`** — eles existem apenas para evitar tela em branco se o endpoint falhar. A fonte real é `form-schemas.ts`.
+
+---
+
+## Estrutura de um schema de tipo
+
+```ts
+// Exemplo simplificado
+const FORM_SCHEMAS: Record<string, FormSchema> = {
+  "assinatura-email": {
+    tipo: "assinatura-email",
+    label: "Assinatura de E-mail",
+    fields: [
+      {
+        name: "nome_assinatura",
+        label: "Nome para assinatura",
+        type: "text",         // text | email | tel | select | radio | textarea | file
+        required: true,
+        options: null,
+      },
+      {
+        name: "cargo",
+        label: "Cargo",
+        type: "select",
+        required: true,
+        options: CARGOS_OPTS,   // array de { value, label }
+      },
+      {
+        name: "marca",
+        label: "Marca",
+        type: "radio",
+        required: true,
+        options: MARCAS_OPTS,
+      },
+    ],
+    field_options: {
+      // Mapa valor → label usado no detalhe da solicitação
+      // Chave = nome do campo, valor = { [opcao]: label_legível }
+      marca: {
+        "svn-investimentos": "SVN Investimentos",
+        "svn-gestao": "SVN Gestão",
+        // ...
+      }
+    }
+  }
+};
+```
+
+---
+
+## `REQUIRED_FIELDS`
+
+```ts
+const REQUIRED_FIELDS: Record<string, string[]> = {
+  "assinatura-email": ["nome_assinatura", "cargo", "marca", "contrato_social"],
+  "cartao-visita-digital": ["nome_cartao", "cargo", "whatsapp", "email_corporativo", "marca"],
+  // ...
+};
+```
+
+A função `validateFormDados(tipo, dados)` em `forms.ts` itera sobre `REQUIRED_FIELDS[tipo]` e retorna erro 400 se algum campo estiver ausente ou vazio no payload.
+
+> Os campos em `REQUIRED_FIELDS` são os validados **no servidor**. O atributo `required: true` nos schemas é informativo para o frontend (asterisco visual, validação client-side via `FormCore.validateRequired`).
+
+---
+
+## Listas compartilhadas
+
+| Constante | Conteúdo | Usado em |
+|---|---|---|
+| `CONTRATOS_OPTS` | Contratos sociais SVN (Investimentos, Capital, Connect…) | Cartão de Visita, Assinatura, Arte NPS… |
+| `MARCAS_OPTS` | Marcas SVN (Investimentos, Gestão, Global, Corporate…) | Maioria dos formulários de identidade |
+| `CARGOS_OPTS` | Cargos de assessores | Cartão de Visita, Assinatura |
+| `SETORES_LIST` | Lista de strings de setores | Formulários internos |
+| `SETOR_CODIGO_MAP` | `{ setor: código }` para montar IDs no ClickUp | `createClickUpTask` |
+
+---
+
+## Endpoint `/api/form-schemas`
+
+Resposta:
+
+```json
+{
+  "marcas":    [{ "value": "svn-investimentos", "label": "SVN Investimentos" }, ...],
+  "contratos": [{ "value": "svn-investimentos", "label": "SVN Investimentos" }, ...],
+  "cargos":    [{ "value": "assessor", "label": "Assessor de Investimentos" }, ...],
+  "setores":   ["Administração", "Alocação", ...],
+  "tipos":     [{ "tipo": "assinatura-email", "label": "Assinatura de E-mail", "fields": [...], "field_options": {...} }, ...],
+  "labels":    { "assinatura-email": "Assinatura de E-mail", ... }
+}
+```
+
+---
+
+## Passo a passo para adicionar um novo tipo de formulário
+
+### 1. Definir o schema em `form-schemas.ts`
+
+```ts
+// Adicione a chave no objeto FORM_SCHEMAS
+"novo-tipo": {
+  tipo: "novo-tipo",
+  label: "Meu Novo Tipo",
+  fields: [
+    { name: "titulo", label: "Título", type: "text", required: true },
+    { name: "descricao", label: "Descrição", type: "textarea", required: true },
+  ],
+  field_options: {},
+},
+```
+
+### 2. Definir campos obrigatórios em `REQUIRED_FIELDS`
+
+```ts
+"novo-tipo": ["titulo", "descricao"],
+```
+
+### 3. Adicionar label em `TIPO_SOLICITACAO_LABELS` no `config.js`
+
+```js
+"novo-tipo": "Meu Novo Tipo",
+```
+
+> Isso é fallback do frontend. O backend também envia via `/api/form-schemas`.
+
+### 4. Adicionar à categoria em `CATEGORIAS_SOLICITACAO` no `config.js`
+
+```js
+{
+  categoria: "Marketing e conteúdo",
+  itens: [
+    // ... itens existentes ...
+    { id: "novo-tipo", label: "Meu Novo Tipo", icon: "icon-file-text", ativo: true },
+  ]
+}
+```
+
+### 5. Criar a página HTML do formulário
+
+Crie `public/form-novo-tipo.html` seguindo o padrão das páginas existentes (veja [frontend.md](frontend.md)). O `FORM_ROUTES` em `solicitacoes.html` (ou equivalente) precisa mapear `"novo-tipo"` para a URL `"/form-novo-tipo.html"`.
+
+### 6. Configurar rota ClickUp (opcional)
+
+Se o tipo deve ir para uma lista ClickUp dedicada, adicione via painel admin em `/admin-clickup-lists.html` ou configure as variáveis `CLICKUP_LIST_*` no `.env`.
+
+### 7. Configurar geração automática (se aplicável)
+
+Se o tipo gera material automaticamente, adicione-o à lista `TIPOS_AUTOMACAO` em `forms.ts` e configure a URL do webhook n8n correspondente (`WEBHOOK_NOVO_TIPO` no `.env`).
+
+---
+
+## Editar um tipo existente
+
+- Para **adicionar campo**: adicione em `fields` e em `REQUIRED_FIELDS` se obrigatório. Dados antigos não terão o campo — `humanizeValue` trata ausências graciosamente.
+- Para **remover campo**: remova de `fields` e `REQUIRED_FIELDS`. Dados antigos que tiverem o campo continuam exibidos via fallback em `humanizeValue`.
+- Para **alterar opções de select/radio**: atualize `options` e `field_options`. Dados antigos com valores removidos aparecem como o próprio slug (fallback em `humanizeValue`).
+
+```
+
+
+## File: artifacts/api-server/docs/frontend.md
+
+```
+# Frontend
+
+O frontend é construído em HTML/CSS/JS vanilla, sem framework. Cada tela é um arquivo `.html` independente em `public/`. Arquivos JS compartilhados são carregados via `<script>` em ordem específica.
+
+## Arquivos JS compartilhados
+
+### `auth.js`
+
+Gerencia a sessão do usuário no lado cliente.
+
+- **`Auth.init()`** — busca `/auth/me` e popula `Auth.user` (nome, email, role). Usa cache de sessionStorage de 5 minutos para evitar requisições repetidas.
+- **`Auth.isAuthenticated()`** — retorna `true` se há usuário na sessão.
+- **`Auth.getRole()`** / **`Auth.getUserName()`** — acessores do perfil.
+- **`Auth.getProfile()`** — retorna dados estendidos (telefone, unidade, cargo, cd_ancord), vindos do MySQL Contatos via `/auth/me-profile`.
+- **`Auth.aplicarPerfilNoCampo(fieldId, valor)`** — preenche automaticamente um campo do formulário com dados do cadastro e exibe hint "Pré-preenchido do seu cadastro".
+- **`Auth.marcarComoLido(id)`** / **`Auth.isPendente(id)`** — controla o badge de notificação de aprovações pendentes não lidas (localStorage).
+- **`Auth.temPendencias()`** / **`Auth.getPendentesCount()`** — usados pelo `Shell` para renderizar o badge numérico no ícone de sino.
+
+### `config.js`
+
+Constantes de UI e configuração carregadas do servidor na inicialização.
+
+- Define `CATEGORIAS_SOLICITACAO` (categorias e itens do menu de seleção de formulário).
+- Define `TIPO_SOLICITACAO_LABELS` (mapa `tipo → label` para exibição).
+- Define `STATUS_SOLICITACAO` (lista de status com `id`, `label`, `bg`, `text`) e `getStatus(id)`.
+- Na inicialização, faz `fetch('/api/config')` e `fetch('/api/form-schemas')` para sobrescrever os fallbacks locais com dados do servidor (marcas, contratos, cargos, setores, labels).
+- Expõe `window._svnFormSchemas` e `window._svnFieldLabels` para formulários que precisam de options dinâmicas.
+
+### `form-core.js`
+
+Motor de formulários. Todas as páginas de formulário dependem deste arquivo.
+
+| Função | Descrição |
+|---|---|
+| `FormCore.initForm({ tipo, onReady, draft, ... })` | Inicializa o formulário: verifica autenticação, restaura rascunho do localStorage, injeta dados do perfil, chama `onReady`. |
+| `FormCore.validateRequired(extraValidate?, scopeEl?)` | Valida campos obrigatórios no escopo (ou em todo o form). Suporta grupos radio/checkbox e visibilidade condicional. Retorna `true` se ok. |
+| `FormCore.submit({ tipo, dados, files, ... })` | Monta `FormData`, faz `POST /api/solicitacoes` e redireciona para `thankyou.html`. |
+| `FormCore.renderStepper(el, steps, current)` | Renderiza o indicador de progresso de etapas no elemento `el`. |
+| `FormCore.saveDraft(tipo, dados)` | Salva rascunho no localStorage com chave `svn_draft_<tipo>`. |
+| `FormCore.clearDraft(tipo)` | Remove rascunho após submit bem-sucedido. |
+
+### `filters.js`
+
+Engine de painéis de filtro para listagens (admin, dashboard).
+
+| Função | Descrição |
+|---|---|
+| `FilterPanel.register(id, { state, onChange })` | Vincula um DOM ID a um objeto de estado e callback de mudança. |
+| `FilterPanel.set(id, btn, key)` | Ativa um filtro e chama `onChange`. |
+| `FilterPanel.clear(id)` | Reseta todos os filtros do painel. |
+| `FilterPanel.toggle(id)` | Abre/fecha o dropdown de filtros. |
+
+### `shell.js`
+
+Layout global (header + sidebar).
+
+| Função | Descrição |
+|---|---|
+| `Shell.render({ activeRoute, contentEl })` | Injeta header e sidebar no DOM com a rota ativa destacada. |
+| `Shell.toggleSidebar()` | Controla o estado aberto/fechado da sidebar no mobile. |
+
+A sidebar exibe itens diferentes conforme a role do usuário (ex.: "Capital Humano" só aparece para `capital_humano` e `admin`; "Admin" só para `admin` e `gestor`).
+
+### `utils.js`
+
+Funções utilitárias globais.
+
+| Função | Descrição |
+|---|---|
+| `window.esc(str)` | Escapa HTML para evitar XSS. |
+| `humanizeValue(key, value)` | Converte valores de banco (slugs, booleans, IDs) em texto legível em português. Usa `_svnFieldLabels` como primeira fonte, com fallbacks para strings comuns. |
+| `mascaraTelefone(el)` | Aplica máscara `(XX) XXXXX-XXXX` ao input. |
+| `mascaraMoeda(el)` | Aplica máscara monetária `R$ X.XXX,XX`. |
+| `Modal.open(id)` / `Modal.close(id)` | Controla modais por ID de elemento. |
+| `autoResizeTextarea(el)` | Expande textareas conforme o conteúdo. |
+
+### `upload-feedback.js`
+
+Feedback visual para inputs de arquivo.
+
+- **`FileUpload.bind(inputId, nameElId, options)`** — ao selecionar arquivo: exibe nome, tamanho, ícone de sucesso/erro. Valida extensões permitidas e tamanho máximo (em MB). Não faz upload — isso é responsabilidade do `FormCore.submit`.
+
+### `toast.js`
+
+Notificações e confirmações.
+
+| Função | Descrição |
+|---|---|
+| `showToast(message, type)` | Exibe notificação não-bloqueante no canto da tela (`success`, `error`, `info`). |
+| `showConfirm(message, options)` | Abre modal de confirmação com callbacks `onConfirm`/`onCancel`. |
+
+### `ibge-loader.js`
+
+Carrega estados e cidades do Brasil via API do IBGE, com cache no localStorage (TTL de 24h). Usado em formulários com seleção geográfica.
+
+---
+
+## Padrão das páginas de formulário
+
+Toda página de formulário segue a mesma estrutura:
+
+### Ordem de carregamento dos scripts
+
+```html
+<script src="/utils.js"></script>
+<script src="/upload-feedback.js"></script>
+<script src="/config.js"></script>
+<script src="/auth.js"></script>
+<script src="/shell.js"></script>
+<script src="/form-core.js"></script>
+```
+
+### Estrutura HTML
+
+```html
+<div class="page-container page-container--narrow">
+  <!-- Indicador de etapas (multi-step) -->
+  <div class="svn-stepper" id="stepper"></div>
+
+  <!-- Etapa 1 -->
+  <div class="form-step" id="step1">
+    <div class="field">
+      <label for="nome">Nome <span class="required-star">*</span></label>
+      <input type="text" id="nome" required>
+      <div class="field-error" id="nome-error"></div>
+    </div>
+    <!-- ... mais campos ... -->
+    <button class="btn btn-submit-gold" onclick="irParaStep2()">Próximo</button>
+  </div>
+
+  <!-- Etapa 2 -->
+  <div class="form-step" id="step2" style="display:none">
+    <!-- ... campos ... -->
+    <button class="btn btn-submit-gold" onclick="submitForm()">Enviar solicitação</button>
+  </div>
+</div>
+```
+
+### Inicialização
+
+```js
+FormCore.initForm({
+  tipo: 'apresentacao-nova',    // tipo_solicitacao
+  draft: true,                  // habilita salvamento de rascunho
+  onReady: (user, profile) => {
+    // pré-preencher campos com dados do perfil
+    Auth.aplicarPerfilNoCampo('telefone', profile?.telefone);
+    // vincular upload
+    FileUpload.bind('arquivo', 'arquivo-nome', { accept: ['.pdf', '.pptx'], maxMb: 20 });
+    // renderizar stepper
+    FormCore.renderStepper(document.getElementById('stepper'), ['Dados', 'Detalhes', 'Revisão'], 0);
+    // inicializar Shell
+    Shell.render({ activeRoute: 'solicitacoes', contentEl: document.getElementById('pageContent') });
+  }
+});
+```
+
+### Validação por etapa
+
+```js
+function irParaStep2() {
+  if (!FormCore.validateRequired(null, document.getElementById('step1'))) return;
+  document.getElementById('step1').style.display = 'none';
+  document.getElementById('step2').style.display = 'block';
+  FormCore.renderStepper(document.getElementById('stepper'), ['Dados', 'Detalhes'], 1);
+}
+```
+
+### Submit
+
+```js
+function submitForm() {
+  if (!FormCore.validateRequired(null, document.getElementById('step2'))) return;
+
+  const dados = {
+    nome:       document.getElementById('nome').value,
+    telefone:   document.getElementById('telefone').value,
+    // ... demais campos
+  };
+
+  FormCore.submit({
+    tipo: 'apresentacao-nova',
+    dados,
+    files: ['arquivo'],   // IDs dos inputs de arquivo a incluir no FormData
+  });
+}
+```
+
+O `FormCore.submit` monta o `FormData`, faz `POST /api/solicitacoes`, limpa o rascunho e redireciona para `thankyou.html?id=<id>`.
+
+---
+
+## Campos pré-preenchidos do cadastro
+
+Campos com dados vindos do MySQL Contatos (via `Auth.getProfile()`) exibem o hint:
+
+> ✓ Pré-preenchido do seu cadastro — pode editar se quiser
+
+Isso é feito por `Auth.aplicarPerfilNoCampo(fieldId, valor)`, que também suporta `<select>` criando a opção dinamicamente se não existir.
+
+```
+
+
+## File: artifacts/api-server/docs/guia-do-usuario.md
+
+```
+# Manual do Usuário — Hub de Solicitações SVN
+
+> Versão para o **colaborador solicitante**. Este guia explica como fazer um pedido ao time de Marketing, acompanhar o andamento e baixar o material quando estiver pronto.
+
+---
+
+## Sumário
+
+1. [Primeiros passos — como acessar e fazer login](#1-primeiros-passos)
+2. [A tela inicial — o que aparece quando você entra](#2-a-tela-inicial)
+3. [Como abrir uma solicitação](#3-como-abrir-uma-solicitação)
+4. [Acompanhar o andamento](#4-acompanhar-o-andamento)
+5. [Aprovar o material](#5-aprovar-o-material)
+6. [Reencontrar pedidos e materiais anteriores](#6-reencontrar-pedidos-e-materiais-anteriores)
+7. [Dúvidas frequentes](#7-dúvidas-frequentes)
+
+---
+
+## 1. Primeiros passos
+
+### Como acessar o Hub
+
+Abra o navegador e acesse o endereço do Hub de Solicitações SVN fornecido pelo time de Marketing.
+
+> [Screenshot: tela de carregamento do Hub com o logo SVN ao centro]
+
+### Como fazer login
+
+1. Ao entrar, você verá dois botões grandes. Clique em qualquer um deles.
+2. O Hub vai verificar se você já está logado. Se não estiver, você será direcionado para a tela de login com sua conta Google.
+3. Use sua **conta corporativa** (`@svninvest.com.br`). Contas pessoais não têm acesso.
+4. Após autenticar, você será levado de volta para onde queria ir.
+
+> [Screenshot: página inicial com os dois botões — "Quero fazer uma solicitação" e "Quero acompanhar uma solicitação"]
+
+### E se não conseguir entrar?
+
+- **"Apenas contas @svninvest.com.br são aceitas"** — você tentou logar com um e-mail pessoal ou de outro domínio. Use sua conta corporativa.
+- **"Falha na autenticação"** — tente novamente. Se o erro persistir, fale com o time de Marketing pelo ícone do WhatsApp que aparece no canto da tela.
+- **Tela em branco ou sem resposta** — tente recarregar a página (F5 ou Ctrl+R).
+
+---
+
+## 2. A tela inicial
+
+Ao entrar no Hub, você vê uma tela escura com dois botões:
+
+| Botão | O que faz |
+|---|---|
+| **Quero fazer uma solicitação** | Abre a lista de todos os tipos de pedido disponíveis |
+| **Quero acompanhar uma solicitação** | Leva para **Minhas solicitações**, onde você vê tudo que já pediu |
+
+Depois de logado, o sistema também mostra uma barra de navegação no topo com acesso rápido a essas duas seções.
+
+---
+
+## 3. Como abrir uma solicitação
+
+### Passo 1 — Escolher o tipo de pedido
+
+Clique em **Quero fazer uma solicitação**. Você verá uma página chamada **"Que tipo de solicitação você gostaria de realizar?"**, organizada em categorias:
+
+**Identidade e materiais pessoais**
+- Página de Assessores
+- Assinatura de E-mail
+- Cartão de Visita
+- Cartão de Boas-vindas
+- Cartão Comemorativo
+- Divulgação NPS
+- Convite Financial Planning
+
+**Eventos e relacionamento**
+- Eventos
+- Patrocínio
+- Brindes
+- Página Online
+
+**Marketing e conteúdo**
+- Artes de Divulgação
+- Apresentação
+- Conteúdo em PDF
+- E-mail Marketing
+- Atualização de material
+- Materiais Impressos
+
+**Audiovisual**
+- Produção Audiovisual
+
+**Outros**
+- Outro (para pedidos que não se encaixam nas categorias acima)
+
+> [Screenshot: página de seleção com os cartões organizados por categoria]
+
+Clique no tipo desejado para abrir o formulário correspondente.
+
+### Passo 2 — Preencher o formulário
+
+Cada tipo de pedido tem seus próprios campos. Algumas dicas gerais:
+
+- Campos com **\*** ou borda vermelha são obrigatórios. O sistema avisa se você tentar enviar sem preenchê-los.
+- Alguns campos já vêm **pré-preenchidos com os dados do seu cadastro** (nome, telefone, unidade etc.). Você pode editar se precisar.
+- Formulários com mais de uma etapa mostram um indicador como **"Etapa 1 de 3"** — avance clicando em **Próximo** e volte com **Voltar** sem perder o que preencheu.
+- Os formulários de **Apresentação** e **Página de Assessores** salvam seu progresso automaticamente. Se fechar a aba e voltar, os dados estarão lá.
+
+### Passo 3 — Anexar arquivos (quando houver)
+
+Formulários como Apresentação, Cartão de Visita (Digital), Arte NPS e Página de Assessores permitem o envio de arquivos (foto de perfil, arquivo base etc.). Clique na área de upload, selecione o arquivo do seu computador e aguarde a confirmação de envio.
+
+### Passo 4 — Revisar e enviar
+
+Revise os dados e clique em **Enviar** (ou **Enviar solicitação**). O botão fica desabilitado durante o envio para evitar envio duplicado.
+
+### O que acontece depois de enviar?
+
+Após o envio, você é levado para uma **tela de confirmação** que exibe:
+
+- Um resumo da sua solicitação (tipo, data, identificação)
+- Dois botões: **Ver solicitação** e **Nova solicitação**
+- Um botão flutuante do WhatsApp para falar com o time de Marketing
+
+**Para tipos com geração automática** (Assinatura de E-mail, Cartão de Visita Digital, Cartão de Boas-vindas, Arte NPS, Convite Financial Planning, Cartão Comemorativo), a tela mostra um spinner "Gerando seu material…" e, em alguns instantes, um botão de **download** aparece automaticamente. Você não precisa esperar — pode fechar e baixar depois pela tela de detalhe da solicitação.
+
+> [Screenshot: tela de confirmação com o resumo e o botão de download apareecendo]
+
+---
+
+## 4. Acompanhar o andamento
+
+### Como acessar
+
+Clique em **Quero acompanhar uma solicitação** na tela inicial, ou em **Minhas solicitações** na barra de navegação.
+
+### O que você vê na tela "Minhas solicitações"
+
+No topo, dois contadores:
+- **Em andamento** — pedidos ainda em processamento
+- **Concluídas** — pedidos finalizados
+
+A lista é dividida em duas abas:
+
+| Aba | Conteúdo |
+|---|---|
+| **Solicitações gerais** | Todos os seus pedidos, exceto Eventos |
+| **Eventos** | Apenas solicitações do tipo Evento |
+
+Você pode filtrar por **Período**, **Tipo**, **Status**, e **Alertas**, além de buscar pelo nome da solicitação no campo de pesquisa.
+
+> [Screenshot: dashboard com a lista de solicitações e os filtros abertos]
+
+### Abrindo o detalhe de uma solicitação
+
+Clique em qualquer card da lista para abrir a página de detalhe. Lá você encontra:
+
+- **Status atual** — exibido como uma etiqueta colorida no topo
+- **Trilha de status** — barra visual mostrando por onde o pedido já passou e onde está agora
+- **Dados da solicitação** — todos os campos que você preencheu
+- **Materiais para aprovação** — aparece quando o material está pronto para você revisar (ver seção 5)
+- **Atividade** — log cronológico dos eventos da solicitação (clique para expandir)
+
+### O que cada status significa
+
+| Status | O que significa |
+|---|---|
+| **Recebido** | Seu pedido chegou ao time de Marketing |
+| **Em análise** | O time está avaliando os detalhes |
+| **Alinhamentos** | O time está alinhando informações internamente |
+| **Em andamento** | O pedido está sendo trabalhado |
+| **Em produção** | O material está sendo criado |
+| **Em revisão** | O time está revisando o material antes de enviar para você |
+| **Em aprovação** | O material está pronto — **sua aprovação é necessária** |
+| **Em cotação / aprovação** | O pedido está em processo de cotação e aprovação financeira |
+| **Aguardando informação** | O time precisa de mais dados seus para continuar |
+| **Aguardando aprovação do RH** | O pedido aguarda o aval do setor de Capital Humano |
+| **Aguardando pagamento** | Aguardando confirmação de pagamento |
+| **Aguardando finalização** | Etapas finais sendo concluídas |
+| **Em design** | Material em fase de criação visual |
+| **Arte finalizada** | Arte pronta, aguardando próxima etapa |
+| **Envio gráfica** | Material enviado à gráfica para impressão |
+| **Envio assessor** | Material sendo entregue a você |
+| **Gerando arte** | Arte sendo gerada automaticamente pelo sistema |
+| **Concluído** | Processo finalizado |
+| **Reprovado** | Você solicitou alterações — o time está revisando |
+| **Cancelado** | Solicitação cancelada |
+| **Em espera** | Pedido pausado temporariamente |
+
+> Quando o status for **Aguardando informação**, fique atento: o time provavelmente vai entrar em contato por outro canal para pedir os dados que faltam.
+
+---
+
+## 5. Aprovar o material
+
+Alguns tipos de pedido passam por uma etapa de aprovação: **Eventos**, **Artes de Divulgação**, **Atualização de Material**, **Conteúdo em PDF** e **Apresentações**. Quando o material está pronto, o status muda para **Em aprovação** e você recebe uma notificação visual.
+
+### Como saber que tem algo para aprovar
+
+- Na lista de **Minhas solicitações**, o card aparece com a etiqueta **APROVAÇÃO** em vermelho e uma borda lateral destacada.
+- Ao abrir o detalhe, uma seção **"Materiais para aprovação"** aparece com o badge **NOVO**.
+
+> [Screenshot: card na lista com a etiqueta "APROVAÇÃO" e a borda vermelha]
+
+### Como aprovar
+
+1. Abra a solicitação clicando no card.
+2. Clique na seção **"Materiais para aprovação"** para expandi-la.
+3. O sistema exibirá uma mensagem com os links para o(s) material(is). Clique nos links para visualizar ou baixar e analisar.
+4. Escolha uma das duas opções:
+
+   - **Aprovado** — confirma que o material está ok. O time de Marketing é notificado automaticamente.
+   - **Solicitar alterações** — abre um campo de texto para você descrever o que precisa ser mudado. Digite as observações e envie. O time receberá seu pedido e, quando a nova versão estiver pronta, o processo se repete.
+
+> [Screenshot: interface de aprovação com os botões "Aprovado" e "Solicitar alterações"]
+
+### O que acontece depois da aprovação
+
+- O status da solicitação muda para **Concluído**.
+- Uma pesquisa de satisfação rápida pode aparecer — é opcional, mas ajuda o time a melhorar.
+- O material fica disponível para download na própria tela de detalhe.
+
+### E se eu solicitar alterações?
+
+O status muda para **Reprovado** enquanto o time trabalha na revisão. Quando a nova versão ficar pronta, o status volta para **Em aprovação** e você verá uma nova rodada de aprovação na tela.
+
+---
+
+## 6. Reencontrar pedidos e materiais anteriores
+
+### Como achar uma solicitação antiga
+
+1. Acesse **Minhas solicitações**.
+2. Use os filtros de **Período** (Hoje / 7 dias / 30 dias / Todos) ou **Status** para restringir a busca.
+3. Use a barra de **busca** para digitar o nome da solicitação.
+4. Clique no card para abrir o detalhe completo.
+
+> [Screenshot: barra de busca e filtros ativos na tela de Minhas Solicitações]
+
+### Como baixar um material já entregue
+
+Há duas formas:
+
+**Direto pela lista:** se o material estiver disponível, o card mostra um botão **Baixar** — clique nele diretamente, sem precisar abrir o detalhe.
+
+**Pelo detalhe da solicitação:** abra a solicitação e o material aparece na área de entrega (logo acima dos dados do formulário). Clique em **Fazer download** ou no link do arquivo.
+
+> [Screenshot: card com botão "Baixar" destacado e tela de detalhe com área de download]
+
+### Geração de material automático (Assinatura de E-mail, Cartão Digital etc.)
+
+Para os tipos que geram material automaticamente, o arquivo fica sempre disponível na tela de detalhe da solicitação. Se precisar de uma nova versão (por exemplo, mudou de cargo), abra um novo pedido.
+
+---
+
+## 7. Dúvidas frequentes
+
+**Esqueci de anexar um arquivo. O que faço?**
+Não é possível editar uma solicitação já enviada. Abra a solicitação, clique no botão de menu (⋯) e veja se há a opção de cancelar — se ainda estiver com status **Recebido**, fale com o time de Marketing pelo WhatsApp para combinar. Caso contrário, peça via canal direto para o time.
+
+**Preciso incluir uma informação que esqueci de colocar. O que faço?**
+Entre em contato diretamente com o time de Marketing informando o número da solicitação (visível na tela de detalhe). Eles orientarão sobre o melhor caminho.
+
+**Quanto tempo demora para meu pedido ser atendido?**
+Depende do tipo de solicitação e da demanda do time. Pedidos de **geração automática** (Assinatura de E-mail, Cartão Digital, Arte NPS etc.) ficam prontos em segundos. Demais pedidos variam — o time de Marketing informa os prazos para cada tipo.
+
+**Quem aprova o material?**
+Você, o próprio solicitante. Quando o material estiver pronto, o Hub manda um aviso visual e você aprova (ou pede alterações) diretamente pela plataforma.
+
+**O status está "Aguardando informação" há dias. O que acontece?**
+O time de Marketing deve estar aguardando algum dado necessário para continuar. Verifique se recebeu algum contato por WhatsApp, e-mail ou outro canal. Se não, entre em contato proativamente.
+
+**Não achei o tipo de pedido que preciso.**
+Use a opção **Outro**, na categoria "Outros", e descreva o que precisa no campo de texto. O time avalia e encaminha para o fluxo correto.
+
+**Posso refazer o download de um material que já peguei antes?**
+Sim. Acesse **Minhas solicitações**, encontre a solicitação e baixe novamente pelo botão **Baixar** no card ou na tela de detalhe.
+
+**Não consigo fazer login mesmo com o e-mail corporativo.**
+Feche todas as abas, limpe os cookies do navegador para o domínio do Hub e tente novamente. Se o problema persistir, fale com o time de Marketing.
+
+**Preciso de ajuda urgente.**
+Use o ícone do **WhatsApp** que aparece no canto inferior da tela logo após enviar uma solicitação, ou fale diretamente com o time de Marketing pelos canais internos da empresa.
+
+---
+
+*Dúvidas sobre o Hub? Fale com o time de Marketing da SVN.*
+
+```
+
+
+## File: artifacts/api-server/docs/integracoes.md
+
+```
+# Integrações
+
+## Autenticação — Microsoft MSAL (Azure AD)
+
+**Biblioteca:** `@azure/msal-node`
+
+O Hub usa OAuth 2.0 Authorization Code com PKCE via Microsoft Azure AD. Apenas contas do domínio `@svninvest.com.br` são aceitas.
+
+**Configuração necessária:**
+- App Registration no Azure AD com redirect URI `<APP_URL>/auth/callback`
+- Variáveis: `MSAL_TENANT_ID`, `MSAL_CLIENT_ID`, `MSAL_CLIENT_SECRET`, `MSAL_REDIRECT_URI`
+
+**Fluxo:**
+```
+Usuário → GET /auth/login
+  → MSAL gera authorization URL → Microsoft login
+  → GET /auth/callback (code troca por token)
+  → valida domínio @svninvest.com.br
+  → upsert em usersTable (cria se não existe, role padrão: colaborador)
+  → busca perfil em MySQL Contatos
+  → popula req.session.user + req.session.userProfile
+  → redireciona para destino original
+```
+
+**Sessão:**
+- Sessão armazenada no PostgreSQL via `connect-pg-simple`
+- Cookie `connect.sid` assinado com `SESSION_SECRET`
+- Expiração da sessão: configurada no `express-session`
+
+**Perfis e permissões:**
+- Role é armazenada em `users.role` e lida em cada requisição via `req.session.user.role`
+- Roles: `colaborador`, `gestor`, `admin`, `capital_humano`
+- Middleware `requireRole(...roles)` verifica a role antes de cada rota protegida
+
+---
+
+## ClickUp
+
+**Biblioteca:** chamadas HTTP diretas via `fetch` (sem SDK)
+
+**Token:** `CLICKUP_API_TOKEN` (personal ou service token)
+
+### Criação de tarefas
+
+Ao criar uma solicitação, `createClickUpTask` em `src/routes/clickup.ts`:
+1. Determina a lista destino: consulta `tipo_clickup_list` no banco; fallback para variáveis `CLICKUP_LIST_*`.
+2. Monta descrição estruturada em markdown com os dados do formulário.
+3. Cria a tarefa via `POST https://api.clickup.com/api/v2/list/<list_id>/task`.
+4. Define assignees conforme `user_tipo_assignments` ou variáveis `CLICKUP_ASSIGNEE_*`.
+
+### Recebimento de status (webhook)
+
+```
+POST /webhook/clickup
+  ← ClickUp dispara ao alterar status de uma tarefa
+  → valida HMAC-SHA256 no header x-signature
+  → mapeia status ClickUp → status interno via CLICKUP_STATUS_MAP
+  → UPDATE solicitacoes.status
+```
+
+**`CLICKUP_STATUS_MAP`** em `src/config/clickup-status.ts` normaliza variações de capitalização e nomes alternativos para os slugs canônicos do Hub (ex.: `"in progress"` → `"em-andamento"`, `"waiting on rh"` → `"aguardando-rh"`).
+
+### Configuração de listas via admin
+
+Admins podem configurar qual lista ClickUp recebe cada tipo de solicitação pelo painel `/admin-clickup-lists.html`. Isso salva em `tipo_clickup_list` e sobrepõe as variáveis de ambiente.
+
+---
+
+## Cloudflare R2 (armazenamento de arquivos)
+
+**Biblioteca:** `@aws-sdk/client-s3` (R2 é compatível com S3)
+
+**Credenciais:** `R2_ACCOUNT_ID`, `R2_ACCESS_KEY`, `R2_SECRET_KEY`, `R2_BUCKET`
+
+**Endpoint:** `https://<R2_ACCOUNT_ID>.r2.cloudflarestorage.com`
+
+**`src/lib/r2-client.ts`** exporta um singleton `S3Client`. Retorna `null` se as credenciais não estiverem configuradas (funcionalidade de upload degradada graciosamente).
+
+### Uso
+
+| Onde | Operação | Chave no R2 |
+|---|---|---|
+| Upload de anexos de formulário | PUT | `uploads/<uuid>.<ext>` |
+| Artes geradas automaticamente | PUT | `artes/<uuid>.<ext>` |
+| Assets de templates (admin) | PUT | `assets/<uuid>.<ext>` |
+| Tombamentos (ZIPs) | PUT | `tombamentos/<uuid>.zip` |
+
+Todas as URLs públicas têm base `R2_PUBLIC_URL`. Arquivos são servidos diretamente pelo CDN da Cloudflare.
+
+---
+
+## n8n / Webhooks
+
+**Chamadas HTTP diretas** para URLs configuradas em variáveis de ambiente.
+
+`src/services/notifications.ts` é o ponto central de disparo.
+
+| Evento | Webhook disparado |
+|---|---|
+| Cartão de visita físico criado | `WEBHOOK_CARTAO_FISICO` |
+| Cartão de visita digital criado | `WEBHOOK_CARTAO_DIGITAL` |
+| Cartão de boas-vindas criado | `WEBHOOK_BOAS_VINDAS` |
+| Arte NPS criada | `WEBHOOK_NPS` |
+| Convite FP criado | `WEBHOOK_CONVITE_FP` |
+| Cartão comemorativo criado | `WEBHOOK_COMEMORATIVO` |
+| Certificado criado | `WEBHOOK_CERTIFICADO` |
+
+O payload enviado ao n8n contém o `id` da solicitação e os `dados` do formulário. O n8n processa (gera arte, envia notificação, aciona gráfica etc.) e pode chamar de volta a API do Hub via `INTERNAL_API_SECRET` para atualizar `entrega_links`.
+
+### Chamadas internas (n8n → Hub)
+
+Rotas que recebem chamadas do n8n exigem o header `Authorization: Bearer <INTERNAL_API_SECRET>` verificado por middleware.
+
+---
+
+## MySQL Contatos (integração legada)
+
+**Biblioteca:** `mysql2`
+
+**Conexão:** pool configurado por `MYSQL_CONTATOS` (string de conexão MySQL). Se a variável estiver ausente ou vazia, a integração é desativada silenciosamente — o login ainda funciona, mas os campos de perfil (telefone, unidade, cargo, cd_ancord) chegam vazios.
+
+**Uso:** em `/auth/callback` e `GET /auth/me-profile`, o sistema busca o contato pelo e-mail via `buscarContato(email)` em `src/lib/mysqlContatos.ts` e popula `req.session.userProfile`.
+
+Campos retornados: `telefone`, `unidade`, `cargo`, `cd_ancord`, `encontrado` (boolean).
+
+---
+
+## Chamadas internas entre serviços
+
+Chamadas de serviços externos (n8n, scripts) para a API interna usam:
+```
+Authorization: Bearer <INTERNAL_API_SECRET>
+```
+
+Esse header é verificado por middleware nas rotas internas. Gere a chave com `openssl rand -hex 32`.
+
+```
+
+
+## File: artifacts/api-server/docs/modelo-dados.md
+
+```
+# Modelo de Dados
+
+## Tabelas principais
+
+### `users`
+
+| Coluna | Tipo | Descrição |
+|---|---|---|
+| `id` | `serial PK` | ID interno |
+| `email` | `varchar(255)` | E-mail corporativo (@svninvest.com.br) — único |
+| `name` | `varchar(255)` | Nome completo |
+| `role` | `varchar(20)` | Role: `colaborador` (padrão), `gestor`, `admin`, `capital_humano` |
+| `telefone` | `varchar(30)` | Telefone sincronizado do MySQL Contatos |
+| `clickup_user_id` | `varchar(100)` | ID do usuário correspondente no ClickUp |
+| `created_at` | `timestamp` | Data de criação |
+
+---
+
+### `solicitacoes`
+
+Tabela central. Cada linha representa um pedido.
+
+| Coluna | Tipo | Descrição |
+|---|---|---|
+| `id` | `serial PK` | ID do pedido |
+| `user_email` | `varchar(255)` | E-mail do solicitante |
+| `tipo_solicitacao` | `varchar(50)` | Slug do tipo (ex.: `assinatura-email`) |
+| `subtipo` | `varchar(50)` | Sub-tipo opcional (ex.: `fisico`, `digital`) |
+| `maturidade` | `integer` | Nível de maturidade (uso específico por tipo) |
+| `dados` | `jsonb` | **Todos os campos do formulário preenchidos** (chaves snake_case) |
+| `clickup_task_id` | `varchar(100)` | ID da tarefa correspondente no ClickUp |
+| `titulo` | `text` | Título gerado automaticamente para exibição |
+| `clickup_url` | `text` | URL da tarefa no ClickUp |
+| `avaliacao` | `jsonb` | Avaliação de satisfação do solicitante (opcional) |
+| `entrega_links` | `jsonb` | Array `[{ label, url }]` dos materiais entregues |
+| `status` | `varchar(30)` | Status atual (slugs de `STATUS_SOLICITACAO`) |
+| `responsavel` | `text` | Nome do responsável atribuído no ClickUp |
+| `erro_geracao` | `text` | Mensagem de erro se a geração automática falhou |
+| `notifications_sent` | `jsonb` | Controle de quais notificações já foram disparadas |
+| `created_at` | `timestamp` | Data de criação |
+| `updated_at` | `timestamp` | Última atualização |
+
+---
+
+### `arquivos`
+
+| Coluna | Tipo | Descrição |
+|---|---|---|
+| `id` | `serial PK` | ID do arquivo |
+| `solicitacao_id` | `integer FK → solicitacoes.id` | Solicitação à qual pertence |
+| `campo` | `varchar(100)` | Nome do campo de upload (ex.: `foto_perfil`) |
+| `url_r2` | `text` | URL pública no Cloudflare R2 |
+| `nome_original` | `varchar(255)` | Nome original do arquivo enviado pelo usuário |
+| `created_at` | `timestamp` | Data de upload |
+
+---
+
+### `eventos_solicitacao`
+
+Log detalhado de eventos por solicitação (trilha de auditoria).
+
+| Coluna | Tipo | Descrição |
+|---|---|---|
+| `id` | `serial PK` | ID do evento |
+| `solicitacao_id` | `integer FK → solicitacoes.id` | Solicitação relacionada |
+| `tipo` | `varchar(16)` | Tipo de evento (ex.: `status`, `aprovacao`, `entrega`) |
+| `origem` | `varchar(32)` | Origem (ex.: `webhook`, `usuario`, `sistema`) |
+| `mensagem` | `text` | Descrição legível do evento |
+| `detalhes` | `jsonb` | Dados adicionais do evento |
+| `user_email` | `varchar(255)` | Usuário que gerou o evento (se aplicável) |
+| `created_at` | `timestamp` | Data do evento |
+
+---
+
+### `activity_log`
+
+Log de alto nível do sistema (menos granular que `eventos_solicitacao`).
+
+| Coluna | Tipo | Descrição |
+|---|---|---|
+| `id` | `serial PK` | |
+| `created_at` | `timestamp` | |
+| `user_email` / `user_name` | `text` | Usuário envolvido |
+| `tipo` | `text` | Categoria do evento |
+| `nivel` | `varchar(10)` | `info`, `warn`, `error` |
+| `solicitacao_id` | `integer` | Referência à solicitação (se aplicável) |
+| `tipo_solicitacao` | `text` | Tipo da solicitação (desnormalizado) |
+| `titulo` | `text` | Título da solicitação (desnormalizado) |
+| `detalhe` | `text` | Mensagem descritiva |
+| `metadata` | `jsonb` | Dados extras |
+
+---
+
+### `art_templates`
+
+Templates dinâmicos para geração de arte.
+
+| Coluna | Tipo | Descrição |
+|---|---|---|
+| `id` | `serial PK` | |
+| `tipo` | `varchar(100)` | Tipo de solicitação ao qual o template se aplica |
+| `variant_value` | `varchar(100)` | Valor de variante (ex.: slug de marca) |
+| `name` | `varchar(200)` | Nome descritivo do template |
+| `config` | `jsonb` | Configuração completa do template (camadas, fontes, posições) |
+| `is_active` | `boolean` | Se `false`, ignorado pela geração |
+| `created_at` / `updated_at` | `timestamp` | |
+| `updated_by` | `integer FK → users.id` | |
+
+---
+
+### `art_assets`
+
+Imagens/logos reutilizáveis nos templates.
+
+| Coluna | Tipo | Descrição |
+|---|---|---|
+| `id` | `serial PK` | |
+| `filename` | `varchar(300)` | Nome original do arquivo |
+| `storage_key` | `varchar(500)` | Chave no R2 |
+| `url` | `varchar(500)` | URL pública |
+| `mime_type` | `varchar(100)` | |
+| `size_bytes` | `bigint` | |
+| `width` / `height` | `integer` | Dimensões da imagem |
+| `uploaded_by` | `integer FK → users.id` | |
+| `used_in_template_ids` | `integer[]` | IDs de templates que usam este asset |
+
+---
+
+### `cartao_aprovacoes`
+
+Workflow de aprovação e impressão de cartão de visita físico.
+
+| Coluna | Tipo | Descrição |
+|---|---|---|
+| `id` | `serial PK` | |
+| `solicitacao_id` | `integer FK → solicitacoes.id` | |
+| `data_pedido` | `varchar(20)` | Data do pedido (legado: string formatada) |
+| `nome` / `whatsapp` / `email` | `varchar` | Dados do solicitante |
+| `unidade` | `varchar(120)` | Unidade SVN de entrega |
+| `contrato_social` | `varchar(60)` | Entidade jurídica |
+| `envio_para` | `varchar(255)` | Endereço de entrega |
+| `custo` | `varchar(20)` | Custo estimado |
+| `status` | `varchar(40)` | Status específico do cartão físico |
+| `observacao` | `text` | Observações do time |
+
+---
+
+### `tombamentos`
+
+Geração em massa de assets digitais (onboarding / migração).
+
+| Coluna | Tipo | Descrição |
+|---|---|---|
+| `id` | `serial PK` | |
+| `nome` | `varchar(255)` | Nome do lote |
+| `marca` | `varchar(60)` | Marca SVN alvo |
+| `status` | `varchar(30)` | Status do processamento |
+| `linhas` | `jsonb` | Array de registros do spreadsheet |
+| `assinaturas_zip_url` | `text` | URL do ZIP com assinaturas geradas |
+| `cartoes_zip_url` | `text` | URL do ZIP com cartões gerados |
+| `expires_at` | `timestamp` | Expiração dos arquivos gerados |
+| `created_by` | `varchar(255)` | Email do admin que criou |
+
+---
+
+### Demais tabelas de configuração
+
+| Tabela | Propósito |
+|---|---|
+| `user_tipo_assignments` | RBAC: mapeia usuário → tipo de solicitação permitido |
+| `tipo_clickup_list` | Mapeia tipo de solicitação → lista ClickUp configurada |
+| `clickup_lists` | Cache das listas ClickUp disponíveis |
+
+---
+
+## O campo `dados` (JSONB)
+
+`solicitacoes.dados` armazena **todos os campos do formulário** como um objeto JSON livre. Não há colunas separadas por campo — a estrutura varia por `tipo_solicitacao`.
+
+**Convenção de chaves:** snake_case canônico, conforme `KEY_MAP` em `forms.ts`.
+
+Exemplo para `assinatura-email`:
+```json
+{
+  "nome_assinatura": "João Silva",
+  "cargo": "Assessor de Investimentos",
+  "marca": "svn-investimentos",
+  "contrato_social": "svn-investimentos",
+  "whatsapp": "(41) 99999-0000",
+  "email_corporativo": "joao.silva@svninvest.com.br",
+  "selos": ["ancord", "cfp"],
+  "is_private_key": false
+}
+```
+
+---
+
+## Resolução de labels para exibição
+
+Quando o detalhe de uma solicitação é exibido, os valores brutos do campo `dados` precisam ser convertidos para texto legível. O fluxo é:
+
+1. **`window._svnFieldLabels`** (populado por `/api/form-schemas`) — primeiro lookup: `_svnFieldLabels[campo][valor]`.
+2. **`humanizeValue(key, value)`** em `utils.js` — fallback geral: trata booleanos, slugs comuns, datas, listas.
+3. **`DRAWER_FIELD_LABELS`** em `config.js` — define o label do **nome** do campo (ex.: `nome_assinatura` → "Nome para assinatura"). Campos com `skip: true` são omitidos na exibição.
+
+Labels de nomes de campos: `DRAWER_FIELD_LABELS_FLAT` é o mapa plano `{ chave: label }` derivado de `DRAWER_FIELD_LABELS`.
+
+```
+
+
+## File: artifacts/api-server/docs/README.md
+
+```
+# Documentação Técnica — Hub de Solicitações SVN
+
+Documentação para quem mantém e evolui o sistema. Toda afirmação está baseada no código do repositório.
+
+## Índice
+
+| Arquivo | Conteúdo |
+|---|---|
+| [visao-geral.md](visao-geral.md) | O que é o Hub, públicos, lista completa de tipos de solicitação |
+| [arquitetura.md](arquitetura.md) | Stack, camadas, diagrama de fluxo, estrutura de pastas |
+| [como-rodar.md](como-rodar.md) | Pré-requisitos, instalação, variáveis de ambiente, dev/build, Replit, Railway, scripts one-off |
+| [frontend.md](frontend.md) | JS compartilhados, padrão das páginas de formulário, validação, submit |
+| [backend.md](backend.md) | Rotas, fluxo do POST de criação, normalizeFormDados, geração de artefatos |
+| [form-schemas.md](form-schemas.md) | Como o form-schemas.ts funciona, passo a passo para adicionar/editar tipo |
+| [modelo-dados.md](modelo-dados.md) | Tabelas, campo `dados` (JSONB), convenção snake_case, resolução de labels |
+| [integracoes.md](integracoes.md) | MSAL/Azure AD, ClickUp, Cloudflare R2, n8n/webhooks, MySQL Contatos |
+| [admin-dashboard.md](admin-dashboard.md) | Painéis de acompanhamento, status, filtros, tombamentos |
+| [scripts.md](scripts.md) | Scripts em src/scripts/, o que fazem, como rodar com segurança |
+| [convencoes.md](convencoes.md) | Tokens de marca SVN, padrões de código, nomenclatura |
+
+## Stack resumida
+
+- **Runtime:** Node.js (ESM) + TypeScript, compilado com esbuild
+- **Framework:** Express 5
+- **Banco de dados:** PostgreSQL + Drizzle ORM
+- **Sessão:** `express-session` persistida via `connect-pg-simple`
+- **Autenticação:** Microsoft MSAL (Azure AD) — domínio `@svninvest.com.br`
+- **Armazenamento de arquivos:** Cloudflare R2 (S3-compatible)
+- **Gerenciamento de tarefas:** ClickUp (API)
+- **Automações:** n8n via webhooks HTTP
+- **Geração de arte:** `sharp`, `fontkit`, `pdf-lib`, `pdfkit`, `opentype.js`
+- **Frontend:** HTML/CSS/JS vanilla (sem framework)
+- **Logging:** `pino` + `pino-http`
+
+```
+
+
+## File: artifacts/api-server/docs/scripts.md
+
+```
+# Scripts & Manutenção
+
+Scripts one-off em `src/scripts/`. Todos são executados diretamente com `tsx` sem necessidade de build prévio.
+
+---
+
+## `migrate-assignments.ts`
+
+**O que faz:** Migra os assignees de solicitações das variáveis de ambiente (`CLICKUP_ASSIGNEE_*`) para a tabela `user_tipo_assignments` no banco de dados. Cria usuários "stub" para IDs do ClickUp que ainda não existam em `usersTable`.
+
+**Tabelas afetadas:** `usersTable`, `userTipoAssignmentsTable`
+
+**Dry-run:** Não possui modo dry-run. Usa `onConflictDoNothing`, portanto é **seguro re-rodar** — não duplica dados.
+
+**Pré-requisitos:** Variáveis `CLICKUP_ASSIGNEE_GERAL`, `CLICKUP_ASSIGNEE_EVENTOS`, `CLICKUP_ASSIGNEE_BRINDES`, `CLICKUP_ASSIGNEE_PATROCINIO` devem estar definidas no ambiente.
+
+**Como rodar:**
+
+```bash
+pnpm --filter @workspace/api-server run migrate-assignments
+# ou diretamente:
+pnpm tsx artifacts/api-server/src/scripts/migrate-assignments.ts
+```
+
+**Quando usar:** Uma única vez após configurar os assignees iniciais, ou quando adicionar novos tipos com assignees via variáveis de ambiente.
+
+---
+
+## `import-cartoes.ts`
+
+**O que faz:** Importa um histórico de pedidos de cartão de visita físico a partir de um arquivo CSV para as tabelas `solicitacoes` e `cartao_aprovacoes`. Útil para migrar dados de sistemas legados.
+
+**Tabelas afetadas:** `solicitacoesTable` (INSERT), `cartaoAprovacoesTable` (INSERT), `usersTable` (SELECT para vincular e-mails)
+
+**Dry-run:** **Sim — modo padrão é dry-run.** Sem `--apply`, apenas imprime o que seria importado e os erros de validação. Isso permite verificar o CSV antes de qualquer escrita.
+
+**Parâmetros:**
+
+| Flag | Descrição |
+|---|---|
+| `--csv <caminho>` | Caminho para o arquivo CSV de entrada |
+| `--apply` | Executa a importação de verdade (sem essa flag, só faz dry-run) |
+
+**Como rodar com segurança:**
+
+```bash
+# 1. Primeiro: inspecione sem modificar nada
+pnpm tsx artifacts/api-server/src/scripts/import-cartoes.ts --csv /caminho/para/arquivo.csv
+
+# 2. Verifique os erros e o preview no output
+
+# 3. Quando tudo estiver ok, aplique:
+pnpm tsx artifacts/api-server/src/scripts/import-cartoes.ts --csv /caminho/para/arquivo.csv --apply
+```
+
+**Quando usar:** Migração única de dados históricos. Não é um script de uso rotineiro.
+
+---
+
+## `seed-art-templates.ts`
+
+**O que faz:** Semeia templates padrão de arte na tabela `art_templates` — especificamente para os tipos `cartao-boas-vindas` e `assinatura-email`, com variantes por marca.
+
+**Tabelas afetadas:** `artTemplatesTable` (INSERT)
+
+**Dry-run:** Não possui flag, mas é **idempotente** — verifica se já existe um template para o `tipo` antes de inserir. Re-rodar não duplica dados.
+
+**Como rodar:**
+
+```bash
+pnpm --filter @workspace/api-server run seed-art-templates
+# ou diretamente:
+pnpm tsx artifacts/api-server/src/scripts/seed-art-templates.ts
+```
+
+**Quando usar:** Após limpar a tabela `art_templates` em ambiente de desenvolvimento, ou ao configurar um ambiente novo do zero.
+
+---
+
+## Checklist de manutenção rotineira
+
+### Adicionar um novo usuário admin
+
+1. Acesse `/admin-usuarios.html`
+2. Clique em **Novo usuário**
+3. Preencha e-mail, nome e selecione role **Admin**
+4. Na primeira vez que o usuário logar via Microsoft, a sessão usará a role cadastrada
+
+### Adicionar nova lista ClickUp
+
+1. Acesse `/admin-clickup-lists.html`
+2. Cole o ID da lista ClickUp (visível na URL da lista no ClickUp)
+3. Vincule o tipo de solicitação desejado
+
+### Verificar erros de geração automática
+
+1. Acesse `/admin-log.html` e filtre por nível **error**
+2. Ou consulte diretamente:
+   ```sql
+   SELECT id, tipo_solicitacao, titulo, erro_geracao, created_at
+   FROM solicitacoes
+   WHERE erro_geracao IS NOT NULL
+   ORDER BY created_at DESC;
+   ```
+
+### Reprocessar uma arte com erro
+
+> TODO: verificar se existe endpoint de reprocessamento manual ou se é necessário atualizar `status` direto no banco e re-disparar o webhook n8n.
+
+### Limpar sessões expiradas
+
+O `connect-pg-simple` cria a tabela `session` e faz limpeza automática de sessões expiradas. Não requer manutenção manual.
+
+### Backup do banco
+
+Configure backup automático no Railway (Settings → Backups) ou use `pg_dump` manualmente:
+
+```bash
+pg_dump $DATABASE_URL > backup-$(date +%Y%m%d).sql
+```
+
+```
+
+
+## File: artifacts/api-server/docs/visao-geral.md
+
+```
+# Visão Geral
+
+## O que é o Hub
+
+O Hub de Solicitações SVN é um sistema web interno que centraliza os pedidos de materiais de marketing feitos por colaboradores e pelo time de Capital Humano à equipe de Marketing da SVN Invest. Substitui fluxos informais (WhatsApp, e-mail) por um processo rastreável com status em tempo real, integração com ClickUp e geração automática de alguns materiais digitais.
+
+## Problema que resolve
+
+- Eliminar pedidos perdidos ou sem histórico
+- Dar visibilidade de status para quem pediu e para quem executa
+- Automatizar geração de artefatos simples (assinaturas de e-mail, cartões digitais, artes NPS etc.)
+- Unificar briefings em formulários estruturados, reduzindo idas e vindas
+
+## Públicos
+
+| Público | O que faz no Hub |
+|---|---|
+| **Colaborador / Assessor** (`colaborador`) | Abre solicitações, acompanha status, baixa materiais prontos, aprova artes |
+| **Capital Humano** (`capital_humano`) | Acessa formulários exclusivos da área (onboarding, books, linha do tempo etc.) |
+| **Gestor** (`gestor`) | Visualiza todas as solicitações, gerencia impersonation |
+| **Admin** (`admin`) | Acesso completo: usuários, templates de arte, ClickUp config, tombamentos |
+| **Time de Marketing** | Atualiza status via ClickUp; o webhook sincroniza o Hub automaticamente |
+
+## Tipos de solicitação suportados
+
+### Identidade e materiais pessoais
+| Tipo (`tipo_solicitacao`) | Label |
+|---|---|
+| `assinatura-email` | Assinatura de E-mail |
+| `cartao-visita-fisico` | Cartão de Visita — Físico |
+| `cartao-visita-digital` | Cartão de Visita — Digital |
+| `cartao-boas-vindas` | Cartão de Boas-vindas |
+| `cartao-comemorativo` | Cartão Comemorativo |
+| `divulgacao-nps` | Arte NPS |
+| `convite-fp` | Convite Financial Planning |
+| `pagina-assessores` | Página de Assessores |
+
+### Eventos e relacionamento
+| Tipo | Label |
+|---|---|
+| `eventos` | Eventos |
+| `patrocinio` | Patrocínio |
+| `brindes` | Brindes |
+| `pagina-online` | Página Online |
+
+### Marketing e conteúdo
+| Tipo | Label |
+|---|---|
+| `artes-divulgacao` | Arte de Divulgação |
+| `apresentacao-nova` | Apresentação — Nova |
+| `apresentacao-atualizar` | Apresentação — Atualização |
+| `conteudo-pdf-informativo` | PDF — Informativo |
+| `conteudo-pdf-ebook` | PDF — Ebook |
+| `email-marketing` | E-mail Marketing |
+| `atualizacao-material` | Atualização de Material |
+| `materiais-impressos` | Materiais Impressos |
+
+### Audiovisual
+| Tipo | Label |
+|---|---|
+| `producao-video` | Produção de Vídeo |
+| `sessao-fotos` | Sessão de Fotos |
+| `producao-audiovisual` | Produção Audiovisual |
+
+### Capital Humano (acesso restrito à role `capital_humano` / `admin`)
+| Tipo | Label |
+|---|---|
+| `ch-kit-onboarding` | Kit Onboarding |
+| `ch-atualizacao-pessoas` | Atualização de Pessoas nos Sites |
+| `ch-conteudo-pdf` | Conteúdo em PDF (CH) |
+| `ch-arte-divulgacao` | Arte de Divulgação (CH) |
+| `ch-atualizacao-books` | Atualização de Books |
+| `ch-linha-do-tempo` | Linha do Tempo |
+| `ch-aniversariantes` | Aniversariantes do Mês |
+
+### Outros
+| Tipo | Label |
+|---|---|
+| `outro` | Outro |
+
+## Geração automática de artefatos
+
+Os tipos a seguir geram o material instantaneamente via `art-generator.ts` + n8n, sem intervenção manual do time de Marketing:
+
+- `assinatura-email`
+- `cartao-visita-digital`
+- `cartao-boas-vindas`
+- `divulgacao-nps`
+- `convite-fp`
+- `cartao-comemorativo`
+
+## Fluxo de aprovação
+
+Tipos que passam por um ciclo de aprovação pelo solicitante (chat na página de detalhe da solicitação):
+
+- `eventos`
+- `artes-divulgacao`
+- `atualizacao-material`
+- `conteudo-pdf-informativo`
+- `conteudo-pdf-ebook`
+- `apresentacao-nova`
+- `apresentacao-atualizar`
+
+```
+
+
+## File: artifacts/api-server/.env.example
+
+```
+# =============================================================================
+# Hub de Solicitações SVN — Variáveis de ambiente
+# =============================================================================
+# Copie este arquivo para .env e preencha os valores reais.
+# No Railway: adicione cada variável em Settings → Variables do serviço.
+#
+# Legenda:
+#   [obrigatório] — servidor não sobe sem ela
+#   [opcional]    — tem valor padrão ou funcionalidade desativada se ausente
+# =============================================================================
+
+
+# ── Servidor ──────────────────────────────────────────────────────────────────
+
+# Porta em que o servidor Express escuta.
+# O Railway injeta PORT automaticamente — não precisa definir manualmente.
+PORT=8080
+
+# Ambiente de execução. Use "production" no Railway.
+NODE_ENV=production                                          # [obrigatório]
+
+# Nível de log: trace | debug | info | warn | error | fatal
+LOG_LEVEL=info                                               # [opcional]
+
+# Origem permitida no CORS (URL pública do app no Railway, sem barra final).
+# Exemplo: https://hub-svn.up.railway.app
+ALLOWED_ORIGIN=https://SEU-APP.up.railway.app               # [obrigatório]
+
+
+# ── Banco de dados PostgreSQL ─────────────────────────────────────────────────
+
+# String de conexão PostgreSQL.
+# O Railway injeta DATABASE_URL automaticamente quando você adiciona um serviço
+# PostgreSQL ao projeto e o referencia pelo nome.
+DATABASE_URL=postgresql://user:password@host:5432/dbname    # [obrigatório]
+
+
+# ── Sessão ────────────────────────────────────────────────────────────────────
+
+# Chave secreta para assinar os cookies de sessão.
+# Gere com: openssl rand -base64 48
+SESSION_SECRET=troque-por-uma-string-longa-e-aleatoria      # [obrigatório]
+
+
+# ── Autenticação Microsoft (MSAL / Azure AD) ──────────────────────────────────
+# Configure um App Registration no Azure Active Directory e preencha abaixo.
+# Redirect URI cadastrada no Azure deve bater exatamente com MSAL_REDIRECT_URI.
+
+MSAL_TENANT_ID=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx         # [obrigatório]
+MSAL_CLIENT_ID=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx         # [obrigatório]
+MSAL_CLIENT_SECRET=seu-client-secret-aqui                   # [obrigatório]
+MSAL_REDIRECT_URI=https://SEU-APP.up.railway.app/auth/callback  # [obrigatório]
+
+
+# ── Cloudflare R2 (armazenamento de arquivos) ──────────────────────────────────
+# Crie um bucket R2 na Cloudflare e gere uma API Token com permissão de leitura
+# e escrita no bucket. ACCOUNT_ID está em Overview da sua conta Cloudflare.
+
+R2_ACCOUNT_ID=seu-account-id-cloudflare                     # [obrigatório]
+R2_BUCKET=nome-do-bucket                                     # [obrigatório]
+R2_ACCESS_KEY=sua-access-key                                 # [obrigatório]
+R2_SECRET_KEY=sua-secret-key                                 # [obrigatório]
+
+# URL pública base do bucket R2 (sem barra final).
+# Configure um domínio público no R2 ou use o endpoint r2.dev.
+# Exemplo: https://pub-xxxxxxxx.r2.dev
+R2_PUBLIC_URL=https://pub-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.r2.dev  # [obrigatório]
+
+
+# ── ClickUp ───────────────────────────────────────────────────────────────────
+# Token de acesso pessoal ou de serviço do ClickUp.
+# Obtenha em: ClickUp → Settings → Apps → API Token
+
+CLICKUP_API_TOKEN=pk_xxxxxxxxxxxxxxxxxx                      # [obrigatório]
+CLICKUP_WEBHOOK_SECRET=                                      # [opcional] HMAC secret configurado no webhook do ClickUp
+
+# IDs das listas do ClickUp onde as tarefas serão criadas por categoria.
+# Obtenha o ID abrindo a lista no ClickUp e inspecionando a URL:
+#   app.clickup.com/TEAM_ID/v/l/LIST_ID
+
+CLICKUP_LIST_GERAL=000000000                                 # [obrigatório]
+CLICKUP_LIST_EVENTOS=000000000                               # [obrigatório]
+CLICKUP_LIST_BRINDES=000000000                               # [obrigatório]
+CLICKUP_LIST_PATROCINIO=000000000                            # [obrigatório]
+
+# IDs dos usuários do ClickUp que receberão as tarefas como responsáveis.
+# Obtenha em: ClickUp → Settings → Members → clique no usuário → ID na URL.
+CLICKUP_ASSIGNEE_GERAL=00000000                              # [obrigatório]
+CLICKUP_ASSIGNEE_EVENTOS=00000000                            # [obrigatório]
+CLICKUP_ASSIGNEE_BRINDES=00000000                            # [obrigatório]
+CLICKUP_ASSIGNEE_PATROCINIO=00000000                         # [obrigatório]
+
+
+# ── Webhooks N8N ──────────────────────────────────────────────────────────────
+# URLs de webhook do N8N disparadas ao criar cada tipo de solicitação.
+# Cada URL ativa o workflow N8N correspondente.
+
+WEBHOOK_CARTAO_FISICO=https://n8n.exemplo.com/webhook/xxxxxxxx    # [obrigatório]
+WEBHOOK_CARTAO_DIGITAL=https://n8n.exemplo.com/webhook/xxxxxxxx   # [obrigatório]
+WEBHOOK_BOAS_VINDAS=https://n8n.exemplo.com/webhook/xxxxxxxx      # [obrigatório]
+WEBHOOK_NPS=https://n8n.exemplo.com/webhook/xxxxxxxx              # [obrigatório]
+WEBHOOK_CONVITE_FP=https://n8n.exemplo.com/webhook/xxxxxxxx       # [obrigatório]
+WEBHOOK_CERTIFICADO=https://n8n.exemplo.com/webhook/xxxxxxxx      # [obrigatório]
+WEBHOOK_COMEMORATIVO=https://n8n.exemplo.com/webhook/xxxxxxxx     # [obrigatório]
+
+
+# ── URLs de recursos estáticos externos ───────────────────────────────────────
+# Usadas em links rápidos no menu e na UI do hub.
+
+URL_LOGO_BRANCA=https://exemplo.com/logo-branca.png          # [opcional]
+URL_LOGO_PRETA=https://exemplo.com/logo-preta.png            # [opcional]
+URL_MANUAL=https://exemplo.com/manual.pdf                    # [opcional]
+URL_TUTORIAL_TRANSMISSAO=https://youtube.com/watch?v=...     # [opcional]
+URL_VIDEO_HERO=https://exemplo.com/video-hero.mp4            # [opcional]
+
+# E-mail de destino para notificação de upload (usado em alguns formulários).
+EMAIL_UPLOAD=setor@empresa.com.br                            # [opcional]
+
+
+# ── Segurança interna ─────────────────────────────────────────────────────────
+# Chave usada para autenticar chamadas internas entre serviços (ex: N8N → API).
+# Gere com: openssl rand -hex 32
+INTERNAL_API_SECRET=troque-por-hex-aleatorio-de-32-bytes     # [obrigatório]
+
+
+# ── MySQL — Contatos (integração legada) ──────────────────────────────────────
+# String de conexão MySQL para consulta de contatos de assessores.
+# Deixe vazio para desativar a integração (funcionalidade degradada, não crítica).
+# Formato: mysql://user:password@host:3306/database
+MYSQL_CONTATOS=                                              # [opcional]
+
+```
+
+
+## File: artifacts/api-server/.lixo-leva1/assessor-mockup.js
+
+```
+// ============================================================================
+// assessor-mockup.js — Componente compartilhado da PRÉVIA da página do assessor.
+// Renderiza o mockup a partir de um objeto `dados` (não de campos de form), para
+// que a validação (Capital Humano) e o próprio formulário usem a MESMA fonte.
+// Depende de window.SELOS_ASSESSOR (definido em config.js).
+//
+//   window.renderAssessorMockup(dados) -> string HTML
+//
+// dados: {
+//   nome_completo|nome, miniBio|mini_bio, linkedin, instagram,
+//   selos: string[] (ids), depoimentos: [{nome, texto}], foto_url|foto_perfil
+// }
+// ============================================================================
+(function () {
+  function esc(s) {
+    return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c];
+    });
+  }
+
+  function selosHtml(selos) {
+    var cat = window.SELOS_ASSESSOR || [];
+    return (selos || []).map(function (id) {
+      var selo = cat.find(function (s) { return s.id === id; });
+      var label = selo ? selo.label : id;
+      return selo && selo.icon_url
+        ? '<img src="' + esc(selo.icon_url) + '" loading="lazy" style="height:32px;width:auto;max-width:80px;object-fit:contain" alt="' + esc(label) + '">'
+        : '<span style="background:var(--icon-bg);border:1px solid var(--border-light);padding:4px 10px;border-radius:var(--radius-sm);font-size:0.75rem;font-weight:600">' + esc(label) + "</span>";
+    }).join("");
+  }
+
+  function socialHtml(dados) {
+    var out = [];
+    if (dados.linkedin) {
+      out.push('<a href="' + esc(dados.linkedin) + '" target="_blank" style="display:inline-flex;width:28px;height:28px;background:#0A66C2;border-radius:var(--radius-sm);align-items:center;justify-content:center;text-decoration:none"><svg width="14" height="14" viewBox="0 0 24 24" fill="white"><path d="M16 8a6 6 0 016 6v7h-4v-7a2 2 0 00-2-2 2 2 0 00-2 2v7h-4v-7a6 6 0 016-6z"/><rect x="2" y="9" width="4" height="12" fill="white"/><circle cx="4" cy="4" r="2" fill="white"/></svg></a>');
+    }
+    var ig = dados.instagram;
+    if (ig) {
+      ig = String(ig).trim();
+      var href = ig.indexOf("http") === 0 ? ig : "https://instagram.com/" + ig.replace(/^@/, "");
+      out.push('<a href="' + esc(href) + '" target="_blank" style="display:inline-flex;width:28px;height:28px;background:linear-gradient(135deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888);border-radius:var(--radius-sm);align-items:center;justify-content:center;text-decoration:none"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.5"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1.5" fill="white" stroke="none"/></svg></a>');
+    }
+    return out.join("");
+  }
+
+  function depoHtml(depoimentos) {
+    var valid = (depoimentos || []).filter(function (d) { return d && d.nome && d.texto; });
+    if (!valid.length) return "";
+    return '<div style="margin-top:24px"><h3 style="font-weight:600;margin-bottom:12px;font-size:0.95rem">Depoimentos</h3><div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">' +
+      valid.map(function (d) {
+        return '<div style="background:var(--icon-bg);border:1px solid var(--border-light);border-radius:var(--radius-md);padding:12px"><p style="font-size:0.875rem;margin-bottom:8px">' + esc(d.texto) + '</p><div style="font-weight:600;font-size:0.8rem">' + esc(d.nome) + "</div></div>";
+      }).join("") +
+      "</div></div>";
+  }
+
+  window.renderAssessorMockup = function (dados) {
+    dados = dados || {};
+    var nome = dados.nome_completo || dados.nome || "Nome do Assessor";
+    var bio = dados.miniBio || dados.mini_bio || "";
+    var foto = dados.foto_url || dados.foto_perfil || dados.fotoPerfil || "";
+    var photoHtml = foto
+      ? '<img src="' + esc(foto) + '" loading="lazy" style="width:100%;height:100%;object-fit:cover" alt="Foto de perfil">'
+      : '<span style="opacity:0.3;font-size:0.85rem">Sem foto</span>';
+    return (
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:24px">' +
+        "<div>" +
+          '<div style="margin-bottom:12px;display:flex;flex-wrap:wrap;gap:6px">' + selosHtml(dados.selos) + "</div>" +
+          '<h2 style="margin-bottom:8px">' + esc(nome) + "</h2>" +
+          '<p style="font-size:0.95rem;opacity:0.8;margin-bottom:16px">' + (bio ? esc(bio) : '<span style="opacity:0.4">Sem bio</span>') + "</p>" +
+          '<div style="display:flex;gap:8px;margin-bottom:16px">' + socialHtml(dados) + "</div>" +
+          '<div style="display:flex;gap:8px">' +
+            '<span class="btn btn-dark" style="font-size:0.8rem;padding:8px 20px;border-radius:var(--radius-md);pointer-events:none">Abrir conta</span>' +
+            '<span class="btn btn-secondary" style="font-size:0.8rem;padding:8px 20px;border-radius:var(--radius-md);pointer-events:none">Falar com assessor</span>' +
+          "</div>" +
+        "</div>" +
+        "<div>" +
+          '<div style="width:100%;height:320px;border-radius:var(--radius-xl);background:var(--icon-bg);display:flex;align-items:center;justify-content:center;overflow:hidden">' + photoHtml + "</div>" +
+        "</div>" +
+      "</div>" +
+      depoHtml(dados.depoimentos) +
+      '<p style="text-align:center;margin-top:20px;font-size:0.75rem;opacity:0.35">Simulação visual. O layout final pode variar conforme o site institucional.</p>'
+    );
+  };
+})();
+
+```
+
+
+## File: artifacts/api-server/.lixo-leva1/backup-convite-templates-1783947796614.json
 
 ```
 [
@@ -3616,2310 +6015,108 @@ Roots: artifacts/api-server lib scripts
 ```
 
 
-## File: artifacts/api-server/build.mjs
-
-```
-import { createRequire } from "node:module";
-import path from "node:path";
-import { fileURLToPath } from "node:url";
-import { build as esbuild } from "esbuild";
-import esbuildPluginPino from "esbuild-plugin-pino";
-import { rm } from "node:fs/promises";
-import { cpSync } from "node:fs";
-
-// Plugins (e.g. 'esbuild-plugin-pino') may use `require` to resolve dependencies
-globalThis.require = createRequire(import.meta.url);
-
-const artifactDir = path.dirname(fileURLToPath(import.meta.url));
-
-async function buildAll() {
-  const distDir = path.resolve(artifactDir, "dist");
-  await rm(distDir, { recursive: true, force: true });
-
-  await esbuild({
-    entryPoints: [path.resolve(artifactDir, "src/index.ts")],
-    platform: "node",
-    bundle: true,
-    format: "esm",
-    outdir: distDir,
-    outExtension: { ".js": ".mjs" },
-    logLevel: "info",
-    // Some packages may not be bundleable, so we externalize them, we can add more here as needed.
-    // Some of the packages below may not be imported or installed, but we're adding them in case they are in the future.
-    // Examples of unbundleable packages:
-    // - uses native modules and loads them dynamically (e.g. sharp)
-    // - use path traversal to read files (e.g. @google-cloud/secret-manager loads sibling .proto files)
-    external: [
-      "*.node",
-      "sharp",
-      "fontkit",
-      "pdfkit",
-      "svg-to-pdfkit",
-      "better-sqlite3",
-      "sqlite3",
-      "canvas",
-      "bcrypt",
-      "argon2",
-      "fsevents",
-      "re2",
-      "farmhash",
-      "xxhash-addon",
-      "bufferutil",
-      "utf-8-validate",
-      "ssh2",
-      "cpu-features",
-      "dtrace-provider",
-      "isolated-vm",
-      "lightningcss",
-      "pg-native",
-      "oracledb",
-      "mongodb-client-encryption",
-      "nodemailer",
-      "handlebars",
-      "knex",
-      "typeorm",
-      "protobufjs",
-      "onnxruntime-node",
-      "@tensorflow/*",
-      "@prisma/client",
-      "@mikro-orm/*",
-      "@grpc/*",
-      "@swc/*",
-      "@aws-sdk/*",
-      "@azure/*",
-      "@opentelemetry/*",
-      "@google-cloud/*",
-      "@google/*",
-      "googleapis",
-      "firebase-admin",
-      "@parcel/watcher",
-      "@sentry/profiling-node",
-      "@tree-sitter/*",
-      "aws-sdk",
-      "classic-level",
-      "dd-trace",
-      "ffi-napi",
-      "grpc",
-      "hiredis",
-      "kerberos",
-      "leveldown",
-      "miniflare",
-      "mysql2",
-      "newrelic",
-      "odbc",
-      "piscina",
-      "realm",
-      "ref-napi",
-      "rocksdb",
-      "sass-embedded",
-      "sequelize",
-      "serialport",
-      "snappy",
-      "tinypool",
-      "usb",
-      "workerd",
-      "wrangler",
-      "zeromq",
-      "zeromq-prebuilt",
-      "playwright",
-      "puppeteer",
-      "puppeteer-core",
-      "electron",
-    ],
-    sourcemap: "linked",
-    plugins: [
-      // pino relies on workers to handle logging, instead of externalizing it we use a plugin to handle it
-      esbuildPluginPino({ transports: ["pino-pretty"] })
-    ],
-    // Make sure packages that are cjs only (e.g. express) but are bundled continue to work in our esm output file
-    banner: {
-      js: `import { createRequire as __bannerCrReq } from 'node:module';
-import __bannerPath from 'node:path';
-import __bannerUrl from 'node:url';
-
-globalThis.require = __bannerCrReq(import.meta.url);
-globalThis.__filename = __bannerUrl.fileURLToPath(import.meta.url);
-globalThis.__dirname = __bannerPath.dirname(globalThis.__filename);
-    `,
-    },
-  });
-
-  // Copy assets (fonts + assinatura images) to dist so they're available at runtime
-  const assetsDir = path.resolve(artifactDir, "assets");
-  const distAssetsDir = path.resolve(distDir, "assets");
-  cpSync(assetsDir, distAssetsDir, { recursive: true });
-}
-
-buildAll().catch((err) => {
-  console.error(err);
-  process.exit(1);
-});
-
-```
-
-
-## File: artifacts/api-server/docs/admin-dashboard.md
-
-```
-# Admin & Dashboard
-
-## Páginas de acompanhamento
-
-| Página | Arquivo | Acesso | Descrição |
-|---|---|---|---|
-| Minhas solicitações | `dashboard.html` | Todos os usuários autenticados | Lista as próprias solicitações (ou todas, se gestor/admin) |
-| Painel admin | `admin.html` | `admin`, `gestor` | Visão geral de todas as solicitações |
-| Usuários | `admin-usuarios.html` | `admin` | Gerencia usuários e roles |
-| ClickUp Listas | `admin-clickup-lists.html` | `admin` | Configura qual lista ClickUp recebe cada tipo |
-| Templates de Arte | `admin-templates.html` | `admin` | Gerencia templates de geração automática |
-| Assets | `admin-assets.html` | `admin` | Biblioteca de imagens/logos usados nos templates |
-| Log de atividades | `admin-log.html` | `admin`, `gestor` | Histórico de eventos do sistema |
-| Tombamentos | `admin-tombamentos.html` | `admin` | Geração em massa de assinaturas e cartões digitais |
-| Capital Humano | `capital-humano.html` | `capital_humano`, `admin` | Seleção de formulários exclusivos do setor |
-
----
-
-## Dashboard (`dashboard.html`)
-
-### Contadores no topo
-
-- **Em andamento** — solicitações com status diferente de `concluido` e `cancelado`
-- **Concluídas** — solicitações com status `concluido`
-
-### Abas
-
-| Aba | Conteúdo |
-|---|---|
-| **Solicitações gerais** | Todos os tipos exceto `eventos` |
-| **Eventos** | Apenas tipo `eventos` |
-
-### Filtros disponíveis
-
-- **Período:** Hoje / 7 dias / 30 dias / Todos
-- **Tipo:** lista de tipos de solicitação
-- **Status:** lista dos status (`STATUS_SOLICITACAO`)
-- **Alertas:** solicitações com pendência de aprovação
-
-Implementados via `filters.js` com estado local e callback de re-renderização.
-
-### Cards de solicitação
-
-Cada card exibe:
-- Título da solicitação
-- Tipo (label amigável)
-- Data de criação
-- Badge de status (cor conforme `STATUS_SOLICITACAO`)
-- Badge **"APROVAÇÃO"** em vermelho se status for `em-aprovacao` e não lido
-- Botão **"Baixar"** se houver `entrega_links`
-
----
-
-## Status das solicitações
-
-Lista completa de status com seus slugs internos:
-
-| Slug | Label | Cor de fundo |
-|---|---|---|
-| `recebido` | Recebido | Cinza escuro |
-| `alinhamentos` | Alinhamentos | Azul |
-| `em-analise` | Em análise | Amarelo |
-| `em-andamento` | Em andamento | Amarelo |
-| `em-producao` | Em produção | Laranja |
-| `em-revisao` | Em revisão | Roxo |
-| `em-aprovacao` | Em aprovação | Azul |
-| `cotacao-aprovacao` | Em cotação / aprovação | Azul |
-| `aguardando` | Aguardando informação | Marrom |
-| `aguardando-rh` | Aguardando aprovação do RH | Marrom |
-| `aguardando-pagamento` | Aguardando pagamento | Marrom |
-| `aguardando-finalizacao` | Aguardando finalização | Roxo |
-| `concluido` | Concluído | Verde |
-| `cancelado` | Cancelado | Vermelho |
-| `em-espera` | Em espera | Cinza escuro |
-| `gerando` | Gerando arte | Azul claro |
-| `erro` | Erro | Vermelho claro |
-| `aguardando-validacao` | Aguardando validação | Cinza claro |
-| `aguardando-contrato` | Aguardando contrato | Âmbar claro |
-| `validado` | Validado | Azul claro |
-| `envio-grafica` | Envio gráfica | Índigo claro |
-| `envio-assessor` | Envio assessor | Verde claro |
-| `reprovado` | Reprovado | Vermelho claro |
-
----
-
-## Gerenciamento de usuários (`admin-usuarios.html`)
-
-- **Listagem** com busca por nome/e-mail
-- **Criar usuário:** formulário com e-mail, nome, role e ClickUp user ID opcional
-- **Alterar role:** dropdown inline para cada usuário (roles: Colaborador, Capital Humano, Gestor, Admin)
-- **Impersonation:** admins e gestores podem logar como outro usuário via `POST /api/admin/impersonate`
-
-> Não é possível alterar a própria role.
-
----
-
-## Tombamentos (`admin-tombamentos.html`)
-
-Funcionalidade para geração em lote de assinaturas de e-mail e cartões digitais a partir de uma planilha.
-
-**Fluxo:**
-1. Admin faz upload de Excel/CSV com lista de colaboradores
-2. Opcionalmente, faz upload de um ZIP com fotos de perfil (nomes de arquivo correspondendo aos nomes da planilha)
-3. O sistema processa cada linha e gera assinatura de e-mail e/ou cartão digital para cada pessoa
-4. Resultado disponível como ZIPs para download (`assinaturas_zip_url`, `cartoes_zip_url`)
-5. Links expiram conforme `expires_at`
-
-**Rotas de API envolvidas:**
-- `POST /api/admin/tombamentos` — cria um novo lote
-- `GET /api/admin/tombamentos` — lista lotes
-- `PATCH /api/admin/tombamentos/:id` — atualiza status e URLs de entrega
-- `POST /api/admin/tombamentos/parse` — valida e interpreta o arquivo de planilha
-
----
-
-## Templates de Arte (`admin-templates.html`)
-
-Interface para criação e edição dos templates usados pela geração automática.
-
-- Templates são armazenados na tabela `art_templates`
-- Cada template tem `tipo` (tipo de solicitação) e `variant_value` (ex.: slug de marca)
-- A configuração (`config` JSONB) define camadas: imagem de fundo, textos, posições, fontes, cores
-- Templates com `is_active = false` são ignorados pela geração
-- Assets (imagens) são gerenciados separadamente em `admin-assets.html`
-
----
-
-## Log de Atividades (`admin-log.html`)
-
-Exibe registros da tabela `activity_log` com:
-- Filtro por tipo de evento, nível, período
-- Busca por e-mail de usuário ou título de solicitação
-- Detalhes expandíveis por entrada
-
----
-
-## Fluxo de aprovação de arte (detalhe da solicitação)
-
-Para tipos com aprovação (`solicitacao.html`):
-
-1. Quando status muda para `em-aprovacao`, a seção "Materiais para aprovação" aparece com badge **NOVO** (destacada com borda vermelha no primeiro acesso).
-2. O usuário expande o acordeão e vê links para os arquivos.
-3. Escolhe **"Aprovado"** → `POST /api/solicitacoes/:id/aprovacao` → notificação ao time.
-4. Ou escolhe **"Solicitar alterações"** → digita observações → enviadas ao time → status muda para `reprovado`.
-5. Quando o time revisa, uma nova rodada começa (novo conjunto de links na mesma solicitação).
-6. Após aprovação final, pesquisa de satisfação opcional aparece.
-
-O histórico de rodadas é armazenado localmente no `localStorage` do navegador (chave `svn_rodadas_<id>`).
-
-```
-
-
-## File: artifacts/api-server/docs/arquitetura.md
-
-```
-# Arquitetura
-
-## Stack e camadas
-
-```
-┌─────────────────────────────────────────────┐
-│  Navegador (HTML/CSS/JS vanilla)             │
-│  auth.js · shell.js · form-core.js · etc.   │
-└──────────────────┬──────────────────────────┘
-                   │ HTTP (fetch)
-┌──────────────────▼──────────────────────────┐
-│  Express 5 (Node.js ESM / TypeScript)        │
-│  src/app.ts  ←  src/routes/index.ts          │
-│  ┌──────────┐ ┌────────┐ ┌────────────────┐ │
-│  │ forms.ts │ │auth.ts │ │   admin.ts     │ │
-│  └──────────┘ └────────┘ └────────────────┘ │
-│  ┌──────────┐ ┌─────────┐ ┌─────────────┐  │
-│  │clickup.ts│ │webhook  │ │  assets.ts  │  │
-│  └──────────┘ └─────────┘ └─────────────┘  │
-└──┬──────────────────────────────────────────┘
-   │
-   ├── PostgreSQL (Drizzle ORM)  — sessions, users, solicitacoes, …
-   ├── Cloudflare R2              — arquivos de upload, artes geradas
-   ├── ClickUp API                — cria e consulta tarefas
-   ├── n8n Webhooks               — dispara automações de geração
-   └── MySQL Contatos (legado)    — perfil do usuário (telefone, unidade)
-```
-
-## Fluxo de uma solicitação (Mermaid)
-
-```mermaid
-sequenceDiagram
-    participant U as Usuário (browser)
-    participant E as Express /api/solicitacoes
-    participant DB as PostgreSQL
-    participant R2 as Cloudflare R2
-    participant CU as ClickUp API
-    participant N8N as n8n Webhook
-    participant WH as POST /webhook/clickup
-
-    U->>E: POST /api/solicitacoes (FormData)
-    E->>E: requireAuth, normalizeFormDados
-    E->>DB: INSERT solicitacoes (status=recebido)
-    E->>R2: upload arquivos anexados
-    E->>DB: INSERT arquivos (urls R2)
-    E->>CU: createTask (lista por tipo)
-    E->>DB: UPDATE clickup_task_id
-    E-->>U: 201 { id, clickup_task_id }
-
-    Note over E,N8N: Em background (não bloqueia resposta)
-    E->>N8N: POST webhook (geração automática, se tipo automação)
-
-    Note over CU,WH: Time de Marketing atualiza status no ClickUp
-    CU-->>WH: POST /webhook/clickup (status update)
-    WH->>WH: valida HMAC x-signature
-    WH->>DB: UPDATE solicitacoes.status
-    WH->>N8N: dispara notificação (se em-aprovacao ou concluido)
-
-    U->>E: GET /api/solicitacoes/:id
-    E->>DB: SELECT
-    E-->>U: { status, dados, entrega_links, … }
-```
-
-## Estrutura de pastas comentada
-
-```
-artifacts/api-server/
-├── build.mjs                   # script de build com esbuild (ESM)
-├── package.json                # dependências e scripts npm
-├── tsconfig.json               # TypeScript (compilação)
-├── tsconfig.typecheck.json     # TypeScript (type-check sem emit)
-│
-├── public/                     # arquivos estáticos servidos pelo Express
-│   ├── *.html                  # páginas (uma por tela)
-│   ├── auth.js                 # client de sessão/perfil
-│   ├── config.js               # constantes de UI (categorias, status, labels)
-│   ├── form-core.js            # engine de formulários (init/validate/submit)
-│   ├── filters.js              # painéis de filtro reutilizáveis
-│   ├── shell.js                # navbar/sidebar global
-│   ├── utils.js                # helpers (esc, humanizeValue, masks, Modal)
-│   ├── upload-feedback.js      # feedback visual em inputs de arquivo
-│   ├── toast.js                # notificações não-bloqueantes e confirmações
-│   └── ibge-loader.js          # estados/cidades via API IBGE (cache 24h)
-│
-└── src/
-    ├── app.ts                  # monta o Express (middleware, rotas, erros)
-    ├── index.ts                # entry-point: inicializa DB, sobe o servidor
-    │
-    ├── assets/                 # recursos estáticos embarcados no servidor
-    │   ├── fonts/              # IvyJournal-Light.ttf, RoobertPRO-Regular.otf
-    │   └── imagens/            # assets base para geração de assinaturas
-    │
-    ├── cartao/
-    │   └── gerar-cartao.ts     # gerador de cartão físico (PDF com fontes vetorizadas)
-    │
-    ├── config/
-    │   ├── clickup-status.ts   # mapa ClickUp status → Hub status interno
-    │   ├── form-schemas.ts     # fonte única de tipos de formulário e campos
-    │   └── unidades.ts         # endereços das unidades SVN
-    │
-    ├── lib/
-    │   ├── logger.ts           # configuração do pino
-    │   ├── mysqlContatos.ts    # pool MySQL para busca de perfil por email
-    │   └── r2-client.ts        # singleton S3Client para o R2
-    │
-    ├── middleware/
-    │   └── auth.middleware.ts  # requireAuth, requireRole
-    │
-    ├── routes/
-    │   ├── index.ts            # agrega sub-routers e define prefixos
-    │   ├── forms.ts            # CRUD de solicitações, /form-schemas
-    │   ├── admin.ts            # usuários, tombamentos, ClickUp config
-    │   ├── auth.ts             # login MSAL, callback, /me, logout
-    │   ├── clickup.ts          # criação de tarefas e consultas ClickUp
-    │   ├── webhook.ts          # recebe updates do ClickUp via HMAC
-    │   ├── r2.ts               # upload/delete no R2
-    │   ├── assets.ts           # biblioteca de assets para templates
-    │   └── health.ts           # GET /healthz
-    │
-    ├── scripts/
-    │   ├── import-cartoes.ts   # importa histórico CSV de cartões físicos
-    │   ├── migrate-assignments.ts  # migra assignees do env para o banco
-    │   └── seed-art-templates.ts   # semeie templates de arte padrão
-    │
-    ├── services/
-    │   ├── activity-log.ts     # registra eventos em eventos_solicitacao
-    │   ├── art-generator.ts    # orquestra geração automática de artes
-    │   ├── notifications.ts    # dispara webhooks n8n nos marcos do fluxo
-    │   ├── pdf-renderer.ts     # converte template para PDF via pdf-lib
-    │   └── template-renderer.ts # motor de renderização de imagem via sharp
-    │
-    ├── types/
-    │   ├── art-template.ts     # tipos do sistema de templates
-    │   ├── express.d.ts        # extensão de tipos do Express (session.user)
-    │   └── vendor-shims.d.ts   # shims de módulos sem @types
-    │
-    └── utils/
-        └── api-error.ts        # classe ApiError com factories estáticas
-```
-
-```
-
-
-## File: artifacts/api-server/docs/backend.md
-
-```
-# Backend
-
-## Montagem do servidor (`src/app.ts` / `src/index.ts`)
-
-`src/index.ts` é o entry-point: inicializa o schema do banco (tabelas `CREATE TABLE IF NOT EXISTS`) e sobe o Express. `src/app.ts` monta os middlewares e rotas.
-
-**Middlewares (em ordem):**
-
-| Middleware | Finalidade |
-|---|---|
-| `helmet` | Headers de segurança HTTP |
-| `compression` | GZIP |
-| `cors` | Restringe origens a `ALLOWED_ORIGIN` |
-| `express-rate-limit` | Limite separado para `/auth` e `/api` |
-| `pino-http` | Logging estruturado de requisições |
-| `express.json()` + `express.urlencoded()` | Parsers de body |
-| `cookie-parser` | Parsing de cookies |
-| `express-session` + `connect-pg-simple` | Sessões persistidas no PostgreSQL |
-| `multer` | Upload de arquivos multipart (configurado em `forms.ts`) |
-
-## Rotas
-
-### `POST /api/solicitacoes` — criar solicitação
-
-Fluxo completo:
-
-1. **`requireAuth`** — verifica sessão ativa.
-2. **Parse do FormData** — `multer` extrai arquivos; body JSON é parseado.
-3. **`normalizeFormDados(tipo, dados)`** — normaliza chaves para snake_case via `KEY_MAP`, remove campos vazios, aplica transformações por tipo (ex.: `cd_ancord` do perfil, contagem de selos).
-4. **`validateFormDados(tipo, dados)`** — verifica `REQUIRED_FIELDS[tipo]`; retorna 400 se faltarem campos.
-5. **INSERT em `solicitacoes`** — status inicial `recebido`.
-6. **Upload de arquivos para R2** — cada arquivo vai para `r2/<uuid>.<ext>`; URLs salvas em `arquivos`.
-7. **`createClickUpTask(tipo, dados, solicitacaoId)`** — monta descrição estruturada e cria tarefa na lista ClickUp correta (configurada em `tipo_clickup_list` ou fallback para env vars).
-8. **UPDATE `clickup_task_id`** no banco.
-9. **Resposta 201** com `{ id, clickup_task_id }`.
-10. **Background:** dispara `triggerArtGeneration(id, tipo, dados)` se for tipo de automação — não bloqueia a resposta.
-
-### `GET /api/solicitacoes` — listar
-
-- Colaboradores veem apenas as próprias. Admins/gestores veem todas.
-- Filtros: `status`, `tipo`, `search` (título), `from`/`to` (data), `page`/`limit`.
-- Retorna paginação + array de solicitações com status formatado.
-
-### `GET /api/solicitacoes/:id` — detalhe
-
-- Colaboradores só acessam as próprias (403 caso contrário).
-- Retorna todos os campos, arquivos, `entrega_links` e `avaliacao`.
-
-### `PATCH /api/solicitacoes/:id/aprovacao` — aprovar arte
-
-- Disponível para o dono da solicitação.
-- Marca a solicitação como aprovada e notifica o time via n8n.
-
-### `GET /api/solicitacoes/:id/entrega` — links de entrega
-
-- Retorna `{ links, status }` para que o frontend exiba o botão de download.
-
-### `GET /api/form-schemas` — metadados dos formulários
-
-- Não requer autenticação.
-- Retorna `{ marcas, contratos, cargos, setores, tipos, labels }`.
-- Usado pelo `config.js` do frontend na inicialização.
-
-### `GET /api/config` — configuração de UI
-
-- Não requer autenticação.
-- Retorna URLs de recursos (logo, manual, vídeo hero, email de upload, lista de unidades).
-
----
-
-## `normalizeFormDados` e `KEY_MAP`
-
-`normalizeFormDados(tipo, dados)` é responsável por garantir que os dados cheguem ao banco e ao ClickUp sempre no formato canônico **snake_case**.
-
-```
-KEY_MAP = {
-  // camelCase legado → snake_case canônico
-  nomeCartao     → nome_cartao
-  emailCorporativo → email_corporativo
-  contratoSocial   → contrato_social
-  isPrivateKey     → is_private_key
-  modeloCartao     → modelo_cartao
-  // ... (~20 mapeamentos)
-}
-```
-
-A função percorre todas as chaves do objeto `dados`, renomeia via `KEY_MAP`, remove valores `null`/`undefined`/`""`, e aplica transformações específicas por tipo (ex.: injeta `cd_ancord` do perfil do usuário para tipos de assessor).
-
-> O campo `dados` é armazenado como `jsonb` no PostgreSQL. A convenção snake_case é a forma canônica. Dados enviados antes da migração 8.3 usavam camelCase — o script `migrate-assignments.ts` e o `normalizeFormDados` tratam ambas as formas.
-
----
-
-## Geração de artefatos
-
-A geração automática ocorre após o `POST /api/solicitacoes` em background:
-
-```
-art-generator.ts
-  └─ busca art_templates ativos para tipo + variant (marca/contrato)
-  └─ template-renderer.ts (sharp)
-       └─ baixa assets (logos, fotos) via fetch
-       └─ compõe imagem PNG
-  └─ pdf-renderer.ts (pdf-lib)        ← se o template gera PDF
-  └─ gerar-cartao.ts (pdfkit)         ← para cartão físico (vetorizado)
-  └─ uploadToR2()
-  └─ UPDATE solicitacoes.entrega_links + status → concluido
-       └─ notifications.ts dispara webhook n8n (notificação ao usuário)
-```
-
-Se a geração falhar, `status` é atualizado para `erro` e `erro_geracao` recebe a mensagem.
-
----
-
-## Webhook do ClickUp (`POST /webhook/clickup`)
-
-1. Valida assinatura HMAC-SHA256 no header `x-signature` usando `CLICKUP_WEBHOOK_SECRET`.
-2. Extrai `task_id` e `status` do payload.
-3. Busca `solicitacao` por `clickup_task_id`.
-4. Mapeia o status ClickUp para status interno via `CLICKUP_STATUS_MAP`.
-5. Atualiza `solicitacoes.status` no banco.
-6. Se novo status for `em-aprovacao` ou `concluido`, dispara notificação via `notifications.ts`.
-
----
-
-## Autenticação (`src/routes/auth.ts`)
-
-Fluxo Microsoft MSAL (OAuth 2.0 Authorization Code + PKCE):
-
-```
-GET /auth/login
-  └─ MSAL gera authorization URL → redireciona para Microsoft
-
-GET /auth/callback
-  └─ MSAL troca code por token
-  └─ extrai email (@svninvest.com.br obrigatório)
-  └─ busca/cria usuário em usersTable
-  └─ busca perfil em MySQL Contatos (telefone, unidade, cargo, cd_ancord)
-  └─ popula req.session.user e req.session.userProfile
-  └─ redireciona para ?redirect= ou /
-
-GET /auth/me          → { authenticated, user, profile, pendentes }
-GET /auth/me-profile  → { profile }
-GET /auth/logout      → destrói sessão, redireciona para /
-```
-
----
-
-## Middleware de autorização
-
-```ts
-// Verifica apenas autenticação
-requireAuth
-
-// Verifica autenticação + role
-requireRole("admin")
-requireRole("admin", "gestor")
-requireRole("capital_humano", "gestor", "admin")
-```
-
-Roles disponíveis: `colaborador` (padrão), `gestor`, `admin`, `capital_humano`.
-
-```
-
-
-## File: artifacts/api-server/docs/como-rodar.md
-
-```
-# Como Rodar
-
-## Pré-requisitos
-
-- **Node.js** 20+ (use `.nvmrc` ou o runtime configurado no Replit/Railway)
-- **pnpm** 9+ (gerenciador de pacotes do monorepo)
-- **PostgreSQL** 15+ acessível via `DATABASE_URL`
-
-## Instalação
-
-```bash
-# Na raiz do monorepo
-pnpm install
-```
-
-Isso instala as dependências de todos os pacotes do workspace (`api-server`, `db`, `api-zod`, `mockup-sandbox`).
-
-## Variáveis de ambiente
-
-Copie `.env.example` para `.env` e preencha os valores. Nunca commite `.env`.
-
-| Variável | Obrigatória | Descrição |
-|---|---|---|
-| `PORT` | Opcional | Porta Express (Railway injeta automaticamente) |
-| `NODE_ENV` | Sim | `development` ou `production` |
-| `LOG_LEVEL` | Opcional | `trace`/`debug`/`info`/`warn`/`error`/`fatal` (padrão: `info`) |
-| `ALLOWED_ORIGIN` | Sim | URL pública do app para CORS (sem barra final) |
-| `DATABASE_URL` | Sim | Connection string PostgreSQL |
-| `SESSION_SECRET` | Sim | Chave para assinar cookies de sessão (gere com `openssl rand -base64 48`) |
-| `MSAL_TENANT_ID` | Sim | Tenant ID do Azure AD |
-| `MSAL_CLIENT_ID` | Sim | Client ID do App Registration |
-| `MSAL_CLIENT_SECRET` | Sim | Client Secret do App Registration |
-| `MSAL_REDIRECT_URI` | Sim | URI de callback cadastrada no Azure (deve bater exatamente) |
-| `R2_ACCOUNT_ID` | Sim | ID da conta Cloudflare |
-| `R2_BUCKET` | Sim | Nome do bucket R2 |
-| `R2_ACCESS_KEY` | Sim | Access Key do R2 |
-| `R2_SECRET_KEY` | Sim | Secret Key do R2 |
-| `R2_PUBLIC_URL` | Sim | URL pública base do bucket (sem barra final) |
-| `CLICKUP_API_TOKEN` | Sim | Token de acesso do ClickUp |
-| `CLICKUP_WEBHOOK_SECRET` | Opcional | HMAC secret do webhook ClickUp |
-| `CLICKUP_LIST_GERAL` | Sim | ID da lista ClickUp para solicitações gerais |
-| `CLICKUP_LIST_EVENTOS` | Sim | ID da lista ClickUp para eventos |
-| `CLICKUP_LIST_BRINDES` | Sim | ID da lista ClickUp para brindes |
-| `CLICKUP_LIST_PATROCINIO` | Sim | ID da lista ClickUp para patrocínio |
-| `CLICKUP_ASSIGNEE_GERAL` | Sim | ID do usuário ClickUp responsável padrão |
-| `CLICKUP_ASSIGNEE_EVENTOS` | Sim | ID do usuário ClickUp para eventos |
-| `CLICKUP_ASSIGNEE_BRINDES` | Sim | ID do usuário ClickUp para brindes |
-| `CLICKUP_ASSIGNEE_PATROCINIO` | Sim | ID do usuário ClickUp para patrocínio |
-| `WEBHOOK_CARTAO_FISICO` | Sim | URL n8n para geração de cartão físico |
-| `WEBHOOK_CARTAO_DIGITAL` | Sim | URL n8n para geração de cartão digital |
-| `WEBHOOK_BOAS_VINDAS` | Sim | URL n8n para cartão de boas-vindas |
-| `WEBHOOK_NPS` | Sim | URL n8n para arte NPS |
-| `WEBHOOK_CONVITE_FP` | Sim | URL n8n para convite Financial Planning |
-| `WEBHOOK_CERTIFICADO` | Sim | URL n8n para certificado |
-| `WEBHOOK_COMEMORATIVO` | Sim | URL n8n para cartão comemorativo |
-| `INTERNAL_API_SECRET` | Sim | Chave HMAC para chamadas internas (n8n → API) |
-| `MYSQL_CONTATOS` | Opcional | `mysql://user:pass@host:3306/db` para perfis de assessores |
-| `URL_LOGO_BRANCA` | Opcional | URL SVG do logo branco (fallback para CDN R2) |
-| `URL_LOGO_PRETA` | Opcional | URL SVG do logo preto |
-| `URL_MANUAL` | Opcional | URL do PDF do manual de eventos |
-| `URL_TUTORIAL_TRANSMISSAO` | Opcional | URL do tutorial de transmissão |
-| `URL_VIDEO_HERO` | Opcional | URL do vídeo de fundo da tela de eventos |
-| `EMAIL_UPLOAD` | Opcional | E-mail de notificação de upload |
-
-## Comandos de desenvolvimento
-
-```bash
-# Roda o build e sobe o servidor em modo desenvolvimento
-pnpm --filter @workspace/api-server run dev
-
-# Somente build (esbuild → dist/)
-pnpm --filter @workspace/api-server run build
-
-# Somente start (precisa que dist/ já exista)
-pnpm --filter @workspace/api-server run start
-
-# Type-check sem emit
-pnpm --filter @workspace/api-server run typecheck
-```
-
-> O comando `dev` executa **build + start** em sequência. Não há watch mode — para recarregar, reinicie o processo manualmente (ou use o botão "Run" no Replit).
-
-## Rodar no Replit
-
-O Replit gerencia o processo via Workflow configurado:
-
-```
-pnpm --filter @workspace/api-server run dev
-```
-
-- O servidor escuta na porta injetada pela variável `PORT`.
-- As variáveis de ambiente são configuradas em **Secrets** no painel do Replit.
-- Para reiniciar: clique em **Run** na barra superior ou use o painel de Workflows.
-
-## Deploy no Railway
-
-1. Crie um projeto Railway e adicione um serviço **PostgreSQL** e um serviço **Node**.
-2. Conecte o repositório Git ao serviço Node.
-3. Configure o **Start Command**:
-   ```
-   pnpm --filter @workspace/api-server run start
-   ```
-4. Configure o **Build Command** (ou use o Nixpacks do Railway):
-   ```
-   pnpm install && pnpm --filter @workspace/api-server run build
-   ```
-5. Adicione todas as variáveis de ambiente em **Settings → Variables**.
-6. O Railway injeta `DATABASE_URL` automaticamente quando o banco é vinculado ao serviço.
-
-## Migrações de banco
-
-O `src/index.ts` chama `db.execute(sql`CREATE TABLE IF NOT EXISTS ...`)` na inicialização — o schema é criado automaticamente na primeira subida. Para alterações de schema, edite `packages/db/src/schema/index.ts` e suba o servidor (Drizzle não executa migrações automáticas destrutivas).
-
-> TODO: verificar se existe script de migração Drizzle (`drizzle-kit push` ou `migrate`) configurado no monorepo.
-
-## Scripts one-off
-
-```bash
-# Migrar assignees de env vars para o banco (seguro re-rodar)
-pnpm --filter @workspace/api-server run migrate-assignments
-
-# Semear templates de arte padrão (idempotente)
-pnpm --filter @workspace/api-server run seed-art-templates
-
-# Importar histórico CSV de cartões físicos (dry-run por padrão)
-pnpm tsx artifacts/api-server/src/scripts/import-cartoes.ts --csv caminho/arquivo.csv
-# Para aplicar de verdade:
-pnpm tsx artifacts/api-server/src/scripts/import-cartoes.ts --csv caminho/arquivo.csv --apply
-```
-
-Veja detalhes sobre cada script em [scripts.md](scripts.md).
-
-```
-
-
-## File: artifacts/api-server/docs/convencoes.md
-
-```
-# Convenções
-
-## Tokens de marca SVN
-
-Definidos como variáveis CSS globais no CSS compartilhado das páginas. Os valores abaixo refletem o uso no código.
-
-### Cores principais
-
-| Token CSS | Valor | Uso |
-|---|---|---|
-| `--carbon-black` | `#221b19` | Texto principal |
-| `--ruby-red` | `#AC3631` | Cor de destaque/brand (botões primários, bordas de aprovação) |
-| `--gold` | `#C98A00` (aprox.) | Status em andamento/análise; botões dourados |
-| `--icon-bg` | `rgba(34,27,25,0.06)` | Fundo de ícones e badges neutros |
-
-### Status e cores de badge
-
-Os status têm suas cores definidas em `STATUS_SOLICITACAO` no `config.js`. A convenção é sempre usar `bg` (background) e `text` (cor do texto) do objeto de status, nunca cores hardcoded por slug.
-
-```js
-const s = getStatus('em-aprovacao');
-// s.bg  = "#2563C0"
-// s.text = "#FFFFFF"
-badge.style.background = s.bg;
-badge.style.color = s.text;
-```
-
-### Tipografia
-
-- **Fonte de texto:** `RoobertPRO-Regular` (usada nos artefatos gerados; não carregada no frontend web)
-- **Fonte de títulos em artes:** `IvyJournal-Light` (usada nos artefatos gerados)
-- No frontend web: `system-ui` / stack de fontes do navegador
-
-### Classes CSS utilitárias recorrentes
-
-| Classe | Uso |
-|---|---|
-| `.page-container` | Wrapper central das páginas |
-| `.page-container--narrow` | Versão estreita para formulários |
-| `.form-card` | Card com sombra para seções do formulário |
-| `.field` | Wrapper de campo (label + input + error) |
-| `.field-error` | Mensagem de erro de validação |
-| `.required-star` | Asterisco vermelho em campos obrigatórios |
-| `.btn` | Base de botão |
-| `.btn-submit-gold` | Botão primário dourado |
-| `.btn-download-page` | Botão de download em página de detalhe |
-| `.svn-stepper` | Indicador de progresso multi-step |
-| `.form-step` | Container de uma etapa do formulário |
-| `.search-bar` | Input de busca padronizado |
-
----
-
-## Padrões de código
-
-### TypeScript / Node.js
-
-- **Módulos:** ESM (`"type": "module"` no package.json). Use `import`/`export`, nunca `require`.
-- **Build:** esbuild via `build.mjs`. O output vai para `dist/index.mjs`. Não é necessário `tsc` para rodar — apenas para type-check.
-- **Type-check:** `pnpm typecheck` (não faz emit). Rode antes de commitar em mudanças de tipos.
-- **Async:** use `async/await`. Evite callbacks encadeados.
-- **Erros:** lance `ApiError` (de `src/utils/api-error.ts`) para erros esperados. O handler central em `app.ts` os serializa corretamente.
-- **Logging:** use `req.log` (pino injetado pelo `pino-http`) dentro de rotas. Nunca use `console.log` em produção.
-
-### Rotas Express
-
-- Todas as rotas definem o tipo de retorno explicitamente: `async (req, res): Promise<void>`.
-- O middleware de autenticação (`requireAuth` / `requireRole`) vem sempre antes da lógica de negócio.
-- Resposta de erro segue o padrão: `res.status(NNN).json({ error: "Mensagem legível" })`.
-
-### JavaScript frontend
-
-- Vanilla JS (sem framework). Módulos não são usados — os scripts são carregados via `<script>` em ordem.
-- Escaping HTML: sempre use `window.esc(str)` ao injetar conteúdo dinâmico no DOM (evita XSS).
-- Não use `innerHTML` com dados do usuário sem `esc()`.
-
-### Nomenclatura
-
-| Contexto | Convenção |
-|---|---|
-| Tipos de solicitação (`tipo_solicitacao`) | kebab-case (`assinatura-email`, `cartao-visita-digital`) |
-| Campos de formulário no banco (`dados` JSONB) | snake_case (`nome_assinatura`, `contrato_social`) |
-| Variáveis JS no frontend | camelCase |
-| Variáveis TypeScript | camelCase (objetos) / UPPER_SNAKE_CASE (constantes de módulo) |
-| IDs de elementos HTML | kebab-case |
-| Classes CSS | kebab-case |
-| Variáveis de ambiente | UPPER_SNAKE_CASE |
-
-### Banco de dados
-
-- Todas as tabelas têm `id serial PRIMARY KEY` e `created_at timestamp`.
-- Dados de formulário vão no campo `dados jsonb` — não crie colunas por campo.
-- Novos campos que precisem de indexação devem ser colunas explícitas (ex.: `status`, `tipo_solicitacao`).
-- Migrações: atualmente feitas com `CREATE TABLE IF NOT EXISTS` na inicialização. Para alterações destrutivas ou adição de índices, crie um script em `src/scripts/`.
-
-### Variáveis de ambiente
-
-- Nunca acesse `process.env` diretamente no código de rota — centralize a leitura em `src/config/` ou no topo do arquivo de inicialização.
-- Variáveis sem valor padrão razoável são `[obrigatório]` — o servidor não deve subir silenciosamente sem elas.
-- Documente toda nova variável no `.env.example` com comentário explicativo.
-
----
-
-## Estrutura de uma nova integração
-
-Se precisar adicionar uma nova integração externa:
-
-1. Crie o cliente em `src/lib/<servico>.ts`
-2. Exponha funções nomeadas (não o cliente bruto) para os consumers
-3. Trate ausência de credenciais graciosamente (retorne `null` ou logue aviso, não lance exceção no boot)
-4. Documente as variáveis de ambiente necessárias no `.env.example`
-5. Adicione a integração em [integracoes.md](integracoes.md)
-
-```
-
-
-## File: artifacts/api-server/docs/form-schemas.md
-
-```
-# Schema de Formulários
-
-## O que é `form-schemas.ts`
-
-`src/config/form-schemas.ts` é a **fonte única de verdade** para metadados de formulários. Ele define:
-
-- Quais tipos de formulário existem
-- Quais campos cada tipo tem (nome, label, tipo de input, required, options)
-- Quais opções aparecem em selects/radios (marcas, contratos, cargos, setores)
-- Os `REQUIRED_FIELDS` validados no backend
-- Os `field_options` usados para resolver labels de valores no detalhe da solicitação
-
-O endpoint `GET /api/form-schemas` expõe esses dados ao frontend. O `config.js` faz fetch desse endpoint na inicialização e popula `window._svnFormSchemas` e `window._svnFieldLabels`.
-
-> **Não edite os fallbacks em `config.js`** — eles existem apenas para evitar tela em branco se o endpoint falhar. A fonte real é `form-schemas.ts`.
-
----
-
-## Estrutura de um schema de tipo
-
-```ts
-// Exemplo simplificado
-const FORM_SCHEMAS: Record<string, FormSchema> = {
-  "assinatura-email": {
-    tipo: "assinatura-email",
-    label: "Assinatura de E-mail",
-    fields: [
-      {
-        name: "nome_assinatura",
-        label: "Nome para assinatura",
-        type: "text",         // text | email | tel | select | radio | textarea | file
-        required: true,
-        options: null,
-      },
-      {
-        name: "cargo",
-        label: "Cargo",
-        type: "select",
-        required: true,
-        options: CARGOS_OPTS,   // array de { value, label }
-      },
-      {
-        name: "marca",
-        label: "Marca",
-        type: "radio",
-        required: true,
-        options: MARCAS_OPTS,
-      },
-    ],
-    field_options: {
-      // Mapa valor → label usado no detalhe da solicitação
-      // Chave = nome do campo, valor = { [opcao]: label_legível }
-      marca: {
-        "svn-investimentos": "SVN Investimentos",
-        "svn-gestao": "SVN Gestão",
-        // ...
-      }
-    }
-  }
-};
-```
-
----
-
-## `REQUIRED_FIELDS`
-
-```ts
-const REQUIRED_FIELDS: Record<string, string[]> = {
-  "assinatura-email": ["nome_assinatura", "cargo", "marca", "contrato_social"],
-  "cartao-visita-digital": ["nome_cartao", "cargo", "whatsapp", "email_corporativo", "marca"],
-  // ...
-};
-```
-
-A função `validateFormDados(tipo, dados)` em `forms.ts` itera sobre `REQUIRED_FIELDS[tipo]` e retorna erro 400 se algum campo estiver ausente ou vazio no payload.
-
-> Os campos em `REQUIRED_FIELDS` são os validados **no servidor**. O atributo `required: true` nos schemas é informativo para o frontend (asterisco visual, validação client-side via `FormCore.validateRequired`).
-
----
-
-## Listas compartilhadas
-
-| Constante | Conteúdo | Usado em |
-|---|---|---|
-| `CONTRATOS_OPTS` | Contratos sociais SVN (Investimentos, Capital, Connect…) | Cartão de Visita, Assinatura, Arte NPS… |
-| `MARCAS_OPTS` | Marcas SVN (Investimentos, Gestão, Global, Corporate…) | Maioria dos formulários de identidade |
-| `CARGOS_OPTS` | Cargos de assessores | Cartão de Visita, Assinatura |
-| `SETORES_LIST` | Lista de strings de setores | Formulários internos |
-| `SETOR_CODIGO_MAP` | `{ setor: código }` para montar IDs no ClickUp | `createClickUpTask` |
-
----
-
-## Endpoint `/api/form-schemas`
-
-Resposta:
-
-```json
-{
-  "marcas":    [{ "value": "svn-investimentos", "label": "SVN Investimentos" }, ...],
-  "contratos": [{ "value": "svn-investimentos", "label": "SVN Investimentos" }, ...],
-  "cargos":    [{ "value": "assessor", "label": "Assessor de Investimentos" }, ...],
-  "setores":   ["Administração", "Alocação", ...],
-  "tipos":     [{ "tipo": "assinatura-email", "label": "Assinatura de E-mail", "fields": [...], "field_options": {...} }, ...],
-  "labels":    { "assinatura-email": "Assinatura de E-mail", ... }
-}
-```
-
----
-
-## Passo a passo para adicionar um novo tipo de formulário
-
-### 1. Definir o schema em `form-schemas.ts`
-
-```ts
-// Adicione a chave no objeto FORM_SCHEMAS
-"novo-tipo": {
-  tipo: "novo-tipo",
-  label: "Meu Novo Tipo",
-  fields: [
-    { name: "titulo", label: "Título", type: "text", required: true },
-    { name: "descricao", label: "Descrição", type: "textarea", required: true },
-  ],
-  field_options: {},
-},
-```
-
-### 2. Definir campos obrigatórios em `REQUIRED_FIELDS`
-
-```ts
-"novo-tipo": ["titulo", "descricao"],
-```
-
-### 3. Adicionar label em `TIPO_SOLICITACAO_LABELS` no `config.js`
-
-```js
-"novo-tipo": "Meu Novo Tipo",
-```
-
-> Isso é fallback do frontend. O backend também envia via `/api/form-schemas`.
-
-### 4. Adicionar à categoria em `CATEGORIAS_SOLICITACAO` no `config.js`
-
-```js
-{
-  categoria: "Marketing e conteúdo",
-  itens: [
-    // ... itens existentes ...
-    { id: "novo-tipo", label: "Meu Novo Tipo", icon: "icon-file-text", ativo: true },
-  ]
-}
-```
-
-### 5. Criar a página HTML do formulário
-
-Crie `public/form-novo-tipo.html` seguindo o padrão das páginas existentes (veja [frontend.md](frontend.md)). O `FORM_ROUTES` em `solicitacoes.html` (ou equivalente) precisa mapear `"novo-tipo"` para a URL `"/form-novo-tipo.html"`.
-
-### 6. Configurar rota ClickUp (opcional)
-
-Se o tipo deve ir para uma lista ClickUp dedicada, adicione via painel admin em `/admin-clickup-lists.html` ou configure as variáveis `CLICKUP_LIST_*` no `.env`.
-
-### 7. Configurar geração automática (se aplicável)
-
-Se o tipo gera material automaticamente, adicione-o à lista `TIPOS_AUTOMACAO` em `forms.ts` e configure a URL do webhook n8n correspondente (`WEBHOOK_NOVO_TIPO` no `.env`).
-
----
-
-## Editar um tipo existente
-
-- Para **adicionar campo**: adicione em `fields` e em `REQUIRED_FIELDS` se obrigatório. Dados antigos não terão o campo — `humanizeValue` trata ausências graciosamente.
-- Para **remover campo**: remova de `fields` e `REQUIRED_FIELDS`. Dados antigos que tiverem o campo continuam exibidos via fallback em `humanizeValue`.
-- Para **alterar opções de select/radio**: atualize `options` e `field_options`. Dados antigos com valores removidos aparecem como o próprio slug (fallback em `humanizeValue`).
-
-```
-
-
-## File: artifacts/api-server/docs/frontend.md
-
-```
-# Frontend
-
-O frontend é construído em HTML/CSS/JS vanilla, sem framework. Cada tela é um arquivo `.html` independente em `public/`. Arquivos JS compartilhados são carregados via `<script>` em ordem específica.
-
-## Arquivos JS compartilhados
-
-### `auth.js`
-
-Gerencia a sessão do usuário no lado cliente.
-
-- **`Auth.init()`** — busca `/auth/me` e popula `Auth.user` (nome, email, role). Usa cache de sessionStorage de 5 minutos para evitar requisições repetidas.
-- **`Auth.isAuthenticated()`** — retorna `true` se há usuário na sessão.
-- **`Auth.getRole()`** / **`Auth.getUserName()`** — acessores do perfil.
-- **`Auth.getProfile()`** — retorna dados estendidos (telefone, unidade, cargo, cd_ancord), vindos do MySQL Contatos via `/auth/me-profile`.
-- **`Auth.aplicarPerfilNoCampo(fieldId, valor)`** — preenche automaticamente um campo do formulário com dados do cadastro e exibe hint "Pré-preenchido do seu cadastro".
-- **`Auth.marcarComoLido(id)`** / **`Auth.isPendente(id)`** — controla o badge de notificação de aprovações pendentes não lidas (localStorage).
-- **`Auth.temPendencias()`** / **`Auth.getPendentesCount()`** — usados pelo `Shell` para renderizar o badge numérico no ícone de sino.
-
-### `config.js`
-
-Constantes de UI e configuração carregadas do servidor na inicialização.
-
-- Define `CATEGORIAS_SOLICITACAO` (categorias e itens do menu de seleção de formulário).
-- Define `TIPO_SOLICITACAO_LABELS` (mapa `tipo → label` para exibição).
-- Define `STATUS_SOLICITACAO` (lista de status com `id`, `label`, `bg`, `text`) e `getStatus(id)`.
-- Na inicialização, faz `fetch('/api/config')` e `fetch('/api/form-schemas')` para sobrescrever os fallbacks locais com dados do servidor (marcas, contratos, cargos, setores, labels).
-- Expõe `window._svnFormSchemas` e `window._svnFieldLabels` para formulários que precisam de options dinâmicas.
-
-### `form-core.js`
-
-Motor de formulários. Todas as páginas de formulário dependem deste arquivo.
-
-| Função | Descrição |
-|---|---|
-| `FormCore.initForm({ tipo, onReady, draft, ... })` | Inicializa o formulário: verifica autenticação, restaura rascunho do localStorage, injeta dados do perfil, chama `onReady`. |
-| `FormCore.validateRequired(extraValidate?, scopeEl?)` | Valida campos obrigatórios no escopo (ou em todo o form). Suporta grupos radio/checkbox e visibilidade condicional. Retorna `true` se ok. |
-| `FormCore.submit({ tipo, dados, files, ... })` | Monta `FormData`, faz `POST /api/solicitacoes` e redireciona para `thankyou.html`. |
-| `FormCore.renderStepper(el, steps, current)` | Renderiza o indicador de progresso de etapas no elemento `el`. |
-| `FormCore.saveDraft(tipo, dados)` | Salva rascunho no localStorage com chave `svn_draft_<tipo>`. |
-| `FormCore.clearDraft(tipo)` | Remove rascunho após submit bem-sucedido. |
-
-### `filters.js`
-
-Engine de painéis de filtro para listagens (admin, dashboard).
-
-| Função | Descrição |
-|---|---|
-| `FilterPanel.register(id, { state, onChange })` | Vincula um DOM ID a um objeto de estado e callback de mudança. |
-| `FilterPanel.set(id, btn, key)` | Ativa um filtro e chama `onChange`. |
-| `FilterPanel.clear(id)` | Reseta todos os filtros do painel. |
-| `FilterPanel.toggle(id)` | Abre/fecha o dropdown de filtros. |
-
-### `shell.js`
-
-Layout global (header + sidebar).
-
-| Função | Descrição |
-|---|---|
-| `Shell.render({ activeRoute, contentEl })` | Injeta header e sidebar no DOM com a rota ativa destacada. |
-| `Shell.toggleSidebar()` | Controla o estado aberto/fechado da sidebar no mobile. |
-
-A sidebar exibe itens diferentes conforme a role do usuário (ex.: "Capital Humano" só aparece para `capital_humano` e `admin`; "Admin" só para `admin` e `gestor`).
-
-### `utils.js`
-
-Funções utilitárias globais.
-
-| Função | Descrição |
-|---|---|
-| `window.esc(str)` | Escapa HTML para evitar XSS. |
-| `humanizeValue(key, value)` | Converte valores de banco (slugs, booleans, IDs) em texto legível em português. Usa `_svnFieldLabels` como primeira fonte, com fallbacks para strings comuns. |
-| `mascaraTelefone(el)` | Aplica máscara `(XX) XXXXX-XXXX` ao input. |
-| `mascaraMoeda(el)` | Aplica máscara monetária `R$ X.XXX,XX`. |
-| `Modal.open(id)` / `Modal.close(id)` | Controla modais por ID de elemento. |
-| `autoResizeTextarea(el)` | Expande textareas conforme o conteúdo. |
-
-### `upload-feedback.js`
-
-Feedback visual para inputs de arquivo.
-
-- **`FileUpload.bind(inputId, nameElId, options)`** — ao selecionar arquivo: exibe nome, tamanho, ícone de sucesso/erro. Valida extensões permitidas e tamanho máximo (em MB). Não faz upload — isso é responsabilidade do `FormCore.submit`.
-
-### `toast.js`
-
-Notificações e confirmações.
-
-| Função | Descrição |
-|---|---|
-| `showToast(message, type)` | Exibe notificação não-bloqueante no canto da tela (`success`, `error`, `info`). |
-| `showConfirm(message, options)` | Abre modal de confirmação com callbacks `onConfirm`/`onCancel`. |
-
-### `ibge-loader.js`
-
-Carrega estados e cidades do Brasil via API do IBGE, com cache no localStorage (TTL de 24h). Usado em formulários com seleção geográfica.
-
----
-
-## Padrão das páginas de formulário
-
-Toda página de formulário segue a mesma estrutura:
-
-### Ordem de carregamento dos scripts
-
-```html
-<script src="/utils.js"></script>
-<script src="/upload-feedback.js"></script>
-<script src="/config.js"></script>
-<script src="/auth.js"></script>
-<script src="/shell.js"></script>
-<script src="/form-core.js"></script>
-```
-
-### Estrutura HTML
-
-```html
-<div class="page-container page-container--narrow">
-  <!-- Indicador de etapas (multi-step) -->
-  <div class="svn-stepper" id="stepper"></div>
-
-  <!-- Etapa 1 -->
-  <div class="form-step" id="step1">
-    <div class="field">
-      <label for="nome">Nome <span class="required-star">*</span></label>
-      <input type="text" id="nome" required>
-      <div class="field-error" id="nome-error"></div>
-    </div>
-    <!-- ... mais campos ... -->
-    <button class="btn btn-submit-gold" onclick="irParaStep2()">Próximo</button>
-  </div>
-
-  <!-- Etapa 2 -->
-  <div class="form-step" id="step2" style="display:none">
-    <!-- ... campos ... -->
-    <button class="btn btn-submit-gold" onclick="submitForm()">Enviar solicitação</button>
-  </div>
-</div>
-```
-
-### Inicialização
-
-```js
-FormCore.initForm({
-  tipo: 'apresentacao-nova',    // tipo_solicitacao
-  draft: true,                  // habilita salvamento de rascunho
-  onReady: (user, profile) => {
-    // pré-preencher campos com dados do perfil
-    Auth.aplicarPerfilNoCampo('telefone', profile?.telefone);
-    // vincular upload
-    FileUpload.bind('arquivo', 'arquivo-nome', { accept: ['.pdf', '.pptx'], maxMb: 20 });
-    // renderizar stepper
-    FormCore.renderStepper(document.getElementById('stepper'), ['Dados', 'Detalhes', 'Revisão'], 0);
-    // inicializar Shell
-    Shell.render({ activeRoute: 'solicitacoes', contentEl: document.getElementById('pageContent') });
-  }
-});
-```
-
-### Validação por etapa
-
-```js
-function irParaStep2() {
-  if (!FormCore.validateRequired(null, document.getElementById('step1'))) return;
-  document.getElementById('step1').style.display = 'none';
-  document.getElementById('step2').style.display = 'block';
-  FormCore.renderStepper(document.getElementById('stepper'), ['Dados', 'Detalhes'], 1);
-}
-```
-
-### Submit
-
-```js
-function submitForm() {
-  if (!FormCore.validateRequired(null, document.getElementById('step2'))) return;
-
-  const dados = {
-    nome:       document.getElementById('nome').value,
-    telefone:   document.getElementById('telefone').value,
-    // ... demais campos
-  };
-
-  FormCore.submit({
-    tipo: 'apresentacao-nova',
-    dados,
-    files: ['arquivo'],   // IDs dos inputs de arquivo a incluir no FormData
-  });
-}
-```
-
-O `FormCore.submit` monta o `FormData`, faz `POST /api/solicitacoes`, limpa o rascunho e redireciona para `thankyou.html?id=<id>`.
-
----
-
-## Campos pré-preenchidos do cadastro
-
-Campos com dados vindos do MySQL Contatos (via `Auth.getProfile()`) exibem o hint:
-
-> ✓ Pré-preenchido do seu cadastro — pode editar se quiser
-
-Isso é feito por `Auth.aplicarPerfilNoCampo(fieldId, valor)`, que também suporta `<select>` criando a opção dinamicamente se não existir.
-
-```
-
-
-## File: artifacts/api-server/docs/guia-do-usuario.md
-
-```
-# Manual do Usuário — Hub de Solicitações SVN
-
-> Versão para o **colaborador solicitante**. Este guia explica como fazer um pedido ao time de Marketing, acompanhar o andamento e baixar o material quando estiver pronto.
-
----
-
-## Sumário
-
-1. [Primeiros passos — como acessar e fazer login](#1-primeiros-passos)
-2. [A tela inicial — o que aparece quando você entra](#2-a-tela-inicial)
-3. [Como abrir uma solicitação](#3-como-abrir-uma-solicitação)
-4. [Acompanhar o andamento](#4-acompanhar-o-andamento)
-5. [Aprovar o material](#5-aprovar-o-material)
-6. [Reencontrar pedidos e materiais anteriores](#6-reencontrar-pedidos-e-materiais-anteriores)
-7. [Dúvidas frequentes](#7-dúvidas-frequentes)
-
----
-
-## 1. Primeiros passos
-
-### Como acessar o Hub
-
-Abra o navegador e acesse o endereço do Hub de Solicitações SVN fornecido pelo time de Marketing.
-
-> [Screenshot: tela de carregamento do Hub com o logo SVN ao centro]
-
-### Como fazer login
-
-1. Ao entrar, você verá dois botões grandes. Clique em qualquer um deles.
-2. O Hub vai verificar se você já está logado. Se não estiver, você será direcionado para a tela de login com sua conta Google.
-3. Use sua **conta corporativa** (`@svninvest.com.br`). Contas pessoais não têm acesso.
-4. Após autenticar, você será levado de volta para onde queria ir.
-
-> [Screenshot: página inicial com os dois botões — "Quero fazer uma solicitação" e "Quero acompanhar uma solicitação"]
-
-### E se não conseguir entrar?
-
-- **"Apenas contas @svninvest.com.br são aceitas"** — você tentou logar com um e-mail pessoal ou de outro domínio. Use sua conta corporativa.
-- **"Falha na autenticação"** — tente novamente. Se o erro persistir, fale com o time de Marketing pelo ícone do WhatsApp que aparece no canto da tela.
-- **Tela em branco ou sem resposta** — tente recarregar a página (F5 ou Ctrl+R).
-
----
-
-## 2. A tela inicial
-
-Ao entrar no Hub, você vê uma tela escura com dois botões:
-
-| Botão | O que faz |
-|---|---|
-| **Quero fazer uma solicitação** | Abre a lista de todos os tipos de pedido disponíveis |
-| **Quero acompanhar uma solicitação** | Leva para **Minhas solicitações**, onde você vê tudo que já pediu |
-
-Depois de logado, o sistema também mostra uma barra de navegação no topo com acesso rápido a essas duas seções.
-
----
-
-## 3. Como abrir uma solicitação
-
-### Passo 1 — Escolher o tipo de pedido
-
-Clique em **Quero fazer uma solicitação**. Você verá uma página chamada **"Que tipo de solicitação você gostaria de realizar?"**, organizada em categorias:
-
-**Identidade e materiais pessoais**
-- Página de Assessores
-- Assinatura de E-mail
-- Cartão de Visita
-- Cartão de Boas-vindas
-- Cartão Comemorativo
-- Divulgação NPS
-- Convite Financial Planning
-
-**Eventos e relacionamento**
-- Eventos
-- Patrocínio
-- Brindes
-- Página Online
-
-**Marketing e conteúdo**
-- Artes de Divulgação
-- Apresentação
-- Conteúdo em PDF
-- E-mail Marketing
-- Atualização de material
-- Materiais Impressos
-
-**Audiovisual**
-- Produção Audiovisual
-
-**Outros**
-- Outro (para pedidos que não se encaixam nas categorias acima)
-
-> [Screenshot: página de seleção com os cartões organizados por categoria]
-
-Clique no tipo desejado para abrir o formulário correspondente.
-
-### Passo 2 — Preencher o formulário
-
-Cada tipo de pedido tem seus próprios campos. Algumas dicas gerais:
-
-- Campos com **\*** ou borda vermelha são obrigatórios. O sistema avisa se você tentar enviar sem preenchê-los.
-- Alguns campos já vêm **pré-preenchidos com os dados do seu cadastro** (nome, telefone, unidade etc.). Você pode editar se precisar.
-- Formulários com mais de uma etapa mostram um indicador como **"Etapa 1 de 3"** — avance clicando em **Próximo** e volte com **Voltar** sem perder o que preencheu.
-- Os formulários de **Apresentação** e **Página de Assessores** salvam seu progresso automaticamente. Se fechar a aba e voltar, os dados estarão lá.
-
-### Passo 3 — Anexar arquivos (quando houver)
-
-Formulários como Apresentação, Cartão de Visita (Digital), Arte NPS e Página de Assessores permitem o envio de arquivos (foto de perfil, arquivo base etc.). Clique na área de upload, selecione o arquivo do seu computador e aguarde a confirmação de envio.
-
-### Passo 4 — Revisar e enviar
-
-Revise os dados e clique em **Enviar** (ou **Enviar solicitação**). O botão fica desabilitado durante o envio para evitar envio duplicado.
-
-### O que acontece depois de enviar?
-
-Após o envio, você é levado para uma **tela de confirmação** que exibe:
-
-- Um resumo da sua solicitação (tipo, data, identificação)
-- Dois botões: **Ver solicitação** e **Nova solicitação**
-- Um botão flutuante do WhatsApp para falar com o time de Marketing
-
-**Para tipos com geração automática** (Assinatura de E-mail, Cartão de Visita Digital, Cartão de Boas-vindas, Arte NPS, Convite Financial Planning, Cartão Comemorativo), a tela mostra um spinner "Gerando seu material…" e, em alguns instantes, um botão de **download** aparece automaticamente. Você não precisa esperar — pode fechar e baixar depois pela tela de detalhe da solicitação.
-
-> [Screenshot: tela de confirmação com o resumo e o botão de download apareecendo]
-
----
-
-## 4. Acompanhar o andamento
-
-### Como acessar
-
-Clique em **Quero acompanhar uma solicitação** na tela inicial, ou em **Minhas solicitações** na barra de navegação.
-
-### O que você vê na tela "Minhas solicitações"
-
-No topo, dois contadores:
-- **Em andamento** — pedidos ainda em processamento
-- **Concluídas** — pedidos finalizados
-
-A lista é dividida em duas abas:
-
-| Aba | Conteúdo |
-|---|---|
-| **Solicitações gerais** | Todos os seus pedidos, exceto Eventos |
-| **Eventos** | Apenas solicitações do tipo Evento |
-
-Você pode filtrar por **Período**, **Tipo**, **Status**, e **Alertas**, além de buscar pelo nome da solicitação no campo de pesquisa.
-
-> [Screenshot: dashboard com a lista de solicitações e os filtros abertos]
-
-### Abrindo o detalhe de uma solicitação
-
-Clique em qualquer card da lista para abrir a página de detalhe. Lá você encontra:
-
-- **Status atual** — exibido como uma etiqueta colorida no topo
-- **Trilha de status** — barra visual mostrando por onde o pedido já passou e onde está agora
-- **Dados da solicitação** — todos os campos que você preencheu
-- **Materiais para aprovação** — aparece quando o material está pronto para você revisar (ver seção 5)
-- **Atividade** — log cronológico dos eventos da solicitação (clique para expandir)
-
-### O que cada status significa
-
-| Status | O que significa |
-|---|---|
-| **Recebido** | Seu pedido chegou ao time de Marketing |
-| **Em análise** | O time está avaliando os detalhes |
-| **Alinhamentos** | O time está alinhando informações internamente |
-| **Em andamento** | O pedido está sendo trabalhado |
-| **Em produção** | O material está sendo criado |
-| **Em revisão** | O time está revisando o material antes de enviar para você |
-| **Em aprovação** | O material está pronto — **sua aprovação é necessária** |
-| **Em cotação / aprovação** | O pedido está em processo de cotação e aprovação financeira |
-| **Aguardando informação** | O time precisa de mais dados seus para continuar |
-| **Aguardando aprovação do RH** | O pedido aguarda o aval do setor de Capital Humano |
-| **Aguardando pagamento** | Aguardando confirmação de pagamento |
-| **Aguardando finalização** | Etapas finais sendo concluídas |
-| **Em design** | Material em fase de criação visual |
-| **Arte finalizada** | Arte pronta, aguardando próxima etapa |
-| **Envio gráfica** | Material enviado à gráfica para impressão |
-| **Envio assessor** | Material sendo entregue a você |
-| **Gerando arte** | Arte sendo gerada automaticamente pelo sistema |
-| **Concluído** | Processo finalizado |
-| **Reprovado** | Você solicitou alterações — o time está revisando |
-| **Cancelado** | Solicitação cancelada |
-| **Em espera** | Pedido pausado temporariamente |
-
-> Quando o status for **Aguardando informação**, fique atento: o time provavelmente vai entrar em contato por outro canal para pedir os dados que faltam.
-
----
-
-## 5. Aprovar o material
-
-Alguns tipos de pedido passam por uma etapa de aprovação: **Eventos**, **Artes de Divulgação**, **Atualização de Material**, **Conteúdo em PDF** e **Apresentações**. Quando o material está pronto, o status muda para **Em aprovação** e você recebe uma notificação visual.
-
-### Como saber que tem algo para aprovar
-
-- Na lista de **Minhas solicitações**, o card aparece com a etiqueta **APROVAÇÃO** em vermelho e uma borda lateral destacada.
-- Ao abrir o detalhe, uma seção **"Materiais para aprovação"** aparece com o badge **NOVO**.
-
-> [Screenshot: card na lista com a etiqueta "APROVAÇÃO" e a borda vermelha]
-
-### Como aprovar
-
-1. Abra a solicitação clicando no card.
-2. Clique na seção **"Materiais para aprovação"** para expandi-la.
-3. O sistema exibirá uma mensagem com os links para o(s) material(is). Clique nos links para visualizar ou baixar e analisar.
-4. Escolha uma das duas opções:
-
-   - **Aprovado** — confirma que o material está ok. O time de Marketing é notificado automaticamente.
-   - **Solicitar alterações** — abre um campo de texto para você descrever o que precisa ser mudado. Digite as observações e envie. O time receberá seu pedido e, quando a nova versão estiver pronta, o processo se repete.
-
-> [Screenshot: interface de aprovação com os botões "Aprovado" e "Solicitar alterações"]
-
-### O que acontece depois da aprovação
-
-- O status da solicitação muda para **Concluído**.
-- Uma pesquisa de satisfação rápida pode aparecer — é opcional, mas ajuda o time a melhorar.
-- O material fica disponível para download na própria tela de detalhe.
-
-### E se eu solicitar alterações?
-
-O status muda para **Reprovado** enquanto o time trabalha na revisão. Quando a nova versão ficar pronta, o status volta para **Em aprovação** e você verá uma nova rodada de aprovação na tela.
-
----
-
-## 6. Reencontrar pedidos e materiais anteriores
-
-### Como achar uma solicitação antiga
-
-1. Acesse **Minhas solicitações**.
-2. Use os filtros de **Período** (Hoje / 7 dias / 30 dias / Todos) ou **Status** para restringir a busca.
-3. Use a barra de **busca** para digitar o nome da solicitação.
-4. Clique no card para abrir o detalhe completo.
-
-> [Screenshot: barra de busca e filtros ativos na tela de Minhas Solicitações]
-
-### Como baixar um material já entregue
-
-Há duas formas:
-
-**Direto pela lista:** se o material estiver disponível, o card mostra um botão **Baixar** — clique nele diretamente, sem precisar abrir o detalhe.
-
-**Pelo detalhe da solicitação:** abra a solicitação e o material aparece na área de entrega (logo acima dos dados do formulário). Clique em **Fazer download** ou no link do arquivo.
-
-> [Screenshot: card com botão "Baixar" destacado e tela de detalhe com área de download]
-
-### Geração de material automático (Assinatura de E-mail, Cartão Digital etc.)
-
-Para os tipos que geram material automaticamente, o arquivo fica sempre disponível na tela de detalhe da solicitação. Se precisar de uma nova versão (por exemplo, mudou de cargo), abra um novo pedido.
-
----
-
-## 7. Dúvidas frequentes
-
-**Esqueci de anexar um arquivo. O que faço?**
-Não é possível editar uma solicitação já enviada. Abra a solicitação, clique no botão de menu (⋯) e veja se há a opção de cancelar — se ainda estiver com status **Recebido**, fale com o time de Marketing pelo WhatsApp para combinar. Caso contrário, peça via canal direto para o time.
-
-**Preciso incluir uma informação que esqueci de colocar. O que faço?**
-Entre em contato diretamente com o time de Marketing informando o número da solicitação (visível na tela de detalhe). Eles orientarão sobre o melhor caminho.
-
-**Quanto tempo demora para meu pedido ser atendido?**
-Depende do tipo de solicitação e da demanda do time. Pedidos de **geração automática** (Assinatura de E-mail, Cartão Digital, Arte NPS etc.) ficam prontos em segundos. Demais pedidos variam — o time de Marketing informa os prazos para cada tipo.
-
-**Quem aprova o material?**
-Você, o próprio solicitante. Quando o material estiver pronto, o Hub manda um aviso visual e você aprova (ou pede alterações) diretamente pela plataforma.
-
-**O status está "Aguardando informação" há dias. O que acontece?**
-O time de Marketing deve estar aguardando algum dado necessário para continuar. Verifique se recebeu algum contato por WhatsApp, e-mail ou outro canal. Se não, entre em contato proativamente.
-
-**Não achei o tipo de pedido que preciso.**
-Use a opção **Outro**, na categoria "Outros", e descreva o que precisa no campo de texto. O time avalia e encaminha para o fluxo correto.
-
-**Posso refazer o download de um material que já peguei antes?**
-Sim. Acesse **Minhas solicitações**, encontre a solicitação e baixe novamente pelo botão **Baixar** no card ou na tela de detalhe.
-
-**Não consigo fazer login mesmo com o e-mail corporativo.**
-Feche todas as abas, limpe os cookies do navegador para o domínio do Hub e tente novamente. Se o problema persistir, fale com o time de Marketing.
-
-**Preciso de ajuda urgente.**
-Use o ícone do **WhatsApp** que aparece no canto inferior da tela logo após enviar uma solicitação, ou fale diretamente com o time de Marketing pelos canais internos da empresa.
-
----
-
-*Dúvidas sobre o Hub? Fale com o time de Marketing da SVN.*
-
-```
-
-
-## File: artifacts/api-server/docs/integracoes.md
-
-```
-# Integrações
-
-## Autenticação — Microsoft MSAL (Azure AD)
-
-**Biblioteca:** `@azure/msal-node`
-
-O Hub usa OAuth 2.0 Authorization Code com PKCE via Microsoft Azure AD. Apenas contas do domínio `@svninvest.com.br` são aceitas.
-
-**Configuração necessária:**
-- App Registration no Azure AD com redirect URI `<APP_URL>/auth/callback`
-- Variáveis: `MSAL_TENANT_ID`, `MSAL_CLIENT_ID`, `MSAL_CLIENT_SECRET`, `MSAL_REDIRECT_URI`
-
-**Fluxo:**
-```
-Usuário → GET /auth/login
-  → MSAL gera authorization URL → Microsoft login
-  → GET /auth/callback (code troca por token)
-  → valida domínio @svninvest.com.br
-  → upsert em usersTable (cria se não existe, role padrão: colaborador)
-  → busca perfil em MySQL Contatos
-  → popula req.session.user + req.session.userProfile
-  → redireciona para destino original
-```
-
-**Sessão:**
-- Sessão armazenada no PostgreSQL via `connect-pg-simple`
-- Cookie `connect.sid` assinado com `SESSION_SECRET`
-- Expiração da sessão: configurada no `express-session`
-
-**Perfis e permissões:**
-- Role é armazenada em `users.role` e lida em cada requisição via `req.session.user.role`
-- Roles: `colaborador`, `gestor`, `admin`, `capital_humano`
-- Middleware `requireRole(...roles)` verifica a role antes de cada rota protegida
-
----
-
-## ClickUp
-
-**Biblioteca:** chamadas HTTP diretas via `fetch` (sem SDK)
-
-**Token:** `CLICKUP_API_TOKEN` (personal ou service token)
-
-### Criação de tarefas
-
-Ao criar uma solicitação, `createClickUpTask` em `src/routes/clickup.ts`:
-1. Determina a lista destino: consulta `tipo_clickup_list` no banco; fallback para variáveis `CLICKUP_LIST_*`.
-2. Monta descrição estruturada em markdown com os dados do formulário.
-3. Cria a tarefa via `POST https://api.clickup.com/api/v2/list/<list_id>/task`.
-4. Define assignees conforme `user_tipo_assignments` ou variáveis `CLICKUP_ASSIGNEE_*`.
-
-### Recebimento de status (webhook)
-
-```
-POST /webhook/clickup
-  ← ClickUp dispara ao alterar status de uma tarefa
-  → valida HMAC-SHA256 no header x-signature
-  → mapeia status ClickUp → status interno via CLICKUP_STATUS_MAP
-  → UPDATE solicitacoes.status
-```
-
-**`CLICKUP_STATUS_MAP`** em `src/config/clickup-status.ts` normaliza variações de capitalização e nomes alternativos para os slugs canônicos do Hub (ex.: `"in progress"` → `"em-andamento"`, `"waiting on rh"` → `"aguardando-rh"`).
-
-### Configuração de listas via admin
-
-Admins podem configurar qual lista ClickUp recebe cada tipo de solicitação pelo painel `/admin-clickup-lists.html`. Isso salva em `tipo_clickup_list` e sobrepõe as variáveis de ambiente.
-
----
-
-## Cloudflare R2 (armazenamento de arquivos)
-
-**Biblioteca:** `@aws-sdk/client-s3` (R2 é compatível com S3)
-
-**Credenciais:** `R2_ACCOUNT_ID`, `R2_ACCESS_KEY`, `R2_SECRET_KEY`, `R2_BUCKET`
-
-**Endpoint:** `https://<R2_ACCOUNT_ID>.r2.cloudflarestorage.com`
-
-**`src/lib/r2-client.ts`** exporta um singleton `S3Client`. Retorna `null` se as credenciais não estiverem configuradas (funcionalidade de upload degradada graciosamente).
-
-### Uso
-
-| Onde | Operação | Chave no R2 |
-|---|---|---|
-| Upload de anexos de formulário | PUT | `uploads/<uuid>.<ext>` |
-| Artes geradas automaticamente | PUT | `artes/<uuid>.<ext>` |
-| Assets de templates (admin) | PUT | `assets/<uuid>.<ext>` |
-| Tombamentos (ZIPs) | PUT | `tombamentos/<uuid>.zip` |
-
-Todas as URLs públicas têm base `R2_PUBLIC_URL`. Arquivos são servidos diretamente pelo CDN da Cloudflare.
-
----
-
-## n8n / Webhooks
-
-**Chamadas HTTP diretas** para URLs configuradas em variáveis de ambiente.
-
-`src/services/notifications.ts` é o ponto central de disparo.
-
-| Evento | Webhook disparado |
-|---|---|
-| Cartão de visita físico criado | `WEBHOOK_CARTAO_FISICO` |
-| Cartão de visita digital criado | `WEBHOOK_CARTAO_DIGITAL` |
-| Cartão de boas-vindas criado | `WEBHOOK_BOAS_VINDAS` |
-| Arte NPS criada | `WEBHOOK_NPS` |
-| Convite FP criado | `WEBHOOK_CONVITE_FP` |
-| Cartão comemorativo criado | `WEBHOOK_COMEMORATIVO` |
-| Certificado criado | `WEBHOOK_CERTIFICADO` |
-
-O payload enviado ao n8n contém o `id` da solicitação e os `dados` do formulário. O n8n processa (gera arte, envia notificação, aciona gráfica etc.) e pode chamar de volta a API do Hub via `INTERNAL_API_SECRET` para atualizar `entrega_links`.
-
-### Chamadas internas (n8n → Hub)
-
-Rotas que recebem chamadas do n8n exigem o header `Authorization: Bearer <INTERNAL_API_SECRET>` verificado por middleware.
-
----
-
-## MySQL Contatos (integração legada)
-
-**Biblioteca:** `mysql2`
-
-**Conexão:** pool configurado por `MYSQL_CONTATOS` (string de conexão MySQL). Se a variável estiver ausente ou vazia, a integração é desativada silenciosamente — o login ainda funciona, mas os campos de perfil (telefone, unidade, cargo, cd_ancord) chegam vazios.
-
-**Uso:** em `/auth/callback` e `GET /auth/me-profile`, o sistema busca o contato pelo e-mail via `buscarContato(email)` em `src/lib/mysqlContatos.ts` e popula `req.session.userProfile`.
-
-Campos retornados: `telefone`, `unidade`, `cargo`, `cd_ancord`, `encontrado` (boolean).
-
----
-
-## Chamadas internas entre serviços
-
-Chamadas de serviços externos (n8n, scripts) para a API interna usam:
-```
-Authorization: Bearer <INTERNAL_API_SECRET>
-```
-
-Esse header é verificado por middleware nas rotas internas. Gere a chave com `openssl rand -hex 32`.
-
-```
-
-
-## File: artifacts/api-server/docs/modelo-dados.md
-
-```
-# Modelo de Dados
-
-## Tabelas principais
-
-### `users`
-
-| Coluna | Tipo | Descrição |
-|---|---|---|
-| `id` | `serial PK` | ID interno |
-| `email` | `varchar(255)` | E-mail corporativo (@svninvest.com.br) — único |
-| `name` | `varchar(255)` | Nome completo |
-| `role` | `varchar(20)` | Role: `colaborador` (padrão), `gestor`, `admin`, `capital_humano` |
-| `telefone` | `varchar(30)` | Telefone sincronizado do MySQL Contatos |
-| `clickup_user_id` | `varchar(100)` | ID do usuário correspondente no ClickUp |
-| `created_at` | `timestamp` | Data de criação |
-
----
-
-### `solicitacoes`
-
-Tabela central. Cada linha representa um pedido.
-
-| Coluna | Tipo | Descrição |
-|---|---|---|
-| `id` | `serial PK` | ID do pedido |
-| `user_email` | `varchar(255)` | E-mail do solicitante |
-| `tipo_solicitacao` | `varchar(50)` | Slug do tipo (ex.: `assinatura-email`) |
-| `subtipo` | `varchar(50)` | Sub-tipo opcional (ex.: `fisico`, `digital`) |
-| `maturidade` | `integer` | Nível de maturidade (uso específico por tipo) |
-| `dados` | `jsonb` | **Todos os campos do formulário preenchidos** (chaves snake_case) |
-| `clickup_task_id` | `varchar(100)` | ID da tarefa correspondente no ClickUp |
-| `titulo` | `text` | Título gerado automaticamente para exibição |
-| `clickup_url` | `text` | URL da tarefa no ClickUp |
-| `avaliacao` | `jsonb` | Avaliação de satisfação do solicitante (opcional) |
-| `entrega_links` | `jsonb` | Array `[{ label, url }]` dos materiais entregues |
-| `status` | `varchar(30)` | Status atual (slugs de `STATUS_SOLICITACAO`) |
-| `responsavel` | `text` | Nome do responsável atribuído no ClickUp |
-| `erro_geracao` | `text` | Mensagem de erro se a geração automática falhou |
-| `notifications_sent` | `jsonb` | Controle de quais notificações já foram disparadas |
-| `created_at` | `timestamp` | Data de criação |
-| `updated_at` | `timestamp` | Última atualização |
-
----
-
-### `arquivos`
-
-| Coluna | Tipo | Descrição |
-|---|---|---|
-| `id` | `serial PK` | ID do arquivo |
-| `solicitacao_id` | `integer FK → solicitacoes.id` | Solicitação à qual pertence |
-| `campo` | `varchar(100)` | Nome do campo de upload (ex.: `foto_perfil`) |
-| `url_r2` | `text` | URL pública no Cloudflare R2 |
-| `nome_original` | `varchar(255)` | Nome original do arquivo enviado pelo usuário |
-| `created_at` | `timestamp` | Data de upload |
-
----
-
-### `eventos_solicitacao`
-
-Log detalhado de eventos por solicitação (trilha de auditoria).
-
-| Coluna | Tipo | Descrição |
-|---|---|---|
-| `id` | `serial PK` | ID do evento |
-| `solicitacao_id` | `integer FK → solicitacoes.id` | Solicitação relacionada |
-| `tipo` | `varchar(16)` | Tipo de evento (ex.: `status`, `aprovacao`, `entrega`) |
-| `origem` | `varchar(32)` | Origem (ex.: `webhook`, `usuario`, `sistema`) |
-| `mensagem` | `text` | Descrição legível do evento |
-| `detalhes` | `jsonb` | Dados adicionais do evento |
-| `user_email` | `varchar(255)` | Usuário que gerou o evento (se aplicável) |
-| `created_at` | `timestamp` | Data do evento |
-
----
-
-### `activity_log`
-
-Log de alto nível do sistema (menos granular que `eventos_solicitacao`).
-
-| Coluna | Tipo | Descrição |
-|---|---|---|
-| `id` | `serial PK` | |
-| `created_at` | `timestamp` | |
-| `user_email` / `user_name` | `text` | Usuário envolvido |
-| `tipo` | `text` | Categoria do evento |
-| `nivel` | `varchar(10)` | `info`, `warn`, `error` |
-| `solicitacao_id` | `integer` | Referência à solicitação (se aplicável) |
-| `tipo_solicitacao` | `text` | Tipo da solicitação (desnormalizado) |
-| `titulo` | `text` | Título da solicitação (desnormalizado) |
-| `detalhe` | `text` | Mensagem descritiva |
-| `metadata` | `jsonb` | Dados extras |
-
----
-
-### `art_templates`
-
-Templates dinâmicos para geração de arte.
-
-| Coluna | Tipo | Descrição |
-|---|---|---|
-| `id` | `serial PK` | |
-| `tipo` | `varchar(100)` | Tipo de solicitação ao qual o template se aplica |
-| `variant_value` | `varchar(100)` | Valor de variante (ex.: slug de marca) |
-| `name` | `varchar(200)` | Nome descritivo do template |
-| `config` | `jsonb` | Configuração completa do template (camadas, fontes, posições) |
-| `is_active` | `boolean` | Se `false`, ignorado pela geração |
-| `created_at` / `updated_at` | `timestamp` | |
-| `updated_by` | `integer FK → users.id` | |
-
----
-
-### `art_assets`
-
-Imagens/logos reutilizáveis nos templates.
-
-| Coluna | Tipo | Descrição |
-|---|---|---|
-| `id` | `serial PK` | |
-| `filename` | `varchar(300)` | Nome original do arquivo |
-| `storage_key` | `varchar(500)` | Chave no R2 |
-| `url` | `varchar(500)` | URL pública |
-| `mime_type` | `varchar(100)` | |
-| `size_bytes` | `bigint` | |
-| `width` / `height` | `integer` | Dimensões da imagem |
-| `uploaded_by` | `integer FK → users.id` | |
-| `used_in_template_ids` | `integer[]` | IDs de templates que usam este asset |
-
----
-
-### `cartao_aprovacoes`
-
-Workflow de aprovação e impressão de cartão de visita físico.
-
-| Coluna | Tipo | Descrição |
-|---|---|---|
-| `id` | `serial PK` | |
-| `solicitacao_id` | `integer FK → solicitacoes.id` | |
-| `data_pedido` | `varchar(20)` | Data do pedido (legado: string formatada) |
-| `nome` / `whatsapp` / `email` | `varchar` | Dados do solicitante |
-| `unidade` | `varchar(120)` | Unidade SVN de entrega |
-| `contrato_social` | `varchar(60)` | Entidade jurídica |
-| `envio_para` | `varchar(255)` | Endereço de entrega |
-| `custo` | `varchar(20)` | Custo estimado |
-| `status` | `varchar(40)` | Status específico do cartão físico |
-| `observacao` | `text` | Observações do time |
-
----
-
-### `tombamentos`
-
-Geração em massa de assets digitais (onboarding / migração).
-
-| Coluna | Tipo | Descrição |
-|---|---|---|
-| `id` | `serial PK` | |
-| `nome` | `varchar(255)` | Nome do lote |
-| `marca` | `varchar(60)` | Marca SVN alvo |
-| `status` | `varchar(30)` | Status do processamento |
-| `linhas` | `jsonb` | Array de registros do spreadsheet |
-| `assinaturas_zip_url` | `text` | URL do ZIP com assinaturas geradas |
-| `cartoes_zip_url` | `text` | URL do ZIP com cartões gerados |
-| `expires_at` | `timestamp` | Expiração dos arquivos gerados |
-| `created_by` | `varchar(255)` | Email do admin que criou |
-
----
-
-### Demais tabelas de configuração
-
-| Tabela | Propósito |
-|---|---|
-| `user_tipo_assignments` | RBAC: mapeia usuário → tipo de solicitação permitido |
-| `tipo_clickup_list` | Mapeia tipo de solicitação → lista ClickUp configurada |
-| `clickup_lists` | Cache das listas ClickUp disponíveis |
-
----
-
-## O campo `dados` (JSONB)
-
-`solicitacoes.dados` armazena **todos os campos do formulário** como um objeto JSON livre. Não há colunas separadas por campo — a estrutura varia por `tipo_solicitacao`.
-
-**Convenção de chaves:** snake_case canônico, conforme `KEY_MAP` em `forms.ts`.
-
-Exemplo para `assinatura-email`:
-```json
-{
-  "nome_assinatura": "João Silva",
-  "cargo": "Assessor de Investimentos",
-  "marca": "svn-investimentos",
-  "contrato_social": "svn-investimentos",
-  "whatsapp": "(41) 99999-0000",
-  "email_corporativo": "joao.silva@svninvest.com.br",
-  "selos": ["ancord", "cfp"],
-  "is_private_key": false
-}
-```
-
----
-
-## Resolução de labels para exibição
-
-Quando o detalhe de uma solicitação é exibido, os valores brutos do campo `dados` precisam ser convertidos para texto legível. O fluxo é:
-
-1. **`window._svnFieldLabels`** (populado por `/api/form-schemas`) — primeiro lookup: `_svnFieldLabels[campo][valor]`.
-2. **`humanizeValue(key, value)`** em `utils.js` — fallback geral: trata booleanos, slugs comuns, datas, listas.
-3. **`DRAWER_FIELD_LABELS`** em `config.js` — define o label do **nome** do campo (ex.: `nome_assinatura` → "Nome para assinatura"). Campos com `skip: true` são omitidos na exibição.
-
-Labels de nomes de campos: `DRAWER_FIELD_LABELS_FLAT` é o mapa plano `{ chave: label }` derivado de `DRAWER_FIELD_LABELS`.
-
-```
-
-
-## File: artifacts/api-server/docs/README.md
-
-```
-# Documentação Técnica — Hub de Solicitações SVN
-
-Documentação para quem mantém e evolui o sistema. Toda afirmação está baseada no código do repositório.
-
-## Índice
-
-| Arquivo | Conteúdo |
-|---|---|
-| [visao-geral.md](visao-geral.md) | O que é o Hub, públicos, lista completa de tipos de solicitação |
-| [arquitetura.md](arquitetura.md) | Stack, camadas, diagrama de fluxo, estrutura de pastas |
-| [como-rodar.md](como-rodar.md) | Pré-requisitos, instalação, variáveis de ambiente, dev/build, Replit, Railway, scripts one-off |
-| [frontend.md](frontend.md) | JS compartilhados, padrão das páginas de formulário, validação, submit |
-| [backend.md](backend.md) | Rotas, fluxo do POST de criação, normalizeFormDados, geração de artefatos |
-| [form-schemas.md](form-schemas.md) | Como o form-schemas.ts funciona, passo a passo para adicionar/editar tipo |
-| [modelo-dados.md](modelo-dados.md) | Tabelas, campo `dados` (JSONB), convenção snake_case, resolução de labels |
-| [integracoes.md](integracoes.md) | MSAL/Azure AD, ClickUp, Cloudflare R2, n8n/webhooks, MySQL Contatos |
-| [admin-dashboard.md](admin-dashboard.md) | Painéis de acompanhamento, status, filtros, tombamentos |
-| [scripts.md](scripts.md) | Scripts em src/scripts/, o que fazem, como rodar com segurança |
-| [convencoes.md](convencoes.md) | Tokens de marca SVN, padrões de código, nomenclatura |
-
-## Stack resumida
-
-- **Runtime:** Node.js (ESM) + TypeScript, compilado com esbuild
-- **Framework:** Express 5
-- **Banco de dados:** PostgreSQL + Drizzle ORM
-- **Sessão:** `express-session` persistida via `connect-pg-simple`
-- **Autenticação:** Microsoft MSAL (Azure AD) — domínio `@svninvest.com.br`
-- **Armazenamento de arquivos:** Cloudflare R2 (S3-compatible)
-- **Gerenciamento de tarefas:** ClickUp (API)
-- **Automações:** n8n via webhooks HTTP
-- **Geração de arte:** `sharp`, `fontkit`, `pdf-lib`, `pdfkit`, `opentype.js`
-- **Frontend:** HTML/CSS/JS vanilla (sem framework)
-- **Logging:** `pino` + `pino-http`
-
-```
-
-
-## File: artifacts/api-server/docs/scripts.md
-
-```
-# Scripts & Manutenção
-
-Scripts one-off em `src/scripts/`. Todos são executados diretamente com `tsx` sem necessidade de build prévio.
-
----
-
-## `migrate-assignments.ts`
-
-**O que faz:** Migra os assignees de solicitações das variáveis de ambiente (`CLICKUP_ASSIGNEE_*`) para a tabela `user_tipo_assignments` no banco de dados. Cria usuários "stub" para IDs do ClickUp que ainda não existam em `usersTable`.
-
-**Tabelas afetadas:** `usersTable`, `userTipoAssignmentsTable`
-
-**Dry-run:** Não possui modo dry-run. Usa `onConflictDoNothing`, portanto é **seguro re-rodar** — não duplica dados.
-
-**Pré-requisitos:** Variáveis `CLICKUP_ASSIGNEE_GERAL`, `CLICKUP_ASSIGNEE_EVENTOS`, `CLICKUP_ASSIGNEE_BRINDES`, `CLICKUP_ASSIGNEE_PATROCINIO` devem estar definidas no ambiente.
-
-**Como rodar:**
-
-```bash
-pnpm --filter @workspace/api-server run migrate-assignments
-# ou diretamente:
-pnpm tsx artifacts/api-server/src/scripts/migrate-assignments.ts
-```
-
-**Quando usar:** Uma única vez após configurar os assignees iniciais, ou quando adicionar novos tipos com assignees via variáveis de ambiente.
-
----
-
-## `import-cartoes.ts`
-
-**O que faz:** Importa um histórico de pedidos de cartão de visita físico a partir de um arquivo CSV para as tabelas `solicitacoes` e `cartao_aprovacoes`. Útil para migrar dados de sistemas legados.
-
-**Tabelas afetadas:** `solicitacoesTable` (INSERT), `cartaoAprovacoesTable` (INSERT), `usersTable` (SELECT para vincular e-mails)
-
-**Dry-run:** **Sim — modo padrão é dry-run.** Sem `--apply`, apenas imprime o que seria importado e os erros de validação. Isso permite verificar o CSV antes de qualquer escrita.
-
-**Parâmetros:**
-
-| Flag | Descrição |
-|---|---|
-| `--csv <caminho>` | Caminho para o arquivo CSV de entrada |
-| `--apply` | Executa a importação de verdade (sem essa flag, só faz dry-run) |
-
-**Como rodar com segurança:**
-
-```bash
-# 1. Primeiro: inspecione sem modificar nada
-pnpm tsx artifacts/api-server/src/scripts/import-cartoes.ts --csv /caminho/para/arquivo.csv
-
-# 2. Verifique os erros e o preview no output
-
-# 3. Quando tudo estiver ok, aplique:
-pnpm tsx artifacts/api-server/src/scripts/import-cartoes.ts --csv /caminho/para/arquivo.csv --apply
-```
-
-**Quando usar:** Migração única de dados históricos. Não é um script de uso rotineiro.
-
----
-
-## `seed-art-templates.ts`
-
-**O que faz:** Semeia templates padrão de arte na tabela `art_templates` — especificamente para os tipos `cartao-boas-vindas` e `assinatura-email`, com variantes por marca.
-
-**Tabelas afetadas:** `artTemplatesTable` (INSERT)
-
-**Dry-run:** Não possui flag, mas é **idempotente** — verifica se já existe um template para o `tipo` antes de inserir. Re-rodar não duplica dados.
-
-**Como rodar:**
-
-```bash
-pnpm --filter @workspace/api-server run seed-art-templates
-# ou diretamente:
-pnpm tsx artifacts/api-server/src/scripts/seed-art-templates.ts
-```
-
-**Quando usar:** Após limpar a tabela `art_templates` em ambiente de desenvolvimento, ou ao configurar um ambiente novo do zero.
-
----
-
-## Checklist de manutenção rotineira
-
-### Adicionar um novo usuário admin
-
-1. Acesse `/admin-usuarios.html`
-2. Clique em **Novo usuário**
-3. Preencha e-mail, nome e selecione role **Admin**
-4. Na primeira vez que o usuário logar via Microsoft, a sessão usará a role cadastrada
-
-### Adicionar nova lista ClickUp
-
-1. Acesse `/admin-clickup-lists.html`
-2. Cole o ID da lista ClickUp (visível na URL da lista no ClickUp)
-3. Vincule o tipo de solicitação desejado
-
-### Verificar erros de geração automática
-
-1. Acesse `/admin-log.html` e filtre por nível **error**
-2. Ou consulte diretamente:
-   ```sql
-   SELECT id, tipo_solicitacao, titulo, erro_geracao, created_at
-   FROM solicitacoes
-   WHERE erro_geracao IS NOT NULL
-   ORDER BY created_at DESC;
-   ```
-
-### Reprocessar uma arte com erro
-
-> TODO: verificar se existe endpoint de reprocessamento manual ou se é necessário atualizar `status` direto no banco e re-disparar o webhook n8n.
-
-### Limpar sessões expiradas
-
-O `connect-pg-simple` cria a tabela `session` e faz limpeza automática de sessões expiradas. Não requer manutenção manual.
-
-### Backup do banco
-
-Configure backup automático no Railway (Settings → Backups) ou use `pg_dump` manualmente:
-
-```bash
-pg_dump $DATABASE_URL > backup-$(date +%Y%m%d).sql
-```
-
-```
-
-
-## File: artifacts/api-server/docs/visao-geral.md
-
-```
-# Visão Geral
-
-## O que é o Hub
-
-O Hub de Solicitações SVN é um sistema web interno que centraliza os pedidos de materiais de marketing feitos por colaboradores e pelo time de Capital Humano à equipe de Marketing da SVN Invest. Substitui fluxos informais (WhatsApp, e-mail) por um processo rastreável com status em tempo real, integração com ClickUp e geração automática de alguns materiais digitais.
-
-## Problema que resolve
-
-- Eliminar pedidos perdidos ou sem histórico
-- Dar visibilidade de status para quem pediu e para quem executa
-- Automatizar geração de artefatos simples (assinaturas de e-mail, cartões digitais, artes NPS etc.)
-- Unificar briefings em formulários estruturados, reduzindo idas e vindas
-
-## Públicos
-
-| Público | O que faz no Hub |
-|---|---|
-| **Colaborador / Assessor** (`colaborador`) | Abre solicitações, acompanha status, baixa materiais prontos, aprova artes |
-| **Capital Humano** (`capital_humano`) | Acessa formulários exclusivos da área (onboarding, books, linha do tempo etc.) |
-| **Gestor** (`gestor`) | Visualiza todas as solicitações, gerencia impersonation |
-| **Admin** (`admin`) | Acesso completo: usuários, templates de arte, ClickUp config, tombamentos |
-| **Time de Marketing** | Atualiza status via ClickUp; o webhook sincroniza o Hub automaticamente |
-
-## Tipos de solicitação suportados
-
-### Identidade e materiais pessoais
-| Tipo (`tipo_solicitacao`) | Label |
-|---|---|
-| `assinatura-email` | Assinatura de E-mail |
-| `cartao-visita-fisico` | Cartão de Visita — Físico |
-| `cartao-visita-digital` | Cartão de Visita — Digital |
-| `cartao-boas-vindas` | Cartão de Boas-vindas |
-| `cartao-comemorativo` | Cartão Comemorativo |
-| `divulgacao-nps` | Arte NPS |
-| `convite-fp` | Convite Financial Planning |
-| `pagina-assessores` | Página de Assessores |
-
-### Eventos e relacionamento
-| Tipo | Label |
-|---|---|
-| `eventos` | Eventos |
-| `patrocinio` | Patrocínio |
-| `brindes` | Brindes |
-| `pagina-online` | Página Online |
-
-### Marketing e conteúdo
-| Tipo | Label |
-|---|---|
-| `artes-divulgacao` | Arte de Divulgação |
-| `apresentacao-nova` | Apresentação — Nova |
-| `apresentacao-atualizar` | Apresentação — Atualização |
-| `conteudo-pdf-informativo` | PDF — Informativo |
-| `conteudo-pdf-ebook` | PDF — Ebook |
-| `email-marketing` | E-mail Marketing |
-| `atualizacao-material` | Atualização de Material |
-| `materiais-impressos` | Materiais Impressos |
-
-### Audiovisual
-| Tipo | Label |
-|---|---|
-| `producao-video` | Produção de Vídeo |
-| `sessao-fotos` | Sessão de Fotos |
-| `producao-audiovisual` | Produção Audiovisual |
-
-### Capital Humano (acesso restrito à role `capital_humano` / `admin`)
-| Tipo | Label |
-|---|---|
-| `ch-kit-onboarding` | Kit Onboarding |
-| `ch-atualizacao-pessoas` | Atualização de Pessoas nos Sites |
-| `ch-conteudo-pdf` | Conteúdo em PDF (CH) |
-| `ch-arte-divulgacao` | Arte de Divulgação (CH) |
-| `ch-atualizacao-books` | Atualização de Books |
-| `ch-linha-do-tempo` | Linha do Tempo |
-| `ch-aniversariantes` | Aniversariantes do Mês |
-
-### Outros
-| Tipo | Label |
-|---|---|
-| `outro` | Outro |
-
-## Geração automática de artefatos
-
-Os tipos a seguir geram o material instantaneamente via `art-generator.ts` + n8n, sem intervenção manual do time de Marketing:
-
-- `assinatura-email`
-- `cartao-visita-digital`
-- `cartao-boas-vindas`
-- `divulgacao-nps`
-- `convite-fp`
-- `cartao-comemorativo`
-
-## Fluxo de aprovação
-
-Tipos que passam por um ciclo de aprovação pelo solicitante (chat na página de detalhe da solicitação):
-
-- `eventos`
-- `artes-divulgacao`
-- `atualizacao-material`
-- `conteudo-pdf-informativo`
-- `conteudo-pdf-ebook`
-- `apresentacao-nova`
-- `apresentacao-atualizar`
-
-```
-
-
-## File: artifacts/api-server/.env.example
-
-```
-# =============================================================================
-# Hub de Solicitações SVN — Variáveis de ambiente
-# =============================================================================
-# Copie este arquivo para .env e preencha os valores reais.
-# No Railway: adicione cada variável em Settings → Variables do serviço.
-#
-# Legenda:
-#   [obrigatório] — servidor não sobe sem ela
-#   [opcional]    — tem valor padrão ou funcionalidade desativada se ausente
-# =============================================================================
-
-
-# ── Servidor ──────────────────────────────────────────────────────────────────
-
-# Porta em que o servidor Express escuta.
-# O Railway injeta PORT automaticamente — não precisa definir manualmente.
-PORT=8080
-
-# Ambiente de execução. Use "production" no Railway.
-NODE_ENV=production                                          # [obrigatório]
-
-# Nível de log: trace | debug | info | warn | error | fatal
-LOG_LEVEL=info                                               # [opcional]
-
-# Origem permitida no CORS (URL pública do app no Railway, sem barra final).
-# Exemplo: https://hub-svn.up.railway.app
-ALLOWED_ORIGIN=https://SEU-APP.up.railway.app               # [obrigatório]
-
-
-# ── Banco de dados PostgreSQL ─────────────────────────────────────────────────
-
-# String de conexão PostgreSQL.
-# O Railway injeta DATABASE_URL automaticamente quando você adiciona um serviço
-# PostgreSQL ao projeto e o referencia pelo nome.
-DATABASE_URL=postgresql://user:password@host:5432/dbname    # [obrigatório]
-
-
-# ── Sessão ────────────────────────────────────────────────────────────────────
-
-# Chave secreta para assinar os cookies de sessão.
-# Gere com: openssl rand -base64 48
-SESSION_SECRET=troque-por-uma-string-longa-e-aleatoria      # [obrigatório]
-
-
-# ── Autenticação Microsoft (MSAL / Azure AD) ──────────────────────────────────
-# Configure um App Registration no Azure Active Directory e preencha abaixo.
-# Redirect URI cadastrada no Azure deve bater exatamente com MSAL_REDIRECT_URI.
-
-MSAL_TENANT_ID=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx         # [obrigatório]
-MSAL_CLIENT_ID=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx         # [obrigatório]
-MSAL_CLIENT_SECRET=seu-client-secret-aqui                   # [obrigatório]
-MSAL_REDIRECT_URI=https://SEU-APP.up.railway.app/auth/callback  # [obrigatório]
-
-
-# ── Cloudflare R2 (armazenamento de arquivos) ──────────────────────────────────
-# Crie um bucket R2 na Cloudflare e gere uma API Token com permissão de leitura
-# e escrita no bucket. ACCOUNT_ID está em Overview da sua conta Cloudflare.
-
-R2_ACCOUNT_ID=seu-account-id-cloudflare                     # [obrigatório]
-R2_BUCKET=nome-do-bucket                                     # [obrigatório]
-R2_ACCESS_KEY=sua-access-key                                 # [obrigatório]
-R2_SECRET_KEY=sua-secret-key                                 # [obrigatório]
-
-# URL pública base do bucket R2 (sem barra final).
-# Configure um domínio público no R2 ou use o endpoint r2.dev.
-# Exemplo: https://pub-xxxxxxxx.r2.dev
-R2_PUBLIC_URL=https://pub-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.r2.dev  # [obrigatório]
-
-
-# ── ClickUp ───────────────────────────────────────────────────────────────────
-# Token de acesso pessoal ou de serviço do ClickUp.
-# Obtenha em: ClickUp → Settings → Apps → API Token
-
-CLICKUP_API_TOKEN=pk_xxxxxxxxxxxxxxxxxx                      # [obrigatório]
-CLICKUP_WEBHOOK_SECRET=                                      # [opcional] HMAC secret configurado no webhook do ClickUp
-
-# IDs das listas do ClickUp onde as tarefas serão criadas por categoria.
-# Obtenha o ID abrindo a lista no ClickUp e inspecionando a URL:
-#   app.clickup.com/TEAM_ID/v/l/LIST_ID
-
-CLICKUP_LIST_GERAL=000000000                                 # [obrigatório]
-CLICKUP_LIST_EVENTOS=000000000                               # [obrigatório]
-CLICKUP_LIST_BRINDES=000000000                               # [obrigatório]
-CLICKUP_LIST_PATROCINIO=000000000                            # [obrigatório]
-
-# IDs dos usuários do ClickUp que receberão as tarefas como responsáveis.
-# Obtenha em: ClickUp → Settings → Members → clique no usuário → ID na URL.
-CLICKUP_ASSIGNEE_GERAL=00000000                              # [obrigatório]
-CLICKUP_ASSIGNEE_EVENTOS=00000000                            # [obrigatório]
-CLICKUP_ASSIGNEE_BRINDES=00000000                            # [obrigatório]
-CLICKUP_ASSIGNEE_PATROCINIO=00000000                         # [obrigatório]
-
-
-# ── Webhooks N8N ──────────────────────────────────────────────────────────────
-# URLs de webhook do N8N disparadas ao criar cada tipo de solicitação.
-# Cada URL ativa o workflow N8N correspondente.
-
-WEBHOOK_CARTAO_FISICO=https://n8n.exemplo.com/webhook/xxxxxxxx    # [obrigatório]
-WEBHOOK_CARTAO_DIGITAL=https://n8n.exemplo.com/webhook/xxxxxxxx   # [obrigatório]
-WEBHOOK_BOAS_VINDAS=https://n8n.exemplo.com/webhook/xxxxxxxx      # [obrigatório]
-WEBHOOK_NPS=https://n8n.exemplo.com/webhook/xxxxxxxx              # [obrigatório]
-WEBHOOK_CONVITE_FP=https://n8n.exemplo.com/webhook/xxxxxxxx       # [obrigatório]
-WEBHOOK_CERTIFICADO=https://n8n.exemplo.com/webhook/xxxxxxxx      # [obrigatório]
-WEBHOOK_COMEMORATIVO=https://n8n.exemplo.com/webhook/xxxxxxxx     # [obrigatório]
-
-
-# ── URLs de recursos estáticos externos ───────────────────────────────────────
-# Usadas em links rápidos no menu e na UI do hub.
-
-URL_LOGO_BRANCA=https://exemplo.com/logo-branca.png          # [opcional]
-URL_LOGO_PRETA=https://exemplo.com/logo-preta.png            # [opcional]
-URL_MANUAL=https://exemplo.com/manual.pdf                    # [opcional]
-URL_TUTORIAL_TRANSMISSAO=https://youtube.com/watch?v=...     # [opcional]
-URL_VIDEO_HERO=https://exemplo.com/video-hero.mp4            # [opcional]
-
-# E-mail de destino para notificação de upload (usado em alguns formulários).
-EMAIL_UPLOAD=setor@empresa.com.br                            # [opcional]
-
-
-# ── Segurança interna ─────────────────────────────────────────────────────────
-# Chave usada para autenticar chamadas internas entre serviços (ex: N8N → API).
-# Gere com: openssl rand -hex 32
-INTERNAL_API_SECRET=troque-por-hex-aleatorio-de-32-bytes     # [obrigatório]
-
-
-# ── MySQL — Contatos (integração legada) ──────────────────────────────────────
-# String de conexão MySQL para consulta de contatos de assessores.
-# Deixe vazio para desativar a integração (funcionalidade degradada, não crítica).
-# Formato: mysql://user:password@host:3306/database
-MYSQL_CONTATOS=                                              # [opcional]
+## File: artifacts/api-server/.lixo-leva2/init.sql
+
+```
+-- =============================================================================
+-- Hub de Solicitações SVN — Script de inicialização do banco de dados
+-- =============================================================================
+-- Execute este script uma única vez no banco PostgreSQL do Railway (ou qualquer
+-- outro PostgreSQL) antes de iniciar o servidor pela primeira vez.
+--
+-- Uso via psql:
+--   psql "$DATABASE_URL" -f scripts/init.sql
+--
+-- Uso via Railway CLI:
+--   railway run psql "$DATABASE_URL" -f scripts/init.sql
+-- =============================================================================
+
+-- ── 1. Sessões (express-session / connect-pg-simple) ─────────────────────────
+CREATE TABLE IF NOT EXISTS "session" (
+  "sid"    VARCHAR      NOT NULL COLLATE "default",
+  "sess"   JSON         NOT NULL,
+  "expire" TIMESTAMP(6) NOT NULL,
+  CONSTRAINT "session_pkey" PRIMARY KEY ("sid") NOT DEFERRABLE INITIALLY IMMEDIATE
+) WITH (OIDS = FALSE);
+
+CREATE INDEX IF NOT EXISTS "IDX_session_expire" ON "session" ("expire");
+
+-- ── 2. Usuários ───────────────────────────────────────────────────────────────
+-- Criados automaticamente no primeiro login via MSAL.
+-- role: 'colaborador' | 'admin'
+CREATE TABLE IF NOT EXISTS "users" (
+  "id"         SERIAL       PRIMARY KEY,
+  "email"      VARCHAR(255) NOT NULL UNIQUE,
+  "name"       VARCHAR(255),
+  "role"       VARCHAR(20)  NOT NULL DEFAULT 'colaborador',
+  "created_at" TIMESTAMP    NOT NULL DEFAULT NOW()
+);
+
+-- ── 3. Solicitações ───────────────────────────────────────────────────────────
+-- Tabela principal. Cada linha = uma solicitação de material/serviço.
+-- dados: campos do formulário (JSONB flexível por tipo)
+-- entrega_links: [{label, url}] — links gerados automaticamente (ex: assinatura PNG)
+-- avaliacao: {nota, comentario} — avaliação do usuário após conclusão
+CREATE TABLE IF NOT EXISTS "solicitacoes" (
+  "id"               SERIAL       PRIMARY KEY,
+  "user_email"       VARCHAR(255) NOT NULL REFERENCES "users" ("email"),
+  "tipo_solicitacao" VARCHAR(50)  NOT NULL,
+  "subtipo"          VARCHAR(50),
+  "maturidade"       INTEGER,
+  "dados"            JSONB        NOT NULL,
+  "clickup_task_id"  VARCHAR(100),
+  "titulo"           TEXT,
+  "clickup_url"      TEXT,
+  "avaliacao"        JSONB,
+  "entrega_links"    JSONB,
+  "status"           VARCHAR(30)  NOT NULL DEFAULT 'recebido',
+  "responsavel"      TEXT,
+  "created_at"       TIMESTAMP    NOT NULL DEFAULT NOW(),
+  "updated_at"       TIMESTAMP    NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS "IDX_solicitacoes_user_email"       ON "solicitacoes" ("user_email");
+CREATE INDEX IF NOT EXISTS "IDX_solicitacoes_tipo_solicitacao" ON "solicitacoes" ("tipo_solicitacao");
+CREATE INDEX IF NOT EXISTS "IDX_solicitacoes_status"           ON "solicitacoes" ("status");
+CREATE INDEX IF NOT EXISTS "IDX_solicitacoes_created_at"       ON "solicitacoes" ("created_at" DESC);
+
+-- ── 4. Arquivos ───────────────────────────────────────────────────────────────
+-- Uploads vinculados a uma solicitação, armazenados no Cloudflare R2.
+CREATE TABLE IF NOT EXISTS "arquivos" (
+  "id"             SERIAL       PRIMARY KEY,
+  "solicitacao_id" INTEGER      NOT NULL REFERENCES "solicitacoes" ("id"),
+  "campo"          VARCHAR(100),
+  "url_r2"         TEXT         NOT NULL,
+  "nome_original"  VARCHAR(255),
+  "created_at"     TIMESTAMP    NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS "IDX_arquivos_solicitacao_id" ON "arquivos" ("solicitacao_id");
+
+-- ── 5. Log de atividades ──────────────────────────────────────────────────────
+-- Registro de ações relevantes: criação de solicitação, mudanças de status,
+-- uploads, erros, etc.
+-- nivel: 'info' | 'warn' | 'error'
+CREATE TABLE IF NOT EXISTS "activity_log" (
+  "id"               SERIAL      PRIMARY KEY,
+  "created_at"       TIMESTAMP   NOT NULL DEFAULT NOW(),
+  "user_email"       TEXT,
+  "user_name"        TEXT,
+  "tipo"             TEXT        NOT NULL,
+  "nivel"            VARCHAR(10) NOT NULL DEFAULT 'info',
+  "solicitacao_id"   INTEGER,
+  "tipo_solicitacao" TEXT,
+  "titulo"           TEXT,
+  "detalhe"          TEXT        NOT NULL,
+  "metadata"         JSONB
+);
+
+CREATE INDEX IF NOT EXISTS "IDX_activity_log_created_at"     ON "activity_log" ("created_at" DESC);
+CREATE INDEX IF NOT EXISTS "IDX_activity_log_solicitacao_id" ON "activity_log" ("solicitacao_id");
+
+-- =============================================================================
+-- Fim do script. Todas as tabelas criadas com IF NOT EXISTS — seguro re-executar.
+-- =============================================================================
 
 ```
 
@@ -6084,13 +6281,13 @@ MYSQL_CONTATOS=                                              # [opcional]
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@300;400;600;700;900&display=swap">
   <link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@300;400;600;700;900&display=swap" rel="stylesheet">
-  <script src="config.js?v=20260615a"></script>
-  <script src="auth.js?v=20260611f"></script>
-  <script src="shell.js?v=20260611f"></script>
-  <script src="utils.js?v=20260615d"></script>
-  <script src="toast.js?v=20260603"></script>
-  <script src="icons.js?v=20260623a"></script>
-  <link rel="stylesheet" href="style.css?v=20260615c">
+  <script src="config.js"></script>
+  <script src="auth.js"></script>
+  <script src="shell.js"></script>
+  <script src="utils.js"></script>
+  <script src="toast.js"></script>
+  <script src="icons.js"></script>
+  <link rel="stylesheet" href="style.css">
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: 'Nunito Sans', sans-serif; color: var(--carbon-black); }
@@ -6423,7 +6620,7 @@ MYSQL_CONTATOS=                                              # [opcional]
   <title>Listas do ClickUp — Hub SVN</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap">
-  <link rel="stylesheet" href="style.css?v=20260615c">
+  <link rel="stylesheet" href="style.css">
   <style>
 
     .ccu-section-title { font-size: 0.72rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-50); margin: 28px 0 12px; }
@@ -6600,11 +6797,11 @@ MYSQL_CONTATOS=                                              # [opcional]
     </div>
   </div>
 
-  <script src="config.js?v=20260615a"></script>
-  <script src="auth.js?v=20260611f"></script>
-  <script src="shell.js?v=20260611f"></script>
-  <script src="utils.js?v=20260615d"></script>
-  <script src="toast.js?v=20260603"></script>
+  <script src="config.js"></script>
+  <script src="auth.js"></script>
+  <script src="shell.js"></script>
+  <script src="utils.js"></script>
+  <script src="toast.js"></script>
   <script>
     let STATE = { lists: [], forms: [], assignedTipos: {} };
 
@@ -6951,7 +7148,7 @@ MYSQL_CONTATOS=                                              # [opcional]
     <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap" media="print" onload="this.media='all'">
   <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap"></noscript>
-  <link rel="stylesheet" href="style.css?v=20260615c">
+  <link rel="stylesheet" href="style.css">
   <style>
     .bulk-bar { display:flex; align-items:center; justify-content:space-between; gap:12px; background:var(--icon-bg); border:1px solid var(--border-light); border-radius:var(--radius-lg); padding:10px 14px; margin-bottom:12px; }
     .bulk-bar .bulk-count { font-weight:700; font-size:0.85rem; color:var(--carbon-black); }
@@ -7211,12 +7408,12 @@ MYSQL_CONTATOS=                                              # [opcional]
   </div>
 
   </div>
-  <script src="utils.js?v=20260615d"></script>
-  <script src="toast.js?v=20260603"></script>
-  <script src="config.js?v=20260615a"></script>
-  <script src="auth.js?v=20260611f"></script>
-  <script src="shell.js?v=20260611f"></script>
-  <script src="filters.js?v=20260616a"></script>
+  <script src="utils.js"></script>
+  <script src="toast.js"></script>
+  <script src="config.js"></script>
+  <script src="auth.js"></script>
+  <script src="shell.js"></script>
+  <script src="filters.js"></script>
   <script>
     let currentTab = 'geral';
     let adminFilters = { eventos: { periodo: '', status: '' }, geral: { periodo: '', status: '' } };
@@ -7375,7 +7572,7 @@ MYSQL_CONTATOS=                                              # [opcional]
         html += `<tr onclick="window.location.href='/solicitacao.html?id=${item.id}'" style="cursor:pointer">
           ${isAdmin ? `<td style="text-align:center" onclick="event.stopPropagation()"><input type="checkbox" class="bulk-cb" data-id="${item.id}" onchange="bulkUpdate('${tab}')"></td>` : ''}
           <td>${esc(tipoLabel)}</td><td>${esc(titulo)}</td><td>${esc(item.user_email)}</td><td>${esc(date)}</td>
-          <td><span class="badge" style="background:${statusObj.bg || '#f1f5f9'};color:${statusObj.text || '#475569'};white-space:nowrap">${esc(statusObj.label)}</span></td>
+          <td>${statusBadgeHtml(statusObj, { style: 'white-space:nowrap' })}</td>
           ${avaliacaoCell}
           ${acoesCell}
         </tr>`;
@@ -7926,7 +8123,7 @@ MYSQL_CONTATOS=                                              # [opcional]
     <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap" media="print" onload="this.media='all'">
   <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap"></noscript>
-  <link rel="stylesheet" href="style.css?v=20260615c">
+  <link rel="stylesheet" href="style.css">
 </head>
 <body class="page-light">
   <div id="pageContent">
@@ -8001,12 +8198,12 @@ MYSQL_CONTATOS=                                              # [opcional]
     </div>
   </div>
 
-  <script src="config.js?v=20260615a"></script>
-  <script src="auth.js?v=20260611f"></script>
-  <script src="shell.js?v=20260611f"></script>
-  <script src="utils.js?v=20260615d"></script>
-  <script src="toast.js?v=20260603"></script>
-  <script src="filters.js?v=20260616a"></script>
+  <script src="config.js"></script>
+  <script src="auth.js"></script>
+  <script src="shell.js"></script>
+  <script src="utils.js"></script>
+  <script src="toast.js"></script>
+  <script src="filters.js"></script>
   <script>
     let logPage = 1;
     let logSearchTimeout;
@@ -8584,7 +8781,7 @@ input.props-input[type="color"] { padding: 2px 4px; height: 30px; }
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap" media="print" onload="this.media='all'">
-  <link rel="stylesheet" href="style.css?v=20260615c">
+  <link rel="stylesheet" href="style.css">
   <script src="/vendor/interact.min.js"></script>
   <link rel="stylesheet" href="admin-templates.css">
 </head>
@@ -8823,13 +9020,13 @@ input.props-input[type="color"] { padding: 2px 4px; height: 30px; }
       </div>
     </div>
   </div>
-  <script src="utils.js?v=20260615d"></script>
-  <script src="toast.js?v=20260603"></script>
-  <script src="config.js?v=20260615a"></script>
-  <script src="auth.js?v=20260611f"></script>
-  <script src="shell.js?v=20260611f"></script>
-  <script src="icons.js?v=20260623a"></script>
-  <script src="admin-templates.js?v=20260714a"></script>
+  <script src="utils.js"></script>
+  <script src="toast.js"></script>
+  <script src="config.js"></script>
+  <script src="auth.js"></script>
+  <script src="shell.js"></script>
+  <script src="icons.js"></script>
+  <script src="admin-templates.js"></script>
   <!-- Preview Modal -->
   <div class="modal-overlay" id="previewModalOverlay" onclick="Modal.close('previewModalOverlay', event)">
     <div class="modal-card" style="max-width:90vw">
@@ -11706,7 +11903,7 @@ input.props-input[type="color"] { padding: 2px 4px; height: 30px; }
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap" media="print" onload="this.media='all'">
   <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap"></noscript>
-  <link rel="stylesheet" href="style.css?v=20260615c">
+  <link rel="stylesheet" href="style.css">
   <style>
     .page-container--wide { max-width: min(1500px, 100%); }  /* 100%, nao 96vw: vw ignora os 232px da sidebar e o excesso era cortado */
     .tomb-tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--border-light); margin: 8px 0 24px; }
@@ -11911,11 +12108,11 @@ input.props-input[type="color"] { padding: 2px 4px; height: 30px; }
     </div>
   </div>
 
-  <script src="config.js?v=20260615a"></script>
-  <script src="auth.js?v=20260611f"></script>
-  <script src="shell.js?v=20260611f"></script>
-  <script src="utils.js?v=20260615d"></script>
-  <script src="toast.js?v=20260603"></script>
+  <script src="config.js"></script>
+  <script src="auth.js"></script>
+  <script src="shell.js"></script>
+  <script src="utils.js"></script>
+  <script src="toast.js"></script>
   <script>
     const MARCAS = [
       { value: 'svn-investimentos', label: 'SVN Investimentos' },
@@ -12291,7 +12488,7 @@ input.props-input[type="color"] { padding: 2px 4px; height: 30px; }
     <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap" media="print" onload="this.media='all'">
   <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap"></noscript>
-  <link rel="stylesheet" href="style.css?v=20260615c">
+  <link rel="stylesheet" href="style.css">
   <style>
     .page-container--wide { max-width: min(1500px, 100%); }  /* 100%, nao 96vw: vw ignora os 232px da sidebar e o excesso era cortado */
     .role-group-row td { cursor: pointer; user-select: none; }
@@ -12477,11 +12674,11 @@ input.props-input[type="color"] { padding: 2px 4px; height: 30px; }
     </div>
   </div>
 
-  <script src="config.js?v=20260615a"></script>
-  <script src="auth.js?v=20260611f"></script>
-  <script src="shell.js?v=20260611f"></script>
-  <script src="utils.js?v=20260615d"></script>
-  <script src="toast.js?v=20260603"></script>
+  <script src="config.js"></script>
+  <script src="auth.js"></script>
+  <script src="shell.js"></script>
+  <script src="utils.js"></script>
+  <script src="toast.js"></script>
   <script>
     let _allUsers = [];
     let _editingUserId = null;
@@ -12911,97 +13108,6 @@ input.props-input[type="color"] { padding: 2px 4px; height: 30px; }
   </script>
 </body>
 </html>
-```
-
-
-## File: artifacts/api-server/public/assessor-mockup.js
-
-```
-// ============================================================================
-// assessor-mockup.js — Componente compartilhado da PRÉVIA da página do assessor.
-// Renderiza o mockup a partir de um objeto `dados` (não de campos de form), para
-// que a validação (Capital Humano) e o próprio formulário usem a MESMA fonte.
-// Depende de window.SELOS_ASSESSOR (definido em config.js).
-//
-//   window.renderAssessorMockup(dados) -> string HTML
-//
-// dados: {
-//   nome_completo|nome, miniBio|mini_bio, linkedin, instagram,
-//   selos: string[] (ids), depoimentos: [{nome, texto}], foto_url|foto_perfil
-// }
-// ============================================================================
-(function () {
-  function esc(s) {
-    return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) {
-      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c];
-    });
-  }
-
-  function selosHtml(selos) {
-    var cat = window.SELOS_ASSESSOR || [];
-    return (selos || []).map(function (id) {
-      var selo = cat.find(function (s) { return s.id === id; });
-      var label = selo ? selo.label : id;
-      return selo && selo.icon_url
-        ? '<img src="' + esc(selo.icon_url) + '" loading="lazy" style="height:32px;width:auto;max-width:80px;object-fit:contain" alt="' + esc(label) + '">'
-        : '<span style="background:var(--icon-bg);border:1px solid var(--border-light);padding:4px 10px;border-radius:var(--radius-sm);font-size:0.75rem;font-weight:600">' + esc(label) + "</span>";
-    }).join("");
-  }
-
-  function socialHtml(dados) {
-    var out = [];
-    if (dados.linkedin) {
-      out.push('<a href="' + esc(dados.linkedin) + '" target="_blank" style="display:inline-flex;width:28px;height:28px;background:#0A66C2;border-radius:var(--radius-sm);align-items:center;justify-content:center;text-decoration:none"><svg width="14" height="14" viewBox="0 0 24 24" fill="white"><path d="M16 8a6 6 0 016 6v7h-4v-7a2 2 0 00-2-2 2 2 0 00-2 2v7h-4v-7a6 6 0 016-6z"/><rect x="2" y="9" width="4" height="12" fill="white"/><circle cx="4" cy="4" r="2" fill="white"/></svg></a>');
-    }
-    var ig = dados.instagram;
-    if (ig) {
-      ig = String(ig).trim();
-      var href = ig.indexOf("http") === 0 ? ig : "https://instagram.com/" + ig.replace(/^@/, "");
-      out.push('<a href="' + esc(href) + '" target="_blank" style="display:inline-flex;width:28px;height:28px;background:linear-gradient(135deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888);border-radius:var(--radius-sm);align-items:center;justify-content:center;text-decoration:none"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.5"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1.5" fill="white" stroke="none"/></svg></a>');
-    }
-    return out.join("");
-  }
-
-  function depoHtml(depoimentos) {
-    var valid = (depoimentos || []).filter(function (d) { return d && d.nome && d.texto; });
-    if (!valid.length) return "";
-    return '<div style="margin-top:24px"><h3 style="font-weight:600;margin-bottom:12px;font-size:0.95rem">Depoimentos</h3><div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">' +
-      valid.map(function (d) {
-        return '<div style="background:var(--icon-bg);border:1px solid var(--border-light);border-radius:var(--radius-md);padding:12px"><p style="font-size:0.875rem;margin-bottom:8px">' + esc(d.texto) + '</p><div style="font-weight:600;font-size:0.8rem">' + esc(d.nome) + "</div></div>";
-      }).join("") +
-      "</div></div>";
-  }
-
-  window.renderAssessorMockup = function (dados) {
-    dados = dados || {};
-    var nome = dados.nome_completo || dados.nome || "Nome do Assessor";
-    var bio = dados.miniBio || dados.mini_bio || "";
-    var foto = dados.foto_url || dados.foto_perfil || dados.fotoPerfil || "";
-    var photoHtml = foto
-      ? '<img src="' + esc(foto) + '" loading="lazy" style="width:100%;height:100%;object-fit:cover" alt="Foto de perfil">'
-      : '<span style="opacity:0.3;font-size:0.85rem">Sem foto</span>';
-    return (
-      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:24px">' +
-        "<div>" +
-          '<div style="margin-bottom:12px;display:flex;flex-wrap:wrap;gap:6px">' + selosHtml(dados.selos) + "</div>" +
-          '<h2 style="margin-bottom:8px">' + esc(nome) + "</h2>" +
-          '<p style="font-size:0.95rem;opacity:0.8;margin-bottom:16px">' + (bio ? esc(bio) : '<span style="opacity:0.4">Sem bio</span>') + "</p>" +
-          '<div style="display:flex;gap:8px;margin-bottom:16px">' + socialHtml(dados) + "</div>" +
-          '<div style="display:flex;gap:8px">' +
-            '<span class="btn btn-dark" style="font-size:0.8rem;padding:8px 20px;border-radius:var(--radius-md);pointer-events:none">Abrir conta</span>' +
-            '<span class="btn btn-secondary" style="font-size:0.8rem;padding:8px 20px;border-radius:var(--radius-md);pointer-events:none">Falar com assessor</span>' +
-          "</div>" +
-        "</div>" +
-        "<div>" +
-          '<div style="width:100%;height:320px;border-radius:var(--radius-xl);background:var(--icon-bg);display:flex;align-items:center;justify-content:center;overflow:hidden">' + photoHtml + "</div>" +
-        "</div>" +
-      "</div>" +
-      depoHtml(dados.depoimentos) +
-      '<p style="text-align:center;margin-top:20px;font-size:0.75rem;opacity:0.35">Simulação visual. O layout final pode variar conforme o site institucional.</p>'
-    );
-  };
-})();
-
 ```
 
 
@@ -13458,7 +13564,7 @@ window.isCurrentUserStaff = function() {
   <title>Capital Humano — Hub SVN</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap">
-  <link rel="stylesheet" href="style.css?v=20260615c">
+  <link rel="stylesheet" href="style.css">
 </head>
 <body class="page-light">
   <div id="pageContent">
@@ -13483,10 +13589,10 @@ window.isCurrentUserStaff = function() {
     </div>
   </div>
 
-  <script src="config.js?v=20260615a"></script>
-  <script src="auth.js?v=20260611f"></script>
-  <script src="utils.js?v=20260615d"></script>
-  <script src="shell.js?v=20260611f"></script>
+  <script src="config.js"></script>
+  <script src="auth.js"></script>
+  <script src="utils.js"></script>
+  <script src="shell.js"></script>
   <script>
     async function init() {
       try { if (typeof _configReady !== 'undefined') await _configReady; } catch (e) {}
@@ -13555,6 +13661,7 @@ const _configReady = Promise.all([
   if (schemas.contratos && schemas.contratos.length) CONTRATOS_SOCIAIS = schemas.contratos.map(c => c.label);
   if (schemas.cargos && schemas.cargos.length) CARGOS_ASSESSOR = schemas.cargos.map(c => c.label);
   if (schemas.setores && schemas.setores.length) SETORES = ['Selecione seu setor', ...schemas.setores];
+  if (schemas.selos && schemas.selos.length) SELOS_ASSESSOR = schemas.selos;
   if (schemas.tipos) {
     window._svnFormSchemas = schemas;
     const fl = {};
@@ -13622,7 +13729,7 @@ const CATEGORIAS_SOLICITACAO = [
 ];
 
 const TIPO_SOLICITACAO_LABELS = {
-  "eventos":                        "Evento",
+  "eventos":                        "Eventos",
   "pagina-assessores-dados":        "Página de Assessores — Dados",
   "pagina-assessores-atualizacao":  "Página de Assessores — Atualização",
   "pagina-assessores":              "Página de Assessores",
@@ -13843,7 +13950,7 @@ const DRAWER_FIELD_LABELS_FLAT = Object.fromEntries(
   Object.entries(DRAWER_FIELD_LABELS).map(([k, v]) => [k, v.label])
 );
 
-const SELOS_ASSESSOR = [
+let SELOS_ASSESSOR = [
   { id: "ancord",          label: "Ancord",         icon_url: "https://pub-a2132f9b61f940659cc98265acfcf64c.r2.dev/ancord.webp" },
   { id: "cea",             label: "CEA",            icon_url: "https://pub-a2132f9b61f940659cc98265acfcf64c.r2.dev/cea.webp" },
   { id: "cfp",             label: "CFP",            icon_url: "https://pub-a2132f9b61f940659cc98265acfcf64c.r2.dev/CFP-Logo.webp" },
@@ -14150,7 +14257,7 @@ const FLUXOS_ETAPAS = {
   <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap" media="print" onload="this.media='all'">
   <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap"></noscript>
-  <link rel="stylesheet" href="style.css?v=20260713a">
+  <link rel="stylesheet" href="style.css">
   <script>(function(){try{const s=JSON.parse(localStorage.getItem('svn_layout_state')||'{}');if(s.isAdmin)document.documentElement.dataset.preShell='admin';}catch(e){}})()</script>
   <style>
     .cc-split { display: grid; grid-template-columns: minmax(0, 1fr) 420px; gap: 24px; align-items: start; }
@@ -14390,12 +14497,12 @@ const FLUXOS_ETAPAS = {
     </div>
   </div>
 
-  <script src="utils.js?v=20260615d"></script>
-  <script src="toast.js?v=20260603"></script>
-  <script src="config.js?v=20260615a"></script>
-  <script src="auth.js?v=20260611f"></script>
-  <script src="shell.js?v=20260611f"></script>
-  <script src="convite-corporate.js?v=20260713b"></script>
+  <script src="utils.js"></script>
+  <script src="toast.js"></script>
+  <script src="config.js"></script>
+  <script src="auth.js"></script>
+  <script src="shell.js"></script>
+  <script src="convite-corporate.js"></script>
 </body>
 </html>
 ```
@@ -14849,7 +14956,7 @@ const FLUXOS_ETAPAS = {
     <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap" media="print" onload="this.media='all'">
   <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap"></noscript>
-  <link rel="stylesheet" href="style.css?v=20260615c">
+  <link rel="stylesheet" href="style.css">
 </head>
 <body class="page-light">
   <div id="pageContent">
@@ -15009,12 +15116,12 @@ const FLUXOS_ETAPAS = {
   </div>
   </div>
 
-  <script src="utils.js?v=20260615d"></script>
-  <script src="toast.js?v=20260603"></script>
-  <script src="config.js?v=20260615a"></script>
-  <script src="auth.js?v=20260611f"></script>
-  <script src="shell.js?v=20260611f"></script>
-  <script src="filters.js?v=20260616a"></script>
+  <script src="utils.js"></script>
+  <script src="toast.js"></script>
+  <script src="config.js"></script>
+  <script src="auth.js"></script>
+  <script src="shell.js"></script>
+  <script src="filters.js"></script>
   <script>
     const CLICKUP_ICON = getClickupIcon();
 
@@ -15194,7 +15301,7 @@ const FLUXOS_ETAPAS = {
                   <line x1="12" y1="15" x2="12" y2="3"/>
                 </svg>
                 Baixar
-              </a>` : `<span class="badge" style="background:${statusObj.bg || '#f1f5f9'};color:${statusObj.text || '#475569'}">${esc(statusObj.label)}</span>`}
+              </a>` : `${statusBadgeHtml(statusObj)}`}
             ${isStaff && item.clickup_url ? `
               <a href="${esc(item.clickup_url)}" target="_blank" rel="noopener"
                  onclick="event.stopPropagation()"
@@ -15461,7 +15568,7 @@ window.FilterPanel = (function () {
     <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap" media="print" onload="this.media='all'">
   <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap"></noscript>
-  <link rel="stylesheet" href="style.css?v=20260615c">
+  <link rel="stylesheet" href="style.css">
 </head>
 <body class="page-light">
   <div id="pageContent">
@@ -15635,13 +15742,13 @@ window.FilterPanel = (function () {
   </div>
 
   </div>
-  <script src="utils.js?v=20260615d"></script>
-  <script src="upload-feedback.js?v=20260615e"></script>
-  <script src="config.js?v=20260615a"></script>
-  <script src="prazo.js?v=20260619a"></script>
-  <script src="auth.js?v=20260611f"></script>
-  <script src="shell.js?v=20260611f"></script>
-  <script src="form-core.js?v=20260611f"></script>
+  <script src="utils.js"></script>
+  <script src="upload-feedback.js"></script>
+  <script src="config.js"></script>
+  <script src="prazo.js"></script>
+  <script src="auth.js"></script>
+  <script src="shell.js"></script>
+  <script src="form-core.js"></script>
   <script>
     const params = new URLSearchParams(window.location.search);
     let subtipo = params.get('subtipo') || '';
@@ -15843,7 +15950,7 @@ window.FilterPanel = (function () {
     <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap" media="print" onload="this.media='all'">
   <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap"></noscript>
-  <link rel="stylesheet" href="style.css?v=20260615c">
+  <link rel="stylesheet" href="style.css">
 </head>
 <body class="page-light">
   <div id="pageContent">
@@ -15961,12 +16068,12 @@ window.FilterPanel = (function () {
   </div>
 
   </div>
-  <script src="utils.js?v=20260615d"></script>
-  <script src="upload-feedback.js?v=20260615e"></script>
-  <script src="config.js?v=20260615a"></script>
-  <script src="auth.js?v=20260611f"></script>
-  <script src="shell.js?v=20260611f"></script>
-  <script src="form-core.js?v=20260611f"></script>
+  <script src="utils.js"></script>
+  <script src="upload-feedback.js"></script>
+  <script src="config.js"></script>
+  <script src="auth.js"></script>
+  <script src="shell.js"></script>
+  <script src="form-core.js"></script>
   <script>
 
     const TIPO = 'artes-divulgacao';
@@ -16036,7 +16143,7 @@ window.FilterPanel = (function () {
     init();
   </script>
 
-  <script src="prazo.js?v=20260619a"></script>
+  <script src="prazo.js"></script>
   <script>
     (function(){ if(!window.Prazo) return; var TIPO="artes-divulgacao";
       Prazo.ready.then(function(){
@@ -16074,7 +16181,7 @@ window.FilterPanel = (function () {
     <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap" media="print" onload="this.media='all'">
   <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap"></noscript>
-  <link rel="stylesheet" href="style.css?v=20260615c">
+  <link rel="stylesheet" href="style.css">
 </head>
 <body class="page-light">
   <div id="pageContent">
@@ -16141,12 +16248,12 @@ window.FilterPanel = (function () {
   
 
   </div>
-  <script src="utils.js?v=20260615d"></script>
-  <script src="upload-feedback.js?v=20260615e"></script>
-  <script src="config.js?v=20260615a"></script>
-  <script src="auth.js?v=20260611f"></script>
-  <script src="shell.js?v=20260611f"></script>
-  <script src="form-core.js?v=20260611f"></script>
+  <script src="utils.js"></script>
+  <script src="upload-feedback.js"></script>
+  <script src="config.js"></script>
+  <script src="auth.js"></script>
+  <script src="shell.js"></script>
+  <script src="form-core.js"></script>
   <script>
 
     const TIPO = 'assinatura-email';
@@ -16227,7 +16334,7 @@ window.FilterPanel = (function () {
     <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap" media="print" onload="this.media='all'">
   <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap"></noscript>
-  <link rel="stylesheet" href="style.css?v=20260615c">
+  <link rel="stylesheet" href="style.css">
 </head>
 <body class="page-light">
   <div id="pageContent">
@@ -16283,12 +16390,12 @@ window.FilterPanel = (function () {
   </div>
 
   </div>
-  <script src="utils.js?v=20260615d"></script>
-  <script src="upload-feedback.js?v=20260615e"></script>
-  <script src="config.js?v=20260615a"></script>
-  <script src="auth.js?v=20260611f"></script>
-  <script src="shell.js?v=20260611f"></script>
-  <script src="form-core.js?v=20260611f"></script>
+  <script src="utils.js"></script>
+  <script src="upload-feedback.js"></script>
+  <script src="config.js"></script>
+  <script src="auth.js"></script>
+  <script src="shell.js"></script>
+  <script src="form-core.js"></script>
   <script>
 
     const TIPO = 'atualizacao-material';
@@ -16352,7 +16459,7 @@ window.FilterPanel = (function () {
     <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap" media="print" onload="this.media='all'">
   <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap"></noscript>
-  <link rel="stylesheet" href="style.css?v=20260615c">
+  <link rel="stylesheet" href="style.css">
 </head>
 <body class="page-light">
   <div id="pageContent">
@@ -16445,12 +16552,12 @@ window.FilterPanel = (function () {
   
 
   </div>
-  <script src="utils.js?v=20260615d"></script>
-  <script src="upload-feedback.js?v=20260615e"></script>
-  <script src="config.js?v=20260615a"></script>
-  <script src="auth.js?v=20260611f"></script>
-  <script src="shell.js?v=20260611f"></script>
-  <script src="form-core.js?v=20260611f"></script>
+  <script src="utils.js"></script>
+  <script src="upload-feedback.js"></script>
+  <script src="config.js"></script>
+  <script src="auth.js"></script>
+  <script src="shell.js"></script>
+  <script src="form-core.js"></script>
   <script>
     const TIPO = 'brindes';
 
@@ -16528,7 +16635,7 @@ window.FilterPanel = (function () {
     <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap" media="print" onload="this.media='all'">
   <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap"></noscript>
-  <link rel="stylesheet" href="style.css?v=20260615c">
+  <link rel="stylesheet" href="style.css">
 </head>
 <body class="page-light">
   <div id="pageContent">
@@ -16598,12 +16705,12 @@ window.FilterPanel = (function () {
   
 
   </div>
-  <script src="utils.js?v=20260615d"></script>
-  <script src="upload-feedback.js?v=20260615e"></script>
-  <script src="config.js?v=20260615a"></script>
-  <script src="auth.js?v=20260611f"></script>
-  <script src="shell.js?v=20260611f"></script>
-  <script src="form-core.js?v=20260611f"></script>
+  <script src="utils.js"></script>
+  <script src="upload-feedback.js"></script>
+  <script src="config.js"></script>
+  <script src="auth.js"></script>
+  <script src="shell.js"></script>
+  <script src="form-core.js"></script>
   <script>
 
     const TIPO = 'cartao-boas-vindas';
@@ -16674,7 +16781,7 @@ window.FilterPanel = (function () {
     <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap" media="print" onload="this.media='all'">
   <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap"></noscript>
-  <link rel="stylesheet" href="style.css?v=20260615c">
+  <link rel="stylesheet" href="style.css">
 </head>
 <body class="page-light">
   <div id="pageContent">
@@ -16741,12 +16848,12 @@ window.FilterPanel = (function () {
   
 
   </div>
-  <script src="utils.js?v=20260615d"></script>
-  <script src="upload-feedback.js?v=20260615e"></script>
-  <script src="config.js?v=20260615a"></script>
-  <script src="auth.js?v=20260611f"></script>
-  <script src="shell.js?v=20260611f"></script>
-  <script src="form-core.js?v=20260611f"></script>
+  <script src="utils.js"></script>
+  <script src="upload-feedback.js"></script>
+  <script src="config.js"></script>
+  <script src="auth.js"></script>
+  <script src="shell.js"></script>
+  <script src="form-core.js"></script>
   <script>
     const TIPO = 'cartao-comemorativo';
 
@@ -16797,7 +16904,7 @@ window.FilterPanel = (function () {
     <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap" media="print" onload="this.media='all'">
   <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap"></noscript>
-  <link rel="stylesheet" href="style.css?v=20260615c">
+  <link rel="stylesheet" href="style.css">
   <style>
     .tipo-option {
       display: flex;
@@ -16974,12 +17081,12 @@ window.FilterPanel = (function () {
   
 
   </div>
-  <script src="utils.js?v=20260615d"></script>
-  <script src="upload-feedback.js?v=20260615e"></script>
-  <script src="config.js?v=20260615a"></script>
-  <script src="auth.js?v=20260611f"></script>
-  <script src="shell.js?v=20260611f"></script>
-  <script src="form-core.js?v=20260611f"></script>
+  <script src="utils.js"></script>
+  <script src="upload-feedback.js"></script>
+  <script src="config.js"></script>
+  <script src="auth.js"></script>
+  <script src="shell.js"></script>
+  <script src="form-core.js"></script>
   <script>
     let tipoSelecionado = null;
 
@@ -17120,7 +17227,7 @@ window.FilterPanel = (function () {
   <title>Aniversariantes do Mês — Hub SVN</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap">
-  <link rel="stylesheet" href="style.css?v=20260615c">
+  <link rel="stylesheet" href="style.css">
 </head>
 <body class="page-light">
   <div id="pageContent">
@@ -17164,12 +17271,12 @@ window.FilterPanel = (function () {
   </div>
   </div>
 
-  <script src="config.js?v=20260615a"></script>
-  <script src="auth.js?v=20260611f"></script>
-  <script src="utils.js?v=20260615d"></script>
-  <script src="shell.js?v=20260611f"></script>
-  <script src="form-core.js?v=20260611f"></script>
-  <script src="upload-feedback.js?v=20260615e"></script>
+  <script src="config.js"></script>
+  <script src="auth.js"></script>
+  <script src="utils.js"></script>
+  <script src="shell.js"></script>
+  <script src="form-core.js"></script>
+  <script src="upload-feedback.js"></script>
   <script>
 
     const TIPO = 'ch-aniversariantes';
@@ -17229,7 +17336,7 @@ window.FilterPanel = (function () {
   <title>Atualização de Books — Hub SVN</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap">
-  <link rel="stylesheet" href="style.css?v=20260615c">
+  <link rel="stylesheet" href="style.css">
   <style>
     .opt-checks { display: flex; flex-direction: column; gap: 8px; }
     .opt-check { display: flex; align-items: center; gap: 10px; padding: 11px 13px; border: 1px solid var(--border-light, #e8e2dc); border-radius: var(--radius-lg); cursor: pointer; font-size: .92rem; }
@@ -17296,12 +17403,12 @@ window.FilterPanel = (function () {
   </div>
   </div>
 
-  <script src="config.js?v=20260615a"></script>
-  <script src="auth.js?v=20260611f"></script>
-  <script src="utils.js?v=20260615d"></script>
-  <script src="shell.js?v=20260611f"></script>
-  <script src="upload-feedback.js?v=20260615e"></script>
-  <script src="form-core.js?v=20260611f"></script>
+  <script src="config.js"></script>
+  <script src="auth.js"></script>
+  <script src="utils.js"></script>
+  <script src="shell.js"></script>
+  <script src="upload-feedback.js"></script>
+  <script src="form-core.js"></script>
   <script>
     const TIPO = 'ch-atualizacao-books';
 
@@ -17382,7 +17489,7 @@ window.FilterPanel = (function () {
   <title>Atualização de Pessoas nos Sites — Hub SVN</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap">
-  <link rel="stylesheet" href="style.css?v=20260615c">
+  <link rel="stylesheet" href="style.css">
 </head>
 <body class="page-light">
   <div id="pageContent">
@@ -17432,12 +17539,12 @@ window.FilterPanel = (function () {
   </div>
   </div>
 
-  <script src="config.js?v=20260615a"></script>
-  <script src="auth.js?v=20260611f"></script>
-  <script src="utils.js?v=20260615d"></script>
-  <script src="shell.js?v=20260611f"></script>
-  <script src="form-core.js?v=20260611f"></script>
-  <script src="upload-feedback.js?v=20260615e"></script>
+  <script src="config.js"></script>
+  <script src="auth.js"></script>
+  <script src="utils.js"></script>
+  <script src="shell.js"></script>
+  <script src="form-core.js"></script>
+  <script src="upload-feedback.js"></script>
   <script>
 
     const TIPO = 'ch-atualizacao-pessoas';
@@ -17485,7 +17592,7 @@ window.FilterPanel = (function () {
   <title>Kit Onboarding — Hub SVN</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap">
-  <link rel="stylesheet" href="style.css?v=20260615c">
+  <link rel="stylesheet" href="style.css">
 </head>
 <body class="page-light">
   <div id="pageContent">
@@ -17524,11 +17631,11 @@ window.FilterPanel = (function () {
   </div>
   </div>
 
-  <script src="config.js?v=20260615a"></script>
-  <script src="auth.js?v=20260611f"></script>
-  <script src="utils.js?v=20260615d"></script>
-  <script src="shell.js?v=20260611f"></script>
-  <script src="form-core.js?v=20260611f"></script>
+  <script src="config.js"></script>
+  <script src="auth.js"></script>
+  <script src="utils.js"></script>
+  <script src="shell.js"></script>
+  <script src="form-core.js"></script>
   <script>
 
     const TIPO = 'ch-kit-onboarding';
@@ -17584,7 +17691,7 @@ window.FilterPanel = (function () {
   <title>Linha do Tempo — Hub SVN</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap">
-  <link rel="stylesheet" href="style.css?v=20260615c">
+  <link rel="stylesheet" href="style.css">
 </head>
 <body class="page-light">
   <div id="pageContent">
@@ -17628,12 +17735,12 @@ window.FilterPanel = (function () {
   </div>
   </div>
 
-  <script src="config.js?v=20260615a"></script>
-  <script src="auth.js?v=20260611f"></script>
-  <script src="utils.js?v=20260615d"></script>
-  <script src="shell.js?v=20260611f"></script>
-  <script src="form-core.js?v=20260611f"></script>
-  <script src="upload-feedback.js?v=20260615e"></script>
+  <script src="config.js"></script>
+  <script src="auth.js"></script>
+  <script src="utils.js"></script>
+  <script src="shell.js"></script>
+  <script src="form-core.js"></script>
+  <script src="upload-feedback.js"></script>
   <script>
 
     const TIPO = 'ch-linha-do-tempo';
@@ -17700,7 +17807,7 @@ window.FilterPanel = (function () {
     <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap" media="print" onload="this.media='all'">
   <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap"></noscript>
-  <link rel="stylesheet" href="style.css?v=20260615c">
+  <link rel="stylesheet" href="style.css">
 </head>
 <body class="page-light">
   <div id="pageContent">
@@ -17768,12 +17875,12 @@ window.FilterPanel = (function () {
   
 
   </div>
-  <script src="utils.js?v=20260615d"></script>
-  <script src="upload-feedback.js?v=20260615e"></script>
-  <script src="config.js?v=20260615a"></script>
-  <script src="auth.js?v=20260611f"></script>
-  <script src="shell.js?v=20260611f"></script>
-  <script src="form-core.js?v=20260611f"></script>
+  <script src="utils.js"></script>
+  <script src="upload-feedback.js"></script>
+  <script src="config.js"></script>
+  <script src="auth.js"></script>
+  <script src="shell.js"></script>
+  <script src="form-core.js"></script>
   <script>
 
     /** Monta o codigo do assessor no formato final: A + digitos. Vazio continua vazio. */
@@ -18246,7 +18353,7 @@ window.FormCore = (function () {
     <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap" media="print" onload="this.media='all'">
   <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap"></noscript>
-  <link rel="stylesheet" href="style.css?v=20260615c">
+  <link rel="stylesheet" href="style.css">
 </head>
 <body class="page-light">
   <div id="pageContent">
@@ -18380,12 +18487,12 @@ window.FormCore = (function () {
   </div>
 
   </div>
-  <script src="utils.js?v=20260615d"></script>
-  <script src="upload-feedback.js?v=20260615e"></script>
-  <script src="config.js?v=20260615a"></script>
-  <script src="auth.js?v=20260611f"></script>
-  <script src="shell.js?v=20260611f"></script>
-  <script src="form-core.js?v=20260611f"></script>
+  <script src="utils.js"></script>
+  <script src="upload-feedback.js"></script>
+  <script src="config.js"></script>
+  <script src="auth.js"></script>
+  <script src="shell.js"></script>
+  <script src="form-core.js"></script>
   <script>
     const params = new URLSearchParams(window.location.search);
     let subtipo = params.get('subtipo') || '';
@@ -18476,7 +18583,7 @@ window.FormCore = (function () {
     init();
   </script>
 
-  <script src="prazo.js?v=20260619a"></script>
+  <script src="prazo.js"></script>
   <script>
     (function(){ if(!window.Prazo) return; var TIPO="conteudo-pdf-informativo";
       Prazo.ready.then(function(){
@@ -18514,7 +18621,7 @@ window.FormCore = (function () {
     <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap" media="print" onload="this.media='all'">
   <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap"></noscript>
-  <link rel="stylesheet" href="style.css?v=20260615c">
+  <link rel="stylesheet" href="style.css">
 </head>
 <body class="page-light">
   <div id="pageContent">
@@ -18581,12 +18688,12 @@ Muito obrigado(a), e conte sempre comigo!</textarea>
   
 
   </div>
-  <script src="utils.js?v=20260615d"></script>
-  <script src="upload-feedback.js?v=20260615e"></script>
-  <script src="config.js?v=20260615a"></script>
-  <script src="auth.js?v=20260611f"></script>
-  <script src="shell.js?v=20260611f"></script>
-  <script src="form-core.js?v=20260611f"></script>
+  <script src="utils.js"></script>
+  <script src="upload-feedback.js"></script>
+  <script src="config.js"></script>
+  <script src="auth.js"></script>
+  <script src="shell.js"></script>
+  <script src="form-core.js"></script>
   <script>
 
     const TIPO = 'divulgacao-nps';
@@ -18650,7 +18757,7 @@ Muito obrigado(a), e conte sempre comigo!</textarea>
     <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap" media="print" onload="this.media='all'">
   <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap"></noscript>
-  <link rel="stylesheet" href="style.css?v=20260615c">
+  <link rel="stylesheet" href="style.css">
 </head>
 <body class="page-light">
   <div id="pageContent">
@@ -18722,12 +18829,12 @@ Muito obrigado(a), e conte sempre comigo!</textarea>
   
 
   </div>
-  <script src="utils.js?v=20260615d"></script>
-  <script src="upload-feedback.js?v=20260615e"></script>
-  <script src="config.js?v=20260615a"></script>
-  <script src="auth.js?v=20260611f"></script>
-  <script src="shell.js?v=20260611f"></script>
-  <script src="form-core.js?v=20260611f"></script>
+  <script src="utils.js"></script>
+  <script src="upload-feedback.js"></script>
+  <script src="config.js"></script>
+  <script src="auth.js"></script>
+  <script src="shell.js"></script>
+  <script src="form-core.js"></script>
   <script>
     const TIPO = 'email-marketing';
 
@@ -18755,7 +18862,7 @@ Muito obrigado(a), e conte sempre comigo!</textarea>
       onReady: function () { FileUpload.bind('baseDisparo', 'baseDisparoName'); }
     });
   </script>
-  <script src="prazo.js?v=20260619a"></script>
+  <script src="prazo.js"></script>
   <script>
     (function(){ if(!window.Prazo) return; var TIPO="email-marketing";
       Prazo.ready.then(function(){
@@ -18793,7 +18900,7 @@ Muito obrigado(a), e conte sempre comigo!</textarea>
     <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap" media="print" onload="this.media='all'">
   <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap"></noscript>
-  <link rel="stylesheet" href="style.css?v=20260615c">
+  <link rel="stylesheet" href="style.css">
 </head>
 <body class="page-light">
   <div id="pageContent">
@@ -19099,13 +19206,13 @@ Muito obrigado(a), e conte sempre comigo!</textarea>
   </div>
 
   </div>
-  <script src="utils.js?v=20260615d"></script>
-  <script src="upload-feedback.js?v=20260615e"></script>
-  <script src="config.js?v=20260615a"></script>
-  <script src="auth.js?v=20260611f"></script>
-  <script src="shell.js?v=20260611f"></script>
-  <script src="form-core.js?v=20260611f"></script>
-  <script src="ibge-loader.js?v=20260603"></script>
+  <script src="utils.js"></script>
+  <script src="upload-feedback.js"></script>
+  <script src="config.js"></script>
+  <script src="auth.js"></script>
+  <script src="shell.js"></script>
+  <script src="form-core.js"></script>
+  <script src="ibge-loader.js"></script>
   <script>
     const STORAGE_KEY = 'hub_form_eventos';
     window.addEventListener('pageshow', function(e) {
@@ -20467,7 +20574,7 @@ Muito obrigado(a), e conte sempre comigo!</textarea>
     <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap" media="print" onload="this.media='all'">
   <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap"></noscript>
-  <link rel="stylesheet" href="style.css?v=20260615c">
+  <link rel="stylesheet" href="style.css">
   <style>
     .tipo-material-btn {
       display:flex;align-items:center;gap:10px;padding:10px 14px;
@@ -20542,12 +20649,12 @@ Muito obrigado(a), e conte sempre comigo!</textarea>
   
 
   </div>
-  <script src="utils.js?v=20260615d"></script>
-  <script src="upload-feedback.js?v=20260615e"></script>
-  <script src="config.js?v=20260615a"></script>
-  <script src="auth.js?v=20260611f"></script>
-  <script src="shell.js?v=20260611f"></script>
-  <script src="form-core.js?v=20260611f"></script>
+  <script src="utils.js"></script>
+  <script src="upload-feedback.js"></script>
+  <script src="config.js"></script>
+  <script src="auth.js"></script>
+  <script src="shell.js"></script>
+  <script src="form-core.js"></script>
   <script>
     const TIPO = 'materiais-impressos';
     const TIPOS_IMPRESSOS = [
@@ -20996,7 +21103,7 @@ Muito obrigado(a), e conte sempre comigo!</textarea>
     <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap" media="print" onload="this.media='all'">
   <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap"></noscript>
-  <link rel="stylesheet" href="style.css?v=20260615c">
+  <link rel="stylesheet" href="style.css">
 </head>
 <body class="page-light">
   <div id="pageContent">
@@ -21048,12 +21155,12 @@ Muito obrigado(a), e conte sempre comigo!</textarea>
   
 
   </div>
-  <script src="utils.js?v=20260615d"></script>
-  <script src="upload-feedback.js?v=20260615e"></script>
-  <script src="config.js?v=20260615a"></script>
-  <script src="auth.js?v=20260611f"></script>
-  <script src="shell.js?v=20260611f"></script>
-  <script src="form-core.js?v=20260611f"></script>
+  <script src="utils.js"></script>
+  <script src="upload-feedback.js"></script>
+  <script src="config.js"></script>
+  <script src="auth.js"></script>
+  <script src="shell.js"></script>
+  <script src="form-core.js"></script>
   <script>
 
     const TIPO = 'outro';
@@ -21107,7 +21214,7 @@ Muito obrigado(a), e conte sempre comigo!</textarea>
     <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap" media="print" onload="this.media='all'">
   <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap"></noscript>
-  <link rel="stylesheet" href="style.css?v=20260615c">
+  <link rel="stylesheet" href="style.css">
 </head>
 <body class="page-light">
   <div id="pageContent">
@@ -21352,12 +21459,12 @@ Muito obrigado(a), e conte sempre comigo!</textarea>
   </div>
 
   </div>
-  <script src="utils.js?v=20260615d"></script>
-  <script src="upload-feedback.js?v=20260615e"></script>
-  <script src="config.js?v=20260615a"></script>
-  <script src="auth.js?v=20260611f"></script>
-  <script src="shell.js?v=20260611f"></script>
-  <script src="form-core.js?v=20260611f"></script>
+  <script src="utils.js"></script>
+  <script src="upload-feedback.js"></script>
+  <script src="config.js"></script>
+  <script src="auth.js"></script>
+  <script src="shell.js"></script>
+  <script src="form-core.js"></script>
   <script>
 
     /** Monta o codigo do assessor no formato final: A + digitos. Vazio continua vazio. */
@@ -21743,7 +21850,7 @@ Muito obrigado(a), e conte sempre comigo!</textarea>
     <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap" media="print" onload="this.media='all'">
   <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap"></noscript>
-  <link rel="stylesheet" href="style.css?v=20260615c">
+  <link rel="stylesheet" href="style.css">
 </head>
 <body class="page-light">
   <div id="pageContent">
@@ -21796,12 +21903,12 @@ Muito obrigado(a), e conte sempre comigo!</textarea>
   
 
   </div>
-  <script src="utils.js?v=20260615d"></script>
-  <script src="upload-feedback.js?v=20260615e"></script>
-  <script src="config.js?v=20260615a"></script>
-  <script src="auth.js?v=20260611f"></script>
-  <script src="shell.js?v=20260611f"></script>
-  <script src="form-core.js?v=20260611f"></script>
+  <script src="utils.js"></script>
+  <script src="upload-feedback.js"></script>
+  <script src="config.js"></script>
+  <script src="auth.js"></script>
+  <script src="shell.js"></script>
+  <script src="form-core.js"></script>
   <script>
 
     const TIPO = 'pagina-online';
@@ -21828,7 +21935,7 @@ Muito obrigado(a), e conte sempre comigo!</textarea>
 
     init();
   </script>
-  <script src="prazo.js?v=20260619a"></script>
+  <script src="prazo.js"></script>
   <script>
     (function(){ if(!window.Prazo) return; var TIPO="pagina-online";
       Prazo.ready.then(function(){
@@ -21866,7 +21973,7 @@ Muito obrigado(a), e conte sempre comigo!</textarea>
     <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap" media="print" onload="this.media='all'">
   <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap"></noscript>
-  <link rel="stylesheet" href="style.css?v=20260615c">
+  <link rel="stylesheet" href="style.css">
 </head>
 <body class="page-light">
   <div id="pageContent">
@@ -22032,13 +22139,13 @@ Muito obrigado(a), e conte sempre comigo!</textarea>
   
 
   </div>
-  <script src="utils.js?v=20260615d"></script>
-  <script src="upload-feedback.js?v=20260615e"></script>
-  <script src="config.js?v=20260615a"></script>
-  <script src="auth.js?v=20260611f"></script>
-  <script src="shell.js?v=20260611f"></script>
-  <script src="ibge-loader.js?v=20260611f"></script>
-  <script src="form-core.js?v=20260611f"></script>
+  <script src="utils.js"></script>
+  <script src="upload-feedback.js"></script>
+  <script src="config.js"></script>
+  <script src="auth.js"></script>
+  <script src="shell.js"></script>
+  <script src="ibge-loader.js"></script>
+  <script src="form-core.js"></script>
   <script>
     const TIPO = 'patrocinio';
 
@@ -22173,7 +22280,7 @@ Muito obrigado(a), e conte sempre comigo!</textarea>
     <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap" media="print" onload="this.media='all'">
   <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap"></noscript>
-  <link rel="stylesheet" href="style.css?v=20260615c">
+  <link rel="stylesheet" href="style.css">
 </head>
 <body class="page-light">
   <div id="pageContent">
@@ -22318,12 +22425,12 @@ Muito obrigado(a), e conte sempre comigo!</textarea>
   
 
   </div>
-  <script src="utils.js?v=20260615d"></script>
-  <script src="upload-feedback.js?v=20260615e"></script>
-  <script src="config.js?v=20260615a"></script>
-  <script src="auth.js?v=20260611f"></script>
-  <script src="shell.js?v=20260611f"></script>
-  <script src="form-core.js?v=20260611f"></script>
+  <script src="utils.js"></script>
+  <script src="upload-feedback.js"></script>
+  <script src="config.js"></script>
+  <script src="auth.js"></script>
+  <script src="shell.js"></script>
+  <script src="form-core.js"></script>
   <script>
     let _modalidade = null;
 
@@ -22435,7 +22542,7 @@ Muito obrigado(a), e conte sempre comigo!</textarea>
 
     init();
   </script>
-  <script src="prazo.js?v=20260619a"></script>
+  <script src="prazo.js"></script>
   <script>
     (function(){ if(!window.Prazo) return;
       Prazo.ready.then(function(){
@@ -23401,7 +23508,7 @@ window.Shell = {
     <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap" media="print" onload="this.media='all'">
   <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap"></noscript>
-  <link rel="stylesheet" href="style.css?v=20260615c">
+  <link rel="stylesheet" href="style.css">
   <style>
     /* ─── Status rail horizontal ─── */
     .status-rail-scroll {
@@ -23486,7 +23593,8 @@ window.Shell = {
     }
     .status-step-label.done { color: var(--sage-green); font-weight: 600; }
     .status-step-label.current { color: var(--current-color, #2563C0); font-weight: 700; }
-    @media (max-width: 560px) {
+    /* MOBILE-RAIL-768: o shell vira mobile em 768px; o rail seguia em 560px. */
+    @media (max-width: 768px) {
       .status-rail-scroll { overflow-x: hidden; overflow-y: visible; padding: 4px 0; }
       .status-rail { flex-direction: column; gap: 0; min-width: 0; }
       .status-step { flex-direction: row; align-items: center; min-width: 0; gap: 10px; flex: none; }
@@ -23886,10 +23994,40 @@ window.Shell = {
     .fact-alt-line + .fact-alt-line { margin-top: 1px; }
     .fact-sub { font-size: 0.74rem; font-weight: 600; margin-top: 5px; display: flex; align-items: flex-start; gap: 4px; }
     .fact-sub svg { flex-shrink: 0; margin-top: 2px; }
-    @media (max-width: 480px) {
+    /* MOBILE-FATOS-LISTA: 768px alinha esta pagina ao resto do app (o shell ja
+       troca em 768; entre 481 e 768 o header ficava desktop com a sidebar fora).
+       E os 3 fatos viram uma lista unica: em 2 colunas sobrava celula orfa e as
+       alturas dos cartoes nunca batiam. */
+    @media (max-width: 768px) {
       .sol-header-top { flex-direction: column; gap: 12px; }
       .sol-titulo { font-size: 1.5rem; }
-      .sol-actions { align-self: flex-start; }
+      .sol-actions { align-self: stretch; width: 100%; justify-content: flex-start; }
+      .sol-actions-kebab { margin-left: auto; }
+
+      .sol-facts {
+        display: block;
+        background: var(--card-white, #fff);
+        border: 1px solid var(--border-light, var(--ink-10));
+        border-radius: var(--radius-lg);
+        overflow: hidden;
+        margin-top: 14px;
+      }
+      .sol-facts .fact {
+        background: transparent !important;
+        border: 0 !important;
+        border-radius: 0;
+        padding: 11px 14px;
+        display: grid;
+        grid-template-columns: auto 1fr;
+        align-items: baseline;
+        column-gap: 14px;
+      }
+      .sol-facts .fact + .fact { border-top: 1px solid var(--ink-08) !important; }
+      .sol-facts .fact-label { margin-bottom: 0; white-space: nowrap; }
+      .sol-facts .fact-value { text-align: right; font-size: 0.88rem; }
+      .sol-facts .fact-rel-sub { grid-column: 2; text-align: right; }
+      .sol-facts .fact-alt-block,
+      .sol-facts .fact-sub { grid-column: 1 / -1; }
     }
 
     /* 4a — Bandeja de detalhes (mobile recolhida, desktop sempre visível) */
@@ -24047,9 +24185,170 @@ window.Shell = {
       transition: border-color .12s;
     }
     .dados-link:hover { border-bottom-color: currentColor; }
-    @media (max-width: 480px) {
-      .dados-grid { grid-template-columns: 1fr; }
+    /* MOBILE-DADOS-COMPACTO ────────────────────────────────────────────
+       Chips para Sim/Nao e listas curtas, bloco de identidade (foto + nome),
+       andamento em uma linha e barra fixa ao rolar. */
+
+    .dados-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+    .dados-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 4px 11px;
+      border: 1px solid var(--border-light);
+      border-radius: var(--radius-pill);
+      background: var(--icon-bg);
+      color: var(--carbon-black);
+      font-size: 0.78rem;
+      font-weight: 600;
+      line-height: 1.5;
+    }
+    .dados-chip svg { flex-shrink: 0; opacity: 0.8; }
+    .dados-chip--nao { opacity: 0.45; }
+    .dados-chips-bool { padding-top: 2px; }
+
+    .dados-identidade {
+      grid-column: 1 / -1;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding-bottom: 14px;
+      border-bottom: 1px solid var(--border-light);
+    }
+    .dados-avatar {
+      display: block;
+      width: 56px;
+      height: 56px;
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      flex-shrink: 0;
+      border: 1px solid var(--border-light);
+      background: var(--ink-05);
+      line-height: 0;
+    }
+    .dados-avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .dados-avatar:hover { border-color: var(--ink-30); }
+    .dados-identidade-txt { min-width: 0; }
+    .dados-nome { font-size: 1.02rem; }
+
+    .dados-mais { display: none; }
+
+    .fluxo-resumo { display: none; }
+    .fluxo-bar {
+      flex: 1 1 40px;
+      height: 4px;
+      border-radius: var(--radius-pill);
+      background: var(--ink-10);
+      overflow: hidden;
+    }
+    .fluxo-bar-fill { display: block; height: 100%; border-radius: var(--radius-pill); transition: width 0.4s ease; }
+
+    .sol-sticky {
+      position: fixed;
+      top: 60px;
+      left: 0;
+      right: 0;
+      z-index: 90;
+      display: none;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 16px;
+      background: var(--card-white, #fff);
+      border-bottom: 1px solid var(--border-light);
+      box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+      opacity: 0;
+      transform: translateY(-100%);
+      transition: opacity 0.2s ease, transform 0.2s ease;
+      pointer-events: none;
+    }
+    .app-shell.is-impersonating .sol-sticky { top: 100px; }
+    .sol-sticky.visivel { opacity: 1; transform: translateY(0); }
+    .sol-sticky-titulo {
+      flex: 1;
+      min-width: 0;
+      font-family: 'Taviraj', serif;
+      font-size: 0.98rem;
+      color: var(--carbon-black);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .sol-sticky-badge {
+      flex-shrink: 0;
+      padding: 4px 10px;
+      border-radius: var(--radius-pill);
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    @media (max-width: 768px) {
+      .dados-grid { grid-template-columns: 1fr; gap: 11px 0; }
       .dados-grid-wide { grid-column: 1; }
+
+      /* Rotulo e valor na mesma linha quando o valor e curto: com 13 campos
+         empilhados em duas linhas cada, a lista virava uma escada. */
+      .dados-field--inline {
+        display: grid;
+        grid-template-columns: minmax(0, 40%) 1fr;
+        align-items: baseline;
+        gap: 0;
+        column-gap: 12px;
+      }
+      .dados-field--inline .dados-value { text-align: right; }
+
+      #dadosContent:not(.dados-tudo) .dados-oculto { display: none; }
+      .dados-mais {
+        display: block;
+        width: 100%;
+        margin-top: 8px;
+        padding: 10px;
+        border: 1px dashed var(--ink-20);
+        border-radius: var(--radius-md);
+        background: none;
+        font-family: 'Nunito Sans', sans-serif;
+        font-size: 0.8rem;
+        font-weight: 700;
+        color: var(--carbon-black);
+        opacity: 0.6;
+        cursor: pointer;
+      }
+      .dados-mais:hover { opacity: 1; }
+
+      .dados-identidade { padding-bottom: 12px; }
+      .dados-avatar { width: 48px; height: 48px; }
+
+      /* Andamento: uma linha com progresso; o rail completo abre sob demanda. */
+      #fluxoCard .fluxo-eyebrow { display: none; }
+      .fluxo-resumo {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        width: 100%;
+        padding: 2px 0;
+        border: none;
+        background: none;
+        font-family: 'Nunito Sans', sans-serif;
+        font-size: 0.85rem;
+        color: var(--carbon-black);
+        text-align: left;
+        cursor: pointer;
+      }
+      .fluxo-resumo-txt { display: flex; align-items: center; gap: 6px; min-width: 0; white-space: nowrap; }
+      .fluxo-resumo-sep { opacity: 0.3; }
+      .fluxo-chevron { flex-shrink: 0; opacity: 0.35; transition: transform 0.25s; }
+      #fluxoCard .status-rail-scroll { display: none; }
+      #fluxoCard.fluxo-aberto .status-rail-scroll { display: block; margin-top: 16px; }
+      #fluxoCard.fluxo-aberto .fluxo-chevron { transform: rotate(180deg); }
+
+      .sol-sticky { display: flex; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .sol-sticky { transition: none; }
+      .fluxo-bar-fill { transition: none; }
     }
 
     
@@ -24075,6 +24374,12 @@ window.Shell = {
 
     <!-- Content -->
     <div id="pageContent" style="display:none">
+
+      <!-- Barra fixa (celular): mantem titulo e status a vista ao rolar -->
+      <div class="sol-sticky" id="solSticky" aria-hidden="true">
+        <span class="sol-sticky-titulo" id="solStickyTitulo"></span>
+        <span class="sol-sticky-badge" id="solStickyBadge"></span>
+      </div>
 
       <!-- Header -->
       <div class="sol-header">
@@ -24162,12 +24467,12 @@ window.Shell = {
     }
   </style>
 
-  <script src="utils.js?v=20260615d"></script>
-  <script src="toast.js?v=20260603"></script>
-  <script src="config.js?v=20260615a"></script>
-  <script src="auth.js?v=20260611f"></script>
-  <script src="shell.js?v=20260611f"></script>
-  <script src="solicitacao.js?v=20260710"></script>
+  <script src="utils.js"></script>
+  <script src="toast.js"></script>
+  <script src="config.js"></script>
+  <script src="auth.js"></script>
+  <script src="shell.js"></script>
+  <script src="solicitacao.js"></script>
 <div class="modal-overlay" id="avaliacaoModal" onclick="fecharModalAvaliacao(event)">
   <div class="modal-card" style="max-width:460px" onclick="event.stopPropagation()">
     <div class="modal-header">
@@ -24341,7 +24646,8 @@ window.Shell = {
       const facts = document.getElementById('solFacts');
       if (!facts) return;
       if (isTipoAutomacao(item.tipo_solicitacao)) { facts.style.display = 'none'; return; }
-      facts.style.display = 'grid';
+      // display fica com o CSS: no celular a barra de fatos vira lista (display:block).
+      facts.style.display = '';
 
       const DIAS_ABBR = ['dom','seg','ter','qua','qui','sex','sáb'];
 
@@ -24386,7 +24692,7 @@ window.Shell = {
           document.getElementById('factPrazoAltMotivo').textContent = motivo;
           cellPrazoAlt.style.display = 'block';
         } else { cellPrazoAlt.style.display = 'none'; }
-        cellPrazo.style.display = 'block';
+        cellPrazo.style.display = '';
       } else {
         cellPrazo.style.display = 'none';
       }
@@ -24396,7 +24702,7 @@ window.Shell = {
       const respNome = cleanResponsavel(item.responsavel);
       if (respNome) {
         document.getElementById('factRespValue').textContent = respNome;
-        cellResp.style.display = 'block';
+        cellResp.style.display = '';
       } else {
         cellResp.style.display = 'none';
       }
@@ -24414,7 +24720,7 @@ window.Shell = {
       if (cellSolic) {
         const norm = (x) => String(x || '').trim().toLowerCase();
         const mesmaPessoa = respNome && norm(respNome) === norm(nomeSolic);
-        cellSolic.style.display = mesmaPessoa ? 'none' : 'block';
+        cellSolic.style.display = mesmaPessoa ? 'none' : '';
       }
 
       // ── Aberto em ──
@@ -24525,7 +24831,7 @@ window.Shell = {
 
       const headerRight = document.getElementById('solHeaderRight');
 
-      const statusBadge = '<span class="sol-status-badge" id="solStatus" style="background:' + (statusObj.bg||'#f1f5f9') + ';color:' + (statusObj.text||'#475569') + '">' + esc(statusObj.label) + '</span>';
+      const statusBadge = statusBadgeHtml(statusObj, { classe: 'sol-status-badge', id: 'solStatus' });
 
       // Paginas de assessor nao usam mais ClickUp — o fluxo e a validacao interna.
       const TIPOS_SEM_CLICKUP = ['pagina-assessores-dados', 'pagina-assessores-atualizacao'];
@@ -24579,6 +24885,8 @@ window.Shell = {
         : '';
 
       headerRight.innerHTML = statusBadge + clickupBtn + avaliacaoBtn + kebabHtml;
+
+      montarStickyBar(titulo, statusObj);
     }
 
     /* ── renderFluxo (horizontal rail) ─────────── */
@@ -24686,8 +24994,30 @@ window.Shell = {
           </div>`;
       }).join('');
 
+      // FLUXO-RESUMO: no celular o rail vertical custava ~200px para dizer o que
+      // cabe em uma linha. O rail completo continua a um toque de distancia.
+      // Status fora do fluxo (idxAtual < 0) nao vira contador: o rail ja mostra
+      // todas as etapas apagadas, e "Etapa 3 de 3" seria mentira.
+      const etapaAtual = idxAtual >= 0 ? etapasVis[idxAtual] : null;
+      const foraDoFluxo = idxAtual < 0;
+      const concluidoFora = foraDoFluxo && item.status === 'concluido';
+      const passo = concluidoFora ? etapasVis.length : idxAtual + 1;
+      const pct = foraDoFluxo ? (concluidoFora ? 100 : 0) : Math.round((passo / etapasVis.length) * 100);
+      const sObjAtual = getStatus(etapaAtual ? etapaAtual.id : item.status);
+      const corAtual = corLegivelSobreClaro(sObjAtual);
+      const contadorHtml = (foraDoFluxo && !concluidoFora)
+        ? ''
+        : `<b>Etapa ${passo} de ${etapasVis.length}</b><span class="fluxo-resumo-sep">\u00b7</span>`;
+      const resumoHtml = `
+        <button type="button" class="fluxo-resumo" id="fluxoResumo" onclick="toggleFluxo()" aria-expanded="false" aria-controls="fluxoCard">
+          <span class="fluxo-resumo-txt">${contadorHtml}<span style="color:${corAtual};font-weight:700">${esc(etapaAtual ? etapaAtual.label : (sObjAtual.label || 'Em andamento'))}</span></span>
+          <span class="fluxo-bar"><span class="fluxo-bar-fill" style="width:${pct}%;background:${corAtual}"></span></span>
+          <svg class="fluxo-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>`;
+
       card.innerHTML = `
-        <p style="font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;opacity:0.38;margin-bottom:14px">Andamento</p>
+        <p class="fluxo-eyebrow" style="font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;opacity:0.38;margin-bottom:14px">Andamento</p>
+        ${resumoHtml}
         <div class="status-rail-scroll"><div class="status-rail">${stepsHtml}</div></div>`;
     }
 
@@ -25834,6 +26164,18 @@ window.Shell = {
     function fieldValueHtml(val, key) {
       const s = String(val).trim();
 
+      // TEL-MAILTO: no celular telefone e e-mail viram um toque so.
+      if (/^[\w.+-]+@[\w-]+\.[\w.-]+$/.test(s)) {
+        return `<a class="dados-link" href="mailto:${esc(s)}">${esc(s)}</a>`;
+      }
+      if (/telefone|whatsapp|celular|contato/i.test(String(key))) {
+        const dig = s.replace(/\D/g, '');
+        if (dig.length >= 10 && dig.length <= 13) {
+          const e164 = dig.length <= 11 ? '+55' + dig : '+' + dig;
+          return `<a class="dados-link" href="tel:${e164}">${esc(s)}</a>`;
+        }
+      }
+
       // @usuario do Instagram vira link, como o LinkedIn ja era
       if (/^@[A-Za-z0-9._]{2,30}$/.test(s)) {
         const user = s.slice(1);
@@ -25852,6 +26194,9 @@ window.Shell = {
     }
 
     /* ── renderDados ──────────────────────────── */
+    /* MOBILE-DADOS-JS: identidade (foto + nome), chips para Sim/Nao e listas
+       curtas, rotulo e valor na mesma linha quando o valor e curto, e o excedente
+       recolhido atras de "Ver todos os dados". */
     function renderDados(dados, item) {
         if (TIPOS_AUTOMACAO.includes(item.tipo_solicitacao)) {
         const dadosCard = document.getElementById('dadosCard');
@@ -25860,10 +26205,40 @@ window.Shell = {
       }
       const container = document.getElementById('dadosContent');
       const palProcessed = new Set();
-      let gridFields = '';
+      const gridFields = [];
       let socialChips = '';
+      let socialCount = 0;
+      let boolChips = '';
+      let boolCount = 0;
+      let identidadeBlock = '';
       let palestrantesBlock = '';
       let hasContent = false;
+
+      const LIMITE_MOBILE = 6;
+      const pular = new Set();
+      const ehImagem = (v) => typeof v === 'string' && /^https?:\/\/\S+\.(jpe?g|png|webp|gif|avif)(\?|$)/i.test(v.trim());
+
+      // Foto + nome viram um bloco so: dois campos a menos e o rosto ancora o topo.
+      const kFoto = ['foto_perfil', 'fotoPerfil'].find(k => ehImagem(dados[k]));
+      const kNome = ['nome_completo', 'nomeCompleto'].find(k => dados[k] && String(dados[k]).trim());
+      if (kFoto && kNome) {
+        const urlFoto = String(dados[kFoto]).trim();
+        const nome = String(dados[kNome]).trim();
+        const lblNome = (typeof DRAWER_FIELD_LABELS_FLAT !== 'undefined' && DRAWER_FIELD_LABELS_FLAT[kNome]) || 'Nome completo';
+        identidadeBlock = `<div class="dados-identidade"><a class="dados-avatar" href="${esc(urlFoto)}" target="_blank" rel="noopener noreferrer" title="Abrir em tamanho real"><img src="${esc(urlFoto)}" alt="" loading="lazy"></a><div class="dados-identidade-txt"><div class="dados-label">${esc(lblNome)}</div><div class="dados-value dados-nome">${esc(nome)}</div></div></div>`;
+        pular.add(kFoto);
+        pular.add(kNome);
+        hasContent = true;
+      }
+
+      const chipSimNao = (rotulo, sim) => sim
+        ? `<span class="dados-chip"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>${esc(rotulo)}</span>`
+        : `<span class="dados-chip dados-chip--nao"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="5" y1="12" x2="19" y2="12"/></svg>${esc(rotulo)}</span>`;
+
+      const ehCurto = (v) => {
+        const s = String(v);
+        return s.length <= 32 && !/\n/.test(s) && !/^https?:\/\//i.test(s) && !/^@[A-Za-z0-9._]{2,30}$/.test(s);
+      };
 
       // Identificacao primeiro, depois contato, depois conteudo.
       const FIELD_PRIORITY = ['nome_completo','nomeCompleto','foto_perfil','fotoPerfil','codigo_assessor','unidade','contrato_social','eh_assessor','quer_pagina','telefone','email','linkedin','instagram','selos','mini_bio','depoimentos','nomeEvento','tituloEvento','dataEvento','horario','origem','tipoEvento','publico','localEvento','unidadeSVN','localNome','localEndereco','estado','cidade','convidados','descricao','objetivos'];
@@ -25873,17 +26248,16 @@ window.Shell = {
       });
       for (const [key, value] of _entries) {
         if (value === null || value === undefined || value === '') continue;
+        if (pular.has(key)) continue;
         if (key === 'rateio' && dados.natureza === 'online') continue;
         if (/^palFoto\d$/.test(key)) continue;
         if (typeof DRAWER_FIELD_LABELS !== 'undefined' && DRAWER_FIELD_LABELS[key]?.skip) continue;
 
         const label = (typeof DRAWER_FIELD_LABELS_FLAT !== 'undefined' && DRAWER_FIELD_LABELS_FLAT[key])
           || String(key).replace(/([a-z])([A-Z])/g, '$1 $2').replace(/[_-]+/g, ' ').replace(/^./, c => c.toUpperCase());
-        const isWide = typeof DRAWER_FIELD_LABELS !== 'undefined' && !!(DRAWER_FIELD_LABELS[key]?.wide);
-        const wideClass = isWide ? ' dados-grid-wide' : '';
 
         if (key === 'temPalestrante') {
-          gridFields += `<div class="dados-field"><div class="dados-label">${esc(label)}</div><div class="dados-value">${esc(String(value))}</div></div>`;
+          gridFields.push(`<div class="dados-field"><div class="dados-label">${esc(label)}</div><div class="dados-value">${esc(String(value))}</div></div>`);
           hasContent = true;
           continue;
         }
@@ -25920,14 +26294,23 @@ window.Shell = {
                 ${d.nome ? `<div style="font-weight:600;font-size:0.78rem">${esc(d.nome)}</div>` : ''}
               </div>`).join('');
             if (depoBlock) {
-              gridFields += `<div class="dados-field dados-grid-wide"><div class="dados-label">${esc(label)}</div>${depoBlock}</div>`;
+              gridFields.push(`<div class="dados-field dados-grid-wide"><div class="dados-label">${esc(label)}</div>${depoBlock}</div>`);
               hasContent = true;
             }
           } else {
-            const val = value.map(v => humanizeValue(key, v)).join(', ');
-            const wideAuto = (val.length > 70 || /\n/.test(val)) ? ' dados-grid-wide' : '';
-            gridFields += `<div class="dados-field${wideAuto}"><div class="dados-label">${esc(label)}</div><div class="dados-value">${fieldValueHtml(val, key)}</div></div>`;
-
+            const itens = value.map(v => String(humanizeValue(key, v))).filter(t => t && t.trim());
+            if (!itens.length) continue;
+            // Lista curta (selos, canais) vira chip: "Ancord, CEA, CFP" em texto
+            // corrido nao mostra que sao itens distintos.
+            const viraChip = itens.every(t => t.length <= 24 && !/^https?:\/\//i.test(t));
+            if (viraChip) {
+              gridFields.push(`<div class="dados-field dados-grid-wide"><div class="dados-label">${esc(label)}</div><div class="dados-chips">${itens.map(t => `<span class="dados-chip">${esc(t)}</span>`).join('')}</div></div>`);
+            } else {
+              const val = itens.join(', ');
+              const largura = (val.length > 70 || /\n/.test(val)) ? ' dados-grid-wide' : '';
+              gridFields.push(`<div class="dados-field${largura}"><div class="dados-label">${esc(label)}</div><div class="dados-value">${fieldValueHtml(val, key)}</div></div>`);
+            }
+            hasContent = true;
           }
           continue;
         }
@@ -25940,13 +26323,23 @@ window.Shell = {
               ? bruto
               : (bruto.startsWith('@') ? 'https://instagram.com/' + bruto.slice(1) : 'https://' + bruto);
             socialChips += chipDeLink(href, rotuloDeLink(href), key);
+            socialCount++;
             hasContent = true;
           }
           continue;
         }
         const val = String(humanizeValue(key, value));
-        const wideAuto = (val.length > 70 || /\n/.test(val)) ? ' dados-grid-wide' : '';
-        gridFields += `<div class="dados-field${wideAuto}"><div class="dados-label">${esc(label)}</div><div class="dados-value">${fieldValueHtml(val, key)}</div></div>`;
+        // Sim/Nao vira chip: dois blocos de rotulo+valor para um bit de informacao
+        // era o que mais esticava a lista no celular.
+        if (/^(sim|n[aã]o)$/i.test(val.trim())) {
+          boolChips += chipSimNao(label, /^sim$/i.test(val.trim()));
+          boolCount++;
+          hasContent = true;
+          continue;
+        }
+        const largura = (val.length > 70 || /\n/.test(val)) ? ' dados-grid-wide' : '';
+        const inline = (!largura && ehCurto(val)) ? ' dados-field--inline' : '';
+        gridFields.push(`<div class="dados-field${largura}${inline}"><div class="dados-label">${esc(label)}</div><div class="dados-value">${fieldValueHtml(val, key)}</div></div>`);
         hasContent = true;
       }
 
@@ -25955,17 +26348,65 @@ window.Shell = {
         return;
       }
 
-      let html = `<div class="dados-grid">${gridFields}`;
+      const excede = gridFields.length > LIMITE_MOBILE;
+      const oculto = excede ? ' dados-oculto' : '';
+      const blocos = gridFields
+        .map((h, i) => (i >= LIMITE_MOBILE ? h.replace('class="dados-field', 'class="dados-field dados-oculto') : h))
+        .join('');
+
+      let html = `<div class="dados-grid">${identidadeBlock}${blocos}`;
+      if (boolChips) {
+        html += `<div class="dados-grid-wide dados-chips dados-chips-bool${oculto}">${boolChips}</div>`;
+      }
       if (socialChips) {
-        html += `<div class="dados-grid-wide dados-chips-social">${socialChips}</div>`;
+        html += `<div class="dados-grid-wide dados-chips-social${oculto}">${socialChips}</div>`;
       }
       if (palestrantesBlock) {
-        html += `<div class="dados-grid-wide" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px;padding:14px;background:var(--icon-bg);border-radius:var(--radius-lg)">
+        html += `<div class="dados-grid-wide${oculto}" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px;padding:14px;background:var(--icon-bg);border-radius:var(--radius-lg)">
           ${palestrantesBlock}
         </div>`;
       }
+      if (excede) {
+        const restantes = (gridFields.length - LIMITE_MOBILE) + boolCount + socialCount + (palestrantesBlock ? 1 : 0);
+        html += `<button type="button" class="dados-mais" id="dadosMaisBtn" onclick="abrirTodosDados()">Ver mais ${restantes} ${restantes === 1 ? 'campo' : 'campos'}</button>`;
+      }
       html += '</div>';
       container.innerHTML = html;
+    }
+
+    function abrirTodosDados() {
+      const c = document.getElementById('dadosContent');
+      if (c) c.classList.add('dados-tudo');
+      const b = document.getElementById('dadosMaisBtn');
+      if (b) b.remove();
+    }
+
+    function toggleFluxo() {
+      const card = document.getElementById('fluxoCard');
+      if (!card) return;
+      const aberto = card.classList.toggle('fluxo-aberto');
+      const btn = document.getElementById('fluxoResumo');
+      if (btn) btn.setAttribute('aria-expanded', String(aberto));
+    }
+
+    /* Barra fixa: ao rolar ate os dados perdia-se a referencia de qual
+       solicitacao esta aberta e em que status ela esta. */
+    function montarStickyBar(titulo, statusObj) {
+      const bar = document.getElementById('solSticky');
+      if (!bar) return;
+      const t = document.getElementById('solStickyTitulo');
+      const b = document.getElementById('solStickyBadge');
+      if (t) t.textContent = titulo || '';
+      if (b) {
+        b.textContent = (statusObj && statusObj.label) || '';
+        b.style.background = (statusObj && statusObj.bg) || '#f1f5f9';
+        b.style.color = (statusObj && statusObj.text) || '#475569';
+      }
+      const alvo = document.querySelector('.sol-header');
+      if (!alvo || typeof IntersectionObserver === 'undefined') return;
+      new IntersectionObserver(([e]) => {
+        bar.classList.toggle('visivel', !e.isIntersecting);
+      }, { rootMargin: '-64px 0px 0px 0px', threshold: 0 }).observe(alvo);
     }
 
     /* ── Atividade (log de eventos) ── */
@@ -26070,7 +26511,7 @@ window.Shell = {
     <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap" media="print" onload="this.media='all'">
   <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap"></noscript>
-  <link rel="stylesheet" href="style.css?v=20260615c">
+  <link rel="stylesheet" href="style.css">
 </head>
 <body class="page-light">
   <div id="pageContent">
@@ -26082,10 +26523,10 @@ window.Shell = {
   </div>
 
   </div>
-  <script src="config.js?v=20260615a"></script>
-  <script src="auth.js?v=20260611f"></script>
-  <script src="utils.js?v=20260615d"></script>
-  <script src="shell.js?v=20260611f"></script>
+  <script src="config.js"></script>
+  <script src="auth.js"></script>
+  <script src="utils.js"></script>
+  <script src="shell.js"></script>
   <script>
     const ICONS = {
       'icon-user': '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>',
@@ -27801,6 +28242,12 @@ input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
   box-shadow: 0 4px 18px rgba(37,211,102,0.5);
 }
 
+/* FAB-MOBILE-COMPACTO: no celular o botao passa por cima do conteudo ao rolar. */
+@media (max-width: 768px) {
+  .float-whatsapp { width: 40px; height: 40px; right: 14px; bottom: 14px; opacity: 0.88; }
+  .float-whatsapp svg { width: 19px; height: 19px; }
+}
+
 @keyframes pulseNotif {
   0%   { box-shadow: 0 0 0 0 rgba(220,38,38,0.6); }
   70%  { box-shadow: 0 0 0 6px rgba(220,38,38,0); }
@@ -28549,7 +28996,7 @@ input[type="checkbox"] {
     <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap" media="print" onload="this.media='all'">
   <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap"></noscript>
-  <link rel="stylesheet" href="style.css?v=20260615c">
+  <link rel="stylesheet" href="style.css">
 </head>
 <body class="page-dark">
   <video autoplay loop muted playsinline style="position:fixed;inset:0;width:100%;height:100%;object-fit:cover;z-index:0" id="bgVideo"></video>
@@ -28596,7 +29043,7 @@ input[type="checkbox"] {
     @keyframes spin { to { transform: rotate(360deg); } }
   </style>
 
-  <script src="config.js?v=20260615a"></script>
+  <script src="config.js"></script>
   <script>
     function isTipoComArtefato(tipoId) {
       if (window._svnFormSchemas?.tipos) {
@@ -29303,6 +29750,26 @@ window.SvnChip = (function () {
   return { html: html, rotulo: rotulo, tipo: tipo, instagramUrl: instagramUrl };
 })();
 
+/* statusBadgeHtml — pilula de status. As cores ja vinham do getStatus/getStatusVisual
+   do config.js, mas a montagem do <span> estava copiada em tres telas; mudar o
+   visual do badge exigia achar as tres. Aceita o id do status ou o objeto ja
+   resolvido (util quando a tela usa getStatusVisual, que trata "em alteracao").
+
+     statusBadgeHtml('concluido')
+     statusBadgeHtml(getStatusVisual(item), { classe: 'sol-status-badge', id: 'solStatus' })
+*/
+function statusBadgeHtml(status, opts) {
+  var o = opts || {};
+  var s = (status && typeof status === 'object')
+    ? status
+    : (typeof getStatus === 'function' ? getStatus(status) : { label: String(status) });
+  var attrId = o.id ? ' id="' + esc(o.id) + '"' : '';
+  var extra = o.style ? ';' + o.style : '';
+  return '<span class="' + esc(o.classe || 'badge') + '"' + attrId
+    + ' style="background:' + (s.bg || '#f1f5f9') + ';color:' + (s.text || '#475569') + extra + '">'
+    + esc(s.label) + '</span>';
+}
+
 ```
 
 
@@ -29320,7 +29787,7 @@ window.SvnChip = (function () {
   <title>Validação de Assessores — Hub SVN</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap">
-  <link rel="stylesheet" href="style.css?v=20260615c">
+  <link rel="stylesheet" href="style.css">
   <style>
     .page-container--wide { max-width: min(1400px, 96vw); }
     .va-tabs { display: flex; gap: 6px; flex-wrap: wrap; margin: 14px 0 16px; border-bottom: 1px solid var(--border-light); }
@@ -29426,11 +29893,11 @@ window.SvnChip = (function () {
     </div>
   </div>
 
-  <script src="utils.js?v=20260615d"></script>
-  <script src="config.js?v=20260615a"></script>
-  <script src="auth.js?v=20260611f"></script>
-  <script src="shell.js?v=20260611f"></script>
-  <script src="assessor-preview.js?v=20260709c"></script>
+  <script src="utils.js"></script>
+  <script src="config.js"></script>
+  <script src="auth.js"></script>
+  <script src="shell.js"></script>
+  <script src="assessor-preview.js"></script>
   <script>
     /* Mapa derivado de STATUS_SOLICITACAO (config.js) — antes esta tela tinha o
        proprio, e as cores divergiam do resumo e do painel para o MESMO status.
@@ -29788,7 +30255,7 @@ window.SvnChip = (function () {
   <title>Validação de Cartões — Hub SVN</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap">
-  <link rel="stylesheet" href="style.css?v=20260615c">
+  <link rel="stylesheet" href="style.css">
   <style>
     /* ============================================================
        VALIDAÇÃO DE CARTÕES — folha de estilo da tela
@@ -30009,12 +30476,12 @@ window.SvnChip = (function () {
     </div>
   </div>
 
-  <script src="config.js?v=20260615a"></script>
-  <script src="auth.js?v=20260611f"></script>
-  <script src="shell.js?v=20260611f"></script>
-  <script src="utils.js?v=20260615d"></script>
-  <script src="toast.js?v=20260603"></script>
-  <script src="icons.js?v=20260623a"></script>
+  <script src="config.js"></script>
+  <script src="auth.js"></script>
+  <script src="shell.js"></script>
+  <script src="utils.js"></script>
+  <script src="toast.js"></script>
+  <script src="icons.js"></script>
   <script>
     const CONTRATO_OPTS = [
       { v: '', label: 'Selecione…' },
@@ -31184,7 +31651,7 @@ interface DadosCartao {
  * Gera o SVG do verso com os textos já convertidos em <path> (curvas).
  * Retorna string SVG pronta para preview no browser OU para virar PDF.
  */
-export function gerarVersoSvg(dados: DadosCartao): string {
+/* interno */ function gerarVersoSvg(dados: DadosCartao): string {
   const template = fs.readFileSync(path.join(ASSETS_CARTAO, "verso.svg"), "utf8");
 
   // 1) Remove os <text>...</text> do template (ficam só defs + rect divisória).
@@ -31284,7 +31751,7 @@ function normalizeStatusKey(raw: string): string {
     .trim();
 }
 
-export const CLICKUP_STATUS_MAP: Record<string, string> = {
+/* interno */ const CLICKUP_STATUS_MAP: Record<string, string> = {
   "to do":                      "recebido",
   "recebido":                   "recebido",
   "in progress":                "em-producao",
@@ -31391,18 +31858,26 @@ export const CARGOS_OPTS = [
   { value: 'socia-assessora', label: 'Sócia e Assessora de Investimentos' },
 ];
 
-// Mantido em espelho com SELOS_ASSESSOR em public/config.js — atualize os dois juntos.
-export const SELOS_LABELS: Record<string, string> = {
-  "ancord": "Ancord",
-  "cea": "CEA",
-  "cfp": "CFP",
-  "cga": "CGA",
-  "cnpi": "CNPI",
-  "cpa10": "CPA-10",
-  "cpa20": "CPA-20",
-  "xp-private": "XP Private",
-  "palestrante-svn": "Palestrante SVN",
-};
+/* SELOS-FONTE-UNICA: era um espelho manual do SELOS_ASSESSOR do config.js — o
+   proprio comentario aqui pedia para atualizar os dois juntos. Agora a lista
+   completa (com icone) mora aqui, vai no payload do /api/form-schemas e o front
+   adota; a lista do config.js fica so como fallback offline. */
+const R2 = "https://pub-a2132f9b61f940659cc98265acfcf64c.r2.dev";
+
+export const SELOS_OPTS: Array<{ id: string; label: string; icon_url: string }> = [
+  { id: "ancord",          label: "Ancord",          icon_url: `${R2}/ancord.webp` },
+  { id: "cea",             label: "CEA",             icon_url: `${R2}/cea.webp` },
+  { id: "cfp",             label: "CFP",             icon_url: `${R2}/CFP-Logo.webp` },
+  { id: "cga",             label: "CGA",             icon_url: `${R2}/cga.webp` },
+  { id: "cnpi",            label: "CNPI",            icon_url: `${R2}/cnpj.webp` },
+  { id: "cpa10",           label: "CPA-10",          icon_url: `${R2}/cpa10.avif` },
+  { id: "cpa20",           label: "CPA-20",          icon_url: `${R2}/cpa20.webp` },
+  { id: "xp-private",      label: "XP Private",      icon_url: `${R2}/xp-private-24.webp` },
+  { id: "palestrante-svn", label: "Palestrante SVN", icon_url: `${R2}/palestrante_certificado.webp` },
+];
+
+export const SELOS_LABELS: Record<string, string> =
+  Object.fromEntries(SELOS_OPTS.map(s => [s.id, s.label]));
 
 // Fonte única de setores: nome (exibição/dropdown) + code (geração de ID no ClickUp).
 // Adicione um setor novo APENAS aqui — a lista de nomes e o mapa de códigos
@@ -31985,69 +32460,18 @@ export const VALID_TIPOS: string[] = [
   "ch-aniversariantes",
 ];
 
-export const TIPOS_COM_CLICKUP: Array<{ tipo: string; label: string }> = [
-  { tipo: "ch-kit-onboarding",      label: "Kit Onboarding" },
-  { tipo: "ch-atualizacao-pessoas", label: "Atualização de Pessoas nos Sites" },
-  { tipo: "ch-atualizacao-books",   label: "Atualização de Books" },
-  { tipo: "ch-linha-do-tempo",      label: "Linha do Tempo" },
-  { tipo: "ch-aniversariantes",     label: "Aniversariantes do Mês" },
-  { tipo: "eventos",                       label: "Eventos" },
-  { tipo: "artes-divulgacao",              label: "Artes de Divulgação" },
-  { tipo: "atualizacao-material",          label: "Atualização de Material" },
-  { tipo: "conteudo-pdf-informativo",      label: "PDF — Informativo" },
-  { tipo: "apresentacao-nova",             label: "Apresentação — Nova" },
-  { tipo: "apresentacao-atualizar",        label: "Apresentação — Atualização" },
-  { tipo: "pagina-assessores-dados",       label: "Página de Assessores — Dados" },
-  { tipo: "pagina-assessores-atualizacao", label: "Página de Assessores — Atualização" },
-  { tipo: "cartao-visita-fisico",          label: "Cartão de Visita — Físico" },
-  { tipo: "pagina-online",                 label: "Página Online" },
-  { tipo: "outro",                         label: "Outro" },
-  { tipo: "brindes",                       label: "Brindes" },
-  { tipo: "patrocinio",                    label: "Patrocínio" },
-  { tipo: "email-marketing",               label: "E-mail Marketing" },
-  { tipo: "producao-video",                label: "Produção de Vídeo" },
-  { tipo: "sessao-fotos",                  label: "Sessão de Fotos" },
-  { tipo: "materiais-impressos",           label: "Materiais Impressos" },
-];
-
-export function getFormSchemaList() {
-  return Object.values(FORM_SCHEMAS).map(s => {
-    const variantField = s.template_variant_field;
-    const variantOptions = variantField
-      ? (s.fields.find(f => f.name === variantField)?.options ?? [])
-      : [];
-    return {
-      tipo: s.tipo,
-      label: s.label,
-      description: s.description,
-      template_variant_field: variantField ?? null,
-      template_variant_options: variantOptions,
-      field_options: Object.fromEntries(
-        s.fields
-          .filter(fl => Array.isArray(fl.options) && fl.options.length > 0)
-          .map(fl => [fl.name, Object.fromEntries((fl.options ?? []).map(o => [o.value, o.label]))]),
-      ),
-      is_automation: s.is_automation,
-      has_clickup: s.has_clickup,
-      has_approval_flow: s.has_approval_flow,
-      has_downloadable_artifact: s.has_downloadable_artifact,
-      placeholders: [
-        ...s.fields.map(f => f.name),
-        ...(s.computed || []).map(c => c.name),
-      ],
-    };
-  });
-}
-
-
 /* Tipos que existem no sistema mas nao tem entrada em FORM_SCHEMAS — as paginas
    de assessor seguem outro fluxo (validacao interna, sem task no ClickUp).
    Sem isso, `FORM_SCHEMAS[tipo]?.label || tipo` devolvia o slug e ele chegava a
-   sair em notificacao para o assessor. Os textos batem com o
-   TIPO_SOLICITACAO_LABELS do config.js, que o front ja usa. */
+   sair em notificacao para o assessor.
+
+   LABEL-FONTE-UNICA: este mapa agora vai no payload do /api/form-schemas, entao
+   o TIPO_SOLICITACAO_LABELS do config.js e so fallback — o rotulo de um tipo se
+   escreve AQUI, num lugar so. Por isso o bloco subiu no arquivo: o
+   TIPOS_COM_CLICKUP abaixo deriva dele via labelDoTipo(). */
 export const LABELS_EXTRA: Record<string, string> = {
   'apresentacao':                           'Apresentação',
-  'artes-divulgacao':                       'Arte de Divulgação',
+  'artes-divulgacao':                       'Artes de Divulgação',
   'atualizacao-material':                   'Atualização de Material',
   'brindes':                                'Brindes',
   'cartao-visita':                          'Cartão de Visita',
@@ -32080,6 +32504,68 @@ export function labelDoTipo(tipo: string): string {
   if (!t) return '';
   return FORM_SCHEMAS[t]?.label || LABELS_EXTRA[t] || t;
 }
+
+/* Quais tipos abrem task no ClickUp. So a lista — o rotulo vem de labelDoTipo,
+   senao a mesma solicitacao saia com um nome na tela e outro no titulo da task
+   (era o caso de "artes-divulgacao"). */
+const TIPOS_COM_CLICKUP_IDS: string[] = [
+  "ch-kit-onboarding",
+  "ch-atualizacao-pessoas",
+  "ch-atualizacao-books",
+  "ch-linha-do-tempo",
+  "ch-aniversariantes",
+  "eventos",
+  "artes-divulgacao",
+  "atualizacao-material",
+  "conteudo-pdf-informativo",
+  "apresentacao-nova",
+  "apresentacao-atualizar",
+  "pagina-assessores-dados",
+  "pagina-assessores-atualizacao",
+  "cartao-visita-fisico",
+  "pagina-online",
+  "outro",
+  "brindes",
+  "patrocinio",
+  "email-marketing",
+  "producao-video",
+  "sessao-fotos",
+  "materiais-impressos",
+];
+
+export const TIPOS_COM_CLICKUP: Array<{ tipo: string; label: string }> =
+  TIPOS_COM_CLICKUP_IDS.map(tipo => ({ tipo, label: labelDoTipo(tipo) }));
+
+export function getFormSchemaList() {
+  return Object.values(FORM_SCHEMAS).map(s => {
+    const variantField = s.template_variant_field;
+    const variantOptions = variantField
+      ? (s.fields.find(f => f.name === variantField)?.options ?? [])
+      : [];
+    return {
+      tipo: s.tipo,
+      label: s.label,
+      description: s.description,
+      template_variant_field: variantField ?? null,
+      template_variant_options: variantOptions,
+      field_options: Object.fromEntries(
+        s.fields
+          .filter(fl => Array.isArray(fl.options) && fl.options.length > 0)
+          .map(fl => [fl.name, Object.fromEntries((fl.options ?? []).map(o => [o.value, o.label]))]),
+      ),
+      is_automation: s.is_automation,
+      has_clickup: s.has_clickup,
+      has_approval_flow: s.has_approval_flow,
+      has_downloadable_artifact: s.has_downloadable_artifact,
+      placeholders: [
+        ...s.fields.map(f => f.name),
+        ...(s.computed || []).map(c => c.name),
+      ],
+    };
+  });
+}
+
+
 
 ```
 
@@ -32472,7 +32958,7 @@ function addDays(d: Date, n: number): Date {
 // Cache por ano: Set de strings 'YYYY-MM-DD'
 const cache = new Map<number, Set<string>>();
 
-export function holidaysForYear(year: number): Set<string> {
+/* interno */ function holidaysForYear(year: number): Set<string> {
   const cached = cache.get(year);
   if (cached) return cached;
 
@@ -32499,11 +32985,11 @@ export function holidaysForYear(year: number): Set<string> {
   return set;
 }
 
-export function isHoliday(date: Date): boolean {
+/* interno */ function isHoliday(date: Date): boolean {
   return holidaysForYear(date.getFullYear()).has(ymd(date));
 }
 
-export function isBusinessDay(date: Date): boolean {
+/* interno */ function isBusinessDay(date: Date): boolean {
   const w = date.getDay();
   if (w === 0 || w === 6) return false; // domingo/sábado
   return !isHoliday(date);
@@ -32774,6 +33260,88 @@ export function getR2Client(): S3Client | null {
 ```
 
 
+## File: artifacts/api-server/src/lib/sessions.ts
+
+```
+import { pool } from "@workspace/db";
+import { logger } from "./logger";
+
+/**
+ * Propagacao de mudancas de identidade para as sessoes ja abertas.
+ *
+ * A sessao guarda um retrato do usuario feito no login (/auth/callback) e o
+ * cookie e rolling de 30 dias, renovado a cada request: quem usa o Hub toda
+ * semana nunca ganha sessao nova. Sem propagar, uma mudanca de papel so
+ * aparecia quando o /auth/me reconciliava — ou seja, no proximo carregamento
+ * de pagina. Entre uma navegacao e outra, as chamadas de API seguiam com o
+ * papel antigo. Tolerar isso ao promover alguem e inofensivo; ao rebaixar,
+ * nao e.
+ *
+ * O store e o connect-pg-simple: uma linha por sessao, com o payload em `sess`
+ * (coluna json). Mexer nele por SQL e deliberado — nao existe API do
+ * express-session para alcancar a sessao de outra pessoa.
+ */
+
+// Fixado no app.ts, em `new PgStore({ tableName: "session" })`.
+const TABELA_SESSAO = "session";
+
+/**
+ * Reescreve a role dentro das sessoes vivas do usuario. Vale na requisicao
+ * seguinte dele, inclusive para o requireRole do servidor, e sem interromper
+ * nada: a sessao continua a mesma, so o papel muda.
+ *
+ * Devolve quantas sessoes foram tocadas (uma pessoa pode ter varias — celular,
+ * desktop, outro navegador). Zero e resultado normal: significa que ela nao
+ * tem sessao aberta, e o proximo login ja traz o papel certo.
+ */
+export async function atualizarRoleNasSessoes(email: string, role: string): Promise<number> {
+  const alvo = String(email || "").toLowerCase();
+  if (!alvo) return 0;
+
+  const { rowCount } = await pool.query(
+    `UPDATE ${TABELA_SESSAO}
+        SET sess = jsonb_set(sess::jsonb, '{user,role}', to_jsonb($2::text))::json
+      WHERE lower(sess -> 'user' ->> 'email') = $1
+        AND COALESCE(sess -> 'user' ->> 'role', '') <> $2`,
+    [alvo, role],
+  );
+
+  const n = rowCount ?? 0;
+  if (n > 0) logger.info({ email: alvo, role, sessoes: n }, "Role propagada para sessoes abertas");
+  return n;
+}
+
+/**
+ * Apaga as sessoes do usuario. Isto NAO e a mesma coisa que a funcao acima:
+ * aqui a pessoa cai no login na proxima requisicao, com perda do que estivesse
+ * preenchendo. Reserve para revogacao de verdade — desligamento, incidente,
+ * acesso indevido — onde a interrupcao e o objetivo. Para mudanca de papel,
+ * use atualizarRoleNasSessoes.
+ *
+ * Cobre tambem as sessoes em que este e-mail e o admin por tras de uma
+ * impersonacao: revogar o acesso de alguem tem que derrubar as duas pontas.
+ *
+ * Sem chamador ainda — existe para quando houver desativacao de usuario.
+ */
+export async function encerrarSessoes(email: string): Promise<number> {
+  const alvo = String(email || "").toLowerCase();
+  if (!alvo) return 0;
+
+  const { rowCount } = await pool.query(
+    `DELETE FROM ${TABELA_SESSAO}
+      WHERE lower(sess -> 'user' ->> 'email') = $1
+         OR lower(sess -> 'adminOriginal' ->> 'email') = $1`,
+    [alvo],
+  );
+
+  const n = rowCount ?? 0;
+  logger.warn({ email: alvo, sessoes: n }, "Sessoes encerradas");
+  return n;
+}
+
+```
+
+
 ## File: artifacts/api-server/src/middleware/auth.middleware.ts
 
 ```
@@ -32807,14 +33375,9 @@ declare module "express-session" {
   }
 }
 
-export function getSessionUser(req: Request): SessionUser | undefined {
-  return req.session?.user;
-}
-
-export function isImpersonating(req: Request): boolean {
-  return !!req.session?.adminOriginal;
-}
-
+// AUTH-MW-LIMPO: getSessionUser e isImpersonating viviam aqui sem nenhum
+// chamador. Quem precisa do usuario le req.session.user direto; quem precisa
+// saber de impersonacao olha req.session.adminOriginal.
 export function requireAuth(req: Request, res: Response, next: NextFunction): void {
   if (!req.session?.user) {
     res.status(401).json({ error: "Autenticação necessária" });
@@ -33008,6 +33571,7 @@ import { FORM_SCHEMAS, getFormSchemaList, TIPOS_COM_CLICKUP } from "../config/fo
 import { isRole } from "../config/roles";
 import { validateClickUpList } from "./clickup";
 import { logAtividadeBg } from "../services/activity-log";
+import { atualizarRoleNasSessoes } from "../lib/sessions";
 import multer from "multer";
 import * as XLSX from "xlsx";
 
@@ -33526,14 +34090,32 @@ router.put("/users/:id/role", requireRole("admin"), async (req, res): Promise<vo
 
     await db.update(usersTable).set({ role }).where(eq(usersTable.id, userId));
 
+    // WRITE-THROUGH-SESSAO: a sessao guarda o papel desde o login, entao mudar
+    // so a tabela deixava a pessoa com o acesso antigo ate ela carregar uma
+    // pagina nova (quando o /auth/me reconcilia). Propagando aqui, vale na
+    // requisicao seguinte dela — o que importa sobretudo ao rebaixar alguem.
+    let sessoesAtualizadas = 0;
+    try {
+      sessoesAtualizadas = await atualizarRoleNasSessoes(targetUser.email, role);
+    } catch (err) {
+      // A troca de papel nao pode falhar por causa da propagacao: usersTable ja
+      // foi atualizada e o /auth/me continua sendo a rede de seguranca.
+      req.log.error({ err, email: targetUser.email }, "Erro ao propagar papel para as sessoes");
+    }
+
     logAtividadeBg({
       userEmail: currentUser.email, userName: currentUser.name,
       tipo: "usuario_papel_alterado", nivel: "warn",
       detalhe: `${currentUser.email} alterou o papel de ${targetUser.email}: "${targetUser.role || "colaborador"}" → "${role}"`,
-      metadata: { targetEmail: targetUser.email, de: targetUser.role || "colaborador", para: role },
+      metadata: {
+        targetEmail: targetUser.email,
+        de: targetUser.role || "colaborador",
+        para: role,
+        sessoesAtualizadas,
+      },
     });
 
-    res.json({ success: true });
+    res.json({ success: true, sessoesAtualizadas });
   } catch (err: any) {
     req.log.error({ err, body: req.body }, "Erro ao alterar role");
     res.status(500).json({ error: "Erro ao alterar role", code: err.code });
@@ -34393,6 +34975,7 @@ export default router;
 
 ```
 import { Router } from "express";
+import type { Request } from "express";
 import { fetchWithTimeout } from "../lib/http";
 import { ConfidentialClientApplication } from "@azure/msal-node";
 import { randomBytes } from "crypto";
@@ -34603,15 +35186,49 @@ router.get("/logout", (req, res) => {
   });
 });
 
-router.get("/me", (req, res): void => {
+// ROLE-RECONCILIADA: a role era gravada na sessao no /auth/callback e nunca mais
+// relida. Promover alguem no painel so alterava usersTable, entao a sessao viva
+// continuava com a role antiga — e como o cookie e rolling (30 dias, renovado a
+// cada request), quem usa o Hub toda semana nunca ganhava uma sessao nova.
+// Resultado: sem sidebar e redirect nas paginas com guard por role, ate deslogar.
+// A impersonacao funcionava porque /impersonate le usersTable na hora.
+//
+// Uma consulta indexada por request de /auth/me (uma vez por carregamento de
+// pagina, e o cliente ainda cacheia 5 min em sessionStorage).
+async function reconciliarRole(req: Request): Promise<void> {
   const user = req.session?.user;
-  if (!user) {
+  if (!user?.email) return;
+  try {
+    const [atual] = await db
+      .select({ role: usersTable.role })
+      .from(usersTable)
+      .where(eq(usersTable.email, user.email))
+      .limit(1);
+    const roleBanco = atual?.role;
+    if (roleBanco && roleBanco !== user.role) {
+      logger.info(
+        { email: user.email, de: user.role, para: roleBanco },
+        "Role da sessao reconciliada com o banco",
+      );
+      req.session.user = { ...user, role: roleBanco };
+    }
+  } catch (err) {
+    // Falha aqui nao pode derrubar o /auth/me: a sessao segue com a role antiga.
+    logger.error({ err, email: user.email }, "Erro ao reconciliar role da sessao");
+  }
+}
+
+router.get("/me", async (req, res): Promise<void> => {
+  if (!req.session?.user) {
     res.json({ authenticated: false });
     return;
   }
+
+  await reconciliarRole(req);
+
   res.json({
     authenticated: true,
-    user,
+    user: req.session.user,
     adminOriginal: req.session.adminOriginal || null,
     impersonating: !!req.session.adminOriginal,
     profile: req.session.userProfile || null,
@@ -36163,7 +36780,7 @@ const SNAPSHOT_TTL_MS = Number(process.env.CLICKUP_SNAPSHOT_TTL_MS) || 30000;
 const snapshotCache = new Map<string, { value: ClickUpSnapshot; expiresAt: number }>();
 
 /** Invalida o snapshot em cache de uma task. Chamado após o app escrever na task. */
-export function invalidateSnapshot(taskId: string): void {
+/* interno */ function invalidateSnapshot(taskId: string): void {
   snapshotCache.delete(taskId);
 }
 
@@ -36806,7 +37423,7 @@ import { FORM_SCHEMAS } from "../config/form-schemas";
 import { uploadToR2, deleteFromR2 } from "./r2";
 import { gerarArteParaSolicitacao, gerarCartaoFisicoPdf } from "../services/art-generator";
 import { logger } from "../lib/logger";
-import { CONTRATOS_OPTS, MARCAS_OPTS, CARGOS_OPTS, SETORES_LIST, getFormSchemaList, VALID_TIPOS } from "../config/form-schemas";
+import { CONTRATOS_OPTS, MARCAS_OPTS, CARGOS_OPTS, SETORES_LIST, SELOS_OPTS, LABELS_EXTRA, getFormSchemaList, VALID_TIPOS } from "../config/form-schemas";
 import { notificarMarcoBg } from "../services/notifications";
 import { logEventoBg, logAtividade, logAtividadeBg } from "../services/activity-log";
 import { eventosSolicitacaoTable, assessorPublicacoesTable } from "@workspace/db";
@@ -36854,12 +37471,18 @@ const upload = multer({ dest: os.tmpdir(), limits: { fileSize: 50 * 1024 * 1024,
 
 router.get("/form-schemas", (_req, res) => {
   const schemaList = getFormSchemaList();
-  const labels = Object.fromEntries(schemaList.map(s => [s.tipo, s.label]));
+  // LABELS-EXTRA-NO-PAYLOAD: antes so os tipos com schema vinham aqui, e os ~20
+  // que vivem em LABELS_EXTRA (paginas de assessor, CH, PDF) eram sincronizados
+  // na mao com o TIPO_SOLICITACAO_LABELS do config.js. Mandando os dois, o back
+  // vira fonte unica e a lista do front fica so como fallback offline.
+  // O schema tem prioridade: e o rotulo mais especifico.
+  const labels = { ...LABELS_EXTRA, ...Object.fromEntries(schemaList.map(s => [s.tipo, s.label])) };
   res.json({
     marcas:    MARCAS_OPTS,
     contratos: CONTRATOS_OPTS,
     cargos:    CARGOS_OPTS,
     setores:   SETORES_LIST,
+    selos:     SELOS_OPTS,
     tipos:     schemaList,
     labels,
   });
@@ -39034,7 +39657,7 @@ export default router;
 ```
 
 
-## File: artifacts/api-server/src/scripts/add-plataforma-convite.ts
+## File: artifacts/api-server/src/scripts/executados/add-plataforma-convite.ts
 
 ```
 /**
@@ -39200,7 +39823,7 @@ main().catch((err) => {
 ```
 
 
-## File: artifacts/api-server/src/scripts/diag-art-templates.ts
+## File: artifacts/api-server/src/scripts/executados/diag-art-templates.ts
 
 ```
 /**
@@ -39273,7 +39896,7 @@ main().catch((err) => {
 ```
 
 
-## File: artifacts/api-server/src/scripts/import-cartoes.ts
+## File: artifacts/api-server/src/scripts/executados/import-cartoes.ts
 
 ```
 import { db, solicitacoesTable, cartaoAprovacoesTable, usersTable } from "@workspace/db";
@@ -39479,98 +40102,7 @@ run().then(() => process.exit(0)).catch(err => {
 ```
 
 
-## File: artifacts/api-server/src/scripts/migrate-assignments.ts
-
-```
-import { db, usersTable, userTipoAssignmentsTable } from "@workspace/db";
-import { eq } from "drizzle-orm";
-
-// Env vars de atribuição descobertos em clickup.ts:
-//   CLICKUP_ASSIGNEE_GERAL      → todos os tipos sem assignee específico
-//   CLICKUP_ASSIGNEE_EVENTOS    → tipo "eventos"
-//   CLICKUP_ASSIGNEE_PATROCINIO → tipo "patrocinio"
-//   CLICKUP_ASSIGNEE_BRINDES    → tipo "brindes"
-
-const TIPOS_GERAL = [
-  "apresentacao-nova",
-  "apresentacao-atualizar",
-  "atualizacao-material",
-  "artes-divulgacao",
-  "cartao-visita-fisico",
-  "criacao-pdf",
-  "email-marketing",
-  "materiais-impressos",
-  "outro",
-  "pagina-assessores",
-  "pagina-online",
-  "producao-video",
-  "sessao-fotos",
-];
-
-const MAPPINGS: Record<string, string | undefined> = {
-  eventos:    process.env.CLICKUP_ASSIGNEE_EVENTOS,
-  patrocinio: process.env.CLICKUP_ASSIGNEE_PATROCINIO,
-  brindes:    process.env.CLICKUP_ASSIGNEE_BRINDES,
-  ...Object.fromEntries(TIPOS_GERAL.map(t => [t, process.env.CLICKUP_ASSIGNEE_GERAL])),
-};
-
-async function migrate() {
-  let created = 0, reused = 0, assigned = 0;
-
-  for (const [tipo, clickupId] of Object.entries(MAPPINGS)) {
-    if (!clickupId) {
-      console.log(`⊘ Skipping ${tipo}: env var não definido`);
-      continue;
-    }
-
-    let user = await db.query.usersTable.findFirst({
-      where: eq(usersTable.clickup_user_id, clickupId),
-    });
-
-    if (!user) {
-      const placeholderEmail = `clickup_stub_${clickupId}@svn.internal`;
-      const existing = await db.query.usersTable.findFirst({
-        where: eq(usersTable.email, placeholderEmail),
-      });
-      if (existing) {
-        user = existing;
-        reused++;
-        console.log(`✓ Stub existente ${user.id} reutilizado para ${tipo} (ClickUp ID ${clickupId})`);
-      } else {
-        const [stub] = await db.insert(usersTable).values({
-          clickup_user_id: clickupId,
-          email: placeholderEmail,
-          name: `Assignee ClickUp ${clickupId}`,
-          role: "colaborador",
-        }).returning();
-        user = stub;
-        created++;
-        console.log(`+ Stub criado para ClickUp ID ${clickupId} → user.id=${user.id} (tipo ${tipo})`);
-      }
-    } else {
-      reused++;
-      console.log(`✓ User existente ${user.id} (${user.email}) reutilizado para ${tipo}`);
-    }
-
-    await db.insert(userTipoAssignmentsTable)
-      .values({ user_id: user.id, tipo })
-      .onConflictDoNothing();
-
-    assigned++;
-  }
-
-  console.log(`\n✓ Migração concluída: ${created} stubs criados, ${reused} reutilizados, ${assigned} atribuições aplicadas`);
-}
-
-migrate().then(() => process.exit(0)).catch(err => {
-  console.error("Erro na migração:", err);
-  process.exit(1);
-});
-
-```
-
-
-## File: artifacts/api-server/src/scripts/normalizar-assessores.ts
+## File: artifacts/api-server/src/scripts/executados/normalizar-assessores.ts
 
 ```
 /**
@@ -39616,7 +40148,7 @@ function hostDoBanco(): string {
 }
 
 /** [D1] "A.3945" | "3248" | "a 1234" -> "A3945" | "A3248" | "A1234" */
-export function normalizarCodigo(bruto: unknown): string | null {
+/* interno */ function normalizarCodigo(bruto: unknown): string | null {
   const s = String(bruto ?? "").trim();
   if (!s) return null;
   const digitos = s.replace(/\D/g, "");
@@ -39625,7 +40157,7 @@ export function normalizarCodigo(bruto: unknown): string | null {
 }
 
 /** [D2] Title Case pt-BR — so age em nomes 100% maiusculos. */
-export function normalizarNome(bruto: unknown): string | null {
+/* interno */ function normalizarNome(bruto: unknown): string | null {
   const s = String(bruto ?? "").trim().replace(/\s+/g, " ");
   if (!s) return null;
   const temMinuscula = /[a-záàâãéêíóôõúüç]/.test(s);
@@ -39725,6 +40257,229 @@ async function main() {
 }
 
 main().catch((e) => { console.error(e); process.exit(1); });
+
+```
+
+
+## File: artifacts/api-server/src/scripts/executados/README.md
+
+```
+# Scripts ja executados
+
+Migracoes e diagnosticos de uso unico que ja rodaram em producao. Ficam aqui
+para consulta (o que foi feito, e como) sem parecer parte do fluxo normal.
+
+Os scripts vivos continuam em `src/scripts/` e tem entrada no `package.json`:
+`migrate-assignments` e `seed-art-templates`.
+
+| Script | O que faz |
+|---|---|
+| `add-plataforma-convite.ts` | Adiciona o campo de plataforma nos convites |
+| `diag-art-templates.ts` | Diagnostico dos templates de arte |
+| `import-cartoes.ts` | Importacao inicial dos cartoes |
+| `normalizar-assessores.ts` | Normaliza codigo e nome dos assessores |
+| `set-chapeu.ts` | Define o chapeu (categoria) das solicitacoes |
+
+Para rodar um deles de novo: `pnpm --filter @workspace/api-server exec tsx src/scripts/executados/<arquivo>`
+
+```
+
+
+## File: artifacts/api-server/src/scripts/executados/set-chapeu.ts
+
+```
+/**
+ * Troca o conteudo da layer do topo dos templates de convite:
+ *   "evento {{tipo_evento}}"  ->  "{{chapeu}}"
+ *
+ * Texto do topo passa a ser controlado por quem gera a arte:
+ *   - Corporate       -> "Hora do Corporate"
+ *   - Form de eventos -> "evento presencial" / "evento online"  (default do art-generator)
+ *
+ * Rodar de dentro de artifacts/api-server:
+ *   npx tsx src/scripts/set-chapeu.ts            # simula
+ *   npx tsx src/scripts/set-chapeu.ts --apply    # grava
+ */
+import { db, artTemplatesTable } from "@workspace/db";
+import { eq } from "drizzle-orm";
+
+const APLICAR = process.argv.includes("--apply");
+
+function hostDoBanco(): string {
+  const url = process.env.DATABASE_URL || "";
+  try {
+    const u = new URL(url);
+    return `${u.hostname}${u.port ? ":" + u.port : ""}${u.pathname}`; // sem usuario/senha
+  } catch {
+    return url ? "(DATABASE_URL ilegivel)" : "(DATABASE_URL nao definida)";
+  }
+}
+
+async function main() {
+  console.log(`\nBanco: ${hostDoBanco()}`);
+
+  // quantos templates existem ao todo? ajuda a perceber banco vazio/errado
+  const todos = await db.select().from(artTemplatesTable);
+  console.log(`Total de art_templates neste banco: ${todos.length}`);
+  if (todos.length) {
+    const porTipo = todos.reduce((acc: Record<string, number>, r: any) => {
+      acc[r.tipo] = (acc[r.tipo] || 0) + 1;
+      return acc;
+    }, {});
+    console.log("Por tipo:", porTipo);
+  }
+
+  const rows = todos.filter((r: any) => r.tipo === "convite-evento");
+
+  if (rows.length === 0) {
+    console.error(
+      "\n✗ Nenhum template 'convite-evento' aqui.\n" +
+        "  Este provavelmente NAO e o banco de producao.\n" +
+        "  Rode apontando para a base certa, por exemplo:\n" +
+        '    DATABASE_URL="$DATABASE_PUBLIC_URL" npx tsx src/scripts/set-chapeu.ts\n' +
+        "  ou:  railway run npx tsx src/scripts/set-chapeu.ts\n",
+    );
+    process.exit(1);
+  }
+
+  console.log(`\n${rows.length} template(s) de convite-evento.`);
+  console.log(APLICAR ? "MODO: aplicando alteracoes\n" : "MODO: simulacao (use --apply para gravar)\n");
+
+  let alterados = 0;
+  let jaOk = 0;
+
+  for (const row of rows) {
+    const config = row.config as any;
+    const layers = config?.layers;
+    if (!Array.isArray(layers)) {
+      console.log(`  [${row.id}] ${row.name}: config sem layers — pulado`);
+      continue;
+    }
+
+    const layer = layers.find(
+      (l: any) => l?.id === "tipo-evento" || /tipo.?evento/i.test(String(l?.id ?? "")),
+    );
+    if (!layer) {
+      console.log(`  [${row.id}] ${row.name}: sem layer de topo — pulado`);
+      continue;
+    }
+    if (layer.content === "{{chapeu}}") {
+      jaOk++;
+      continue;
+    }
+
+    const antes = layer.content;
+    layer.content = "{{chapeu}}";
+
+    if (APLICAR) {
+      await db.update(artTemplatesTable).set({ config }).where(eq(artTemplatesTable.id, row.id));
+    }
+    console.log(`  [${row.id}] ${row.name}: "${antes}"  ->  "{{chapeu}}"`);
+    alterados++;
+  }
+
+  console.log(
+    `\n${alterados} a alterar | ${jaOk} ja ok` +
+      (APLICAR ? "\n✓ gravado no banco." : "\n(nada foi gravado — rode com --apply)"),
+  );
+  process.exit(0);
+}
+
+main().catch((err) => {
+  console.error("Falhou:", err);
+  process.exit(1);
+});
+
+```
+
+
+## File: artifacts/api-server/src/scripts/migrate-assignments.ts
+
+```
+import { db, usersTable, userTipoAssignmentsTable } from "@workspace/db";
+import { eq } from "drizzle-orm";
+
+// Env vars de atribuição descobertos em clickup.ts:
+//   CLICKUP_ASSIGNEE_GERAL      → todos os tipos sem assignee específico
+//   CLICKUP_ASSIGNEE_EVENTOS    → tipo "eventos"
+//   CLICKUP_ASSIGNEE_PATROCINIO → tipo "patrocinio"
+//   CLICKUP_ASSIGNEE_BRINDES    → tipo "brindes"
+
+const TIPOS_GERAL = [
+  "apresentacao-nova",
+  "apresentacao-atualizar",
+  "atualizacao-material",
+  "artes-divulgacao",
+  "cartao-visita-fisico",
+  "criacao-pdf",
+  "email-marketing",
+  "materiais-impressos",
+  "outro",
+  "pagina-assessores",
+  "pagina-online",
+  "producao-video",
+  "sessao-fotos",
+];
+
+const MAPPINGS: Record<string, string | undefined> = {
+  eventos:    process.env.CLICKUP_ASSIGNEE_EVENTOS,
+  patrocinio: process.env.CLICKUP_ASSIGNEE_PATROCINIO,
+  brindes:    process.env.CLICKUP_ASSIGNEE_BRINDES,
+  ...Object.fromEntries(TIPOS_GERAL.map(t => [t, process.env.CLICKUP_ASSIGNEE_GERAL])),
+};
+
+async function migrate() {
+  let created = 0, reused = 0, assigned = 0;
+
+  for (const [tipo, clickupId] of Object.entries(MAPPINGS)) {
+    if (!clickupId) {
+      console.log(`⊘ Skipping ${tipo}: env var não definido`);
+      continue;
+    }
+
+    let user = await db.query.usersTable.findFirst({
+      where: eq(usersTable.clickup_user_id, clickupId),
+    });
+
+    if (!user) {
+      const placeholderEmail = `clickup_stub_${clickupId}@svn.internal`;
+      const existing = await db.query.usersTable.findFirst({
+        where: eq(usersTable.email, placeholderEmail),
+      });
+      if (existing) {
+        user = existing;
+        reused++;
+        console.log(`✓ Stub existente ${user.id} reutilizado para ${tipo} (ClickUp ID ${clickupId})`);
+      } else {
+        const [stub] = await db.insert(usersTable).values({
+          clickup_user_id: clickupId,
+          email: placeholderEmail,
+          name: `Assignee ClickUp ${clickupId}`,
+          role: "colaborador",
+        }).returning();
+        user = stub;
+        created++;
+        console.log(`+ Stub criado para ClickUp ID ${clickupId} → user.id=${user.id} (tipo ${tipo})`);
+      }
+    } else {
+      reused++;
+      console.log(`✓ User existente ${user.id} (${user.email}) reutilizado para ${tipo}`);
+    }
+
+    await db.insert(userTipoAssignmentsTable)
+      .values({ user_id: user.id, tipo })
+      .onConflictDoNothing();
+
+    assigned++;
+  }
+
+  console.log(`\n✓ Migração concluída: ${created} stubs criados, ${reused} reutilizados, ${assigned} atribuições aplicadas`);
+}
+
+migrate().then(() => process.exit(0)).catch(err => {
+  console.error("Erro na migração:", err);
+  process.exit(1);
+});
 
 ```
 
@@ -39931,114 +40686,6 @@ seed().catch((err) => {
 ```
 
 
-## File: artifacts/api-server/src/scripts/set-chapeu.ts
-
-```
-/**
- * Troca o conteudo da layer do topo dos templates de convite:
- *   "evento {{tipo_evento}}"  ->  "{{chapeu}}"
- *
- * Texto do topo passa a ser controlado por quem gera a arte:
- *   - Corporate       -> "Hora do Corporate"
- *   - Form de eventos -> "evento presencial" / "evento online"  (default do art-generator)
- *
- * Rodar de dentro de artifacts/api-server:
- *   npx tsx src/scripts/set-chapeu.ts            # simula
- *   npx tsx src/scripts/set-chapeu.ts --apply    # grava
- */
-import { db, artTemplatesTable } from "@workspace/db";
-import { eq } from "drizzle-orm";
-
-const APLICAR = process.argv.includes("--apply");
-
-function hostDoBanco(): string {
-  const url = process.env.DATABASE_URL || "";
-  try {
-    const u = new URL(url);
-    return `${u.hostname}${u.port ? ":" + u.port : ""}${u.pathname}`; // sem usuario/senha
-  } catch {
-    return url ? "(DATABASE_URL ilegivel)" : "(DATABASE_URL nao definida)";
-  }
-}
-
-async function main() {
-  console.log(`\nBanco: ${hostDoBanco()}`);
-
-  // quantos templates existem ao todo? ajuda a perceber banco vazio/errado
-  const todos = await db.select().from(artTemplatesTable);
-  console.log(`Total de art_templates neste banco: ${todos.length}`);
-  if (todos.length) {
-    const porTipo = todos.reduce((acc: Record<string, number>, r: any) => {
-      acc[r.tipo] = (acc[r.tipo] || 0) + 1;
-      return acc;
-    }, {});
-    console.log("Por tipo:", porTipo);
-  }
-
-  const rows = todos.filter((r: any) => r.tipo === "convite-evento");
-
-  if (rows.length === 0) {
-    console.error(
-      "\n✗ Nenhum template 'convite-evento' aqui.\n" +
-        "  Este provavelmente NAO e o banco de producao.\n" +
-        "  Rode apontando para a base certa, por exemplo:\n" +
-        '    DATABASE_URL="$DATABASE_PUBLIC_URL" npx tsx src/scripts/set-chapeu.ts\n' +
-        "  ou:  railway run npx tsx src/scripts/set-chapeu.ts\n",
-    );
-    process.exit(1);
-  }
-
-  console.log(`\n${rows.length} template(s) de convite-evento.`);
-  console.log(APLICAR ? "MODO: aplicando alteracoes\n" : "MODO: simulacao (use --apply para gravar)\n");
-
-  let alterados = 0;
-  let jaOk = 0;
-
-  for (const row of rows) {
-    const config = row.config as any;
-    const layers = config?.layers;
-    if (!Array.isArray(layers)) {
-      console.log(`  [${row.id}] ${row.name}: config sem layers — pulado`);
-      continue;
-    }
-
-    const layer = layers.find(
-      (l: any) => l?.id === "tipo-evento" || /tipo.?evento/i.test(String(l?.id ?? "")),
-    );
-    if (!layer) {
-      console.log(`  [${row.id}] ${row.name}: sem layer de topo — pulado`);
-      continue;
-    }
-    if (layer.content === "{{chapeu}}") {
-      jaOk++;
-      continue;
-    }
-
-    const antes = layer.content;
-    layer.content = "{{chapeu}}";
-
-    if (APLICAR) {
-      await db.update(artTemplatesTable).set({ config }).where(eq(artTemplatesTable.id, row.id));
-    }
-    console.log(`  [${row.id}] ${row.name}: "${antes}"  ->  "{{chapeu}}"`);
-    alterados++;
-  }
-
-  console.log(
-    `\n${alterados} a alterar | ${jaOk} ja ok` +
-      (APLICAR ? "\n✓ gravado no banco." : "\n(nada foi gravado — rode com --apply)"),
-  );
-  process.exit(0);
-}
-
-main().catch((err) => {
-  console.error("Falhou:", err);
-  process.exit(1);
-});
-
-```
-
-
 ## File: artifacts/api-server/src/services/activity-log.ts
 
 ```
@@ -40064,7 +40711,7 @@ export interface EventoInput {
   user_email?: string;
 }
 
-export async function logEvento(solicitacaoId: number, evento: EventoInput): Promise<void> {
+/* interno */ async function logEvento(solicitacaoId: number, evento: EventoInput): Promise<void> {
   try {
     await db.insert(eventosSolicitacaoTable).values({
       solicitacao_id: solicitacaoId,
@@ -40612,7 +41259,7 @@ async function checkOne(name: string, ping: () => Promise<void>): Promise<void> 
   }
 }
 
-export async function checkHealth(): Promise<void> {
+/* interno */ async function checkHealth(): Promise<void> {
   lastCheckAt = Date.now();
   for (const d of DEPS) {
     try { await checkOne(d.name, d.ping); } catch (err) { logger.error({ err, dep: d.name }, "health-monitor: erro inesperado"); }
@@ -40660,7 +41307,7 @@ const WEBHOOK_URL = process.env.N8N_NOTIFICATIONS_WEBHOOK_URL;
 const HUB_URL = process.env.HUB_PUBLIC_URL || "https://hub.portalsvn.com.br";
 
 
-export const TIPOS_COM_APROVACAO = new Set([
+/* interno */ const TIPOS_COM_APROVACAO = new Set([
   "eventos",
   "artes-divulgacao",
   "atualizacao-material",
@@ -40671,7 +41318,7 @@ export const TIPOS_COM_APROVACAO = new Set([
 
 export type Marco = "recebida" | "aprovacao" | "reaprovacao" | "concluida" | "prazo_alterado" | "publicada";
 
-export async function notificarMarco(solicitacaoId: number, marco: Marco): Promise<void> {
+/* interno */ async function notificarMarco(solicitacaoId: number, marco: Marco): Promise<void> {
   if (!WEBHOOK_URL) {
     logger.warn({ solicitacaoId, marco }, "N8N_NOTIFICATIONS_WEBHOOK_URL ausente — pulando");
     logAtividadeBg({
@@ -40882,7 +41529,7 @@ const DEDUP_DAYS = parseInt(process.env.STUCK_DEDUP_DAYS || "7", 10);
 // Intervalo entre verificações (default 6h).
 const CHECK_INTERVAL_MS = parseInt(process.env.STUCK_CHECK_INTERVAL_MS || String(6 * 60 * 60 * 1000), 10);
 
-export async function checkStuckRequests(): Promise<void> {
+/* interno */ async function checkStuckRequests(): Promise<void> {
   try {
     const cutoff = new Date(Date.now() - STUCK_DAYS * 86400000);
 
@@ -41800,14 +42447,11 @@ export const AVAILABLE_FONTS = [
   { family: 'Roobert PRO TRIAL Heavy',    file: 'RoobertPROTRIAL-Heavy.otf' },
 ];
 
-export const PLACEHOLDERS_BY_TIPO: Record<string, string[]> = {
-  'assinatura-email':      ['nome', 'cargo', 'telefone', 'email', 'marca_label', 'tem_cfp', 'marca'],
-  'cartao-boas-vindas':    ['telefone', 'nome_cliente', 'nome_assinatura', 'unidade', 'contrato_social', 'is_private_key', 'contrato_label'],
-  'cartao-visita-digital': ['nome', 'telefone', 'email', 'contrato_social', 'foto_perfil', 'contrato_label', 'telefone_digits', 'site_url'],
-  'divulgacao-nps':        ['telefone', 'nome_assinatura', 'cargo', 'agradecimento', 'modelo_arte', 'foto_perfil'],
-  'convite-fp':            ['telefone', 'codigo_assessor', 'nome_assinatura', 'cargo', 'contrato_social', 'contrato_label'],
-  'cartao-comemorativo':   ['telefone', 'nome_aniversariante', 'modelo_cartao', 'mensagem', 'assinatura', 'email_destinatario'],
-};
+/* PLACEHOLDERS-REMOVIDO: a lista de placeholders por tipo vivia aqui sem
+   nenhum importador, e o admin-templates.js mantinha uma copia propria.
+   A fonte viva e getFormSchemaList(), que ja devolve `placeholders` por tipo
+   (campos + computed) no /api/form-schemas. */
+
 ```
 
 
@@ -43134,112 +43778,6 @@ Internal request management web application for SVN Investimentos. Built as a pn
 - DATABASE_URL
 - CLICKUP_API_TOKEN
 - R2_ACCOUNT_ID, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, R2_BUCKET, R2_PUBLIC_URL
-
-```
-
-
-## File: scripts/init.sql
-
-```
--- =============================================================================
--- Hub de Solicitações SVN — Script de inicialização do banco de dados
--- =============================================================================
--- Execute este script uma única vez no banco PostgreSQL do Railway (ou qualquer
--- outro PostgreSQL) antes de iniciar o servidor pela primeira vez.
---
--- Uso via psql:
---   psql "$DATABASE_URL" -f scripts/init.sql
---
--- Uso via Railway CLI:
---   railway run psql "$DATABASE_URL" -f scripts/init.sql
--- =============================================================================
-
--- ── 1. Sessões (express-session / connect-pg-simple) ─────────────────────────
-CREATE TABLE IF NOT EXISTS "session" (
-  "sid"    VARCHAR      NOT NULL COLLATE "default",
-  "sess"   JSON         NOT NULL,
-  "expire" TIMESTAMP(6) NOT NULL,
-  CONSTRAINT "session_pkey" PRIMARY KEY ("sid") NOT DEFERRABLE INITIALLY IMMEDIATE
-) WITH (OIDS = FALSE);
-
-CREATE INDEX IF NOT EXISTS "IDX_session_expire" ON "session" ("expire");
-
--- ── 2. Usuários ───────────────────────────────────────────────────────────────
--- Criados automaticamente no primeiro login via MSAL.
--- role: 'colaborador' | 'admin'
-CREATE TABLE IF NOT EXISTS "users" (
-  "id"         SERIAL       PRIMARY KEY,
-  "email"      VARCHAR(255) NOT NULL UNIQUE,
-  "name"       VARCHAR(255),
-  "role"       VARCHAR(20)  NOT NULL DEFAULT 'colaborador',
-  "created_at" TIMESTAMP    NOT NULL DEFAULT NOW()
-);
-
--- ── 3. Solicitações ───────────────────────────────────────────────────────────
--- Tabela principal. Cada linha = uma solicitação de material/serviço.
--- dados: campos do formulário (JSONB flexível por tipo)
--- entrega_links: [{label, url}] — links gerados automaticamente (ex: assinatura PNG)
--- avaliacao: {nota, comentario} — avaliação do usuário após conclusão
-CREATE TABLE IF NOT EXISTS "solicitacoes" (
-  "id"               SERIAL       PRIMARY KEY,
-  "user_email"       VARCHAR(255) NOT NULL REFERENCES "users" ("email"),
-  "tipo_solicitacao" VARCHAR(50)  NOT NULL,
-  "subtipo"          VARCHAR(50),
-  "maturidade"       INTEGER,
-  "dados"            JSONB        NOT NULL,
-  "clickup_task_id"  VARCHAR(100),
-  "titulo"           TEXT,
-  "clickup_url"      TEXT,
-  "avaliacao"        JSONB,
-  "entrega_links"    JSONB,
-  "status"           VARCHAR(30)  NOT NULL DEFAULT 'recebido',
-  "responsavel"      TEXT,
-  "created_at"       TIMESTAMP    NOT NULL DEFAULT NOW(),
-  "updated_at"       TIMESTAMP    NOT NULL DEFAULT NOW()
-);
-
-CREATE INDEX IF NOT EXISTS "IDX_solicitacoes_user_email"       ON "solicitacoes" ("user_email");
-CREATE INDEX IF NOT EXISTS "IDX_solicitacoes_tipo_solicitacao" ON "solicitacoes" ("tipo_solicitacao");
-CREATE INDEX IF NOT EXISTS "IDX_solicitacoes_status"           ON "solicitacoes" ("status");
-CREATE INDEX IF NOT EXISTS "IDX_solicitacoes_created_at"       ON "solicitacoes" ("created_at" DESC);
-
--- ── 4. Arquivos ───────────────────────────────────────────────────────────────
--- Uploads vinculados a uma solicitação, armazenados no Cloudflare R2.
-CREATE TABLE IF NOT EXISTS "arquivos" (
-  "id"             SERIAL       PRIMARY KEY,
-  "solicitacao_id" INTEGER      NOT NULL REFERENCES "solicitacoes" ("id"),
-  "campo"          VARCHAR(100),
-  "url_r2"         TEXT         NOT NULL,
-  "nome_original"  VARCHAR(255),
-  "created_at"     TIMESTAMP    NOT NULL DEFAULT NOW()
-);
-
-CREATE INDEX IF NOT EXISTS "IDX_arquivos_solicitacao_id" ON "arquivos" ("solicitacao_id");
-
--- ── 5. Log de atividades ──────────────────────────────────────────────────────
--- Registro de ações relevantes: criação de solicitação, mudanças de status,
--- uploads, erros, etc.
--- nivel: 'info' | 'warn' | 'error'
-CREATE TABLE IF NOT EXISTS "activity_log" (
-  "id"               SERIAL      PRIMARY KEY,
-  "created_at"       TIMESTAMP   NOT NULL DEFAULT NOW(),
-  "user_email"       TEXT,
-  "user_name"        TEXT,
-  "tipo"             TEXT        NOT NULL,
-  "nivel"            VARCHAR(10) NOT NULL DEFAULT 'info',
-  "solicitacao_id"   INTEGER,
-  "tipo_solicitacao" TEXT,
-  "titulo"           TEXT,
-  "detalhe"          TEXT        NOT NULL,
-  "metadata"         JSONB
-);
-
-CREATE INDEX IF NOT EXISTS "IDX_activity_log_created_at"     ON "activity_log" ("created_at" DESC);
-CREATE INDEX IF NOT EXISTS "IDX_activity_log_solicitacao_id" ON "activity_log" ("solicitacao_id");
-
--- =============================================================================
--- Fim do script. Todas as tabelas criadas com IF NOT EXISTS — seguro re-executar.
--- =============================================================================
 
 ```
 

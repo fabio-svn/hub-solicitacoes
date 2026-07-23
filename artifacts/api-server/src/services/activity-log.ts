@@ -20,7 +20,7 @@ export interface EventoInput {
   user_email?: string;
 }
 
-export async function logEvento(solicitacaoId: number, evento: EventoInput): Promise<void> {
+/* interno */ async function logEvento(solicitacaoId: number, evento: EventoInput): Promise<void> {
   try {
     await db.insert(eventosSolicitacaoTable).values({
       solicitacao_id: solicitacaoId,

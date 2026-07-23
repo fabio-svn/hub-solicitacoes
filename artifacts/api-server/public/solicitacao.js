@@ -296,7 +296,7 @@
 
       const headerRight = document.getElementById('solHeaderRight');
 
-      const statusBadge = '<span class="sol-status-badge" id="solStatus" style="background:' + (statusObj.bg||'#f1f5f9') + ';color:' + (statusObj.text||'#475569') + '">' + esc(statusObj.label) + '</span>';
+      const statusBadge = statusBadgeHtml(statusObj, { classe: 'sol-status-badge', id: 'solStatus' });
 
       // Paginas de assessor nao usam mais ClickUp — o fluxo e a validacao interna.
       const TIPOS_SEM_CLICKUP = ['pagina-assessores-dados', 'pagina-assessores-atualizacao'];

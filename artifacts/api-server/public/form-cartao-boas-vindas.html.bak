@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <script>(function(){try{const s=JSON.parse(localStorage.getItem('svn_layout_state')||'{}');if(s.isAdmin)document.documentElement.dataset.preShell='admin';}catch(e){}})()</script>
+  <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+  <link rel="manifest" href="/site.webmanifest" />
+  <meta name="theme-color" content="#AC3631" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cartão de Boas-vindas - Hub SVN</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap" media="print" onload="this.media='all'">
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap"></noscript>
+  <link rel="stylesheet" href="style.css?v=20260615c">
+</head>
+<body class="page-light">
+  <div id="pageContent">
+  <div class="page-container page-container--narrow">
+
+    <div class="form-card">
+      <div class="form-progress"><div class="form-progress-bar" id="progressBar" style="width:100%"></div></div>
+      <div class="flex-between">
+        <h2 class="text-md-medium">Cartão de Boas-vindas</h2>
+      </div>
+      <hr class="sep">
+
+      <div class="alert-card alert-info">
+        <div class="alert-title">Como funciona</div>
+        <div class="alert-text">Preencha os dados do novo cliente para gerar o cartão personalizado de boas-vindas. O material gerado ficará disponível ao final da solicitação.</div>
+      </div>
+
+      <div class="field">
+        <label>Telefone <span class="text-ruby">*</span></label>
+        <input type="tel" id="telefone" placeholder="(00) 00000-0000" oninput="mascaraTelefone(this)" required>
+      </div>
+      <div class="field">
+        <label>Nome do cliente <span class="text-ruby">*</span></label>
+        <input type="text" id="nomeCliente" placeholder="Nome completo do cliente" required>
+      </div>
+      <div class="field">
+        <label>Nome para assinatura <span class="text-ruby">*</span></label>
+        <input type="text" id="nomeAssinatura" placeholder="Nome do assessor que assina o cartão" required>
+      </div>
+      <div class="field">
+        <label>Contrato social <span class="text-ruby">*</span></label>
+        <select id="contratoSocial" required>
+          <option value="">Selecione</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Unidade <span class="text-ruby">*</span></label>
+        <select id="unidade" required>
+          <option value="">Selecione a unidade</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Seu cliente se enquadra como Private? <span class="text-ruby">*</span></label>
+        <div class="radio-group" style="flex-direction:row;gap:24px">
+          <label class="radio-option">
+            <input type="radio" name="isPrivate" value="sim" required>
+            <span class="radio-custom"></span>
+            <span>Sim</span>
+          </label>
+          <label class="radio-option">
+            <input type="radio" name="isPrivate" value="nao">
+            <span class="radio-custom"></span>
+            <span>Não</span>
+          </label>
+        </div>
+      </div>
+
+      <div class="section-divider">
+        <div id="submitError" class="alert-card alert-danger" style="display:none;margin-bottom:16px"></div>
+        <div id="formStatusArea" style="display:none;margin-top:16px"></div>
+        <div class="form-nav" style="justify-content:flex-end">
+          <button class="btn btn-primary btn-submit-gold" id="btnSubmit" onclick="submitForm()">Enviar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+
+  </div>
+  <script src="utils.js?v=20260615d"></script>
+  <script src="upload-feedback.js?v=20260615e"></script>
+  <script src="config.js?v=20260615a"></script>
+  <script src="auth.js?v=20260611f"></script>
+  <script src="shell.js?v=20260611f"></script>
+  <script src="form-core.js?v=20260611f"></script>
+  <script>
+
+    const TIPO = 'cartao-boas-vindas';
+
+    async function init() {
+      await FormCore.initForm({
+        tipo: TIPO,
+        draft: true,
+        onReady: function() {
+          var contratoSel = document.getElementById('contratoSocial');
+          if (contratoSel) {
+            (window._svnFormSchemas ? (window._svnFormSchemas.contratos || []) : []).forEach(function(c) {
+              var o = document.createElement('option'); o.value = c.value || c.id || ''; o.textContent = c.label; contratoSel.appendChild(o);
+            });
+          }
+          var unidadeSel = document.getElementById('unidade');
+          if (unidadeSel) {
+            UNIDADES_SVN.forEach(function(u) {
+              var o = document.createElement('option'); o.value = u.nome; o.textContent = u.nome; unidadeSel.appendChild(o);
+            });
+          }
+          Auth.aplicarPerfilNoCampo('nomeAssinatura', Auth.getUserName());
+        },
+      });
+    }
+
+    async function submitForm() {
+      if (!FormCore.validateRequired()) return;
+      var isPrivateEl = document.querySelector('input[name="isPrivate"]:checked');
+      var dados = {
+        nome: Auth.getUserName(),
+        telefone: document.getElementById('telefone').value,
+        nome_cliente: document.getElementById('nomeCliente').value,
+        nome_assinatura: document.getElementById('nomeAssinatura').value,
+        contrato_social: document.getElementById('contratoSocial').value,
+        unidade: document.getElementById('unidade').value,
+        is_private_key: isPrivateEl ? isPrivateEl.value : 'nao',
+      };
+      await FormCore.submit({ tipo: TIPO, dados: dados });
+    }
+
+    init();
+  </script>
+</body>
+</html>

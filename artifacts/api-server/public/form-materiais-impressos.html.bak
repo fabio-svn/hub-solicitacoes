@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <script>(function(){try{const s=JSON.parse(localStorage.getItem('svn_layout_state')||'{}');if(s.isAdmin)document.documentElement.dataset.preShell='admin';}catch(e){}})()</script>
+  <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+  <link rel="manifest" href="/site.webmanifest" />
+  <meta name="theme-color" content="#AC3631" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Materiais Impressos - Hub SVN</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap" media="print" onload="this.media='all'">
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap"></noscript>
+  <link rel="stylesheet" href="style.css?v=20260615c">
+  <style>
+    .tipo-material-btn {
+      display:flex;align-items:center;gap:10px;padding:10px 14px;
+      border:1.5px solid var(--border-light);border-radius:var(--radius-lg);background:var(--card-white);
+      cursor:pointer;transition:all 0.15s;font-family:'Nunito Sans', sans-serif;font-size:0.85rem;font-weight:600;
+      text-align:left;width:100%;
+    }
+    .tipo-material-btn:hover { border-color:var(--ruby-red); }
+    .tipo-material-btn.selected { background:var(--carbon-black);color:white;border-color:var(--carbon-black); }
+    .tipo-material-btn.selected svg { stroke:white; }
+    .pill-radio { display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border:1.5px solid var(--border-light);border-radius:var(--radius-pill);background:var(--card-white);cursor:pointer;font-size:0.82rem;font-weight:600;transition:all 0.15s;user-select:none; }
+    .pill-radio input { display:none; }
+    .pill-radio:hover { border-color:var(--ruby-red); }
+    .pill-radio.checked { background:var(--carbon-black);color:white;border-color:var(--carbon-black); }
+    .pill-tag { margin-left:6px;background:var(--ink-10);border-radius:var(--radius-pill);padding:2px 8px;font-size:0.68rem;font-weight:700; }
+    .pill-radio.checked .pill-tag { background:rgba(255,255,255,0.15);color:rgba(255,255,255,0.8); }
+  </style>
+</head>
+<body class="page-light">
+  <div id="pageContent">
+  <div class="page-container page-container--wide">
+    <div class="form-split">
+      <div class="form-main">
+        <div class="form-card">
+          <div class="form-progress"><div class="form-progress-bar" id="progressBar" style="width:100%"></div></div>
+          <div class="flex-between">
+            <h2 class="text-md-medium">Materiais Impressos</h2>
+          </div>
+          <hr class="sep">
+
+          <div class="field">
+            <label>Telefone <span class="text-ruby">*</span></label>
+            <input type="tel" id="telefone" placeholder="(00) 00000-0000" oninput="mascaraTelefone(this)" required>
+          </div>
+          <div class="field">
+            <label>Setor <span class="text-ruby">*</span></label>
+            <select id="setor" required>
+              <option value="">Selecione seu setor</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label style="margin-bottom:12px">Qual tipo de material você quer produzir? <span class="text-ruby">*</span></label>
+            <div id="tipoMaterialContainer" style="display:grid;grid-template-columns:1fr 1fr;gap:8px"></div>
+          </div>
+
+          <div id="camposCondicionais" style="margin-top:20px"></div>
+
+          <div class="section-divider">
+            <div id="submitError" class="alert-card alert-danger" style="display:none;margin-bottom:16px"></div>
+        <div id="formStatusArea" style="display:none;margin-top:16px"></div>
+            <div class="form-nav" style="justify-content:flex-end">
+              <button class="btn btn-primary btn-submit-gold" id="btnSubmit" onclick="submitForm()">Enviar</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-sidebar">
+        <div class="preview-panel" id="previewPainel">
+          <div id="previewIcone" style="margin-bottom:12px;display:flex;justify-content:center">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" opacity="0.2">
+              <rect x="3" y="3" width="18" height="18" rx="2"/>
+            </svg>
+          </div>
+          <div id="previewTitulo" style="font-weight:700;font-size:0.95rem;margin-bottom:8px;text-align:center">Selecione um tipo de material</div>
+          <div id="previewDicas" style="font-size:0.82rem;opacity:0.6;line-height:1.6;text-align:center">As informações do material aparecerão aqui.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+
+  </div>
+  <script src="utils.js?v=20260615d"></script>
+  <script src="upload-feedback.js?v=20260615e"></script>
+  <script src="config.js?v=20260615a"></script>
+  <script src="auth.js?v=20260611f"></script>
+  <script src="shell.js?v=20260611f"></script>
+  <script src="form-core.js?v=20260611f"></script>
+  <script>
+    const TIPO = 'materiais-impressos';
+    const TIPOS_IMPRESSOS = [
+      { id: 'documento',          label: 'Documento',                icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>' },
+      { id: 'flyer-institucional', label: 'Flyer Institucional',     icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/></svg>' },
+      { id: 'flyer-personalizado', label: 'Flyer Personalizado',     icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>' },
+      { id: 'carta',              label: 'Carta',                    icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>' },
+      { id: 'banner',             label: 'Banner',                   icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="6" y="2" width="12" height="18" rx="1"/><line x1="12" y1="20" x2="12" y2="22"/></svg>' },
+      { id: 'adesivo',            label: 'Adesivo',                  icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 019 9"/></svg>' },
+      { id: 'bloco-notas',        label: 'Bloco de Notas',           icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></svg>' },
+      { id: 'camiseta',           label: 'Camiseta',                 icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" id="camisetaIconPreview"><path d="M20.38 3.46L16 2a4 4 0 01-8 0L3.62 3.46a2 2 0 00-1.34 2.23l.58 3.57a1 1 0 00.99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 002-2V10h2.15a1 1 0 00.99-.84l.58-3.57a2 2 0 00-1.34-2.23z"/></svg>' },
+      { id: 'outro-impresso',     label: 'Outro material impresso',  icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>' },
+    ];
+
+    const PREVIEW_IMPRESSOS = {
+      'documento':          { titulo: (f) => `Documento — ${f||'A4'}`, dicas: () => 'Sugestão: A4 • Ideal para comunicados e relatórios. • Orientação vertical.' },
+      'flyer-institucional':{ titulo: () => 'Flyer Institucional',       dicas: () => 'Segue o modelo padrão SVN. Ideal para divulgação da empresa.' },
+      'flyer-personalizado':{ titulo: (f) => `Flyer — ${f||'A5'}`,       dicas: () => 'Sugestão: A5 • Ideal para divulgação. • Orientação vertical.' },
+      'carta':              { titulo: (f) => `Carta — ${f||'A4'}`,        dicas: () => 'Sugestão: A4 • Ideal para comunicação formal. • Orientação vertical.' },
+      'banner':             { titulo: (_, o) => `Banner — ${o||'Vertical'}`, dicas: () => 'Sugestão: Vertical • Ideal para displays em pé. Informe o tamanho em cm.' },
+      'adesivo':            { titulo: (t) => `Adesivo — ${t||'Quadrado'}`, dicas: () => 'Defina o tipo (quadrado/redondo) e tamanho em cm.' },
+      'bloco-notas':        { titulo: () => 'Bloco de Notas',              dicas: () => 'Ideal para uso corporativo. Descreva o conteúdo de cada folha.' },
+      'camiseta':           { titulo: (t, c) => `Camiseta — ${t||'T-shirt'} — ${c||'Branco'}`, dicas: () => 'A cor do ícone será atualizada conforme sua seleção.' },
+      'outro-impresso':     { titulo: () => 'Material Personalizado',      dicas: () => 'Descreva o material impresso que você precisa.' },
+    };
+
+    const CORES_CAMISETA = {
+      'branco':'#FFFFFF','preto':'#221B19','azul':'#1e40af','vermelho':'var(--danger)',
+      'amarelo':'#eab308','laranja':'#ea580c','roxo':'#7c3aed','multicolorida':'url(#gradMulti)','outro':'#9ca3af',
+    };
+
+    function init() {
+      FormCore.initForm({
+        tipo: 'materiais-impressos',
+        redirectPath: '/form-materiais-impressos.html',
+        activeRoute: 'nova-solicitacao',
+        onReady: function () {
+          renderTiposMaterial();
+        }
+      });
+    }
+
+    function renderTiposMaterial() {
+      const container = document.getElementById('tipoMaterialContainer');
+      container.innerHTML = TIPOS_IMPRESSOS.map(t => `
+        <button type="button" class="tipo-material-btn" id="btn_${t.id}" onclick="selecionarTipo('${t.id}')">
+          ${t.icon}
+          <span>${t.label}</span>
+        </button>
+      `).join('');
+    }
+
+    function selecionarTipo(tipo) {
+      TIPOS_IMPRESSOS.forEach(t => {
+        const btn = document.getElementById('btn_' + t.id);
+        if (btn) btn.className = 'tipo-material-btn' + (t.id === tipo ? ' selected' : '');
+      });
+      renderCamposCondicionais(tipo);
+    }
+
+    function pill(name, value, label, recomendado) {
+      const tag = recomendado ? `<span class="pill-tag">Recomendado</span>` : '';
+      return `<label class="pill-radio" onclick="this.classList.toggle('checked',this.querySelector('input').checked);document.querySelectorAll('[name=${name}]').forEach(el=>el.closest('label').classList.toggle('checked',el.checked));atualizarPreview()">
+        <input type="radio" name="${name}" value="${value}" onchange="atualizarPreview()">
+        <span>${label}</span>${tag}
+      </label>`;
+    }
+
+    function uploadField(inputId, nameId) {
+      return `<div class="file-input-wrapper">
+        <label class="file-input-btn" for="${inputId}">Escolher arquivo</label>
+        <input type="file" id="${inputId}">
+        <div class="file-name" id="${nameId}"></div>
+      </div>`;
+    }
+
+    function renderCamposCondicionais(tipo) {
+      const container = document.getElementById('camposCondicionais');
+      container.innerHTML = '';
+      window._tipoMaterial = tipo;
+      atualizarPreview();
+
+      switch (tipo) {
+        case 'documento':
+        case 'carta':
+          container.innerHTML = `
+            <div class="field">
+              <label>Formato do papel</label>
+              <div style="display:flex;gap:8px;flex-wrap:wrap">
+                ${pill('formatoPapel','A4','A4',true)}
+                ${pill('formatoPapel','A5','A5',false)}
+                ${pill('formatoPapel','outro-papel','Outro',false)}
+              </div>
+              <div id="outroPapelField" style="display:none;margin-top:8px">
+                <input type="text" id="outroPapel" placeholder="Ex.: 10x15cm, 20x20cm">
+              </div>
+            </div>
+            <div class="field">
+              <label>Orientação</label>
+              <div style="display:flex;gap:8px">
+                ${pill('orientacao','horizontal','Horizontal',false)}
+                ${pill('orientacao','vertical','Vertical',true)}
+              </div>
+            </div>
+            <div class="field">
+              <label>Descrição da solicitação <span class="text-ruby">*</span></label>
+              <input type="text" id="descricaoSolicitacao" placeholder="Descreva a solicitação" required>
+            </div>
+            <div class="field">
+              <label>Conteúdo ${tipo === 'carta' ? 'da carta' : 'do documento'} <span class="text-ruby">*</span></label>
+              <textarea id="conteudoMaterial" placeholder="Descreva o conteúdo..." required></textarea>
+            </div>
+            <div class="field">
+              <label>Arquivos de apoio (opcional)</label>
+              ${uploadField('arquivoApoio','arquivoApoioName')}
+            </div>`;
+          break;
+
+        case 'flyer-institucional':
+          container.innerHTML = `
+            <div class="alert-card alert-info" style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px">
+              <div class="alert-text" style="flex:1">O flyer institucional segue o modelo padrão SVN.</div>
+              <button type="button" class="btn btn-secondary" style="font-size:0.8rem;white-space:nowrap" onclick="verModeloFlyer()">Ver modelo padrão</button>
+            </div>
+            <div class="field">
+              <label>Descrição da solicitação <span class="text-ruby">*</span></label>
+              <textarea id="conteudoMaterial" placeholder="Descreva o conteúdo..." required></textarea>
+            </div>`;
+          break;
+
+        case 'flyer-personalizado':
+          container.innerHTML = `
+            <div class="field">
+              <label>Usar o modelo padrão como base?</label>
+              <div style="display:flex;gap:8px">
+                ${pill('baseFlyer','sim','Sim',false)}
+                ${pill('baseFlyer','nao','Não',false)}
+              </div>
+            </div>
+            <div class="field">
+              <label>Formato</label>
+              <div style="display:flex;gap:8px;flex-wrap:wrap">
+                ${pill('formatoPapel','A4','A4',false)}
+                ${pill('formatoPapel','A5','A5',true)}
+                ${pill('formatoPapel','outro-papel','Outro',false)}
+              </div>
+              <div id="outroPapelField" style="display:none;margin-top:8px">
+                <input type="text" id="outroPapel" placeholder="Ex.: 10x15cm">
+              </div>
+            </div>
+            <div class="field">
+              <label>Orientação</label>
+              <div style="display:flex;gap:8px">
+                ${pill('orientacao','horizontal','Horizontal',false)}
+                ${pill('orientacao','vertical','Vertical',true)}
+              </div>
+            </div>
+            <div class="field">
+              <label>Qual conteúdo deve constar no material?</label>
+              <div class="checkbox-group">
+                <label class="checkbox-option"><input type="checkbox" value="Sobre a empresa"><span class="checkbox-custom"></span><span>Sobre a empresa</span></label>
+                <label class="checkbox-option"><input type="checkbox" value="Números Institucionais"><span class="checkbox-custom"></span><span>Números Institucionais</span></label>
+                <label class="checkbox-option"><input type="checkbox" value="Serviços PF"><span class="checkbox-custom"></span><span>Serviços PF</span></label>
+                <label class="checkbox-option"><input type="checkbox" value="Serviços PJ"><span class="checkbox-custom"></span><span>Serviços PJ</span></label>
+                <label class="checkbox-option"><input type="checkbox" value="Bio do solicitante"><span class="checkbox-custom"></span><span>Bio do solicitante</span></label>
+                <label class="checkbox-option"><input type="checkbox" value="Outro"><span class="checkbox-custom"></span><span>Outro</span></label>
+                <label class="checkbox-option"><input type="checkbox" value="QR Code" onchange="toggleQrLink(this)"><span class="checkbox-custom"></span><span>QR Code</span></label>
+              </div>
+              <div id="qrLinkField" style="display:none;margin-top:8px">
+                <input type="text" id="qrLink" placeholder="Cole o link de destino do QR Code">
+              </div>
+            </div>
+            <div class="field">
+              <label>Descreva o conteúdo <span class="text-ruby">*</span></label>
+              <textarea id="conteudoMaterial" placeholder="Descreva o conteúdo..." required></textarea>
+            </div>`;
+          break;
+
+        case 'banner':
+          container.innerHTML = `
+            <div class="field">
+              <label>Tamanho <span class="text-ruby">*</span></label>
+              <input type="text" id="tamanhoBanner" placeholder="Ex.: 80x200cm, 100x200cm" required oninput="atualizarPreview()">
+            </div>
+            <div class="field">
+              <label>Orientação</label>
+              <div style="display:flex;gap:8px;flex-wrap:wrap">
+                ${pill('orientacao','horizontal','Horizontal (tipo testeira)',false)}
+                ${pill('orientacao','vertical','Vertical',true)}
+              </div>
+            </div>
+            <div class="field">
+              <label>Descreva o conteúdo <span class="text-ruby">*</span></label>
+              <textarea id="conteudoMaterial" placeholder="Descreva o conteúdo..." required></textarea>
+            </div>`;
+          break;
+
+        case 'adesivo':
+          container.innerHTML = `
+            <div class="field" onchange="toggleOrientacaoAdesivo()">
+              <label>Tipo</label>
+              <div style="display:flex;gap:8px;flex-wrap:wrap">
+                ${pill('tipoAdesivo','quadrado','Quadrado',false)}
+                ${pill('tipoAdesivo','redondo','Redondo',false)}
+                ${pill('tipoAdesivo','retangular','Retangular',false)}
+              </div>
+            </div>
+            <div class="field" id="orientacaoAdesivoField" style="display:none">
+              <label>Orientação</label>
+              <div style="display:flex;gap:8px">
+                ${pill('orientacao','horizontal','Horizontal',false)}
+                ${pill('orientacao','vertical','Vertical',false)}
+              </div>
+            </div>
+            <div class="field">
+              <label>Tamanho <span class="text-ruby">*</span></label>
+              <input type="text" id="tamanhoAdesivo" placeholder="Ex.: 5x5cm, 10cm diâmetro" required oninput="atualizarPreview()">
+            </div>
+            <div class="field">
+              <label>Descreva o conteúdo <span class="text-ruby">*</span></label>
+              <textarea id="conteudoMaterial" placeholder="Descreva o conteúdo..." required></textarea>
+            </div>`;
+          break;
+
+        case 'bloco-notas':
+          container.innerHTML = `
+            <div class="field">
+              <label>Descreva o conteúdo <span class="text-ruby">*</span></label>
+              <textarea id="conteudoMaterial" placeholder="Descreva o que deve constar no bloco..." required></textarea>
+            </div>
+            <div class="field">
+              <label>Arquivos de apoio (opcional)</label>
+              ${uploadField('arquivoApoio','arquivoApoioName')}
+            </div>`;
+          break;
+
+        case 'camiseta':
+          container.innerHTML = `
+            <div class="field">
+              <label>Tipo de camiseta</label>
+              <div style="display:flex;gap:8px;flex-wrap:wrap">
+                ${pill('tipoCamiseta','polo','Polo',false)}
+                ${pill('tipoCamiseta','dryfit','DryFit',false)}
+                ${pill('tipoCamiseta','tshirt','T-shirt (Algodão)',false)}
+              </div>
+            </div>
+            <div class="field">
+              <label>Cor</label>
+              <div style="display:flex;gap:8px;flex-wrap:wrap">
+                ${['Branco','Preto','Azul','Vermelho','Amarelo','Laranja','Roxo','Multicolorida','Outro']
+                  .map(c => pill('corCamiseta', c.toLowerCase(), c, false)).join('')}
+              </div>
+            </div>
+            <div class="field">
+              <label>Descreva o visual esperado da camiseta <span class="text-ruby">*</span></label>
+              <textarea id="conteudoMaterial" placeholder="Ex.: logo na frente, frase nas costas, etc." required></textarea>
+            </div>
+            <div class="field">
+              <label>Quantidade e tamanhos (opcional)</label>
+              <textarea id="qtdTamanhos" placeholder="Ex.: 10 un G, 20 un P, etc."></textarea>
+            </div>
+            <div class="field">
+              <label>Fornecedor de preferência (opcional)</label>
+              <input type="text" id="fornecedor" placeholder="Nome do fornecedor">
+            </div>`;
+          break;
+
+        case 'outro-impresso':
+          container.innerHTML = `
+            <div class="field">
+              <label>Descreva o material <span class="text-ruby">*</span></label>
+              <textarea id="conteudoMaterial" placeholder="Descreva o material impresso que precisa..." required></textarea>
+            </div>
+            <div class="field">
+              <label>Arquivos de apoio (opcional)</label>
+              ${uploadField('arquivoApoio','arquivoApoioName')}
+            </div>`;
+          break;
+      }
+
+      container.querySelectorAll('input[type="radio"], select, input[type="text"]').forEach(el => el.addEventListener('change', atualizarPreview));
+      container.querySelectorAll('input[name="formatoPapel"]').forEach(el => el.addEventListener('change', function() {
+        const outroPapelField = document.getElementById('outroPapelField');
+        if (outroPapelField) outroPapelField.style.display = this.value === 'outro-papel' ? 'block' : 'none';
+      }));
+
+      if (document.getElementById('arquivoApoio')) {
+        FileUpload.bind('arquivoApoio', 'arquivoApoioName');
+      }
+    }
+
+    function atualizarPreview() {
+      const tipo = window._tipoMaterial;
+      if (!tipo || !PREVIEW_IMPRESSOS[tipo]) {
+        document.getElementById('previewTitulo').textContent = 'Selecione um tipo de material';
+        document.getElementById('previewDicas').textContent = 'As informações do material aparecerão aqui.';
+        document.getElementById('previewIcone').innerHTML = '<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" opacity="0.2"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>';
+        return;
+      }
+
+      const preview = PREVIEW_IMPRESSOS[tipo];
+      const fmt = document.querySelector('input[name="formatoPapel"]:checked')?.value || document.getElementById('outroPapel')?.value || '';
+      const ori = document.querySelector('input[name="orientacao"]:checked')?.value || '';
+      const cor = document.querySelector('input[name="corCamiseta"]:checked')?.value || '';
+      const tipoSub = document.querySelector('input[name="tipoAdesivo"]:checked')?.value || document.querySelector('input[name="tipoCamiseta"]:checked')?.value || '';
+
+      document.getElementById('previewTitulo').textContent = preview.titulo(fmt || tipoSub || cor, ori || cor);
+      document.getElementById('previewDicas').textContent = preview.dicas(fmt, ori);
+
+      const isHoriz = ori === 'horizontal';
+      let iconeHtml = '';
+      if (tipo === 'banner') {
+        iconeHtml = isHoriz
+          ? '<svg width="80" height="30" viewBox="0 0 80 30" fill="none" stroke="currentColor" stroke-width="1.5" style="opacity:0.7"><rect x="1" y="1" width="78" height="28" rx="3"/></svg>'
+          : '<svg width="40" height="80" viewBox="0 0 40 80" fill="none" stroke="currentColor" stroke-width="1.5" style="opacity:0.7"><rect x="1" y="1" width="38" height="78" rx="3"/></svg>';
+      } else if (tipo === 'adesivo') {
+        const isRound = tipoSub === 'redondo';
+        iconeHtml = isRound
+          ? '<svg width="60" height="60" viewBox="0 0 60 60" fill="none" stroke="currentColor" stroke-width="1.5" style="opacity:0.7"><circle cx="30" cy="30" r="28"/></svg>'
+          : '<svg width="60" height="60" viewBox="0 0 60 60" fill="none" stroke="currentColor" stroke-width="1.5" style="opacity:0.7"><rect x="2" y="2" width="56" height="56" rx="4"/></svg>';
+      } else if (tipo === 'camiseta') {
+        const corHex = CORES_CAMISETA[cor] || '#FFFFFF';
+        iconeHtml = `<svg width="64" height="64" viewBox="0 0 24 24" style="opacity:0.85" stroke="#221b19" stroke-width="1.5" fill="${corHex}"><path d="M20.38 3.46L16 2a4 4 0 01-8 0L3.62 3.46a2 2 0 00-1.34 2.23l.58 3.57a1 1 0 00.99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 002-2V10h2.15a1 1 0 00.99-.84l.58-3.57a2 2 0 00-1.34-2.23z"/></svg>`;
+      } else if (['documento','carta','flyer-institucional','flyer-personalizado'].includes(tipo)) {
+        const w = isHoriz ? 80 : 55; const h = isHoriz ? 55 : 80;
+        iconeHtml = `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" fill="none" stroke="currentColor" stroke-width="1.5" style="opacity:0.7"><rect x="1" y="1" width="${w-2}" height="${h-2}" rx="3"/></svg>`;
+      } else {
+        const t = TIPOS_IMPRESSOS.find(t => t.id === tipo);
+        if (t) iconeHtml = t.icon.replace('width="20" height="20"', 'width="48" height="48"');
+      }
+      document.getElementById('previewIcone').innerHTML = iconeHtml;
+    }
+
+    function validateRequiredFields() {
+      return FormCore.validateRequired(function(inv) {
+        if (!window._tipoMaterial) {
+          FormCore.markInvalid(inv, document.getElementById('tipoMaterialContainer'), 'Selecione um tipo de material.');
+        }
+      });
+    }
+
+    function submitForm() {
+      if (!validateRequiredFields()) return;
+      const dados = {
+        nome: Auth.getUserName(),
+        setor: document.getElementById('setor')?.value || '',
+        tipoMaterial: window._tipoMaterial || '',
+        formatoPapel: document.querySelector('input[name="formatoPapel"]:checked')?.value || '',
+        orientacao: document.querySelector('input[name="orientacao"]:checked')?.value || '',
+        conteudoMaterial: document.getElementById('conteudoMaterial')?.value || '',
+      };
+      const conteudoCheckboxes = document.querySelectorAll('.checkbox-group input[type="checkbox"]:checked');
+      if (conteudoCheckboxes.length) dados.conteudoSelecionado = Array.from(conteudoCheckboxes).map(c => c.value).join(', ');
+      if (document.getElementById('tamanhoBanner')) dados.tamanho = document.getElementById('tamanhoBanner').value;
+      if (document.getElementById('tamanhoAdesivo')) dados.tamanho = document.getElementById('tamanhoAdesivo').value;
+      if (document.querySelector('input[name="tipoAdesivo"]:checked')) dados.tipoAdesivo = document.querySelector('input[name="tipoAdesivo"]:checked').value;
+      if (document.querySelector('input[name="tipoCamiseta"]:checked')) dados.tipoCamiseta = document.querySelector('input[name="tipoCamiseta"]:checked').value;
+      if (document.querySelector('input[name="corCamiseta"]:checked')) dados.corCamiseta = document.querySelector('input[name="corCamiseta"]:checked').value;
+      if (document.getElementById('qtdTamanhos')) dados.qtdTamanhos = document.getElementById('qtdTamanhos').value;
+      if (document.getElementById('fornecedor')) dados.fornecedor = document.getElementById('fornecedor').value;
+      if (document.getElementById('descricaoSolicitacao')) dados.descricaoSolicitacao = document.getElementById('descricaoSolicitacao').value;
+      if (document.getElementById('qrLink') && document.getElementById('qrLink').value) dados.qrLink = document.getElementById('qrLink').value;
+      FormCore.submit({
+        tipo: TIPO,
+        subtipo: window._tipoMaterial || '',
+        dados: dados,
+        files: [{ inputId: 'arquivoApoio', field: 'arquivo' }],
+        resumo: { setor: dados.setor },
+        btnId: 'btnSubmit',
+      });
+    }
+
+    function toggleQrLink(cb) {
+      const f = document.getElementById('qrLinkField');
+      if (f) f.style.display = cb.checked ? 'block' : 'none';
+    }
+    function toggleOrientacaoAdesivo() {
+      const sel = document.querySelector('input[name="tipoAdesivo"]:checked')?.value;
+      const f = document.getElementById('orientacaoAdesivoField');
+      if (!f) return;
+      const show = sel === 'retangular';
+      f.style.display = show ? 'block' : 'none';
+      if (!show) f.querySelectorAll('input[name="orientacao"]').forEach(r => { r.checked = false; r.closest('label')?.classList.remove('checked'); });
+    }
+    function verModeloFlyer() {
+      document.getElementById('flyerModal').classList.add('visible');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function fecharFlyerModal(e) {
+      if (e && e.target !== document.getElementById('flyerModal')) return;
+      document.getElementById('flyerModal').classList.remove('visible');
+      document.body.style.overflow = '';
+    }
+
+    init();
+  </script>
+
+  <div class="modal-overlay" id="flyerModal" onclick="fecharFlyerModal(event)">
+    <div class="modal-card" onclick="event.stopPropagation()">
+      <div class="modal-header">
+        <h3 class="modal-title">Modelo padrão — Flyer Institucional</h3>
+        <button class="modal-close" onclick="fecharFlyerModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p style="opacity:0.7;margin:0 0 18px">Os dados do flyer padrão são validados e atualizados antes do envio para produção.</p>
+        <div style="display:flex;gap:16px;flex-wrap:wrap;justify-content:center">
+          <figure style="margin:0;flex:1 1 260px;max-width:320px">
+            <img src="https://solicitacoes.portalsvn.com.br/assets/2026-06/IJoyGwNp-Flyer_Institucional_A5_Frente.jpg" alt="Flyer Institucional — Frente" loading="lazy" style="width:100%;height:auto;display:block;border-radius:var(--radius-md);border:1px solid var(--border-light)">
+            <figcaption style="text-align:center;font-size:0.78rem;opacity:0.55;margin-top:8px">Frente</figcaption>
+          </figure>
+          <figure style="margin:0;flex:1 1 260px;max-width:320px">
+            <img src="https://solicitacoes.portalsvn.com.br/assets/2026-06/uQfkpsmQ-Flyer_Institucional_A5_Verso.jpg" alt="Flyer Institucional — Verso" loading="lazy" style="width:100%;height:auto;display:block;border-radius:var(--radius-md);border:1px solid var(--border-light)">
+            <figcaption style="text-align:center;font-size:0.78rem;opacity:0.55;margin-top:8px">Verso</figcaption>
+          </figure>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" onclick="fecharFlyerModal()">Fechar</button>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

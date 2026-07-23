@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <script>(function(){try{const s=JSON.parse(localStorage.getItem('svn_layout_state')||'{}');if(s.isAdmin)document.documentElement.dataset.preShell='admin';}catch(e){}})()</script>
+  <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+  <link rel="manifest" href="/site.webmanifest" />
+  <meta name="theme-color" content="#AC3631" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Patrocínio - Hub SVN</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap" media="print" onload="this.media='all'">
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap"></noscript>
+  <link rel="stylesheet" href="style.css?v=20260615c">
+</head>
+<body class="page-light">
+  <div id="pageContent">
+  <div class="page-container page-container--narrow">
+    <div class="form-card">
+      <div class="svn-stepper" id="formStepper" data-steps="Informações|Financeiro"></div>
+      <div class="form-progress" style="display:none"><div class="form-progress-bar" id="progressBar"></div></div>
+      <div class="flex-between">
+        <h2 class="text-md-medium">Patrocínio</h2>
+        <span id="stepLabel" style="display:none">Passo 1 de 2</span>
+      </div>
+      <hr class="sep">
+
+      <!-- Passo 1 -->
+      <div class="form-step active" id="step1">
+        <div class="alert-card alert-warning">
+          <div class="alert-title">Prazos de entrega</div>
+          <div class="alert-text">Peça com no mínimo <strong>30 dias de antecedência</strong> — contrato (jurídico) e produção dos materiais (gráfica) levam tempo.</div>
+        </div>
+
+        <div class="field">
+          <label>Setor <span class="text-ruby">*</span></label>
+          <select id="setor" required>
+            <option value="">Selecione seu setor</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Telefone <span class="text-ruby">*</span></label>
+          <input type="tel" id="telefone" placeholder="(00) 00000-0000" oninput="mascaraTelefone(this)" required>
+        </div>
+        <div class="field">
+          <label>Título do evento patrocinado <span class="text-ruby">*</span></label>
+          <input type="text" id="tituloEvento" placeholder="Nome do evento" required>
+        </div>
+        <div class="field">
+          <label>Qual ou quais serão as marcas parceiras neste patrocínio? <span class="text-ruby">*</span></label>
+          <input type="text" id="marcasParceiras" placeholder="Marcas parceiras" required>
+        </div>
+        <div class="field">
+          <label>CPF/CNPJ das marcas parceiras</label>
+          <input type="text" id="cnpjParceiros" placeholder="CPF ou CNPJ">
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div class="field">
+            <label>Data do evento <span class="text-ruby">*</span></label>
+            <input type="date" id="dataEvento" required>
+          </div>
+          <div class="field">
+            <label>Horário <span class="text-ruby">*</span></label>
+            <input type="time" id="horario" required>
+          </div>
+        </div>
+        <div class="field">
+          <label>É horário de Brasília?</label>
+          <div class="radio-group" style="flex-direction:row;gap:16px">
+            <label class="radio-option"><input type="radio" name="horBrasilia" value="sim" required><span class="radio-custom"></span><span>Sim</span></label>
+            <label class="radio-option"><input type="radio" name="horBrasilia" value="nao"><span class="radio-custom"></span><span>Não</span></label>
+          </div>
+        </div>
+        <div class="field">
+          <label>Local (nome e endereço) <span class="text-ruby">*</span></label>
+          <textarea id="local" placeholder="Nome do local e endereço completo" required></textarea>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div class="field">
+            <label>Estado <span class="text-ruby">*</span></label>
+            <select id="estado" onchange="loadCidades()" required>
+              <option value="">Selecione</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Cidade <span class="text-ruby">*</span></label>
+            <select id="cidade" disabled required>
+              <option value="">Selecione o estado</option>
+            </select>
+          </div>
+        </div>
+        <div class="field">
+          <label>Tipo de evento <span class="text-ruby">*</span></label>
+          <select id="tipoEvento" required>
+            <option value="">Selecione</option>
+            <option>Almoço</option>
+            <option>Jantar</option>
+            <option>Esportivo</option>
+            <option>Corporativo</option>
+            <option>Feira</option>
+            <option>Beneficente</option>
+            <option>Escolar</option>
+            <option>Universitário</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>O evento será aberto ou fechado? <span class="text-ruby">*</span></label>
+          <select id="publico" required>
+            <option value="">Selecione</option>
+            <option value="aberto">Será aberto ao público em geral</option>
+            <option value="fechado">Será fechado para convidados</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Explique a ideia do patrocínio <span class="text-ruby">*</span></label>
+          <textarea id="explicacao" placeholder="Descreva a proposta e objetivos..." required></textarea>
+        </div>
+
+        <div class="field" style="margin-top:16px">
+          <label>Mídia kit ou proposta de patrocínio (opcional)</label>
+          <div class="file-input-wrapper">
+            <label class="file-input-btn" for="midiaKit">Escolher arquivo</label>
+            <input type="file" id="midiaKit">
+            <div class="file-name" id="midiaKitName"></div>
+          </div>
+        </div>
+        <div class="field">
+          <label>Arquivos de apoio — logos dos parceiros (opcional)</label>
+          <div class="file-input-wrapper">
+            <label class="file-input-btn" for="arquivoApoio">Escolher arquivo</label>
+            <input type="file" id="arquivoApoio">
+            <div class="file-name" id="arquivoApoioName"></div>
+          </div>
+        </div>
+
+        <div class="form-nav" style="margin-top:28px">
+          <button class="btn btn-primary" onclick="goToStep2()">Próximo</button>
+        </div>
+      </div>
+
+      <!-- Passo 2 -->
+      <div class="form-step" id="step2">
+        <button type="button" onclick="voltarStep1()" class="btn-voltar">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="15 18 9 12 15 6"/></svg>
+          Voltar
+        </button>
+
+        <h2 style="font-weight:600;font-size:1.1rem;margin-bottom:20px">Informações financeiras</h2>
+
+        <div class="field">
+          <label>Centro de custo <span class="text-ruby">*</span></label>
+          <input type="text" id="centroCusto" placeholder="Centro de custo" required>
+        </div>
+        <div class="field">
+          <label>Valor da cota de patrocínio <span class="text-ruby">*</span></label>
+          <input type="text" id="valorCota" placeholder="R$ 0,00" oninput="mascaraMoeda(this)" required>
+        </div>
+        <div class="field">
+          <label>Orçamento total (incluindo patrocínio e materiais extras) <span class="text-ruby">*</span></label>
+          <input type="text" id="orcamentoTotal" placeholder="R$ 0,00" oninput="mascaraMoeda(this)" required>
+        </div>
+        <div class="field">
+          <label>Materiais adicionais (opcional)</label>
+          <div id="adicionaisGrid" class="checkbox-group"></div>
+        </div>
+
+        <div class="section-divider">
+          <div id="submitError" class="alert-card alert-danger" style="display:none;margin-bottom:16px"></div>
+        <div id="formStatusArea" style="display:none;margin-top:16px"></div>
+          <div class="form-nav" style="justify-content:flex-end">
+            <button class="btn btn-primary btn-submit-gold" id="btnSubmit" onclick="submitForm()">Enviar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+
+  </div>
+  <script src="utils.js?v=20260615d"></script>
+  <script src="upload-feedback.js?v=20260615e"></script>
+  <script src="config.js?v=20260615a"></script>
+  <script src="auth.js?v=20260611f"></script>
+  <script src="shell.js?v=20260611f"></script>
+  <script src="ibge-loader.js?v=20260611f"></script>
+  <script src="form-core.js?v=20260611f"></script>
+  <script>
+    const TIPO = 'patrocinio';
+
+    let _estados = [];
+
+    async function loadEstados() {
+      try {
+        _estados = await IBGELoader.loadEstados();
+        const sel = document.getElementById('estado');
+        if (!sel) return;
+        sel.innerHTML = '<option value="">Selecione</option>';
+        _estados.forEach(e => { sel.innerHTML += `<option value="${e.id}">${e.sigla} — ${e.nome}</option>`; });
+      } catch (e) { console.error('IBGE error:', e); }
+    }
+
+    async function loadCidades() {
+      const estadoId = document.getElementById('estado').value;
+      const cidSel = document.getElementById('cidade');
+      if (!estadoId) { cidSel.disabled = true; cidSel.innerHTML = '<option value="">Selecione o estado</option>'; return; }
+      cidSel.innerHTML = '<option>Carregando...</option>';
+      try {
+        const cidades = await IBGELoader.loadCidades(estadoId);
+        cidSel.innerHTML = '<option value="">Selecione</option>';
+        cidades.forEach(c => { cidSel.innerHTML += `<option>${c.nome}</option>`; });
+        cidSel.disabled = false;
+      } catch (e) { console.error(e); }
+    }
+
+    function init() {
+      FormCore.initForm({
+        tipo: 'patrocinio',
+        redirectPath: '/form-patrocinio.html',
+        activeRoute: 'nova-solicitacao',
+        onReady: async function () {
+          FileUpload.bind('midiaKit', 'midiaKitName');
+          FileUpload.bind('arquivoApoio', 'arquivoApoioName');
+          (function renderAdicionais() {
+            const grid = document.getElementById('adicionaisGrid');
+            if (!grid || typeof ITENS_MATERIAIS === 'undefined') return;
+            grid.innerHTML = ITENS_MATERIAIS.map(function (m) {
+              return '<label class="checkbox-option"><input type="checkbox" name="adicional" value="' + m.id + '"><span class="checkbox-custom"></span><span>' + m.label + '</span></label>';
+            }).join('');
+          })();
+          await loadEstados();
+        }
+      });
+    }
+
+    function validateStep(stepId) {
+      return FormCore.validateRequired(null, document.getElementById(stepId));
+    }
+
+    function goToStep2() {
+      if (!validateStep('step1')) return;
+      document.getElementById('step1').classList.remove('active');
+      document.getElementById('step2').classList.add('active');
+      document.getElementById('progressBar').style.width = '100%';
+      document.getElementById('stepLabel').textContent = 'Passo 2 de 2';
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function voltarStep1() {
+      document.getElementById('step2').classList.remove('active');
+      document.getElementById('step1').classList.add('active');
+      document.getElementById('progressBar').style.width = '50%';
+      document.getElementById('stepLabel').textContent = 'Passo 1 de 2';
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function submitForm() {
+      if (!validateStep('step2')) return;
+      const dados = {
+        nome: Auth.getUserName(),
+        telefone: document.getElementById('telefone').value,
+        setor: document.getElementById('setor')?.value || '',
+        tituloEvento: document.getElementById('tituloEvento').value,
+        marcasParceiras: document.getElementById('marcasParceiras').value,
+        cnpjParceiros: document.getElementById('cnpjParceiros').value,
+        dataEvento: document.getElementById('dataEvento').value,
+        horario: document.getElementById('horario').value,
+        horBrasilia: document.querySelector('input[name="horBrasilia"]:checked')?.value || '',
+        local: document.getElementById('local').value,
+        estado: document.getElementById('estado')?.value || '',
+        cidade: document.getElementById('cidade')?.value || '',
+        tipoEvento: document.getElementById('tipoEvento').value,
+        publico: document.getElementById('publico').value,
+        explicacao: document.getElementById('explicacao').value,
+        centroCusto: document.getElementById('centroCusto').value,
+        valorCota: document.getElementById('valorCota').value,
+        orcamentoTotal: document.getElementById('orcamentoTotal').value,
+        materiais: [...document.querySelectorAll('input[name="adicional"]:checked')].map(function (c) { return c.value; }),
+      };
+      FormCore.submit({
+        tipo: TIPO,
+        dados: dados,
+        files: [
+          { inputId: 'midiaKit', field: 'arquivo' },
+          { inputId: 'arquivoApoio', field: 'arquivo2' },
+        ],
+        resumo: { setor: dados.setor },
+        btnId: 'btnSubmit',
+      });
+    }
+
+    init();
+  </script>
+
+</body>
+</html>

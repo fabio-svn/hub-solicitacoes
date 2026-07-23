@@ -44,6 +44,7 @@ const _configReady = Promise.all([
   if (schemas.contratos && schemas.contratos.length) CONTRATOS_SOCIAIS = schemas.contratos.map(c => c.label);
   if (schemas.cargos && schemas.cargos.length) CARGOS_ASSESSOR = schemas.cargos.map(c => c.label);
   if (schemas.setores && schemas.setores.length) SETORES = ['Selecione seu setor', ...schemas.setores];
+  if (schemas.selos && schemas.selos.length) SELOS_ASSESSOR = schemas.selos;
   if (schemas.tipos) {
     window._svnFormSchemas = schemas;
     const fl = {};
@@ -108,10 +109,41 @@ const CATEGORIAS_SOLICITACAO = [
       { id: "outro", label: "Outro", icon: "icon-edit", ativo: true },
     ]
   },
+  {
+    // Os formularios do CH ja eram restritos por papel dentro de cada pagina,
+    // mas ficavam fora daqui — entao nao apareciam nem na home nem no Ctrl+K,
+    // so pela capital-humano.html. Com `roles`, aparecem para quem pode.
+    // Os rotulos batem com o LABELS_EXTRA do backend.
+    categoria: "Capital Humano",
+    roles: ["admin", "capital_humano"],
+    itens: [
+      { id: "ch-atualizacao-pessoas", label: "Atualização de Pessoas nos Sites", icon: "icon-refresh", ativo: true },
+      { id: "ch-atualizacao-books", label: "Atualização de Books", icon: "icon-newspaper", ativo: true },
+      { id: "ch-linha-do-tempo", label: "Linha do Tempo", icon: "icon-calendar", ativo: true },
+      { id: "ch-aniversariantes", label: "Aniversariantes do Mês", icon: "icon-party-popper", ativo: true },
+    ]
+  },
 ];
 
+/* CATEGORIAS-POR-ROLE: use SEMPRE esta funcao no lugar de CATEGORIAS_SOLICITACAO
+   ao montar algo que o usuario ve (cards da home, busca do Ctrl+K). Categorias
+   sem `roles` valem para todo mundo; com `roles`, so para quem tem o papel.
+
+   Isto e conforto de interface, nao seguranca: quem souber a URL continua
+   chegando na pagina, e quem barra e o guard de papel dentro do formulario mais
+   a validacao do backend. Nao use como unica trava para nada sensivel. */
+function categoriasVisiveis() {
+  var role = (typeof Auth !== 'undefined' && typeof Auth.getUserRole === 'function')
+    ? Auth.getUserRole()
+    : null;
+  return CATEGORIAS_SOLICITACAO.filter(function (cat) {
+    if (!Array.isArray(cat.roles)) return true;
+    return cat.roles.indexOf(role) !== -1;
+  });
+}
+
 const TIPO_SOLICITACAO_LABELS = {
-  "eventos":                        "Evento",
+  "eventos":                        "Eventos",
   "pagina-assessores-dados":        "Página de Assessores — Dados",
   "pagina-assessores-atualizacao":  "Página de Assessores — Atualização",
   "pagina-assessores":              "Página de Assessores",
@@ -332,7 +364,7 @@ const DRAWER_FIELD_LABELS_FLAT = Object.fromEntries(
   Object.entries(DRAWER_FIELD_LABELS).map(([k, v]) => [k, v.label])
 );
 
-const SELOS_ASSESSOR = [
+let SELOS_ASSESSOR = [
   { id: "ancord",          label: "Ancord",         icon_url: "https://pub-a2132f9b61f940659cc98265acfcf64c.r2.dev/ancord.webp" },
   { id: "cea",             label: "CEA",            icon_url: "https://pub-a2132f9b61f940659cc98265acfcf64c.r2.dev/cea.webp" },
   { id: "cfp",             label: "CFP",            icon_url: "https://pub-a2132f9b61f940659cc98265acfcf64c.r2.dev/CFP-Logo.webp" },
@@ -569,6 +601,10 @@ const FORM_ROUTES = {
   "email-marketing":       "form-email-marketing.html",
   "producao-audiovisual":  "form-producao-audiovisual.html",
   "materiais-impressos":   "form-materiais-impressos.html",
+  "ch-atualizacao-pessoas": "form-ch-atualizacao-pessoas.html",
+  "ch-atualizacao-books":   "form-ch-atualizacao-books.html",
+  "ch-linha-do-tempo":      "form-ch-linha-do-tempo.html",
+  "ch-aniversariantes":     "form-ch-aniversariantes.html",
 };
 
 const FLUXOS_ETAPAS = {

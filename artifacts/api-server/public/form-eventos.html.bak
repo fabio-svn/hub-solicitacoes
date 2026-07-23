@@ -1,0 +1,1668 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <script>(function(){try{const s=JSON.parse(localStorage.getItem('svn_layout_state')||'{}');if(s.isAdmin)document.documentElement.dataset.preShell='admin';}catch(e){}})()</script>
+  <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+  <link rel="manifest" href="/site.webmanifest" />
+  <meta name="theme-color" content="#AC3631" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Eventos - Hub SVN</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap" media="print" onload="this.media='all'">
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap"></noscript>
+  <link rel="stylesheet" href="style.css?v=20260615c">
+</head>
+<body class="page-light">
+  <div id="pageContent">
+  <div class="page-container page-container--wide">
+    <div class="form-split">
+      <div class="form-main">
+        <div class="form-card">
+          <div class="svn-stepper" id="formStepper" data-steps="Formato|Informações|Materiais|Palestrantes|Custos|Anexos"></div>
+          <div class="form-progress" style="display:none"><div class="form-progress-bar" id="progressBar"></div></div>
+          <div class="flex-between">
+            <h2 class="text-md-medium" id="formTitulo">Eventos</h2>
+            <span style="display:none" id="stepLabel">Etapa 1 de 6</span>
+          </div>
+          <hr class="sep">
+
+          <!-- STEP 1: Natureza -->
+          <div class="form-step active" id="step1">
+            <h2 style="font-weight:600;font-size:1.1rem;margin-bottom:20px">O evento é presencial ou online?</h2>
+            <div class="field">
+              <div class="radio-cards">
+                <div class="radio-card" onclick="selectNatureza('presencial')" id="cardPresencial">
+                  <div class="card-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg></div>
+                  <div class="card-label">Presencial</div>
+                </div>
+                <div class="radio-card" onclick="selectNatureza('online')" id="cardOnline">
+                  <div class="card-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg></div>
+                  <div class="card-label">Online</div>
+                </div>
+              </div>
+            </div>
+            <div id="onlineTutorial" style="display:none;margin-top:12px">
+              <label class="checkbox-option">
+                <input type="checkbox" id="checkTutorial">
+                <span class="checkbox-custom"></span>
+                <span>Confirmo que assisti ao <a href="" id="tutorialLink" target="_blank">tutorial para transmissões online</a></span>
+              </label>
+            </div>
+            <div class="field" style="margin-top:16px">
+              <label>Telefone <span class="text-ruby">*</span></label>
+              <input type="tel" id="telefone" placeholder="(00) 00000-0000" oninput="mascaraTelefone(this)" required>
+            </div>
+            <div class="field" style="margin-top:16px">
+              <label>Setor <span class="text-ruby">*</span></label>
+              <select id="setor" required>
+                <option value="">Selecione seu setor</option>
+              </select>
+            </div>
+            <div class="field" style="margin-top:16px">
+              <label class="checkbox-option">
+                <input type="checkbox" id="checkPrazos">
+                <span class="checkbox-custom"></span>
+                <span>Confirmo que estou ciente dos <a href="#" onclick="event.preventDefault();openPrazosModal()" class="text-ruby">prazos necessários</a> para a organização do evento.</span>
+              </label>
+            </div>
+            <div class="form-nav">
+              <button class="btn btn-primary" id="btnNext1" disabled onclick="goStep(2)">Próximo</button>
+            </div>
+          </div>
+
+          <!-- STEP 2: Maturidade -->
+          <div class="form-step" id="step2">
+        <button type="button" onclick="goStep(1)" class="btn-voltar">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="15 18 9 12 15 6"/></svg>
+          Voltar
+        </button>
+
+            <h2 style="font-weight:600;font-size:1.1rem;margin-bottom:20px">Qual o nível de informação que você tem sobre o evento?</h2>
+            <div class="radio-cards maturidade-cards" style="margin-bottom:16px">
+              <div class="radio-card" onclick="selectMaturidade(1)" id="mat1">
+                <div class="card-icon" style="font-size:2rem;font-family:'Taviraj', serif;font-weight:300">1</div>
+                <div class="card-label">Tenho a maioria das informações</div>
+                <div class="card-desc">Evento com data, local e detalhes definidos</div>
+              </div>
+              <div class="radio-card" onclick="selectMaturidade(2)" id="mat2">
+                <div class="card-icon" style="font-size:2rem;font-family:'Taviraj', serif;font-weight:300">2</div>
+                <div class="card-label">Tenho algumas informações</div>
+                <div class="card-desc">Algumas informações definidas, outras em aberto</div>
+              </div>
+              <div class="radio-card" onclick="selectMaturidade(3)" id="mat3">
+                <div class="card-icon" style="font-size:2rem;font-family:'Taviraj', serif;font-weight:300">3</div>
+                <div class="card-label">Ainda estou estruturando</div>
+                <div class="card-desc">Tenho uma ideia, preciso de apoio para estruturar</div>
+              </div>
+            </div>
+            <a href="#" onclick="event.preventDefault();openOrientationModal()" style="font-size:0.85rem">Qual opção devo escolher?</a>
+            <div id="maturityFields" style="margin-top:24px"></div>
+            <div class="form-nav" id="nav2" style="display:none">
+              
+              <button class="btn btn-primary" onclick="validateStep2() && goStep(3)">Próximo</button>
+            </div>
+          </div>
+
+          <!-- STEP 3: Materiais -->
+          <div class="form-step" id="step3">
+        <button type="button" onclick="goStep(2)" class="btn-voltar">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="15 18 9 12 15 6"/></svg>
+          Voltar
+        </button>
+
+            <div class="alert-card alert-danger">
+              <div class="alert-title">Obrigatório</div>
+              <div class="alert-text">Clique nas opções que fazem parte da solicitação para esse evento</div>
+            </div>
+            <div class="alert-card alert-info">
+              <div class="alert-title">Dica</div>
+              <div class="alert-text">Se os materiais de apoio não estiverem definidos, marque a opção "Pacote Padrão", pois é utilizado na grande maioria dos eventos.</div>
+            </div>
+            <h2 style="font-weight:600;font-size:1.1rem;margin-bottom:20px">Materiais e serviços</h2>
+            <div id="materiaisContainer"></div>
+            <div id="materiaisCondFields" style="margin-top:16px"></div>
+            <div class="field-error" id="materiaisError">Selecione pelo menos um item para continuar.</div>
+            <div class="form-nav">
+              
+              <button class="btn btn-primary" onclick="validateMateriais() && goStep(4)">Próximo</button>
+            </div>
+          </div>
+
+          <!-- STEP 4: Palestrantes -->
+          <div class="form-step" id="step4">
+        <button type="button" onclick="goStep(3)" class="btn-voltar">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="15 18 9 12 15 6"/></svg>
+          Voltar
+        </button>
+
+            <h2 style="font-weight:600;font-size:1.1rem;margin-bottom:20px">Palestrantes</h2>
+            <div class="field">
+              <label>O evento terá palestrante(s)?</label>
+              <div class="radio-group">
+                <label class="radio-option"><input type="radio" name="temPalestrante" value="sim" onchange="handlePalestrante(true)"><span class="radio-custom"></span><span>Sim</span></label>
+                <label class="radio-option"><input type="radio" name="temPalestrante" value="nao" onchange="handlePalestrante(false)"><span class="radio-custom"></span><span>Não</span></label>
+              </div>
+            </div>
+            <div id="palestranteQtd" style="display:none">
+              <div class="field">
+                <label>Quantidade de palestrantes</label>
+                <div class="radio-group" style="flex-direction:row;gap:16px">
+                  <label class="radio-option"><input type="radio" name="qtdPalestrante" value="1" onchange="renderPalestrantes(1)"><span class="radio-custom"></span><span>1</span></label>
+                  <label class="radio-option"><input type="radio" name="qtdPalestrante" value="2" onchange="renderPalestrantes(2)"><span class="radio-custom"></span><span>2</span></label>
+                  <label class="radio-option"><input type="radio" name="qtdPalestrante" value="3" onchange="renderPalestrantes(3)"><span class="radio-custom"></span><span>3</span></label>
+                  <label class="radio-option"><input type="radio" name="qtdPalestrante" value="4" onchange="renderPalestrantes(4)"><span class="radio-custom"></span><span>4</span></label>
+                </div>
+              </div>
+            </div>
+            <div id="palestranteBlocos"></div>
+            <div class="form-nav">
+              
+              <button class="btn btn-primary" id="btnNext4" onclick="validateStep4() && goStep(getNextStepFrom4())">Próximo</button>
+            </div>
+          </div>
+
+          <!-- STEP 5: Custos (presencial only) -->
+          <div class="form-step" id="step5">
+        <button type="button" onclick="goStep(4)" class="btn-voltar">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="15 18 9 12 15 6"/></svg>
+          Voltar
+        </button>
+
+            <h2 style="font-weight:600;font-size:1.1rem;margin-bottom:20px">Custos</h2>
+            <div class="field">
+              <label>Custo estimado (em R$)</label>
+              <input type="text" id="custoEstimado" placeholder="R$ 0,00" oninput="handleCusto()">
+            </div>
+            <div id="rateioField" style="display:none">
+              <div class="field">
+                <label>Rateio</label>
+                <select id="rateio"></select>
+              </div>
+            </div>
+            <div class="form-nav">
+              
+              <button class="btn btn-primary" onclick="validateStep5() && goStep(6)">Próximo</button>
+            </div>
+          </div>
+
+          <!-- STEP 6: Anexos e observações -->
+          <div class="form-step" id="step6">
+        <button type="button" onclick="goStep(getPrevStepFrom6())" class="btn-voltar">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="15 18 9 12 15 6"/></svg>
+          Voltar
+        </button>
+
+            <h2 style="font-weight:600;font-size:1.1rem;margin-bottom:20px">Anexos e observações</h2>
+            <div class="field">
+              <label>Logo complementar de parceiro (opcional)</label>
+              <div class="file-input-wrapper">
+                <label class="file-input-btn" for="logoFile"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg> Escolher arquivo</label>
+                <input type="file" id="logoFile" accept=".png,.jpg,.jpeg,.svg,.ai,.pdf">
+                <div class="file-name" id="logoFileName"></div>
+              </div>
+              <div class="field-hint">Caso não consiga, envie para o e-mail: <span data-email-upload></span></div>
+            </div>
+            <div class="field">
+              <label>Imagem complementar (opcional)</label>
+              <div class="file-input-wrapper">
+                <label class="file-input-btn" for="imgFile"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg> Escolher arquivo</label>
+                <input type="file" id="imgFile" accept=".png,.jpg,.jpeg,.webp">
+                <div class="file-name" id="imgFileName"></div>
+              </div>
+            </div>
+            <div class="field">
+              <label>Demais arquivos de apoio (opcional)</label>
+              <div class="file-input-wrapper">
+                <label class="file-input-btn" for="demaisFile"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg> Escolher arquivo</label>
+                <input type="file" id="demaisFile">
+                <div class="file-name" id="demaisFileName"></div>
+              </div>
+            </div>
+            <div class="field">
+              <label>Observações gerais (opcional)</label>
+              <input type="text" id="observacoes" placeholder="Algo mais que você queira informar?">
+            </div>
+            <div class="section-divider">
+              <div id="submitError" class="alert-card alert-danger" style="display:none;margin-bottom:16px"></div>
+        <div id="formStatusArea" style="display:none;margin-top:16px"></div>
+              <div class="form-nav">
+                
+                <button class="btn btn-primary btn-submit-gold" id="btnSubmit" onclick="submitForm()">Enviar</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SIDEBAR PREVIEW -->
+      <div class="form-sidebar">
+        <div class="preview-panel">
+          <h4><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> Resumo do pedido</h4>
+          <div id="previewRows">
+            <div style="padding:12px 0;border-bottom:1px solid var(--border-light)">
+              <div style="font-size:0.7rem;font-weight:600;opacity:0.4;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px">Evento</div>
+              <div style="font-family:'Taviraj', serif;font-weight:300;font-size:1.1rem;color:var(--carbon-black)" id="pvEvento">—</div>
+            </div>
+            <div class="preview-row"><span class="preview-label">Solicitante</span><span class="preview-value empty" id="pvSolicitante">—</span></div>
+            <div class="preview-row"><span class="preview-label">Data</span><span class="preview-value empty" id="pvData">—</span></div>
+            <div class="preview-row" id="pvLocalRow"><span class="preview-label">Local</span><span class="preview-value empty" id="pvLocal">—</span></div>
+            <div class="preview-row" id="pvCanalRow" style="display:none"><span class="preview-label">Canal</span><span class="preview-value empty" id="pvCanal">—</span></div>
+            <div class="preview-row"><span class="preview-label">Custo</span><span class="preview-value empty" id="pvCusto">—</span></div>
+            <div class="preview-row"><span class="preview-label">Palestrantes</span><span class="preview-value empty" id="pvPalestrantes">—</span></div>
+          </div>
+          <div style="margin-top:12px;border-top:1px solid var(--border-light);padding-top:12px">
+            <div style="font-size:0.75rem;font-weight:600;opacity:0.4;margin-bottom:8px">Itens selecionados</div>
+            <div id="pvItens" style="display:flex;flex-wrap:wrap;gap:6px"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Orientation Modal -->
+  <div class="modal-overlay" id="orientModal" onclick="closeOrientationModal(event)">
+    <div class="modal-card" style="max-width:720px" onclick="event.stopPropagation()">
+      <div class="modal-header">
+        <div>
+          <h3 class="modal-title">Qual opção escolher?</h3>
+          <p class="modal-subtitle">Escolha o cenário que mais se aproxima da realidade do seu evento.</p>
+        </div>
+        <button class="modal-close" onclick="closeOrientationModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px">
+          <div style="text-align:center;padding:16px">
+            <div style="font-family:'Taviraj', serif;font-size:3rem;font-weight:300;margin-bottom:8px;color:var(--carbon-black)">1</div>
+            <span class="badge" style="background:var(--ruby-red);color:white;margin-bottom:8px;white-space:normal;display:inline-block;line-height:1.3">Tenho a maioria das informações</span>
+            <p style="font-size:0.82rem;opacity:0.7;margin-top:8px">Quando as informações mais básicas do evento estiverem pré-definidas.</p>
+            <p style="font-size:0.78rem;font-style:italic;opacity:0.5;margin-top:4px">Ex.: Tenho Nome, Data, Local, Formato, etc</p>
+          </div>
+          <div style="text-align:center;padding:16px">
+            <div style="font-family:'Taviraj', serif;font-size:3rem;font-weight:300;margin-bottom:8px;color:var(--carbon-black)">2</div>
+            <span class="badge" style="background:var(--sage-green);color:white;margin-bottom:8px;white-space:normal;display:inline-block;line-height:1.3">Tenho algumas informações</span>
+            <p style="font-size:0.82rem;opacity:0.7;margin-top:8px">Quando algumas informações estiverem definidas, mas você precisa de apoio para fechar outros pontos.</p>
+            <p style="font-size:0.78rem;font-style:italic;opacity:0.5;margin-top:4px">Ex.: Quero realizar uma palestra sobre FIIs no dia 7, mas ainda preciso definir o local.</p>
+          </div>
+          <div style="text-align:center;padding:16px">
+            <div style="font-family:'Taviraj', serif;font-size:3rem;font-weight:300;margin-bottom:8px;color:var(--carbon-black)">3</div>
+            <span class="badge" style="background:var(--leather-brown);color:white;margin-bottom:8px;white-space:normal;display:inline-block;line-height:1.3">Ainda estou estruturando</span>
+            <p style="font-size:0.82rem;opacity:0.7;margin-top:8px">Quando você tiver uma ideia para um evento, mas precisa de apoio para estruturar.</p>
+            <p style="font-size:0.78rem;font-style:italic;opacity:0.5;margin-top:4px">Ex.: Gostaria de realizar uma experiencia com clientes, mas preciso de assistência.</p>
+          </div>
+        </div>
+        <hr style="border:none;border-top:1px solid var(--ink-10);margin:16px 0">
+        <p style="font-size:0.78rem;opacity:0.5;font-style:italic;margin:0">Para que o processo ocorra de forma eficiente, escolha a opção que mais se adequa à realidade do seu evento. Quanto mais informações forem preenchidas, mais rápido será o processo.</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" onclick="closeOrientationModal()">Entendi</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Pacote Padrão Preview Modal -->
+  <div class="modal-overlay" id="pacoteModal" onclick="closePacoteModal(event)">
+    <div class="modal-card" onclick="event.stopPropagation()">
+      <div class="modal-header">
+        <h3 class="modal-title">Prévia do Pacote Padrão</h3>
+        <button class="modal-close" onclick="closePacoteModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div style="display:flex;gap:16px;flex-wrap:wrap;justify-content:center" id="pacoteImgs"></div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" onclick="closePacoteModal()">Fechar</button>
+      </div>
+    </div>
+  </div>
+
+  </div>
+  <script src="utils.js?v=20260615d"></script>
+  <script src="upload-feedback.js?v=20260615e"></script>
+  <script src="config.js?v=20260615a"></script>
+  <script src="auth.js?v=20260611f"></script>
+  <script src="shell.js?v=20260611f"></script>
+  <script src="form-core.js?v=20260611f"></script>
+  <script src="ibge-loader.js?v=20260603"></script>
+  <script>
+    const STORAGE_KEY = 'hub_form_eventos';
+    window.addEventListener('pageshow', function(e) {
+      if (e.persisted) {
+        try { sessionStorage.removeItem(STORAGE_KEY); } catch {}
+        window.location.reload();
+      }
+    });
+    const formState = { natureza: null, maturidade: null, materiais: new Set(), palestrantes: [] };
+    let estados = [];
+
+    const COND_MATERIAL_FIELDS = [
+      'matPersonConvite','matPersonPagina',
+      'matBannerTam','matBannerConteudo',
+      'matFlyerTam','matFlyerConteudo',
+      'matBrindeDesc',
+      'matIgArroba',
+      'matEmailConteudo',
+      'matApoioDesc',
+      'matSorteioDesc',
+      'matStandMat',
+    ];
+    const COND_MATERIAL_RADIOS = ['flyerTipo','igTipo','sorteio1'];
+
+    function saveFormState() {
+      const fields = ['nomeEvento','dataEvento','horario','descricao',
+        'origem','tipoEvento','publico','convidados','canal','linkTransmissao',
+        'objetivos','custoEstimado','rateio','observacoes','localNome','localEndereco',
+        'localSugestoes','ideaQuando'];
+      const data = {};
+      fields.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) data[id] = el.value;
+      });
+      data._natureza = formState.natureza;
+      data._maturidade = formState.maturidade;
+      data._materiais = [...formState.materiais];
+      data._estado = document.getElementById('estado')?.value || '';
+      data._cidade = document.getElementById('cidade')?.value || '';
+      data._setor = document.getElementById('setor')?.value || '';
+      data._checkPrazos = document.getElementById('checkPrazos')?.checked || false;
+      data._checkTutorial = document.getElementById('checkTutorial')?.checked || false;
+      const tipoAprox = document.querySelector('input[name="tipoAprox"]:checked');
+      if (tipoAprox) data._tipoAprox = tipoAprox.value;
+      const condVals = {};
+      COND_MATERIAL_FIELDS.forEach(id => { const el = document.getElementById(id); if (el) condVals[id] = el.value; });
+      COND_MATERIAL_RADIOS.forEach(name => {
+        const checked = document.querySelector(`input[name="${name}"]:checked`);
+        if (checked) condVals['_r_' + name] = checked.value;
+      });
+      condVals['_cb_captacao'] = [...document.querySelectorAll('input[name="captacao"]:checked')].map(e => e.value);
+      data._condMaterial = condVals;
+      data._temPalestrante = document.querySelector('input[name="temPalestrante"]:checked')?.value || '';
+      data._qtdPalestrante = document.querySelector('input[name="qtdPalestrante"]:checked')?.value || '';
+      for (let i = 1; i <= 4; i++) {
+        data['_palSvn' + i] = document.querySelector(`input[name="palSvn${i}"]:checked`)?.value || '';
+        data['_palNome' + i] = document.getElementById('palNome' + i)?.value || '';
+        data['_palCargo' + i] = document.getElementById('palCargo' + i)?.value || '';
+      }
+      try { sessionStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch {}
+    }
+
+    let _pendingCondMaterial = null;
+
+    function restoreFormState() {
+      try {
+        const raw = sessionStorage.getItem(STORAGE_KEY);
+        if (!raw) return;
+        const data = JSON.parse(raw);
+        const fields = ['nomeEvento','dataEvento','horario','descricao',
+          'origem','tipoEvento','publico','convidados','canal','linkTransmissao',
+          'objetivos','custoEstimado','rateio','observacoes'];
+        fields.forEach(id => {
+          const el = document.getElementById(id);
+          if (el && data[id]) el.value = data[id];
+        });
+        if (data._setor) { const el = document.getElementById('setor'); if (el) el.value = data._setor; }
+        if (data._checkPrazos) { const el = document.getElementById('checkPrazos'); if (el) el.checked = true; }
+        if (data._checkTutorial) { const el = document.getElementById('checkTutorial'); if (el) el.checked = true; }
+        if (data._natureza) {
+          formState.natureza = data._natureza;
+          selectNatureza(data._natureza);
+        }
+        if (data._maturidade) {
+          formState.maturidade = data._maturidade;
+          selectMaturidade(data._maturidade);
+        }
+        if (data._materiais) data._materiais.forEach(m => formState.materiais.add(m));
+        if (data._condMaterial) _pendingCondMaterial = data._condMaterial;
+      } catch {}
+    }
+
+    function restoreCondMaterialFields() {
+      let vals = null;
+      try {
+        const raw = sessionStorage.getItem(STORAGE_KEY);
+        if (raw) vals = JSON.parse(raw)._condMaterial || null;
+      } catch {}
+      if (!vals) vals = _pendingCondMaterial;
+      if (!vals) return;
+      COND_MATERIAL_FIELDS.forEach(id => {
+        if (vals[id]) { const el = document.getElementById(id); if (el) el.value = vals[id]; }
+      });
+      COND_MATERIAL_RADIOS.forEach(name => {
+        const val = vals['_r_' + name];
+        if (val) {
+          const radio = document.querySelector(`input[name="${name}"][value="${val}"]`);
+          if (radio) { radio.checked = true; radio.dispatchEvent(new Event('change')); }
+        }
+      });
+      if (Array.isArray(vals['_cb_captacao'])) {
+        vals['_cb_captacao'].forEach(v => {
+          const cb = document.querySelector(`input[name="captacao"][value="${v}"]`);
+          if (cb) cb.checked = true;
+        });
+      }
+    }
+
+    function clearFormStorage() {
+      try { sessionStorage.removeItem(STORAGE_KEY); } catch {}
+    }
+
+    const CAMPOS_ETAPA2_FORM2 = [
+      { id: "nome-evento", label: "Nome do evento" },
+      { id: "data-evento", label: "Data do evento" },
+      { id: "horario", label: "Horário do evento" },
+      { id: "descricao", label: "Descrição do evento" },
+      { id: "origem", label: "Origem do evento" },
+      { id: "tipo-evento", label: "Tipo de evento" },
+      { id: "publico", label: "Público do evento" },
+      { id: "estado-cidade", label: "Estado e Cidade" },
+      { id: "local", label: "Local do evento" },
+      { id: "convidados", label: "Número de convidados" },
+    ];
+
+    const CAMPOS_ETAPA2_FORM2_ONLINE = [
+      { id: "titulo-evento", label: "Título do evento" },
+      { id: "descricao", label: "Descrição do evento" },
+      { id: "publico", label: "Público do evento" },
+      { id: "objetivos", label: "Objetivos de retorno" },
+      { id: "canal", label: "Canal de transmissão" },
+      { id: "link-transmissao", label: "Link da transmissão" },
+      { id: "origem", label: "Origem do evento" },
+      { id: "data-evento", label: "Data do evento" },
+      { id: "horario", label: "Horário do evento" },
+    ];
+
+    function init() {
+      FormCore.initForm({
+        tipo: 'eventos',
+        redirectPath: '/form-eventos.html',
+        activeRoute: 'nova-solicitacao',
+        onReady: function () {
+          document.querySelectorAll('[data-email-upload]').forEach(el => { el.textContent = EMAIL_UPLOAD; });
+          document.getElementById('tutorialLink').href = URL_TUTORIAL_TRANSMISSAO;
+
+          const ratSel = document.getElementById('rateio');
+          OPCOES_RATEIO.forEach(r => { const o = document.createElement('option'); o.value = r; o.textContent = r; ratSel.appendChild(o); });
+
+          restoreFormState();
+
+          document.getElementById('setor')?.addEventListener('change', () => { validateStep1(); saveFormState(); });
+          document.getElementById('checkPrazos').addEventListener('change', () => { validateStep1(); saveFormState(); });
+          document.getElementById('checkTutorial')?.addEventListener('change', () => { validateStep1(); saveFormState(); });
+
+          ['logoFile','demaisFile'].forEach(id => { FileUpload.bind(id, id.replace('File','FileName')); });
+          FileUpload.bind('imgFile', 'imgFileName', { maxMB: 50 });
+
+          const dataInput = document.getElementById('dataEvento');
+          if (dataInput) {
+            const hoje = new Date().toISOString().split('T')[0];
+            dataInput.min = hoje;
+            dataInput.addEventListener('change', function() {
+              const diasAte = Math.ceil((new Date(this.value) - new Date()) / (1000 * 60 * 60 * 24));
+              const avisoEl = document.getElementById('dataAvisoMinimo');
+              if (avisoEl) {
+                if (diasAte < 15) {
+                  avisoEl.textContent = '⚠️ Atenção: o prazo mínimo para organização é de 15 dias. Verifique se a data escolhida é viável.';
+                  avisoEl.style.display = 'block';
+                } else {
+                  avisoEl.style.display = 'none';
+                }
+              }
+            });
+          }
+
+          updatePreview('pvSolicitante', Auth.getUserName());
+          validateStep1();
+        }
+      });
+    }
+
+    function updatePreview(id, val) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.textContent = val || '—';
+      el.classList.toggle('empty', !val);
+    }
+
+    function selectNatureza(nat) {
+      formState.natureza = nat;
+      document.getElementById('cardPresencial').className = 'radio-card' + (nat === 'presencial' ? ' selected' : '');
+      document.getElementById('cardOnline').className = 'radio-card' + (nat === 'online' ? ' selected' : '');
+      document.getElementById('onlineTutorial').style.display = nat === 'online' ? 'block' : 'none';
+      document.getElementById('pvLocalRow').style.display = nat === 'presencial' ? 'flex' : 'none';
+      document.getElementById('pvCanalRow').style.display = nat === 'online' ? 'flex' : 'none';
+      if (nat === 'presencial') document.getElementById('checkTutorial').checked = false;
+      const _ft = document.getElementById('formTitulo');
+      if (_ft) _ft.textContent = 'Eventos — ' + (nat === 'presencial' ? 'Presencial' : 'Online');
+      validateStep1();
+    }
+
+    function validateStep1() {
+      const prazos = document.getElementById('checkPrazos').checked;
+      const nat = !!formState.natureza;
+      const setor = !!document.getElementById('setor')?.value;
+      let tutorial = true;
+      if (formState.natureza === 'online') tutorial = document.getElementById('checkTutorial').checked;
+      document.getElementById('btnNext1').disabled = !(prazos && nat && setor && tutorial);
+    }
+
+    function selectMaturidade(m) {
+      formState.maturidade = m;
+      [1,2,3].forEach(i => document.getElementById('mat' + i).className = 'radio-card' + (i === m ? ' selected' : ''));
+      renderMaturityFields();
+      document.getElementById('nav2').style.display = 'flex';
+    }
+
+    function renderMaturityFields() {
+      const container = document.getElementById('maturityFields');
+      const nat = formState.natureza;
+      const mat = formState.maturidade;
+      let html = '';
+
+      if (nat === 'presencial' && mat === 1) {
+        html = buildPresencial1Fields();
+      } else if (nat === 'presencial' && mat === 2) {
+        html = buildPresencial2Fields();
+      } else if (nat === 'presencial' && mat === 3) {
+        html = buildPresencial3Fields();
+      } else if (nat === 'online' && mat === 1) {
+        html = buildOnline1Fields();
+      } else if (nat === 'online' && mat === 2) {
+        html = buildOnline2Fields();
+      } else if (nat === 'online' && mat === 3) {
+        html = buildOnline3Fields();
+      }
+
+      container.innerHTML = html;
+      container.style.animation = 'fadeSlide 0.3s ease';
+      if (window.FormCore) FormCore.syncRequiredMarks(container);
+      setupDynamicListeners();
+    }
+
+    function buildPresencial1Fields() {
+      return `
+        <div class="field"><label>Nome do evento</label><input type="text" id="nomeEvento" placeholder="Nome do evento" oninput="updatePreview('pvEvento',this.value)" required></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div class="field"><label>Data do evento</label><input type="date" id="dataEvento" onchange="updatePreview('pvData',this.value)" required><div id="dataAvisoMinimo" class="field-error" style="display:none;color:var(--ruby-red);font-size:0.8rem;margin-top:4px"></div></div>
+          <div class="field"><label>Horário</label><input type="time" id="horario"></div>
+        </div>
+        <div class="field"><label>Horário de Brasília?</label><div class="radio-group" style="flex-direction:row;gap:16px"><label class="radio-option"><input type="radio" name="horBrasilia" value="sim"><span class="radio-custom"></span><span>Sim</span></label><label class="radio-option"><input type="radio" name="horBrasilia" value="nao"><span class="radio-custom"></span><span>Não</span></label></div></div>
+        <div class="field"><label>Breve descrição do evento</label><textarea id="descricao" placeholder="Ex.: evento voltado para relacionamento com clientes que se interessam por vinhos"></textarea><div class="field-hint">Fale sobre aspectos como organização e tópicos do conteúdo que será abordado.</div></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div class="field"><label>Origem do evento</label><select id="origem">${ORIGENS_EVENTO.map(o=>`<option>${o}</option>`).join('')}</select></div>
+          <div class="field"><label>Tipo de evento</label><select id="tipoEvento">${TIPOS_EVENTO.map(t=>`<option>${t}</option>`).join('')}</select></div>
+        </div>
+        <div class="field"><label>Público do evento</label><select id="publico"><option>Selecione</option><option>Fechado para convidados</option><option>Aberto ao público em geral</option></select></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div class="field"><label>Estado</label><select id="estado" onchange="loadCidades()"><option>Carregando...</option></select></div>
+          <div class="field"><label>Cidade</label><select id="cidade" disabled><option>Escolha o estado primeiro</option></select></div>
+        </div>
+        <div class="field"><label>Local do evento</label><select id="localEvento" onchange="handleLocal()"><option>Selecione</option><option value="unidade">Unidade SVN</option><option value="externo">Local externo</option><option value="nao-definido">Local ainda não definido</option></select></div>
+        <div id="localConditional"></div>
+        <div class="field"><label>Número de convidados</label><input type="number" id="convidados" min="1" placeholder="Contando com assessores e palestrantes"></div>
+      `;
+    }
+
+    function buildPresencial2Fields() {
+      const pills = CAMPOS_ETAPA2_FORM2.map(c => `<button class="pill" data-campo="${c.id}" onclick="toggleCampo('${c.id}','${c.label}')">${c.label}</button>`).join('');
+      return `
+        <div class="alert-card alert-info"><div class="alert-title">Opcional</div><div class="alert-text">Selecione os campos que você já tem informação para preencher.</div></div>
+        <div class="pills-wrap">${pills}</div>
+        <div id="camposDinamicos" style="margin-top:16px"></div>
+      `;
+    }
+
+    function buildPresencial3Fields() {
+      return `
+        <div class="field"><label>Descrição do evento</label><textarea id="descricao" placeholder="Descreva sua ideia para o evento..."></textarea></div>
+        <div class="field"><label>Tipo aproximado de evento</label>
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
+            ${TIPOS_EVENTO_FORM3.map(t => `<label class="radio-option" style="padding:8px 12px;border:1px solid var(--border-light);border-radius:var(--radius-md)"><input type="radio" name="tipoAprox" value="${t}"><span class="radio-custom"></span><span style="font-size:0.85rem">${t}</span></label>`).join('')}
+          </div>
+        </div>
+        <div class="field"><label>Ideia de quando realizar (opcional)</label><input type="text" id="ideaQuando" placeholder="Ex.: segundo semestre, próximo trimestre..."></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div class="field"><label>Estado (opcional)</label><select id="estado" onchange="loadCidades()"><option>Selecione</option></select></div>
+          <div class="field"><label>Cidade (opcional)</label><select id="cidade" disabled><option>Escolha o estado primeiro</option></select></div>
+        </div>
+        <div class="field"><label>Número esperado de convidados (opcional)</label><input type="number" id="convidados" min="1"></div>
+      `;
+    }
+
+    function buildOnline1Fields() {
+      return `
+        <div class="field"><label>Título do evento</label><input type="text" id="nomeEvento" placeholder="Título do evento" oninput="updatePreview('pvEvento',this.value)" required></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div class="field"><label>Data do evento</label><input type="date" id="dataEvento" onchange="updatePreview('pvData',this.value)" required><div id="dataAvisoMinimo" class="field-error" style="display:none;color:var(--ruby-red);font-size:0.8rem;margin-top:4px"></div></div>
+          <div class="field"><label>Horário</label><input type="time" id="horario"></div>
+        </div>
+        <div class="field"><label>Horário de Brasília?</label><div class="radio-group" style="flex-direction:row;gap:16px"><label class="radio-option"><input type="radio" name="horBrasilia" value="sim"><span class="radio-custom"></span><span>Sim</span></label><label class="radio-option"><input type="radio" name="horBrasilia" value="nao"><span class="radio-custom"></span><span>Não</span></label></div></div>
+        <div class="field"><label>Descrição</label><textarea id="descricao" placeholder="Descreva o evento..."></textarea></div>
+        <div class="field"><label>Público do evento</label><select id="publico"><option>Selecione</option><option>Fechado para convidados</option><option>Aberto ao público em geral</option></select></div>
+        <div class="field"><label>Objetivos de retorno</label><textarea id="objetivos" placeholder="Quais são os objetivos esperados com este evento?"></textarea></div>
+        <div class="field"><label>Canal de transmissão</label><select id="canal" onchange="handleCanal()">${CANAIS_TRANSMISSAO.map(c=>`<option>${c}</option>`).join('')}</select></div>
+        <div class="field" id="linkTransmissaoField"><label>Link da transmissão</label><input type="url" id="linkTransmissao" placeholder="https://..."><div id="canalAviso" class="alert-card alert-info" style="display:none;margin-top:8px"><div class="alert-text">O link pode ser informado posteriormente.</div></div></div>
+        <div class="field"><label>Origem do evento</label><select id="origem">${ORIGENS_EVENTO_ONLINE.map(o=>`<option>${o}</option>`).join('')}</select></div>
+      `;
+    }
+
+    function buildOnline2Fields() {
+      const pills = CAMPOS_ETAPA2_FORM2_ONLINE.map(c => `<button class="pill" data-campo="${c.id}" onclick="toggleCampo('${c.id}','${c.label}')">${c.label}</button>`).join('');
+      return `
+        <div class="alert-card alert-info"><div class="alert-title">Opcional</div><div class="alert-text">Selecione os campos que você já tem informação para preencher.</div></div>
+        <div class="pills-wrap">${pills}</div>
+        <div id="camposDinamicos" style="margin-top:16px"></div>
+      `;
+    }
+
+    function buildOnline3Fields() {
+      const tiposOnline = ['Webinar','Aula online','Reunião aberta','Transmissão de evento presencial','Workshop online','Painel de discussão','Outro'];
+      return `
+        <div class="field"><label>Descrição</label><textarea id="descricao" placeholder="Descreva sua ideia..."></textarea></div>
+        <div class="field"><label>Tipo online aproximado</label>
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
+            ${tiposOnline.map(t => `<label class="radio-option" style="padding:8px 12px;border:1px solid var(--border-light);border-radius:var(--radius-md)"><input type="radio" name="tipoAprox" value="${t}"><span class="radio-custom"></span><span style="font-size:0.85rem">${t}</span></label>`).join('')}
+          </div>
+        </div>
+        <div class="field"><label>Ideia de quando realizar (opcional)</label><input type="text" id="ideaQuando" placeholder="Ex.: próximo mês..."></div>
+        <div class="field"><label>Canal provável (opcional)</label><select id="canal">${CANAIS_TRANSMISSAO.map(c=>`<option>${c}</option>`).join('')}</select></div>
+        <div class="field"><label>Número esperado de participantes (opcional)</label><input type="number" id="convidados" min="1"></div>
+      `;
+    }
+
+    function setupDynamicListeners() {
+      const estadoEl = document.getElementById('estado');
+      if (estadoEl && estadoEl.options[0]?.text === 'Carregando...') loadEstados();
+      else if (estadoEl) {
+        estadoEl.innerHTML = '<option>Selecione</option>';
+        loadEstados();
+      }
+    }
+
+    async function loadEstados() {
+      const sel = document.getElementById('estado');
+      if (!sel) return;
+      try {
+        estados = await IBGELoader.loadEstados();
+        sel.innerHTML = '<option>Selecione</option>';
+        estados.forEach(e => { sel.innerHTML += `<option value="${e.id}">${e.sigla} — ${e.nome}</option>`; });
+        try {
+          const raw = sessionStorage.getItem(STORAGE_KEY);
+          if (raw) {
+            const saved = JSON.parse(raw);
+            if (saved._estado) {
+              sel.value = saved._estado;
+              if (sel.value) await loadCidades(saved._cidade);
+            }
+          }
+        } catch {}
+      } catch (e) {
+        console.error('IBGE error:', e);
+        sel.innerHTML = '<option value="">Erro ao carregar — clique para tentar novamente</option>';
+        sel.onclick = () => { sel.innerHTML = '<option>Carregando...</option>'; sel.onclick = null; sel.onchange = () => loadCidades(); loadEstados(); };
+      }
+    }
+
+    async function loadCidades(cidadeParaRestaurar) {
+      const estadoId = document.getElementById('estado').value;
+      const cidSel = document.getElementById('cidade');
+      if (!estadoId || estadoId === 'Selecione') { cidSel.disabled = true; cidSel.innerHTML = '<option>Escolha o estado primeiro</option>'; return; }
+      cidSel.innerHTML = '<option>Carregando...</option>';
+      try {
+        const cidades = await IBGELoader.loadCidades(estadoId);
+        cidSel.innerHTML = '<option>Selecione</option>';
+        cidades.forEach(c => { cidSel.innerHTML += `<option>${c.nome}</option>`; });
+        cidSel.disabled = false;
+        if (cidadeParaRestaurar) cidSel.value = cidadeParaRestaurar;
+      } catch (e) {
+        console.error(e);
+        cidSel.innerHTML = '<option value="">Erro ao carregar cidades</option>';
+        cidSel.disabled = false;
+      }
+    }
+
+    function handleLocal() {
+      const val = document.getElementById('localEvento').value;
+      const container = document.getElementById('localConditional');
+      if (val === 'unidade') {
+        container.innerHTML = `<div class="field"><label>Unidade SVN</label><select id="unidadeSVN" onchange="showUnidadeEndereco()"><option value="">Selecione</option>${UNIDADES_SVN.map(u => `<option value="${u.nome}">${u.nome}</option>`).join('')}</select></div><div id="unidadeEndereco"></div>`;
+        updatePreview('pvLocal', 'Unidade SVN');
+      } else if (val === 'externo') {
+        container.innerHTML = `<div class="field"><label>Nome do local</label><input type="text" id="localNome" oninput="updatePreview('pvLocal',this.value)"></div><div class="field"><label>Endereço</label><input type="text" id="localEndereco"></div>`;
+        updatePreview('pvLocal', 'Local externo');
+      } else if (val === 'nao-definido') {
+        container.innerHTML = `<div class="field"><label>Aponte suas ideias e sugestões (opcional)</label><textarea id="localSugestoes"></textarea></div>`;
+        updatePreview('pvLocal', 'Não definido');
+      } else { container.innerHTML = ''; updatePreview('pvLocal', ''); }
+    }
+
+    function showUnidadeEndereco() {
+      const nome = document.getElementById('unidadeSVN').value;
+      const u = UNIDADES_SVN.find(x => x.nome === nome);
+      document.getElementById('unidadeEndereco').innerHTML = u ? `<div class="address-pill"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--ruby-red)" stroke-width="1.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>${u.endereco}</div>` : '';
+      updatePreview('pvLocal', nome);
+    }
+
+    function handleCanal() {
+      const canal = document.getElementById('canal')?.value;
+      updatePreview('pvCanal', canal);
+      const aviso = document.getElementById('canalAviso');
+      if (aviso) aviso.style.display = CANAIS_SEM_LINK_OBRIGATORIO.includes(canal) ? 'block' : 'none';
+    }
+
+    const activeCampos = new Set();
+    function toggleCampo(id, label) {
+      const pills = document.querySelectorAll(`[data-campo="${id}"]`);
+      if (activeCampos.has(id)) {
+        activeCampos.delete(id);
+        pills.forEach(p => p.classList.remove('selected'));
+      } else {
+        activeCampos.add(id);
+        pills.forEach(p => p.classList.add('selected'));
+      }
+      renderDynamicCampos();
+    }
+
+    function renderDynamicCampos() {
+      const container = document.getElementById('camposDinamicos');
+      if (!container) return;
+      const allCampos = formState.natureza === 'online' ? CAMPOS_ETAPA2_FORM2_ONLINE : CAMPOS_ETAPA2_FORM2;
+      let html = '';
+      allCampos.forEach(c => {
+        if (!activeCampos.has(c.id)) return;
+        html += buildCampoField(c);
+      });
+      container.innerHTML = html;
+      if (window.FormCore) FormCore.syncRequiredMarks(container);
+      setupDynamicListeners();
+    }
+
+    function buildCampoField(campo) {
+      switch(campo.id) {
+        case 'nome-evento': case 'titulo-evento': return `<div class="field"><label>${campo.label}</label><input type="text" id="nomeEvento" oninput="updatePreview('pvEvento',this.value)" required></div>`;
+        case 'data-evento': return `<div class="field"><label>${campo.label}</label><input type="date" id="dataEvento" onchange="updatePreview('pvData',this.value)" required></div>`;
+        case 'horario': return `<div class="field"><label>${campo.label}</label><input type="time" id="horario"></div>`;
+        case 'descricao': return `<div class="field"><label>${campo.label}</label><textarea id="descricao"></textarea></div>`;
+        case 'origem': return `<div class="field"><label>${campo.label}</label><select id="origem">${(formState.natureza==='online'?ORIGENS_EVENTO_ONLINE:ORIGENS_EVENTO).map(o=>`<option>${o}</option>`).join('')}</select></div>`;
+        case 'tipo-evento': return `<div class="field"><label>${campo.label}</label><select id="tipoEvento">${TIPOS_EVENTO.map(t=>`<option>${t}</option>`).join('')}</select></div>`;
+        case 'publico': return `<div class="field"><label>${campo.label}</label><select id="publico"><option>Selecione</option><option>Fechado para convidados</option><option>Aberto ao público em geral</option></select></div>`;
+        case 'estado-cidade': return `<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px"><div class="field"><label>Estado</label><select id="estado" onchange="loadCidades()"><option>Carregando...</option></select></div><div class="field"><label>Cidade</label><select id="cidade" disabled><option>Escolha o estado primeiro</option></select></div></div>`;
+        case 'local': return `<div class="field"><label>${campo.label}</label><select id="localEvento" onchange="handleLocal()"><option>Selecione</option><option value="unidade">Unidade SVN</option><option value="externo">Local externo</option><option value="nao-definido">Não definido</option></select></div><div id="localConditional"></div>`;
+        case 'convidados': return `<div class="field"><label>${campo.label}</label><input type="number" id="convidados" min="1"></div>`;
+        case 'objetivos': return `<div class="field"><label>${campo.label}</label><textarea id="objetivos"></textarea></div>`;
+        case 'canal': return `<div class="field"><label>${campo.label}</label><select id="canal" onchange="handleCanal()">${CANAIS_TRANSMISSAO.map(c=>`<option>${c}</option>`).join('')}</select></div>`;
+        case 'link-transmissao': return `<div class="field"><label>${campo.label}</label><input type="url" id="linkTransmissao"></div>`;
+        default: return `<div class="field"><label>${campo.label}</label><input type="text" id="${campo.id}"></div>`;
+      }
+    }
+
+    function goStep(step) {
+      saveFormState();
+      const currentStep = document.querySelector('.form-step.active');
+      if (currentStep) {
+        currentStep.classList.add('leaving');
+        setTimeout(() => {
+          currentStep.classList.remove('active', 'leaving');
+          activateStep(step);
+        }, 180);
+      } else {
+        activateStep(step);
+      }
+    }
+
+    function activateStep(step) {
+      document.getElementById('step' + step).classList.add('active');
+      const steps = getStepCount();
+      document.getElementById('progressBar').style.width = (step / steps * 100) + '%';
+      document.getElementById('stepLabel').textContent = `Etapa ${step} de ${steps}`;
+      if (step === 3) {
+        renderMateriais();
+        formState.materiais.forEach(id => {
+          const condBlock = document.getElementById('cond-' + id);
+          if (condBlock) condBlock.classList.add('open');
+        });
+        bindCondUploadHandlers();
+        restoreCondMaterialFields();
+      }
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function getNextStepFrom4() {
+      return formState.natureza === 'presencial' && formState.maturidade !== 3 ? 5 : 6;
+    }
+
+    function getPrevStepFrom6() {
+      return formState.natureza === 'presencial' && formState.maturidade !== 3 ? 5 : 4;
+    }
+
+    function getStepCount() {
+      return 6;
+    }
+
+    function bindCondUploadHandlers() {
+      if (document.getElementById('matEmailBase')) {
+        FileUpload.bind('matEmailBase', 'matEmailBaseName', { accept: '.xlsx,.csv,.xls' });
+      }
+    }
+
+    function renderMateriais() {
+      const items = formState.natureza === 'online' ? ITENS_MATERIAIS_ONLINE : ITENS_MATERIAIS;
+      const container = document.getElementById('materiaisContainer');
+      container.innerHTML = items.map(item => `
+        <div class="material-block">
+          <button class="pill ${formState.materiais.has(item.id)?'selected':''}" data-material="${item.id}" onclick="toggleMaterial('${item.id}')">
+            ${item.label}
+          </button>
+          <div class="conditional-fields ${formState.materiais.has(item.id)?'open':''}" id="cond-${item.id}">
+            ${getMaterialConditional(item.id)}
+          </div>
+          <hr class="block-divider">
+        </div>
+      `).join('');
+      updateMateriaisPreview();
+    }
+
+    function toggleMaterial(id) {
+      const removing = formState.materiais.has(id);
+      if (removing) {
+        formState.materiais.delete(id);
+      } else {
+        formState.materiais.add(id);
+      }
+
+      const btn = document.querySelector(`[data-material="${id}"]`);
+      if (btn) btn.classList.toggle('selected', !removing);
+
+      const condBlock = document.getElementById('cond-' + id);
+      if (condBlock) {
+        if (removing) {
+          condBlock.classList.remove('open');
+          condBlock.querySelectorAll('input:not([type="file"]), textarea, select').forEach(el => {
+            if (el.type === 'radio' || el.type === 'checkbox') el.checked = false;
+            else el.value = '';
+          });
+        } else {
+          condBlock.classList.add('open');
+        }
+      }
+
+      updateMateriaisPreview();
+    }
+
+    function getMaterialConditional(id) {
+      switch(id) {
+        case 'pacote-padrao': case 'pacote-padrao-online':
+          return `<div style="margin-top:8px"><button class="btn btn-secondary" style="font-size:0.8rem" onclick="openPacoteModal()">Ver prévia do material</button></div>`;
+        case 'pacote-personalizado': case 'pacote-personalizado-online':
+          return `
+            <div style="margin-top:12px">
+              <div class="field">
+                <label>O que personalizar no convite?</label>
+                <input type="text" id="matPersonConvite" placeholder="Ex.: usar imagem de fundo relacionada ao setor agro">
+              </div>
+              <div class="field">
+                <label>O que incluir na página de inscrição?</label>
+                <input type="text" id="matPersonPagina" placeholder="Ex.: adicionar bio do assessor">
+              </div>
+            </div>`;
+        case 'banner-impresso':
+          return `
+            <div style="margin-top:12px">
+              <div class="field">
+                <label>Tamanho do banner</label>
+                <input type="text" id="matBannerTam" placeholder="Ex.: 60×90cm, 80×120cm">
+              </div>
+              <div class="field">
+                <label>O que incluir no banner?</label>
+                <input type="text" id="matBannerConteudo" placeholder="Ex.: números institucionais, descrição de um produto...">
+              </div>
+            </div>`;
+        case 'flyer':
+          return `
+            <div style="margin-top:12px">
+              <div class="field">
+                <label>Tipo de flyer</label>
+                <div class="radio-group">
+                  <label class="radio-option">
+                    <input type="radio" name="flyerTipo" value="institucional" onchange="handleFlyerTipo()">
+                    <span class="radio-custom"></span><span>Institucional Padrão (A5)</span>
+                  </label>
+                  <label class="radio-option">
+                    <input type="radio" name="flyerTipo" value="personalizado" onchange="handleFlyerTipo()">
+                    <span class="radio-custom"></span><span>Personalizado</span>
+                  </label>
+                </div>
+              </div>
+              <div id="flyerPersonalizadoFields" style="display:none">
+                <div class="field">
+                  <label>Tamanho do flyer</label>
+                  <input type="text" id="matFlyerTam" placeholder="Ex.: A5, A4...">
+                </div>
+                <div class="field">
+                  <label>Conteúdo do flyer</label>
+                  <input type="text" id="matFlyerConteudo" placeholder="Ex.: gostaria de falar sobre um serviço específico">
+                </div>
+              </div>
+            </div>`;
+        case 'brindes-store':
+          return `<div style="margin-top:8px"><a href="${URL_STORE}" target="_blank" class="btn btn-secondary" style="font-size:0.8rem">Ir para a Store</a></div>`;
+        case 'brindes-personalizados':
+          return `
+            <div style="margin-top:12px">
+              <div class="field">
+                <label>Descreva o brinde personalizado</label>
+                <textarea id="matBrindeDesc" placeholder="Descreva o brinde que deseja..."></textarea>
+              </div>
+            </div>`;
+        case 'captacao-audiovisual':
+          return `<div class="field" style="margin-top:8px"><div class="checkbox-group"><label class="checkbox-option"><input type="checkbox" name="captacao" value="fotos"><span class="checkbox-custom"></span><span>Sessão de fotos</span></label><label class="checkbox-option"><input type="checkbox" name="captacao" value="video"><span class="checkbox-custom"></span><span>Gravação de vídeo</span></label></div></div>`;
+        case 'instagram': case 'instagram-online':
+          return `
+            <div style="margin-top:12px">
+              <div class="field">
+                <label>Forma de divulgação</label>
+                <div class="radio-group">
+                  <label class="radio-option"><input type="radio" name="igTipo" value="menção"><span class="radio-custom"></span><span>Menção</span></label>
+                  <label class="radio-option"><input type="radio" name="igTipo" value="colab"><span class="radio-custom"></span><span>Colab</span></label>
+                </div>
+              </div>
+              <div class="field">
+                <label>Perfil do Instagram</label>
+                <input type="text" id="matIgArroba" placeholder="@perfil">
+              </div>
+            </div>`;
+        case 'email-marketing': case 'email-marketing-online':
+          return `
+            <div style="margin-top:12px">
+              <div class="field">
+                <label>Conteúdo do e-mail</label>
+                <input type="text" id="matEmailConteudo" placeholder="Descreva o conteúdo que deseja incluir no e-mail">
+              </div>
+              <div class="field">
+                <label>Base para disparo (opcional)</label>
+                <div class="file-input-wrapper">
+                  <label class="file-input-btn" for="matEmailBase">Escolher arquivo (.xlsx, .csv)</label>
+                  <input type="file" id="matEmailBase" accept=".xlsx,.csv,.xls">
+                  <div class="file-name" id="matEmailBaseName"></div>
+                </div>
+              </div>
+            </div>`;
+        case 'apoio-live-online':
+          return `
+            <div style="margin-top:12px">
+              <div class="field">
+                <label>Tipo de apoio necessário</label>
+                <textarea id="matApoioDesc" placeholder="Ex.: moderação do chat, suporte técnico, apresentação dos slides..."></textarea>
+              </div>
+            </div>`;
+        case 'pagina-sorteio':
+          return `
+            <div style="margin-top:12px">
+              <div class="field">
+                <label>O prêmio já foi definido?</label>
+                <div class="radio-group">
+                  <label class="radio-option">
+                    <input type="radio" name="sorteio1" value="sim" onchange="handleSorteioPremioDefined(true)">
+                    <span class="radio-custom"></span><span>Sim</span>
+                  </label>
+                  <label class="radio-option">
+                    <input type="radio" name="sorteio1" value="nao" onchange="handleSorteioPremioDefined(false)">
+                    <span class="radio-custom"></span><span>Não</span>
+                  </label>
+                </div>
+              </div>
+              <div id="sorteioDescField" style="display:none">
+                <div class="field">
+                  <label>Descreva o prêmio</label>
+                  <input type="text" id="matSorteioDesc" placeholder="Ex.: kit de vinhos, jantar para dois...">
+                </div>
+              </div>
+            </div>`;
+        case 'projeto-stand':
+          return `
+            <div style="margin-top:12px">
+              <div class="field">
+                <label>Materiais necessários para o stand</label>
+                <input type="text" id="matStandMat" placeholder="Ex.: testeira, banner balcão, adesivo de fundo...">
+              </div>
+            </div>`;
+        default: return '';
+      }
+    }
+
+    function handleFlyerTipo() {
+      const tipo = document.querySelector('input[name="flyerTipo"]:checked')?.value;
+      const fields = document.getElementById('flyerPersonalizadoFields');
+      if (fields) fields.style.display = tipo === 'personalizado' ? 'block' : 'none';
+    }
+
+    function handleSorteioPremioDefined(defined) {
+      const field = document.getElementById('sorteioDescField');
+      if (field) field.style.display = defined ? 'block' : 'none';
+    }
+
+    function validateStep2() {
+      const mat = formState.maturidade;
+      if (!mat) {
+        const cards = document.querySelectorAll('#step2 .radio-card');
+        cards.forEach(c => c.style.outline = '2px solid var(--ruby-red)');
+        setTimeout(() => cards.forEach(c => c.style.outline = ''), 1200);
+        return false;
+      }
+
+      document.querySelectorAll('#maturityFields .field-invalid').forEach(el => el.classList.remove('field-invalid'));
+      const errors = [];
+
+      function markInvalid(fieldEl) {
+        if (!fieldEl) return;
+        fieldEl.classList.add('field-invalid');
+        errors.push(fieldEl);
+      }
+
+      function isFieldVisible(el) {
+        let cur = el;
+        while (cur && cur !== document.body) {
+          const style = window.getComputedStyle(cur);
+          if (style.display === 'none' || style.visibility === 'hidden') return false;
+          cur = cur.parentElement;
+        }
+        return true;
+      }
+
+      function checkField(inputEl) {
+        if (!inputEl) return;
+        const fieldEl = inputEl.closest('.field');
+        if (!fieldEl) return;
+        const label = fieldEl.querySelector('label');
+        if (label && label.textContent.toLowerCase().includes('opcional')) return;
+        let empty = false;
+        if (inputEl.type === 'radio') {
+          if (inputEl !== [...document.querySelectorAll(`input[name="${inputEl.name}"]`)][0]) return;
+          empty = !document.querySelector(`input[name="${inputEl.name}"]:checked`);
+        } else if (inputEl.tagName === 'SELECT') {
+          empty = !inputEl.value || /^selecione/i.test(inputEl.value) || /^carregando/i.test(inputEl.value);
+        } else {
+          empty = !inputEl.value.trim();
+        }
+        if (empty) markInvalid(fieldEl);
+      }
+
+      if (mat === 1) {
+        const container = document.getElementById('maturityFields');
+        if (container) {
+          container.querySelectorAll('input:not([type="file"]), select, textarea').forEach(input => {
+            if (input.id === 'cidade' && input.disabled) return;
+            if (!isFieldVisible(input)) return;
+            checkField(input);
+          });
+        }
+      } else if (mat === 2) {
+        const camposDinamicos = document.getElementById('camposDinamicos');
+        if (camposDinamicos) {
+          camposDinamicos.querySelectorAll('input:not([type="file"]), select, textarea').forEach(input => {
+            if (input.id === 'cidade' && input.disabled) return;
+            if (!isFieldVisible(input)) return;
+            checkField(input);
+          });
+        }
+      } else if (mat === 3) {
+        const descEl = document.getElementById('descricao');
+        if (descEl) {
+          const fieldEl = descEl.closest('.field');
+          if (!descEl.value.trim() && fieldEl) markInvalid(fieldEl);
+        }
+        const tipoRadios = document.querySelectorAll('input[name="tipoAprox"]');
+        if (tipoRadios.length > 0 && !document.querySelector('input[name="tipoAprox"]:checked')) {
+          markInvalid(tipoRadios[0].closest('.field'));
+        }
+      }
+
+      if (errors.length > 0) {
+        errors[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+        return false;
+      }
+      return true;
+    }
+
+    function validateMateriais() {
+      if (formState.materiais.size === 0) {
+        document.getElementById('materiaisError').classList.add('visible');
+        return false;
+      }
+      document.getElementById('materiaisError').classList.remove('visible');
+
+      document.querySelectorAll('#materiaisCondFields .field-invalid, #materiaisContainer .field-invalid').forEach(el => el.classList.remove('field-invalid'));
+      const errors = [];
+
+      function checkCondField(inputEl) {
+        if (!inputEl) return;
+        const fieldEl = inputEl.closest('.field');
+        if (!fieldEl) return;
+        const label = fieldEl.querySelector('label');
+        if (label && label.textContent.toLowerCase().includes('opcional')) return;
+        let empty = false;
+        if (inputEl.type === 'file') return;
+        if (inputEl.type === 'radio') {
+          if (inputEl !== [...document.querySelectorAll(`input[name="${inputEl.name}"]`)][0]) return;
+          empty = !document.querySelector(`input[name="${inputEl.name}"]:checked`);
+        } else if (inputEl.tagName === 'SELECT') {
+          empty = !inputEl.value || /^selecione/i.test(inputEl.value);
+        } else {
+          empty = !inputEl.value.trim();
+        }
+        if (empty) {
+          fieldEl.classList.add('field-invalid');
+          errors.push(fieldEl);
+        }
+      }
+
+      document.querySelectorAll('.conditional-fields.open').forEach(condBlock => {
+        condBlock.querySelectorAll('input:not([type="file"]), select, textarea').forEach(input => {
+          const hiddenParent = input.closest('[style*="display:none"], [style*="display: none"]');
+          if (hiddenParent) return;
+          checkCondField(input);
+        });
+      });
+
+      if (errors.length > 0) {
+        errors[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+        return false;
+      }
+      return true;
+    }
+
+    function updateMateriaisPreview() {
+      const container = document.getElementById('pvItens');
+      const items = formState.natureza === 'online' ? ITENS_MATERIAIS_ONLINE : ITENS_MATERIAIS;
+
+      const ICONS = {
+        'pacote-padrao': `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>`,
+        'pacote-personalizado': `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>`,
+        'banner-impresso': `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>`,
+        'flyer': `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>`,
+        'brindes-store': `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 010-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 000-5C13 2 12 7 12 7z"/></svg>`,
+        'brindes-personalizados': `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 010-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 000-5C13 2 12 7 12 7z"/></svg>`,
+        'captacao-audiovisual': `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>`,
+        'coffee-break': `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M18 8h1a4 4 0 010 8h-1"/><path d="M2 8h16v9a4 4 0 01-4 4H6a4 4 0 01-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>`,
+        'instagram': `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>`,
+        'email-marketing': `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>`,
+        'equipe-staff': `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>`,
+        'jantar-almoco': `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="18" y1="2" x2="18" y2="22"/><path d="M14 6c0 2.21 1.79 4 4 4s4-1.79 4-4V2H14v4z"/><path d="M6 2v6c0 2.21-1.79 4-4 4v8a2 2 0 004 0V2"/></svg>`,
+        'pagina-sorteio': `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`,
+        'projeto-stand': `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>`,
+        'pacote-padrao-online': `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>`,
+        'pacote-personalizado-online': `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>`,
+        'instagram-online': `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>`,
+        'link-youtube-online': `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8" fill="currentColor" stroke="none"/></svg>`,
+        'apoio-live-online': `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 18v-6a9 9 0 0118 0v6"/><path d="M21 19a2 2 0 01-2 2h-1a2 2 0 01-2-2v-3a2 2 0 012-2h3zM3 19a2 2 0 002 2h1a2 2 0 002-2v-3a2 2 0 00-2-2H3z"/></svg>`,
+        'email-marketing-online': `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>`,
+      };
+
+      container.innerHTML = [...formState.materiais].map(id => {
+        const item = items.find(i => i.id === id);
+        const prazo = PRAZOS_MATERIAIS[id];
+        const icon = ICONS[id] || '';
+        if (!item) return '';
+        return `<div style="background:var(--icon-bg);border-radius:var(--radius-md);padding:8px 10px;font-size:0.75rem;font-weight:600;display:flex;align-items:flex-start;gap:6px;margin-bottom:4px">
+          <span style="color:var(--ruby-red);flex-shrink:0;line-height:1.4;margin-top:1px">${icon}</span>
+          <div style="min-width:0">
+            <div style="line-height:1.4">${item.label}</div>
+            ${prazo ? `<div style="font-size:0.65rem;color:var(--ruby-red);opacity:0.8;margin-top:2px">${prazo.label}</div>` : ''}
+          </div>
+        </div>`;
+      }).join('');
+    }
+
+    function validateStep4() {
+      document.querySelectorAll('#step4 .field-invalid').forEach(el => el.classList.remove('field-invalid'));
+      const errors = [];
+
+      function markField(el) {
+        if (!el) return;
+        const fieldEl = el.closest ? (el.closest('.field') || el) : el;
+        fieldEl.classList.add('field-invalid');
+        errors.push(fieldEl);
+      }
+
+      const temPalestrante = document.querySelector('input[name="temPalestrante"]:checked');
+      if (!temPalestrante) {
+        markField(document.querySelector('input[name="temPalestrante"]'));
+        if (errors.length > 0) errors[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+        return false;
+      }
+
+      if (temPalestrante.value === 'sim') {
+        const qtd = document.querySelector('input[name="qtdPalestrante"]:checked');
+        if (!qtd) {
+          markField(document.querySelector('input[name="qtdPalestrante"]'));
+          if (errors.length > 0) errors[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+          return false;
+        }
+
+        const n = parseInt(qtd.value);
+        for (let i = 1; i <= n; i++) {
+          const palSvn = document.querySelector(`input[name="palSvn${i}"]:checked`);
+          if (!palSvn) {
+            markField(document.querySelector(`input[name="palSvn${i}"]`));
+            continue;
+          }
+          if (palSvn.value === 'sim') {
+            const nome = document.getElementById('palNome' + i);
+            const cargo = document.getElementById('palCargo' + i);
+            if (nome && !nome.value.trim()) markField(nome);
+            if (cargo && !cargo.value.trim()) markField(cargo);
+          }
+        }
+      }
+
+      if (errors.length > 0) {
+        errors[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+        return false;
+      }
+      return true;
+    }
+
+    function validateStep5() {
+      const custo = document.getElementById('custoEstimado')?.value.trim();
+      if (!custo || custo === 'R$ 0,00') {
+        const field = document.querySelector('#step5 .field');
+        if (field) {
+          field.classList.add('field-invalid');
+          setTimeout(() => field.classList.remove('field-invalid'), 600);
+        }
+        return false;
+      }
+      const rateioField = document.getElementById('rateioField');
+      if (rateioField && rateioField.style.display !== 'none') {
+        const rateioVal = document.getElementById('rateio').value;
+        if (!rateioVal || rateioVal === OPCOES_RATEIO[0]) {
+          const field = document.querySelector('#rateioField .field');
+          if (field) { field.classList.add('field-invalid'); setTimeout(() => field.classList.remove('field-invalid'), 600); }
+          return false;
+        }
+      }
+      return true;
+    }
+
+    function handlePalestrante(has) {
+      document.getElementById('palestranteQtd').style.display = has ? 'block' : 'none';
+      if (!has) { document.getElementById('palestranteBlocos').innerHTML = ''; updatePreview('pvPalestrantes', 'Sem palestrantes'); }
+    }
+
+    function renderPalestrantes(n) {
+      const container = document.getElementById('palestranteBlocos');
+      const _snap = {};
+      for (let i = 1; i <= 4; i++) {
+        const svn = document.querySelector(`input[name="palSvn${i}"]:checked`)?.value;
+        const nome = document.getElementById('palNome' + i)?.value;
+        const cargo = document.getElementById('palCargo' + i)?.value;
+        if (svn || nome || cargo) _snap[i] = { svn: svn || '', nome: nome || '', cargo: cargo || '' };
+      }
+      let html = '';
+      for (let i = 1; i <= n; i++) {
+        html += `
+          <div style="margin-top:16px;animation:fadeSlide 0.3s ease ${i*0.08}s both">
+            <hr class="block-divider"><h3 style="font-weight:600;font-size:0.95rem;margin-bottom:12px">Palestrante ${i}</h3>
+            <div class="field"><label>O palestrante ${i} é colaborador da SVN?</label>
+              <div class="radio-group"><label class="radio-option"><input type="radio" name="palSvn${i}" value="sim" onchange="showPalFields(${i},true)"><span class="radio-custom"></span><span>Sim</span></label><label class="radio-option"><input type="radio" name="palSvn${i}" value="nao" onchange="showPalFields(${i},false)"><span class="radio-custom"></span><span>Não</span></label></div>
+            </div>
+            <div id="palFields${i}"></div>
+          </div>
+        `;
+      }
+      container.innerHTML = html;
+      for (let i = 1; i <= n; i++) {
+        const d = _snap[i];
+        if (!d || !d.svn) continue;
+        const radio = document.querySelector(`input[name="palSvn${i}"][value="${d.svn}"]`);
+        if (radio) radio.checked = true;
+        showPalFields(i, d.svn === 'sim');
+        if (d.svn === 'sim') {
+          const nomeEl = document.getElementById('palNome' + i); if (nomeEl) nomeEl.value = d.nome;
+          const cargoEl = document.getElementById('palCargo' + i); if (cargoEl) cargoEl.value = d.cargo;
+          updatePalPreview(i);
+        }
+      }
+      updatePreview('pvPalestrantes', n + ' palestrante(s)');
+    }
+
+    function showPalFields(i, isSvn) {
+      const container = document.getElementById('palFields' + i);
+      if (isSvn) {
+        container.innerHTML = `
+          <div class="field"><label>Nome do palestrante ${i}</label><input type="text" id="palNome${i}" oninput="updatePalPreview(${i})"></div>
+          <div class="field"><label>Cargo do palestrante ${i}</label><input type="text" id="palCargo${i}" oninput="updatePalPreview(${i})"></div>
+          <div class="field">
+            <label>Foto (opcional)</label>
+            <div class="file-input-wrapper">
+              <label class="file-input-btn" for="palFoto${i}">Escolher foto</label>
+              <input type="file" id="palFoto${i}" accept=".jpg,.jpeg,.png,.webp">
+            </div>
+            <div class="file-name" id="palFotoStatus${i}"></div>
+            <div class="field-hint">Caso não consiga, envie para: ${EMAIL_UPLOAD}</div>
+          </div>
+          <div id="palPreview${i}"></div>
+        `;
+
+        FileUpload.bind('palFoto' + i, 'palFotoStatus' + i, {
+          accept: '.jpg,.jpeg,.png,.webp',
+          maxMB: 50,
+          onChange: function(file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+              updatePalPreview(i);
+              const avatarEl = document.querySelector('#palPreview' + i + ' .speaker-avatar');
+              if (avatarEl) {
+                avatarEl.innerHTML = `<img src="${e.target.result}" alt="foto" style="width:100%;height:100%;object-fit:cover;border-radius:var(--radius-round)">`;
+              }
+            };
+            reader.readAsDataURL(file);
+          }
+        });
+      } else {
+        container.innerHTML = `<div class="alert-card alert-danger"><div class="alert-title">Atenção</div><div class="alert-text">Será enviado por e-mail um link para o cadastro do palestrante. Esse passo é obrigatório para o andamento do evento.</div></div>`;
+      }
+    }
+
+    function updatePalPreview(i) {
+      const nome = document.getElementById('palNome' + i)?.value || '';
+      const cargo = document.getElementById('palCargo' + i)?.value || '';
+      const container = document.getElementById('palPreview' + i);
+      if (!container || (!nome && !cargo)) { if (container) container.innerHTML = ''; return; }
+      const initials = nome.split(' ').filter(Boolean).map(w => w[0]).join('').substring(0, 2).toUpperCase();
+      container.innerHTML = `<div class="speaker-preview"><div class="speaker-avatar">${initials || '?'}</div><div class="speaker-info"><div class="speaker-name">${nome}</div><div class="speaker-cargo">${cargo}</div></div><span class="badge-svn">SVN</span></div>`;
+    }
+
+    function handleCusto() {
+      const val = document.getElementById('custoEstimado').value.replace(/\D/g, '');
+      const num = parseInt(val) || 0;
+      const formatted = (num / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+      document.getElementById('custoEstimado').value = formatted;
+      document.getElementById('rateioField').style.display = num > 0 ? 'block' : 'none';
+      updatePreview('pvCusto', formatted);
+    }
+
+    function openOrientationModal() { document.getElementById('orientModal').classList.add('visible'); }
+    function closeOrientationModal(e) { if (!e || e.target === document.getElementById('orientModal')) document.getElementById('orientModal').classList.remove('visible'); }
+    function openPacoteModal() {
+      const imgs = document.getElementById('pacoteImgs');
+      if (!imgs.hasChildNodes()) {
+        const pacoteItems = [
+          { url: 'https://pub-a2132f9b61f940659cc98265acfcf64c.r2.dev/Convite.png', titulo: 'Modelo padrão de convite' },
+          { url: 'https://pub-a2132f9b61f940659cc98265acfcf64c.r2.dev/tela1.png', titulo: 'Modelo padrão de LP' },
+        ];
+        imgs.innerHTML = pacoteItems.map(item => `
+          <div style="flex:1;min-width:200px;max-width:320px">
+            <p style="font-size:0.8rem;font-weight:600;color:var(--carbon-black);opacity:0.6;margin-bottom:8px;text-align:center">${item.titulo}</p>
+            <img src="${item.url}"
+                 style="width:100%;height:auto;border-radius:var(--radius-md);object-fit:contain;display:block"
+                 onerror="this.parentElement.innerHTML='<p style=\\'opacity:0.4;font-size:0.8rem;text-align:center;padding:20px\\'>Imagem não disponível</p>'">
+          </div>
+        `).join('');
+      }
+      document.getElementById('pacoteModal').classList.add('visible');
+    }
+    function closePacoteModal(e) { if (!e || e.target === document.getElementById('pacoteModal')) document.getElementById('pacoteModal').classList.remove('visible'); }
+
+    // Validação delegada ao core: escopo = step ativo. O core já pula
+    // .conditional-fields fechado e trata checkbox/radio obrigatório.
+    function validateRequiredFields() {
+      return FormCore.validateRequired(null, document.querySelector('.form-step.active'));
+    }
+
+    async function submitForm() {
+      if (!validateRequiredFields()) return;
+      const btn = document.getElementById('btnSubmit');
+      btn.disabled = true; if(window.formLockUI)window.formLockUI(btn);
+      const loadingMessages = ['Enviando...', 'Processando arquivos...', 'Registrando solicitação...', 'Quase pronto...'];
+      let msgIdx = 0;
+      btn.textContent = loadingMessages[0];
+      const msgInterval = setInterval(() => {
+        msgIdx = Math.min(msgIdx + 1, loadingMessages.length - 1);
+        if (!btn.disabled) { clearInterval(msgInterval); return; }
+        btn.textContent = loadingMessages[msgIdx];
+      }, 3000);
+
+      const dados = {
+        nome:           Auth.getUserName(),
+        setor:          document.getElementById('setor')?.value || '',
+        telefone:       document.getElementById('telefone')?.value || '',
+        whatsapp:       document.getElementById('telefone')?.value || '',
+        natureza:       formState.natureza,
+        maturidade:     formState.maturidade === 1 ? 'Tenho a maioria das informações'
+                      : formState.maturidade === 2 ? 'Tenho algumas informações'
+                      : formState.maturidade === 3 ? 'Ainda estou estruturando' : '',
+        nomeEvento:     document.getElementById('nomeEvento')?.value     || '',
+        dataEvento:     document.getElementById('dataEvento')?.value     || '',
+        horario:        document.getElementById('horario')?.value        || '',
+        descricao:      document.getElementById('descricao')?.value      || '',
+        origem:         document.getElementById('origem')?.value         || '',
+        tipoEvento:     document.getElementById('tipoEvento')?.value     || '',
+        publico:        document.getElementById('publico')?.value        || '',
+        estado:         document.getElementById('estado')?.value         || '',
+        cidade:         document.getElementById('cidade')?.value         || '',
+        localEvento:    document.getElementById('localEvento')?.value    || '',
+        unidadeSVN:     document.getElementById('unidadeSVN')?.value     || '',
+        localNome:      document.getElementById('localNome')?.value      || '',
+        localEndereco:  document.getElementById('localEndereco')?.value  || '',
+        convidados:     document.getElementById('convidados')?.value     || '',
+        custoEstimado:  document.getElementById('custoEstimado')?.value  || '',
+        rateio:         document.getElementById('rateio')?.value         || '',
+        canal:          document.getElementById('canal')?.value          || '',
+        linkTransmissao:document.getElementById('linkTransmissao')?.value|| '',
+        objetivos:      document.getElementById('objetivos')?.value      || '',
+        materiais:      [...formState.materiais],
+        tipoAprox:      document.querySelector('input[name="tipoAprox"]:checked')?.value || '',
+        ideaQuando:     document.getElementById('ideaQuando')?.value     || '',
+        observacoes:    document.getElementById('observacoes')?.value    || '',
+        horBrasilia:    (() => { const v = document.querySelector('input[name="horBrasilia"]:checked')?.value;  return v === 'sim' ? 'Sim' : v === 'nao' ? 'Não' : ''; })(),
+        temPalestrante: (() => { const v = document.querySelector('input[name="temPalestrante"]:checked')?.value; return v === 'sim' ? 'Sim' : v === 'nao' ? 'Não' : ''; })(),
+        palSvn1:        (() => { const v = document.querySelector('input[name="palSvn1"]:checked')?.value;   return v === 'sim' ? 'Sim' : v === 'nao' ? 'Não' : ''; })(),
+        palNome1:       document.getElementById('palNome1')?.value       || '',
+        palCargo1:      document.getElementById('palCargo1')?.value      || '',
+        palSvn2:        (() => { const v = document.querySelector('input[name="palSvn2"]:checked')?.value;   return v === 'sim' ? 'Sim' : v === 'nao' ? 'Não' : ''; })(),
+        palNome2:       document.getElementById('palNome2')?.value       || '',
+        palCargo2:      document.getElementById('palCargo2')?.value      || '',
+        palSvn3:        (() => { const v = document.querySelector('input[name="palSvn3"]:checked')?.value;   return v === 'sim' ? 'Sim' : v === 'nao' ? 'Não' : ''; })(),
+        palNome3:       document.getElementById('palNome3')?.value       || '',
+        palCargo3:      document.getElementById('palCargo3')?.value      || '',
+        palSvn4:        (() => { const v = document.querySelector('input[name="palSvn4"]:checked')?.value;   return v === 'sim' ? 'Sim' : v === 'nao' ? 'Não' : ''; })(),
+        palNome4:       document.getElementById('palNome4')?.value       || '',
+        palCargo4:      document.getElementById('palCargo4')?.value      || '',
+        materiaisDetalhes: (() => {
+          const det = {};
+          if (formState.materiais.has('pacote-personalizado') || formState.materiais.has('pacote-personalizado-online')) {
+            const d = {};
+            const c = document.getElementById('matPersonConvite')?.value?.trim();
+            const p = document.getElementById('matPersonPagina')?.value?.trim();
+            if (c) d.personConvite = c;
+            if (p) d.personPagina = p;
+            const key = formState.materiais.has('pacote-personalizado') ? 'pacote-personalizado' : 'pacote-personalizado-online';
+            if (Object.keys(d).length) det[key] = d;
+          }
+          if (formState.materiais.has('banner-impresso')) {
+            const d = {};
+            const t = document.getElementById('matBannerTam')?.value?.trim();
+            const c = document.getElementById('matBannerConteudo')?.value?.trim();
+            if (t) d.tamanho = t;
+            if (c) d.conteudo = c;
+            if (Object.keys(d).length) det['banner-impresso'] = d;
+          }
+          if (formState.materiais.has('flyer')) {
+            const d = {};
+            const tipo = document.querySelector('input[name="flyerTipo"]:checked')?.value;
+            if (tipo) d.tipo = tipo === 'institucional' ? 'Institucional Padrão (A5)' : 'Personalizado';
+            if (tipo === 'personalizado') {
+              const t = document.getElementById('matFlyerTam')?.value?.trim();
+              const c = document.getElementById('matFlyerConteudo')?.value?.trim();
+              if (t) d.tamanho = t;
+              if (c) d.conteudo = c;
+            }
+            if (Object.keys(d).length) det['flyer'] = d;
+          }
+          if (formState.materiais.has('brindes-personalizados')) {
+            const d = {};
+            const b = document.getElementById('matBrindeDesc')?.value?.trim();
+            if (b) d.descricao = b;
+            if (Object.keys(d).length) det['brindes-personalizados'] = d;
+          }
+          if (formState.materiais.has('captacao-audiovisual')) {
+            const d = {};
+            const c = [...document.querySelectorAll('input[name="captacao"]:checked')].map(e => e.value);
+            if (c.length) d.tipo = c.map(v => v === 'fotos' ? 'Sessão de fotos' : 'Gravação de vídeo').join(', ');
+            if (Object.keys(d).length) det['captacao-audiovisual'] = d;
+          }
+          if (formState.materiais.has('instagram') || formState.materiais.has('instagram-online')) {
+            const d = {};
+            const t = document.querySelector('input[name="igTipo"]:checked')?.value;
+            const a = document.getElementById('matIgArroba')?.value?.trim();
+            if (t) d.formaDiv = t === 'menção' ? 'Menção' : 'Colab';
+            if (a) d.arroba = a;
+            const key = formState.materiais.has('instagram') ? 'instagram' : 'instagram-online';
+            if (Object.keys(d).length) det[key] = d;
+          }
+          if (formState.materiais.has('email-marketing') || formState.materiais.has('email-marketing-online')) {
+            const d = {};
+            const c = document.getElementById('matEmailConteudo')?.value?.trim();
+            if (c) d.conteudo = c;
+            const key = formState.materiais.has('email-marketing') ? 'email-marketing' : 'email-marketing-online';
+            if (Object.keys(d).length) det[key] = d;
+          }
+          if (formState.materiais.has('apoio-live-online')) {
+            const d = {};
+            const a = document.getElementById('matApoioDesc')?.value?.trim();
+            if (a) d.descricao = a;
+            if (Object.keys(d).length) det['apoio-live-online'] = d;
+          }
+          if (formState.materiais.has('pagina-sorteio')) {
+            const d = {};
+            const s = document.querySelector('input[name="sorteio1"]:checked')?.value;
+            if (s) {
+              d.premioDefinido = s === 'sim' ? 'Sim' : 'Não';
+              if (s === 'sim') {
+                const desc = document.getElementById('matSorteioDesc')?.value?.trim();
+                if (desc) d.descricao = desc;
+              }
+            }
+            if (Object.keys(d).length) det['pagina-sorteio'] = d;
+          }
+          if (formState.materiais.has('projeto-stand')) {
+            const d = {};
+            const m = document.getElementById('matStandMat')?.value?.trim();
+            if (m) d.materiais = m;
+            if (Object.keys(d).length) det['projeto-stand'] = d;
+          }
+          return Object.keys(det).length ? det : undefined;
+        })(),
+      };
+
+      const dadosLimpos = Object.fromEntries(
+        Object.entries(dados).filter(([_, v]) => {
+          if (Array.isArray(v)) return v.length > 0;
+          return v !== '' && v !== null && v !== undefined;
+        })
+      );
+
+      const formData = new FormData();
+      formData.append('tipo_solicitacao', 'eventos');
+      formData.append('subtipo', formState.natureza);
+      formData.append('maturidade', formState.maturidade);
+      formData.append('dados', JSON.stringify(dadosLimpos));
+
+      ['logoFile','imgFile','demaisFile'].forEach(id => {
+        const f = document.getElementById(id)?.files[0];
+        if (f) formData.append(id, f);
+      });
+      const matEmailBaseFile = document.getElementById('matEmailBase')?.files[0];
+      if (matEmailBaseFile) formData.append('matEmailBase', matEmailBaseFile);
+
+      for (let i = 1; i <= 4; i++) {
+        const f = document.getElementById('palFoto' + i)?.files[0];
+        if (f) formData.append('palFoto' + i, f);
+      }
+
+      try {
+        const res = await fetch('/api/solicitacoes', { method: 'POST', body: formData });
+        const d = await res.json().catch(() => ({}));
+        if (res.ok) {
+          clearFormStorage();
+          try {
+            const resumo = {
+              tipo: TIPO_SOLICITACAO_LABELS[formData.get('tipo_solicitacao')] || formData.get('tipo_solicitacao'),
+              subtipo: formData.get('subtipo') || '', titulo: dados.nomeEvento || dados.tituloEvento || dados.titulo || dados.nome_completo || dados.nomeCompleto || '',
+              solicitante: dados.nome || Auth.getUserName(),
+              setor: dados.setor || '',
+              data: new Date().toLocaleDateString('pt-BR'),
+              hora: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+              materiais: dados.materiais || [],
+              natureza: dados.natureza || '',
+              maturidade: dados.maturidade || '',
+              id: d.id,
+            };
+            sessionStorage.setItem('svn_ultimo_resumo', JSON.stringify(resumo));
+          } catch {}
+          clearInterval(msgInterval);
+          window.location.replace('/thankyou.html');
+        }
+        else {
+          clearInterval(msgInterval);
+          throw new Error(d.error || 'submit_failed');
+        }
+      } catch (e) {
+        clearInterval(msgInterval);
+        const errEl = document.getElementById('submitError');
+        if (errEl) { errEl.style.display = 'block'; errEl.textContent = 'Erro de conexão. Verifique sua internet.'; }
+        if(window.formUnlockUI)window.formUnlockUI(btn); else { btn.disabled = false; btn.textContent = 'Enviar'; }
+      }
+    }
+
+    function openPrazosModal() { Modal.open('prazosModal'); }
+    function closePrazosModal(e) { Modal.close('prazosModal', e); }
+
+    init();
+  </script>
+
+  <div class="modal-overlay" id="prazosModal" onclick="closePrazosModal(event)">
+    <div class="modal-card" onclick="event.stopPropagation()">
+      <div class="modal-header">
+        <div>
+          <h2 class="modal-title">Prazos para organização de eventos</h2>
+          <p class="modal-subtitle">Antecedência mínima por tipo de evento.</p>
+        </div>
+        <button class="modal-close" onclick="closePrazosModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:16px">
+          <div style="background:var(--ink-05);border:1px solid var(--ink-08);border-radius:var(--radius-lg);padding:16px">
+            <div style="font-size:0.62rem;text-transform:uppercase;letter-spacing:0.07em;color:var(--ink-40);margin-bottom:6px">Online</div>
+            <div style="font-size:2rem;font-weight:500;font-family:'Taviraj', serif;color:var(--carbon-black);line-height:1">15</div>
+            <div style="font-size:0.76rem;color:var(--ink-50);margin-top:3px">dias úteis de antecedência</div>
+            <div style="margin-top:10px;font-size:0.76rem;color:var(--ink-50);line-height:1.5">Webinars, lives, transmissões internas. Inclui divulgação digital e convite.</div>
+          </div>
+          <div style="background:var(--ink-05);border:1px solid var(--ink-08);border-radius:var(--radius-lg);padding:16px">
+            <div style="font-size:0.62rem;text-transform:uppercase;letter-spacing:0.07em;color:var(--ink-40);margin-bottom:6px">Presencial simples</div>
+            <div style="font-size:2rem;font-weight:500;font-family:'Taviraj', serif;color:var(--carbon-black);line-height:1">21</div>
+            <div style="font-size:0.76rem;color:var(--ink-50);margin-top:3px">dias úteis de antecedência</div>
+            <div style="margin-top:10px;font-size:0.76rem;color:var(--ink-50);line-height:1.5">Coffee, treinamentos e reuniões internas. Inclui logística e divulgação.</div>
+          </div>
+          <div style="background:var(--ink-05);border:1px solid var(--ink-08);border-radius:var(--radius-lg);padding:16px">
+            <div style="font-size:0.62rem;text-transform:uppercase;letter-spacing:0.07em;color:var(--ink-40);margin-bottom:6px">Presencial complexo</div>
+            <div style="font-size:2rem;font-weight:500;font-family:'Taviraj', serif;color:var(--carbon-black);line-height:1">45</div>
+            <div style="font-size:0.76rem;color:var(--ink-50);margin-top:3px">dias úteis de antecedência</div>
+            <div style="margin-top:10px;font-size:0.76rem;color:var(--ink-50);line-height:1.5">Eventos externos, com palestrante, buffet, espaços locados ou cobertura jornalística.</div>
+          </div>
+        </div>
+        <p style="font-size:0.78rem;color:var(--ink-50);line-height:1.6;margin:0">Esses prazos garantem qualidade na entrega e organização adequada. Solicitações fora do prazo mínimo podem não ser atendidas ou terão escopo reduzido.</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" onclick="closePrazosModal()">Entendi</button>
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>

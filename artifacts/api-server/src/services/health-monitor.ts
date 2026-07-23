@@ -60,7 +60,7 @@ async function checkOne(name: string, ping: () => Promise<void>): Promise<void> 
   }
 }
 
-export async function checkHealth(): Promise<void> {
+/* interno */ async function checkHealth(): Promise<void> {
   lastCheckAt = Date.now();
   for (const d of DEPS) {
     try { await checkOne(d.name, d.ping); } catch (err) { logger.error({ err, dep: d.name }, "health-monitor: erro inesperado"); }
