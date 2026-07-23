@@ -101,8 +101,7 @@
     }
     .status-step-label.done { color: var(--sage-green); font-weight: 600; }
     .status-step-label.current { color: var(--current-color, #2563C0); font-weight: 700; }
-    /* MOBILE-RAIL-768: o shell vira mobile em 768px; o rail seguia em 560px. */
-    @media (max-width: 768px) {
+    @media (max-width: 560px) {
       .status-rail-scroll { overflow-x: hidden; overflow-y: visible; padding: 4px 0; }
       .status-rail { flex-direction: column; gap: 0; min-width: 0; }
       .status-step { flex-direction: row; align-items: center; min-width: 0; gap: 10px; flex: none; }
@@ -502,40 +501,10 @@
     .fact-alt-line + .fact-alt-line { margin-top: 1px; }
     .fact-sub { font-size: 0.74rem; font-weight: 600; margin-top: 5px; display: flex; align-items: flex-start; gap: 4px; }
     .fact-sub svg { flex-shrink: 0; margin-top: 2px; }
-    /* MOBILE-FATOS-LISTA: 768px alinha esta pagina ao resto do app (o shell ja
-       troca em 768; entre 481 e 768 o header ficava desktop com a sidebar fora).
-       E os 3 fatos viram uma lista unica: em 2 colunas sobrava celula orfa e as
-       alturas dos cartoes nunca batiam. */
-    @media (max-width: 768px) {
+    @media (max-width: 480px) {
       .sol-header-top { flex-direction: column; gap: 12px; }
       .sol-titulo { font-size: 1.5rem; }
-      .sol-actions { align-self: stretch; width: 100%; justify-content: flex-start; }
-      .sol-actions-kebab { margin-left: auto; }
-
-      .sol-facts {
-        display: block;
-        background: var(--card-white, #fff);
-        border: 1px solid var(--border-light, var(--ink-10));
-        border-radius: var(--radius-lg);
-        overflow: hidden;
-        margin-top: 14px;
-      }
-      .sol-facts .fact {
-        background: transparent !important;
-        border: 0 !important;
-        border-radius: 0;
-        padding: 11px 14px;
-        display: grid;
-        grid-template-columns: auto 1fr;
-        align-items: baseline;
-        column-gap: 14px;
-      }
-      .sol-facts .fact + .fact { border-top: 1px solid var(--ink-08) !important; }
-      .sol-facts .fact-label { margin-bottom: 0; white-space: nowrap; }
-      .sol-facts .fact-value { text-align: right; font-size: 0.88rem; }
-      .sol-facts .fact-rel-sub { grid-column: 2; text-align: right; }
-      .sol-facts .fact-alt-block,
-      .sol-facts .fact-sub { grid-column: 1 / -1; }
+      .sol-actions { align-self: flex-start; }
     }
 
     /* 4a — Bandeja de detalhes (mobile recolhida, desktop sempre visível) */
@@ -693,170 +662,9 @@
       transition: border-color .12s;
     }
     .dados-link:hover { border-bottom-color: currentColor; }
-    /* MOBILE-DADOS-COMPACTO ────────────────────────────────────────────
-       Chips para Sim/Nao e listas curtas, bloco de identidade (foto + nome),
-       andamento em uma linha e barra fixa ao rolar. */
-
-    .dados-chips { display: flex; flex-wrap: wrap; gap: 6px; }
-    .dados-chip {
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-      padding: 4px 11px;
-      border: 1px solid var(--border-light);
-      border-radius: var(--radius-pill);
-      background: var(--icon-bg);
-      color: var(--carbon-black);
-      font-size: 0.78rem;
-      font-weight: 600;
-      line-height: 1.5;
-    }
-    .dados-chip svg { flex-shrink: 0; opacity: 0.8; }
-    .dados-chip--nao { opacity: 0.45; }
-    .dados-chips-bool { padding-top: 2px; }
-
-    .dados-identidade {
-      grid-column: 1 / -1;
-      display: flex;
-      align-items: center;
-      gap: 14px;
-      padding-bottom: 14px;
-      border-bottom: 1px solid var(--border-light);
-    }
-    .dados-avatar {
-      display: block;
-      width: 56px;
-      height: 56px;
-      border-radius: var(--radius-md);
-      overflow: hidden;
-      flex-shrink: 0;
-      border: 1px solid var(--border-light);
-      background: var(--ink-05);
-      line-height: 0;
-    }
-    .dados-avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
-    .dados-avatar:hover { border-color: var(--ink-30); }
-    .dados-identidade-txt { min-width: 0; }
-    .dados-nome { font-size: 1.02rem; }
-
-    .dados-mais { display: none; }
-
-    .fluxo-resumo { display: none; }
-    .fluxo-bar {
-      flex: 1 1 40px;
-      height: 4px;
-      border-radius: var(--radius-pill);
-      background: var(--ink-10);
-      overflow: hidden;
-    }
-    .fluxo-bar-fill { display: block; height: 100%; border-radius: var(--radius-pill); transition: width 0.4s ease; }
-
-    .sol-sticky {
-      position: fixed;
-      top: 60px;
-      left: 0;
-      right: 0;
-      z-index: 90;
-      display: none;
-      align-items: center;
-      gap: 10px;
-      padding: 9px 16px;
-      background: var(--card-white, #fff);
-      border-bottom: 1px solid var(--border-light);
-      box-shadow: 0 2px 10px rgba(0,0,0,0.06);
-      opacity: 0;
-      transform: translateY(-100%);
-      transition: opacity 0.2s ease, transform 0.2s ease;
-      pointer-events: none;
-    }
-    .app-shell.is-impersonating .sol-sticky { top: 100px; }
-    .sol-sticky.visivel { opacity: 1; transform: translateY(0); }
-    .sol-sticky-titulo {
-      flex: 1;
-      min-width: 0;
-      font-family: 'Taviraj', serif;
-      font-size: 0.98rem;
-      color: var(--carbon-black);
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-    .sol-sticky-badge {
-      flex-shrink: 0;
-      padding: 4px 10px;
-      border-radius: var(--radius-pill);
-      font-size: 0.68rem;
-      font-weight: 700;
-      letter-spacing: 0.04em;
-      text-transform: uppercase;
-      white-space: nowrap;
-    }
-
-    @media (max-width: 768px) {
-      .dados-grid { grid-template-columns: 1fr; gap: 11px 0; }
+    @media (max-width: 480px) {
+      .dados-grid { grid-template-columns: 1fr; }
       .dados-grid-wide { grid-column: 1; }
-
-      /* Rotulo e valor na mesma linha quando o valor e curto: com 13 campos
-         empilhados em duas linhas cada, a lista virava uma escada. */
-      .dados-field--inline {
-        display: grid;
-        grid-template-columns: minmax(0, 40%) 1fr;
-        align-items: baseline;
-        gap: 0;
-        column-gap: 12px;
-      }
-      .dados-field--inline .dados-value { text-align: right; }
-
-      #dadosContent:not(.dados-tudo) .dados-oculto { display: none; }
-      .dados-mais {
-        display: block;
-        width: 100%;
-        margin-top: 8px;
-        padding: 10px;
-        border: 1px dashed var(--ink-20);
-        border-radius: var(--radius-md);
-        background: none;
-        font-family: 'Nunito Sans', sans-serif;
-        font-size: 0.8rem;
-        font-weight: 700;
-        color: var(--carbon-black);
-        opacity: 0.6;
-        cursor: pointer;
-      }
-      .dados-mais:hover { opacity: 1; }
-
-      .dados-identidade { padding-bottom: 12px; }
-      .dados-avatar { width: 48px; height: 48px; }
-
-      /* Andamento: uma linha com progresso; o rail completo abre sob demanda. */
-      #fluxoCard .fluxo-eyebrow { display: none; }
-      .fluxo-resumo {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        width: 100%;
-        padding: 2px 0;
-        border: none;
-        background: none;
-        font-family: 'Nunito Sans', sans-serif;
-        font-size: 0.85rem;
-        color: var(--carbon-black);
-        text-align: left;
-        cursor: pointer;
-      }
-      .fluxo-resumo-txt { display: flex; align-items: center; gap: 6px; min-width: 0; white-space: nowrap; }
-      .fluxo-resumo-sep { opacity: 0.3; }
-      .fluxo-chevron { flex-shrink: 0; opacity: 0.35; transition: transform 0.25s; }
-      #fluxoCard .status-rail-scroll { display: none; }
-      #fluxoCard.fluxo-aberto .status-rail-scroll { display: block; margin-top: 16px; }
-      #fluxoCard.fluxo-aberto .fluxo-chevron { transform: rotate(180deg); }
-
-      .sol-sticky { display: flex; }
-    }
-
-    @media (prefers-reduced-motion: reduce) {
-      .sol-sticky { transition: none; }
-      .fluxo-bar-fill { transition: none; }
     }
 
     
@@ -882,12 +690,6 @@
 
     <!-- Content -->
     <div id="pageContent" style="display:none">
-
-      <!-- Barra fixa (celular): mantem titulo e status a vista ao rolar -->
-      <div class="sol-sticky" id="solSticky" aria-hidden="true">
-        <span class="sol-sticky-titulo" id="solStickyTitulo"></span>
-        <span class="sol-sticky-badge" id="solStickyBadge"></span>
-      </div>
 
       <!-- Header -->
       <div class="sol-header">
@@ -980,7 +782,7 @@
   <script src="config.js?v=20260615a"></script>
   <script src="auth.js?v=20260611f"></script>
   <script src="shell.js?v=20260611f"></script>
-  <script src="solicitacao.js?v=20260723"></script>
+  <script src="solicitacao.js?v=20260710"></script>
 <div class="modal-overlay" id="avaliacaoModal" onclick="fecharModalAvaliacao(event)">
   <div class="modal-card" style="max-width:460px" onclick="event.stopPropagation()">
     <div class="modal-header">

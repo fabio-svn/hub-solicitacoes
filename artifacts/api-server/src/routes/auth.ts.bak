@@ -1,5 +1,4 @@
 import { Router } from "express";
-import type { Request } from "express";
 import { fetchWithTimeout } from "../lib/http";
 import { ConfidentialClientApplication } from "@azure/msal-node";
 import { randomBytes } from "crypto";
@@ -210,49 +209,15 @@ router.get("/logout", (req, res) => {
   });
 });
 
-// ROLE-RECONCILIADA: a role era gravada na sessao no /auth/callback e nunca mais
-// relida. Promover alguem no painel so alterava usersTable, entao a sessao viva
-// continuava com a role antiga — e como o cookie e rolling (30 dias, renovado a
-// cada request), quem usa o Hub toda semana nunca ganhava uma sessao nova.
-// Resultado: sem sidebar e redirect nas paginas com guard por role, ate deslogar.
-// A impersonacao funcionava porque /impersonate le usersTable na hora.
-//
-// Uma consulta indexada por request de /auth/me (uma vez por carregamento de
-// pagina, e o cliente ainda cacheia 5 min em sessionStorage).
-async function reconciliarRole(req: Request): Promise<void> {
+router.get("/me", (req, res): void => {
   const user = req.session?.user;
-  if (!user?.email) return;
-  try {
-    const [atual] = await db
-      .select({ role: usersTable.role })
-      .from(usersTable)
-      .where(eq(usersTable.email, user.email))
-      .limit(1);
-    const roleBanco = atual?.role;
-    if (roleBanco && roleBanco !== user.role) {
-      logger.info(
-        { email: user.email, de: user.role, para: roleBanco },
-        "Role da sessao reconciliada com o banco",
-      );
-      req.session.user = { ...user, role: roleBanco };
-    }
-  } catch (err) {
-    // Falha aqui nao pode derrubar o /auth/me: a sessao segue com a role antiga.
-    logger.error({ err, email: user.email }, "Erro ao reconciliar role da sessao");
-  }
-}
-
-router.get("/me", async (req, res): Promise<void> => {
-  if (!req.session?.user) {
+  if (!user) {
     res.json({ authenticated: false });
     return;
   }
-
-  await reconciliarRole(req);
-
   res.json({
     authenticated: true,
-    user: req.session.user,
+    user,
     adminOriginal: req.session.adminOriginal || null,
     impersonating: !!req.session.adminOriginal,
     profile: req.session.userProfile || null,

@@ -111,8 +111,7 @@
       const facts = document.getElementById('solFacts');
       if (!facts) return;
       if (isTipoAutomacao(item.tipo_solicitacao)) { facts.style.display = 'none'; return; }
-      // display fica com o CSS: no celular a barra de fatos vira lista (display:block).
-      facts.style.display = '';
+      facts.style.display = 'grid';
 
       const DIAS_ABBR = ['dom','seg','ter','qua','qui','sex','sáb'];
 
@@ -157,7 +156,7 @@
           document.getElementById('factPrazoAltMotivo').textContent = motivo;
           cellPrazoAlt.style.display = 'block';
         } else { cellPrazoAlt.style.display = 'none'; }
-        cellPrazo.style.display = '';
+        cellPrazo.style.display = 'block';
       } else {
         cellPrazo.style.display = 'none';
       }
@@ -167,7 +166,7 @@
       const respNome = cleanResponsavel(item.responsavel);
       if (respNome) {
         document.getElementById('factRespValue').textContent = respNome;
-        cellResp.style.display = '';
+        cellResp.style.display = 'block';
       } else {
         cellResp.style.display = 'none';
       }
@@ -185,7 +184,7 @@
       if (cellSolic) {
         const norm = (x) => String(x || '').trim().toLowerCase();
         const mesmaPessoa = respNome && norm(respNome) === norm(nomeSolic);
-        cellSolic.style.display = mesmaPessoa ? 'none' : '';
+        cellSolic.style.display = mesmaPessoa ? 'none' : 'block';
       }
 
       // ── Aberto em ──
@@ -350,8 +349,6 @@
         : '';
 
       headerRight.innerHTML = statusBadge + clickupBtn + avaliacaoBtn + kebabHtml;
-
-      montarStickyBar(titulo, statusObj);
     }
 
     /* ── renderFluxo (horizontal rail) ─────────── */
@@ -459,30 +456,8 @@
           </div>`;
       }).join('');
 
-      // FLUXO-RESUMO: no celular o rail vertical custava ~200px para dizer o que
-      // cabe em uma linha. O rail completo continua a um toque de distancia.
-      // Status fora do fluxo (idxAtual < 0) nao vira contador: o rail ja mostra
-      // todas as etapas apagadas, e "Etapa 3 de 3" seria mentira.
-      const etapaAtual = idxAtual >= 0 ? etapasVis[idxAtual] : null;
-      const foraDoFluxo = idxAtual < 0;
-      const concluidoFora = foraDoFluxo && item.status === 'concluido';
-      const passo = concluidoFora ? etapasVis.length : idxAtual + 1;
-      const pct = foraDoFluxo ? (concluidoFora ? 100 : 0) : Math.round((passo / etapasVis.length) * 100);
-      const sObjAtual = getStatus(etapaAtual ? etapaAtual.id : item.status);
-      const corAtual = corLegivelSobreClaro(sObjAtual);
-      const contadorHtml = (foraDoFluxo && !concluidoFora)
-        ? ''
-        : `<b>Etapa ${passo} de ${etapasVis.length}</b><span class="fluxo-resumo-sep">\u00b7</span>`;
-      const resumoHtml = `
-        <button type="button" class="fluxo-resumo" id="fluxoResumo" onclick="toggleFluxo()" aria-expanded="false" aria-controls="fluxoCard">
-          <span class="fluxo-resumo-txt">${contadorHtml}<span style="color:${corAtual};font-weight:700">${esc(etapaAtual ? etapaAtual.label : (sObjAtual.label || 'Em andamento'))}</span></span>
-          <span class="fluxo-bar"><span class="fluxo-bar-fill" style="width:${pct}%;background:${corAtual}"></span></span>
-          <svg class="fluxo-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="6 9 12 15 18 9"/></svg>
-        </button>`;
-
       card.innerHTML = `
-        <p class="fluxo-eyebrow" style="font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;opacity:0.38;margin-bottom:14px">Andamento</p>
-        ${resumoHtml}
+        <p style="font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;opacity:0.38;margin-bottom:14px">Andamento</p>
         <div class="status-rail-scroll"><div class="status-rail">${stepsHtml}</div></div>`;
     }
 
@@ -1629,18 +1604,6 @@
     function fieldValueHtml(val, key) {
       const s = String(val).trim();
 
-      // TEL-MAILTO: no celular telefone e e-mail viram um toque so.
-      if (/^[\w.+-]+@[\w-]+\.[\w.-]+$/.test(s)) {
-        return `<a class="dados-link" href="mailto:${esc(s)}">${esc(s)}</a>`;
-      }
-      if (/telefone|whatsapp|celular|contato/i.test(String(key))) {
-        const dig = s.replace(/\D/g, '');
-        if (dig.length >= 10 && dig.length <= 13) {
-          const e164 = dig.length <= 11 ? '+55' + dig : '+' + dig;
-          return `<a class="dados-link" href="tel:${e164}">${esc(s)}</a>`;
-        }
-      }
-
       // @usuario do Instagram vira link, como o LinkedIn ja era
       if (/^@[A-Za-z0-9._]{2,30}$/.test(s)) {
         const user = s.slice(1);
@@ -1659,9 +1622,6 @@
     }
 
     /* ── renderDados ──────────────────────────── */
-    /* MOBILE-DADOS-JS: identidade (foto + nome), chips para Sim/Nao e listas
-       curtas, rotulo e valor na mesma linha quando o valor e curto, e o excedente
-       recolhido atras de "Ver todos os dados". */
     function renderDados(dados, item) {
         if (TIPOS_AUTOMACAO.includes(item.tipo_solicitacao)) {
         const dadosCard = document.getElementById('dadosCard');
@@ -1670,40 +1630,10 @@
       }
       const container = document.getElementById('dadosContent');
       const palProcessed = new Set();
-      const gridFields = [];
+      let gridFields = '';
       let socialChips = '';
-      let socialCount = 0;
-      let boolChips = '';
-      let boolCount = 0;
-      let identidadeBlock = '';
       let palestrantesBlock = '';
       let hasContent = false;
-
-      const LIMITE_MOBILE = 6;
-      const pular = new Set();
-      const ehImagem = (v) => typeof v === 'string' && /^https?:\/\/\S+\.(jpe?g|png|webp|gif|avif)(\?|$)/i.test(v.trim());
-
-      // Foto + nome viram um bloco so: dois campos a menos e o rosto ancora o topo.
-      const kFoto = ['foto_perfil', 'fotoPerfil'].find(k => ehImagem(dados[k]));
-      const kNome = ['nome_completo', 'nomeCompleto'].find(k => dados[k] && String(dados[k]).trim());
-      if (kFoto && kNome) {
-        const urlFoto = String(dados[kFoto]).trim();
-        const nome = String(dados[kNome]).trim();
-        const lblNome = (typeof DRAWER_FIELD_LABELS_FLAT !== 'undefined' && DRAWER_FIELD_LABELS_FLAT[kNome]) || 'Nome completo';
-        identidadeBlock = `<div class="dados-identidade"><a class="dados-avatar" href="${esc(urlFoto)}" target="_blank" rel="noopener noreferrer" title="Abrir em tamanho real"><img src="${esc(urlFoto)}" alt="" loading="lazy"></a><div class="dados-identidade-txt"><div class="dados-label">${esc(lblNome)}</div><div class="dados-value dados-nome">${esc(nome)}</div></div></div>`;
-        pular.add(kFoto);
-        pular.add(kNome);
-        hasContent = true;
-      }
-
-      const chipSimNao = (rotulo, sim) => sim
-        ? `<span class="dados-chip"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>${esc(rotulo)}</span>`
-        : `<span class="dados-chip dados-chip--nao"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="5" y1="12" x2="19" y2="12"/></svg>${esc(rotulo)}</span>`;
-
-      const ehCurto = (v) => {
-        const s = String(v);
-        return s.length <= 32 && !/\n/.test(s) && !/^https?:\/\//i.test(s) && !/^@[A-Za-z0-9._]{2,30}$/.test(s);
-      };
 
       // Identificacao primeiro, depois contato, depois conteudo.
       const FIELD_PRIORITY = ['nome_completo','nomeCompleto','foto_perfil','fotoPerfil','codigo_assessor','unidade','contrato_social','eh_assessor','quer_pagina','telefone','email','linkedin','instagram','selos','mini_bio','depoimentos','nomeEvento','tituloEvento','dataEvento','horario','origem','tipoEvento','publico','localEvento','unidadeSVN','localNome','localEndereco','estado','cidade','convidados','descricao','objetivos'];
@@ -1713,16 +1643,17 @@
       });
       for (const [key, value] of _entries) {
         if (value === null || value === undefined || value === '') continue;
-        if (pular.has(key)) continue;
         if (key === 'rateio' && dados.natureza === 'online') continue;
         if (/^palFoto\d$/.test(key)) continue;
         if (typeof DRAWER_FIELD_LABELS !== 'undefined' && DRAWER_FIELD_LABELS[key]?.skip) continue;
 
         const label = (typeof DRAWER_FIELD_LABELS_FLAT !== 'undefined' && DRAWER_FIELD_LABELS_FLAT[key])
           || String(key).replace(/([a-z])([A-Z])/g, '$1 $2').replace(/[_-]+/g, ' ').replace(/^./, c => c.toUpperCase());
+        const isWide = typeof DRAWER_FIELD_LABELS !== 'undefined' && !!(DRAWER_FIELD_LABELS[key]?.wide);
+        const wideClass = isWide ? ' dados-grid-wide' : '';
 
         if (key === 'temPalestrante') {
-          gridFields.push(`<div class="dados-field"><div class="dados-label">${esc(label)}</div><div class="dados-value">${esc(String(value))}</div></div>`);
+          gridFields += `<div class="dados-field"><div class="dados-label">${esc(label)}</div><div class="dados-value">${esc(String(value))}</div></div>`;
           hasContent = true;
           continue;
         }
@@ -1759,23 +1690,14 @@
                 ${d.nome ? `<div style="font-weight:600;font-size:0.78rem">${esc(d.nome)}</div>` : ''}
               </div>`).join('');
             if (depoBlock) {
-              gridFields.push(`<div class="dados-field dados-grid-wide"><div class="dados-label">${esc(label)}</div>${depoBlock}</div>`);
+              gridFields += `<div class="dados-field dados-grid-wide"><div class="dados-label">${esc(label)}</div>${depoBlock}</div>`;
               hasContent = true;
             }
           } else {
-            const itens = value.map(v => String(humanizeValue(key, v))).filter(t => t && t.trim());
-            if (!itens.length) continue;
-            // Lista curta (selos, canais) vira chip: "Ancord, CEA, CFP" em texto
-            // corrido nao mostra que sao itens distintos.
-            const viraChip = itens.every(t => t.length <= 24 && !/^https?:\/\//i.test(t));
-            if (viraChip) {
-              gridFields.push(`<div class="dados-field dados-grid-wide"><div class="dados-label">${esc(label)}</div><div class="dados-chips">${itens.map(t => `<span class="dados-chip">${esc(t)}</span>`).join('')}</div></div>`);
-            } else {
-              const val = itens.join(', ');
-              const largura = (val.length > 70 || /\n/.test(val)) ? ' dados-grid-wide' : '';
-              gridFields.push(`<div class="dados-field${largura}"><div class="dados-label">${esc(label)}</div><div class="dados-value">${fieldValueHtml(val, key)}</div></div>`);
-            }
-            hasContent = true;
+            const val = value.map(v => humanizeValue(key, v)).join(', ');
+            const wideAuto = (val.length > 70 || /\n/.test(val)) ? ' dados-grid-wide' : '';
+            gridFields += `<div class="dados-field${wideAuto}"><div class="dados-label">${esc(label)}</div><div class="dados-value">${fieldValueHtml(val, key)}</div></div>`;
+
           }
           continue;
         }
@@ -1788,23 +1710,13 @@
               ? bruto
               : (bruto.startsWith('@') ? 'https://instagram.com/' + bruto.slice(1) : 'https://' + bruto);
             socialChips += chipDeLink(href, rotuloDeLink(href), key);
-            socialCount++;
             hasContent = true;
           }
           continue;
         }
         const val = String(humanizeValue(key, value));
-        // Sim/Nao vira chip: dois blocos de rotulo+valor para um bit de informacao
-        // era o que mais esticava a lista no celular.
-        if (/^(sim|n[aã]o)$/i.test(val.trim())) {
-          boolChips += chipSimNao(label, /^sim$/i.test(val.trim()));
-          boolCount++;
-          hasContent = true;
-          continue;
-        }
-        const largura = (val.length > 70 || /\n/.test(val)) ? ' dados-grid-wide' : '';
-        const inline = (!largura && ehCurto(val)) ? ' dados-field--inline' : '';
-        gridFields.push(`<div class="dados-field${largura}${inline}"><div class="dados-label">${esc(label)}</div><div class="dados-value">${fieldValueHtml(val, key)}</div></div>`);
+        const wideAuto = (val.length > 70 || /\n/.test(val)) ? ' dados-grid-wide' : '';
+        gridFields += `<div class="dados-field${wideAuto}"><div class="dados-label">${esc(label)}</div><div class="dados-value">${fieldValueHtml(val, key)}</div></div>`;
         hasContent = true;
       }
 
@@ -1813,65 +1725,17 @@
         return;
       }
 
-      const excede = gridFields.length > LIMITE_MOBILE;
-      const oculto = excede ? ' dados-oculto' : '';
-      const blocos = gridFields
-        .map((h, i) => (i >= LIMITE_MOBILE ? h.replace('class="dados-field', 'class="dados-field dados-oculto') : h))
-        .join('');
-
-      let html = `<div class="dados-grid">${identidadeBlock}${blocos}`;
-      if (boolChips) {
-        html += `<div class="dados-grid-wide dados-chips dados-chips-bool${oculto}">${boolChips}</div>`;
-      }
+      let html = `<div class="dados-grid">${gridFields}`;
       if (socialChips) {
-        html += `<div class="dados-grid-wide dados-chips-social${oculto}">${socialChips}</div>`;
+        html += `<div class="dados-grid-wide dados-chips-social">${socialChips}</div>`;
       }
       if (palestrantesBlock) {
-        html += `<div class="dados-grid-wide${oculto}" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px;padding:14px;background:var(--icon-bg);border-radius:var(--radius-lg)">
+        html += `<div class="dados-grid-wide" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px;padding:14px;background:var(--icon-bg);border-radius:var(--radius-lg)">
           ${palestrantesBlock}
         </div>`;
       }
-      if (excede) {
-        const restantes = (gridFields.length - LIMITE_MOBILE) + boolCount + socialCount + (palestrantesBlock ? 1 : 0);
-        html += `<button type="button" class="dados-mais" id="dadosMaisBtn" onclick="abrirTodosDados()">Ver mais ${restantes} ${restantes === 1 ? 'campo' : 'campos'}</button>`;
-      }
       html += '</div>';
       container.innerHTML = html;
-    }
-
-    function abrirTodosDados() {
-      const c = document.getElementById('dadosContent');
-      if (c) c.classList.add('dados-tudo');
-      const b = document.getElementById('dadosMaisBtn');
-      if (b) b.remove();
-    }
-
-    function toggleFluxo() {
-      const card = document.getElementById('fluxoCard');
-      if (!card) return;
-      const aberto = card.classList.toggle('fluxo-aberto');
-      const btn = document.getElementById('fluxoResumo');
-      if (btn) btn.setAttribute('aria-expanded', String(aberto));
-    }
-
-    /* Barra fixa: ao rolar ate os dados perdia-se a referencia de qual
-       solicitacao esta aberta e em que status ela esta. */
-    function montarStickyBar(titulo, statusObj) {
-      const bar = document.getElementById('solSticky');
-      if (!bar) return;
-      const t = document.getElementById('solStickyTitulo');
-      const b = document.getElementById('solStickyBadge');
-      if (t) t.textContent = titulo || '';
-      if (b) {
-        b.textContent = (statusObj && statusObj.label) || '';
-        b.style.background = (statusObj && statusObj.bg) || '#f1f5f9';
-        b.style.color = (statusObj && statusObj.text) || '#475569';
-      }
-      const alvo = document.querySelector('.sol-header');
-      if (!alvo || typeof IntersectionObserver === 'undefined') return;
-      new IntersectionObserver(([e]) => {
-        bar.classList.toggle('visivel', !e.isIntersecting);
-      }, { rootMargin: '-64px 0px 0px 0px', threshold: 0 }).observe(alvo);
     }
 
     /* ── Atividade (log de eventos) ── */
