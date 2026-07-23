@@ -266,10 +266,23 @@
           + '<span class="col-resizer"></span></th>';
       }).join('') + '</tr>';
     }
+    // A largura fixa (soma das colunas, ~1340px) e escrita INLINE, e inline vence
+    // o !important da media query — no celular a tabela ficava com 1340px e o
+    // conteudo saia da tela, deixando a pagina aparentemente vazia.
+    function uEhMobile() {
+      return window.matchMedia('(max-width: 600px)').matches;
+    }
+
     function uApplyWidth() {
-      const total = UCOLS.reduce(function (s, c) { return s + (uColWidths[c.f] || c.w); }, 0);
       const tbl = document.getElementById('usuariosTabela');
-      if (tbl) tbl.style.width = total + 'px';
+      if (!tbl) return;
+      if (uEhMobile()) {
+        // deixa a media query mandar: table-layout auto + width 100%
+        tbl.style.removeProperty('width');
+        return;
+      }
+      const total = UCOLS.reduce(function (s, c) { return s + (uColWidths[c.f] || c.w); }, 0);
+      tbl.style.width = total + 'px';
     }
     function uSortCmp(a, b) {
       const f = uSort.field;
@@ -610,6 +623,11 @@
     }
 
     init();
+
+    // Girar o aparelho muda o lado da media query: reavalia a largura.
+    window.addEventListener('resize', function () {
+      if (typeof uApplyWidth === 'function') uApplyWidth();
+    });
   </script>
 </body>
 </html>
