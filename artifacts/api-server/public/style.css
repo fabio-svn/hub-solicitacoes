@@ -1570,6 +1570,25 @@ input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
     "sidebar main";
 }
 
+/* O colapso so existe no desktop, onde a sidebar e uma coluna fixa. No celular
+   ela vira gaveta (o @media de 768px abaixo), e estas regras atrapalhavam:
+   a de grid tem especificidade maior que a do mobile — @media nao soma
+   especificidade — entao `columns` vinha daqui ("56px 1fr") e `areas` do mobile
+   (1 coluna), espremendo a pagina; e os labels ficavam ocultos, deixando a
+   gaveta so com icones. */
+@media (min-width: 769px) {
+  .app-shell.sidebar-collapsed[data-is-admin]:not(.no-sidebar) {
+    grid-template-columns: 56px 1fr;
+  }
+  .app-shell.sidebar-collapsed .sidebar-label,
+  .app-shell.sidebar-collapsed .sidebar-section-title { display: none; }
+  .app-shell.sidebar-collapsed .sidebar-link {
+    justify-content: center;
+    padding: 10px 0;
+  }
+  .app-shell.sidebar-collapsed .sidebar-icon { margin: 0 auto; }
+}
+
 .app-shell.no-sidebar,
 .app-shell:not([data-is-admin]) {
   grid-template-columns: 1fr;
@@ -1585,16 +1604,6 @@ input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
    continuava aplicada ao impersonar alguem sem sidebar, deixando o grid com
    columns de 2 faixas e areas de 1 — o conteudo inteiro era espremido nos
    56px e quebrava palavra por palavra. */
-.app-shell.sidebar-collapsed[data-is-admin]:not(.no-sidebar) {
-  grid-template-columns: 56px 1fr;
-}
-.app-shell.sidebar-collapsed .sidebar-label,
-.app-shell.sidebar-collapsed .sidebar-section-title { display: none; }
-.app-shell.sidebar-collapsed .sidebar-link {
-  justify-content: center;
-  padding: 10px 0;
-}
-.app-shell.sidebar-collapsed .sidebar-icon { margin: 0 auto; }
 
 /* App Header */
 .app-header {

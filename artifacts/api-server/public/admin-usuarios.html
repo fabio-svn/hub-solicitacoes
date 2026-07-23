@@ -44,9 +44,14 @@
     .rg-pill { padding: 3px 10px; border-radius: var(--radius-pill); font-size: 0.78rem; font-weight: 700; font-family: 'Nunito Sans', sans-serif; }
     .rg-count { margin-left: 8px; font-size: 0.78rem; opacity: 0.55; }
     @media (max-width: 600px) {
-      #usuariosTabela { table-layout: auto !important; width: 100% !important; }
-      #usuariosTabela th, #usuariosTabela td { width: auto !important; }
-      #usuariosTabela td { overflow: visible !important; }
+      /* Reverte o card-layout global do .admin-table: esta tabela usa scroll horizontal */
+      #usuariosTabela { display: table !important; table-layout: auto !important; width: 100% !important; }
+      #usuariosTabela thead { display: table-header-group !important; }
+      #usuariosTabela tbody { display: table-row-group !important; }
+      #usuariosTabela tr { display: table-row !important; width: auto !important; border: revert !important; border-radius: 0 !important; margin-bottom: 0 !important; padding: 0 !important; }
+      #usuariosTabela th,
+      #usuariosTabela td { display: table-cell !important; width: auto !important; overflow: visible !important; }
+      #usuariosTabela td::before { display: none !important; }
       .col-resizer { display: none; }
     }
   </style>
