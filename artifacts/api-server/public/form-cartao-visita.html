@@ -54,7 +54,7 @@
 
       <!-- Passo 1: Escolha do tipo -->
       <div class="form-step active" id="step1">
-        <h2 style="font-weight:600;font-size:1.1rem;margin-bottom:20px">Qual tipo de cartão você precisa?</h2>
+        <h2 class="card-titulo">Qual tipo de cartão você precisa?</h2>
         <div class="radio-cards step1-escolha">
           <div class="radio-card" onclick="selectTipo('fisico')" id="cardFisico">
             <div class="card-icon">
@@ -134,7 +134,7 @@
         </div>
         <div class="section-divider">
           <div id="submitErrorFisico" class="alert-card alert-danger" style="display:none;margin-bottom:16px"></div>
-          <div class="form-nav" style="justify-content:flex-end">
+          <div class="form-nav">
             <button class="btn btn-primary btn-submit-gold" id="btnSubmitFisico" onclick="submitFormFisico()">Enviar</button>
           </div>
         </div>
@@ -183,7 +183,7 @@
         </div>
         <div class="section-divider">
           <div id="submitErrorDigital" class="alert-card alert-danger" style="display:none;margin-bottom:16px"></div>
-          <div class="form-nav" style="justify-content:flex-end">
+          <div class="form-nav">
             <button class="btn btn-primary btn-submit-gold" id="btnSubmitDigital" onclick="submitFormDigital()">Enviar</button>
           </div>
         </div>

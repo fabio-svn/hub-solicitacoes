@@ -149,4 +149,34 @@ if prob == 0:
     print(f"  (sem \u26a0 = {len(set(sch)|set(dd))-len(IGNORAR & (set(sch)|set(dd)))} tabelas batem coluna-a-coluna, nos dois sentidos)")
 PY
 
+echo; echo "### 8. Deriva do <head>: fonte e favicon fora do padrao ###"
+python3 - "$PUB" <<'PY'
+import glob, os, re, sys
+pub = sys.argv[1]
+# O que toda pagina do Hub precisa ter no <head>. Se um arquivo novo for criado
+# a partir de um modelo antigo, e aqui que a diferenca aparece — foi assim que
+# 11 paginas ficaram sem preload de fonte e sem favicon.
+EXIGIDO = [
+    ('preconnect gstatic', r'rel="preconnect"\s+href="https://fonts\.gstatic\.com"'),
+    ('preload da fonte',   r'rel="preload"\s+as="style"'),
+    ('noscript da fonte',  r'<noscript><link rel="stylesheet" href="https://fonts\.googleapis\.com'),
+    ('favicon 32',         r'favicon-32x32\.png'),
+    ('favicon 16',         r'favicon-16x16\.png'),
+    ('apple-touch-icon',   r'apple-touch-icon\.png'),
+    ('site.webmanifest',   r'site\.webmanifest'),
+    ('theme-color',        r'name="theme-color"'),
+]
+prob = 0
+for f in sorted(glob.glob(os.path.join(pub, '*.html'))):
+    m = re.search(r'<head>(.*?)</head>', open(f, encoding='utf-8', errors='replace').read(), re.S)
+    if not m:
+        continue
+    faltando = [nome for nome, rx in EXIGIDO if not re.search(rx, m.group(1))]
+    if faltando:
+        print(f"  \u26a0 {os.path.basename(f)}: sem {', '.join(faltando)}")
+        prob += 1
+if prob == 0:
+    print("  (sem \u26a0 = todas as paginas com o <head> padrao)")
+PY
+
 echo; echo "==================== FIM ===================="

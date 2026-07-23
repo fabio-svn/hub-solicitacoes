@@ -1606,6 +1606,9 @@ router.post("/assessor-aprovacoes/:id/decisao", requireAuth, async (req, res): P
     };
     if (novoStatus === "ajustes-solicitados") setFields.ciclo = (pub?.ciclo || 1) + 1;
 
+    // Vira true quando ha link publicado — e o unico gatilho do e-mail de conclusao.
+    let avisarAssessor = false;
+
     // "Concluído" = publicado no site. So faz sentido depois de aprovado e nao e uma
     // decisao de validacao: nao mexe em decidido_por/decidido_em nem nos ajustes.
     if (novoStatus === "publicado") {
@@ -1621,26 +1624,33 @@ router.post("/assessor-aprovacoes/:id/decisao", requireAuth, async (req, res): P
         return;
       }
 
-      // A pagina so esta "concluida" quando esta no ar em algum endereco. Exigir a
-      // URL aqui garante que o link fique registrado e possa ir no e-mail ao assessor.
+      // LINK-OPCIONAL-ATUALIZACAO: em pagina nova o link e obrigatorio — e ele que
+      // vai no e-mail que avisa o assessor. Em atualizacao a pagina ja esta no ar,
+      // entao o campo e opcional, e preenche-lo passa a ser o gesto de "vale um
+      // aviso". Sem link, conclui em silencio e o entrega_links antigo fica intacto
+      // (sobrescrever com vazio apagaria o link da publicacao original).
+      const ehAtualizacao = assessorCategoria(sol, dados) === "atualizacao";
       const urlPublicada = String((b as any).url_publicada || "").trim();
-      if (!urlPublicada) {
+      if (!urlPublicada && !ehAtualizacao) {
         res.status(400).json({ error: "Informe o link da página publicada para concluir." });
         return;
       }
-      let urlValida: string;
-      try {
-        const u = new URL(urlPublicada);
-        if (u.protocol !== "http:" && u.protocol !== "https:") throw new Error("protocolo");
-        urlValida = u.toString();
-      } catch {
-        res.status(400).json({ error: "O link da página precisa ser uma URL válida (começando com https://)." });
-        return;
+      if (urlPublicada) {
+        let urlValida: string;
+        try {
+          const u = new URL(urlPublicada);
+          if (u.protocol !== "http:" && u.protocol !== "https:") throw new Error("protocolo");
+          urlValida = u.toString();
+        } catch {
+          res.status(400).json({ error: "O link da página precisa ser uma URL válida (começando com https://)." });
+          return;
+        }
+        // entrega_links e o campo que o resumo ja mostra ao solicitante
+        await db.update(solicitacoesTable)
+          .set({ entrega_links: [{ label: "Página no site", url: urlValida }], updated_at: new Date() })
+          .where(eq(solicitacoesTable.id, id));
+        avisarAssessor = true;
       }
-      // entrega_links e o campo que o resumo ja mostra ao solicitante
-      await db.update(solicitacoesTable)
-        .set({ entrega_links: [{ label: "Página no site", url: urlValida }], updated_at: new Date() })
-        .where(eq(solicitacoesTable.id, id));
       delete setFields.decidido_por;
       delete setFields.decidido_em;
       delete setFields.ajustes;
@@ -1667,7 +1677,9 @@ router.post("/assessor-aprovacoes/:id/decisao", requireAuth, async (req, res): P
     }
 
     // Unico aviso que o assessor recebe depois do "recebida": a pagina esta no ar.
-    if (novoStatus === "publicado") {
+    // Em atualizacao concluida sem link, nao ha o que anunciar — ver
+    // LINK-OPCIONAL-ATUALIZACAO acima.
+    if (novoStatus === "publicado" && avisarAssessor) {
       notificarMarcoBg(id, "publicada");
     }
 

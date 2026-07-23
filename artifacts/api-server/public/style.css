@@ -648,6 +648,10 @@ input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
 
 /* Form navigation */
 .form-nav { display: flex; gap: 12px; margin-top: 24px; justify-content: flex-end; }
+
+/* Titulo de bloco dentro de card/painel. Estava repetido inline em 16 <h2>
+   de 13 telas; mexer no tamanho exigia achar os 16. */
+.card-titulo { font-weight: 600; font-size: 1.1rem; margin-bottom: 20px; }
 .form-step { display: none; }
 .form-step.active { display: block; animation: fadeSlide 0.28s ease forwards; }
 .form-step.leaving { display: block; animation: fadeSlideOut 0.2s ease forwards; }

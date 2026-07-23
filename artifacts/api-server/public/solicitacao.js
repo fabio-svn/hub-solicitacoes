@@ -1197,8 +1197,14 @@
             </div>
           </div>
         </div>`;
-      const chatWrap = document.getElementById('chatWrap');
-      if (chatWrap) chatWrap.insertAdjacentHTML('beforeend', html);
+      /* PESQUISA-SEM-CHAT: isto desenhava so dentro de #chatWrap, que existe
+         apenas quando o card de aprovacao e montado. Nas solicitacoes sem
+         mini-chat o pesquisaSeAplicavel() rodava, chamava esta funcao, o
+         getElementById voltava null e nada acontecia — sem erro. Resultado: essas
+         solicitacoes nunca pediram avaliacao, e a media so refletia os tipos com
+         aprovacao. */
+      const alvo = document.getElementById('chatWrap') || document.getElementById('pesquisaCard');
+      if (alvo) alvo.insertAdjacentHTML('beforeend', html);
     }
 
     function selecionarNota(nota) {

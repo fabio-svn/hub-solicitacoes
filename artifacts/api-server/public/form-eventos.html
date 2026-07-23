@@ -34,7 +34,7 @@
 
           <!-- STEP 1: Natureza -->
           <div class="form-step active" id="step1">
-            <h2 style="font-weight:600;font-size:1.1rem;margin-bottom:20px">O evento é presencial ou online?</h2>
+            <h2 class="card-titulo">O evento é presencial ou online?</h2>
             <div class="field">
               <div class="radio-cards">
                 <div class="radio-card" onclick="selectNatureza('presencial')" id="cardPresencial">
@@ -83,7 +83,7 @@
           Voltar
         </button>
 
-            <h2 style="font-weight:600;font-size:1.1rem;margin-bottom:20px">Qual o nível de informação que você tem sobre o evento?</h2>
+            <h2 class="card-titulo">Qual o nível de informação que você tem sobre o evento?</h2>
             <div class="radio-cards maturidade-cards" style="margin-bottom:16px">
               <div class="radio-card" onclick="selectMaturidade(1)" id="mat1">
                 <div class="card-icon" style="font-size:2rem;font-family:'Taviraj', serif;font-weight:300">1</div>
@@ -124,7 +124,7 @@
               <div class="alert-title">Dica</div>
               <div class="alert-text">Se os materiais de apoio não estiverem definidos, marque a opção "Pacote Padrão", pois é utilizado na grande maioria dos eventos.</div>
             </div>
-            <h2 style="font-weight:600;font-size:1.1rem;margin-bottom:20px">Materiais e serviços</h2>
+            <h2 class="card-titulo">Materiais e serviços</h2>
             <div id="materiaisContainer"></div>
             <div id="materiaisCondFields" style="margin-top:16px"></div>
             <div class="field-error" id="materiaisError">Selecione pelo menos um item para continuar.</div>
@@ -141,7 +141,7 @@
           Voltar
         </button>
 
-            <h2 style="font-weight:600;font-size:1.1rem;margin-bottom:20px">Palestrantes</h2>
+            <h2 class="card-titulo">Palestrantes</h2>
             <div class="field">
               <label>O evento terá palestrante(s)?</label>
               <div class="radio-group">
@@ -174,7 +174,7 @@
           Voltar
         </button>
 
-            <h2 style="font-weight:600;font-size:1.1rem;margin-bottom:20px">Custos</h2>
+            <h2 class="card-titulo">Custos</h2>
             <div class="field">
               <label>Custo estimado (em R$)</label>
               <input type="text" id="custoEstimado" placeholder="R$ 0,00" oninput="handleCusto()">
@@ -198,7 +198,7 @@
           Voltar
         </button>
 
-            <h2 style="font-weight:600;font-size:1.1rem;margin-bottom:20px">Anexos e observações</h2>
+            <h2 class="card-titulo">Anexos e observações</h2>
             <div class="field">
               <label>Logo complementar de parceiro (opcional)</label>
               <div class="file-input-wrapper">
