@@ -61,13 +61,14 @@
         </button>
 
         <div id="updateCard" style="display:none" class="alert-card alert-info">
-          <div class="alert-title">Atualização</div>
-          <div class="alert-text">Preencha apenas os campos que deseja atualizar. Os demais permanecerão como estão no seu perfil atual.</div>
+          <div class="alert-title">O que você gostaria de atualizar?</div>
+          <div class="alert-text">Marque abaixo o que você quer mudar — pode escolher mais de um. O que ficar de fora continua como está hoje na sua página.</div>
         </div>
 
         <!-- Seletor inline — mostrado apenas quando isAtualizacao === true -->
         <div id="seletorInline" style="display:none;margin-bottom:24px">
-          <p style="font-size:0.85rem;font-weight:600;margin-bottom:10px">O que você gostaria de atualizar?</p>
+          <!-- O titulo agora vive no aviso acima (#updateCard), junto da instrucao:
+               repetir a pergunta aqui so duplicava a mesma frase duas vezes na tela. -->
           <div style="display:flex;flex-wrap:wrap;gap:8px" id="camposBtnList">
             <button class="campo-toggle-btn" data-campo="nomeCompleto" onclick="toggleCampoInline(this)">Nome completo</button>
             <button class="campo-toggle-btn" data-campo="codigoAssessor" onclick="toggleCampoInline(this)">Código do assessor</button>
@@ -81,6 +82,8 @@
             <button class="campo-toggle-btn" data-campo="depoimentos" onclick="toggleCampoInline(this)">Depoimentos</button>
           </div>
           <p id="seletorInlineError" style="display:none;color:var(--ruby-red);font-size:0.8rem;margin-top:8px">Selecione ao menos um campo para enviar.</p>
+          <!-- Os campos escolhidos sao movidos para ca (ver toggleCampoInline). -->
+          <div id="camposSelecionadosWrap" style="margin-top:18px"></div>
         </div>
 
         <h2 class="card-titulo">Informações do assessor</h2>
@@ -338,6 +341,54 @@
 
     const camposSelecionados = new Set();
 
+    /* CAMPO-JUNTO-DOS-BOTOES ─────────────────────────────────────────────────
+       Os campos vivem na ordem do formulario completo (o mesmo HTML serve ao
+       fluxo de pagina nova). No fluxo de atualizacao isso deixava o campo
+       escolhido aparecer bem longe do botao que o revelou — a pessoa clicava em
+       "Foto de perfil" e a mudanca acontecia fora da vista, depois de Telefone e
+       de "Voce e assessor?".
+
+       Agora o campo escolhido e MOVIDO para logo abaixo dos botoes, e devolvido
+       ao lugar de origem quando desmarcado. Um marcador invisivel guarda a
+       posicao original, e a ordem dentro do container segue a do formulario, nao
+       a ordem dos cliques. O fluxo de pagina nova nao chama esta funcao (os
+       botoes so existem no de atualizacao), entao nada muda la. */
+    let _ordemCampos = null;
+
+    function _ordemDosCampos() {
+      if (!_ordemCampos) {
+        _ordemCampos = Array.prototype.map.call(
+          document.querySelectorAll('#step2 [id^="field_"]'),
+          function (el) { return el.id; }
+        );
+      }
+      return _ordemCampos;
+    }
+
+    function moverCampoParaCima(fieldEl) {
+      const destino = document.getElementById('camposSelecionadosWrap');
+      if (!destino || fieldEl.parentNode === destino) return;
+      const ordem = _ordemDosCampos();
+
+      if (!document.querySelector('[data-slot="' + fieldEl.id + '"]')) {
+        const marca = document.createElement('span');
+        marca.setAttribute('data-slot', fieldEl.id);
+        marca.style.display = 'none';
+        fieldEl.parentNode.insertBefore(marca, fieldEl);
+      }
+
+      const meu = ordem.indexOf(fieldEl.id);
+      const antes = Array.prototype.find.call(destino.children, function (c) {
+        return ordem.indexOf(c.id) > meu;
+      });
+      destino.insertBefore(fieldEl, antes || null);
+    }
+
+    function devolverCampo(fieldEl) {
+      const marca = document.querySelector('[data-slot="' + fieldEl.id + '"]');
+      if (marca && marca.parentNode) marca.parentNode.insertBefore(fieldEl, marca);
+    }
+
     function toggleCampoInline(btn) {
       const campo = btn.dataset.campo;
       const fieldEl = document.getElementById('field_' + campo);
@@ -348,13 +399,15 @@
         if (fieldEl) {
           fieldEl.style.maxHeight = '0';
           fieldEl.style.overflow = 'hidden';
-          setTimeout(() => { fieldEl.style.display = 'none'; }, 300);
+          // devolve so depois da animacao, senao o campo "pula" antes de sumir
+          setTimeout(() => { fieldEl.style.display = 'none'; devolverCampo(fieldEl); }, 300);
           fieldEl.querySelectorAll('input,textarea,select').forEach(i => i.required = false);
         }
       } else {
         camposSelecionados.add(campo);
         btn.classList.add('selecionado');
         if (fieldEl) {
+          moverCampoParaCima(fieldEl);
           fieldEl.style.display = 'block';
           fieldEl.style.overflow = 'hidden';
           fieldEl.style.maxHeight = '0';

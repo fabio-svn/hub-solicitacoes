@@ -394,3 +394,77 @@ function statusBadgeHtml(status, opts) {
     + ' style="background:' + (s.bg || '#f1f5f9') + ';color:' + (s.text || '#475569') + extra + '">'
     + esc(s.label) + '</span>';
 }
+
+/* ── REDE-DE-ERROS ──────────────────────────────────────────────────────────
+   Ate aqui, um erro de JavaScript sumia: a pagina ficava quebrada e o unico
+   registro era o console de quem estava usando. Isto captura o que escapa e
+   manda para /api/client-error, que grava no log de atividades.
+
+   Tres travas para nao virar o proprio problema:
+     - no maximo 5 relatos por sessao
+     - a mesma falha (mensagem + origem) so e relatada uma vez
+     - o envio nunca lanca; se falhar, falha calado
+
+   Ele NAO substitui try/catch: serve para o que ninguem previu. */
+(function () {
+  var LIMITE_POR_SESSAO = 5;
+  var enviados = 0;
+  var vistos = {};
+
+  function relatar(dados) {
+    if (enviados >= LIMITE_POR_SESSAO) return;
+    var chave = (dados.mensagem || '') + '|' + (dados.origem || '');
+    if (vistos[chave]) return;
+    vistos[chave] = 1;
+    enviados++;
+    try {
+      var corpo = JSON.stringify(dados);
+      // sendBeacon sobrevive a navegacao e leva o cookie de sessao junto.
+      if (navigator.sendBeacon) {
+        navigator.sendBeacon('/api/client-error', new Blob([corpo], { type: 'application/json' }));
+      } else {
+        fetch('/api/client-error', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: corpo,
+          keepalive: true,
+        }).catch(function () {});
+      }
+    } catch (e) { /* relatar erro nao pode gerar erro */ }
+  }
+
+  window.addEventListener('error', function (e) {
+    // Falha de carregamento de recurso chega neste mesmo evento, com o elemento
+    // no target. Só script e folha de estilo interessam — imagem quebrada em
+    // conteudo de usuario nao e problema do Hub.
+    var alvo = e.target;
+    if (alvo && alvo !== window && alvo.tagName) {
+      var tag = alvo.tagName.toUpperCase();
+      if (tag === 'SCRIPT' || tag === 'LINK') {
+        relatar({
+          tipo: 'recurso',
+          mensagem: 'Falha ao carregar ' + tag.toLowerCase(),
+          origem: alvo.src || alvo.href || location.pathname,
+        });
+      }
+      return;
+    }
+    relatar({
+      tipo: 'erro',
+      mensagem: (e.message || 'Erro desconhecido'),
+      origem: location.pathname + (e.filename ? ' · ' + e.filename : ''),
+      linha: e.lineno,
+      stack: e.error && e.error.stack ? String(e.error.stack) : '',
+    });
+  }, true);
+
+  window.addEventListener('unhandledrejection', function (e) {
+    var r = e.reason;
+    relatar({
+      tipo: 'promise',
+      mensagem: (r && (r.message || String(r))) || 'Promise rejeitada sem motivo',
+      origem: location.pathname,
+      stack: r && r.stack ? String(r.stack) : '',
+    });
+  });
+})();

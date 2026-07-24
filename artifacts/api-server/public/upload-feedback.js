@@ -1,4 +1,8 @@
 const FileUpload = {
+  // Espelha o LIMITE_UPLOAD_MB do src/routes/forms.ts. Se mudar la, mude aqui:
+  // e este numero que evita um upload longo terminar em recusa.
+  MAX_MB_PADRAO: 250,
+
   success(nameEl, file) {
     if (!nameEl) return;
     const size = file.size >= 1024 * 1024
@@ -34,6 +38,67 @@ const FileUpload = {
     input.dataset.uploadBound = '1';
     options = options || {};
 
+    /* DICA-DE-UPLOAD: o limite e os formatos so apareciam DEPOIS de escolher um
+       arquivo errado, em mensagem de erro. Como o bind ja conhece os dois, a
+       dica e montada aqui — assim ela nasce certa em todo formulario e continua
+       certa quando o limite mudar, sem depender de alguem lembrar de editar 23
+       arquivos. */
+    (function escreverDica() {
+      var caixa = (input.closest && input.closest('.file-input-wrapper')) || input.parentElement;
+      if (!caixa || caixa.querySelector('.file-hint')) return;
+
+      var partes = [];
+      if (options.accept) {
+        var itens = options.accept.split(',').map(function (x) { return x.trim().toLowerCase(); }).filter(Boolean);
+        // Hoje os formularios so usam extensao, mas aceitar padrao MIME e legal
+        // e alguem pode escrever "image/*" um dia — sem isto, a dica omitiria
+        // metade do que o campo aceita.
+        var GRUPO = { image: 'imagens', video: 'vídeos', audio: 'áudios' };
+        var exts = itens.map(function (x) {
+          if (x.indexOf('/') === -1) return x.replace(/^\./, '');
+          if (x.slice(-2) === '/*') return GRUPO[x.slice(0, -2)] || x.slice(0, -2);
+          return x.split('/')[1];
+        }).filter(Boolean);
+        // "JPG, JPEG" polui sem informar: quem tem .jpeg entende JPG.
+        if (exts.indexOf('jpg') !== -1) {
+          exts = exts.filter(function (x) { return x !== 'jpeg'; });
+        }
+        if (exts.length) {
+          var GRUPOS = ['imagens', 'vídeos', 'áudios'];
+          partes.push(exts.map(function (x) {
+            return GRUPOS.indexOf(x) !== -1 ? x : x.toUpperCase();
+          }).join(', '));
+        }
+        // De quebra, o seletor do sistema passa a filtrar sozinho.
+        if (!input.getAttribute('accept')) input.setAttribute('accept', options.accept);
+      }
+
+      var maxMB = options.maxMB || FileUpload.MAX_MB_PADRAO;
+      if (maxMB) partes.push('até ' + maxMB + ' MB');
+      if (!partes.length) return;
+
+      var dica = document.createElement('div');
+      dica.className = 'file-hint';
+      dica.textContent = partes.join(' · ');
+
+      /* DICA-EM-LINHA-FLEX: no formulario de assessores o wrapper divide uma
+         linha flex com o botao "Acessar banco de fotos", e o pai alinha pelo
+         centro. Pondo a dica DENTRO do wrapper, ele ficava mais alto e o botao
+         vizinho descia junto — o alinhamento quebrava. Nesse caso a dica vai
+         para o fim da propria linha e, com flex-basis:100% no CSS, cai sozinha
+         na linha de baixo: a altura do wrapper volta a ser a do botao. */
+      var pai = caixa.parentElement;
+      var paiEhFlex = false;
+      try {
+        paiEhFlex = !!pai && /flex/.test(window.getComputedStyle(pai).display);
+      } catch (e) { /* ambiente sem layout: segue pelo caminho normal */ }
+
+      if (paiEhFlex) pai.appendChild(dica);
+      // Antes do nome do arquivo escolhido, para a dica ficar colada no botao.
+      else if (nameEl && nameEl.parentNode === caixa) caixa.insertBefore(dica, nameEl);
+      else caixa.appendChild(dica);
+    })();
+
     input.addEventListener('change', function(e) {
       const f = e.target.files[0];
       if (!f) { FileUpload.clear(nameEl); return; }
@@ -57,8 +122,14 @@ const FileUpload = {
         }
       }
 
-      if (options.maxMB && f.size > options.maxMB * 1024 * 1024) {
-        FileUpload.error(nameEl, 'Arquivo excede o tamanho máximo de ' + options.maxMB + ' MB');
+      /* MAX_MB_PADRAO: o maxMB era opcional e quase nenhum formulario passava —
+         o arquivo subia inteiro para o servidor recusar no fim (14 s de upload
+         para receber "erro interno"). Agora, sem maxMB proprio, vale o mesmo
+         limite do POST /api/solicitacoes, e a recusa acontece na hora de
+         escolher o arquivo. Quem passa um limite menor continua com o seu. */
+      var maxMB = options.maxMB || FileUpload.MAX_MB_PADRAO;
+      if (maxMB && f.size > maxMB * 1024 * 1024) {
+        FileUpload.error(nameEl, 'Arquivo excede o tamanho máximo de ' + maxMB + ' MB');
         input.value = '';
         return;
       }

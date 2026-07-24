@@ -3,9 +3,6 @@ import { logger } from "./lib/logger";
 import { pool } from "@workspace/db";
 import { startStuckMonitor } from "./services/stuck-monitor";
 import { startHealthMonitor } from "./services/health-monitor";
-import { sendAlert } from "./services/alert";
-import { marcarDesligando } from "./routes/health";
-import type { Server } from "http";
 
 const rawPort = process.env["PORT"];
 
@@ -20,9 +17,6 @@ const port = Number(rawPort);
 if (Number.isNaN(port) || port <= 0) {
   throw new Error(`Invalid PORT value: "${rawPort}"`);
 }
-
-// Fica no escopo do modulo para que os guardas de processo la embaixo alcancem.
-let servidor: Server | undefined;
 
 const DB_STATEMENTS = [
   // Sessões (express-session)
@@ -251,92 +245,16 @@ async function start() {
   }
   logger.info("Database setup complete");
 
-  servidor = app.listen(port, () => {
+  const server = app.listen(port, () => {
     logger.info({ port }, "Server listening");
     startStuckMonitor();
     startHealthMonitor();
   });
 
-  servidor.on('error', (err) => {
+  server.on('error', (err) => {
     logger.error({ err }, "Error listening on port");
     process.exit(1);
   });
 }
 
 start();
-
-/* ── GUARDAS-DE-PROCESSO ────────────────────────────────────────────────────
-   Faltavam as duas pontas do ciclo de vida do processo:
-
-   1. Desligamento. A cada deploy o Railway manda SIGTERM e o processo morria na
-      hora, cortando requisicoes em andamento. Com upload de ate 250 MB isso
-      significa alguem perder minutos de envio porque voce publicou uma correcao.
-      Agora o servidor para de aceitar conexoes novas, espera as abertas e so
-      entao encerra o pool do banco.
-
-   2. Erro fora de requisicao. Um `unhandledRejection` num monitor ou num
-      logAtividadeBg derrubava o processo em silencio — o Railway reiniciava e o
-      alerta que voces ja tem montado nao disparava.
-
-   ATENCAO ao efeito colateral: desde o Node 15, promise rejeitada sem
-   tratamento DERRUBA o processo por padrao. Ao registrar o listener abaixo, ela
-   passa a ser registrada e o servidor CONTINUA de pe. E a troca certa para
-   tarefa de fundo, mas significa que um bug assim nao aparece mais como queda —
-   ele aparece no log e no alerta. Vale acompanhar o canal de alerta nas
-   primeiras semanas. Ja o uncaughtException encerra mesmo: depois dele o estado
-   do processo e incerto, e insistir e pior do que reiniciar. */
-
-const LIMITE_DRENAGEM_MS = 25_000;
-let encerrando = false;
-
-function encerrar(codigo: number, motivo: string): void {
-  if (encerrando) return;
-  encerrando = true;
-  marcarDesligando();
-  logger.info({ motivo }, "Encerrando: parando de aceitar conexoes");
-
-  // Teto: se alguma requisicao longa nao terminar, sai mesmo assim. O unref
-  // evita que este timer sozinho segure o processo de pe.
-  const forcar = setTimeout(() => {
-    logger.warn({ motivo, limiteMs: LIMITE_DRENAGEM_MS }, "Encerramento forcado com requisicoes abertas");
-    process.exit(codigo);
-  }, LIMITE_DRENAGEM_MS);
-  forcar.unref();
-
-  const finalizar = () => {
-    pool.end()
-      .catch((err) => logger.warn({ err }, "Falha ao encerrar o pool do banco"))
-      .finally(() => {
-        clearTimeout(forcar);
-        logger.info({ motivo }, "Encerrado com as requisicoes concluidas");
-        process.exit(codigo);
-      });
-  };
-
-  if (servidor) servidor.close(finalizar);
-  else finalizar();
-}
-
-process.on("SIGTERM", () => encerrar(0, "SIGTERM"));
-process.on("SIGINT", () => encerrar(0, "SIGINT"));
-
-process.on("unhandledRejection", (motivo: unknown) => {
-  logger.error({ err: motivo }, "Unhandled rejection");
-  void sendAlert({
-    service: "processo",
-    level: "error",
-    text: "Promise rejeitada sem tratamento",
-    meta: { motivo: motivo instanceof Error ? motivo.message : String(motivo) },
-  });
-});
-
-process.on("uncaughtException", (err) => {
-  logger.fatal({ err }, "Uncaught exception");
-  void sendAlert({
-    service: "processo",
-    level: "error",
-    text: "Excecao nao tratada — reiniciando",
-    meta: { erro: err.message },
-  });
-  encerrar(1, "uncaughtException");
-});

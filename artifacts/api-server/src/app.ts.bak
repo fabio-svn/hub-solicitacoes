@@ -51,11 +51,6 @@ app.use(compression());
 app.use(
   pinoHttp({
     logger,
-    /* CODIGO-DE-ERRO: o id padrao do pino-http e um contador que reinicia junto
-       com o processo — dois erros diferentes podiam ser "req.id 76". Um codigo
-       curto e aleatorio da para a pessoa ditar por telefone e para voce achar no
-       log com um grep, sem ambiguidade entre reinicios. */
-    genReqId: () => Math.random().toString(36).slice(2, 8).toUpperCase(),
     serializers: {
       req(req) {
         return {
@@ -191,29 +186,9 @@ app.use((err: Error, req: Request, res: Response, _next: NextFunction) => {
     });
     return;
   }
-  /* MULTER-NAO-E-UNHANDLED: as outras rotas com upload (assets, corporate,
-     admin) ainda usam o multer cru. Sem este ramo, um arquivo grande demais
-     entrava no log como "Unhandled error" e voltava 500, escondendo um caso
-     previsto entre as falhas de verdade. */
-  if ((err as any)?.name === "MulterError") {
-    const code = (err as any).code as string;
-    const field = (err as any).field as string | undefined;
-    req.log?.warn({ code, field }, "Upload recusado pelo limite");
-    res.status(code === "LIMIT_FILE_SIZE" ? 413 : 400).json({
-      error: code === "LIMIT_FILE_SIZE"
-        ? "Arquivo acima do limite aceito neste envio."
-        : "Nao foi possivel receber o arquivo enviado.",
-      code,
-    });
-    return;
-  }
-
   req.log?.error({ err }, "Unhandled error");
-  /* O codigo vai junto na resposta: e o unico fio entre "deu erro na minha tela"
-     e a linha certa do log. So no 500 — os outros erros ja dizem o que houve. */
   res.status(500).json({
     error: process.env.NODE_ENV !== "production" ? ((err as any).message || "Erro interno do servidor") : "Erro interno do servidor",
-    ref: req.id,
   });
 });
 

@@ -1,4 +1,6 @@
 import { Router } from "express";
+import type { RequestHandler } from "express";
+import { ApiError } from "../utils/api-error";
 import { TIPOS_AUTOMACAO_SET } from "../config/tipos";
 import { fetchWithTimeout } from "../lib/http";
 import multer from "multer";
@@ -59,7 +61,60 @@ router.get("/prazo/info", requireAuth, (req, res): void => {
   });
 });
 
-const upload = multer({ dest: os.tmpdir(), limits: { fileSize: 50 * 1024 * 1024, files: 10, fields: 20 } });
+/* LIMITE-UPLOAD-MB: arquivo grande demais e erro previsivel, mas caia no
+   handler global ele virava "Unhandled error" + 500 "Erro interno do servidor" —
+   o log parecia falha do servidor e quem enviava nao descobria que o problema
+   era o tamanho. Aqui o multer e embrulhado para devolver 413 com o limite
+   escrito, que o handler global ja sabe formatar (e um ApiError). */
+/* 250 MB (era 50) para caber midia kit e material de audiovisual. O arquivo
+   nao passa pela memoria: o multer grava em disco temporario e o uploadToR2 le
+   com createReadStream, apagando o temporario no finally. O custo real e tempo
+   de requisicao — nos ~29 Mbps de upload observados no log, 250 MB levam perto
+   de 70 s so para chegar ao servidor. Por isso o limite do navegador
+   (MAX_MB_PADRAO no upload-feedback.js) precisa continuar espelhando este
+   numero: recusar depois de 70 s de espera e bem pior do que recusar na hora
+   de escolher o arquivo. */
+export const LIMITE_UPLOAD_MB = 250;
+const LIMITE_ARQUIVOS = 10;
+
+const uploadRaw = multer({
+  dest: os.tmpdir(),
+  limits: { fileSize: LIMITE_UPLOAD_MB * 1024 * 1024, files: LIMITE_ARQUIVOS, fields: 20 },
+});
+
+const MULTER_MSG: Record<string, { status: number; msg: string }> = {
+  LIMIT_FILE_SIZE: { status: 413, msg: `Arquivo acima do limite de ${LIMITE_UPLOAD_MB} MB.` },
+  LIMIT_FILE_COUNT: { status: 400, msg: `Envie no maximo ${LIMITE_ARQUIVOS} arquivos.` },
+  LIMIT_UNEXPECTED_FILE: { status: 400, msg: "Campo de arquivo inesperado no envio." },
+  LIMIT_FIELD_COUNT: { status: 400, msg: "Formulario com campos demais." },
+};
+
+/* WRAPPER-COMPLETO: a primeira versao expunha so `any()`, e o
+   POST /solicitacoes/:id/alteracao usa `array("arquivos", 10)` — o tsc pegou.
+   Agora o tratamento de erro e uma funcao a parte e cada metodo do multer passa
+   por ela, entao acrescentar `single`/`fields` no futuro nao volta a quebrar. */
+function comErroTratado(mw: RequestHandler): RequestHandler {
+  return (req, res, next) => {
+    mw(req, res, (err: any) => {
+      if (err && err.name === "MulterError") {
+        const t = MULTER_MSG[err.code] || { status: 400, msg: "Nao foi possivel receber o arquivo." };
+        const campo = err.field ? ` (campo: ${err.field})` : "";
+        req.log?.warn({ code: err.code, field: err.field }, "Upload recusado pelo limite");
+        next(new ApiError(t.status, t.msg + campo, err.code));
+        return;
+      }
+      next(err);
+    });
+  };
+}
+
+const upload = {
+  any: (): RequestHandler => comErroTratado(uploadRaw.any()),
+  array: (campo: string, maximo?: number): RequestHandler => comErroTratado(uploadRaw.array(campo, maximo)),
+  single: (campo: string): RequestHandler => comErroTratado(uploadRaw.single(campo)),
+  fields: (campos: readonly { name: string; maxCount?: number }[]): RequestHandler =>
+    comErroTratado(uploadRaw.fields(campos as { name: string; maxCount?: number }[])),
+};
 
 router.get("/form-schemas", (_req, res) => {
   const schemaList = getFormSchemaList();

@@ -12,20 +12,7 @@ router.get("/healthz", (_req, res) => {
 // Readiness: reflete o estado das dependências (banco, R2) coletado pelo health-monitor.
 // 503 = "no ar, porém degradado". Um monitor externo (ex.: UptimeRobot) pode acompanhar
 // este endpoint. O /healthz acima segue como liveness puro do processo.
-/* DESLIGANDO: entre o SIGTERM e a ultima requisicao terminar, o processo ainda
-   responde — mas nao deve receber trafego novo. Quem observa o /readyz (proxy,
-   monitor externo) precisa ver 503 nessa janela, senao continua mandando gente
-   para uma instancia que esta fechando. */
-let desligando = false;
-export function marcarDesligando(): void {
-  desligando = true;
-}
-
 router.get("/readyz", (_req, res) => {
-  if (desligando) {
-    res.status(503).json({ ok: false, desligando: true });
-    return;
-  }
   const snap = getHealthSnapshot();
   res.status(snap.ok ? 200 : 503).json(snap);
 });

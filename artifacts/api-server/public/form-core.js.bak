@@ -252,18 +252,11 @@ window.FormCore = (function () {
       else { fd.append(field, el.files[0]); }
     });
 
-    /* CODIGO-NA-TELA: o catch era vazio, entao queda de rede no meio do upload
-       ficava indistinguivel de recusa do servidor — as duas viravam "Erro ao
-       enviar. Tente novamente.". Agora a falha de rede se identifica, e quando o
-       servidor manda um `ref` (erro 500) o codigo aparece na tela para a pessoa
-       repassar. */
-    let res = { ok: false }, d = {}, falhaDeRede = false;
+    let res = { ok: false }, d = {};
     try {
       res = await fetch('/api/solicitacoes', { method: 'POST', body: fd });
       d = await res.json().catch(function () { return {}; });
-    } catch (_) {
-      falhaDeRede = true;
-    }
+    } catch (_) {}
 
     if (res.ok) {
       _clearDraft(opts.draftTipo || _activeDraftTipo || tipo);
@@ -284,12 +277,7 @@ window.FormCore = (function () {
     }
 
     const errEl = document.getElementById('submitError');
-    if (errEl) {
-      errEl.style.display = 'block';
-      errEl.textContent = falhaDeRede
-        ? 'A conexão caiu durante o envio. Verifique a internet e tente de novo — o rascunho foi mantido.'
-        : (d.error || 'Erro ao enviar. Tente novamente.') + (d.ref ? ' (código ' + d.ref + ')' : '');
-    }
+    if (errEl) { errEl.style.display = 'block'; errEl.textContent = d.error || 'Erro ao enviar. Tente novamente.'; }
     if (btn) { if (window.formUnlockUI) window.formUnlockUI(btn); else { btn.disabled = false; btn.textContent = 'Enviar'; } }
     return false;
   }

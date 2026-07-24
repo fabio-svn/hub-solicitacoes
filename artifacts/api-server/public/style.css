@@ -1068,6 +1068,9 @@ input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
 }
 .file-input-btn:hover { border-color: var(--ruby-red); }
 .file-input-btn svg, .file-input-btn img { pointer-events: none; }
+/* Dica de formatos e tamanho, logo abaixo do botao de escolher arquivo.
+   Gerada pelo FileUpload.bind (ver public/upload-feedback.js). */
+.file-hint { font-size: 0.76rem; color: var(--ink-50); margin-top: 6px; flex-basis: 100%; }
 .file-name { font-size: 0.82rem; margin-top: 6px; display: flex; align-items: center; gap: 6px; }
 .file-name .check { color: var(--ruby-red); }
 
