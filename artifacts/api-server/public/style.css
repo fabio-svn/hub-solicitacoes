@@ -1605,6 +1605,9 @@ input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
   }
   .app-shell.sidebar-collapsed .sidebar-label,
   .app-shell.sidebar-collapsed .sidebar-section-title { display: none; }
+  /* DIVISOR-RECOLHIDO: na trilha de 56px o recuo de 18px quase sumiria. */
+  .app-shell.sidebar-collapsed .sidebar-section { margin-top: 12px; padding-top: 12px; }
+  .app-shell.sidebar-collapsed .sidebar-section::before { left: 12px; right: 12px; }
   .app-shell.sidebar-collapsed .sidebar-link {
     justify-content: center;
     padding: 10px 0;
@@ -1770,7 +1773,23 @@ input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
   opacity: 0.7;
 }
 .sidebar-link.active .sidebar-icon { opacity: 1; }
-.sidebar-section { margin-top: 20px; }
+/* DIVISOR-DE-SECAO: um filete separando os grupos do menu. Vale sobretudo
+   recolhida, onde os titulos somem e os icones ficavam todos numa coluna so,
+   sem nada indicando onde uma secao termina. Recuado das bordas para nao
+   encostar no fundo de hover dos links, que ocupa a largura toda. */
+.sidebar-section { margin-top: 18px; padding-top: 14px; position: relative; }
+.sidebar-section::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 18px;
+  right: 18px;
+  height: 1px;
+  background: var(--ink-10);
+}
+/* O primeiro grupo so ganha filete se houver item solto acima dele. */
+.sidebar-nav > .sidebar-section:first-child { margin-top: 8px; padding-top: 0; }
+.sidebar-nav > .sidebar-section:first-child::before { display: none; }
 .sidebar-section-title {
   font-size: 0.68rem;
   text-transform: uppercase;

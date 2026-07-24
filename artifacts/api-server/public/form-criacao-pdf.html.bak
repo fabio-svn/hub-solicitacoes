@@ -22,15 +22,42 @@
   <div id="pageContent">
   <div class="page-container page-container--narrow">
     <div class="form-card">
-      <div class="svn-stepper" id="formStepper" data-steps="Material|Detalhes"></div>
+      <div class="svn-stepper" id="formStepper" data-steps="Tipo|Material|Detalhes"></div>
       <div class="form-progress" style="display:none"><div class="form-progress-bar" id="progressBar"></div></div>
       <div class="flex-between">
         <h2 class="text-md-medium" id="formTitle">Conteúdo em PDF</h2>
-        <span style="display:none" id="stepLabel">Etapa 1 de 2</span>
+        <span style="display:none" id="stepLabel">Etapa 1 de 3</span>
       </div>
       <hr class="sep">
 
-      <div class="form-step active" id="step1"><!-- era step2 -->
+      <div class="form-step active" id="step1">
+        <h2 style="font-weight:600;font-size:1.1rem;margin-bottom:8px">Qual tipo de PDF?</h2>
+        <div class="radio-cards step1-escolha">
+          <div class="radio-card" onclick="selectSubtipo('informativo')" id="cardInformativo">
+            <div class="card-icon">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+            </div>
+            <div class="card-label">Informativo</div>
+            <div class="card-desc">Material de apoio, resumo ou documento informativo em PDF</div>
+          </div>
+          <div class="radio-card" onclick="selectSubtipo('ebook')" id="cardEbook">
+            <div class="card-icon">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
+            </div>
+            <div class="card-label">E-book</div>
+            <div class="card-desc">Material educativo ou guia completo em formato de e-book</div>
+          </div>
+        </div>
+        <div class="form-nav">
+          <button class="btn btn-primary" id="btnNext1" disabled onclick="goToStep2()">Próximo</button>
+        </div>
+      </div>
+
+      <div class="form-step" id="step2">
+        <button type="button" onclick="goStep(1)" class="btn-voltar">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="15 18 9 12 15 6"/></svg>
+          Voltar
+        </button>
 
         <h2 class="card-titulo">Informações do material</h2>
         <div class="field">
@@ -82,12 +109,12 @@
         </div>
         <div class="form-nav">
           
-          <button class="btn btn-primary" onclick="validateStep1() && goStep(2)">Próximo</button>
+          <button class="btn btn-primary" onclick="validateStep2() && goStep(3)">Próximo</button>
         </div>
       </div>
 
-      <div class="form-step" id="step2"><!-- era step3 -->
-        <button type="button" onclick="goStep(1)" class="btn-voltar">
+      <div class="form-step" id="step3">
+        <button type="button" onclick="goStep(2)" class="btn-voltar">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="15 18 9 12 15 6"/></svg>
           Voltar
         </button>
@@ -130,25 +157,43 @@
   <script src="shell.js"></script>
   <script src="form-core.js"></script>
   <script>
-    /* SEM-EBOOK: existia uma etapa so para escolher entre Informativo e E-book,
-       e a opcao E-book nem gerava solicitacao — redirecionava para a Store. Agora
-       o formulario e so de informativo e comeca direto no preenchimento, com
-       duas etapas em vez de tres. */
-    const TIPO_SOLICITACAO = 'conteudo-pdf-informativo';
+    const params = new URLSearchParams(window.location.search);
+    let subtipo = params.get('subtipo') || '';
+    const OGL_EBOOK_URL = 'https://store.portalsvn.com.br/observatorio-da-geracao-de-leads/';
+    if (subtipo === 'ebook') { window.location.replace(OGL_EBOOK_URL); }
+    const TIPOS = { informativo: 'conteudo-pdf-informativo', ebook: 'conteudo-pdf-ebook' };
+
+    function selectSubtipo(tipo) {
+      if (tipo === 'ebook') { window.location.href = OGL_EBOOK_URL; return; }
+      subtipo = tipo;
+      document.getElementById('cardInformativo').className = 'radio-card' + (tipo === 'informativo' ? ' selected' : '');
+      document.getElementById('cardEbook').className = 'radio-card' + (tipo === 'ebook' ? ' selected' : '');
+      document.getElementById('btnNext1').disabled = false;
+    }
+
+    function goToStep2() {
+      document.getElementById('step1').classList.remove('active');
+      document.getElementById('step2').classList.add('active');
+      document.getElementById('progressBar').style.width = '66%';
+      document.getElementById('stepLabel').textContent = 'Etapa 2 de 3';
+      document.getElementById('formTitle').textContent = subtipo === 'ebook' ? 'PDF — E-book' : 'PDF — Informativo';
+      window.scrollTo(0, 0);
+    }
 
     function goStep(step) {
       document.querySelectorAll('.form-step').forEach(s => s.classList.remove('active'));
       document.getElementById('step' + step).classList.add('active');
-      document.getElementById('progressBar').style.width = (step === 1 ? 50 : 100) + '%';
-      document.getElementById('stepLabel').textContent = `Etapa ${step} de 2`;
+      const progress = step === 1 ? 33 : step === 2 ? 66 : 100;
+      document.getElementById('progressBar').style.width = progress + '%';
+      document.getElementById('stepLabel').textContent = `Etapa ${step} de 3`;
       window.scrollTo(0, 0);
     }
 
     // Validação por step delegada ao core (escopo = o próprio step).
     // Agora respeita TODOS os [required] do step2 (inclui telefone/setor, que antes
     // não eram checados) + o grupo de checkboxes "canais".
-    function validateStep1() {
-      return FormCore.validateRequired(null, document.getElementById('step1'));
+    function validateStep2() {
+      return FormCore.validateRequired(null, document.getElementById('step2'));
     }
 
     function init() {
@@ -158,6 +203,7 @@
         redirectPath: '/form-criacao-pdf.html',
         activeRoute: 'nova-solicitacao',
         onReady: function () {
+          if (subtipo) goToStep2();
           document.getElementById('canalOutroCheck').addEventListener('change', () => {
             document.getElementById('canalOutroField').style.display =
               document.getElementById('canalOutroCheck').checked ? 'block' : 'none';
@@ -168,8 +214,8 @@
     }
 
     async function submitForm() {
-      // No submit valida só a etapa ativa (a 2) — a 1 já passou no "Próximo".
-      if (!FormCore.validateRequired(null, document.getElementById('step2'))) return;
+      // No submit valida só o step ativo (step3), como antes — step2 já passou no "Próximo".
+      if (!FormCore.validateRequired(null, document.getElementById('step3'))) return;
 
       const canais = [...document.querySelectorAll('#canais input:checked')].map(c => c.value);
       const dados = {
@@ -187,8 +233,8 @@
       };
 
       await FormCore.submit({
-        tipo: TIPO_SOLICITACAO,
-        subtipo: 'informativo',
+        tipo: TIPOS[subtipo] || TIPOS.informativo,  // tipo_solicitacao real
+        subtipo: subtipo,
         draftTipo: 'criacao-pdf',                    // limpa o rascunho certo no sucesso
         dados: dados,
         files: [{ inputId: 'arquivoApoio', field: 'arquivoApoio' }],

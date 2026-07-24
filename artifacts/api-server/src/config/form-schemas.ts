@@ -678,6 +678,10 @@ export const LABELS_EXTRA: Record<string, string> = {
   'ch-kit-onboarding':                      'Kit Onboarding',
   'ch-linha-do-tempo':                      'Linha do Tempo',
   'conteudo-pdf':                           'Conteúdo em PDF',
+  // EBOOK-HISTORICO: o formulario de e-book saiu do ar (o material passou a
+  // viver na Store). O rotulo fica porque solicitacoes antigas desse tipo ainda
+  // existem no banco — sem ele, apareceriam como slug cru na tela do solicitante.
+  // Nao e ponto de entrada para nada: nenhum formulario gera esse tipo.
   'conteudo-pdf-ebook':                     'PDF — Ebook',
   'conteudo-pdf-informativo':               'PDF — Informativo',
   'email-marketing':                        'E-mail Marketing',
