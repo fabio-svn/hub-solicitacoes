@@ -789,7 +789,7 @@
       if (!container) return;
       // ESCOPO-CORRIGIDO-CORDESTATUS: corDeStatus foi movida para o escopo do
       // script (perto de recorteTipo), para renderAdminGrafico tambem alcancar.
-      const CORES = ['#AC3631','#221B19','#4a7c2f','#1e40af','#9333ea','#ea580c','#0891b2','#be123c','#854d0e','#166534'];
+      const CORES = ['#0A9060','#1e40af','#4a7c2f','#0891b2','#166534','#3b82f6','#6f877b','#155e75','#3f6212','#1d4ed8'];  // PALETA-AZUL-VERDE: tons frios da marca, alternando azul/verde para separar fatias vizinhas
       const todosItens = modo === 'tipo'
         ? getGraficoBase('tipo').map(i => ({ id: i.tipo, label: (typeof TIPO_SOLICITACAO_LABELS !== 'undefined' && TIPO_SOLICITACAO_LABELS[i.tipo]) || i.tipo, value: i.count }))
         : getGraficoBase('status').map(i => ({ id: i.status, label: getStatus(i.status).label, value: i.count, cor: corDeStatus(i.status) }));
@@ -861,7 +861,7 @@
           return;
         }
 
-        const CORES = ['#AC3631','#221B19','#4a7c2f','#1e40af','#9333ea','#ea580c','#0891b2','#be123c','#854d0e','#166534'];
+        const CORES = ['#0A9060','#1e40af','#4a7c2f','#0891b2','#166534','#3b82f6','#6f877b','#155e75','#3f6212','#1d4ed8'];  // PALETA-AZUL-VERDE: tons frios da marca, alternando azul/verde para separar fatias vizinhas
         const DPR = window.devicePixelRatio || 1;
         const SIZE = 200;
         canvas.width = SIZE * DPR;
