@@ -1471,6 +1471,7 @@ export interface ClickUpSnapshot {
   status: string | null;
   dueDate: Date | null;
   motivoPrazo: string | null;
+  responsavel: string | null;
 }
 
 // Lê status + prazo (due_date) + motivo do prazo de uma task numa única chamada.
@@ -1498,6 +1499,11 @@ export async function getClickUpTaskSnapshot(taskId: string): Promise<ClickUpSna
     const data = await response.json() as {
       status?: { status?: string };
       due_date?: string | number | null;
+      // RESP-DO-SNAPSHOT: o JSON da task ja traz os assignees na mesma resposta —
+      // so nao eram lidos. E o "responsavel" que o resumo mostra; extrair aqui
+      // faz o Hub acompanhar quem esta atribuido no ClickUp em vez de congelar o
+      // valor da criacao.
+      assignees?: Array<{ username?: string; email?: string }>;
       custom_fields?: Array<{ id: string; name?: string; value?: unknown }>;
     };
     const status = mapClickUpStatus(data.status?.status || "");
@@ -1514,7 +1520,11 @@ export async function getClickUpTaskSnapshot(taskId: string): Promise<ClickUpSna
         : ((f.name || "").toLowerCase().includes("motivo") && (f.name || "").toLowerCase().includes("prazo"))
     );
     if (mf && mf.value != null && String(mf.value).trim()) motivoPrazo = String(mf.value).trim();
-    const snap: ClickUpSnapshot = { status, dueDate, motivoPrazo };
+    // Primeiro assignee = responsavel exibido. Varios assignees: junta os nomes.
+    const responsavel = Array.isArray(data.assignees) && data.assignees.length
+      ? data.assignees.map(a => (a.username || a.email || "").trim()).filter(Boolean).join(", ") || null
+      : null;
+    const snap: ClickUpSnapshot = { status, dueDate, motivoPrazo, responsavel };
     snapshotCache.set(taskId, { value: snap, expiresAt: Date.now() + SNAPSHOT_TTL_MS });
     return snap;
   } catch {

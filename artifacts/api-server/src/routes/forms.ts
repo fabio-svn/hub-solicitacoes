@@ -886,6 +886,7 @@ router.get("/solicitacoes/:id/status", requireAuth, async (req, res): Promise<vo
     let prazoAnteriorOut: Date | null = solicitacao.prazo_anterior ? new Date(solicitacao.prazo_anterior) : null;
     let prazoMotivoOut: string | null = solicitacao.prazo_motivo || null;
     let prazoAlteradoEmOut: Date | null = solicitacao.prazo_alterado_em ? new Date(solicitacao.prazo_alterado_em) : null;
+    let responsavelOut: string | null = solicitacao.responsavel ?? null;
 
     if (solicitacao.clickup_task_id) {
       try {
@@ -894,6 +895,12 @@ router.get("/solicitacoes/:id/status", requireAuth, async (req, res): Promise<vo
           const patch: Record<string, unknown> = {};
           if (snap.status && snap.status !== solicitacao.status) {
             patch.status = snap.status; statusOut = snap.status; updated = true;
+          }
+          // RESP-SYNC: mantem o responsavel do resumo igual ao assignee atual do
+          // ClickUp. So grava quando ha valor novo e diferente — nunca apaga com
+          // vazio (uma leitura falha do ClickUp nao deve zerar o responsavel).
+          if (snap.responsavel && snap.responsavel !== solicitacao.responsavel) {
+            patch.responsavel = snap.responsavel; responsavelOut = snap.responsavel; updated = true;
           }
           if (snap.dueDate) {
             const old = solicitacao.prazo ? new Date(solicitacao.prazo) : null;
@@ -947,6 +954,7 @@ router.get("/solicitacoes/:id/status", requireAuth, async (req, res): Promise<vo
     res.json({
       status: statusOut,
       updated,
+      responsavel: responsavelOut,
       observacao: observacaoOut,
       prazo: prazoOut ? prazoOut.toISOString() : null,
       prazo_anterior: prazoAnteriorOut ? prazoAnteriorOut.toISOString() : null,

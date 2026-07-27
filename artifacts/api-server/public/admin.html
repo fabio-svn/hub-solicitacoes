@@ -375,7 +375,7 @@
     function seloNatureza(item) {
       const auto = (typeof TIPOS_AUTOMACAO !== 'undefined') && TIPOS_AUTOMACAO.indexOf(item.tipo_solicitacao) !== -1;
       if (!auto) return '';
-      return '<span title="Gerado por automação" style="display:inline-block;margin-left:7px;font-size:0.6rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;padding:1px 6px;border-radius:var(--radius-pill);background:var(--ink-08);color:var(--ink-50);vertical-align:middle">auto</span>';
+      return '<span title="Gerado por automação" style="display:inline-block;margin-left:7px;font-size:0.6rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;padding:1px 7px;border-radius:var(--radius-pill);background:#d9edf2;color:#155e75;vertical-align:middle">auto</span>';
     }
 
     function badgePrazo(item) {

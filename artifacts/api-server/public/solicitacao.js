@@ -89,9 +89,11 @@
         if (d.prazo_anterior) item.prazo_anterior = d.prazo_anterior;
         if (d.prazo_motivo !== undefined) item.prazo_motivo = d.prazo_motivo;
         if (d.observacao !== undefined) item.observacao = d.observacao;  // OBS-REPROVACAO-SYNC
+        const respMudou = (d.responsavel !== undefined && d.responsavel !== item.responsavel);  // RESP-SYNC-FRONT
+        if (respMudou) item.responsavel = d.responsavel;
         if (d.prazo_alterado_em) item.prazo_alterado_em = d.prazo_alterado_em;
         if (statusMudou) item.status = d.status;
-        if (statusMudou || prazoMudou || obsChegou) {
+        if (statusMudou || prazoMudou || obsChegou || respMudou) {
           renderPage(item);
           if (prazoMudou && window.showToast) showToast('O prazo desta solicitação foi atualizado.', 'info');
         }
@@ -1155,88 +1157,167 @@
     }
 
     /* ── Pesquisa de Satisfação ── */
+    /* CARD-AVALIACAO-V2: a pesquisa antiga eram cinco quadradinhos soltos, sem
+       hierarquia nem resposta a escolha — nao convidava a avaliar. Esta versao,
+       em JS puro e cores da marca (sem libs), traz:
+         - estrelas (coerentes com a aval-pill da lista admin)
+         - um banner que responde a nota escolhida ("Muito bom", etc.)
+         - tags rapidas que MUDAM conforme a nota: nota baixa pergunta o que
+           faltou, nota alta pergunta o que brilhou — captam o porque sem exigir
+           texto (e o dado que vira acao para o time)
+         - comentario e envio revelados so depois da nota (menos intimidador)
+       O backend nao muda: POST /avaliacao continua recebendo { nota, comentario }.
+       As tags entram como uma primeira linha do comentario, entre colchetes. */
+    const SENTIMENTOS = {
+      1: { rotulo: 'Muito abaixo do esperado', frase: 'Lamentamos. Conte o que faltou para corrigirmos.', cor: 'var(--ruby-red)' },
+      2: { rotulo: 'Precisa melhorar',          frase: 'Queremos entender os pontos fracos desta entrega.', cor: '#b45309' },
+      3: { rotulo: 'Atendeu ao pedido',         frase: 'Entrega conforme o combinado. Algo poderia ter surpreendido?', cor: '#b45309' },
+      4: { rotulo: 'Muito bom',                 frase: 'Ótimo resultado — obrigado pelo retorno!', cor: 'var(--sage-green)' },
+      5: { rotulo: 'Excelente',                 frase: 'Trabalho impecável. Sua nota motiva o time a manter o nível.', cor: 'var(--sage-green)' },
+    };
+    // Tags dependentes da nota: até 3 = o que faltou; 4+ = o que brilhou.
+    const TAGS_BAIXA = ['Prazo estourou', 'Fugiu do briefing', 'Precisou de retrabalho', 'Comunicação confusa', 'Qualidade abaixo'];
+    const TAGS_ALTA  = ['Entrega ágil', 'Fiel ao briefing', 'Design impecável', 'Ótima comunicação', 'Superou o esperado'];
+
     async function renderPesquisaSatisfacao(solId) {
       if (document.getElementById('pesquisaSatisfacao')) return;
-      const notas = [1,2,3,4,5];
+
+      const estrela = (preenchida) =>
+        `<svg viewBox="0 0 24 24" width="30" height="30" fill="${preenchida ? 'var(--ruby-red)' : 'none'}" stroke="${preenchida ? 'var(--ruby-red)' : 'var(--ink-20)'}" stroke-width="1.5" style="transition:all .15s"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`;
+
       const html = `
         <div id="pesquisaSatisfacao" style="
-          background: rgba(255,255,255,0.7);
-          border: 1px solid var(--ink-10);
-          border-radius: var(--radius-xl);
-          padding: 16px 20px;
-          margin-top: 16px;
-          font-family: inherit;
-        ">
-          <p style="font-size:0.9rem;font-weight:600;color:var(--carbon-black);margin:0 0 10px">
-            Em uma escala de 1 a 5, como você avalia o material entregue?
-          </p>
-          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">
-            ${notas.map(n => `
-              <button
-                class="nota-btn"
-                data-nota="${n}"
-                onclick="selecionarNota(${n})"
-                style="
-                  width:36px;height:36px;border-radius:var(--radius-md);
-                  border:2px solid var(--ink-20);
-                  background:transparent;font-size:0.85rem;
-                  font-weight:700;color:var(--carbon-black);
-                  cursor:pointer;transition:all 0.15s;
-                "
-              >${n}</button>
-            `).join('')}
-          </div>
-          <div id="pesquisaComentarioWrap" style="display:none;margin-top:6px">
-            <textarea
-              id="pesquisaComentario"
-              placeholder="Comentário opcional (máx. 500 caracteres)"
-              maxlength="500"
-              style="
-                width:100%;border-radius:var(--radius-md);border:1px solid var(--ink-20);
-                padding:8px 12px;font-family:inherit;font-size:0.85rem;
-                resize:vertical;min-height:64px;background:var(--paper-white);
-                box-sizing:border-box;
-              "
-            ></textarea>
-            <div style="display:flex;gap:8px;margin-top:8px">
-              <button onclick="enviarAvaliacao(${solId})" style="
-                background:var(--ruby-red);color:#fff;border:none;
-                border-radius:var(--radius-md);padding:7px 18px;font-size:0.85rem;
-                font-weight:600;cursor:pointer;
-              ">Enviar avaliação</button>
-              <button onclick="document.getElementById('pesquisaSatisfacao').remove()" style="
-                background:transparent;color:var(--ink-50);border:none;
-                font-size:0.82rem;cursor:pointer;text-decoration:underline;
-              ">Pular</button>
+          background:var(--paper-white);border:1px solid var(--ink-10);
+          border-radius:var(--radius-xl);margin-top:16px;margin-bottom:28px;overflow:hidden;
+          font-family:inherit;">
+          <div style="height:3px;background:linear-gradient(90deg,var(--ruby-red),#d98c3f 55%,var(--sage-green))"></div>
+          <div style="padding:20px 22px">
+            <p style="font-size:1rem;font-weight:700;color:var(--carbon-black);margin:0 0 3px">
+              Como você avalia a entrega deste material?
+            </p>
+            <p style="font-size:0.82rem;color:var(--ink-50);margin:0 0 16px">
+              Sua avaliação ajuda o time a manter a qualidade das próximas entregas.
+            </p>
+
+            <div id="estrelasWrap" style="display:flex;gap:6px;margin-bottom:4px">
+              ${[1,2,3,4,5].map(n => `
+                <button type="button" class="estrela-btn" data-nota="${n}"
+                  onmouseenter="hoverNota(${n})" onmouseleave="hoverNota(0)" onclick="selecionarNota(${n})"
+                  title="${n} de 5"
+                  style="background:none;border:none;padding:4px;cursor:pointer;line-height:0;border-radius:var(--radius-sm)">
+                  ${estrela(false)}
+                </button>`).join('')}
+            </div>
+
+            <div id="sentimentoBanner" style="display:none;margin:12px 0 0;padding:11px 14px;border-radius:var(--radius-md);border:1px solid var(--ink-10)">
+              <span id="sentimentoRotulo" style="font-weight:700;font-size:0.9rem"></span>
+              <span id="sentimentoFrase" style="display:block;font-size:0.82rem;color:var(--ink-60);margin-top:2px"></span>
+            </div>
+
+            <div id="pesquisaExtra" style="display:none;margin-top:16px;padding-top:16px;border-top:1px solid var(--ink-10)">
+              <p id="tagsLabel" style="font-size:0.8rem;font-weight:600;color:var(--ink-70);margin:0 0 8px"></p>
+              <div id="tagsWrap" style="display:flex;flex-wrap:wrap;gap:7px;margin-bottom:14px"></div>
+
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+                <label style="font-size:0.8rem;font-weight:600;color:var(--ink-70)">Comentário (opcional)</label>
+                <span id="contadorCom" style="font-size:0.72rem;color:var(--ink-40)">0 / 500</span>
+              </div>
+              <textarea id="pesquisaComentario" maxlength="500" rows="3"
+                oninput="document.getElementById('contadorCom').textContent = this.value.length + ' / 500'"
+                placeholder="Conte o que achou da agilidade, da qualidade ou da fidelidade ao briefing…"
+                style="width:100%;border-radius:var(--radius-md);border:1px solid var(--ink-20);
+                  padding:10px 12px;font-family:inherit;font-size:0.85rem;resize:vertical;
+                  min-height:70px;background:var(--paper-white);box-sizing:border-box"></textarea>
+
+              <div style="display:flex;align-items:center;gap:14px;margin-top:14px">
+                <button onclick="enviarAvaliacao(${solId})" style="
+                  background:var(--ruby-red);color:#fff;border:none;border-radius:var(--radius-md);
+                  padding:10px 20px;font-family:inherit;font-size:0.85rem;font-weight:700;
+                  cursor:pointer;transition:opacity .15s">Enviar avaliação</button>
+                <button onclick="limparNota()" style="
+                  background:none;border:none;color:var(--ink-50);font-family:inherit;
+                  font-size:0.8rem;text-decoration:underline;cursor:pointer">Limpar</button>
+              </div>
             </div>
           </div>
         </div>`;
-      /* PESQUISA-SEM-CHAT: isto desenhava so dentro de #chatWrap, que existe
-         apenas quando o card de aprovacao e montado. Nas solicitacoes sem
-         mini-chat o pesquisaSeAplicavel() rodava, chamava esta funcao, o
-         getElementById voltava null e nada acontecia — sem erro. Resultado: essas
-         solicitacoes nunca pediram avaliacao, e a media so refletia os tipos com
-         aprovacao. */
+
+      /* PESQUISA-SEM-CHAT: injeta no #chatWrap (itens com mini-chat) ou no
+         #pesquisaCard (itens sem chat de aprovacao). */
       const alvo = document.getElementById('chatWrap') || document.getElementById('pesquisaCard');
       if (alvo) alvo.insertAdjacentHTML('beforeend', html);
     }
 
-    function selecionarNota(nota) {
-      document.querySelectorAll('.nota-btn').forEach(btn => {
+    function _pintarEstrelas(ate) {
+      document.querySelectorAll('#estrelasWrap .estrela-btn').forEach(btn => {
         const n = parseInt(btn.dataset.nota);
-        btn.style.background = n === nota ? 'var(--ruby-red)' : 'transparent';
-        btn.style.color = n === nota ? '#fff' : 'var(--carbon-black)';
-        btn.style.borderColor = n === nota ? 'var(--ruby-red)' : 'var(--ink-20)';
+        const cheia = n <= ate;
+        const svg = btn.querySelector('polygon').parentNode;
+        svg.setAttribute('fill', cheia ? 'var(--ruby-red)' : 'none');
+        svg.setAttribute('stroke', cheia ? 'var(--ruby-red)' : 'var(--ink-20)');
       });
-      document.querySelector('.nota-btn[data-nota="' + nota + '"]').dataset.selecionado = '1';
+    }
+
+    function hoverNota(n) {
+      _pintarEstrelas(n > 0 ? n : (window._notaSelecionada || 0));
+    }
+
+    function selecionarNota(nota) {
       window._notaSelecionada = nota;
-      document.getElementById('pesquisaComentarioWrap').style.display = 'block';
+      window._tagsSelecionadas = [];
+      _pintarEstrelas(nota);
+
+      const s = SENTIMENTOS[nota];
+      const banner = document.getElementById('sentimentoBanner');
+      banner.style.display = 'block';
+      banner.style.background = 'color-mix(in srgb, ' + s.cor + ' 8%, transparent)';
+      banner.style.borderColor = 'color-mix(in srgb, ' + s.cor + ' 30%, transparent)';
+      const rot = document.getElementById('sentimentoRotulo');
+      rot.textContent = s.rotulo; rot.style.color = s.cor;
+      document.getElementById('sentimentoFrase').textContent = s.frase;
+
+      // tags conforme a nota
+      const baixa = nota <= 3;
+      document.getElementById('tagsLabel').textContent = baixa ? 'O que faltou? (opcional)' : 'O que se destacou? (opcional)';
+      const tags = baixa ? TAGS_BAIXA : TAGS_ALTA;
+      document.getElementById('tagsWrap').innerHTML = tags.map(t => `
+        <button type="button" class="tag-btn" data-tag="${t}" onclick="toggleTag(this)"
+          style="padding:6px 12px;border-radius:var(--radius-pill);border:1px solid var(--ink-20);
+            background:transparent;color:var(--ink-70);font-family:inherit;font-size:0.78rem;
+            font-weight:600;cursor:pointer;transition:all .12s">${t}</button>`).join('');
+
+      document.getElementById('pesquisaExtra').style.display = 'block';
+    }
+
+    function toggleTag(btn) {
+      const t = btn.dataset.tag;
+      window._tagsSelecionadas = window._tagsSelecionadas || [];
+      const i = window._tagsSelecionadas.indexOf(t);
+      const on = i === -1;
+      if (on) window._tagsSelecionadas.push(t); else window._tagsSelecionadas.splice(i, 1);
+      btn.style.background = on ? 'var(--ruby-red)' : 'transparent';
+      btn.style.color = on ? '#fff' : 'var(--ink-70)';
+      btn.style.borderColor = on ? 'var(--ruby-red)' : 'var(--ink-20)';
+    }
+
+    function limparNota() {
+      window._notaSelecionada = null;
+      window._tagsSelecionadas = [];
+      _pintarEstrelas(0);
+      document.getElementById('sentimentoBanner').style.display = 'none';
+      document.getElementById('pesquisaExtra').style.display = 'none';
+      const c = document.getElementById('pesquisaComentario');
+      if (c) { c.value = ''; document.getElementById('contadorCom').textContent = '0 / 500'; }
     }
 
     async function enviarAvaliacao(solId) {
       const nota = window._notaSelecionada;
       if (!nota) return;
-      const comentario = (document.getElementById('pesquisaComentario')?.value || '').trim();
+      const texto = (document.getElementById('pesquisaComentario')?.value || '').trim();
+      const tags = window._tagsSelecionadas || [];
+      // As tags viram a primeira linha do comentario, sem mudar o backend.
+      const comentario = (tags.length ? '[' + tags.join(', ') + ']' + (texto ? '\n' + texto : '') : texto);
+
       let ok = false;
       try {
         const res = await fetch('/api/solicitacoes/' + solId + '/avaliacao', {
@@ -1252,10 +1333,13 @@
       }
       const el = document.getElementById('pesquisaSatisfacao');
       if (el) el.outerHTML = `
-        <div style="
-          text-align:center;padding:14px;color:var(--ink-50);
-          font-size:0.85rem;margin-top:12px;
-        ">Obrigado pelo feedback! 💛</div>`;
+        <div style="text-align:center;padding:22px 16px;color:var(--sage-green);
+          font-size:0.9rem;font-weight:600;margin-top:16px;
+          background:color-mix(in srgb, var(--sage-green) 8%, transparent);
+          border:1px solid color-mix(in srgb, var(--sage-green) 25%, transparent);
+          border-radius:var(--radius-xl)">
+          Avaliação registrada. Obrigado pelo retorno!
+        </div>`;
     }
 
     async function verAvaliacao(solId) {
