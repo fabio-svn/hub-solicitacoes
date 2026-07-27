@@ -51,3 +51,6 @@ Thumbs.db
 *.bak-*
 /patch-*.py
 /fix-*.py
+# Backups dos patches
+*.bak
+.lixo-*/
