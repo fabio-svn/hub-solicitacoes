@@ -215,6 +215,14 @@
               <button class="filter-chip" data-filter="prazo" data-value="vencendo" data-label="Vencendo (48h)" onclick="toggleFilter(this,'eventos','prazo')">Vencendo</button>
             </div>
           </div>
+          <div class="filter-panel-row">
+            <span class="filter-panel-label">Natureza</span>
+            <div class="filter-panel-chips">
+              <button class="filter-chip active" data-filter="natureza" data-value="" data-label="Todas" onclick="toggleFilter(this,'eventos','natureza')">Todas</button>
+              <button class="filter-chip" data-filter="natureza" data-value="solicitacao" data-label="Solicitações" onclick="toggleFilter(this,'eventos','natureza')">Solicitações</button>
+              <button class="filter-chip" data-filter="natureza" data-value="automacao" data-label="Automações" onclick="toggleFilter(this,'eventos','natureza')">Automações</button>
+            </div>
+          </div>
         </div>
         </div>
         <div class="search-bar" style="flex:1;margin-bottom:0;height:32px;padding:0 14px;border-radius:var(--radius-md)">
@@ -278,6 +286,14 @@
               <button class="filter-chip" data-filter="prazo" data-value="vencendo" data-label="Vencendo (48h)" onclick="toggleFilter(this,'geral','prazo')">Vencendo</button>
             </div>
           </div>
+          <div class="filter-panel-row">
+            <span class="filter-panel-label">Natureza</span>
+            <div class="filter-panel-chips">
+              <button class="filter-chip active" data-filter="natureza" data-value="" data-label="Todas" onclick="toggleFilter(this,'geral','natureza')">Todas</button>
+              <button class="filter-chip" data-filter="natureza" data-value="solicitacao" data-label="Solicitações" onclick="toggleFilter(this,'geral','natureza')">Solicitações</button>
+              <button class="filter-chip" data-filter="natureza" data-value="automacao" data-label="Automações" onclick="toggleFilter(this,'geral','natureza')">Automações</button>
+            </div>
+          </div>
         </div>
         </div>
         <div class="search-bar" style="flex:1;margin-bottom:0;height:32px;padding:0 14px;border-radius:var(--radius-md)">
@@ -300,7 +316,7 @@
   <script src="filters.js"></script>
   <script>
     let currentTab = 'geral';
-    let adminFilters = { eventos: { periodo: '', status: '', prazo: '' }, geral: { periodo: '', status: '', prazo: '' } };
+    let adminFilters = { eventos: { periodo: '', status: '', prazo: '', natureza: '' }, geral: { periodo: '', status: '', prazo: '', natureza: '' } };
     let adminPages = { eventos: 1, geral: 1 };
 
     // Filtros: engine compartilhado (filters.js). Cada aba é uma instância; adminFilters[tab]
@@ -353,6 +369,15 @@
        prestes a vencer. Silenciosa quando esta no prazo ou nao tem prazo. Os
        status finais nunca ficam "atrasados". Mesmos cortes do backend. */
     const STATUS_FINAIS_PRAZO = ['concluido','publicado','cancelado','reprovado','erro','envio-assessor','envio-grafica'];
+    /* SELO-AUTOMACAO: marca discreta ao lado do tipo, so nas automacoes, para
+       distinguir de solicitacao manual sem abrir. Cor neutra, nao compete com o
+       status. Usa a mesma lista TIPOS_AUTOMACAO do config. */
+    function seloNatureza(item) {
+      const auto = (typeof TIPOS_AUTOMACAO !== 'undefined') && TIPOS_AUTOMACAO.indexOf(item.tipo_solicitacao) !== -1;
+      if (!auto) return '';
+      return '<span title="Gerado por automação" style="display:inline-block;margin-left:7px;font-size:0.6rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;padding:1px 6px;border-radius:var(--radius-pill);background:var(--ink-08);color:var(--ink-50);vertical-align:middle">auto</span>';
+    }
+
     function badgePrazo(item) {
       if (!item || !item.prazo) return '';
       if (STATUS_FINAIS_PRAZO.indexOf(item.status) !== -1) return '';
@@ -440,6 +465,7 @@
       if (adminFilters[tab].status) params.set('status', adminFilters[tab].status);
       if (adminFilters[tab].avaliacao) params.set('avaliacao', adminFilters[tab].avaliacao);
       if (adminFilters[tab].prazo) params.set('prazo', adminFilters[tab].prazo);
+      if (adminFilters[tab].natureza) params.set('natureza', adminFilters[tab].natureza);
       const search = document.getElementById(tab === 'eventos' ? 'searchEventos' : 'searchGeral');
       if (search && search.value.trim()) params.set('busca', search.value.trim());
 
@@ -504,7 +530,11 @@
         + '</tr></thead><tbody>';
       data.data.forEach((item) => {
         const dados = typeof item.dados === 'string' ? JSON.parse(item.dados) : (item.dados || {});
-        const titulo = item.titulo || dados.nomeEvento || dados.tituloEvento || dados.titulo || dados.nome_completo || dados.nomeCompleto || '-';
+        let titulo = item.titulo || dados.nomeEvento || dados.tituloEvento || dados.titulo || dados.nome_completo || dados.nomeCompleto || '-';
+        // TITULO-SEM-TIPO: o tipo ja tem coluna propria; aqui tiramos o prefixo
+        // "[Tipo] " do titulo so nesta lista. O titulo no banco, no resumo e no
+        // ClickUp continua intacto. Remove um unico [..] no comeco, com o espaco.
+        titulo = String(titulo).replace(/^\s*\[[^\]]*\]\s*/, '').trim() || '-';
         const tipoLabel = TIPO_SOLICITACAO_LABELS[item.tipo_solicitacao] || item.tipo_solicitacao;
         const statusObj = getStatusVisual(item);
         const date = new Date(item.created_at).toLocaleDateString('pt-BR');
@@ -529,7 +559,7 @@
           : '<td style="text-align:center;opacity:0.28">&mdash;</td>';
         html += `<tr onclick="window.location.href='/solicitacao.html?id=${item.id}'" style="cursor:pointer">
           ${isAdmin ? `<td style="text-align:center" onclick="event.stopPropagation()"><input type="checkbox" class="bulk-cb" data-id="${item.id}" onchange="bulkUpdate('${tab}')"></td>` : ''}
-          <td>${esc(tipoLabel)}</td><td>${esc(titulo)}</td><td>${esc(item.user_email)}</td><td>${esc(date)}</td>
+          <td>${esc(tipoLabel)}${seloNatureza(item)}</td><td>${esc(titulo)}</td><td>${esc(item.user_email)}</td><td>${esc(date)}</td>
           <td>${statusBadgeHtml(statusObj, { style: 'white-space:nowrap' })}${badgePrazo(item)}</td>
           ${avaliacaoCell}
           ${acoesCell}

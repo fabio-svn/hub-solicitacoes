@@ -539,6 +539,14 @@ router.get("/solicitacoes", requireAuth, async (req, res) => {
       conditions.push(sql`(${solicitacoesTable.dados}::text ILIKE ${searchTerm})`);
     }
 
+    /* FILTRO-NATUREZA: separa o que e automacao do que e solicitacao manual,
+       pela mesma lista TIPOS_AUTOMACAO_SET usada no resto do backend. */
+    if (req.query.natureza === "automacao") {
+      conditions.push(inArray(solicitacoesTable.tipo_solicitacao, [...TIPOS_AUTOMACAO_SET]));
+    } else if (req.query.natureza === "solicitacao") {
+      conditions.push(notInArray(solicitacoesTable.tipo_solicitacao, [...TIPOS_AUTOMACAO_SET]));
+    }
+
     /* FILTRO-PRAZO: "atrasada" = tem prazo, o prazo passou e a solicitacao ainda
        nao terminou. Sem prazo nunca conta (IS NOT NULL). Os status finais sao os
        mesmos que o stuck-monitor ja ignora, para as duas visoes concordarem.
@@ -549,7 +557,21 @@ router.get("/solicitacoes", requireAuth, async (req, res) => {
       const FINAIS = ["concluido", "publicado", "cancelado", "reprovado", "erro", "envio-assessor", "envio-grafica"];
       const agora = new Date();
       conditions.push(sql`${solicitacoesTable.prazo} IS NOT NULL`);
-      conditions.push(notInArray(solicitacoesTable.status, FINAIS));
+      /* PRAZO-CARTAO-STATUS: o cartao guarda o status real em cartao_aprovacoes;
+         solicitacoes.status fica generico. Sem isto, um cartao "reprovado" ou
+         "envio-grafica" ainda entrava em Atrasadas, porque o corte de status
+         olhava a coluna errada. Para cartao, o status efetivo vem da subquery
+         (com fallback para o default quando ainda nao ha linha de aprovacao);
+         para o resto, continua sendo solicitacoes.status. */
+      const statusFinaisSql = sql.join(FINAIS.map(s => sql`${s}`), sql`, `);
+      conditions.push(sql`
+        CASE WHEN ${solicitacoesTable.tipo_solicitacao} = 'cartao-visita-fisico'
+             THEN COALESCE(
+               (SELECT ca.status FROM cartao_aprovacoes ca
+                WHERE ca.solicitacao_id = ${solicitacoesTable.id}),
+               'aguardando-validacao')
+             ELSE ${solicitacoesTable.status}
+        END NOT IN (${statusFinaisSql})`);
       if (req.query.prazo === "atrasada") {
         conditions.push(lt(solicitacoesTable.prazo, agora));
       } else {

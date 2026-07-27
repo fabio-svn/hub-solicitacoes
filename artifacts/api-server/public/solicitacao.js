@@ -78,6 +78,12 @@
         const d = await r.json();
         const prazoMudou = d.prazo_alterado_em && d.prazo_alterado_em !== item.prazo_alterado_em;
         const statusMudou = d.updated && d.status && d.status !== item.status;
+        // OBS-CHEGOU: o motivo da reprovacao vem no /status (async), depois do
+        // primeiro render. Numa solicitacao ja reprovada o status nao muda, entao
+        // sem isto o card nunca era redesenhado e o motivo — ja carregado — nao
+        // aparecia. So conta como novidade se havia texto novo e diferente.
+        const obsNova = (d.observacao !== undefined && d.observacao !== null && String(d.observacao).trim() !== '');
+        const obsChegou = obsNova && d.observacao !== item.observacao;
         // sincroniza os campos de prazo silenciosamente
         if (d.prazo) item.prazo = d.prazo;
         if (d.prazo_anterior) item.prazo_anterior = d.prazo_anterior;
@@ -85,7 +91,7 @@
         if (d.observacao !== undefined) item.observacao = d.observacao;  // OBS-REPROVACAO-SYNC
         if (d.prazo_alterado_em) item.prazo_alterado_em = d.prazo_alterado_em;
         if (statusMudou) item.status = d.status;
-        if (statusMudou || prazoMudou) {
+        if (statusMudou || prazoMudou || obsChegou) {
           renderPage(item);
           if (prazoMudou && window.showToast) showToast('O prazo desta solicitação foi atualizado.', 'info');
         }
