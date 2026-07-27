@@ -207,6 +207,14 @@
               <button class="filter-chip" data-filter="avaliacao" data-value="baixa" data-label="Nota até 3" onclick="toggleFilter(this,'eventos','avaliacao')">Nota até 3</button>
             </div>
           </div>
+          <div class="filter-panel-row">
+            <span class="filter-panel-label">Prazo</span>
+            <div class="filter-panel-chips">
+              <button class="filter-chip active" data-filter="prazo" data-value="" data-label="Todos" onclick="toggleFilter(this,'eventos','prazo')">Todos</button>
+              <button class="filter-chip" data-filter="prazo" data-value="atrasada" data-label="Atrasadas" onclick="toggleFilter(this,'eventos','prazo')">Atrasadas</button>
+              <button class="filter-chip" data-filter="prazo" data-value="vencendo" data-label="Vencendo (48h)" onclick="toggleFilter(this,'eventos','prazo')">Vencendo</button>
+            </div>
+          </div>
         </div>
         </div>
         <div class="search-bar" style="flex:1;margin-bottom:0;height:32px;padding:0 14px;border-radius:var(--radius-md)">
@@ -262,6 +270,14 @@
               <button class="filter-chip" data-filter="avaliacao" data-value="baixa" data-label="Nota até 3" onclick="toggleFilter(this,'geral','avaliacao')">Nota até 3</button>
             </div>
           </div>
+          <div class="filter-panel-row">
+            <span class="filter-panel-label">Prazo</span>
+            <div class="filter-panel-chips">
+              <button class="filter-chip active" data-filter="prazo" data-value="" data-label="Todos" onclick="toggleFilter(this,'geral','prazo')">Todos</button>
+              <button class="filter-chip" data-filter="prazo" data-value="atrasada" data-label="Atrasadas" onclick="toggleFilter(this,'geral','prazo')">Atrasadas</button>
+              <button class="filter-chip" data-filter="prazo" data-value="vencendo" data-label="Vencendo (48h)" onclick="toggleFilter(this,'geral','prazo')">Vencendo</button>
+            </div>
+          </div>
         </div>
         </div>
         <div class="search-bar" style="flex:1;margin-bottom:0;height:32px;padding:0 14px;border-radius:var(--radius-md)">
@@ -284,7 +300,7 @@
   <script src="filters.js"></script>
   <script>
     let currentTab = 'geral';
-    let adminFilters = { eventos: { periodo: '', status: '' }, geral: { periodo: '', status: '' } };
+    let adminFilters = { eventos: { periodo: '', status: '', prazo: '' }, geral: { periodo: '', status: '', prazo: '' } };
     let adminPages = { eventos: 1, geral: 1 };
 
     // Filtros: engine compartilhado (filters.js). Cada aba é uma instância; adminFilters[tab]
@@ -310,15 +326,64 @@
        cheia. Precisa ficar no escopo do script: renderAdminGrafico e
        renderGraficoDropdown chamam as duas. Cai na paleta generica so se um
        status nao tiver `text`. */
-    function corDeStatus(id) {
-      const s = getStatus(id) || {};
-      let c = s.text || s.bg || '';
-      const m = /var\((--[a-z0-9-]+)\)/i.exec(c);
-      if (m) {
-        const v = getComputedStyle(document.documentElement).getPropertyValue(m[1]).trim();
-        if (v) c = v;
+    /* COR-STATUS-DA-PALETA: a visao "Por status" usa as cores da MESMA paleta do
+       "Por tipo" (CORES), em vez das cores do badge. Cada status recebe uma cor
+       FIXA por familia — concluido/aprovado nos verdes, recebido/andamento nos
+       azuis, espera nos tons de terra, revisao no roxo, erro/cancelado no
+       vermelho. Fixa (nao por posicao) para "Concluido" ser sempre o mesmo
+       verde, independentemente da contagem daquele dia. Status fora do mapa
+       caem na paleta por hash do nome, ainda dentro da familia. */
+    const COR_STATUS = {
+      concluido: '#4a7c2f', publicado: '#4a7c2f', 'envio-assessor': '#4a7c2f',
+      aprovado: '#166534', validado: '#166534',
+      recebido: '#1e40af', alinhamentos: '#1e40af',
+      'em-aprovacao': '#1e40af', 'cotacao-aprovacao': '#1e40af',
+      'em-analise': '#0891b2', 'em-andamento': '#0891b2', 'em-producao': '#0891b2',
+      gerando: '#0891b2', 'envio-grafica': '#0891b2',
+      'em-revisao': '#9333ea', 'aguardando-finalizacao': '#9333ea',
+      aguardando: '#ea580c', 'aguardando-rh': '#ea580c', 'aguardando-validacao': '#ea580c',
+      'ajustes-solicitados': '#ea580c',
+      'aguardando-pagamento': '#854d0e', 'aguardando-contrato': '#854d0e', 'em-espera': '#854d0e',
+      cancelado: '#AC3631', reprovado: '#AC3631', erro: '#be123c',
+      registrado: '#221B19',
+    };
+    const CORES_STATUS_FALLBACK = ['#AC3631','#221B19','#4a7c2f','#1e40af','#9333ea','#ea580c','#0891b2','#be123c','#854d0e','#166534'];
+
+    /* BADGE-PRAZO: pilula que aparece so quando a solicitacao esta em atraso ou
+       prestes a vencer. Silenciosa quando esta no prazo ou nao tem prazo. Os
+       status finais nunca ficam "atrasados". Mesmos cortes do backend. */
+    const STATUS_FINAIS_PRAZO = ['concluido','publicado','cancelado','reprovado','erro','envio-assessor'];
+    function badgePrazo(item) {
+      if (!item || !item.prazo) return '';
+      if (STATUS_FINAIS_PRAZO.indexOf(item.status) !== -1) return '';
+      const prazo = new Date(item.prazo);
+      if (isNaN(prazo)) return '';
+      const agora = new Date();
+      const diaMs = 86400000;
+      // diferenca em dias inteiros, arredondando para o dia (ignora horas)
+      const d0 = new Date(agora.getFullYear(), agora.getMonth(), agora.getDate());
+      const d1 = new Date(prazo.getFullYear(), prazo.getMonth(), prazo.getDate());
+      const dias = Math.round((d1 - d0) / diaMs);
+      let txt, bg, cor;
+      if (dias < 0) {
+        const n = Math.abs(dias);
+        txt = 'Atrasada ' + n + 'd';
+        bg = 'rgba(172,54,49,0.12)'; cor = '#AC3631';
+      } else if (dias === 0) {
+        txt = 'Vence hoje'; bg = '#FEF3C7'; cor = '#92400E';
+      } else if (dias === 1) {
+        txt = 'Vence amanhã'; bg = '#FEF3C7'; cor = '#92400E';
+      } else {
+        return '';
       }
-      return c || null;
+      return '<span title="Prazo: ' + prazo.toLocaleDateString('pt-BR') + '" style="display:inline-block;margin-left:6px;font-size:0.68rem;font-weight:700;padding:2px 7px;border-radius:var(--radius-pill);background:' + bg + ';color:' + cor + ';white-space:nowrap;vertical-align:middle">' + txt + '</span>';
+    }
+    function corDeStatus(id) {
+      if (COR_STATUS[id]) return COR_STATUS[id];
+      // sem entrada no mapa: cor estavel derivada do nome (nao muda entre sessoes)
+      let h = 0;
+      for (let i = 0; i < String(id).length; i++) h = (h * 31 + id.charCodeAt(i)) >>> 0;
+      return CORES_STATUS_FALLBACK[h % CORES_STATUS_FALLBACK.length];
     }
 
 
@@ -369,6 +434,7 @@
       if (adminFilters[tab].periodo) params.set('periodo', adminFilters[tab].periodo);
       if (adminFilters[tab].status) params.set('status', adminFilters[tab].status);
       if (adminFilters[tab].avaliacao) params.set('avaliacao', adminFilters[tab].avaliacao);
+      if (adminFilters[tab].prazo) params.set('prazo', adminFilters[tab].prazo);
       const search = document.getElementById(tab === 'eventos' ? 'searchEventos' : 'searchGeral');
       if (search && search.value.trim()) params.set('busca', search.value.trim());
 
@@ -459,7 +525,7 @@
         html += `<tr onclick="window.location.href='/solicitacao.html?id=${item.id}'" style="cursor:pointer">
           ${isAdmin ? `<td style="text-align:center" onclick="event.stopPropagation()"><input type="checkbox" class="bulk-cb" data-id="${item.id}" onchange="bulkUpdate('${tab}')"></td>` : ''}
           <td>${esc(tipoLabel)}</td><td>${esc(titulo)}</td><td>${esc(item.user_email)}</td><td>${esc(date)}</td>
-          <td>${statusBadgeHtml(statusObj, { style: 'white-space:nowrap' })}</td>
+          <td>${statusBadgeHtml(statusObj, { style: 'white-space:nowrap' })}${badgePrazo(item)}</td>
           ${avaliacaoCell}
           ${acoesCell}
         </tr>`;
@@ -789,7 +855,7 @@
       if (!container) return;
       // ESCOPO-CORRIGIDO-CORDESTATUS: corDeStatus foi movida para o escopo do
       // script (perto de recorteTipo), para renderAdminGrafico tambem alcancar.
-      const CORES = ['#0A9060','#1e40af','#4a7c2f','#0891b2','#166534','#3b82f6','#6f877b','#155e75','#3f6212','#1d4ed8'];  // PALETA-AZUL-VERDE: tons frios da marca, alternando azul/verde para separar fatias vizinhas
+      const CORES = ['#AC3631','#221B19','#4a7c2f','#1e40af','#9333ea','#ea580c','#0891b2','#be123c','#854d0e','#166534'];
       const todosItens = modo === 'tipo'
         ? getGraficoBase('tipo').map(i => ({ id: i.tipo, label: (typeof TIPO_SOLICITACAO_LABELS !== 'undefined' && TIPO_SOLICITACAO_LABELS[i.tipo]) || i.tipo, value: i.count }))
         : getGraficoBase('status').map(i => ({ id: i.status, label: getStatus(i.status).label, value: i.count, cor: corDeStatus(i.status) }));
@@ -861,7 +927,7 @@
           return;
         }
 
-        const CORES = ['#0A9060','#1e40af','#4a7c2f','#0891b2','#166534','#3b82f6','#6f877b','#155e75','#3f6212','#1d4ed8'];  // PALETA-AZUL-VERDE: tons frios da marca, alternando azul/verde para separar fatias vizinhas
+        const CORES = ['#AC3631','#221B19','#4a7c2f','#1e40af','#9333ea','#ea580c','#0891b2','#be123c','#854d0e','#166534'];
         const DPR = window.devicePixelRatio || 1;
         const SIZE = 200;
         canvas.width = SIZE * DPR;

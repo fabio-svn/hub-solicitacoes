@@ -539,6 +539,26 @@ router.get("/solicitacoes", requireAuth, async (req, res) => {
       conditions.push(sql`(${solicitacoesTable.dados}::text ILIKE ${searchTerm})`);
     }
 
+    /* FILTRO-PRAZO: "atrasada" = tem prazo, o prazo passou e a solicitacao ainda
+       nao terminou. Sem prazo nunca conta (IS NOT NULL). Os status finais sao os
+       mesmos que o stuck-monitor ja ignora, para as duas visoes concordarem.
+         atrasada  -> prazo < agora
+         vencendo  -> prazo entre agora e +48h (ainda da para agir)
+       O corte de status vale para os dois. */
+    if (req.query.prazo === "atrasada" || req.query.prazo === "vencendo") {
+      const FINAIS = ["concluido", "publicado", "cancelado", "reprovado", "erro", "envio-assessor"];
+      const agora = new Date();
+      conditions.push(sql`${solicitacoesTable.prazo} IS NOT NULL`);
+      conditions.push(notInArray(solicitacoesTable.status, FINAIS));
+      if (req.query.prazo === "atrasada") {
+        conditions.push(lt(solicitacoesTable.prazo, agora));
+      } else {
+        const em48h = new Date(agora.getTime() + 48 * 60 * 60 * 1000);
+        conditions.push(sql`${solicitacoesTable.prazo} >= ${agora.toISOString()}`);
+        conditions.push(sql`${solicitacoesTable.prazo} <= ${em48h.toISOString()}`);
+      }
+    }
+
     if (req.query.periodo) {
       const now = new Date();
       let fromDate: Date | null = null;
