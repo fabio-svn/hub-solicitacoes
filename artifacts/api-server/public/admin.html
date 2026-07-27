@@ -303,6 +303,25 @@
     let recorteTipo = null;
     let recorteStatus = null;
 
+    /* COR-DONUT-STATUS: cada status tem duas cores no config.js — `bg`, o fundo
+       claro da pilula (feito para texto escuro por cima), e `text`, a cor
+       saturada desse texto. O donut vinha usando `bg`, entao as fatias saiam
+       lavanda/verde-menta quase sem contraste. `text` e a cor certa para area
+       cheia. Precisa ficar no escopo do script: renderAdminGrafico e
+       renderGraficoDropdown chamam as duas. Cai na paleta generica so se um
+       status nao tiver `text`. */
+    function corDeStatus(id) {
+      const s = getStatus(id) || {};
+      let c = s.text || s.bg || '';
+      const m = /var\((--[a-z0-9-]+)\)/i.exec(c);
+      if (m) {
+        const v = getComputedStyle(document.documentElement).getPropertyValue(m[1]).trim();
+        if (v) c = v;
+      }
+      return c || null;
+    }
+
+
     async function init() {
       await _configReady;
       await Auth.init();
@@ -768,24 +787,8 @@
       if (!adminGraficoData) return;
       const container = document.getElementById(modo === 'tipo' ? 'graficoDropdownTipo' : 'graficoDropdownStatus');
       if (!container) return;
-      /* COR-DONUT-STATUS: cada status tem duas cores no config.js — `bg`, o fundo
-         claro da pilula (feito para texto escuro por cima), e `text`, a cor
-         saturada desse texto. O donut vinha usando `bg`, entao as fatias saiam
-         lavanda/verde-menta quase sem contraste. `text` e a cor certa para area
-         cheia: tem corpo e mantem o vinculo (verde = concluido, cinza =
-         recebido). Cai na paleta generica so se um status nao tiver `text`. */
-      function corDeStatus(id) {
-        const s = getStatus(id) || {};
-        let c = s.text || s.bg || '';
-        // alguns status usam var(--token) em vez de hex; resolve para o valor real.
-        const m = /var\((--[a-z0-9-]+)\)/i.exec(c);
-        if (m) {
-          const v = getComputedStyle(document.documentElement).getPropertyValue(m[1]).trim();
-          if (v) c = v;
-        }
-        return c || null;
-      }
-
+      // ESCOPO-CORRIGIDO-CORDESTATUS: corDeStatus foi movida para o escopo do
+      // script (perto de recorteTipo), para renderAdminGrafico tambem alcancar.
       const CORES = ['#AC3631','#221B19','#4a7c2f','#1e40af','#9333ea','#ea580c','#0891b2','#be123c','#854d0e','#166534'];
       const todosItens = modo === 'tipo'
         ? getGraficoBase('tipo').map(i => ({ id: i.tipo, label: (typeof TIPO_SOLICITACAO_LABELS !== 'undefined' && TIPO_SOLICITACAO_LABELS[i.tipo]) || i.tipo, value: i.count }))
