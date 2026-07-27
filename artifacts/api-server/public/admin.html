@@ -352,7 +352,7 @@
     /* BADGE-PRAZO: pilula que aparece so quando a solicitacao esta em atraso ou
        prestes a vencer. Silenciosa quando esta no prazo ou nao tem prazo. Os
        status finais nunca ficam "atrasados". Mesmos cortes do backend. */
-    const STATUS_FINAIS_PRAZO = ['concluido','publicado','cancelado','reprovado','erro','envio-assessor'];
+    const STATUS_FINAIS_PRAZO = ['concluido','publicado','cancelado','reprovado','erro','envio-assessor','envio-grafica'];
     function badgePrazo(item) {
       if (!item || !item.prazo) return '';
       if (STATUS_FINAIS_PRAZO.indexOf(item.status) !== -1) return '';
@@ -364,19 +364,24 @@
       const d0 = new Date(agora.getFullYear(), agora.getMonth(), agora.getDate());
       const d1 = new Date(prazo.getFullYear(), prazo.getMonth(), prazo.getDate());
       const dias = Math.round((d1 - d0) / diaMs);
-      let txt, bg, cor;
+      /* BADGE-LEVE: ponto colorido + texto na MESMA linha do status, sem fundo.
+         O badge de status ja e uma pilula solida; um segundo bloco solido embaixo
+         competia com ele e pesava a linha. O ponto da o sinal de urgencia, o
+         texto informa, e nada empilha. Vermelho = venceu, ambar = vence ja. */
+      let txt, cor;
       if (dias < 0) {
-        const n = Math.abs(dias);
-        txt = 'Atrasada ' + n + 'd';
-        bg = 'rgba(172,54,49,0.12)'; cor = '#AC3631';
+        txt = 'Atrasada ' + Math.abs(dias) + 'd'; cor = '#AC3631';
       } else if (dias === 0) {
-        txt = 'Vence hoje'; bg = '#FEF3C7'; cor = '#92400E';
+        txt = 'Vence hoje'; cor = '#92400E';
       } else if (dias === 1) {
-        txt = 'Vence amanhã'; bg = '#FEF3C7'; cor = '#92400E';
+        txt = 'Vence amanhã'; cor = '#92400E';
       } else {
         return '';
       }
-      return '<span title="Prazo: ' + prazo.toLocaleDateString('pt-BR') + '" style="display:inline-block;margin-left:6px;font-size:0.68rem;font-weight:700;padding:2px 7px;border-radius:var(--radius-pill);background:' + bg + ';color:' + cor + ';white-space:nowrap;vertical-align:middle">' + txt + '</span>';
+      return '<span title="Prazo: ' + prazo.toLocaleDateString('pt-BR') +
+        '" style="margin-left:10px;font-size:0.72rem;font-weight:600;color:' + cor + ';white-space:nowrap;vertical-align:middle">' +
+        '<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:' + cor + ';margin-right:5px;vertical-align:middle"></span>' +
+        txt + '</span>';
     }
     function corDeStatus(id) {
       if (COR_STATUS[id]) return COR_STATUS[id];

@@ -82,6 +82,7 @@
         if (d.prazo) item.prazo = d.prazo;
         if (d.prazo_anterior) item.prazo_anterior = d.prazo_anterior;
         if (d.prazo_motivo !== undefined) item.prazo_motivo = d.prazo_motivo;
+        if (d.observacao !== undefined) item.observacao = d.observacao;  // OBS-REPROVACAO-SYNC
         if (d.prazo_alterado_em) item.prazo_alterado_em = d.prazo_alterado_em;
         if (statusMudou) item.status = d.status;
         if (statusMudou || prazoMudou) {
@@ -416,10 +417,17 @@
             </div>`;
           return;
         }
+        // MOTIVO-NO-CARD: em reprovacao, o motivo (observacao da validacao) aparece
+        // abaixo do rotulo. Sem motivo, mostra so o rotulo, como antes.
+        const _motivo = (item.status === 'reprovado' && item.observacao && String(item.observacao).trim())
+          ? String(item.observacao).trim() : '';
         card.innerHTML = `
-          <div style="display:flex;align-items:center;gap:8px;padding:8px 0">
-            <div style="width:10px;height:10px;border-radius:var(--radius-round);background:${sObj.text || 'var(--danger)'};flex-shrink:0"></div>
-            <span style="font-size:0.875rem;font-weight:700;color:${sObj.text || 'var(--danger)'}">${excepcional.label}</span>
+          <div style="display:flex;align-items:${_motivo ? 'flex-start' : 'center'};gap:8px;padding:8px 0">
+            <div style="width:10px;height:10px;border-radius:var(--radius-round);background:${sObj.text || 'var(--danger)'};flex-shrink:0;margin-top:${_motivo ? '5px' : '0'}"></div>
+            <div>
+              <span style="font-size:0.875rem;font-weight:700;color:${sObj.text || 'var(--danger)'}">${excepcional.label}</span>
+              ${_motivo ? `<div style="font-size:0.82rem;color:var(--ink-70);margin-top:4px;line-height:1.5">${esc(_motivo)}</div>` : ''}
+            </div>
           </div>`;
         return;
       }

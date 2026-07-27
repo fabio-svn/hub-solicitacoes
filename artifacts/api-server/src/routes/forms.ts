@@ -546,7 +546,7 @@ router.get("/solicitacoes", requireAuth, async (req, res) => {
          vencendo  -> prazo entre agora e +48h (ainda da para agir)
        O corte de status vale para os dois. */
     if (req.query.prazo === "atrasada" || req.query.prazo === "vencendo") {
-      const FINAIS = ["concluido", "publicado", "cancelado", "reprovado", "erro", "envio-assessor"];
+      const FINAIS = ["concluido", "publicado", "cancelado", "reprovado", "erro", "envio-assessor", "envio-grafica"];
       const agora = new Date();
       conditions.push(sql`${solicitacoesTable.prazo} IS NOT NULL`);
       conditions.push(notInArray(solicitacoesTable.status, FINAIS));
@@ -846,7 +846,15 @@ router.get("/solicitacoes/:id/status", requireAuth, async (req, res): Promise<vo
     if (solicitacao.tipo_solicitacao === "cartao-visita-fisico") {
       const [apr] = await db.select().from(cartaoAprovacoesTable)
         .where(eq(cartaoAprovacoesTable.solicitacao_id, solicitacao.id));
-      res.json({ status: apr?.status || STATUS_APROVACAO_DEFAULT, updated: false });
+      // MOTIVO-CARTAO: a observacao da validacao (o motivo da reprovacao) ja existe
+      // na cartao_aprovacoes, mas nao chegava ao front. So faz sentido enviar quando
+      // reprovado — nos outros status ela e nota interna do validador.
+      const st = apr?.status || STATUS_APROVACAO_DEFAULT;
+      res.json({
+        status: st,
+        updated: false,
+        observacao: st === "reprovado" ? (apr?.observacao || null) : null,
+      });
       return;
     }
 
@@ -902,9 +910,22 @@ router.get("/solicitacoes/:id/status", requireAuth, async (req, res): Promise<vo
       }
     }
 
+    // MOTIVO-GERAL: paginas de assessor reprovadas guardam o motivo em
+    // assessor_publicacoes.observacao; envia junto para o card explicar a recusa.
+    let observacaoOut: string | null = null;
+    if (statusOut === "reprovado") {
+      try {
+        const [pubObs] = await db.select({ obs: assessorPublicacoesTable.observacao })
+          .from(assessorPublicacoesTable)
+          .where(eq(assessorPublicacoesTable.solicitacao_id, id));
+        observacaoOut = pubObs?.obs || null;
+      } catch { /* segue sem o motivo */ }
+    }
+
     res.json({
       status: statusOut,
       updated,
+      observacao: observacaoOut,
       prazo: prazoOut ? prazoOut.toISOString() : null,
       prazo_anterior: prazoAnteriorOut ? prazoAnteriorOut.toISOString() : null,
       prazo_motivo: prazoMotivoOut,
