@@ -100,7 +100,7 @@ Muito obrigado(a), e conte sempre comigo!</textarea>
         onReady: function() {
           var cargoSel = document.getElementById('cargo');
           if (cargoSel) { CARGOS_ASSESSOR.forEach(function(c) { var o = document.createElement('option'); o.value = c; o.textContent = c; cargoSel.appendChild(o); }); }
-          FileUpload.bind('fotoPerfil', 'fotoPerfilName', { maxMB: 5, accept: '.jpg,.jpeg,.png,.webp' });
+          FileUpload.bind('fotoPerfil', 'fotoPerfilName', { maxMB: FileUpload.MAX_MB_FOTO, accept: '.jpg,.jpeg,.png,.webp' });
         },
       });
     }

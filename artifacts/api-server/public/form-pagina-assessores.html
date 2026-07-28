@@ -440,7 +440,7 @@
           CONTRATOS_SOCIAIS.forEach(c => { const o = document.createElement('option'); o.value = c; o.textContent = c; csSel.appendChild(o); });
           Auth.aplicarPerfilNoCampo('unidade', Auth.getUnidade());
           renderSelos();
-          FileUpload.bind('fotoPerfil', 'fotoPerfilName', { accept: '.jpg,.jpeg,.png,.webp', maxMB: 50 });
+          FileUpload.bind('fotoPerfil', 'fotoPerfilName', { accept: '.jpg,.jpeg,.png,.webp', maxMB: FileUpload.MAX_MB_FOTO });
         }
       });
     }

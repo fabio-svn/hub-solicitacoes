@@ -48,6 +48,28 @@ function normalizeStatusKey(raw: string): string {
   "reprovado / cancelado":      "reprovado",
 };
 
+// STATUS-DESCONHECIDO-ALERTA: quando o ClickUp manda um status que o mapa nao
+// conhece, o Hub o ignora (a solicitacao mantem o status anterior). Isso e
+// seguro — nao quebra nada — mas era SILENCIOSO: ninguem descobria que uma etapa
+// nova do ClickUp nao estava mapeada ate um usuario estranhar. Agora registramos
+// um aviso (uma vez por status, para nao floodar o log a cada sincronizacao).
+const _statusDesconhecidosVistos = new Set<string>();
+
 export function mapClickUpStatus(raw: string): string | null {
-  return CLICKUP_STATUS_MAP[normalizeStatusKey(raw)] || null;
+  const chave = normalizeStatusKey(raw);
+  const mapeado = CLICKUP_STATUS_MAP[chave] || null;
+  if (!mapeado && chave && !_statusDesconhecidosVistos.has(chave)) {
+    _statusDesconhecidosVistos.add(chave);
+    // import tardio evita ciclo de dependencia com o logger
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      const { logger } = require("../lib/logger");
+      logger.warn(
+        { statusClickUp: raw, chaveNormalizada: chave },
+        "ClickUp enviou um status que o Hub nao reconhece — a solicitacao ficara no status anterior. " +
+        "Adicione este status ao CLICKUP_STATUS_MAP em src/config/clickup-status.ts."
+      );
+    } catch { /* sem logger disponivel: segue silencioso, como antes */ }
+  }
+  return mapeado;
 }

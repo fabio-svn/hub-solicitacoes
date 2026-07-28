@@ -171,6 +171,7 @@ const TIPO_SOLICITACAO_LABELS = {
   "sessao-fotos":                   "Sessão de Fotos",
   "materiais-impressos":            "Materiais Impressos",
   "outro":                          "Outro",
+  "material-tombamento":            "Materiais de Tombamento",
   // Capital Humano
   "ch-kit-onboarding":              "Kit Onboarding",
   "ch-atualizacao-pessoas":         "Atualização de Pessoas nos Sites",
@@ -646,6 +647,10 @@ const FLUXOS_ETAPAS = {
     { id: "envio-assessor",       label: "Envio assessor",       visivel: true  },
     { id: "reprovado",            label: "Reprovado",            visivel: false },
   ],
+  // BRINDES-SEM-ETAPAS: brindes segue um fluxo proprio, informado fora do Hub
+  // por outra area. Lista vazia => o card de etapas nao aparece (o front esconde
+  // quando nao ha etapas visiveis).
+  "brindes": [],
   "_default": [
     { id: "recebido",     label: "Recebido",              visivel: true  },
     { id: "em-analise",   label: "Em análise",            visivel: true  },

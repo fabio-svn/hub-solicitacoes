@@ -653,6 +653,7 @@ export const VALID_TIPOS: string[] = [
   "ch-atualizacao-books",
   "ch-linha-do-tempo",
   "ch-aniversariantes",
+  "material-tombamento",
 ];
 
 /* Tipos que existem no sistema mas nao tem entrada em FORM_SCHEMAS — as paginas
@@ -693,6 +694,7 @@ export const LABELS_EXTRA: Record<string, string> = {
   'pagina-assessores-dados--registro':      'Registro de Assessor',
   'pagina-assessores-registro':             'Registro de Assessor',
   'pagina-online':                          'Página Online',
+  'material-tombamento':                    'Materiais de Tombamento',
 };
 
 /* Rotulo legivel de um tipo de solicitacao. Use SEMPRE que o texto for aparecer

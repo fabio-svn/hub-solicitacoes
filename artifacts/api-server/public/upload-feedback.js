@@ -3,47 +3,15 @@ const FileUpload = {
   // e este numero que evita um upload longo terminar em recusa.
   MAX_MB_PADRAO: 250,
 
-  success(nameEl, file) {
-    if (!nameEl) return;
-    const size = file.size >= 1024 * 1024
-      ? (file.size / (1024 * 1024)).toFixed(1) + ' MB'
-      : Math.round(file.size / 1024) + ' KB';
-    nameEl.innerHTML =
-      `<div class="upload-feedback upload-feedback--success">` +
-        `<svg class="upload-feedback__icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="20 6 9 17 4 12"/></svg>` +
-        `<span class="upload-feedback__name" title="${file.name}">${file.name}</span>` +
-        `<span class="upload-feedback__meta">${size}</span>` +
-      `</div>`;
-  },
+  // MAX_MB_FOTO: limite unico para campos de FOTO. Fotos reais nao passam disto;
+  // padroniza os antigos 5/10/50. Mude AQUI para mudar em todos.
+  MAX_MB_FOTO: 25,
 
-  error(nameEl, message) {
-    if (!nameEl) return;
-    nameEl.innerHTML =
-      `<div class="upload-feedback upload-feedback--error">` +
-        `<svg class="upload-feedback__icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>` +
-        `<span>${message}</span>` +
-      `</div>`;
-  },
-
-  clear(nameEl) {
-    if (!nameEl) return;
-    nameEl.innerHTML = '';
-  },
-
-  bind(inputId, nameElId, options) {
-    const input   = typeof inputId  === 'string' ? document.getElementById(inputId)  : inputId;
-    const nameEl  = typeof nameElId === 'string' ? document.getElementById(nameElId) : nameElId;
-    if (!input) return;
-    if (input.dataset.uploadBound === '1') return;
-    input.dataset.uploadBound = '1';
+  // DICA-COMPARTILHADA: monta "JPG, PNG · até N MB" a partir de accept+maxMB.
+  // Usada pelo bind explicito E pelo safety-net, para todo input file ter dica.
+  escreverDica(input, options, nameEl) {
     options = options || {};
-
-    /* DICA-DE-UPLOAD: o limite e os formatos so apareciam DEPOIS de escolher um
-       arquivo errado, em mensagem de erro. Como o bind ja conhece os dois, a
-       dica e montada aqui — assim ela nasce certa em todo formulario e continua
-       certa quando o limite mudar, sem depender de alguem lembrar de editar 23
-       arquivos. */
-    (function escreverDica() {
+    var caixa = (input.closest && input.closest('.file-input-wrapper')) || input.parentElement;
       var caixa = (input.closest && input.closest('.file-input-wrapper')) || input.parentElement;
       if (!caixa || caixa.querySelector('.file-hint')) return;
 
@@ -97,8 +65,47 @@ const FileUpload = {
       // Antes do nome do arquivo escolhido, para a dica ficar colada no botao.
       else if (nameEl && nameEl.parentNode === caixa) caixa.insertBefore(dica, nameEl);
       else caixa.appendChild(dica);
-    })();
+  },
 
+  success(nameEl, file) {
+    if (!nameEl) return;
+    const size = file.size >= 1024 * 1024
+      ? (file.size / (1024 * 1024)).toFixed(1) + ' MB'
+      : Math.round(file.size / 1024) + ' KB';
+    nameEl.innerHTML =
+      `<div class="upload-feedback upload-feedback--success">` +
+        `<svg class="upload-feedback__icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="20 6 9 17 4 12"/></svg>` +
+        `<span class="upload-feedback__name" title="${file.name}">${file.name}</span>` +
+        `<span class="upload-feedback__meta">${size}</span>` +
+      `</div>`;
+  },
+
+  error(nameEl, message) {
+    if (!nameEl) return;
+    nameEl.innerHTML =
+      `<div class="upload-feedback upload-feedback--error">` +
+        `<svg class="upload-feedback__icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>` +
+        `<span>${message}</span>` +
+      `</div>`;
+  },
+
+  clear(nameEl) {
+    if (!nameEl) return;
+    nameEl.innerHTML = '';
+  },
+
+  bind(inputId, nameElId, options) {
+    const input   = typeof inputId  === 'string' ? document.getElementById(inputId)  : inputId;
+    const nameEl  = typeof nameElId === 'string' ? document.getElementById(nameElId) : nameElId;
+    if (!input) return;
+    if (input.dataset.uploadBound === '1') return;
+    input.dataset.uploadBound = '1';
+    options = options || {};
+
+    /* DICA-DE-UPLOAD: montada por FileUpload.escreverDica (abaixo), chamada tanto
+       aqui (bind explicito) quanto no safety-net por delegacao — assim inputs sem
+       bind proprio (ex.: forms de Capital Humano) tambem ganham a dica. */
+    FileUpload.escreverDica(input, options, nameEl);
     input.addEventListener('change', function(e) {
       const f = e.target.files[0];
       if (!f) { FileUpload.clear(nameEl); return; }
@@ -149,6 +156,13 @@ document.addEventListener('change', function (e) {
   if (input.dataset.uploadBound === '1') return;
   var nameEl = document.getElementById(input.id + 'Name');
   if (!nameEl || typeof FileUpload === 'undefined') return;
+  // Sem bind proprio, a dica nunca era montada. Monta agora (uma vez), lendo o
+  // accept do proprio input se houver. Assim os forms de Capital Humano (input
+  // file solto) ganham "até 25 MB" como os demais.
+  if (FileUpload.escreverDica) {
+    var accAttr = input.getAttribute('accept');
+    FileUpload.escreverDica(input, { accept: accAttr || '' }, nameEl);
+  }
   var files = input.files;
   if (!files || !files.length) { FileUpload.clear(nameEl); return; }
   if (files.length === 1) { FileUpload.success(nameEl, files[0]); }

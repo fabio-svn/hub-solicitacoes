@@ -227,7 +227,7 @@
           Auth.aplicarPerfilNoCampo('unidadeFisico', Auth.getUnidade());
           Auth.aplicarPerfilNoCampo('telefoneDigital', Auth.getTelefone());
 
-          FileUpload.bind('fotoPerfilDigital', 'fotoPerfilDigitalName', { accept: '.jpg,.jpeg,.png,.webp', maxMB: 10 });
+          FileUpload.bind('fotoPerfilDigital', 'fotoPerfilDigitalName', { accept: '.jpg,.jpeg,.png,.webp', maxMB: FileUpload.MAX_MB_FOTO });
         }
       });
     }

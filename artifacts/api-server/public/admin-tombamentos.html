@@ -19,12 +19,21 @@
   <link rel="stylesheet" href="style.css">
   <style>
     .page-container--wide { max-width: min(1500px, 100%); }  /* 100%, nao 96vw: vw ignora os 232px da sidebar e o excesso era cortado */
+    /* PANEL-CRIAR-CENTRO: alinha o conteudo da aba "criar" ao centro, para o
+       botao "+ Novo tombamento" e o cartao ficarem centralizados juntos. */
+    /* so centraliza quando ATIVO — senao o seletor por ID venceria a regra
+       .tomb-panel{display:none} e o painel (com o botao "+ Novo tombamento")
+       nunca escondia ao trocar para a aba "realizados". */
+    #panelCriar.active { display: flex; flex-direction: column; align-items: center; }
     .tomb-tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--border-light); margin: 8px 0 24px; }
     .tomb-tab { padding: 10px 18px; border: none; background: transparent; font-family: 'Nunito Sans', sans-serif; font-size: 0.9rem; font-weight: 700; color: var(--ink-50); cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; }
     .tomb-tab.active { color: var(--carbon-black); border-bottom-color: var(--ruby-red); }
     .tomb-panel { display: none; } .tomb-panel.active { display: block; }
 
-    .tomb-create { max-width: 480px; border: 1px solid var(--border-light); border-radius: var(--radius-xl); padding: 22px; margin-top: 8px; }
+    /* FORM-CARD-CENTRADO: o form de criacao segue o padrao .form-card dos outros
+       forms — cartao branco centralizado, com sombra suave. (Mantem a classe
+       .tomb-create para preservar os estilos de campo abaixo.) */
+    .tomb-create { max-width: 620px; margin: 8px auto 0; background: var(--card-white); border: 1px solid var(--border-light); border-radius: var(--radius-2xl); box-shadow: 0 2px 16px var(--ink-05); padding: 30px 32px; }
     .tomb-create .field { margin-bottom: 14px; }
     .tomb-create label { display: block; font-size: 0.8rem; font-weight: 700; margin-bottom: 5px; }
     .tomb-create input, .tomb-create select { width: 100%; padding: 9px 11px; border: 1px solid var(--border-light); border-radius: var(--radius-md); font-family: inherit; font-size: 0.9rem; }
@@ -42,6 +51,15 @@
     .tomb-drop { border: 2px dashed var(--border-light); border-radius: var(--radius-xl); padding: 26px; text-align: center; }
     .tomb-drop p { margin: 8px 0 0; font-size: 0.84rem; color: var(--ink-50); }
     .tomb-filename { font-size: 0.85rem; font-weight: 700; margin-top: 10px; }
+    /* tomb-loaded: barra compacta que substitui a caixa gigante quando o arquivo
+       ja esta carregado — badge do arquivo + botao discreto de substituir. */
+    .tomb-loaded { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; padding: 12px 16px; border: 1px solid var(--border-light); border-radius: var(--radius-md); background: var(--card-white, #fff); }
+    .tomb-loaded__badge { display: inline-flex; align-items: center; gap: 8px; font-size: 0.86rem; font-weight: 600; color: var(--carbon-black); }
+    .tomb-loaded__badge svg { color: var(--sage-green); flex-shrink: 0; }
+    .tomb-loaded__meta { font-size: 0.8rem; color: var(--ink-50); }
+    .tomb-loaded__spacer { flex: 1; }
+    .tomb-loaded__btn { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border: 1px solid var(--border-light); border-radius: var(--radius-md); background: transparent; font-family: inherit; font-size: 0.8rem; font-weight: 600; cursor: pointer; color: var(--carbon-black); transition: 0.15s; white-space: nowrap; }
+    .tomb-loaded__btn:hover { border-color: var(--ruby-red); color: var(--ruby-red); }
     .tomb-summary { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; margin: 22px 0 12px; }
     .tomb-pill { padding: 3px 11px; border-radius: var(--radius-pill); font-weight: 700; font-size: 0.78rem; }
     .tomb-pill--ok { background: #dcfce7; color: var(--success); }
@@ -123,9 +141,11 @@
 
       <!-- Visão de abas (lista / criar) -->
       <div id="viewTabs">
-        <div class="tomb-tabs">
-          <button class="tomb-tab active" data-tab="criar" onclick="trocarAba('criar')">Criar novo tombamento</button>
-          <button class="tomb-tab" data-tab="realizados" onclick="trocarAba('realizados')">Tombamentos realizados</button>
+        <!-- ABAS-PADRAO-GLOBAL: usa .tabs/.tab do sistema (mesmo visual das abas
+             do resto do app) em vez do estilo local duplicado. -->
+        <div class="tabs" style="justify-content:center">
+          <button class="tab active" data-tab="criar" onclick="trocarAba('criar')">Novo tombamento</button>
+          <button class="tab" data-tab="realizados" onclick="trocarAba('realizados')">Tombamentos realizados</button>
         </div>
 
         <div class="tomb-panel active" id="panelCriar">
@@ -146,8 +166,44 @@
               <p id="novoMarcaErro" class="tomb-erro" style="display:none">Selecione a marca do tombamento.</p>
               <p class="tomb-note">A marca vale para todo o tombamento — todas as assinaturas e cartões usarão o logo dela.</p>
             </div>
+            <!-- BOX-SOLICITACAO-COMPLETA: a criacao na pagina e a propria solicitacao
+                 de tombamento (nao passa mais pelo form "Outros"). Pede tudo de uma vez
+                 — descricao (opcional), planilha e fotos — e ao criar ja processa e leva
+                 ao workspace com a planilha lida e as fotos casadas para revisao. -->
+            <div class="field">
+              <label>Descrição / observação <span style="opacity:0.5;font-weight:400">(opcional)</span></label>
+              <textarea id="novoDescricao" rows="2" placeholder="Algum detalhe que o time deva saber sobre este tombamento?" style="width:100%;resize:vertical;font-family:inherit;padding:8px 10px;border:1px solid var(--border-light);border-radius:var(--radius-sm)"></textarea>
+            </div>
+            <!-- FORM-UPLOAD-PADRAO: mesmos inputs de arquivo dos outros forms
+                 (file-input-btn + FileUpload). Antes eram <input type=file> cru,
+                 que renderizava o "Escolher arquivo / Nenhum arquivo" do navegador,
+                 destoando do restante do sistema. -->
+            <div class="field">
+              <label>Planilha de colaboradores</label>
+              <div class="file-input-wrapper">
+                <label class="file-input-btn" for="novoPlanilha">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                  Escolher planilha
+                </label>
+                <input type="file" id="novoPlanilha" accept=".xlsx,.xls,.csv">
+                <div class="file-name" id="novoPlanilhaName"></div>
+              </div>
+              <p class="tomb-note">Colunas: nome, e-mail, telefone, cargo, tem CFP, arquivo da foto (opcional).</p>
+            </div>
+            <div class="field">
+              <label>Fotos dos colaboradores <span style="opacity:0.5;font-weight:400">(.zip, para cartões)</span></label>
+              <div class="file-input-wrapper">
+                <label class="file-input-btn" for="novoFotos">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                  Escolher .zip de fotos
+                </label>
+                <input type="file" id="novoFotos" accept=".zip,application/zip">
+                <div class="file-name" id="novoFotosName"></div>
+              </div>
+              <p class="tomb-note">O sistema casa cada pessoa pelo nome — você confere antes de gerar. Só para marcas com cartão digital.</p>
+            </div>
             <div style="display:flex;gap:10px;margin-top:6px">
-              <button class="btn btn-primary" onclick="criarTombamento()">Criar tombamento</button>
+              <button class="btn btn-primary" id="btnCriarTomb" onclick="criarTombamento()">Criar tombamento</button>
               <button class="btn" style="background:transparent;border:1px solid var(--border-light)" onclick="cancelarNovo()">Cancelar</button>
             </div>
           </div>
@@ -169,6 +225,10 @@
           <span class="tomb-marca-pill" id="wsMarca"></span>
         </div>
 
+        <!-- BADGE-PLANILHA: quando ainda nao ha planilha, a caixa (tombDrop) pede
+             o arquivo; quando ja ha, ela da lugar a uma barra compacta com o badge
+             e um botao "Substituir" (a caixa gigante nao faz mais sentido depois de
+             carregada). O input #tombFile e compartilhado pelos dois estados. -->
         <div class="tomb-drop" id="tombDrop">
           <label class="btn btn-primary" style="cursor:pointer;display:inline-flex;align-items:center;gap:6px">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
@@ -178,6 +238,18 @@
           <p>Formatos: .xlsx, .xls ou .csv (máx. 15 MB). Colunas: nome, e-mail, telefone, cargo, tem CFP, arquivo da foto. (A marca não vai na planilha — é a do tombamento.) A coluna <strong>arquivo da foto</strong> é opcional: sem ela, o sistema casa as fotos pelo nome.</p>
           <div class="tomb-filename" id="tombFilename"></div>
         </div>
+        <div class="tomb-loaded" id="tombPlanilhaLoaded" style="display:none">
+          <span class="tomb-loaded__badge">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+            Planilha carregada
+          </span>
+          <span class="tomb-loaded__meta" id="tombPlanilhaMeta"></span>
+          <span class="tomb-loaded__spacer"></span>
+          <button type="button" class="tomb-loaded__btn" onclick="document.getElementById('tombFile').click()">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            Substituir planilha
+          </button>
+        </div>
 
         <div id="tombResultado" style="display:none">
           <div class="tomb-summary" id="tombSummary"></div>
@@ -186,7 +258,7 @@
           </div>
           <div class="tomb-actions">
             <button class="btn btn-primary" id="btnGerarAssinaturas" onclick="gerarAssinaturas()" disabled>Gerar assinaturas (.zip)</button>
-            <button class="btn btn-dark" id="btnGerarCartoes" style="display:inline-flex;align-items:center;gap:7px" onclick="document.getElementById('fotosZipInput').click()" disabled><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>Upload de .zip com fotos para cartões</button>
+            <button class="btn btn-dark" id="btnGerarCartoes" style="display:inline-flex;align-items:center;gap:7px" onclick="document.getElementById('fotosZipInput').click()" disabled><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg><span class="btn-cartoes-label">Upload de .zip com fotos para cartões</span></button>
             <input type="file" id="fotosZipInput" accept=".zip,application/zip" style="display:none" onchange="cartoesStep1(this)">
           </div>
           <p class="tomb-note">Cartões digitais: suba um <strong>.zip com as fotos</strong> (máx. 100 MB) e o sistema casa cada pessoa pelo nome — você confere antes de gerar. A coluna <strong>arquivo_foto</strong> é opcional (se preenchida, tem prioridade). Disponível apenas para marcas com cartão digital (Investimentos, Capital, Connect).</p>
@@ -226,6 +298,7 @@
   <script src="shell.js"></script>
   <script src="utils.js"></script>
   <script src="toast.js"></script>
+  <script src="upload-feedback.js"></script>
   <script>
     const MARCAS = [
       { value: 'svn-investimentos', label: 'SVN Investimentos' },
@@ -262,13 +335,25 @@
       document.getElementById('novoMarca').innerHTML = '<option value="">Selecione…</option>'
         + MARCAS.map(function (m) { return '<option value="' + m.value + '">' + esc(m.label) + '</option>'; }).join('');
       setupDrop();
+      // BIND-UPLOADS-FORM: feedback de arquivo escolhido + validacao de formato,
+      // no mesmo padrao dos outros forms.
+      if (typeof FileUpload !== 'undefined' && FileUpload.bind) {
+        FileUpload.bind('novoPlanilha', 'novoPlanilhaName', { accept: '.xlsx,.xls,.csv', maxMB: 15 });
+        FileUpload.bind('novoFotos', 'novoFotosName', { accept: '.zip', maxMB: 100 });
+      }
       carregarLista();
     }
 
     function trocarAba(aba) {
-      document.querySelectorAll('.tomb-tab').forEach(function (b) { b.classList.toggle('active', b.getAttribute('data-tab') === aba); });
+      // TOGGLE-TAB-GLOBAL: as abas agora usam a classe global .tab.
+      document.querySelectorAll('#viewTabs .tab').forEach(function (b) { b.classList.toggle('active', b.getAttribute('data-tab') === aba); });
       document.getElementById('panelCriar').classList.toggle('active', aba === 'criar');
       document.getElementById('panelRealizados').classList.toggle('active', aba === 'realizados');
+      // RESET-ESTADO-ABA: sempre volta a aba "criar" ao estado inicial (form
+      // fechado, botao "+ Novo tombamento" visivel). Sem isto, o form aberto
+      // persistia ao alternar de aba e o botao sumia. cancelarNovo() faz esse
+      // reset (e limpa os campos).
+      cancelarNovo();
       if (aba === 'realizados') carregarLista();
     }
 
@@ -281,7 +366,17 @@
       const s = document.getElementById('novoMarca'); if (s) s.classList.remove('erro');
       const e = document.getElementById('novoMarcaErro'); if (e) e.style.display = 'none';
     }
-    function cancelarNovo() { document.getElementById('tombCreateForm').style.display = 'none'; document.getElementById('btnNovo').style.display = 'inline-flex'; document.getElementById('novoNome').value = ''; document.getElementById('novoMarca').value = ''; limparErroNome(); limparErroMarca(); }
+    function cancelarNovo() {
+      document.getElementById('tombCreateForm').style.display = 'none';
+      document.getElementById('btnNovo').style.display = 'inline-flex';
+      document.getElementById('novoNome').value = '';
+      document.getElementById('novoMarca').value = '';
+      // LIMPA-CAMPOS-NOVOS: descricao e arquivos da solicitacao completa
+      const d = document.getElementById('novoDescricao'); if (d) d.value = '';
+      const p = document.getElementById('novoPlanilha'); if (p) p.value = '';
+      const f = document.getElementById('novoFotos'); if (f) f.value = '';
+      limparErroNome(); limparErroMarca();
+    }
 
     async function criarTombamento() {
       const nome = document.getElementById('novoNome').value.trim();
@@ -298,13 +393,34 @@
         const e = document.getElementById('novoMarcaErro'); if (e) e.style.display = 'block';
         return;
       }
+      // ORQUESTRA-CRIACAO: cria o tombamento com a descricao e, se vieram arquivos,
+      // ja processa em sequencia (planilha -> fotos), reusando as funcoes do
+      // workspace. A revisao humana continua: cai no workspace com tudo carregado.
+      const descricao = (document.getElementById('novoDescricao')?.value || '').trim();
+      const arquivoPlanilha = document.getElementById('novoPlanilha')?.files?.[0] || null;
+      const arquivoFotos = document.getElementById('novoFotos')?.files?.[0] || null;
+      const btn = document.getElementById('btnCriarTomb');
+      // PROGRESSO-CRIACAO: a criacao encadeia varios passos (criar -> ler planilha
+      // -> casar fotos) que podem levar alguns segundos com arquivos grandes.
+      // Mostrar a etapa atual deixa claro que esta progredindo, nao travado.
+      var etapa = function (texto) {
+        if (btn) { btn.disabled = true; btn.innerHTML = SPIN + ' ' + texto; }
+      };
+      etapa('Criando…');
       try {
-        const res = await fetch('/api/admin/tombamentos', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ nome: nome, marca: marca }) });
+        const res = await fetch('/api/admin/tombamentos', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ nome: nome, marca: marca, descricao: descricao }) });
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || 'Erro ao criar');
         cancelarNovo();
-        abrirWorkspace(data);
-      } catch (err) { if (window.showToast) showToast(err.message || 'Erro ao criar tombamento', 'error'); }
+        abrirWorkspace(data);            // seta currentTomb + mostra workspace
+        // processa os arquivos que vieram na criacao (cada um trata seu proprio erro)
+        if (arquivoPlanilha) { etapa('Lendo planilha…'); await enviarPlanilha(arquivoPlanilha); }
+        if (arquivoFotos) { etapa('Casando fotos…'); await cartoesStep1({ files: [arquivoFotos], value: '' }); }
+      } catch (err) {
+        if (window.showToast) showToast(err.message || 'Erro ao criar tombamento', 'error');
+      } finally {
+        if (btn) { btn.disabled = false; btn.textContent = 'Criar tombamento'; }
+      }
     }
 
     async function carregarLista() {
@@ -313,7 +429,7 @@
         const res = await fetch('/api/admin/tombamentos');
         const data = await res.json();
         const lista = data.tombamentos || [];
-        if (!lista.length) { el.innerHTML = '<div class="tomb-empty">Nenhum tombamento ainda. Crie o primeiro na aba "Criar novo tombamento".</div>'; return; }
+        if (!lista.length) { el.innerHTML = '<div class="tomb-empty">Nenhum tombamento ainda. Crie o primeiro na aba "Novo tombamento".</div>'; return; }
         el.innerHTML = lista.map(function (t) {
           const dt = t.created_at ? new Date(t.created_at).toLocaleDateString('pt-BR') : '';
           const n = (t.linhas && t.linhas.length) ? (t.linhas.length + ' linha(s)') : 'sem planilha';
@@ -334,6 +450,23 @@
       } catch (err) { if (window.showToast) showToast(err.message || 'Erro ao abrir', 'error'); }
     }
 
+    /* ESTADO-PLANILHA: alterna entre a caixa de upload (sem planilha) e a barra
+       compacta com badge (planilha carregada). meta = texto opcional (linhas). */
+    function atualizarEstadoPlanilha(temPlanilha, meta) {
+      var drop = document.getElementById('tombDrop');
+      var loaded = document.getElementById('tombPlanilhaLoaded');
+      if (!drop || !loaded) return;
+      if (temPlanilha) {
+        drop.style.display = 'none';
+        loaded.style.display = 'flex';
+        var m = document.getElementById('tombPlanilhaMeta');
+        if (m) m.textContent = meta || '';
+      } else {
+        drop.style.display = '';
+        loaded.style.display = 'none';
+      }
+    }
+
     function abrirWorkspace(tomb) {
       currentTomb = tomb;
       document.getElementById('viewTabs').style.display = 'none';
@@ -342,8 +475,27 @@
       document.getElementById('wsMarca').textContent = marcaLabel(tomb.marca);
       setBrandLogo(tomb.marca);
       document.getElementById('tombFilename').textContent = '';
-      if (tomb.linhas && tomb.linhas.length) { renderTabela(tomb.linhas); }
-      else { document.getElementById('tombResultado').style.display = 'none'; }
+      // APLICA-ESTADO-WS: planilha carregada -> badge; senao -> caixa de upload.
+      if (tomb.linhas && tomb.linhas.length) {
+        renderTabela(tomb.linhas);
+        atualizarEstadoPlanilha(true, tomb.linhas.length + ' linha(s)');
+      } else {
+        document.getElementById('tombResultado').style.display = 'none';
+        atualizarEstadoPlanilha(false);
+      }
+      // fotos: se o tombamento ja tem ZIP persistido, sinaliza no botao
+      atualizarEstadoFotos(!!tomb.fotos_zip_key);
+    }
+
+    /* ESTADO-FOTOS: quando o tombamento ja tem um ZIP de fotos persistido, o
+       botao reflete isso ("Substituir fotos") em vez de sugerir um primeiro
+       upload. Estado leve — a revisao de fotos continua igual. */
+    function atualizarEstadoFotos(temFotos) {
+      var btn = document.getElementById('btnGerarCartoes');
+      if (!btn) return;
+      btn.dataset.temFotos = temFotos ? '1' : '';
+      var label = btn.querySelector('.btn-cartoes-label');
+      if (label) label.textContent = temFotos ? 'Substituir .zip de fotos' : 'Upload de .zip com fotos para cartões';
     }
 
     function setBrandLogo(marca) {
@@ -388,6 +540,8 @@
         // salva as linhas no tombamento
         await fetch('/api/admin/tombamentos/' + currentTomb.id, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ linhas: data.rows }) });
         currentTomb.linhas = data.rows;
+        // POS-UPLOAD-BADGE: planilha agora carregada -> troca a caixa pelo badge.
+        atualizarEstadoPlanilha(true, file.name + ' · ' + data.rows.length + ' linha(s)');
       } catch (err) {
         document.getElementById('tombFilename').textContent = '';
         if (window.showToast) showToast(err.message || 'Erro ao ler a planilha', 'error');

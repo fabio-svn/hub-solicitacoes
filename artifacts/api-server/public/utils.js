@@ -148,8 +148,12 @@ function humanizeValue(key, value) {
     return map[lv] || humanizeSlug(String(value));
   }
 
-  const dataCampos = ['dataEvento', 'prazoEntrega'];
-  if (dataCampos.includes(key) && typeof value === 'string') {
+  // HUMANIZA-DATA-AUTO: antes so 'dataEvento' e 'prazoEntrega' eram formatados;
+  // campos como dataDisparo, dataPronto, dataEntrega (Capital Humano etc.) caiam
+  // fora e apareciam crus (2026-08-15). Agora qualquer campo cujo NOME sugira
+  // data/prazo E cujo VALOR tenha cara de ISO (YYYY-MM-DD) e humanizado.
+  if (typeof value === 'string' && /(^|[a-z])(data|prazo|nascimento|admissao|aniversario)/i.test(key)
+      && /^\d{4}-\d{2}-\d{2}/.test(value.trim())) {
     const formatted = formatarData(value);
     if (formatted !== value) return formatted;
   }

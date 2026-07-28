@@ -238,6 +238,16 @@ const DB_STATEMENTS = [
     "updated_at"          TIMESTAMP    NOT NULL DEFAULT NOW()
   )`,
   `CREATE INDEX IF NOT EXISTS "idx_tombamentos_created_at" ON "tombamentos" ("created_at" DESC)`,
+  // fotos_zip_key: key do ZIP de fotos original no R2 (persistente). Antes o ZIP
+  // so vivia num cache em memoria de 30 min — expirava e obrigava a re-subir.
+  `ALTER TABLE "tombamentos" ADD COLUMN IF NOT EXISTS "fotos_zip_key" TEXT`,
+  // descricao: observacao livre da solicitacao de tombamento (o unico campo do
+  // form "Outros" que agrega para tombamento — os demais eram redundantes).
+  `ALTER TABLE "tombamentos" ADD COLUMN IF NOT EXISTS "descricao" TEXT`,
+  // solicitacao_id: liga o tombamento a solicitacao de MARKETING que ele gera
+  // (arte, e-mail, outros materiais). Essa solicitacao dispara o ClickUp e
+  // aparece em "Minhas solicitacoes". O tombamento em si segue na sua tabela.
+  `ALTER TABLE "tombamentos" ADD COLUMN IF NOT EXISTS "solicitacao_id" INTEGER`,
 ];
 
 async function start() {

@@ -927,15 +927,17 @@
         </div>
       </div>
 
+      <!-- AVALIACAO-ACIMA-STATUS: quando a solicitacao esta concluida, a avaliacao
+           e o que importa; o rail de status ja cumpriu seu papel. Por isso a
+           ancora da pesquisa vem ANTES do card de status. Vazia (em andamento)
+           nao ocupa espaco, entao nao atrapalha quem ainda acompanha o fluxo. -->
+      <div id="pesquisaCard"></div>
+
       <!-- Status rail -->
       <div class="form-card" style="padding:20px 20px 16px;margin-bottom:16px" id="fluxoCard"></div>
 
       <!-- Aprovação -->
       <div id="aprovacaoCard" style="margin-bottom:16px;display:none"></div>
-
-      <!-- Ancora da pesquisa de satisfacao quando a solicitacao nao tem mini-chat
-           de aprovacao. Vazio nao ocupa espaco: a margem vem do proprio bloco. -->
-      <div id="pesquisaCard"></div>
 
       <!-- Dados -->
       <div class="form-card" style="padding:20px" id="dadosCard">

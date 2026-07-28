@@ -1335,7 +1335,12 @@ export async function createClickUpTask(
   let taskName: string;
   let description: string;
 
-  if (tipo === "eventos") {
+  if (tipo === "material-tombamento") {
+    // MATERIAL-TOMBAMENTO-TASK: materiais de marketing de um tombamento (arte,
+    // e-mail, outros). O nome do tombamento vem em dados.titulo.
+    taskName = `[Tombamento] ${str(dados.titulo) || "sem nome"}`;
+    description = buildGeneralDescription(tipo, subtipo, dados, user, safeArquivos);
+  } else if (tipo === "eventos") {
     taskName = buildClickUpEventTaskName(dados);
     description = buildEventDescription(dados, user, safeArquivos);
   } else if (tipo === "cartao-visita-fisico") {

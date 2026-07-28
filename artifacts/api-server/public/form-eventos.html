@@ -495,7 +495,7 @@
           document.getElementById('checkTutorial')?.addEventListener('change', () => { validateStep1(); saveFormState(); });
 
           ['logoFile','demaisFile'].forEach(id => { FileUpload.bind(id, id.replace('File','FileName')); });
-          FileUpload.bind('imgFile', 'imgFileName', { maxMB: 50 });
+          FileUpload.bind('imgFile', 'imgFileName', { maxMB: FileUpload.MAX_MB_FOTO });
 
           const dataInput = document.getElementById('dataEvento');
           if (dataInput) {
@@ -1350,7 +1350,7 @@
 
         FileUpload.bind('palFoto' + i, 'palFotoStatus' + i, {
           accept: '.jpg,.jpeg,.png,.webp',
-          maxMB: 50,
+          maxMB: FileUpload.MAX_MB_FOTO,
           onChange: function(file) {
             const reader = new FileReader();
             reader.onload = function(e) {

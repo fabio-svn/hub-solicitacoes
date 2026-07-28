@@ -297,6 +297,24 @@
       return Auth.isPendente(itemId) && !lidos.has(itemId);
     }
 
+    /* AVALIACAO-PENDENTE: mesmas 4 regras de pesquisaSeAplicavel (solicitacao.js)
+       — concluida/publicada, nao-automacao, sem nota, e do proprio usuario (pois
+       admin ve solicitacoes de terceiros na lista e nao deve avaliar por eles).
+       Assim o indicador so aparece onde a pessoa pode mesmo avaliar. */
+    function avaliacaoPendente(item) {
+      if (!item) return false;
+      var status = String(item.status || '');
+      if (status !== 'concluido' && status !== 'publicado') return false;
+      var autoLista = (typeof TIPOS_AUTOMACAO !== 'undefined') ? TIPOS_AUTOMACAO : [];
+      if (autoLista.indexOf(item.tipo_solicitacao) !== -1) return false;
+      if (item.avaliacao && item.avaliacao.nota) return false;
+      try {
+        var meu = (typeof Auth !== 'undefined' && Auth.getUserEmail && Auth.getUserEmail()) || '';
+        if (!meu || String(item.user_email || '').toLowerCase() !== meu.toLowerCase()) return false;
+      } catch (_) { return false; }
+      return true;
+    }
+
     function renderList(tab, data) {
       const container = document.getElementById(tab === 'eventos' ? 'listEventos' : 'listGeral');
 
@@ -324,6 +342,7 @@
         const periodo = periodoGrupo(item.created_at);
         const naturezaLabel = dados.natureza ? NATUREZA_LABEL[dados.natureza] : null;
         const pendente = isCardPendente(item.id);
+      const avaliarPendente = avaliacaoPendente(item);
 
         let groupHeader = '';
         if (periodo !== lastPeriodo) {
@@ -342,7 +361,7 @@
         return groupHeader + `<div class="request-card" onclick="window.location.href='/solicitacao.html?id=${item.id}'"
           style="${pendente ? 'border-left:3px solid var(--ruby-red);' : ''}">
           <div class="request-info">
-            <div class="request-title">${esc(titulo)}${pendente ? ' <span style="display:inline-block;font-size:0.62rem;font-weight:800;background:var(--ruby-red);color:white;padding:1px 6px;border-radius:var(--radius-pill);vertical-align:middle;margin-left:4px">APROVAÇÃO</span>' : ''}${erroBadgeHtml}</div>
+            <div class="request-title">${esc(titulo)}${pendente ? ' <span style="display:inline-block;font-size:0.62rem;font-weight:800;background:var(--ruby-red);color:white;padding:1px 6px;border-radius:var(--radius-pill);vertical-align:middle;margin-left:4px">APROVAÇÃO</span>' : ''}${avaliarPendente ? ' <span title="Você ainda não avaliou esta entrega" style="display:inline-flex;align-items:center;gap:3px;font-size:0.62rem;font-weight:800;background:#fbeecb;color:#8a5a00;padding:1px 7px;border-radius:var(--radius-pill);vertical-align:middle;margin-left:4px"><svg width="9" height="9" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>AVALIAR</span><!--PILL-AVALIAR-->' : ''}${erroBadgeHtml}</div>
             <div class="request-meta">
               <span>${esc(tipoLabel)}</span>
               <span>${esc(dataRel)}</span>
@@ -350,7 +369,22 @@
           </div>
           <div class="request-badges">
             ${naturezaLabel ? `<span class="badge" style="background:var(--icon-bg);color:var(--carbon-black);opacity:0.7">${esc(naturezaLabel)}</span>` : ''}
-            ${(Array.isArray(item.entrega_links) && item.entrega_links.length > 0) ? `
+            ${(Array.isArray(item.entrega_links) && item.entrega_links.length > 0) ? (
+              /* ENTREGA-ACESSAR-OU-BAIXAR: paginas de assessor guardam a URL da
+                 pagina publicada no MESMO campo entrega_links das automacoes. Mas
+                 pagina se ACESSA (nova aba), arquivo se BAIXA. O tipo decide. */
+              String(item.tipo_solicitacao || '').indexOf('pagina-assessores') === 0 ? `
+              <a href="${esc(item.entrega_links[0].url)}" target="_blank" rel="noopener"
+                 onclick="event.stopPropagation()"
+                 class="btn-download-tag"
+                 title="Abrir ${esc(item.entrega_links[0].label || 'a página')} em nova aba">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+                  <polyline points="15 3 21 3 21 9"/>
+                  <line x1="10" y1="14" x2="21" y2="3"/>
+                </svg>
+                Acessar
+              </a>` : `
               <a href="${esc(item.entrega_links[0].url)}" download="${esc(item.tipo_solicitacao)}-${item.id}.png"
                  onclick="event.stopPropagation()"
                  class="btn-download-tag"
@@ -361,7 +395,8 @@
                   <line x1="12" y1="15" x2="12" y2="3"/>
                 </svg>
                 Baixar
-              </a>` : `${statusBadgeHtml(statusObj)}`}
+              </a>`
+            ) : `${statusBadgeHtml(statusObj)}`}
             ${isStaff && item.clickup_url ? `
               <a href="${esc(item.clickup_url)}" target="_blank" rel="noopener"
                  onclick="event.stopPropagation()"

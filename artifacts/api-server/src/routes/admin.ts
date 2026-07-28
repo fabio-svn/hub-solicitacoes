@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { db } from "@workspace/db";
 import { usersTable, activityLogTable, artTemplatesTable, solicitacoesTable, userTipoAssignmentsTable, tipoClickupListTable, clickupListsTable, tombamentosTable } from "@workspace/db";
-import { eq, desc, sql, and, count, isNull, notInArray } from "drizzle-orm";
+import { eq, desc, sql, and, count, isNull, notInArray, or, ilike, inArray } from "drizzle-orm";
 import { requireAuth, requireRole } from "../middleware/auth.middleware";
 import { logger } from "../lib/logger";
 import { renderFromTemplate } from "../services/template-renderer";
@@ -10,7 +10,9 @@ import JSZip from "jszip";
 import { AVAILABLE_FONTS } from "../types/art-template";
 import { FORM_SCHEMAS, getFormSchemaList, TIPOS_COM_CLICKUP } from "../config/form-schemas";
 import { isRole } from "../config/roles";
-import { validateClickUpList } from "./clickup";
+import { validateClickUpList, createClickUpTask } from "./clickup";
+import { PutObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3";
+import { getR2Client, R2_BUCKET } from "../lib/r2-client";
 import { logAtividadeBg } from "../services/activity-log";
 import { atualizarRoleNasSessoes } from "../lib/sessions";
 import multer from "multer";
@@ -78,14 +80,66 @@ router.post("/tombamentos/parse", requireRole("admin", "capital_humano"), upload
 
 router.post("/tombamentos", requireRole("admin", "capital_humano"), async (req, res): Promise<void> => {
   try {
-    const { nome, marca } = req.body as { nome?: string; marca?: string };
+    // DESCRICAO-NA-CRIACAO: a criacao na pagina e o inicio formal do tombamento
+    // (aposenta o form "Outros"). A descricao e opcional.
+    const { nome, marca, descricao } = req.body as { nome?: string; marca?: string; descricao?: string };
     if (!nome || !nome.trim()) { res.status(400).json({ error: "Informe o nome do tombamento." }); return; }
     if (!marca || !marca.trim()) { res.status(400).json({ error: "Selecione a marca." }); return; }
     const [row] = await db.insert(tombamentosTable).values({
       nome: nome.trim(),
       marca: marca.trim(),
+      descricao: (descricao && descricao.trim()) ? descricao.trim() : null,
       created_by: req.session.user?.email ?? null,
     }).returning();
+
+    // TOMB-GERA-SOLICITACAO: o tombamento sempre requer materiais de marketing
+    // (arte, e-mail, outros). Criamos aqui uma solicitacao tipo
+    // "material-tombamento" que (a) aparece em "Minhas solicitacoes" e (b)
+    // dispara a tarefa no ClickUp (lista geral, via getListId->fallback). O
+    // marketing trabalha em PARALELO — nao espera as assinaturas/cartoes.
+    // Resiliente: se qualquer parte falhar, o tombamento ja esta criado e a
+    // resposta segue; o vinculo apenas nao e gravado.
+    try {
+      const u = req.session.user;
+      if (u) {
+        const dadosSolic = {
+          titulo: row.nome,
+          marca: row.marca,
+          descricao: row.descricao || "",
+          tombamento_id: row.id,
+        };
+        const [solic] = await db.insert(solicitacoesTable).values({
+          user_email: u.email,
+          tipo_solicitacao: "material-tombamento",
+          dados: dadosSolic,
+          status: "recebido",
+        }).returning();
+
+        // liga o tombamento a solicitacao
+        await db.update(tombamentosTable)
+          .set({ solicitacao_id: solic.id, updated_at: new Date() })
+          .where(eq(tombamentosTable.id, row.id));
+
+        // dispara o ClickUp (nao bloqueia a resposta; erro nao derruba o tombamento)
+        createClickUpTask(
+          { tipo_solicitacao: "material-tombamento", subtipo: null },
+          { name: u.name, email: u.email, role: u.role },
+          dadosSolic,
+          {},
+        ).then(async ({ taskId }) => {
+          if (taskId) {
+            await db.update(solicitacoesTable)
+              .set({ clickup_task_id: taskId, clickup_url: `https://app.clickup.com/t/${taskId}`, titulo: `[Tombamento] ${row.nome}` })
+              .where(eq(solicitacoesTable.id, solic.id));
+          }
+        }).catch((err) => {
+          logger.error({ err, tombamentoId: row.id }, "[tombamentos] falha ao criar task no ClickUp (tombamento segue)");
+        });
+      }
+    } catch (err) {
+      logger.error({ err, tombamentoId: row.id }, "[tombamentos] falha ao gerar solicitacao de marketing (tombamento segue)");
+    }
+
     res.json(row);
   } catch (err) {
     logger.error({ err }, "[tombamentos] erro ao criar");
@@ -229,6 +283,37 @@ function tombMatchScore(pTokens: string[], pCompact: string, fTokens: string[], 
 }
 
 // Cache em memória do .zip de fotos durante a revisão (evita re-upload + permite prévia).
+// TOMB-FOTOS-R2: o ZIP de fotos do tombamento passa a ser guardado no R2
+// (persistente), alem do cache em memoria (rapido, mas efemero: 30 min, 3 itens,
+// morre no restart). O cache vira só uma camada de velocidade; o R2 e a verdade.
+async function tombFotosR2Upload(id: number, buffer: Buffer): Promise<string | null> {
+  const s3 = getR2Client();
+  if (!s3 || !R2_BUCKET) return null; // sem R2 configurado: segue so com cache
+  const key = `tombamentos/${id}/fotos-${Date.now()}.zip`;
+  try {
+    await s3.send(new PutObjectCommand({
+      Bucket: R2_BUCKET, Key: key, Body: buffer, ContentType: "application/zip",
+    }));
+    return key;
+  } catch (err) {
+    logger.error({ err, id }, "[tombamentos] falha ao subir ZIP de fotos ao R2");
+    return null;
+  }
+}
+
+async function tombFotosR2Download(key: string): Promise<Buffer | null> {
+  const s3 = getR2Client();
+  if (!s3 || !R2_BUCKET || !key) return null;
+  try {
+    const out = await s3.send(new GetObjectCommand({ Bucket: R2_BUCKET, Key: key }));
+    const bytes = await (out.Body as any).transformToByteArray();
+    return Buffer.from(bytes);
+  } catch (err) {
+    logger.error({ err, key }, "[tombamentos] falha ao ler ZIP de fotos do R2");
+    return null;
+  }
+}
+
 const tombZipCache = new Map<number, { buffer: Buffer; expires: number }>();
 const TOMB_ZIP_TTL_MS = 30 * 60 * 1000;
 function tombZipCacheSet(id: number, buffer: Buffer): void {
@@ -289,6 +374,14 @@ router.post("/tombamentos/:id/match-fotos", requireRole("admin", "capital_humano
     try { fotosZip = await JSZip.loadAsync(file.buffer); }
     catch { res.status(400).json({ error: "Não foi possível ler o .zip de fotos. Confira o arquivo." }); return; }
     tombZipCacheSet(id, file.buffer);
+    // PERSISTE-FOTOS-R2: sobe o ZIP ao R2 e guarda a key no tombamento, para
+    // conferir/retomar em outra sessao (o cache sozinho expira em 30 min).
+    const fotosKey = await tombFotosR2Upload(id, file.buffer);
+    if (fotosKey) {
+      await db.update(tombamentosTable)
+        .set({ fotos_zip_key: fotosKey, updated_at: new Date() })
+        .where(eq(tombamentosTable.id, id));
+    }
 
     const fotos = lerNomesFotos(fotosZip);
     if (!fotos.length) { res.status(400).json({ error: "O .zip não contém imagens (.jpg, .png, .webp)." }); return; }
@@ -369,8 +462,14 @@ router.post("/tombamentos/:id/gerar-cartoes", requireRole("admin", "capital_huma
     }
 
     const file = (req as { file?: { buffer: Buffer } }).file;
-    const srcZipBuf = file ? file.buffer : tombZipCacheGet(id);
-    if (!srcZipBuf) { res.status(410).json({ error: "Sessão expirada — reenvie o .zip de fotos.", expired: true }); return; }
+    // FALLBACK-R2: 1) ZIP enviado agora, 2) cache quente, 3) R2 (persistente).
+    // O passo 3 e o que permite gerar depois do cache expirar, sem re-subir.
+    let srcZipBuf: Buffer | null = file ? file.buffer : tombZipCacheGet(id);
+    if (!srcZipBuf && tomb.fotos_zip_key) {
+      srcZipBuf = await tombFotosR2Download(String(tomb.fotos_zip_key));
+      if (srcZipBuf) tombZipCacheSet(id, srcZipBuf); // reaquece o cache
+    }
+    if (!srcZipBuf) { res.status(410).json({ error: "As fotos deste tombamento não foram encontradas — reenvie o .zip.", expired: true }); return; }
     let fotosZip: JSZip;
     try { fotosZip = await JSZip.loadAsync(srcZipBuf); }
     catch { res.status(400).json({ error: "Não foi possível ler o .zip de fotos. Confira o arquivo." }); return; }
@@ -481,22 +580,113 @@ router.delete("/tombamentos/:id", requireRole("admin", "capital_humano"), async 
 
 router.get("/users", requireRole("admin"), async (req, res) => {
   try {
-    const users = await db.select().from(usersTable);
-    const assignments = await db.select().from(userTipoAssignmentsTable);
+    /* USERS-PAGINADO: com ~150 usuarios (e crescendo), carregar todos de uma vez
+       nao escala. Agora o endpoint pagina no servidor e aceita busca e filtro por
+       role. RETROCOMPATIVEL: sem nenhum parametro de paginacao, devolve tudo como
+       antes (um array puro), para nao quebrar quem ainda consome o formato velho.
+       Com ?page=... devolve { data, total, page, limit, totalPages, roleCounts }. */
+    const temPaginacao = req.query.page !== undefined
+      || req.query.busca !== undefined
+      || req.query.role !== undefined
+      || req.query.paginado === "1";
 
-    const byUserId = new Map<number, string[]>();
-    for (const a of assignments) {
-      const list = byUserId.get(a.user_id) || [];
-      list.push(a.tipo);
-      byUserId.set(a.user_id, list);
+    // filtros (usados nos dois modos so quando paginado)
+    const busca = String(req.query.busca || "").trim();
+    const roleFiltro = String(req.query.role || "").trim();
+
+    const conds: any[] = [];
+    if (busca) {
+      const termo = `%${busca}%`;
+      conds.push(or(ilike(usersTable.name, termo), ilike(usersTable.email, termo)));
+    }
+    if (roleFiltro) {
+      conds.push(eq(usersTable.role, roleFiltro));
+    }
+    const whereExpr = conds.length ? and(...conds) : undefined;
+
+    // helper para enriquecer com tipos_assigned
+    const enrich = (rows: any[], assignments: any[]) => {
+      const byUserId = new Map<number, string[]>();
+      for (const a of assignments) {
+        const list = byUserId.get(a.user_id) || [];
+        list.push(a.tipo);
+        byUserId.set(a.user_id, list);
+      }
+      return rows.map(u => ({ ...u, tipos_assigned: byUserId.get(u.id) || [] }));
+    };
+
+    if (!temPaginacao) {
+      // modo legado: devolve tudo (array puro)
+      const users = await db.select().from(usersTable);
+      const assignments = await db.select().from(userTipoAssignmentsTable);
+      res.json(enrich(users, assignments));
+      return;
     }
 
-    const enriched = users.map(u => ({
-      ...u,
-      tipos_assigned: byUserId.get(u.id) || [],
-    }));
+    // modo paginado
+    const page = Math.max(1, parseInt(String(req.query.page)) || 1);
+    const limit = Math.min(100, Math.max(1, parseInt(String(req.query.limit)) || 30));
+    const offset = (page - 1) * limit;
 
-    res.json(enriched);
+    // total filtrado (para paginacao)
+    const [{ total }] = await db
+      .select({ total: sql<number>`count(*)` })
+      .from(usersTable)
+      .where(whereExpr);
+
+    // SORT-WHITELIST: ordena no servidor (os 150, nao so a pagina). So colunas
+    // simples e conhecidas — o nome da coluna NUNCA vem cru do cliente, e sim de
+    // um mapa fixo, para nao abrir brecha de injecao. "Formularios" (contagem de
+    // outra tabela) fica de fora de proposito: exigiria JOIN e e uso raro.
+    const SORT_COLS: Record<string, any> = {
+      name: usersTable.name,
+      email: usersTable.email,
+      clickup_user_id: usersTable.clickup_user_id,
+      created_at: usersTable.created_at,
+      role: usersTable.role,
+    };
+    const sortCol = SORT_COLS[String(req.query.sort || "")] || usersTable.name;
+    const sortDir = String(req.query.dir || "asc") === "desc" ? desc(sortCol) : sortCol;
+
+    const rows = await db
+      .select()
+      .from(usersTable)
+      .where(whereExpr)
+      .orderBy(sortDir)
+      .limit(limit)
+      .offset(offset);
+
+    // assignments so dos usuarios desta pagina
+    const ids = rows.map(r => r.id);
+    const assignments = ids.length
+      ? await db.select().from(userTipoAssignmentsTable).where(inArray(userTipoAssignmentsTable.user_id, ids))
+      : [];
+
+    // contadores por role — SEMPRE sobre a base inteira (respeitando so a busca,
+    // nao o filtro de role, senao o chip ativo zeraria os demais). Assim os
+    // numeros dos chips refletem o total de cada role.
+    const buscaConds = busca ? [or(ilike(usersTable.name, `%${busca}%`), ilike(usersTable.email, `%${busca}%`))] : [];
+    const roleRows = await db
+      .select({ role: usersTable.role, c: sql<number>`count(*)` })
+      .from(usersTable)
+      .where(buscaConds.length ? and(...buscaConds) : undefined)
+      .groupBy(usersTable.role);
+    const roleCounts: Record<string, number> = {};
+    let totalGeral = 0;
+    for (const r of roleRows) {
+      roleCounts[r.role || "sem_role"] = Number(r.c);
+      totalGeral += Number(r.c);
+    }
+    roleCounts["_todos"] = totalGeral;
+
+    res.json({
+      data: enrich(rows, assignments),
+      total: Number(total),
+      page,
+      limit,
+      totalPages: Math.ceil(Number(total) / limit),
+      roleCounts,
+    });
   } catch (err: any) {
     req.log.error({ err }, "Erro ao listar usuários");
     res.status(500).json({ error: "Erro ao listar usuários", code: err.code });

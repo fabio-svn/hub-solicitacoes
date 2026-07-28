@@ -1183,14 +1183,28 @@
       if (document.getElementById('pesquisaSatisfacao')) return;
 
       const estrela = (preenchida) =>
-        `<svg viewBox="0 0 24 24" width="30" height="30" fill="${preenchida ? 'var(--ruby-red)' : 'none'}" stroke="${preenchida ? 'var(--ruby-red)' : 'var(--ink-20)'}" stroke-width="1.5" style="transition:all .15s"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`;
+        `<svg viewBox="0 0 24 24" width="32" height="32" fill="${preenchida ? 'url(#starGrad)' : 'none'}" stroke="${preenchida ? 'none' : 'var(--ink-20)'}" stroke-width="1.5" style="transition:all .18s;${preenchida ? 'filter:url(#starGlow)' : ''}"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`;
 
       const html = `
         <div id="pesquisaSatisfacao" style="
-          background:var(--paper-white);border:1px solid var(--ink-10);
+          background:#ffffff;border:1px solid var(--ink-10);
           border-radius:var(--radius-xl);margin-top:16px;margin-bottom:28px;overflow:hidden;
-          font-family:inherit;">
-          <div style="height:3px;background:linear-gradient(90deg,var(--ruby-red),#d98c3f 55%,var(--sage-green))"></div>
+          box-shadow:0 4px 20px rgba(34,27,25,0.07);font-family:inherit;">
+          <!-- AVALIACAO-VISUAL: fundo branco solido (o transparente sumia no
+               papel), sombra suave para destacar do restante, e SEM o filete
+               degradê rubi->verde — ele vinha do mockup e nao existe em nenhum
+               outro ponto do Hub. As estrelas preenchidas usam o gradiente rubi
+               (starGrad) com glow (starGlow), definidos aqui uma vez. -->
+          <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+            <linearGradient id="starGrad" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="#c0453f"/>
+              <stop offset="55%" stop-color="var(--ruby-red)"/>
+              <stop offset="100%" stop-color="var(--ruby-dark)"/>
+            </linearGradient>
+            <filter id="starGlow" x="-40%" y="-40%" width="180%" height="180%">
+              <feDropShadow dx="0" dy="0" stdDeviation="2" flood-color="#AC3631" flood-opacity="0.5"/>
+            </filter>
+          </defs></svg>
           <div style="padding:20px 22px">
             <p style="font-size:1rem;font-weight:700;color:var(--carbon-black);margin:0 0 3px">
               Como você avalia a entrega deste material?
@@ -1253,8 +1267,10 @@
         const n = parseInt(btn.dataset.nota);
         const cheia = n <= ate;
         const svg = btn.querySelector('polygon').parentNode;
-        svg.setAttribute('fill', cheia ? 'var(--ruby-red)' : 'none');
-        svg.setAttribute('stroke', cheia ? 'var(--ruby-red)' : 'var(--ink-20)');
+        // GLOW-AO-PINTAR: cheia = gradiente rubi + glow; vazia = so contorno.
+        svg.setAttribute('fill', cheia ? 'url(#starGrad)' : 'none');
+        svg.setAttribute('stroke', cheia ? 'none' : 'var(--ink-20)');
+        svg.style.filter = cheia ? 'url(#starGlow)' : '';
       });
     }
 

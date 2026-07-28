@@ -77,7 +77,10 @@
           </button>
         </div>
       </div>
-      <p class="page-subtitle" style="margin-bottom:20px">Gerencie usuários do sistema: funções e IDs do ClickUp. Use o botão "Logar como" para visualizar o sistema como aquele usuário.</p>
+      <p class="page-subtitle" style="margin-bottom:16px">Gerencie usuários do sistema: funções e IDs do ClickUp. Use o botão "Logar como" para visualizar o sistema como aquele usuário.</p>
+      <!-- CHIPS-ROLE: filtro por função (substitui o accordion). Os contadores vem
+           do servidor (roleCounts), sobre a base inteira, nao so a pagina atual. -->
+      <div id="roleChips" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px"></div>
 
       <div class="admin-userlist-table-wrap" style="border-radius:var(--radius-xl);border:1px solid var(--border-light);overflow-x:auto">
         <table class="admin-table" id="usuariosTabela">
@@ -208,7 +211,9 @@
   <script src="utils.js"></script>
   <script src="toast.js"></script>
   <script>
-    let _allUsers = [];
+    let _allUsers = [];          // usuarios da PAGINA atual (nao mais a base toda)
+    // ESTADO-PAGINADO: filtros e paginacao agora vivem aqui e vao ao servidor.
+    let _uState = { page: 1, limit: 30, busca: '', role: '', totalPages: 1, total: 0, roleCounts: {} };
     let _editingUserId = null;
     let _userSearchTimeout;
     let _tiposComClickup = [];
@@ -231,17 +236,97 @@
     };
 
     async function loadUsuarios() {
+      /* LOAD-PAGINADO: pede uma pagina ao servidor, com busca e filtro de role.
+         O servidor devolve { data, total, page, totalPages, roleCounts }. */
       const tbody = document.getElementById('usuariosTabelaBody');
       tbody.innerHTML = `<tr><td colspan="7" style="padding:24px;text-align:center;opacity:0.4">Carregando...</td></tr>`;
       try {
-        const res = await fetch('/api/admin/users');
+        const params = new URLSearchParams({
+          page: String(_uState.page),
+          limit: String(_uState.limit),
+          paginado: '1',
+        });
+        if (_uState.busca) params.set('busca', _uState.busca);
+        if (_uState.role) params.set('role', _uState.role);
+        // SORT-NOS-PARAMS: sort vai ao servidor (ordena os 150, nao so a pagina).
+        params.set('sort', uSort.field);
+        params.set('dir', uSort.dir === 1 ? 'asc' : 'desc');
+        const res = await fetch('/api/admin/users?' + params.toString());
         if (!res.ok) throw new Error('erro');
         const data = await res.json();
-        _allUsers = data.users || data || [];
+        _allUsers = data.data || [];
+        _uState.total = data.total || 0;
+        _uState.totalPages = data.totalPages || 1;
+        _uState.roleCounts = data.roleCounts || {};
+        renderRoleChips();
         renderUsuarios(_allUsers);
+        renderUsersPagination();
       } catch {
         tbody.innerHTML = `<tr><td colspan="7" style="padding:24px;text-align:center;color:var(--ruby-red)">Erro ao carregar usuários.</td></tr>`;
       }
+    }
+
+    // CHIPS-RENDER: chips de role com contadores do servidor.
+    function renderRoleChips() {
+      const box = document.getElementById('roleChips');
+      if (!box) return;
+      const rc = _uState.roleCounts || {};
+      const ordem = ['admin', 'gestor', 'capital_humano', 'corporate', 'colaborador'];
+      const extras = Object.keys(rc).filter(function (r) { return r !== '_todos' && ordem.indexOf(r) < 0; });
+      const roles = ordem.filter(function (r) { return rc[r] != null; }).concat(extras);
+      const chip = function (value, label, count, active) {
+        const cor = active ? 'background:var(--carbon-black);color:#fff;border-color:var(--carbon-black)'
+                           : 'background:transparent;color:var(--carbon-black);border-color:var(--border-light)';
+        return '<button onclick="filtrarRole(\'' + value + '\')" style="' + cor + ';padding:5px 12px;border-radius:var(--radius-pill);border:1px solid;font-family:\'Nunito Sans\',sans-serif;font-size:0.78rem;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:all 0.12s">'
+          + esc(label)
+          + (count != null ? '<span style="opacity:0.6;font-weight:600">' + count + '</span>' : '')
+          + '</button>';
+      };
+      let html = chip('', 'Todos', rc._todos != null ? rc._todos : '', _uState.role === '');
+      roles.forEach(function (r) {
+        html += chip(r, (ROLE_LABELS[r] || r), rc[r] || 0, _uState.role === r);
+      });
+      box.innerHTML = html;
+    }
+
+    function filtrarRole(role) {
+      _uState.role = role;
+      _uState.page = 1;
+      loadUsuarios();
+    }
+
+    // PAGINACAO-USERS: controles anterior / paginas / proxima.
+    function renderUsersPagination() {
+      let container = document.getElementById('usersPagination');
+      if (!container) {
+        container = document.createElement('div');
+        container.id = 'usersPagination';
+        container.style.cssText = 'display:flex;gap:6px;justify-content:center;align-items:center;margin-top:16px;flex-wrap:wrap';
+        const tabela = document.getElementById('usuariosTabela');
+        if (tabela && tabela.parentNode) tabela.parentNode.appendChild(container);
+      }
+      const tp = _uState.totalPages;
+      if (tp <= 1) { container.innerHTML = ''; return; }
+      const btn = function (label, page, disabled, active) {
+        return '<button ' + (disabled ? 'disabled' : '') + ' onclick="irParaPagina(' + page + ')" style="min-width:32px;padding:5px 10px;border-radius:var(--radius-sm);border:1px solid var(--border-light);background:' + (active ? 'var(--carbon-black);color:#fff' : 'transparent') + ';font-family:\'Nunito Sans\',sans-serif;font-size:0.8rem;font-weight:600;cursor:' + (disabled ? 'default' : 'pointer') + ';opacity:' + (disabled ? '0.35' : '1') + '">' + label + '</button>';
+      };
+      let html = btn('‹', _uState.page - 1, _uState.page <= 1, false);
+      // janela de paginas em torno da atual, para nao explodir com muitas paginas
+      const win = 2;
+      let ini = Math.max(1, _uState.page - win);
+      let fim = Math.min(tp, _uState.page + win);
+      if (ini > 1) { html += btn('1', 1, false, _uState.page === 1); if (ini > 2) html += '<span style="opacity:0.4">…</span>'; }
+      for (let i = ini; i <= fim; i++) html += btn(String(i), i, false, i === _uState.page);
+      if (fim < tp) { if (fim < tp - 1) html += '<span style="opacity:0.4">…</span>'; html += btn(String(tp), tp, false, _uState.page === tp); }
+      html += btn('›', _uState.page + 1, _uState.page >= tp, false);
+      html += '<span style="margin-left:10px;font-size:0.78rem;opacity:0.5">' + _uState.total + ' no total</span>';
+      container.innerHTML = html;
+    }
+
+    function irParaPagina(page) {
+      if (page < 1 || page > _uState.totalPages || page === _uState.page) return;
+      _uState.page = page;
+      loadUsuarios();
     }
 
     const UCOLS = [
@@ -257,7 +342,7 @@
     let uSort = { field: 'name', dir: 1 };
     let uColWidths = {};
     let uResizing = false;
-    let collapsedRoles = {};
+    /* REMOVIDO-COLLAPSEDROLES: o accordion saiu; nada mais colapsa. */
 
     function uBuildHead() {
       return '<tr>' + UCOLS.map(function (c) {
@@ -295,23 +380,18 @@
       if (f === 'created_at') return (new Date(a.created_at || 0) - new Date(b.created_at || 0)) * uSort.dir;
       return String(a[f] || '').localeCompare(String(b[f] || ''), 'pt-BR', { numeric: true, sensitivity: 'base' }) * uSort.dir;
     }
-    function uSectionHeader(role, count) {
-      const style = ROLE_COLORS[role] || ROLE_COLORS.colaborador;
-      const label = ROLE_LABELS[role] || role;
-      const collapsed = !!collapsedRoles[role];
-      return '<tr class="role-group-row" data-rolehdr="' + esc(role) + '"><td colspan="' + UCOLS.length + '">'
-        + '<span class="rg-chevron">' + (collapsed ? '▸' : '▾') + '</span>'
-        + '<span class="rg-pill" style="background:' + style + '">' + esc(label) + '</span>'
-        + '<span class="rg-count">' + count + (count === 1 ? ' usuário' : ' usuários') + '</span>'
-        + '</td></tr>';
-    }
+    /* REMOVIDO-SECTIONHEADER: uSectionHeader e o accordion por role sairam com a
+       paginacao — os chips de role os substituiram. Codigo removido para nao
+       confundir quem ler depois. */
     function uAttachHandlers() {
       document.querySelectorAll('#usuariosTabela thead th.sortable').forEach(function (th) {
         th.addEventListener('click', function (e) {
           if (uResizing || (e.target && e.target.classList && e.target.classList.contains('col-resizer'))) return;
           const f = th.getAttribute('data-col');
           if (uSort.field === f) uSort.dir *= -1; else { uSort.field = f; uSort.dir = 1; }
-          renderUsuarios(_allUsers);
+          // SORT-RECARREGA: pede ao servidor ordenado (os 150), volta pra pagina 1.
+          _uState.page = 1;
+          loadUsuarios();
         });
       });
       document.querySelectorAll('#usuariosTabela thead th .col-resizer').forEach(function (rz) {
@@ -325,18 +405,7 @@
           document.addEventListener('mousemove', move); document.addEventListener('mouseup', up);
         });
       });
-      document.querySelectorAll('#usuariosTabelaBody tr[data-rolehdr]').forEach(function (hdr) {
-        hdr.addEventListener('click', function () {
-          const role = hdr.getAttribute('data-rolehdr');
-          const wasCollapsed = !!collapsedRoles[role];
-          if (wasCollapsed) delete collapsedRoles[role]; else collapsedRoles[role] = true;
-          document.querySelectorAll('#usuariosTabelaBody tr[data-rolegroup="' + role + '"]').forEach(function (r) {
-            r.style.display = wasCollapsed ? '' : 'none';
-          });
-          const ch = hdr.querySelector('.rg-chevron');
-          if (ch) ch.textContent = wasCollapsed ? '▾' : '▸';
-        });
-      });
+      // REMOVIDO-ACCORDION-HANDLER: sem cabecalhos de grupo, nao ha o que expandir.
     }
 
     function renderUsuarios(users) {
@@ -344,23 +413,13 @@
       const thead = document.getElementById('usuariosThead');
       if (thead) thead.innerHTML = uBuildHead();
       uApplyWidth();
-      const busca = (document.getElementById('userBusca')?.value || '').trim().toLowerCase();
-      const filtered = busca
-        ? users.filter(u => (u.name || '').toLowerCase().includes(busca) || (u.email || '').toLowerCase().includes(busca))
-        : users;
-
-      if (!filtered.length) {
+      // RENDER-FLAT: a busca e o filtro ja aconteceram NO SERVIDOR. Aqui so
+      // renderizamos a pagina recebida, em lista unica (sem accordion por role).
+      if (!users.length) {
         tbody.innerHTML = `<tr><td colspan="7" style="padding:24px;text-align:center;opacity:0.4">Nenhum usuário encontrado.</td></tr>`;
         return;
       }
-
       const meEmail = typeof Auth !== 'undefined' ? Auth.getUserEmail() : '';
-
-      const groups = {};
-      filtered.forEach(function (uu) { (groups[uu.role] = groups[uu.role] || []).push(uu); });
-      const rest = Object.keys(groups).filter(function (r) { return ROLE_ORDER.indexOf(r) < 0; })
-        .sort(function (a, b) { return (ROLE_LABELS[a] || a).localeCompare(ROLE_LABELS[b] || b, 'pt-BR'); });
-      const roleOrder = ROLE_ORDER.concat(rest);
       const userRow = function (u) {
         const dt = u.created_at ? new Date(u.created_at).toLocaleDateString('pt-BR') : '—';
         const roleStyle = ROLE_COLORS[u.role] || ROLE_COLORS.colaborador;
@@ -405,24 +464,21 @@
           </td>
         </tr>`;
       };
-      let html = '';
-      roleOrder.forEach(function (role) {
-        const arr = groups[role];
-        if (!arr || !arr.length) return;
-        arr.sort(uSortCmp);
-        html += uSectionHeader(role, arr.length);
-        html += arr.map(userRow).join('');
-      });
-      tbody.innerHTML = html;
-      Object.keys(collapsedRoles).forEach(function (role) {
-        document.querySelectorAll('#usuariosTabelaBody tr[data-rolegroup="' + role + '"]').forEach(function (r) { r.style.display = 'none'; });
-      });
+      // SEM-SORT-LOCAL: o servidor ja devolve ordenado (sort global). Aqui so
+      // renderiza a pagina recebida, em lista unica.
+      tbody.innerHTML = users.map(userRow).join('');
       uAttachHandlers();
     }
 
     function debounceUserSearch() {
+      // BUSCA-SERVIDOR: a busca agora procura nos ~150 no servidor, nao so na
+      // pagina carregada. Reseta para a pagina 1 a cada nova busca.
       clearTimeout(_userSearchTimeout);
-      _userSearchTimeout = setTimeout(() => renderUsuarios(_allUsers), 250);
+      _userSearchTimeout = setTimeout(function () {
+        _uState.busca = (document.getElementById('userBusca')?.value || '').trim();
+        _uState.page = 1;
+        loadUsuarios();
+      }, 300);
     }
 
     async function logarComo(email) {
