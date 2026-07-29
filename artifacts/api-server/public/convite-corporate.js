@@ -101,11 +101,47 @@
     } else {
       return;
     }
-    renderPalestrantes();
+    // FOTO-LOOP-FIX-AOMUDAR: atualiza SO a foto deste palestrante, sem reconstruir
+    // todos os inputs. Antes, o renderPalestrantes() aqui destruia (innerHTML) o
+    // proprio input de nome que disparou este onblur — o input recriado disparava
+    // onblur de novo -> aoMudarNome -> render -> loop infinito que travava o
+    // navegador (so aparecia com 2+ palestrantes). Update cirurgico quebra o ciclo.
+    atualizarFotoPalestrante(i);
   };
 
+  // atualizarFotoPalestrante: re-renderiza apenas a linha da foto do palestrante i.
+  // Nao toca nos <input> de nome/cargo — por isso nao dispara blur em cascata.
+  function atualizarFotoPalestrante(i) {
+    var row = document.getElementById('foto-row-' + i);
+    if (row) row.innerHTML = htmlFotoRow(i);
+  }
+
   // ── campos dos palestrantes ─────────────────────────────────────
+  // FOTO-ROW-FN-DEF: o conteudo interno da linha da foto (thumb + botoes), isolado
+  // para poder atualizar so a foto de um palestrante sem reconstruir os inputs.
+  function htmlFotoRow(i) {
+    var foto = fotos[i];
+    return (foto
+              ? '<img class="cc-foto-thumb" loading="lazy" src="' + esc(foto) + '" alt="Foto do palestrante ' + i + '">'
+              : '<div class="cc-foto-placeholder">sem<br>foto</div>') +
+           '<div class="cc-foto-actions">' +
+             '<button type="button" class="btn btn-secondary" style="padding:6px 12px;font-size:0.78rem" onclick="abrirBiblioteca(' + i + ')">' +
+               (foto ? 'Trocar foto' : 'Escolher foto') +
+             '</button>' +
+             (foto ? '<button type="button" class="btn btn-secondary" style="padding:6px 12px;font-size:0.78rem" onclick="removerFoto(' + i + ')">Remover</button>' : '') +
+             (fotoAuto[i] ? '<span class="cc-foto-auto">✓ foto do cadastro</span>' : '') +
+           '</div>';
+  }
+
+  var _renderandoPalestrantes = false;
   function renderPalestrantes() {
+    // FOTO-LOOP-GUARD: cinto de seguranca contra reentrancia — se um handler
+    // disparado durante o render chamar renderPalestrantes de novo, ignora.
+    if (_renderandoPalestrantes) return;
+    _renderandoPalestrantes = true;
+    try { _renderPalestrantesInterno(); } finally { _renderandoPalestrantes = false; }
+  }
+  function _renderPalestrantesInterno() {
     var num = parseInt(val('num_palestrantes'), 10) || 1;
     var html = '';
 
@@ -117,24 +153,13 @@
           '<div class="field">' +
             '<label for="p' + i + '_nome">Nome</label>' +
             '<input type="text" id="p' + i + '_nome" value="' + esc(val('p' + i + '_nome')) + '" ' +
-                   'placeholder="Nome do palestrante" onchange="aoMudarNome(' + i + ')" onblur="aoMudarNome(' + i + ')">' +
+                   'placeholder="Nome do palestrante" onblur="aoMudarNome(' + i + ')">' + /* FOTO-ONCHANGE-DEDUP: so onblur; onchange+onblur dobrava o disparo */
           '</div>' +
           '<div class="field">' +
             '<label for="p' + i + '_cargo">Cargo</label>' +
             '<input type="text" id="p' + i + '_cargo" value="' + esc(val('p' + i + '_cargo')) + '" placeholder="Ex.: Estrategista-chefe">' +
           '</div>' +
-          '<div class="cc-foto-row">' +
-            (foto
-              ? '<img class="cc-foto-thumb" src="' + esc(foto) + '" alt="Foto do palestrante ' + i + '">'
-              : '<div class="cc-foto-placeholder">sem<br>foto</div>') +
-            '<div class="cc-foto-actions">' +
-              '<button type="button" class="btn btn-secondary" style="padding:6px 12px;font-size:0.78rem" onclick="abrirBiblioteca(' + i + ')">' +
-                (foto ? 'Trocar foto' : 'Escolher foto') +
-              '</button>' +
-              (foto ? '<button type="button" class="btn btn-secondary" style="padding:6px 12px;font-size:0.78rem" onclick="removerFoto(' + i + ')">Remover</button>' : '') +
-              (fotoAuto[i] ? '<span class="cc-foto-auto">✓ foto do cadastro</span>' : '') +
-            '</div>' +
-          '</div>' +
+          '<div class="cc-foto-row" id="foto-row-' + i + '">' + htmlFotoRow(i) + '</div>' + /* FOTO-ROW-EXTRACT */
         '</div>';
     }
     document.getElementById('palestrantesContainer').innerHTML = html;
