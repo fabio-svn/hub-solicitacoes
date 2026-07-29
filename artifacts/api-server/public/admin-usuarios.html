@@ -19,13 +19,28 @@
   <link rel="stylesheet" href="style.css">
   <style>
     .page-container--wide { max-width: min(1500px, 100%); }  /* 100%, nao 96vw: vw ignora os 232px da sidebar e o excesso era cortado */
+    /* SCROLL-CLARO-USERS: barra de rolagem clara e discreta. */
+    .user-scroll { scrollbar-width: thin; scrollbar-color: #e6e0d8 transparent; }
+    .user-scroll::-webkit-scrollbar { width: 10px; height: 10px; }
+    .user-scroll::-webkit-scrollbar-track { background: transparent; }
+    .user-scroll::-webkit-scrollbar-thumb { background: #e6e0d8; border-radius: var(--radius-md); border: 2px solid transparent; background-clip: padding-box; }
+    .user-scroll::-webkit-scrollbar-thumb:hover { background: #d8d0c5; background-clip: padding-box; }
+    /* FUNIL-CSS-REMOVIDO: o funil agora usa a classe global .vc-funil (definida
+       em style.css, compartilhada com as paginas de validacao) — visual
+       identico, sem CSS proprio que destoava. */
+    /* CONTROLS-USERS: busca/atualizar/adicionar em linha, abaixo do funil. */
+    #userControls { display: flex; gap: 12px; align-items: center; margin-bottom: 18px; flex-wrap: wrap; }
+    #userControls .search-bar { flex: 1; min-width: 240px; margin-bottom: 0; }
     .role-group-row td { cursor: pointer; user-select: none; }
     .rg-chevron { display: inline-block; width: 14px; color: var(--ink-50); font-size: 0.7rem; }
     #usuariosTabela { table-layout: fixed; }
     #usuariosTabela th { position: relative; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     #usuariosTabela th.sortable { cursor: pointer; }
-    #usuariosTabela th .sort-ind { margin-left: 5px; font-size: 0.7rem; color: rgba(255,255,255,0.4); }
-    #usuariosTabela th .sort-ind.active { color: var(--paper-white); }
+    /* SORT-SETA-CSS: setas SVG escuras (cabecalho agora e bege). Inativa =
+       discreta; ativa = rubi. */
+    #usuariosTabela th .sort-ind { margin-left: 5px; display: inline-flex; vertical-align: middle; color: var(--ink-40); }
+    #usuariosTabela th .sort-ind svg { display: block; }
+    #usuariosTabela th .sort-ind.active { color: var(--ruby-red); }
     #usuariosTabela td { overflow: hidden; }
     #usuariosTabela td > div { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .col-resizer { position: absolute; top: 0; right: 0; width: 7px; height: 100%; cursor: col-resize; user-select: none; z-index: 3; }
@@ -36,8 +51,10 @@
       position: sticky; right: 0; z-index: 2;
       box-shadow: -6px 0 8px -6px rgba(34,27,25,0.16);
     }
-    #usuariosTabela td.col-acoes { background: var(--card-white, #FFFFFE); }
-    #usuariosTabela th[data-col="_acoes"] { background: var(--carbon-black); }
+    /* ACOES-PADRAO: a coluna de acoes deixa de ter fundo carbon-black no header
+       (destoava). Header herda o bege das tabelas; celula fica no tom do corpo. */
+    #usuariosTabela td.col-acoes { background: var(--paper-white); }
+    #usuariosTabela th[data-col="_acoes"] { background: var(--surface-warm); }
     #usuariosTabela tr.role-group-row td.col-acoes { background: #f4ece1; }
     .col-resizer:hover { background: rgba(172,54,49,0.5); }
     .role-group-row td { background: #f4ece1; border-top: 1px solid var(--border-light); border-bottom: 1px solid var(--border-light); padding: 7px 14px !important; }
@@ -60,33 +77,39 @@
   <div id="pageContent">
     <div class="page-container page-container--wide">
 
+      <!-- HEADER-SO-TITULO: o topo fica so com o titulo; os controles (busca,
+           atualizar, adicionar) desceram para baixo do funil. -->
       <div class="page-header">
         <h1 class="page-title">Usuários</h1>
-        <div class="page-header__actions">
-          <div class="search-bar" style="margin-bottom:0;height:32px;padding:0 14px;border-radius:var(--radius-md);min-width:220px">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.4"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-            <input type="text" id="userBusca" placeholder="Buscar por nome ou e-mail..." oninput="debounceUserSearch()">
-          </div>
-          <button onclick="loadUsuarios()" style="padding:6px 14px;border-radius:var(--radius-md);border:1px solid var(--border-light);background:transparent;font-family:'Nunito Sans', sans-serif;font-size:0.8rem;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:6px">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 102.13-9.36L1 10"/></svg>
-            Atualizar
-          </button>
-          <button onclick="abrirNovoUsuario()" class="btn btn-primary" style="white-space:nowrap;padding:8px 16px;font-size:0.85rem">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="vertical-align:middle;margin-right:4px"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-            Adicionar usuário
-          </button>
-        </div>
       </div>
-      <p class="page-subtitle" style="margin-bottom:16px">Gerencie usuários do sistema: funções e IDs do ClickUp. Use o botão "Logar como" para visualizar o sistema como aquele usuário.</p>
-      <!-- CHIPS-ROLE: filtro por função (substitui o accordion). Os contadores vem
-           do servidor (roleCounts), sobre a base inteira, nao so a pagina atual. -->
-      <div id="roleChips" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px"></div>
+      <p class="page-subtitle" style="margin-bottom:18px">Gerencie usuários do sistema: funções, IDs do ClickUp e formulários. Use o botão "Logar como" para visualizar o sistema como aquele usuário.</p>
 
-      <div class="admin-userlist-table-wrap" style="border-radius:var(--radius-xl);border:1px solid var(--border-light);overflow-x:auto">
+      <!-- FUNIL-CLASSE-GLOBAL: reusa .vc-funil (classe global compartilhada com
+           validacao de cartoes/assessores) — visual identico. -->
+      <div id="roleFunil" class="vc-funil"></div>
+
+      <!-- CONTROLS-USERS: busca / atualizar / adicionar, abaixo do funil. -->
+      <div id="userControls">
+        <div class="search-bar" style="height:38px;padding:0 16px;border-radius:var(--radius-pill)">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.4"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" id="userBusca" placeholder="Buscar por nome ou e-mail..." oninput="debounceUserSearch()">
+        </div>
+        <button onclick="loadUsuarios()" style="padding:9px 16px;border-radius:var(--radius-pill);border:1px solid var(--border-light);background:var(--card-white);font-family:'Nunito Sans', sans-serif;font-size:0.85rem;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:6px;white-space:nowrap">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 102.13-9.36L1 10"/></svg>
+          Atualizar
+        </button>
+        <button onclick="abrirNovoUsuario()" class="btn btn-primary" style="white-space:nowrap;padding:9px 18px;font-size:0.85rem">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="vertical-align:middle;margin-right:4px"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Adicionar usuário
+        </button>
+      </div>
+
+      <!-- SCROLL-CLARO-USERS: barra de rolagem clara (mesma da validacao de cartoes). -->
+      <div class="admin-userlist-table-wrap user-scroll" style="border-radius:var(--radius-xl);border:1px solid var(--border-light);overflow-x:auto">
         <table class="admin-table" id="usuariosTabela">
           <thead id="usuariosThead"></thead>
           <tbody id="usuariosTabelaBody">
-            <tr><td colspan="7" style="padding:24px;text-align:center;opacity:0.4">Carregando...</td></tr>
+            <tr><td colspan="5" style="padding:24px;text-align:center;opacity:0.4">Carregando...</td></tr>
           </tbody>
         </table>
       </div>
@@ -173,6 +196,47 @@
         </div>
       </div>
 
+      <!-- gerirUsuarioModal: modal consolidado (engrenagem) — funcao, ClickUp ID
+           e formularios num so lugar. Salva chamando os endpoints existentes. -->
+      <div class="modal-overlay" id="gerirUsuarioModal">
+        <div class="modal-card" style="max-width:460px">
+          <div class="modal-header">
+            <div>
+              <h2 class="modal-title">Gerir usuário</h2>
+              <p class="modal-subtitle" id="gerirUserName"></p>
+            </div>
+            <button class="modal-close" onclick="cancelarGerir()">&times;</button>
+          </div>
+          <div class="modal-body">
+            <div class="field">
+              <label>Função</label>
+              <select id="gerirRoleSelect">
+                <option value="colaborador">Colaborador</option>
+                <option value="gestor">Gestor</option>
+                <option value="capital_humano">Capital Humano</option>
+                <option value="corporate">Corporate</option>
+                <option value="admin">Admin</option>
+              </select>
+              <p style="font-size:0.74rem;opacity:0.55;margin:5px 0 0">Define o que o usuário pode ver e fazer no hub.</p>
+            </div>
+            <div class="field">
+              <label>ClickUp User ID</label>
+              <input type="text" id="gerirClickupInput" placeholder="ex: 55127950">
+              <p style="font-size:0.74rem;opacity:0.55;margin:5px 0 0">Vincula o usuário às tarefas do ClickUp. Deixe em branco para remover.</p>
+            </div>
+            <div class="field">
+              <label>Formulários atribuídos</label>
+              <div id="gerirTiposList" style="max-height:220px;overflow:auto;border:1px solid var(--border-light);border-radius:var(--radius-md);padding:8px"></div>
+              <p style="font-size:0.74rem;opacity:0.55;margin:5px 0 0">Quais formulários este usuário recebe automaticamente no ClickUp.</p>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button onclick="cancelarGerir()" class="btn btn-secondary">Cancelar</button>
+            <button onclick="salvarGerir()" class="btn btn-primary" id="gerirSalvarBtn">Salvar</button>
+          </div>
+        </div>
+      </div>
+
       <!-- Editar função modal -->
       <div class="modal-overlay" id="editRoleModal">
         <div class="modal-card" style="max-width:380px">
@@ -239,7 +303,7 @@
       /* LOAD-PAGINADO: pede uma pagina ao servidor, com busca e filtro de role.
          O servidor devolve { data, total, page, totalPages, roleCounts }. */
       const tbody = document.getElementById('usuariosTabelaBody');
-      tbody.innerHTML = `<tr><td colspan="7" style="padding:24px;text-align:center;opacity:0.4">Carregando...</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="5" style="padding:24px;text-align:center;opacity:0.4">Carregando...</td></tr>`;
       try {
         const params = new URLSearchParams({
           page: String(_uState.page),
@@ -262,29 +326,38 @@
         renderUsuarios(_allUsers);
         renderUsersPagination();
       } catch {
-        tbody.innerHTML = `<tr><td colspan="7" style="padding:24px;text-align:center;color:var(--ruby-red)">Erro ao carregar usuários.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="5" style="padding:24px;text-align:center;color:var(--ruby-red)">Erro ao carregar usuários.</td></tr>`;
       }
     }
 
     // CHIPS-RENDER: chips de role com contadores do servidor.
-    function renderRoleChips() {
-      const box = document.getElementById('roleChips');
+    // RENDER-FUNIL: cards de funil por funcao (mesma linguagem da validacao).
+    // Reusa filtrarRole e os roleCounts do servidor; cada card usa as cores da
+    // role (--etapa/--etapa-bg) como no funil de status.
+    var _ROLE_ETAPA = {
+      admin:         { et: 'var(--ruby-red)',   bg: 'rgba(159,63,55,0.1)' },
+      gestor:        { et: 'var(--sage-green)',  bg: 'rgba(111,135,123,0.1)' },
+      capital_humano:{ et: '#4f46e5',            bg: 'rgba(99,102,241,0.1)' },
+      corporate:     { et: 'var(--sage-green)',  bg: 'rgba(111,135,123,0.12)' },
+      colaborador:   { et: 'var(--ink-50)',      bg: 'var(--ink-08)' },
+    };
+    function renderRoleChips() {  // nome mantido; agora desenha o funil
+      const box = document.getElementById('roleFunil');
       if (!box) return;
       const rc = _uState.roleCounts || {};
       const ordem = ['admin', 'gestor', 'capital_humano', 'corporate', 'colaborador'];
       const extras = Object.keys(rc).filter(function (r) { return r !== '_todos' && ordem.indexOf(r) < 0; });
       const roles = ordem.filter(function (r) { return rc[r] != null; }).concat(extras);
-      const chip = function (value, label, count, active) {
-        const cor = active ? 'background:var(--carbon-black);color:#fff;border-color:var(--carbon-black)'
-                           : 'background:transparent;color:var(--carbon-black);border-color:var(--border-light)';
-        return '<button onclick="filtrarRole(\'' + value + '\')" style="' + cor + ';padding:5px 12px;border-radius:var(--radius-pill);border:1px solid;font-family:\'Nunito Sans\',sans-serif;font-size:0.78rem;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:all 0.12s">'
-          + esc(label)
-          + (count != null ? '<span style="opacity:0.6;font-weight:600">' + count + '</span>' : '')
-          + '</button>';
+      const card = function (value, label, count, active, et, bg) {
+        return '<button type="button" class="stat-card' + (active ? ' active' : '') + '"'
+          + ' style="--etapa:' + et + ';--etapa-bg:' + bg + '" onclick="filtrarRole(\'' + value + '\')">'
+          + '<div class="stat-number">' + (count != null ? count : '') + '</div>'
+          + '<div class="stat-label">' + esc(label) + '</div></button>';
       };
-      let html = chip('', 'Todos', rc._todos != null ? rc._todos : '', _uState.role === '');
+      let html = card('', 'Todos', rc._todos != null ? rc._todos : '', _uState.role === '', 'var(--carbon-black)', '#efeae1');
       roles.forEach(function (r) {
-        html += chip(r, (ROLE_LABELS[r] || r), rc[r] || 0, _uState.role === r);
+        var c = _ROLE_ETAPA[r] || { et: 'var(--ink-40)', bg: 'var(--icon-bg)' };
+        html += card(r, (ROLE_LABELS[r] || r), rc[r] || 0, _uState.role === r, c.et, c.bg);
       });
       box.innerHTML = html;
     }
@@ -329,14 +402,14 @@
       loadUsuarios();
     }
 
+    // UCOLS-ENXUTO: ClickUp ID e Formularios saem (agora no modal de gestao);
+    // Funcao vira tag ao lado do nome. Sobram Nome, E-mail, Cadastro, Acoes.
     const UCOLS = [
-      { f: 'name', label: 'Nome', w: 230, sort: true },
+      { f: 'name', label: 'Nome', w: 300, sort: true },
       { f: 'email', label: 'E-mail', w: 320, sort: true },
-      { f: 'role', label: 'Função', w: 140, sort: false },
-      { f: 'clickup_user_id', label: 'ClickUp ID', w: 180, sort: true },
-      { f: 'tipos', label: 'Formulários', w: 180, sort: true },
       { f: 'created_at', label: 'Cadastro', w: 130, sort: true },
-      { f: '_acoes', label: 'Ações', w: 160, sort: false, center: true },
+      { f: 'last_login', label: 'Último acesso', w: 150, sort: true },  /* ULTIMO-ACESSO-COL */
+      { f: '_acoes', label: 'Ações', w: 200, sort: false, center: true },
     ];
     const ROLE_ORDER = ['admin', 'gestor', 'capital_humano', 'corporate'];
     let uSort = { field: 'name', dir: 1 };
@@ -348,7 +421,11 @@
       return '<tr>' + UCOLS.map(function (c) {
         const cw = uColWidths[c.f] || c.w;
         const active = uSort.field === c.f;
-        const ind = c.sort ? (active ? (uSort.dir === 1 ? '▲' : '▼') : '↕') : '';
+        // SORT-SETA-SVG: setas SVG claras (up/down/updown) no lugar de ▲▼↕.
+        var _svgUp = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M8 14l4-4 4 4"/></svg>';
+        var _svgDown = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M8 10l4 4 4-4"/></svg>';
+        var _svgBoth = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 9l4-4 4 4M8 15l4 4 4-4"/></svg>';
+        const ind = c.sort ? (active ? (uSort.dir === 1 ? _svgUp : _svgDown) : _svgBoth) : '';
         return '<th data-col="' + c.f + '"' + (c.sort ? ' class="sortable"' : '')
           + ' style="width:' + cw + 'px' + (c.center ? ';text-align:center' : '') + '">'
           + esc(c.label)
@@ -371,11 +448,31 @@
         tbl.style.removeProperty('width');
         return;
       }
+      // TABELA-FULL-WIDTH: com poucas colunas, a soma das larguras pode ser menor
+      // que o espaco disponivel — nesse caso a tabela ocupa 100% (nao fica
+      // estreita com espaco vazio a direita). Se a soma exceder, mantem a soma
+      // (rola horizontal). O resize de coluna continua funcionando.
       const total = UCOLS.reduce(function (s, c) { return s + (uColWidths[c.f] || c.w); }, 0);
-      tbl.style.width = total + 'px';
+      var disp = tbl.parentElement ? tbl.parentElement.clientWidth : 0;
+      tbl.style.width = (disp && total < disp) ? '100%' : (total + 'px');
+    }
+    // ULTIMO-ACESSO-FMT: "Hoje HH:MM", "Ontem HH:MM", data curta, ou "nunca acessou".
+    function fmtUltimoAcesso(v) {
+      if (!v) return 'nunca acessou';
+      const d = new Date(v);
+      if (isNaN(d.getTime())) return '—';
+      const agora = new Date();
+      const hoje = new Date(agora.getFullYear(), agora.getMonth(), agora.getDate());
+      const dia = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+      const difDias = Math.round((hoje - dia) / 86400000);
+      const hhmm = d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+      if (difDias === 0) return 'Hoje, ' + hhmm;
+      if (difDias === 1) return 'Ontem, ' + hhmm;
+      return d.toLocaleDateString('pt-BR');
     }
     function uSortCmp(a, b) {
       const f = uSort.field;
+      if (f === 'last_login') return ((new Date(a.last_login || 0)) - (new Date(b.last_login || 0))) * uSort.dir;
       if (f === 'tipos') return ((a.tipos_assigned || []).length - (b.tipos_assigned || []).length) * uSort.dir;
       if (f === 'created_at') return (new Date(a.created_at || 0) - new Date(b.created_at || 0)) * uSort.dir;
       return String(a[f] || '').localeCompare(String(b[f] || ''), 'pt-BR', { numeric: true, sensitivity: 'base' }) * uSort.dir;
@@ -416,7 +513,7 @@
       // RENDER-FLAT: a busca e o filtro ja aconteceram NO SERVIDOR. Aqui so
       // renderizamos a pagina recebida, em lista unica (sem accordion por role).
       if (!users.length) {
-        tbody.innerHTML = `<tr><td colspan="7" style="padding:24px;text-align:center;opacity:0.4">Nenhum usuário encontrado.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="5" style="padding:24px;text-align:center;opacity:0.4">Nenhum usuário encontrado.</td></tr>`;
         return;
       }
       const meEmail = typeof Auth !== 'undefined' ? Auth.getUserEmail() : '';
@@ -426,41 +523,35 @@
         const roleLabel = ROLE_LABELS[u.role] || u.role;
         const isMe = u.email === meEmail;
         return `<tr data-rolegroup="${esc(u.role)}" style="border-top:1px solid var(--border-light);transition:background 0.12s" onmouseover="this.style.background='var(--icon-bg)'" onmouseout="this.style.background=''">
+          <!-- NOME-COM-TAG: nome + tag de funcao (a coluna Funcao virou tag; a
+               edicao da role agora e no modal de gestao). -->
           <td style="padding:10px 14px">
-            <div style="font-weight:600;font-size:0.85rem">${esc(u.name || '—')}</div>
+            <div style="display:flex;align-items:center;gap:9px">
+              <span style="font-weight:600;font-size:0.85rem">${esc(u.name || '—')}</span>
+              <span style="padding:2px 9px;border-radius:var(--radius-pill);background:${roleStyle};font-size:0.7rem;font-weight:700;white-space:nowrap">${roleLabel}</span>
+            </div>
           </td>
           <td style="padding:10px 14px">
             <div style="font-size:0.82rem;opacity:0.7">${esc(u.email || '—')}</div>
           </td>
           <td style="padding:10px 14px">
-            <button onclick="abrirEditRole('${esc(u.id)}', '${esc(u.name || u.email)}', '${esc(u.role)}')" style="padding:3px 9px;border-radius:var(--radius-sm);background:${roleStyle};border:none;font-family:'Nunito Sans', sans-serif;font-size:0.78rem;font-weight:700;cursor:pointer">${roleLabel}</button>
-          </td>
-          <td style="padding:10px 14px">
-            <button onclick="abrirEditClickup('${esc(u.id)}', '${esc(u.name || u.email)}', '${esc(u.clickup_user_id || '')}')"
-                    style="font-size:0.8rem;font-family:monospace;opacity:0.7;background:transparent;border:1px dashed var(--ink-12);padding:3px 9px;border-radius:var(--radius-sm);cursor:pointer;transition:all 0.15s"
-                    onmouseover="this.style.background='var(--icon-bg)';this.style.opacity='1'"
-                    onmouseout="this.style.background='transparent';this.style.opacity='0.7'">
-              ${esc(u.clickup_user_id || '— editar —')}
-            </button>
-          </td>
-          <td style="padding:10px 14px">
-            <button onclick="abrirEditAssignments('${esc(u.id)}', '${esc(u.name || u.email)}')"
-                    style="font-size:0.78rem;background:var(--ink-05);border:none;padding:4px 10px;border-radius:var(--radius-sm);cursor:pointer;display:inline-flex;align-items:center;gap:5px;transition:all 0.15s"
-                    onmouseover="this.style.background='var(--icon-bg)'"
-                    onmouseout="this.style.background='var(--ink-05)'">
-              <strong>${(u.tipos_assigned || []).length}</strong>
-              <span style="opacity:0.6">${(u.tipos_assigned || []).length === 1 ? 'formulário' : 'formulários'}</span>
-              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="opacity:0.4"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-            </button>
-          </td>
-          <td style="padding:10px 14px">
             <span style="font-size:0.8rem;opacity:0.6">${dt}</span>
           </td>
+          <!-- ULTIMO-ACESSO-CELULA: formata o last_login (ou "nunca acessou"). -->
+          <td style="padding:10px 14px">
+            <span style="font-size:0.8rem;${u.last_login ? 'opacity:0.6' : 'opacity:0.4;font-style:italic'}">${fmtUltimoAcesso(u.last_login)}</span>
+          </td>
           <td style="padding:10px 14px;text-align:center" class="col-acoes">
+            <!-- GERIR-ENGRENAGEM: acoes com Logar como + engrenagem de gestao. -->
+            <div style="display:inline-flex;gap:6px;align-items:center;justify-content:flex-end">
             ${!isMe ? `<button onclick="logarComo('${esc(u.email)}')" title="Visualizar sistema como este usuário" style="padding:5px 12px;border-radius:var(--radius-md);border:1px solid var(--border-light);background:transparent;font-family:'Nunito Sans', sans-serif;font-size:0.78rem;font-weight:600;cursor:pointer;white-space:nowrap;display:inline-flex;align-items:center;gap:5px">
               <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
               Logar como
             </button>` : `<span style="font-size:0.75rem;opacity:0.35">Você</span>`}
+            <button onclick="abrirGerir('${esc(u.id)}')" title="Gerir usuário" style="width:32px;height:32px;border-radius:var(--radius-md);border:1px solid var(--border-light);background:transparent;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;color:var(--ink-50);flex:none">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+            </button>
+            </div>
           </td>
         </tr>`;
       };
@@ -610,6 +701,60 @@
           showToast(err.error || 'Erro ao atualizar ClickUp ID', 'error');
         }
       } catch (err) { console.error('[admin-usuarios/clickup-id]', err); showToast('Erro de conexão', 'error'); }
+    }
+
+    // GERIR: modal consolidado. Carrega valores atuais do usuario da pagina e,
+    // ao salvar, chama os 3 endpoints existentes (role, clickup_user_id,
+    // assignments) em sequencia, recarregando a lista uma unica vez.
+    let _gerirUserId = null;
+    async function abrirGerir(userId) {
+      _gerirUserId = userId;
+      const user = (_allUsers || []).find(u => String(u.id) === String(userId));
+      if (!user) return;
+      document.getElementById('gerirUserName').innerHTML = '<strong>' + esc(user.name || user.email) + '</strong> · ' + esc(user.email);
+      document.getElementById('gerirRoleSelect').value = user.role || 'colaborador';
+      document.getElementById('gerirClickupInput').value = user.clickup_user_id || '';
+      // formularios: checkboxes (reusa _tiposComClickup e tipos_assigned)
+      const tiposAtuais = new Set(user.tipos_assigned || []);
+      await _ensureTipos();
+      const listEl = document.getElementById('gerirTiposList');
+      listEl.innerHTML = _tiposComClickup.map(t => `
+        <label style="display:flex;align-items:center;gap:10px;padding:7px 9px;border-radius:var(--radius-sm);cursor:pointer"
+               onmouseover="this.style.background='var(--icon-bg)'" onmouseout="this.style.background='transparent'">
+          <input type="checkbox" value="${esc(t.tipo)}" ${tiposAtuais.has(t.tipo) ? 'checked' : ''} style="cursor:pointer">
+          <span style="font-size:0.86rem">${esc(t.label)}</span>
+        </label>`).join('');
+      Modal.open('gerirUsuarioModal');
+    }
+    function cancelarGerir() {
+      Modal.close('gerirUsuarioModal');
+      _gerirUserId = null;
+    }
+    async function salvarGerir() {
+      if (!_gerirUserId) return;
+      const id = _gerirUserId;
+      const btn = document.getElementById('gerirSalvarBtn');
+      const orig = btn.textContent; btn.textContent = 'Salvando…'; btn.disabled = true;
+      const role = document.getElementById('gerirRoleSelect').value;
+      const clickup = document.getElementById('gerirClickupInput').value.trim();
+      const tipos = Array.from(document.querySelectorAll('#gerirTiposList input[type=checkbox]:checked')).map(c => c.value);
+      try {
+        // os 3 endpoints existentes, em sequencia.
+        const r1 = await fetch(`/api/admin/users/${id}/role`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ role }) });
+        const r2 = await fetch(`/api/admin/users/${id}/clickup_user_id`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ clickup_user_id: clickup || null }) });
+        const r3 = await fetch(`/api/admin/users/${id}/assignments`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ tipos }) });
+        if (r1.ok && r2.ok && r3.ok) {
+          cancelarGerir();
+          await loadUsuarios();
+        } else {
+          showToast('Erro ao salvar uma das alterações', 'error');
+        }
+      } catch (err) {
+        console.error('[admin-usuarios/gerir]', err);
+        showToast('Erro de conexão', 'error');
+      } finally {
+        btn.textContent = orig; btn.disabled = false;
+      }
     }
 
     async function abrirEditAssignments(userId, userName) {

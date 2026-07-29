@@ -45,6 +45,32 @@
     .tomb-item-meta { font-size: 0.78rem; color: var(--ink-50); margin-top: 2px; }
     .tomb-marca-pill { padding: 3px 11px; border-radius: var(--radius-pill); font-size: 0.76rem; font-weight: 700; background: rgba(172,54,49,0.1); color: var(--ruby-red); white-space: nowrap; }
 
+    /* STEP-STAGE-CSS: o workspace vira um fluxo de 3 etapas (Planilha ->
+       Assinaturas -> Cartoes), cada uma num card. Stepper estatico no topo
+       como rotulo das secoes. */
+    /* SAGE-TOKENS: tons suaves derivados do sage para o badge de sucesso. */
+    #tombWorkspace { --sage-soft: #eef2ef; --sage-border: #cdd9d0; }
+    /* NAV-ANCORA-CSS: atalhos para as secoes (nao e progresso sequencial — a
+       pessoa faz assinaturas e cartoes juntos, em qualquer ordem). Cada botao
+       rola ate seu card. */
+    .tomb-nav { display: flex; gap: 8px; margin: 0 0 24px; flex-wrap: wrap; }
+    /* NAV-TRANSPARENTE: atalhos com fundo transparente e icone (nao numero — o
+       numero dava impressao de quantidade). O icone e o mesmo do card da secao. */
+    .tomb-nav__btn { display: inline-flex; align-items: center; gap: 8px; padding: 9px 16px; border: 1px solid var(--border-light); border-radius: var(--radius-pill); background: transparent; font-family: inherit; font-size: 0.86rem; font-weight: 600; color: var(--carbon-black); cursor: pointer; transition: 0.15s; text-decoration: none; }
+    .tomb-nav__btn:hover { border-color: var(--ruby-red); color: var(--ruby-red); background: rgba(172,54,49,0.04); }
+    .tomb-nav__ico { display: inline-flex; color: var(--ink-50); }
+    .tomb-nav__ico svg { width: 16px; height: 16px; }
+    .tomb-nav__btn:hover .tomb-nav__ico { color: var(--ruby-red); }
+    html { scroll-behavior: smooth; }
+    .tomb-stage { scroll-margin-top: 20px; }
+    .tomb-stage { background: var(--card-white); border: 1px solid var(--border-light); border-radius: var(--radius-2xl); box-shadow: 0 2px 16px var(--ink-05); padding: 24px 26px; margin-bottom: 18px; }
+    .tomb-stage-head { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+    .tomb-stage-badge { width: 34px; height: 34px; border-radius: var(--radius-lg); background: var(--icon-bg); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .tomb-stage-badge svg { width: 18px; height: 18px; color: var(--ruby-red); }
+    .tomb-stage-title { font-size: 1.08rem; font-weight: 700; margin: 0; }
+    .tomb-stage-desc { font-size: 0.84rem; color: var(--ink-50); margin: 2px 0 0; }
+    .tomb-stage-action { margin-top: 18px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+    .tomb-stage-action .hint { font-size: 0.8rem; color: var(--ink-50); margin: 0; }
     .tomb-ws-header { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin-bottom: 18px; }
     .tomb-ws-nome { font-family: 'Taviraj', serif; font-weight: 400; font-size: 1.5rem; }
 
@@ -53,13 +79,20 @@
     .tomb-filename { font-size: 0.85rem; font-weight: 700; margin-top: 10px; }
     /* tomb-loaded: barra compacta que substitui a caixa gigante quando o arquivo
        ja esta carregado — badge do arquivo + botao discreto de substituir. */
-    .tomb-loaded { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; padding: 12px 16px; border: 1px solid var(--border-light); border-radius: var(--radius-md); background: var(--card-white, #fff); }
-    .tomb-loaded__badge { display: inline-flex; align-items: center; gap: 8px; font-size: 0.86rem; font-weight: 600; color: var(--carbon-black); }
-    .tomb-loaded__badge svg { color: var(--sage-green); flex-shrink: 0; }
-    .tomb-loaded__meta { font-size: 0.8rem; color: var(--ink-50); }
+    /* BADGE-DESTAQUE-CSS: badge de arquivo carregado destacado do fundo — faixa
+       sage suave, circulo com check, rotulo + nome/meta em evidencia, e botao de
+       substituir no padrao "file-input-btn" (borda tracejada, como os uploads). */
+    .tomb-loaded { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; padding: 14px 18px; border: 1px solid var(--sage-border); border-radius: var(--radius-lg); background: var(--sage-soft); }
+    /* CHECK-MENOR: circulo de sucesso mais discreto. */
+    .tomb-loaded__check { width: 26px; height: 26px; border-radius: 50%; background: var(--state-done); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .tomb-loaded__check svg { color: #fff; width: 14px; height: 14px; }
+    .tomb-loaded__txt { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+    .tomb-loaded__label { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--sage-green); }
+    .tomb-loaded__meta { font-size: 0.9rem; font-weight: 700; color: var(--carbon-black); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .tomb-loaded__spacer { flex: 1; }
-    .tomb-loaded__btn { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border: 1px solid var(--border-light); border-radius: var(--radius-md); background: transparent; font-family: inherit; font-size: 0.8rem; font-weight: 600; cursor: pointer; color: var(--carbon-black); transition: 0.15s; white-space: nowrap; }
-    .tomb-loaded__btn:hover { border-color: var(--ruby-red); color: var(--ruby-red); }
+    .tomb-loaded__btn { display: inline-flex; align-items: center; gap: 8px; padding: 9px 15px; background: var(--card-white); border: 1px dashed var(--sage-border); border-radius: var(--radius-md); cursor: pointer; font-family: inherit; font-size: 0.83rem; font-weight: 600; color: var(--carbon-black); transition: 0.15s; white-space: nowrap; }
+    .tomb-loaded__btn svg { color: var(--sage-green); }
+    .tomb-loaded__btn:hover { border-color: var(--sage-green); background: var(--card-white); }
     .tomb-summary { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; margin: 22px 0 12px; }
     .tomb-pill { padding: 3px 11px; border-radius: var(--radius-pill); font-weight: 700; font-size: 0.78rem; }
     .tomb-pill--ok { background: #dcfce7; color: var(--success); }
@@ -105,8 +138,11 @@
     .tomb-erro { color: var(--danger); font-size: 0.78rem; margin-top: 5px; }
     .field input.erro, .field select.erro { border-color: var(--danger) !important; box-shadow: 0 0 0 3px rgba(220,38,38,0.12); }
     /* Logo da marca no topo (tela de edição) */
-    .tomb-brand-logo { display: none; align-items: center; justify-content: center; background: var(--carbon-black); border-radius: var(--radius-xl); padding: 14px 26px; box-shadow: 0 2px 8px var(--ink-12); }
-    .tomb-brand-logo img { height: 34px; max-width: 240px; object-fit: contain; display: block; }
+    /* LOGO-TRANSPARENTE: logo escuro da marca em fundo transparente (SVG local),
+       integrado ao header em vez da "plaquinha" preta anterior. */
+    .tomb-brand-logo { display: none; align-items: center; justify-content: center; background: transparent; padding: 0; }
+    /* LOGO-MENOR-WS: logo alinhado ao nome do tombamento, mais discreto. */
+    .tomb-brand-logo img { height: 30px; max-width: 190px; object-fit: contain; display: block; }
     @media (max-width: 640px) { .tomb-brand-logo { padding: 10px 18px; } .tomb-brand-logo img { height: 26px; } }
       @media (max-width: 600px) {
       /* Reverte o card-layout global do .admin-table: estas tabelas usam scroll
@@ -131,12 +167,12 @@
 <body class="page-light">
   <div id="pageContent">
     <div class="page-container page-container--wide">
-      <div class="page-header">
-        <div>
-          <h1 class="page-title">Tombamentos</h1>
-          <p class="page-subtitle" style="margin-top:4px">Geração em massa de assinaturas e cartões digitais a partir de uma planilha.</p>
-        </div>
-        <div class="tomb-brand-logo" id="tombBrandLogo"><img id="tombBrandLogoImg" src="" alt=""></div>
+      <!-- tombPageHeader: cabecalho da LISTA — centralizado (alinha com abas e
+           botao). No workspace ele e escondido pelo JS (la o titulo e o nome do
+           tombamento). O logo saiu daqui e passou para o header do workspace. -->
+      <div id="tombPageHeader" style="text-align:center;margin:0 0 24px">
+        <h1 class="page-title">Tombamentos</h1>
+        <p class="page-subtitle" style="margin-top:4px;max-width:640px;margin-left:auto;margin-right:auto">Gere assinaturas e cartões digitais da sua equipe automaticamente a partir de uma planilha. A partir daqui, o marketing dá continuidade aos materiais de apoio da demanda.</p>
       </div>
 
       <!-- Visão de abas (lista / criar) -->
@@ -216,67 +252,117 @@
 
       <!-- Workspace de um tombamento aberto -->
       <div id="tombWorkspace" style="display:none">
-        <button type="button" onclick="voltarLista()" class="btn-voltar" style="margin-bottom:14px">
+        <!-- WS-HEADER-NOVO: Voltar como link discreto (breadcrumb); nome do
+             tombamento + marca a esquerda e o logo da marca alinhado a direita,
+             na mesma linha. Sem o titulo "Tombamentos" repetido. -->
+        <button type="button" onclick="voltarLista()" class="btn-voltar" style="margin-bottom:16px">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="15 18 9 12 15 6"/></svg>
           Voltar
         </button>
         <div class="tomb-ws-header">
           <span class="tomb-ws-nome" id="wsNome"></span>
           <span class="tomb-marca-pill" id="wsMarca"></span>
+          <span style="flex:1"></span>
+          <div class="tomb-brand-logo" id="tombBrandLogo"><img id="tombBrandLogoImg" src="" alt=""></div>
         </div>
 
-        <!-- BADGE-PLANILHA: quando ainda nao ha planilha, a caixa (tombDrop) pede
-             o arquivo; quando ja ha, ela da lugar a uma barra compacta com o badge
-             e um botao "Substituir" (a caixa gigante nao faz mais sentido depois de
-             carregada). O input #tombFile e compartilhado pelos dois estados. -->
-        <div class="tomb-drop" id="tombDrop">
-          <label class="btn btn-primary" style="cursor:pointer;display:inline-flex;align-items:center;gap:6px">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-            Escolher planilha
-            <input type="file" id="tombFile" accept=".xlsx,.xls,.csv" style="display:none" onchange="aoEscolherArquivo(this)">
-          </label>
-          <p>Formatos: .xlsx, .xls ou .csv (máx. 15 MB). Colunas: nome, e-mail, telefone, cargo, tem CFP, arquivo da foto. (A marca não vai na planilha — é a do tombamento.) A coluna <strong>arquivo da foto</strong> é opcional: sem ela, o sistema casa as fotos pelo nome.</p>
-          <div class="tomb-filename" id="tombFilename"></div>
-        </div>
-        <div class="tomb-loaded" id="tombPlanilhaLoaded" style="display:none">
-          <span class="tomb-loaded__badge">
-            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-            Planilha carregada
-          </span>
-          <span class="tomb-loaded__meta" id="tombPlanilhaMeta"></span>
-          <span class="tomb-loaded__spacer"></span>
-          <button type="button" class="tomb-loaded__btn" onclick="document.getElementById('tombFile').click()">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-            Substituir planilha
-          </button>
+        <!-- NAV-ANCORA-HTML: atalhos para as secoes (rolam ate o card). -->
+        <!-- NAV-ICONES: icones (mesmos dos cards) no lugar dos numeros. -->
+        <div class="tomb-nav">
+          <a class="tomb-nav__btn" href="#stageColaboradores"><span class="tomb-nav__ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></span>Colaboradores</a>
+          <a class="tomb-nav__btn" href="#stageAssinaturas"><span class="tomb-nav__ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="5" width="18" height="14" rx="2"/><polyline points="3 7 12 13 21 7"/></svg></span>Assinaturas</a>
+          <a class="tomb-nav__btn" href="#stageCartoes"><span class="tomb-nav__ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="2" y="5" width="20" height="14" rx="2"/><circle cx="8" cy="12" r="2.5"/><path d="M14 10h5M14 14h5"/></svg></span>Cartões digitais</a>
         </div>
 
+        <!-- C1-ETAPAS: 3 cards. #tombResultado continua sendo o container que a
+             logica mostra/esconde conforme ha planilha; agora ele agrupa as etapas
+             2 e 3. A etapa 1 (upload/badge + tabela) fica sempre visivel. TODOS os
+             IDs originais preservados para o JS. -->
+
+        <!-- ETAPA 1: COLABORADORES -->
+        <div class="tomb-stage" id="stageColaboradores">
+          <div class="tomb-stage-head">
+            <div class="tomb-stage-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
+            <div><h3 class="tomb-stage-title">Colaboradores</h3><!-- CARD-COLAB-SEM-NUM --><p class="tomb-stage-desc">Suba a planilha e confira os dados antes de gerar.</p></div>
+          </div>
+
+          <!-- BADGE-PLANILHA: caixa quando sem planilha; badge quando carregada. -->
+          <div class="tomb-drop" id="tombDrop">
+            <label class="btn btn-primary" style="cursor:pointer;display:inline-flex;align-items:center;gap:6px">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+              Escolher planilha
+              <input type="file" id="tombFile" accept=".xlsx,.xls,.csv" style="display:none" onchange="aoEscolherArquivo(this)">
+            </label>
+            <p>Formatos: .xlsx, .xls ou .csv (máx. 15 MB). Colunas: nome, e-mail, telefone, cargo, tem CFP, arquivo da foto. (A marca não vai na planilha — é a do tombamento.) A coluna <strong>arquivo da foto</strong> é opcional: sem ela, o sistema casa as fotos pelo nome.</p>
+            <div class="tomb-filename" id="tombFilename"></div>
+          </div>
+          <!-- BADGE-PLANILHA-NOVO: check + rotulo + meta (o JS escreve o nome/linhas
+               em #tombPlanilhaMeta) + botao substituir no padrao de upload. -->
+          <div class="tomb-loaded" id="tombPlanilhaLoaded" style="display:none">
+            <div class="tomb-loaded__check">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><polyline points="20 6 9 17 4 12"/></svg>
+            </div>
+            <div class="tomb-loaded__txt">
+              <span class="tomb-loaded__label">Planilha carregada</span>
+              <span class="tomb-loaded__meta" id="tombPlanilhaMeta"></span>
+            </div>
+            <span class="tomb-loaded__spacer"></span>
+            <button type="button" class="tomb-loaded__btn" onclick="document.getElementById('tombFile').click()">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+              Substituir planilha
+            </button>
+          </div>
+
+          <div id="tombResultadoTabela">
+            <div class="tomb-summary" id="tombSummary"></div>
+            <div class="admin-userlist-table-wrap" style="border-radius:var(--radius-xl);border:1px solid var(--border-light);overflow-x:auto">
+              <table class="admin-table" id="tombTabela"><thead id="tombThead"></thead><tbody id="tombTbody"></tbody></table>
+            </div>
+          </div>
+        </div>
+
+        <!-- #tombResultado agrupa as etapas 2 e 3 (a logica mostra/esconde ele). -->
         <div id="tombResultado" style="display:none">
-          <div class="tomb-summary" id="tombSummary"></div>
-          <div class="admin-userlist-table-wrap" style="border-radius:var(--radius-xl);border:1px solid var(--border-light);overflow-x:auto">
-            <table class="admin-table" id="tombTabela"><thead id="tombThead"></thead><tbody id="tombTbody"></tbody></table>
-          </div>
-          <div class="tomb-actions">
-            <button class="btn btn-primary" id="btnGerarAssinaturas" onclick="gerarAssinaturas()" disabled>Gerar assinaturas (.zip)</button>
-            <button class="btn btn-dark" id="btnGerarCartoes" style="display:inline-flex;align-items:center;gap:7px" onclick="document.getElementById('fotosZipInput').click()" disabled><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg><span class="btn-cartoes-label">Upload de .zip com fotos para cartões</span></button>
-            <input type="file" id="fotosZipInput" accept=".zip,application/zip" style="display:none" onchange="cartoesStep1(this)">
-          </div>
-          <p class="tomb-note">Cartões digitais: suba um <strong>.zip com as fotos</strong> (máx. 100 MB) e o sistema casa cada pessoa pelo nome — você confere antes de gerar. A coluna <strong>arquivo_foto</strong> é opcional (se preenchida, tem prioridade). Disponível apenas para marcas com cartão digital (Investimentos, Capital, Connect).</p>
 
-          <div id="cartoesReview" class="tomb-review" style="display:none">
-            <div class="tomb-review-head">
-              <div><strong>Revisão de fotos</strong><span id="cartoesResumo" class="tomb-review-resumo"></span></div>
-              <button class="btn-text" type="button" onclick="cartoesCancelar()">Cancelar</button>
+          <!-- ETAPA 2: ASSINATURAS -->
+          <div class="tomb-stage" id="stageAssinaturas">
+            <div class="tomb-stage-head">
+              <div class="tomb-stage-badge"><!-- ICONE-ASSINATURAS-OK: envelope (assinatura de e-mail) --><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="5" width="18" height="14" rx="2"/><polyline points="3 7 12 13 21 7"/></svg></div>
+              <div><h3 class="tomb-stage-title">Assinaturas de e-mail</h3><!-- CARD-ASSIN-SEM-NUM --><p class="tomb-stage-desc">Gera um .zip com a assinatura de cada colaborador.</p></div>
             </div>
-            <p class="tomb-note" style="margin-top:0">Confira os pares antes de gerar. <span class="rev-badge rev-revisar">revisar</span> = casou só pelo primeiro nome ou está ambíguo, vale conferir.</p>
-            <div class="tomb-review-wrap">
-              <table class="admin-table" id="cartoesRevTabela">
-                <thead><tr><th>Pessoa</th><th style="width:120px">Status</th><th style="width:46%">Foto atribuída</th></tr></thead>
-                <tbody id="cartoesRevTbody"></tbody>
-              </table>
+            <div class="tomb-stage-action">
+              <button class="btn btn-primary" id="btnGerarAssinaturas" onclick="gerarAssinaturas()" disabled>Gerar assinaturas (.zip)</button>
+              <span class="hint">Usa o logo da marca do tombamento em todas as assinaturas.</span>
             </div>
-            <div class="tomb-actions">
-              <button class="btn btn-primary" id="btnCartoesGerar" onclick="cartoesGerar()">Gerar cartões</button>
+          </div>
+
+          <!-- ETAPA 3: CARTOES -->
+          <div class="tomb-stage" id="stageCartoes">
+            <div class="tomb-stage-head">
+              <div class="tomb-stage-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="2" y="5" width="20" height="14" rx="2"/><circle cx="8" cy="12" r="2.5"/><path d="M14 10h5M14 14h5"/></svg></div>
+              <div><h3 class="tomb-stage-title">Cartões digitais</h3><!-- CARD-CART-SEM-NUM --><p class="tomb-stage-desc">Suba as fotos, confira os pares e gere os cartões.</p></div>
+            </div>
+            <div class="tomb-stage-action">
+              <button class="btn btn-dark" id="btnGerarCartoes" style="display:inline-flex;align-items:center;gap:7px" onclick="document.getElementById('fotosZipInput').click()" disabled><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg><span class="btn-cartoes-label">Upload de .zip com fotos para cartões</span></button>
+              <input type="file" id="fotosZipInput" accept=".zip,application/zip" style="display:none" onchange="cartoesStep1(this)">
+            </div>
+            <p class="tomb-note">Suba um <strong>.zip com as fotos</strong> (máx. 100 MB) e o sistema casa cada pessoa pelo nome — você confere antes de gerar. A coluna <strong>arquivo_foto</strong> é opcional (se preenchida, tem prioridade). Disponível apenas para marcas com cartão digital (Investimentos, Capital, Connect).</p>
+
+            <div id="cartoesReview" class="tomb-review" style="display:none">
+              <div class="tomb-review-head">
+                <div><strong>Revisão de fotos</strong><span id="cartoesResumo" class="tomb-review-resumo"></span></div>
+                <button class="btn-text" type="button" onclick="cartoesCancelar()">Cancelar</button>
+              </div>
+              <p class="tomb-note" style="margin-top:0">Confira os pares antes de gerar. <span class="rev-badge rev-revisar">revisar</span> = casou só pelo primeiro nome ou está ambíguo, vale conferir.</p>
+              <div class="tomb-review-wrap">
+                <table class="admin-table" id="cartoesRevTabela">
+                  <thead><tr><th>Pessoa</th><th style="width:120px">Status</th><th style="width:46%">Foto atribuída</th></tr></thead>
+                  <tbody id="cartoesRevTbody"></tbody>
+                </table>
+              </div>
+              <div class="tomb-actions">
+                <button class="btn btn-primary" id="btnCartoesGerar" onclick="cartoesGerar()">Gerar cartões</button>
+              </div>
             </div>
           </div>
         </div>
@@ -307,9 +393,9 @@
     ];
     const ASSETS_BASE_TOMB = 'https://solicitacoes.portalsvn.com.br/assinatura_email';
     const MARCA_LOGO = {
-      'svn-investimentos': ASSETS_BASE_TOMB + '/assinaturas_assinatura_svn.png',
-      'svn-capital':       ASSETS_BASE_TOMB + '/assinaturas_assinatura_logo_svn_capital.png',
-      'svn-connect':       ASSETS_BASE_TOMB + '/assinaturas_assinatura_logo_svn_connect.png',
+      'svn-investimentos': '/assets/svn-investimentos.svg',
+      'svn-capital':       '/assets/svn-capital.svg',
+      'svn-connect':       '/assets/svn-connect.svg',
     };
     const marcaLabel = function (v) { const m = MARCAS.find(function (x) { return x.value === v; }); return m ? m.label : (v || '—'); };
     const COLS = [
@@ -471,6 +557,7 @@
       currentTomb = tomb;
       document.getElementById('viewTabs').style.display = 'none';
       document.getElementById('tombWorkspace').style.display = 'block';
+      var _ph = document.getElementById('tombPageHeader'); if (_ph) _ph.style.display = 'none'; // HEADER-HIDE-WS
       document.getElementById('wsNome').textContent = tomb.nome;
       document.getElementById('wsMarca').textContent = marcaLabel(tomb.marca);
       setBrandLogo(tomb.marca);
@@ -515,6 +602,7 @@
       currentTomb = null;
       document.getElementById('tombWorkspace').style.display = 'none';
       document.getElementById('viewTabs').style.display = 'block';
+      var _ph2 = document.getElementById('tombPageHeader'); if (_ph2) _ph2.style.display = ''; // HEADER-SHOW-LISTA
       const box = document.getElementById('tombBrandLogo'); if (box) box.style.display = 'none';
       trocarAba('realizados');
     }

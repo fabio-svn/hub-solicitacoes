@@ -61,13 +61,16 @@
     .vc-scroll::-webkit-scrollbar-thumb { background: #e6e0d8; border-radius: var(--radius-md); border: 2px solid transparent; background-clip: padding-box; }
     .vc-scroll::-webkit-scrollbar-thumb:hover { background: #d8d0c5; background-clip: padding-box; }
     table.vc { border-collapse: separate; border-spacing: 0; width: 100%; min-width: 1180px; font-size: 0.74rem; }
-    table.vc th { position: sticky; top: 0; z-index: 2; background: var(--carbon-black); color: var(--paper-white);
-      font-weight: 600; padding: 9px 10px; text-align: center; white-space: nowrap; user-select: none;
-      box-shadow: inset 0 -1px 0 rgba(0,0,0,.18); }
+    /* VC-BEGE: cabecalho claro (igual a reforma das tabelas admin) — bege quente,
+       texto escuro, borda inferior. Sort com setas SVG escuras. */
+    table.vc th { position: sticky; top: 0; z-index: 2; background: var(--surface-warm); color: var(--ink-70);
+      font-weight: 700; padding: 9px 10px; text-align: center; white-space: nowrap; user-select: none;
+      box-shadow: inset 0 -1px 0 var(--border-light); }
     table.vc th.sortable { cursor: pointer; }
-    table.vc th.sortable:hover { background: #2c2421; }
-    table.vc th .sort-ind { font-size: 0.7rem; margin-left: 5px; color: rgba(255,255,255,.4); }
-    table.vc th .sort-ind.active { color: var(--paper-white); }
+    table.vc th.sortable:hover { background: #e8e1d9; }
+    table.vc th .sort-ind { margin-left: 5px; display: inline-flex; vertical-align: middle; color: var(--ink-40); }
+    table.vc th .sort-ind svg { display: block; }
+    table.vc th .sort-ind.active { color: var(--ruby-red); }
     table.vc td { border-bottom: 1px solid #eef1f4; border-right: 1px solid #f4f6f8; padding: 3px 4px; text-align: center; vertical-align: middle; background: #fff; }
     table.vc th:first-child, table.vc td:first-child { padding-left: 16px; }
     table.vc tbody tr:nth-child(even) td { background: #fcfbfa; }
@@ -524,7 +527,11 @@
         const cw = colWidths[c.f] || c.min;
         const canSort = c.type !== 'delete' && c.type !== 'pdf' && c.type !== 'dias';
         const isActive = sortState.field === c.f;
-        const ind = !canSort ? '' : (isActive ? (sortState.dir === 1 ? '▲' : '▼') : '↕');
+        // VC-SETA-SVG: setas SVG no lugar de ▲▼↕.
+        var _uUp = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M8 14l4-4 4 4"/></svg>';
+        var _uDown = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M8 10l4 4 4-4"/></svg>';
+        var _uBoth = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 9l4-4 4 4M8 15l4 4 4-4"/></svg>';
+        const ind = !canSort ? '' : (isActive ? (sortState.dir === 1 ? _uUp : _uDown) : _uBoth);
         const cls = c.group + (canSort ? ' sortable' : '') + (c.sec ? ' vc-sec' : '');
         const resizer = c.type !== 'delete' ? '<span class="vc-resizer"></span>' : '';
         return '<th class="' + cls + '" data-sort="' + c.f + '" style="width:' + cw + 'px;min-width:' + cw + 'px">'

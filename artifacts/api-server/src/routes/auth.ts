@@ -127,12 +127,13 @@ router.get("/callback", async (req, res) => {
     let role = "colaborador";
 
     if (existing.length === 0) {
-      await db.insert(usersTable).values({ email, name, role: "colaborador" });
+      await db.insert(usersTable).values({ email, name, role: "colaborador", last_login: new Date() });
     } else {
       role = existing[0].role || "colaborador";
-      if (existing[0].name !== name) {
-        await db.update(usersTable).set({ name }).where(eq(usersTable.email, email));
-      }
+      // last_login sempre atualiza; o nome so quando muda.
+      const patch: Record<string, unknown> = { last_login: new Date() };
+      if (existing[0].name !== name) patch.name = name;
+      await db.update(usersTable).set(patch).where(eq(usersTable.email, email));
     }
 
     req.session.user = { email, name, role };

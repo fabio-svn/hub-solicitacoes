@@ -10,6 +10,7 @@ export const usersTable = pgTable("users", {
   telefone: varchar("telefone", { length: 30 }),
   clickup_user_id: varchar("clickup_user_id", { length: 100 }),
   created_at: timestamp("created_at").defaultNow().notNull(),
+  last_login: timestamp("last_login"),
 });
 
 export const insertUserSchema = createInsertSchema(usersTable).omit({ id: true, created_at: true });
