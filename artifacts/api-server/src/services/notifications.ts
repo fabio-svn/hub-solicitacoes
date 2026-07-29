@@ -10,13 +10,15 @@ const WEBHOOK_URL = process.env.N8N_NOTIFICATIONS_WEBHOOK_URL;
 const HUB_URL = process.env.HUB_PUBLIC_URL || "https://hub.portalsvn.com.br";
 
 
-/* interno */ const TIPOS_COM_APROVACAO = new Set([
-  "eventos",
-  "artes-divulgacao",
-  "atualizacao-material",
-  "conteudo-pdf-informativo",
-  "apresentacao-nova",
-  "apresentacao-atualizar",
+// NOTIF-APROVACAO-EXCLUSAO: antes era uma lista de PERMISSAO que esquecia os
+// tipos de Capital Humano (ch-*) — o e-mail de aprovacao nunca era enviado para
+// eles. Agora e uma lista de EXCLUSAO, espelhando o backend (/entrega): todo
+// tipo tem aprovacao, menos os que nao passam por aprovacao. Assim o e-mail sai
+// para os CH, e tipos novos entram sozinhos.
+/* interno */ const TIPOS_SEM_APROVACAO = new Set([
+  "cartao-visita-fisico",
+  "pagina-assessores-dados",
+  "pagina-assessores-atualizacao",
 ]);
 
 export type Marco = "recebida" | "aprovacao" | "reaprovacao" | "concluida" | "prazo_alterado" | "publicada";
@@ -41,7 +43,8 @@ export type Marco = "recebida" | "aprovacao" | "reaprovacao" | "concluida" | "pr
     const isFisico = tipo === "cartao-visita-fisico";
 
     if (marco === "recebida" && isAutomacao) return;
-    if ((marco === "aprovacao" || marco === "reaprovacao") && !TIPOS_COM_APROVACAO.has(tipo)) return;
+    // NOTIF-CHECK-EXCLUSAO: bloqueia so os tipos que nao passam por aprovacao.
+    if ((marco === "aprovacao" || marco === "reaprovacao") && TIPOS_SEM_APROVACAO.has(tipo)) return;
 
     const sent = (sol.notifications_sent as Record<string, string>) || {};
     if (marco !== "prazo_alterado" && sent[marco]) return;
