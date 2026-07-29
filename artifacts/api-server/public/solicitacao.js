@@ -723,12 +723,15 @@
     async function renderAprovacao(item, dados) {
       const card = document.getElementById('aprovacaoCard');
 
-      const tiposComAprovacao = [
-        'eventos', 'artes-divulgacao', 'atualizacao-material',
-        'conteudo-pdf-informativo',
-        'apresentacao-nova', 'apresentacao-atualizar',
+      // APROVACAO-EXCLUSAO: espelha o backend (/entrega) — em vez de uma lista de
+      // permissao que esquecia os tipos de Capital Humano (ch-*), usa a lista de
+      // EXCLUSAO. Todo tipo tem aprovacao, menos os que o backend nega. Assim o
+      // front e o backend nunca mais divergem, e tipos novos entram sozinhos.
+      const tiposSemAprovacao = [
+        'cartao-visita-fisico',
+        'pagina-assessores-dados', 'pagina-assessores-atualizacao',
       ];
-      if (!tiposComAprovacao.includes(item.tipo_solicitacao)) {
+      if (tiposSemAprovacao.includes(item.tipo_solicitacao)) {
         card.style.display = 'none';
         return;
       }

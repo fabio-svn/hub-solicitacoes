@@ -424,19 +424,25 @@ router.post("/tombamentos/:id/match-fotos", requireRole("admin", "capital_humano
     const validas = linhas.filter((r) => !(Array.isArray(r._issues) && r._issues.length));
     if (!validas.length) { res.status(400).json({ error: "Nenhuma linha válida (todas têm pendências)." }); return; }
 
+    // MATCH-REPROCESSA-R2: com upload, usa o arquivo enviado (e persiste). SEM
+    // upload, reprocessa o zip ja persistido (cache -> R2) — permite restaurar a
+    // revisao ao reabrir/recarregar o workspace sem reenviar o zip.
     const file = (req as { file?: { buffer: Buffer } }).file;
-    if (!file) { res.status(400).json({ error: "Envie o .zip de fotos no campo 'fotos'." }); return; }
+    let srcBuf: Buffer | null = file ? file.buffer : tombZipCacheGet(id);
+    if (!srcBuf && tomb.fotos_zip_key) srcBuf = await tombFotosR2Download(String(tomb.fotos_zip_key));
+    if (!srcBuf) { res.status(400).json({ error: "Envie o .zip de fotos no campo 'fotos'.", semFotos: true }); return; }
     let fotosZip: JSZip;
-    try { fotosZip = await JSZip.loadAsync(file.buffer); }
+    try { fotosZip = await JSZip.loadAsync(srcBuf); }
     catch { res.status(400).json({ error: "Não foi possível ler o .zip de fotos. Confira o arquivo." }); return; }
-    tombZipCacheSet(id, file.buffer);
-    // PERSISTE-FOTOS-R2: sobe o ZIP ao R2 e guarda a key no tombamento, para
-    // conferir/retomar em outra sessao (o cache sozinho expira em 30 min).
-    const fotosKey = await tombFotosR2Upload(id, file.buffer);
-    if (fotosKey) {
-      await db.update(tombamentosTable)
-        .set({ fotos_zip_key: fotosKey, updated_at: new Date() })
-        .where(eq(tombamentosTable.id, id));
+    // so re-sobe ao R2 quando veio um upload novo (reprocessar do R2 nao precisa).
+    if (file) {
+      tombZipCacheSet(id, file.buffer);
+      const fotosKey = await tombFotosR2Upload(id, file.buffer);
+      if (fotosKey) {
+        await db.update(tombamentosTable)
+          .set({ fotos_zip_key: fotosKey, updated_at: new Date() })
+          .where(eq(tombamentosTable.id, id));
+      }
     }
 
     const fotos = lerNomesFotos(fotosZip);

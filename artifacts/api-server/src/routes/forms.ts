@@ -234,11 +234,6 @@ function parseQueryArray(val: unknown): string[] {
   return String(val).split(',').filter(Boolean);
 }
 
-function extractUrl(text: string): string | null {
-  const m = text.match(/https?:\/\/[^\s<>"')]+/);
-  return m ? m[0].replace(/[.,;:!?)]+$/, "") : null;
-}
-
 function gerarTituloSolicitacao(tipo: string, dados: Record<string, unknown>, userName: string): string {
   const s = (v: unknown) => String(v || "").trim();
   switch (tipo) {

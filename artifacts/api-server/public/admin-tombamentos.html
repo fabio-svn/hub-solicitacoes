@@ -603,7 +603,10 @@
       // APLICA-ESTADO-WS: planilha carregada -> badge; senao -> caixa de upload.
       if (tomb.linhas && tomb.linhas.length) {
         renderTabela(tomb.linhas);
-        atualizarEstadoPlanilha(true, tomb.linhas.length + ' linha(s)');
+        // PLANILHA-NOME-RESTORE: usa o nome guardado (planilha_nome) ao recarregar,
+        // nao so a contagem de linhas — o nome sumia ao atualizar a pagina.
+        var _meta = (tomb.planilha_nome ? tomb.planilha_nome + ' · ' : '') + tomb.linhas.length + ' linha(s)';
+        atualizarEstadoPlanilha(true, _meta);
       } else {
         document.getElementById('tombResultado').style.display = 'none';
         atualizarEstadoPlanilha(false);
@@ -611,6 +614,28 @@
       // fotos: se o tombamento ja tem ZIP persistido, sinaliza no botao
       atualizarEstadoFotos(!!tomb.fotos_zip_key);
       atualizarBotaoBaixar(); // AO-ABRIR: link de baixar planilha, se houver arquivo guardado
+      // REVISAO-RESTORE: se ha zip de fotos persistido, reconstroi a revisao a
+      // partir dele (reprocessa no backend a partir do R2) — sem isto, o painel
+      // de fotos zerava ao recarregar a pagina.
+      if (tomb.fotos_zip_key && tomb.linhas && tomb.linhas.length) {
+        restaurarRevisaoFotos();
+      }
+    }
+
+    // restaurarRevisaoFotos: pede ao backend para reprocessar o zip ja persistido
+    // (match-fotos sem upload) e re-renderiza a revisao. Silencioso em caso de
+    // falha — o usuario ainda pode reenviar o zip manualmente.
+    async function restaurarRevisaoFotos() {
+      if (!currentTomb) return;
+      try {
+        const res = await fetch('/api/admin/tombamentos/' + currentTomb.id + '/match-fotos', { method: 'POST' });
+        if (!res.ok) return;
+        const data = await res.json().catch(function () { return {}; });
+        if (data && Array.isArray(data.pessoas)) {
+          cartoesFotos = data.fotos || [];
+          renderRevisao(data);
+        }
+      } catch (_) { /* silencioso */ }
     }
 
     /* ESTADO-FOTOS: quando o tombamento ja tem um ZIP de fotos persistido, o
