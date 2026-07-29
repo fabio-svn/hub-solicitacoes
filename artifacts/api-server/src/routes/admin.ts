@@ -67,11 +67,47 @@ function parseTombamentoPlanilha(buf: Buffer): { rows: Array<Record<string, unkn
   return { rows };
 }
 
-router.post("/tombamentos/parse", requireRole("admin", "capital_humano"), uploadPlanilha.single("planilha"), (req, res): void => {
+// PLANILHA-R2: guarda o .xlsx original no R2 para permitir baixar depois. Mesmo
+// padrao do ZIP de fotos. Retorna a key (ou null se o R2 nao estiver configurado).
+async function tombPlanilhaR2Upload(id: number, buffer: Buffer, nomeOrig: string): Promise<string | null> {
+  const s3 = getR2Client();
+  if (!s3 || !R2_BUCKET) return null;
+  const ext = (nomeOrig.match(/\.(xlsx|xls|csv)$/i)?.[1] || "xlsx").toLowerCase();
+  const key = `tombamentos/${id}/planilha-${Date.now()}.${ext}`;
   try {
-    const file = (req as { file?: { buffer: Buffer } }).file;
+    const ct = ext === "csv" ? "text/csv" : (ext === "xls" ? "application/vnd.ms-excel" : "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+    await s3.send(new PutObjectCommand({ Bucket: R2_BUCKET, Key: key, Body: buffer, ContentType: ct }));
+    return key;
+  } catch (err) {
+    logger.error({ err, id }, "[tombamentos] falha ao subir planilha ao R2");
+    return null;
+  }
+}
+async function tombPlanilhaR2Download(key: string): Promise<Buffer | null> {
+  const s3 = getR2Client();
+  if (!s3 || !R2_BUCKET || !key) return null;
+  try {
+    const out = await s3.send(new GetObjectCommand({ Bucket: R2_BUCKET, Key: key }));
+    const bytes = await (out.Body as any).transformToByteArray();
+    return Buffer.from(bytes);
+  } catch (err) {
+    logger.error({ err, key }, "[tombamentos] falha ao ler planilha do R2");
+    return null;
+  }
+}
+
+router.post("/tombamentos/parse", requireRole("admin", "capital_humano"), uploadPlanilha.single("planilha"), async (req, res): Promise<void> => {
+  try {
+    const file = (req as { file?: { buffer: Buffer; originalname?: string } }).file;
     if (!file) { res.status(400).json({ error: "Envie a planilha no campo 'planilha'." }); return; }
-    res.json(parseTombamentoPlanilha(file.buffer));
+    const parsed = parseTombamentoPlanilha(file.buffer);
+    // sobe o arquivo original ao R2 (se houver tombId e R2). Falha aqui nao
+    // impede o parse — as linhas ja saem; so o "baixar" fica indisponivel.
+    let planilha_key: string | null = null;
+    const tombId = parseInt(String((req.body as any)?.tombId ?? ""), 10);
+    const nomeOrig = String(file.originalname || "planilha.xlsx");
+    if (!isNaN(tombId)) planilha_key = await tombPlanilhaR2Upload(tombId, file.buffer, nomeOrig);
+    res.json({ ...parsed, planilha_key, planilha_nome: nomeOrig });
   } catch (err) {
     logger.error({ err }, "[tombamentos] erro ao ler planilha");
     res.status(400).json({ error: "Não foi possível ler a planilha. Confira se é um .xlsx, .xls ou .csv válido." });
@@ -163,13 +199,33 @@ router.get("/tombamentos/:id", requireRole("admin", "capital_humano"), async (re
 router.patch("/tombamentos/:id", requireRole("admin", "capital_humano"), async (req, res): Promise<void> => {
   const id = parseInt(String(req.params.id), 10);
   if (isNaN(id)) { res.status(400).json({ error: "ID inválido" }); return; }
-  const { linhas, nome } = req.body as { linhas?: unknown; nome?: string };
+  const { linhas, nome, planilha_key, planilha_nome } = req.body as { linhas?: unknown; nome?: string; planilha_key?: string; planilha_nome?: string };
   const patch: Record<string, unknown> = { updated_at: new Date() };
   if (linhas !== undefined) patch.linhas = linhas;
   if (nome !== undefined && String(nome).trim()) patch.nome = String(nome).trim();
+  if (planilha_key !== undefined) patch.planilha_key = planilha_key || null;
+  if (planilha_nome !== undefined) patch.planilha_nome = planilha_nome || null;
   const [row] = await db.update(tombamentosTable).set(patch).where(eq(tombamentosTable.id, id)).returning();
   if (!row) { res.status(404).json({ error: "Tombamento não encontrado" }); return; }
   res.json(row);
+});
+
+// PLANILHA-DOWNLOAD: baixa o .xlsx original do R2. GET /tombamentos/:id/planilha
+router.get("/tombamentos/:id/planilha", requireRole("admin", "capital_humano"), async (req, res): Promise<void> => {
+  const id = parseInt(String(req.params.id), 10);
+  if (isNaN(id)) { res.status(400).json({ error: "ID inválido" }); return; }
+  const [tomb] = await db.select().from(tombamentosTable).where(eq(tombamentosTable.id, id));
+  if (!tomb) { res.status(404).json({ error: "Tombamento não encontrado" }); return; }
+  const key = (tomb as any).planilha_key as string | null;
+  if (!key) { res.status(404).json({ error: "Este tombamento não tem a planilha guardada para download." }); return; }
+  const buf = await tombPlanilhaR2Download(key);
+  if (!buf) { res.status(410).json({ error: "Planilha não encontrada no armazenamento." }); return; }
+  const nome = String((tomb as any).planilha_nome || `tombamento-${id}.xlsx`);
+  const ext = (nome.match(/\.(xlsx|xls|csv)$/i)?.[1] || "xlsx").toLowerCase();
+  const ct = ext === "csv" ? "text/csv" : (ext === "xls" ? "application/vnd.ms-excel" : "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+  res.setHeader("Content-Type", ct);
+  res.setHeader("Content-Disposition", `attachment; filename="${nome.replace(/[^\w.\- ]+/g, "_")}"`);
+  res.send(buf);
 });
 
 function tombSlug(s: unknown): string {
@@ -436,6 +492,58 @@ router.post("/tombamentos/:id/match-fotos", requireRole("admin", "capital_humano
   } catch (err) {
     logger.error({ err }, "[tombamentos] erro ao casar fotos");
     res.status(400).json({ error: "Erro ao analisar as fotos." });
+  }
+});
+
+// FOTO-AVULSA: adiciona UMA imagem individual ao ZIP de fotos do tombamento
+// (para quem a foto chegou depois). Baixa o ZIP atual do R2, insere a nova foto
+// com um nome derivado da pessoa, e regrava. Reusa todo o resto do fluxo: a foto
+// avulsa vira "mais uma no zip" e casa/gera igual as demais.
+const uploadFotoUnica = multer({ storage: multer.memoryStorage(), limits: { fileSize: 15 * 1024 * 1024 } });
+router.post("/tombamentos/:id/foto-avulsa", requireRole("admin", "capital_humano"), uploadFotoUnica.single("foto"), async (req, res): Promise<void> => {
+  try {
+    const id = parseInt(String(req.params.id), 10);
+    if (isNaN(id)) { res.status(400).json({ error: "ID inválido" }); return; }
+    const [tomb] = await db.select().from(tombamentosTable).where(eq(tombamentosTable.id, id));
+    if (!tomb) { res.status(404).json({ error: "Tombamento não encontrado" }); return; }
+
+    const file = (req as { file?: { buffer: Buffer; originalname?: string } }).file;
+    if (!file) { res.status(400).json({ error: "Envie a imagem no campo 'foto'." }); return; }
+    const nomePessoa = String((req.body as any)?.nome ?? "").trim();
+    if (!nomePessoa) { res.status(400).json({ error: "Informe a pessoa (campo 'nome')." }); return; }
+    const origExt = (String(file.originalname || "").match(/\.(jpe?g|png|webp|gif)$/i)?.[1] || "jpg").toLowerCase();
+    if (!/^(jpe?g|png|webp|gif)$/i.test(origExt)) { res.status(400).json({ error: "Formato de imagem não suportado (use jpg, png, webp ou gif)." }); return; }
+
+    // recupera o ZIP atual (cache -> R2) ou cria um novo se ainda nao houver.
+    let srcBuf: Buffer | null = tombZipCacheGet(id);
+    if (!srcBuf && tomb.fotos_zip_key) srcBuf = await tombFotosR2Download(String(tomb.fotos_zip_key));
+    let zip: JSZip;
+    if (srcBuf) {
+      try { zip = await JSZip.loadAsync(srcBuf); }
+      catch { zip = new JSZip(); }
+    } else {
+      zip = new JSZip();
+    }
+
+    // nome do arquivo dentro do zip: derivado da pessoa, evitando colisao.
+    const slug = tombSlug(nomePessoa);
+    let fname = `${slug}.${origExt}`;
+    const existentes = new Set(Object.keys(zip.files).map((k) => (k.split(/[\\/]/).pop() || "").toLowerCase()));
+    let i = 2;
+    while (existentes.has(fname.toLowerCase())) { fname = `${slug}-${i}.${origExt}`; i++; }
+    zip.file(fname, file.buffer);
+
+    // regrava o zip no R2 e reaquece o cache.
+    const novoBuf = await zip.generateAsync({ type: "nodebuffer" });
+    tombZipCacheSet(id, novoBuf);
+    const novaKey = await tombFotosR2Upload(id, novoBuf);
+    if (novaKey) {
+      await db.update(tombamentosTable).set({ fotos_zip_key: novaKey, updated_at: new Date() }).where(eq(tombamentosTable.id, id));
+    }
+    res.json({ ok: true, arquivo: fname });
+  } catch (err) {
+    logger.error({ err }, "[tombamentos] erro ao adicionar foto avulsa");
+    res.status(500).json({ error: "Erro ao adicionar a foto." });
   }
 });
 

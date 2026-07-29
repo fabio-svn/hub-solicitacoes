@@ -1392,7 +1392,7 @@
               <div style="font-size:3rem;font-weight:700;color:${notaCor};line-height:1">${nota}</div>
               <div style="font-size:0.82rem;font-weight:600;color:${notaCor};margin-bottom:10px">${notaLabel}</div>
               <div style="display:flex;justify-content:center;gap:2px;flex-wrap:wrap">${estrelas}</div>
-              <div style="font-size:0.75rem;opacity:0.35;margin-top:8px">de 10</div>
+              <div style="font-size:0.75rem;opacity:0.35;margin-top:8px">de 5</div><!-- ESCALA-5-SOLIC -->
             </div>
             ${comentario ? `
               <div style="background:var(--icon-bg);border-radius:var(--radius-lg);padding:14px 16px;margin-bottom:16px">

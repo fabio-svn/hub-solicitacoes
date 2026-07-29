@@ -149,9 +149,15 @@ body {
 
 :focus-visible { outline: 2px solid var(--ruby-red); outline-offset: 2px; }
 
-::-webkit-scrollbar { width: 6px; }
+/* SCROLL-CLARO-GLOBAL: barra clara e sutil no hub inteiro (antes era o marrom
+   escuro --leather-brown, que pesava). Mesmo tom da tabela de validacao de
+   cartoes. Largura 8px: discreta, mas facil de agarrar. Firefox via
+   scrollbar-color; WebKit via ::-webkit-scrollbar. */
+* { scrollbar-width: thin; scrollbar-color: #e6e0d8 transparent; }
+::-webkit-scrollbar { width: 8px; height: 8px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--leather-brown); border-radius: var(--radius-xs); }
+::-webkit-scrollbar-thumb { background: #e6e0d8; border-radius: var(--radius-md); border: 2px solid transparent; background-clip: padding-box; }
+::-webkit-scrollbar-thumb:hover { background: #d8d0c5; background-clip: padding-box; }
 
 a { color: var(--ruby-red); text-decoration: none; }
 a:hover { text-decoration: underline; }
@@ -781,14 +787,21 @@ input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
 .filter-chip:hover:not(.active) { border-color: var(--ruby-red); }
 
 /* Search */
+/* SEARCH-PILL: campo de busca padrao do hub — formato pill, altura confortavel,
+   borda clara. Antes cada pagina sobrepunha com inline (alturas/raios diversos);
+   agora a classe manda e o visual e unico em todo o hub. */
+/* SEARCH-ALTURA: altura fixa (36px) para casar com os botoes ao lado (.btn,
+   .filter-toggle-btn). Continua pill; so deixou de ser mais "gorda" que os
+   botoes. O padding vertical vira 0 e a altura manda. */
 .search-bar {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 9px;
   background: var(--card-white);
   border: 1px solid var(--border-light);
-  border-radius: var(--radius-lg);
-  padding: 10px 14px;
+  border-radius: var(--radius-pill);
+  height: 36px;
+  padding: 0 16px;
   margin-bottom: 20px;
   max-width: 480px;
 }
@@ -1452,7 +1465,7 @@ input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
 
 .filter-bar { display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:16px; }
 .filter-toggle-btn {
-  display:inline-flex; align-items:center; gap:6px; height:32px; padding:0 14px;
+  display:inline-flex; align-items:center; gap:6px; height:36px; padding:0 16px; /* FILTER-BTN-36 */
   border-radius:var(--radius-md); border:1px solid var(--border-light); background:var(--card-white);
   cursor:pointer; font-family:'Nunito Sans', sans-serif; font-size:0.8rem; font-weight:600;
   color:var(--carbon-black); transition:0.15s; white-space:nowrap;

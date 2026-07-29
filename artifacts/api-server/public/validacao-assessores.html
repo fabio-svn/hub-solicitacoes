@@ -101,8 +101,9 @@
         <input type="search" id="vaSearch" placeholder="Buscar por nome ou código…" oninput="setBusca(this.value)">
       </div>
       <div style="position:relative">
-        <button class="btn" id="vaFilterToggle" onclick="toggleFilterPanel(event)">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:inline-flex"><path d="M3 5h18M6 12h12M10 19h4"/></svg>
+        <!-- FILTRO-BTN-PADRAO-VA: botao de filtro padronizado. -->
+        <button class="filter-toggle-btn" id="vaFilterToggle" onclick="toggleFilterPanel(event)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
           Filtros <span class="filter-count-badge" id="vaFilterBadge" style="display:none">1</span>
         </button>
         <div class="filter-panel" id="vaFilterPanel">

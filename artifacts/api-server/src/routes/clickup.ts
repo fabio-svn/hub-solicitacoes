@@ -143,6 +143,55 @@ const ARQUIVO_LABELS: Record<string, string> = {
   palFoto4:        "Foto — Palestrante 4",
 };
 
+// CAMPO_LABELS: rótulos "bonitos" para campos de texto que não têm bloco
+// específico em buildDetailsSection (hoje, sobretudo os formulários de Capital
+// Humano). Campo que não estiver aqui usa o nome humanizado automaticamente.
+// Adicione uma linha aqui quando quiser um rótulo mais claro que o automático.
+const CAMPO_LABELS: Record<string, string> = {
+  oQueAtualizar: "O que precisa ser atualizado",
+  dataPronto:    "Data que precisa estar pronto",
+  book:          "Books a atualizar",
+  booksField:    "Books a atualizar",
+  alteracoes:    "Alterações necessárias",
+  linkFotos:     "Link da pasta com fotos",
+  mes:           "Mês de referência",
+};
+
+// Campos que o RESUMO (buildGeneralDescription) já mostra, ou que são técnicos /
+// tratados em outra seção — o fallback os ignora para não duplicar nem vazar.
+const CAMPOS_FALLBACK_IGNORAR = new Set<string>([
+  // já no RESUMO / requester
+  "titulo", "nome", "nome_completo", "finalidade", "prazoEntrega", "publico",
+  "publicoAlvo", "canais", "canal", "canalOutro", "observacoes",
+  // já em outras seções ou técnicos
+  "telefone", "whatsapp", "email", "emailCorporativo", "subtipo", "tipo",
+  "setor", "departamento", "centroCusto",
+]);
+
+// buildFallbackDetails: para tipos sem bloco próprio, varre os campos de `dados`
+// que sobraram (texto com valor, não ignorados, não arquivos) e monta as linhas
+// de detalhe automaticamente. Usa CAMPO_LABELS quando há rótulo; senão humaniza
+// o nome do campo. Arquivos ficam de fora (têm a própria seção 📎 ARQUIVOS).
+function buildFallbackDetails(dados: FormDados): string[] {
+  const items: string[] = [];
+  for (const [chave, valorRaw] of Object.entries(dados as Record<string, unknown>)) {
+    if (CAMPOS_FALLBACK_IGNORAR.has(chave)) continue;
+    if (chave in ARQUIVO_LABELS) continue;      // arquivos têm seção própria
+    if (chave.startsWith("_")) continue;        // campos internos
+    // só valores de texto/número simples; objetos e arrays complexos ficam de fora
+    let valor = "";
+    if (typeof valorRaw === "string" || typeof valorRaw === "number") {
+      valor = str(valorRaw as string);
+    } else if (Array.isArray(valorRaw) && valorRaw.every(v => typeof v === "string")) {
+      valor = (valorRaw as string[]).join(", ");
+    }
+    if (!valor) continue;
+    const label = CAMPO_LABELS[chave] || humanizeSlug(chave);
+    items.push(`• ${label}:\n${valor}`);
+  }
+  return items;
+}
+
 interface FieldDef {
   label: string;
   id: string;
@@ -595,6 +644,13 @@ function buildDetailsSection(tipo: string, dados: FormDados): string | null {
     }
   }
 
+  // DETAILS-FALLBACK: se nenhum bloco específico preencheu detalhes (caso dos
+  // formulários de Capital Humano e de qualquer form novo), varre os campos que
+  // sobraram automaticamente — assim nada que a pessoa preencheu se perde.
+  if (items.length === 0) {
+    const fb = buildFallbackDetails(dados);
+    items.push(...fb);
+  }
   if (items.length === 0) return null;
   return `📝 DETALHES\n━━━━━━━━━━━━━━━━━━━━━━\n\n${items.join("\n")}`;
 }
@@ -1490,6 +1546,79 @@ const snapshotCache = new Map<string, { value: ClickUpSnapshot; expiresAt: numbe
 /** Invalida o snapshot em cache de uma task. Chamado após o app escrever na task. */
 /* interno */ function invalidateSnapshot(taskId: string): void {
   snapshotCache.delete(taskId);
+}
+
+// CLICKUP_ENTREGA_FIELD_ID: o custom field "Entrega" (links dos materiais). Era
+// um literal solto no endpoint /entrega; virou constante para o webhook e o
+// endpoint lerem o MESMO campo.
+export const CLICKUP_ENTREGA_FIELD_ID = "4485ee1d-253f-4599-a66a-aa674deddf41";
+
+// extrai a primeira URL de um texto (mesma heuristica do forms.ts).
+function ckExtractUrl(text: string): string | null {
+  const m = text.match(/https?:\/\/[^\s<>"')]+/);
+  return m ? m[0].replace(/[.,;:!?)]+$/, "") : null;
+}
+
+// parseEntregaTexto: converte o texto do campo Entrega do ClickUp numa lista de
+// {label, url}. Cobre 5 formatos (markdown, "label | url", url nua, "label: url",
+// url no meio da linha). Movido do endpoint /entrega para ser reutilizavel pelo
+// webhook — a logica e identica, so deixou de ser inline.
+export function parseEntregaTexto(entregaRaw: string): Array<{ label: string; url: string }> {
+  const links: Array<{ label: string; url: string }> = [];
+  if (!entregaRaw) return links;
+  const lines = entregaRaw.split(/\n+/);
+  let materialCount = 0;
+  lines.forEach((line) => {
+    const trimmed = line.trim();
+    if (!trimmed) return;
+    const mdMatch = trimmed.match(/\[([^\]]+)\]\((https?:\/\/[^)]+)\)/);
+    if (mdMatch) { links.push({ label: mdMatch[1].trim(), url: mdMatch[2].trim() }); return; }
+    if (trimmed.includes("|")) {
+      const pipeIdx = trimmed.indexOf("|");
+      const before = trimmed.substring(0, pipeIdx).trim();
+      const after = trimmed.substring(pipeIdx + 1).trim();
+      const url = ckExtractUrl(after) || ckExtractUrl(before);
+      if (url) { links.push({ label: before.startsWith("http") ? `Material ${++materialCount}` : before, url }); return; }
+    }
+    if (/^https?:\/\//.test(trimmed)) {
+      const url = ckExtractUrl(trimmed);
+      if (url) { links.push({ label: `Material ${++materialCount}`, url }); return; }
+    }
+    const colonIdx = trimmed.indexOf(":");
+    if (colonIdx > 0 && !trimmed.startsWith("http")) {
+      const possibleLabel = trimmed.substring(0, colonIdx).trim();
+      const url = ckExtractUrl(trimmed.substring(colonIdx + 1).trim());
+      if (url && possibleLabel.length < 60) { links.push({ label: possibleLabel, url }); return; }
+    }
+    const url = ckExtractUrl(trimmed);
+    if (url) {
+      const textPart = trimmed.replace(url, "").replace(/[:\-|]+$/, "").trim();
+      const label = textPart && !textPart.startsWith("http") && textPart.length < 60 ? textPart : `Material ${++materialCount}`;
+      links.push({ label, url });
+    }
+  });
+  return links;
+}
+
+// extrairEntregaLinks: busca a task no ClickUp e devolve os links do campo
+// Entrega ja parseados. Usado pelo endpoint /entrega (fallback ao vivo) e pelo
+// webhook (para persistir o link quando o status vira em-aprovacao). Retorna []
+// se nao houver token, task ou campo — nunca lanca.
+export async function extrairEntregaLinks(taskId: string): Promise<Array<{ label: string; url: string }>> {
+  if (!CLICKUP_API_TOKEN || !taskId) return [];
+  try {
+    const response = await fetchWithTimeout(`https://api.clickup.com/api/v2/task/${taskId}`, {
+      headers: { "Authorization": CLICKUP_API_TOKEN },
+    });
+    if (!response.ok) return [];
+    const data = await response.json() as { custom_fields?: Array<{ id: string; value?: unknown }> };
+    const field = data.custom_fields?.find((f) => f.id === CLICKUP_ENTREGA_FIELD_ID);
+    const raw = field?.value ? String(field.value) : "";
+    return parseEntregaTexto(raw);
+  } catch (err) {
+    logger.warn({ err, taskId }, "[clickup] falha ao extrair links de entrega");
+    return [];
+  }
 }
 
 export async function getClickUpTaskSnapshot(taskId: string): Promise<ClickUpSnapshot | null> {

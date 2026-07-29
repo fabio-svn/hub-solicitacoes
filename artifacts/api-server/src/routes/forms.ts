@@ -10,7 +10,7 @@ import { db } from "@workspace/db";
 import { solicitacoesTable, arquivosTable, cartaoAprovacoesTable, usersTable, activityLogTable } from "@workspace/db";
 import { eq, desc, and, ne, sql, inArray, lt, notInArray } from "drizzle-orm";
 import { requireAuth, requireRole } from "../middleware/auth.middleware";
-import { createClickUpTask, getClickUpTaskStatus, getClickUpTaskSnapshot, setClickUpTaskStatus, calcularPrazo, getPrazoDiasUteis, PRAZO_DIAS_UTEIS, APRESENTACAO_TIERS, CLICKUP_STATUS_EM_REVISAO, CLICKUP_STATUS_CONCLUIDO, notificarCartaoValidadoChat, type ArquivosMap } from "./clickup";
+import { createClickUpTask, extrairEntregaLinks, getClickUpTaskStatus, getClickUpTaskSnapshot, setClickUpTaskStatus, calcularPrazo, getPrazoDiasUteis, PRAZO_DIAS_UTEIS, APRESENTACAO_TIERS, CLICKUP_STATUS_EM_REVISAO, CLICKUP_STATUS_CONCLUIDO, notificarCartaoValidadoChat, type ArquivosMap } from "./clickup";
 import { holidaysList } from "../lib/holidays";
 import { normalizeFormDados } from "../lib/normalize";
 import { FORM_SCHEMAS } from "../config/form-schemas";
@@ -1090,75 +1090,29 @@ router.get("/solicitacoes/:id/entrega", requireAuth, async (req, res): Promise<v
     });
     if (!response.ok) { res.json({ links: [], status: solicitacao.status }); return; }
 
-    const data = await response.json() as {
-      custom_fields?: Array<{ id: string; value?: string }>;
-      status?: { status: string };
-    };
+    // ENTREGA-AUTOCURA: usa a funcao compartilhada (mesma do webhook). Se achar
+    // links ao vivo E o banco ainda nao tiver, persiste — assim a proxima
+    // abertura usa o caminho rapido (banco) e o chat nao depende mais desta
+    // consulta ao vivo. Auto-corrige o caso em que o link foi posto no ClickUp
+    // e o webhook nao o capturou.
+    const links = await extrairEntregaLinks(String(solicitacao.clickup_task_id));
 
-    const entregaField = data.custom_fields?.find(f => f.id === "4485ee1d-253f-4599-a66a-aa674deddf41");
-    const entregaRaw = entregaField?.value || "";
-
-    const links: Array<{ label: string; url: string }> = [];
-
-    if (entregaRaw) {
-      const lines = entregaRaw.split(/\n+/);
-      let materialCount = 0;
-      lines.forEach(line => {
-        const trimmed = line.trim();
-        if (!trimmed) return;
-
-        // Case 1: markdown link [label](url)
-        const mdMatch = trimmed.match(/\[([^\]]+)\]\((https?:\/\/[^)]+)\)/);
-        if (mdMatch) {
-          links.push({ label: mdMatch[1].trim(), url: mdMatch[2].trim() });
-          return;
+    if (links.length > 0) {
+      const jaTinha = Array.isArray(solicitacao.entrega_links) && (solicitacao.entrega_links as unknown[]).length > 0;
+      if (!jaTinha) {
+        try {
+          await db.update(solicitacoesTable)
+            .set({ entrega_links: links, updated_at: new Date() })
+            .where(eq(solicitacoesTable.id, solicitacao.id));
+          logger.info({ id: solicitacao.id, count: links.length }, "Entrega: links do ClickUp persistidos no banco (auto-cura)");
+        } catch (err) {
+          logger.warn({ err, id: solicitacao.id }, "Entrega: falha ao persistir links (segue com os links em memoria)");
         }
-
-        // Case 2: pipe separator  "Label | https://..."
-        if (trimmed.includes(" | ") || trimmed.includes("|")) {
-          const pipeIdx = trimmed.indexOf("|");
-          const before = trimmed.substring(0, pipeIdx).trim();
-          const after = trimmed.substring(pipeIdx + 1).trim();
-          const url = extractUrl(after) || extractUrl(before);
-          if (url) {
-            const label = before.startsWith("http") ? `Material ${++materialCount}` : before;
-            links.push({ label, url });
-            return;
-          }
-        }
-
-        // Case 3: bare URL on its own line
-        if (/^https?:\/\//.test(trimmed)) {
-          const url = extractUrl(trimmed);
-          if (url) { links.push({ label: `Material ${++materialCount}`, url }); return; }
-        }
-
-        // Case 4: "Label: https://..." — colon separator, but label must not start with http
-        const colonIdx = trimmed.indexOf(":");
-        if (colonIdx > 0 && !trimmed.startsWith("http")) {
-          const possibleLabel = trimmed.substring(0, colonIdx).trim();
-          const rest = trimmed.substring(colonIdx + 1).trim();
-          const url = extractUrl(rest);
-          if (url && possibleLabel.length < 60) {
-            links.push({ label: possibleLabel, url });
-            return;
-          }
-        }
-
-        // Case 5: line contains a URL somewhere
-        const url = extractUrl(trimmed);
-        if (url) {
-          const textPart = trimmed.replace(url, "").replace(/[:\-|]+$/, "").trim();
-          const label = textPart && !textPart.startsWith("http") && textPart.length < 60
-            ? textPart
-            : `Material ${++materialCount}`;
-          links.push({ label, url });
-        }
-      });
+      }
     }
 
     logger.info({ links, count: links.length }, "Parsed Entrega links");
-    res.json({ links, status: solicitacao.status, taskId: solicitacao.clickup_task_id, rawLength: entregaRaw.length });
+    res.json({ links, status: solicitacao.status, taskId: solicitacao.clickup_task_id });
   } catch (err) {
     logger.error({ err }, "Erro ao buscar entrega");
     res.status(500).json({ error: "Erro ao buscar links de entrega" });

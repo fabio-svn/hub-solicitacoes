@@ -122,6 +122,15 @@
     .spin { display:inline-block; width:13px; height:13px; border:2px solid rgba(255,255,255,.45); border-top-color:#fff; border-radius:var(--radius-round); vertical-align:-2px; animation: tombspin .7s linear infinite; }
     .spin--dark { border-color: var(--ink-20); border-top-color:var(--carbon-black); }
     @keyframes tombspin { to { transform: rotate(360deg); } }
+    /* REV-TOGGLE-CSS: toggle incluir/excluir por pessoa. Ligado (sage) = gera;
+       desligado = a linha esmaece e a pessoa fica fora da geracao (reversivel). */
+    .rev-tgl { position:relative; width:38px; height:22px; border-radius:999px; background:var(--sage-green); cursor:pointer; flex:none; transition:background .18s; border:none; padding:0; }
+    .rev-tgl::after { content:""; position:absolute; top:2px; left:2px; width:18px; height:18px; border-radius:50%; background:#fff; transition:left .18s; box-shadow:0 1px 3px rgba(0,0,0,.2); }
+    .rev-tgl.off { background:var(--ink-12); }
+    .rev-tgl.off::after { left:18px; }
+    tr.rev-row--off td:not(.rev-tgl-cell) { opacity:.4; }
+    tr.rev-row--off.rev-row--alert td { background:transparent; }
+    .rev-tgl-cell { text-align:center; }
     .rev-foto-cell { display:flex; gap:8px; align-items:center; }
     .rev-foto-cell select { flex:1; }
     .rev-eye { background:transparent; border:1px solid var(--border-light); border-radius:var(--radius-md); cursor:pointer; padding:6px 8px; display:inline-flex; align-items:center; color:var(--carbon-black); flex:none; }
@@ -307,6 +316,11 @@
               <span class="tomb-loaded__meta" id="tombPlanilhaMeta"></span>
             </div>
             <span class="tomb-loaded__spacer"></span>
+            <!-- tombBaixarPlanilha: baixa o .xlsx original (aparece so quando ha arquivo guardado). -->
+            <a id="tombBaixarPlanilha" class="tomb-loaded__btn" style="display:none;text-decoration:none" download>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              Baixar planilha
+            </a>
             <button type="button" class="tomb-loaded__btn" onclick="document.getElementById('tombFile').click()">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
               Substituir planilha
@@ -350,13 +364,15 @@
 
             <div id="cartoesReview" class="tomb-review" style="display:none">
               <div class="tomb-review-head">
-                <div><strong>Revisão de fotos</strong><span id="cartoesResumo" class="tomb-review-resumo"></span></div>
+                <div><strong>Revisão de fotos</strong><span id="cartoesResumo" class="tomb-review-resumo"></span><span id="cartoesContagem" class="tomb-review-resumo" style="font-weight:700;color:var(--carbon-black)"></span></div>
                 <button class="btn-text" type="button" onclick="cartoesCancelar()">Cancelar</button>
               </div>
               <p class="tomb-note" style="margin-top:0">Confira os pares antes de gerar. <span class="rev-badge rev-revisar">revisar</span> = casou só pelo primeiro nome ou está ambíguo, vale conferir.</p>
               <div class="tomb-review-wrap">
-                <table class="admin-table" id="cartoesRevTabela">
-                  <thead><tr><th>Pessoa</th><th style="width:120px">Status</th><th style="width:46%">Foto atribuída</th></tr></thead>
+                <input type="file" id="tombFotoAvulsaInput" accept="image/jpeg,image/png,image/webp,image/gif" style="display:none">
+              <table class="admin-table" id="cartoesRevTabela">
+                  <!-- REV-COL-GERAR: coluna do toggle incluir/excluir. -->
+                <thead><tr><th style="width:64px;text-align:center">Gerar</th><th>Pessoa</th><th style="width:120px">Status</th><th style="width:42%">Foto atribuída</th></tr></thead>
                   <tbody id="cartoesRevTbody"></tbody>
                 </table>
               </div>
@@ -538,6 +554,20 @@
 
     /* ESTADO-PLANILHA: alterna entre a caixa de upload (sem planilha) e a barra
        compacta com badge (planilha carregada). meta = texto opcional (linhas). */
+    // atualizarBotaoBaixar: mostra o link "Baixar planilha" quando o tombamento
+    // tem o .xlsx guardado no R2 (planilha_key). Aponta para o endpoint de download.
+    function atualizarBotaoBaixar() {
+      var a = document.getElementById('tombBaixarPlanilha');
+      if (!a) return;
+      if (currentTomb && currentTomb.planilha_key) {
+        a.href = '/api/admin/tombamentos/' + currentTomb.id + '/planilha';
+        a.style.display = 'inline-flex';
+      } else {
+        a.removeAttribute('href');
+        a.style.display = 'none';
+      }
+    }
+
     function atualizarEstadoPlanilha(temPlanilha, meta) {
       var drop = document.getElementById('tombDrop');
       var loaded = document.getElementById('tombPlanilhaLoaded');
@@ -552,6 +582,14 @@
         loaded.style.display = 'none';
       }
     }
+
+    // AVULSA-INPUT-LISTENER: liga o seletor de foto avulsa (uma vez).
+    (function () {
+      document.addEventListener('DOMContentLoaded', function () {
+        var inp = document.getElementById('tombFotoAvulsaInput');
+        if (inp) inp.addEventListener('change', function () { if (this.files && this.files[0]) _avulsaEnviar(this.files[0]); });
+      });
+    })();
 
     function abrirWorkspace(tomb) {
       currentTomb = tomb;
@@ -572,6 +610,7 @@
       }
       // fotos: se o tombamento ja tem ZIP persistido, sinaliza no botao
       atualizarEstadoFotos(!!tomb.fotos_zip_key);
+      atualizarBotaoBaixar(); // AO-ABRIR: link de baixar planilha, se houver arquivo guardado
     }
 
     /* ESTADO-FOTOS: quando o tombamento ja tem um ZIP de fotos persistido, o
@@ -618,18 +657,22 @@
       if (!currentTomb) return;
       if (file.size > MAX_PLANILHA) { if (window.showToast) showToast('Planilha acima de 15 MB. Reduza o arquivo.', 'error'); return; }
       document.getElementById('tombFilename').innerHTML = '<span class="spin spin--dark"></span> Lendo: ' + esc(file.name) + '…';
-      const fd = new FormData(); fd.append('planilha', file);
+      // FRONT-PLANILHA-KEY: manda o tombId para o parse guardar o .xlsx no R2.
+      const fd = new FormData(); fd.append('planilha', file); fd.append('tombId', String(currentTomb.id));
       try {
         const res = await fetch('/api/admin/tombamentos/parse', { method: 'POST', body: fd });
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || 'Erro ao ler planilha');
         document.getElementById('tombFilename').textContent = file.name + ' — ' + data.rows.length + ' linha(s)';
         renderTabela(data.rows);
-        // salva as linhas no tombamento
-        await fetch('/api/admin/tombamentos/' + currentTomb.id, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ linhas: data.rows }) });
+        // salva as linhas E a referencia da planilha (para baixar depois).
+        await fetch('/api/admin/tombamentos/' + currentTomb.id, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ linhas: data.rows, planilha_key: data.planilha_key || null, planilha_nome: data.planilha_nome || file.name }) });
         currentTomb.linhas = data.rows;
+        currentTomb.planilha_key = data.planilha_key || null;
+        currentTomb.planilha_nome = data.planilha_nome || file.name;
         // POS-UPLOAD-BADGE: planilha agora carregada -> troca a caixa pelo badge.
         atualizarEstadoPlanilha(true, file.name + ' · ' + data.rows.length + ' linha(s)');
+        atualizarBotaoBaixar();
       } catch (err) {
         document.getElementById('tombFilename').textContent = '';
         if (window.showToast) showToast(err.message || 'Erro ao ler a planilha', 'error');
@@ -718,23 +761,125 @@
         cartoesFotos.map(function (n) { return '<option value="' + cartEsc(n) + '">' + cartEsc(n) + '</option>'; })
       ).join('');
       const pessoas = data.pessoas || [];
+      // REV-TGL-LINHA: cada linha ganha um toggle "Gerar" (ligado por padrao).
+      // Quem tem foto entra ligado; quem esta "sem foto" comeca desligado (nao ha
+      // o que gerar ate a foto chegar) — mas pode ser religado.
       tbody.innerHTML = pessoas.map(function (p) {
-        const alerta = (p.status === 'revisar' || p.status === 'sem_foto') ? ' class="rev-row--alert"' : '';
+        const alertaCls = (p.status === 'revisar' || p.status === 'sem_foto') ? ' rev-row--alert' : '';
+        const off = (p.status === 'sem_foto' && !p.foto);
+        const rowCls = alertaCls + (off ? ' rev-row--off' : '');
         const sub = cartEsc(p.email) + (p.obs ? ' · ' + cartEsc(p.obs) : '');
-        return '<tr' + alerta + '>'
+        return '<tr class="' + rowCls.trim() + '">'
+          + '<td class="rev-tgl-cell"><button type="button" class="rev-tgl' + (off ? ' off' : '') + '" title="Incluir/excluir na geração" onclick="cartoesToggleLinha(this)"></button></td>'
           + '<td>' + cartEsc(p.nome) + '<div style="font-size:.75rem;color:var(--ink-50)">' + sub + '</div></td>'
           + '<td><span class="rev-badge rev-' + p.status + '">' + p.status.replace('_', ' ') + '</span></td>'
           + '<td><div class="rev-foto-cell"><select data-email="' + cartEsc(p.email) + '">' + opts + '</select>'
-          + '<button type="button" class="rev-eye" title="Ver foto" onclick="cartoesPreview(this)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button></div></td></tr>';
+          + '<button type="button" class="rev-eye" title="Ver foto" onclick="cartoesPreview(this)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>'
+          // rev-avulsa-btn: subir uma foto individual (quando a foto chegou depois).
+          + '<button type="button" class="rev-eye rev-avulsa" title="Subir foto avulsa desta pessoa" data-nome="' + cartEsc(p.nome) + '" data-email="' + cartEsc(p.email) + '" onclick="cartoesFotoAvulsa(this)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></button>'
+          + '</div></td></tr>';
       }).join('');
       const selects = tbody.querySelectorAll('select[data-email]');
       pessoas.forEach(function (p, i) { if (selects[i]) selects[i].value = p.foto || ''; });
+      // ao escolher/limpar foto, recontar; se ganhou foto e estava desligada por
+      // "sem foto", religa.
+      selects.forEach(function (s) {
+        s.addEventListener('change', function () {
+          const tr = s.closest('tr');
+          const tgl = tr.querySelector('.rev-tgl');
+          if (s.value && tgl && tgl.classList.contains('off') && tr.classList.contains('rev-row--off')) {
+            tgl.classList.remove('off'); tr.classList.remove('rev-row--off');
+          }
+          cartoesAtualizarContagem();
+        });
+      });
+      cartoesAtualizarContagem();
       const r = data.resumo || {};
       document.getElementById('cartoesResumo').textContent =
         (r.auto || 0) + ' automáticas · ' + (r.revisar || 0) + ' a revisar · ' + (r.sem_foto || 0) + ' sem foto · ' + (r.fotos || 0) + ' fotos no zip';
       document.getElementById('cartoesReview').style.display = 'block';
       document.getElementById('cartoesReview').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
+
+    // REV-TGL-FN: liga/desliga uma linha da geracao. Ao trocar a foto de "sem
+    // foto" para uma valida, a pessoa e religada automaticamente (ver onchange).
+    function cartoesToggleLinha(btn) {
+      const tr = btn.closest('tr');
+      const off = btn.classList.toggle('off');
+      tr.classList.toggle('rev-row--off', off);
+      cartoesAtualizarContagem();
+    }
+    // conta quantos vao gerar (ligado + com foto) e atualiza o resumo e o botao.
+    function cartoesAtualizarContagem() {
+      const linhas = document.querySelectorAll('#cartoesRevTbody tr');
+      var vaoGerar = 0, fora = 0, semFoto = 0;
+      linhas.forEach(function (tr) {
+        const tgl = tr.querySelector('.rev-tgl');
+        const sel = tr.querySelector('select[data-email]');
+        const temFoto = sel && sel.value;
+        const ligado = tgl && !tgl.classList.contains('off');
+        if (!temFoto) { semFoto++; if (!ligado) fora++; }
+        else if (ligado) vaoGerar++;
+        else fora++;
+      });
+      const btn = document.getElementById('btnCartoesGerar');
+      if (btn && !btn.disabled) btn.textContent = 'Gerar cartões' + (vaoGerar ? ' (' + vaoGerar + ')' : '');
+      const cont = document.getElementById('cartoesContagem');
+      if (cont) cont.textContent = vaoGerar + ' vão gerar · ' + fora + ' fora' + (semFoto ? ' · ' + semFoto + ' sem foto' : '');
+    }
+
+    // FOTO-AVULSA-FN: sobe uma foto individual da pessoa. Ao concluir, o backend
+    // adiciona a imagem ao ZIP e devolve o nome do arquivo; aqui a gente insere
+    // esse nome como opcao no select da pessoa, seleciona, e religa a linha
+    // (deixa de estar "sem foto"). O contador (Camada 2) reflete na hora.
+    var _avulsaAlvo = null;
+    function cartoesFotoAvulsa(btn) {
+      _avulsaAlvo = { nome: btn.getAttribute('data-nome'), email: btn.getAttribute('data-email') };
+      var input = document.getElementById('tombFotoAvulsaInput');
+      input.value = '';
+      input.click();
+    }
+    async function _avulsaEnviar(file) {
+      if (!file || !_avulsaAlvo || !currentTomb) return;
+      if (file.size > 15 * 1024 * 1024) { if (window.showToast) showToast('Imagem acima de 15 MB.', 'error'); return; }
+      const alvo = _avulsaAlvo;
+      if (window.showToast) showToast('Enviando foto de ' + alvo.nome + '…', 'info');
+      try {
+        const fd = new FormData();
+        fd.append('foto', file);
+        fd.append('nome', alvo.nome);
+        const res = await fetch('/api/admin/tombamentos/' + currentTomb.id + '/foto-avulsa', { method: 'POST', body: fd });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Erro ao enviar a foto');
+        const arquivo = data.arquivo;
+        // insere o arquivo como opcao no select da pessoa (se ainda nao existir),
+        // seleciona, religa a linha e reconta.
+        const sel = document.querySelector('#cartoesRevTbody select[data-email="' + _cssEsc(alvo.email) + '"]');
+        if (sel) {
+          if (!Array.prototype.some.call(sel.options, function (o) { return o.value === arquivo; })) {
+            const opt = document.createElement('option');
+            opt.value = arquivo; opt.textContent = arquivo;
+            sel.appendChild(opt);
+          }
+          sel.value = arquivo;
+          const tr = sel.closest('tr');
+          const tgl = tr.querySelector('.rev-tgl');
+          if (tgl) tgl.classList.remove('off');
+          tr.classList.remove('rev-row--off');
+          // atualiza o badge de status para "avulsa"
+          const badge = tr.querySelector('.rev-badge');
+          if (badge) { badge.className = 'rev-badge rev-exato'; badge.textContent = 'foto avulsa'; }
+          if (typeof cartoesAtualizarContagem === 'function') cartoesAtualizarContagem();
+        }
+        if (window.showToast) showToast('Foto de ' + alvo.nome + ' adicionada.', 'success');
+      } catch (err) {
+        if (window.showToast) showToast(err.message || 'Erro ao enviar a foto', 'error');
+      } finally {
+        _avulsaAlvo = null;
+      }
+    }
+    // escapa aspas para o seletor de atributo
+    function _cssEsc(s) { return String(s).replace(/["\\]/g, '\\$&'); }
 
     function cartoesCancelar() {
       document.getElementById('cartoesReview').style.display = 'none';
@@ -743,11 +888,17 @@
 
     async function cartoesGerar() {
       if (!currentTomb || !cartoesFotosFile) { if (window.showToast) showToast('Suba o .zip de fotos novamente', 'error'); return; }
+      // REV-GERAR-TOGGLE: so entra quem tem foto E esta com o toggle ligado.
+      // Desligar exclui a pessoa mesmo que ela tenha foto (backend ja pula quem
+      // nao esta no atrib).
       const atrib = {};
-      document.querySelectorAll('#cartoesRevTbody select[data-email]').forEach(function (s) {
-        if (s.value) atrib[s.getAttribute('data-email')] = s.value;
+      document.querySelectorAll('#cartoesRevTbody tr').forEach(function (tr) {
+        const s = tr.querySelector('select[data-email]');
+        const tgl = tr.querySelector('.rev-tgl');
+        const ligado = tgl && !tgl.classList.contains('off');
+        if (s && s.value && ligado) atrib[s.getAttribute('data-email')] = s.value;
       });
-      if (!Object.keys(atrib).length) { if (window.showToast) showToast('Nenhuma foto atribuída', 'error'); return; }
+      if (!Object.keys(atrib).length) { if (window.showToast) showToast('Ninguém marcado para gerar. Ligue ao menos uma pessoa com foto.', 'error'); return; }
       const btn = document.getElementById('btnCartoesGerar');
       setBtnLoading(btn, 'Gerando…');
       try {

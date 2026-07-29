@@ -194,6 +194,8 @@ export const tombamentosTable = pgTable("tombamentos", {
   assinaturas_zip_url: text("assinaturas_zip_url"),
   cartoes_zip_url: text("cartoes_zip_url"),
   fotos_zip_key: text("fotos_zip_key"),
+  planilha_key: text("planilha_key"),
+  planilha_nome: text("planilha_nome"),
   descricao: text("descricao"),
   solicitacao_id: integer("solicitacao_id"),
   expires_at: timestamp("expires_at"),

@@ -5,6 +5,7 @@ import { solicitacoesTable } from "@workspace/db";
 import { eq, sql } from "drizzle-orm";
 import { logger } from "../lib/logger";
 import { mapClickUpStatus } from "../config/clickup-status";
+import { extrairEntregaLinks } from "./clickup";
 import { notificarMarcoBg } from "../services/notifications";
 import { logEventoBg } from "../services/activity-log";
 
@@ -120,6 +121,25 @@ router.post(
       });
 
       const patch: Record<string, unknown> = { status: hubStatus, updated_at: new Date() };
+      // WEBHOOK-CAPTURA-ENTREGA: quando a demanda entra em aprovacao (inclusive
+      // quando o link e posto direto no ClickUp), captura os links do campo
+      // Entrega e persiste no banco. Sem isto, o entrega_links ficava vazio e o
+      // chat de aprovacao dependia de uma consulta ao vivo fragil — as vezes
+      // vindo vazia por timing de propagacao. So grava se ainda nao houver links.
+      if (hubStatus === "em-aprovacao") {
+        const jaTinha = Array.isArray(solicitacao.entrega_links) && (solicitacao.entrega_links as unknown[]).length > 0;
+        if (!jaTinha) {
+          try {
+            const links = await extrairEntregaLinks(taskId);
+            if (links.length > 0) {
+              patch.entrega_links = links;
+              logger.info({ taskId, count: links.length }, "ClickUp webhook: links de entrega capturados ao entrar em aprovacao");
+            }
+          } catch (err) {
+            logger.warn({ err, taskId }, "ClickUp webhook: falha ao capturar links de entrega");
+          }
+        }
+      }
       if (hubStatus === "em-revisao") {
         // Voltou para revisão (alteração) — libera o e-mail de re-aprovação para a
         // próxima volta a "em-aprovacao". Cobre o caso em que a alteração é feita

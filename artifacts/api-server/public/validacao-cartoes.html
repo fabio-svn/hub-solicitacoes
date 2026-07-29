@@ -162,8 +162,9 @@
         </div>
         <div class="vc-tools">
           <div style="position:relative">
-            <button class="btn" id="vcFilterToggle" onclick="toggleFilterPanel()">
-              <span data-icon="filter" style="display:inline-flex"></span>
+            <!-- FILTRO-BTN-PADRAO-VC: botao de filtro padronizado (mesma classe e icone do resto). -->
+            <button class="filter-toggle-btn" id="vcFilterToggle" onclick="toggleFilterPanel()">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
               Filtros <span class="filter-count-badge" id="vcFilterBadge" style="display:none">1</span>
             </button>
             <div class="filter-panel" id="vcFilterPanel">
