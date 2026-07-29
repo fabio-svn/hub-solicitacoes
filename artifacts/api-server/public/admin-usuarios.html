@@ -707,6 +707,7 @@
     // ao salvar, chama os 3 endpoints existentes (role, clickup_user_id,
     // assignments) em sequencia, recarregando a lista uma unica vez.
     let _gerirUserId = null;
+    let _gerirOriginal = null; // GERIR-SNAPSHOT: valores ao abrir, para salvar so o que mudou
     async function abrirGerir(userId) {
       _gerirUserId = userId;
       const user = (_allUsers || []).find(u => String(u.id) === String(userId));
@@ -714,6 +715,12 @@
       document.getElementById('gerirUserName').innerHTML = '<strong>' + esc(user.name || user.email) + '</strong> · ' + esc(user.email);
       document.getElementById('gerirRoleSelect').value = user.role || 'colaborador';
       document.getElementById('gerirClickupInput').value = user.clickup_user_id || '';
+      // GERIR-SNAPSHOT-SET: guarda os valores originais para salvar so o que mudou.
+      _gerirOriginal = {
+        role: user.role || 'colaborador',
+        clickup: user.clickup_user_id || '',
+        tipos: (user.tipos_assigned || []).slice().sort().join('|'),
+      };
       // formularios: checkboxes (reusa _tiposComClickup e tipos_assigned)
       const tiposAtuais = new Set(user.tipos_assigned || []);
       await _ensureTipos();
@@ -748,14 +755,27 @@
         try { const d = await res.json(); msg = d && d.error ? d.error : ''; } catch (_) {}
         return { nome, status: res.status, msg };
       }
+      // GERIR-SO-DELTA: envia cada operacao SO se o valor mudou. Editar apenas a
+      // lista do proprio usuario nao dispara mais o request de role (que bateria
+      // na protecao "nao alterar a propria role" e derrubaria o salvamento).
+      const _o = _gerirOriginal || {};
+      const _roleMudou = role !== _o.role;
+      const _clickupMudou = (clickup || '') !== (_o.clickup || '');
+      const _tiposMudou = tipos.slice().sort().join('|') !== (_o.tipos || '');
       try {
         const falhas = [];
-        const f1 = await _salvarPasso('Papel do usuário', `/api/admin/users/${id}/role`, { role });
-        if (f1) falhas.push(f1);
-        const f2 = await _salvarPasso('ClickUp User ID', `/api/admin/users/${id}/clickup_user_id`, { clickup_user_id: clickup || null });
-        if (f2) falhas.push(f2);
-        const f3 = await _salvarPasso('Listas/atribuições', `/api/admin/users/${id}/assignments`, { tipos });
-        if (f3) falhas.push(f3);
+        if (_roleMudou) {
+          const f1 = await _salvarPasso('Papel do usuário', `/api/admin/users/${id}/role`, { role });
+          if (f1) falhas.push(f1);
+        }
+        if (_clickupMudou) {
+          const f2 = await _salvarPasso('ClickUp User ID', `/api/admin/users/${id}/clickup_user_id`, { clickup_user_id: clickup || null });
+          if (f2) falhas.push(f2);
+        }
+        if (_tiposMudou) {
+          const f3 = await _salvarPasso('Listas/atribuições', `/api/admin/users/${id}/assignments`, { tipos });
+          if (f3) falhas.push(f3);
+        }
 
         if (falhas.length === 0) {
           cancelarGerir();
