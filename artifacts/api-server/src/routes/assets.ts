@@ -18,7 +18,14 @@ const router = Router();
 const R2_PUBLIC_URL  = (process.env.R2_PUBLIC_URL || "").replace(/\/*$/, "/");
 
 
-const ALLOWED_MIME = new Set(["image/png", "image/jpeg", "image/webp"]);
+// SVG-ALLOWED: a biblioteca aceita SVG. Decisao consciente sobre seguranca: SVG
+// pode conter <script>, mas (a) o upload e restrito a admins (requireRole abaixo)
+// e (b) os assets sao servidos de um dominio SEPARADO (R2 pub-*.r2.dev), isolado
+// da origem do Hub — um script embutido rodaria fora do contexto do Hub, sem
+// acesso a sessao. Se algum dia o upload abrir para nao-admins OU os assets
+// passarem a ser servidos do dominio do Hub, adicione sanitizacao (remover
+// <script>, <foreignObject> e atributos on*) antes de subir ao R2.
+const ALLOWED_MIME = new Set(["image/png", "image/jpeg", "image/webp", "image/svg+xml"]);
 const MAX_BYTES = 10 * 1024 * 1024; // 10 MB
 const MAX_DIM   = 8000;
 
@@ -58,9 +65,19 @@ router.post(
         return;
       }
 
-      const meta   = await sharp(file.path).metadata();
-      const width  = meta.width;
-      const height = meta.height;
+      // SVG-META-TOLERANTE: o sharp le SVG, mas um SVG sem width/height fixos pode
+      // vir sem dimensoes — nao e erro (o render define o tamanho pela layer). So
+      // aplica o limite de dimensao quando ha dimensao conhecida.
+      let width: number | undefined;
+      let height: number | undefined;
+      try {
+        const meta = await sharp(file.path).metadata();
+        width  = meta.width;
+        height = meta.height;
+      } catch (err) {
+        // SVG malformado ou sem dimensao: segue sem dimensao (width/height null)
+        logger.warn({ err, file: file.originalname }, "[assets] metadados indisponiveis (svg sem dimensao?)");
+      }
       if ((width && width > MAX_DIM) || (height && height > MAX_DIM)) {
         await cleanup();
         res.status(400).json({ error: `Imagem muito grande (máx ${MAX_DIM}×${MAX_DIM}px)` });
