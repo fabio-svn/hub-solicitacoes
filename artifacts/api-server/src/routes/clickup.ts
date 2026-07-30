@@ -15,6 +15,14 @@ const CLICKUP_API_TOKEN = process.env.CLICKUP_API_TOKEN || "";
 export const CLICKUP_STATUS_EM_REVISAO = process.env.CLICKUP_STATUS_EM_REVISAO || "em revisão";
 export const CLICKUP_STATUS_CONCLUIDO = process.env.CLICKUP_STATUS_CONCLUIDO || "concluído";
 
+// HUB-LINK-VAR: URL publica do Hub (mesma env usada em notifications.ts). Usada
+// para incluir, na descricao da task, o link direto para a solicitacao no Hub.
+const HUB_URL = process.env.HUB_PUBLIC_URL || "https://hub.portalsvn.com.br";
+// Link da solicitacao atual — setado no inicio de createClickUpTask e lido por
+// buildRequesterSection. Seguro porque a montagem da descricao e sincrona (sem
+// await entre setar e usar), entao tasks concorrentes nao se intercalam aqui.
+let hubLinkAtual: string | null = null;
+
 // Monta link wa.me a partir de um telefone (assume Brasil/55 quando não houver DDI).
 function waLink(phone: string): string | null {
   let d = String(phone || "").replace(/\D/g, "");
@@ -290,6 +298,7 @@ const MATERIAL_COND_LABELS: Record<string, Record<string, string>> = {
 };
 
 interface SolicitacaoData {
+  id?: number;
   tipo_solicitacao: string;
   subtipo?: string | null;
 }
@@ -483,6 +492,10 @@ function buildRequesterSection(user: UserData, dados?: FormDados): string {
   if (tel) {
     const wa = waLink(tel);
     items.push(wa ? `• Telefone/WhatsApp: ${tel} — ${wa}` : `• Telefone: ${tel}`);
+  }
+  // HUB-LINK-BLOCO: link direto para a solicitacao no Hub, logo abaixo do telefone.
+  if (hubLinkAtual) {
+    items.push(`• Ver no Hub: ${hubLinkAtual}`);
   }
   logger.info({ nome: user.name, email: user.email, temTelefone: !!tel }, "ClickUp: bloco solicitante montado");
   return `👤 SOLICITANTE\n━━━━━━━━━━━━━━━━━━━━━━\n\n${items.join("\n")}`;
@@ -1359,6 +1372,9 @@ export async function createClickUpTask(
     return { taskId: null, taskName: "", responsavel: "" };
   }
 
+  // HUB-LINK-SET: monta o link da solicitacao no Hub (se houver id) para o bloco
+  // do solicitante. Limpa ao final para nao vazar para uma proxima chamada.
+  hubLinkAtual = solicitacao.id ? `${HUB_URL}/solicitacao.html?id=${solicitacao.id}` : null;
   const tipo = solicitacao.tipo_solicitacao;
 
   // Tipos de assessor: o novo sistema de aprovacoes cobre tudo que se fazia no

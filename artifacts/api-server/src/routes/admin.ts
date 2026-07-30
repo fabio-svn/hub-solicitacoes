@@ -656,7 +656,18 @@ router.get("/tombamentos/:id/foto", requireRole("admin", "capital_humano"), asyn
     const id = parseInt(String(req.params.id), 10);
     const nome = String(req.query.nome ?? "");
     if (isNaN(id) || !nome) { res.status(400).end(); return; }
-    const buf = tombZipCacheGet(id);
+    // PREVIA-R2-FALLBACK: o cache em memória (tombZipCache) expira em 30min e some
+    // no restart do servidor. Antes disso virava 410 ("prévia expirou"). Agora, se
+    // o cache estiver vazio, baixa o .zip do R2 (fotos_zip_key) e repõe no cache —
+    // a prévia funciona enquanto o zip existir no R2, sem depender do cache volátil.
+    let buf = tombZipCacheGet(id);
+    if (!buf) {
+      const [tombFoto] = await db.select().from(tombamentosTable).where(eq(tombamentosTable.id, id));
+      if (tombFoto?.fotos_zip_key) {
+        const r2buf = await tombFotosR2Download(String(tombFoto.fotos_zip_key));
+        if (r2buf) { tombZipCacheSet(id, r2buf); buf = r2buf; }
+      }
+    }
     if (!buf) { res.status(410).json({ error: "Prévia expirada. Reenvie o .zip." }); return; }
     const zip = await JSZip.loadAsync(buf);
     const target = nome.toLowerCase();
@@ -1019,6 +1030,43 @@ function validateTemplateConfig(config: any): string | null {
     if (layer.font_family && !VALID_FONT_FAMILIES.has(layer.font_family)) {
       return `Fonte inválida: "${layer.font_family}"`;
     }
+    // VALIDA-LAYER-TIPO: checagens por tipo — pegam JSON incompleto (ex.: colado de
+    // ferramenta externa) ANTES de virar erro de render (NaN) no gerador.
+    const TIPOS_VALIDOS = new Set(['text-block', 'text-line', 'image', 'shape']);
+    if (!layer.type || !TIPOS_VALIDOS.has(layer.type)) {
+      return `Layer "${layer.id}": type inválido ou ausente ("${layer.type ?? ''}")`;
+    }
+    for (const eixo of ['x', 'y'] as const) {
+      if (layer[eixo] != null && typeof layer[eixo] !== 'number') {
+        return `Layer "${layer.id}": ${eixo} deve ser número`;
+      }
+    }
+    if (layer.type === 'text-block' || layer.type === 'text-line') {
+      if (typeof layer.font_size !== 'number' || layer.font_size <= 0) {
+        return `Layer "${layer.id}": font_size deve ser um número > 0`;
+      }
+      if (layer.content == null || typeof layer.content !== 'string') {
+        return `Layer "${layer.id}": content (texto) obrigatório`;
+      }
+      if (layer.type === 'text-block' && layer.line_height != null && typeof layer.line_height !== 'number') {
+        return `Layer "${layer.id}": line_height deve ser número`;
+      }
+    }
+    if (layer.type === 'image') {
+      const src = layer.source;
+      if (!src || typeof src !== 'object' || !src.type) {
+        return `Layer "${layer.id}": source (imagem) obrigatório`;
+      }
+      if (src.type === 'variant' && !src.variant_source) {
+        return `Layer "${layer.id}": source variant sem variant_source`;
+      }
+    }
+    if (layer.type === 'shape') {
+      const FORMAS = new Set(['rectangle', 'ellipse']);
+      if (!layer.shape || !FORMAS.has(layer.shape)) {
+        return `Layer "${layer.id}": shape deve ser 'rectangle' ou 'ellipse'`;
+      }
+    }
     const maxX = (layer.x || 0) + (layer.w || 0);
     const maxY = (layer.y || 0) + (layer.h || 0);
     if (maxX > config.canvas.width + 50) return `Layer "${layer.id}" ultrapassa largura do canvas`;
@@ -1078,6 +1126,11 @@ router.post("/art-templates/preview", requireRole("admin"), async (req, res): Pr
   try {
     const { config, data } = req.body as { config: any; data: Record<string, any> };
     if (!config) { res.status(400).json({ error: "Campo config obrigatório" }); return; }
+    // VALIDA-NO-PREVIEW: valida o config ANTES de renderizar — assim um layer
+    // incompleto vira uma mensagem clara ("Layer X: font_size...") em vez de um
+    // 500 genérico ou uma imagem quebrada.
+    const previewErro = validateTemplateConfig(config);
+    if (previewErro) { res.status(400).json({ error: previewErro }); return; }
     const pngBuffer = await renderFromTemplate(config, data || {});
     res.set('Content-Type', 'image/png').send(pngBuffer);
   } catch (err: any) {

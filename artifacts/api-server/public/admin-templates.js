@@ -288,6 +288,32 @@
     if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) { fail('JSON precisa ser um objeto de template.'); return; }
     if (!Array.isArray(parsed.layers)) { fail('Faltou o array "layers".'); return; }
     if (!parsed.canvas || typeof parsed.canvas.width !== 'number' || typeof parsed.canvas.height !== 'number') { fail('Faltou "canvas" com width/height numericos.'); return; }
+    // VALIDA-LAYER-FRONT: checa cada layer ANTES de aplicar — pega JSON incompleto
+    // (comum ao colar de ferramenta externa) e aponta o layer/campo problemático,
+    // em vez de deixar quebrar só na hora de gerar o convite.
+    const _erroLayer = (function () {
+      const vistos = new Set();
+      const FONTES = new Set((window.AVAILABLE_FONTS || []).map(function (f) { return f.family || f; }));
+      for (const l of parsed.layers) {
+        if (!l || !l.id) return 'Um layer está sem "id".';
+        if (vistos.has(l.id)) return 'ID de layer duplicado: ' + l.id;
+        vistos.add(l.id);
+        if (!['text-block', 'text-line', 'image', 'shape'].includes(l.type)) return 'Layer "' + l.id + '": type inválido ou ausente.';
+        if (l.type === 'text-block' || l.type === 'text-line') {
+          if (typeof l.font_size !== 'number' || l.font_size <= 0) return 'Layer "' + l.id + '": font_size deve ser número > 0.';
+          if (typeof l.content !== 'string') return 'Layer "' + l.id + '": content (texto) obrigatório.';
+          if (l.type === 'text-block' && l.line_height != null && typeof l.line_height !== 'number') return 'Layer "' + l.id + '": line_height deve ser número.';
+          if (FONTES.size && l.font_family && !FONTES.has(l.font_family)) return 'Layer "' + l.id + '": fonte inválida ("' + l.font_family + '").';
+        }
+        if (l.type === 'image') {
+          if (!l.source || !l.source.type) return 'Layer "' + l.id + '": source (imagem) obrigatório.';
+          if (l.source.type === 'variant' && !l.source.variant_source) return 'Layer "' + l.id + '": variant sem variant_source.';
+        }
+        if (l.type === 'shape' && !['rectangle', 'ellipse'].includes(l.shape)) return 'Layer "' + l.id + '": shape deve ser rectangle ou ellipse.';
+      }
+      return null;
+    })();
+    if (_erroLayer) { fail(_erroLayer); return; }
     currentTemplate = Object.assign({}, currentTemplate, parsed);
     selectedIds.clear();
     selectedLayerId = null;
@@ -1671,9 +1697,17 @@
   function getLayer(id) {
     return currentTemplate?.layers.find(l => l.id === id) || null;
   }
+  // LAYER-UID-HELPER: id único e estável — evita colisão ao duplicar em lote no
+  // mesmo milissegundo (Date.now() repetia). Usa randomUUID quando disponível.
+  function novoLayerId(prefixo) {
+    const rand = (window.crypto && crypto.randomUUID)
+      ? crypto.randomUUID().slice(0, 8)
+      : (Date.now().toString(36) + Math.random().toString(36).slice(2, 6));
+    return prefixo + '_' + rand;
+  }
   function addLayer(type) {
     if (!currentTemplate) return;
-    const id = type + '_' + Date.now();
+    const id = novoLayerId(type);
     const base = { id, name: 'Nova layer', x: 100, y: 100 };
     let layer;
     if (type === 'text-line') layer = { ...base, type, font_family: 'Nunito Sans Light', font_size: 48, color: '#ffffff', align: 'left', content: 'Texto', w: 400 };
@@ -1706,7 +1740,7 @@
     const layer = getLayer(id);
     if (!layer || !currentTemplate) return;
     const clone = JSON.parse(JSON.stringify(layer));
-    clone.id = layer.type + '_' + Date.now();
+    clone.id = novoLayerId(layer.type); // LAYER-UID-DUP1
     clone.name = (clone.name || layer.id) + ' (cópia)';
     clone.x = (clone.x || 0) + 20;
     clone.y = (clone.y || 0) + 20;
@@ -1740,7 +1774,7 @@
     const newIds = [];
     originals.forEach((layer, i) => {
       const clone = JSON.parse(JSON.stringify(layer));
-      clone.id = layer.type + '_' + Date.now() + '_' + i;
+      clone.id = novoLayerId(layer.type); // LAYER-UID-DUP2
       clone.name = (clone.name || layer.id) + ' (cópia)';
       clone.x = (clone.x || 0) + 20;
       clone.y = (clone.y || 0) + 20;
@@ -2603,7 +2637,15 @@
         body: JSON.stringify({ config: currentTemplate, data: testData }),
         signal: previewAbortCtrl.signal,
       });
-      if (!res.ok) return;
+      if (!res.ok) {
+        // ERRO-PREVIEW-VISIVEL: em vez de silenciar, mostra o motivo que o backend
+        // devolve ({ error }) — ex.: "Layer X: font_size...". Antes o preview so
+        // nao atualizava, sem pista do porquê.
+        let _motivo = '';
+        try { const _d = await res.json(); _motivo = _d && _d.error ? _d.error : ''; } catch (_) {}
+        showToast(_motivo ? ('Prévia: ' + _motivo) : 'Não foi possível gerar a prévia.', 'error', 5000);
+        return;
+      }
       const blob = await res.blob();
       const img = document.getElementById('previewImg');
       const oldUrl = img.src;
@@ -2624,8 +2666,33 @@
   }
 
   // ── Save ─────────────────────────────────────────────────────
+  // VALIDA-ANTES-SALVAR: checa os layers no cliente antes do PUT — evita o
+  // round-trip e dá erro claro apontando o layer/campo. Mesma regra do backend.
+  function validarLayers(cfg) {
+    if (!cfg || !Array.isArray(cfg.layers)) return 'Config sem array de layers.';
+    const vistos = new Set();
+    for (const l of cfg.layers) {
+      if (!l || !l.id) return 'Um layer está sem "id".';
+      if (vistos.has(l.id)) return 'ID de layer duplicado: ' + l.id;
+      vistos.add(l.id);
+      if (!['text-block', 'text-line', 'image', 'shape'].includes(l.type)) return 'Layer "' + l.id + '": type inválido ou ausente.';
+      if (l.type === 'text-block' || l.type === 'text-line') {
+        if (typeof l.font_size !== 'number' || l.font_size <= 0) return 'Layer "' + l.id + '": font_size deve ser número > 0.';
+        if (typeof l.content !== 'string') return 'Layer "' + l.id + '": content (texto) obrigatório.';
+        if (l.type === 'text-block' && l.line_height != null && typeof l.line_height !== 'number') return 'Layer "' + l.id + '": line_height deve ser número.';
+      }
+      if (l.type === 'image') {
+        if (!l.source || !l.source.type) return 'Layer "' + l.id + '": source (imagem) obrigatório.';
+        if (l.source.type === 'variant' && !l.source.variant_source) return 'Layer "' + l.id + '": variant sem variant_source.';
+      }
+      if (l.type === 'shape' && !['rectangle', 'ellipse'].includes(l.shape)) return 'Layer "' + l.id + '": shape deve ser rectangle ou ellipse.';
+    }
+    return null;
+  }
   async function saveTemplate() {
     if (!currentTemplateMeta || !currentTemplate) return;
+    const _erroSave = validarLayers(currentTemplate);
+    if (_erroSave) { showToast('Não salvo — ' + _erroSave, 'error', 5000); return; }
     const res = await fetch(`/api/admin/art-templates/${currentTemplateMeta.id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },

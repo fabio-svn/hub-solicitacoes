@@ -233,7 +233,7 @@
                 <input type="file" id="novoPlanilha" accept=".xlsx,.xls,.csv">
                 <div class="file-name" id="novoPlanilhaName"></div>
               </div>
-              <p class="tomb-note">Colunas: nome, e-mail, telefone, cargo, tem CFP, arquivo da foto (opcional).</p>
+              <p class="tomb-note">Colunas: nome, e-mail, telefone, tem CFP.</p>
             </div>
             <div class="field">
               <label>Fotos dos colaboradores <span style="opacity:0.5;font-weight:400">(.zip, para cartões)</span></label>
@@ -271,6 +271,12 @@
         <div class="tomb-ws-header">
           <span class="tomb-ws-nome" id="wsNome"></span>
           <span class="tomb-marca-pill" id="wsMarca"></span>
+          <!-- TOMB-CLICKUP-EL: link para a task no ClickUp — so admin, so quando ha url -->
+          <a id="wsClickupLink" href="#" target="_blank" rel="noopener" title="Abrir tarefa no ClickUp"
+             style="display:none;align-items:center;gap:6px;text-decoration:none;color:var(--ink-60);font-size:0.82rem;padding:4px 10px;border:1px solid var(--border-light);border-radius:var(--radius-md)">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3l7 5-3 9H8L5 8z"/></svg>
+            <span>ClickUp</span>
+          </a>
           <span style="flex:1"></span>
           <div class="tomb-brand-logo" id="tombBrandLogo"><img id="tombBrandLogoImg" src="" alt=""></div>
         </div>
@@ -302,7 +308,7 @@
               Escolher planilha
               <input type="file" id="tombFile" accept=".xlsx,.xls,.csv" style="display:none" onchange="aoEscolherArquivo(this)">
             </label>
-            <p>Formatos: .xlsx, .xls ou .csv (máx. 15 MB). Colunas: nome, e-mail, telefone, cargo, tem CFP, arquivo da foto. (A marca não vai na planilha — é a do tombamento.) A coluna <strong>arquivo da foto</strong> é opcional: sem ela, o sistema casa as fotos pelo nome.</p>
+            <p>Formatos: .xlsx, .xls ou .csv (máx. 15 MB). Colunas: nome, e-mail, telefone, tem CFP. (A marca não vai na planilha — é a do tombamento.) As fotos são casadas pelo nome ao subir o .zip, e você ajusta no painel se precisar.</p>
             <div class="tomb-filename" id="tombFilename"></div>
           </div>
           <!-- BADGE-PLANILHA-NOVO: check + rotulo + meta (o JS escreve o nome/linhas
@@ -360,7 +366,7 @@
               <button class="btn btn-dark" id="btnGerarCartoes" style="display:inline-flex;align-items:center;gap:7px" onclick="document.getElementById('fotosZipInput').click()" disabled><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg><span class="btn-cartoes-label">Upload de .zip com fotos para cartões</span></button>
               <input type="file" id="fotosZipInput" accept=".zip,application/zip" style="display:none" onchange="cartoesStep1(this)">
             </div>
-            <p class="tomb-note">Suba um <strong>.zip com as fotos</strong> (máx. 100 MB) e o sistema casa cada pessoa pelo nome — você confere antes de gerar. A coluna <strong>arquivo_foto</strong> é opcional (se preenchida, tem prioridade). Disponível apenas para marcas com cartão digital (Investimentos, Capital, Connect).</p>
+            <p class="tomb-note">Suba um <strong>.zip com as fotos</strong> (máx. 100 MB) e o sistema casa cada pessoa pelo nome — você confere e ajusta antes de gerar. Disponível apenas para marcas com cartão digital (Investimentos, Capital, Connect).</p>
 
             <div id="cartoesReview" class="tomb-review" style="display:none">
               <div class="tomb-review-head">
@@ -372,7 +378,7 @@
                 <input type="file" id="tombFotoAvulsaInput" accept="image/jpeg,image/png,image/webp,image/gif" style="display:none">
               <table class="admin-table" id="cartoesRevTabela">
                   <!-- REV-COL-GERAR: coluna do toggle incluir/excluir. -->
-                <thead><tr><th style="width:64px;text-align:center">Gerar</th><th>Pessoa</th><th style="width:120px">Status</th><th style="width:42%">Foto atribuída</th></tr></thead>
+                <thead><tr><th style="width:64px;text-align:center">Gerar</th><th>Pessoa</th><th style="width:140px">Compatibilidade</th><th style="width:42%">Foto atribuída</th></tr></thead>
                   <tbody id="cartoesRevTbody"></tbody>
                 </table>
               </div>
@@ -414,9 +420,13 @@
       'svn-connect':       '/assets/svn-connect.svg',
     };
     const marcaLabel = function (v) { const m = MARCAS.find(function (x) { return x.value === v; }); return m ? m.label : (v || '—'); };
+    // COLS-SEM-CARGO-FOTO: cargo (so usado em assinaturas de e-mail especificas, nao
+    // em tombamentos) e arquivo_foto (o match por nome + ajuste no painel cobrem o
+    // caso) foram removidos da visualizacao. Os dados seguem na planilha; so nao sao
+    // exibidos nesta tabela.
     const COLS = [
       { f: 'nome', label: 'Nome' }, { f: 'email', label: 'E-mail' }, { f: 'telefone', label: 'Telefone' },
-      { f: 'cargo', label: 'Cargo' }, { f: 'tem_cfp', label: 'Tem CFP' }, { f: 'arquivo_foto', label: 'Arquivo da foto' },
+      { f: 'tem_cfp', label: 'Tem CFP' },
     ];
     let currentTomb = null;
 
@@ -598,6 +608,20 @@
       var _ph = document.getElementById('tombPageHeader'); if (_ph) _ph.style.display = 'none'; // HEADER-HIDE-WS
       document.getElementById('wsNome').textContent = tomb.nome;
       document.getElementById('wsMarca').textContent = marcaLabel(tomb.marca);
+      // TOMB-CLICKUP-SHOW: link da task no ClickUp — visível só para admin puro
+      // (capital_humano nao ve) e apenas quando o tombamento tem clickup_url.
+      (function () {
+        var _lk = document.getElementById('wsClickupLink');
+        if (!_lk) return;
+        var _ehAdmin = (typeof Auth !== 'undefined' && Auth.getUserRole && Auth.getUserRole() === 'admin');
+        if (_ehAdmin && tomb.clickup_url) {
+          _lk.href = tomb.clickup_url;
+          _lk.style.display = 'inline-flex';
+        } else {
+          _lk.style.display = 'none';
+          _lk.removeAttribute('href');
+        }
+      })();
       setBrandLogo(tomb.marca);
       document.getElementById('tombFilename').textContent = '';
       // APLICA-ESTADO-WS: planilha carregada -> badge; senao -> caixa de upload.
