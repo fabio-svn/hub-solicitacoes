@@ -339,6 +339,19 @@ window.SvnChip = (function () {
     return 'https://instagram.com/' + s.replace(/^@/, '');
   }
 
+  /* FIX-URL-NORM: garante esquema absoluto. Sem isto, um link colado como
+     "www.linkedin.com/in/fulano" (sem https://) virava href relativo e o
+     navegador o prefixava com o dominio do Hub. Aplica-se a qualquer link/rede,
+     nao so LinkedIn. Nao mexe em mailto:/tel:/#/caminhos internos. */
+  function normalizarUrl(v) {
+    var s = String(v == null ? '' : v).trim();
+    if (!s) return s;
+    if (/^(https?:\/\/|mailto:|tel:|#|\/)/i.test(s)) return s; // ja absoluto ou intencional
+    // parece dominio (tem ponto antes da primeira barra) -> assume https://
+    if (/^[^\s\/]+\.[^\s\/]+/.test(s)) return 'https://' + s.replace(/^\/+/, '');
+    return s;
+  }
+
   /* Descobre o tipo pelo nome do campo e, se nao der, pela extensao/host. */
   function tipo(url, chave) {
     var k = String(chave || '').toLowerCase();
@@ -367,6 +380,7 @@ window.SvnChip = (function () {
   /* Uma linha so: o .dados-value do resumo usa white-space:pre-wrap e
      qualquer indentacao viraria espaco visivel. */
   function html(url, texto, chave) {
+    url = normalizarUrl(url); // FIX-URL-HREF: href sempre absoluto (corrige link sem https://)
     var t = tipo(url, chave);
     var marca = REDES[t];
     var txt = texto || rotulo(url);
@@ -376,7 +390,7 @@ window.SvnChip = (function () {
     return '<a class="svn-chip" href="' + esc(url) + '" target="_blank" rel="noopener noreferrer" title="' + esc(url) + '">' + icone + '<span class="svn-chip__txt">' + esc(txt) + '</span></a>';
   }
 
-  return { html: html, rotulo: rotulo, tipo: tipo, instagramUrl: instagramUrl };
+  return { html: html, rotulo: rotulo, tipo: tipo, instagramUrl: instagramUrl, normalizarUrl: normalizarUrl };
 })();
 
 /* statusBadgeHtml — pilula de status. As cores ja vinham do getStatus/getStatusVisual
