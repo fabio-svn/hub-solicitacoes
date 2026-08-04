@@ -19,7 +19,15 @@ window.getClickupIcon = function() {
 };
 
 function mascaraTelefone(el) {
-  let v = el.value.replace(/\D/g, '').substring(0, 11);
+  const raw = el.value;
+  // Modo internacional: começa com + (ex.: +54 9 11 6404-6362, +1 415 555-0172)
+  // Permite apenas caracteres válidos em números internacionais; sem máscara BR.
+  if (/^\+/.test(raw) || /^00\d/.test(raw)) {
+    el.value = raw.replace(/[^\d\s\-()+]/g, '').replace(/\s{2,}/g, ' ');
+    return;
+  }
+  // Máscara brasileira padrão
+  let v = raw.replace(/\D/g, '').substring(0, 11);
   if (v.length > 10) {
     v = '(' + v.substring(0,2) + ') ' + v.substring(2,7) + '-' + v.substring(7);
   } else if (v.length > 6) {
