@@ -218,10 +218,16 @@ export type ConviteFormato = typeof CONVITE_FORMATOS[number];
 
 export async function gerarKitConvite(
   dados: Record<string, unknown>,
+  formatos?: readonly string[],
 ): Promise<Record<string, { buffer: Buffer; ext: string; mimetype: string }>> {
   const num = String(dados["num_palestrantes"] ?? "").trim() || "1";
   const resultado: Record<string, { buffer: Buffer; ext: string; mimetype: string }> = {};
-  for (const formato of CONVITE_FORMATOS) {
+  // KIT-1-FORMATO: por padrao gera os 3; se `formatos` vier, gera so os pedidos
+  // (usado pela previa rapida do Sistema de Eventos — 1 formato em vez de 3).
+  const alvos = (formatos && formatos.length)
+    ? CONVITE_FORMATOS.filter((f) => formatos.includes(f))
+    : CONVITE_FORMATOS;
+  for (const formato of alvos) {
     const dadosFmt = { ...dados, _variante_convite: `${num}-${formato}` };
     try {
       const art = await gerarArteBuffer("convite-evento", dadosFmt);

@@ -24,9 +24,25 @@ import { eventosSolicitacaoTable, assessorPublicacoesTable } from "@workspace/db
 
 const router = Router();
 
-/** Formata string de telefone para (XX) XXXXX-XXXX ou (XX) XXXX-XXXX. */
+/**
+ * Formata telefone para exibicao.
+ * - Brasileiro (10 ou 11 digitos, sem DDI): (XX) XXXXX-XXXX ou (XX) XXXX-XXXX.
+ * - Internacional (comeca com + ou 00, ou tem mais de 11 digitos): PRESERVA o que
+ *   a pessoa digitou (o espacamento varia por pais), apenas garantindo o "+" na
+ *   frente (e convertendo 00 -> +). Nao corta digitos.
+ * TELEFONE-INTL: antes a funcao cortava em 11 digitos e forcava o formato BR,
+ * quebrando numeros internacionais (ex.: +1 415 555 0172 virava "(14) 15555-0172").
+ */
 function formatarTelefone(raw: string): string {
-  const d = raw.replace(/\D/g, "").slice(0, 11);
+  const limpo = String(raw ?? "").trim();
+  const soDigitos = limpo.replace(/\D/g, "");
+  const ehInternacional = /^\+/.test(limpo) || /^00\d/.test(limpo) || soDigitos.length > 11;
+  if (ehInternacional) {
+    let out = limpo.replace(/^00/, "+");
+    if (!out.startsWith("+")) out = "+" + out;
+    return out.replace(/\s+/g, " ").trim();
+  }
+  const d = soDigitos.slice(0, 11);
   if (d.length === 11) return `(${d.slice(0,2)}) ${d.slice(2,7)}-${d.slice(7)}`;
   if (d.length === 10) return `(${d.slice(0,2)}) ${d.slice(2,6)}-${d.slice(6)}`;
   return raw; // devolve sem alterar se não tiver dígitos suficientes

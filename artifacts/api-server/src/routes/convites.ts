@@ -42,8 +42,12 @@ router.post("/gerar-convite", async (req, res): Promise<void> => {
       return;
     }
 
-    // 3) Gerar o KIT (3 formatos) reusando o motor; cada formato tem seu template
-    const kit = await gerarKitConvite(dados);
+    // 3) Gerar o KIT reusando o motor. Por padrao os 3 formatos; se o request
+    // passar `formatos` (lista), gera so esses — usado pela previa rapida (1 formato).
+    const formatosPedidos = Array.isArray((req.body as any)?.formatos)
+      ? ((req.body as any).formatos as unknown[]).filter((x): x is string => typeof x === "string")
+      : undefined;
+    const kit = await gerarKitConvite(dados, formatosPedidos);
     const formatos = Object.keys(kit);
     if (formatos.length === 0) {
       res.status(404).json({
