@@ -7,7 +7,7 @@ import { mapClickUpStatus } from "../config/clickup-status";
 import { UNIDADES_ENDERECOS } from "../config/unidades";
 import { FORM_SCHEMAS, SETOR_CODIGO_MAP, TIPOS_COM_CLICKUP, SELOS_LABELS, labelDoTipo } from "../config/form-schemas";
 import { buscarContato } from "../lib/mysqlContatos";
-import { addBusinessDays, proximaQuarta as proximaQuartaUtil } from "../lib/holidays";
+import { addBusinessDays, proximaQuarta as proximaQuartaUtil, proximaSegQuaOuSex } from "../lib/holidays";
 
 const CLICKUP_API_TOKEN = process.env.CLICKUP_API_TOKEN || "";
 
@@ -1332,8 +1332,9 @@ export function calcularPrazo(tipo: string, dados?: Record<string, unknown>, fro
     tipo === "pagina-assessores-dados" ||
     tipo === "pagina-assessores-atualizacao"
   ) {
-    const d = proximaQuartaUtil(from); d.setHours(12, 0, 0, 0);
-    return { modo: "data", date: d, regra: "Próxima quarta-feira útil" };
+    const d = proximaSegQuaOuSex(from); d.setHours(12, 0, 0, 0);
+    const nomes = ["domingo", "segunda-feira", "terça-feira", "quarta-feira", "quinta-feira", "sexta-feira", "sábado"];
+    return { modo: "data", date: d, regra: `Próxima ${nomes[d.getDay()]} útil` };
   }
   if (tipo === "eventos") {
     const dataEvento = String((dados || {}).dataEvento || "");

@@ -90,6 +90,27 @@ export function proximaQuarta(from: Date = new Date()): Date {
   return d;
 }
 
+/**
+ * Próximo prazo para solicitações de página de equipe.
+ * Regra: Sex/Sáb/Dom → segunda | Seg/Ter → quarta | Qua/Qui → sexta.
+ * Se o dia-alvo cair em feriado, avança semanas completas (mantém o mesmo
+ * dia da semana) até encontrar um dia sem feriado.
+ */
+export function proximaSegQuaOuSex(from: Date = new Date()): Date {
+  const dow = from.getDay(); // 0=Dom 1=Seg 2=Ter 3=Qua 4=Qui 5=Sex 6=Sáb
+  let target: number;
+  if (dow === 5 || dow === 6 || dow === 0) target = 1;  // Sex/Sáb/Dom → segunda
+  else if (dow === 1 || dow === 2)          target = 3;  // Seg/Ter     → quarta
+  else                                       target = 5;  // Qua/Qui     → sexta
+  // Avança pelo menos 1 dia até chegar no weekday alvo
+  const d = new Date(from);
+  d.setDate(d.getDate() + 1);
+  while (d.getDay() !== target) d.setDate(d.getDate() + 1);
+  // Se for feriado, pula semanas inteiras (mantém o mesmo dia da semana)
+  while (isHoliday(d)) d.setDate(d.getDate() + 7);
+  return d;
+}
+
 // Lista de feriados (YYYY-MM-DD) cobrindo de (ano-1) a (ano+2), para o front.
 export function holidaysList(baseYear: number = new Date().getFullYear()): string[] {
   const out: string[] = [];
