@@ -301,8 +301,8 @@
           ? '<img class="va-thumb" src="' + esc(l.foto_url) + '" alt="" loading="lazy" decoding="async">'
           : '<div class="va-thumb"></div>';
         const tm = TIPO_META[l.categoria] || { label: l.categoria || '—', bg: '#eee', fg: '#555' };
-        const tipoTag = '<span style="display:inline-block;font-size:0.65rem;font-weight:700;text-transform:uppercase;' +
-          'letter-spacing:.04em;padding:2px 8px;border-radius:20px;background:' + tm.bg + ';color:' + tm.fg + ';margin-bottom:4px">' +
+        const tipoTag = '<span style="display:block;font-size:0.68rem;font-weight:600;text-transform:uppercase;' +
+          'letter-spacing:.06em;color:var(--ink-50,#6B7280);margin-bottom:3px">' +
           tm.label + '</span>';
         const stBadge = '<div style="margin-top:4px">' + badge(l.status) +
           (l.ciclo > 1 ? ' <span class="sub">' + l.ciclo + '\u00AA rodada de ajustes</span>' : '') + '</div>';
