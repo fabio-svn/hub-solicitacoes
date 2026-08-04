@@ -28,8 +28,10 @@
     .btn.has-filters { border-color: var(--ruby-red); color: var(--ruby-red); }
     .va-count { font-size: 0.82rem; color: var(--ink-50); margin-left: auto; }
     .va-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; }
-    .va-card { border: 1px solid var(--border-light); border-radius: var(--radius-xl); padding: 14px; background: var(--card-white, #fff); cursor: pointer; display: flex; gap: 12px; align-items: center; transition: box-shadow .14s, border-color .14s; will-change: transform; content-visibility: auto; contain-intrinsic-size: 0 90px; }
+    .va-card { border: 1px solid var(--border-light); border-radius: var(--radius-xl); padding: 14px; background: var(--card-white, #fff); cursor: pointer; display: flex; gap: 12px; align-items: center; transition: box-shadow .14s, border-color .14s, opacity .25s ease-in-out; will-change: transform; content-visibility: auto; contain-intrinsic-size: 0 90px; }
     .va-card:hover { box-shadow: 0 2px 10px rgba(34,27,25,.08); border-color: #d8d0c5; }
+    .va-card--concluido { opacity: .55; }
+    .va-card--concluido:hover { opacity: 1; }
     /* Skeleton loader */
     @keyframes va-shimmer { from { background-position: -200% 0; } to { background-position: 200% 0; } }
     .va-skeleton { background: linear-gradient(90deg, var(--icon-bg) 25%, #e8e4de 50%, var(--icon-bg) 75%); background-size: 200% 100%; animation: va-shimmer 1.4s ease infinite; border-radius: var(--radius-md); }
@@ -306,7 +308,8 @@
           tm.label + '</span>';
         const stBadge = '<div style="margin-top:4px">' + badge(l.status) +
           (l.ciclo > 1 ? ' <span class="sub">' + l.ciclo + '\u00AA rodada de ajustes</span>' : '') + '</div>';
-        return '<div class="va-card" onclick="abrirDetalhe(' + l.solicitacao_id + ')">' + foto +
+        const concluido = l.status === 'publicado' || l.status === 'reprovado';
+        return '<div class="va-card' + (concluido ? ' va-card--concluido' : '') + '" onclick="abrirDetalhe(' + l.solicitacao_id + ')">' + foto +
           '<div style="flex:1;min-width:0">' +
           tipoTag +
           '<div class="nm">' + esc(l.nome || '—') + '</div>' +
