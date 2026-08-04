@@ -10,7 +10,7 @@
   <link rel="manifest" href="/site.webmanifest" />
   <meta name="theme-color" content="#AC3631" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Validação de Assessores — Hub SVN</title>
+  <title>Validação de Equipe — Hub SVN</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap">
@@ -28,8 +28,14 @@
     .btn.has-filters { border-color: var(--ruby-red); color: var(--ruby-red); }
     .va-count { font-size: 0.82rem; color: var(--ink-50); margin-left: auto; }
     .va-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; }
-    .va-card { border: 1px solid var(--border-light); border-radius: var(--radius-xl); padding: 14px; background: var(--card-white, #fff); cursor: pointer; display: flex; gap: 12px; align-items: center; transition: box-shadow .14s, border-color .14s; }
+    .va-card { border: 1px solid var(--border-light); border-radius: var(--radius-xl); padding: 14px; background: var(--card-white, #fff); cursor: pointer; display: flex; gap: 12px; align-items: center; transition: box-shadow .14s, border-color .14s; will-change: transform; content-visibility: auto; contain-intrinsic-size: 0 90px; }
     .va-card:hover { box-shadow: 0 2px 10px rgba(34,27,25,.08); border-color: #d8d0c5; }
+    /* Skeleton loader */
+    @keyframes va-shimmer { from { background-position: -200% 0; } to { background-position: 200% 0; } }
+    .va-skeleton { background: linear-gradient(90deg, var(--icon-bg) 25%, #e8e4de 50%, var(--icon-bg) 75%); background-size: 200% 100%; animation: va-shimmer 1.4s ease infinite; border-radius: var(--radius-md); }
+    .va-sk-circle { width: 54px; height: 54px; border-radius: 50%; flex-shrink: 0; }
+    .va-sk-line { height: 0.78rem; margin-bottom: 8px; border-radius: 6px; }
+    .va-skeleton-card { pointer-events: none; }
     .va-thumb { width: 54px; height: 54px; border-radius: 50%; object-fit: cover; object-position: top; background: var(--icon-bg); flex-shrink: 0; }
     .va-card .nm { font-weight: 600; font-size: 0.92rem; }
     .va-card .sub { font-size: 0.76rem; color: var(--ink-60); }
@@ -87,7 +93,7 @@
   <div class="page-container page-container--wide" id="pageRoot" style="display:none">
     <div class="page-header">
       <div>
-        <h1 class="page-title">Validação de Assessores</h1>
+        <h1 class="page-title">Validação de Equipe</h1>
         <p class="page-subtitle">Fluxo unificado de novos cadastros, atualizações e registros sem página.</p>
       </div>
     </div>
@@ -180,11 +186,32 @@
     let fUnidade  = '';
     let detalheId = null;
 
+    /* Cache do detalhe por ID: evita re-fetch ao reabrir o mesmo card.
+       Invalidado em decidir() e salvarEdicao() para garantir dados frescos. */
+    const _detalheCache = new Map();
+    /* Timer de debounce da busca: impede re-render a cada tecla. */
+    let _buscaTimer = null;
+
     function fmtData(v) { if (!v) return ''; try { return new Date(v).toLocaleDateString('pt-BR'); } catch (e) { return ''; } }
     function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
     function badge(status) { const s = STATUS[status] || { label: status, bg: '#eee', fg: '#333' }; return '<span class="va-badge" style="background:' + s.bg + ';color:' + s.fg + '">' + esc(s.label) + '</span>'; }
 
+    function renderSkeleton() {
+      document.getElementById('vaGrid').innerHTML = Array.from({ length: 6 }, function () {
+        return '<div class="va-card va-skeleton-card">' +
+          '<div class="va-skeleton va-sk-circle"></div>' +
+          '<div style="flex:1;min-width:0">' +
+            '<div class="va-skeleton va-sk-line" style="width:38%;height:0.62rem;margin-bottom:7px"></div>' +
+            '<div class="va-skeleton va-sk-line" style="width:68%"></div>' +
+            '<div class="va-skeleton va-sk-line" style="width:50%;height:0.68rem;margin-top:2px"></div>' +
+          '</div></div>';
+      }).join('');
+      document.getElementById('vaEmpty').style.display = 'none';
+      document.getElementById('vaCount').textContent = '';
+    }
+
     async function carregar() {
+      renderSkeleton();
       try {
         const r = await fetch('/api/assessor-aprovacoes');
         if (!r.ok) throw new Error('falha');
@@ -240,14 +267,20 @@
         uns.map(u => '<button class="filter-chip' + (fUnidade === u ? ' active' : '') + '" onclick="setUnidade(this,\'' + esc(u) + '\')">' + esc(u) + '</button>').join('');
     }
 
-    /* Funil sempre visível — contagens somam todos os tipos (ou apenas o tipo
-       filtrado, se fTipo estiver activo). */
+    /* Funil sempre visível — contagens em uma única passagem sobre base()
+       para não fazer 6 .filter() separados sobre o mesmo array. */
     function renderFunil() {
       const el = document.getElementById('vaFunil');
       el.style.display = '';
       const b = base();
+      /* Contagem em O(n) em vez de O(n*6). */
+      const counts = { todos: b.length };
+      for (let i = 0; i < b.length; i++) {
+        const s = b[i].status;
+        counts[s] = (counts[s] || 0) + 1;
+      }
       el.innerHTML = FUNIL.map(function (f) {
-        const n = f === 'todos' ? b.length : b.filter(l => l.status === f).length;
+        const n = counts[f] || 0;
         const st = STATUS[f] || { label: 'Todos', accent: 'var(--carbon-black)', bg: 'var(--icon-bg)' };
         const active = fStatus === f;
         const style = active ? 'style="--etapa:' + (st.accent || 'var(--carbon-black)') + ';--etapa-bg:' + (st.bg || 'var(--icon-bg)') + '33;"' : '';
@@ -265,7 +298,7 @@
       document.getElementById('vaCount').textContent = arr.length + ' registro(s)';
       grid.innerHTML = arr.map(function (l) {
         const foto = l.foto_url
-          ? '<img class="va-thumb" src="' + esc(l.foto_url) + '" alt="">'
+          ? '<img class="va-thumb" src="' + esc(l.foto_url) + '" alt="" loading="lazy" decoding="async">'
           : '<div class="va-thumb"></div>';
         const tm = TIPO_META[l.categoria] || { label: l.categoria || '—', bg: '#eee', fg: '#555' };
         const tipoTag = '<span style="display:inline-block;font-size:0.65rem;font-weight:700;text-transform:uppercase;' +
@@ -286,7 +319,7 @@
 
     function setTipo(el, t)    { fTipo = t;    fStatus = 'todos'; [...document.querySelectorAll('#vaTipoChips .filter-chip')].forEach(x => x.classList.remove('active')); el.classList.add('active'); renderFunil(); renderLista(); atualizarFilterUI(); }
     function setStatus(f)       { fStatus = f;  renderFunil(); renderLista(); }
-    function setBusca(v)        { fBusca = v;   renderFunil(); renderLista(); }
+    function setBusca(v)        { fBusca = v;   clearTimeout(_buscaTimer); _buscaTimer = setTimeout(function () { renderFunil(); renderLista(); }, 200); }
     function setContrato(el, c) { fContrato = c; [...document.querySelectorAll('#vaContratoChips .filter-chip')].forEach(x => x.classList.remove('active')); el.classList.add('active'); renderFunil(); renderLista(); atualizarFilterUI(); }
     function setUnidade(el, u)  { fUnidade = u;  [...document.querySelectorAll('#vaUnidadeChips .filter-chip')].forEach(x => x.classList.remove('active')); el.classList.add('active'); renderFunil(); renderLista(); atualizarFilterUI(); }
     function limparFiltros()    { fTipo = ''; fContrato = ''; fUnidade = ''; renderTipoChips(); renderContratoChips(); renderUnidades(); renderFunil(); renderLista(); atualizarFilterUI(); }
@@ -307,10 +340,20 @@
     async function abrirDetalhe(id) {
       detalheId = id;
       document.getElementById('vaModal').classList.add('visible');
-      document.getElementById('vaDetalhe').innerHTML = '<div style="padding:40px;text-align:center;opacity:0.5">Carregando…</div>';
-      let data;
-      try { const r = await fetch('/api/assessor-aprovacoes/' + id); data = await r.json(); }
-      catch (e) { document.getElementById('vaDetalhe').innerHTML = '<div style="padding:30px;text-align:center;color:var(--danger)">Erro ao carregar.</div>'; return; }
+      /* Skeleton do modal — aparece só se não há cache. */
+      let data = _detalheCache.get(id);
+      if (!data) {
+        document.getElementById('vaDetalhe').innerHTML =
+          '<div style="padding:24px 0 8px">' +
+            '<div class="va-skeleton va-sk-line" style="width:28%;height:0.6rem;margin-bottom:16px"></div>' +
+            '<div class="va-skeleton va-sk-line" style="width:55%;height:1.1rem;margin-bottom:8px"></div>' +
+            '<div class="va-skeleton va-sk-line" style="width:40%;height:0.72rem;margin-bottom:24px"></div>' +
+            '<div class="va-skeleton" style="width:100%;height:200px;border-radius:var(--radius-xl);margin-bottom:16px"></div>' +
+            '<div class="va-skeleton va-sk-line" style="width:70%"></div>' +
+          '</div>';
+        try { const r = await fetch('/api/assessor-aprovacoes/' + id); data = await r.json(); _detalheCache.set(id, data); }
+        catch (e) { document.getElementById('vaDetalhe').innerHTML = '<div style="padding:30px;text-align:center;color:var(--danger)">Erro ao carregar.</div>'; return; }
+      }
       window._vaDados = data;
       const resumo = data.resumo || {};
       const pub    = data.publicacao || {};
@@ -437,8 +480,9 @@
         });
         const j = await r.json().catch(() => ({}));
         if (!r.ok) throw new Error(j.error || 'Falha ao salvar.');
+        _detalheCache.delete(detalheId);   // força re-fetch do modal com dados novos
         await abrirDetalhe(detalheId);
-        await carregar();
+        await carregar();                  // lista/filtros podem mudar (nome, unidade)
       } catch (e) {
         msg.style.color = 'var(--danger)'; msg.textContent = e.message || 'Erro ao salvar.';
       }
@@ -470,6 +514,9 @@
       decidir('publicado', { url_publicada: url });
     }
 
+    /* Mapa de decisao → status local (evita re-fetch da lista inteira). */
+    const _STATUS_MAP = { aprovado: 'aprovado', ajustes: 'ajustes-solicitados', reprovado: 'reprovado', publicado: 'publicado' };
+
     async function decidir(decisao, extra) {
       const obs = (document.getElementById('vaObs') || {}).value || '';
       const msg = document.getElementById('vaMsg');
@@ -487,8 +534,18 @@
           body: JSON.stringify({ decisao, observacao: obs, ajustes: [], ...(extra || {}) }),
         });
         if (!r.ok) throw new Error('falha');
+        /* Update otimista: atualiza o item local em vez de recarregar a lista inteira.
+           O modal fecha e o card na lista já mostra o status novo imediatamente. */
+        _detalheCache.delete(detalheId);
+        const novoStatus = _STATUS_MAP[decisao] || decisao;
+        const idx = LINHAS.findIndex(function (l) { return l.solicitacao_id === detalheId; });
+        if (idx !== -1) {
+          LINHAS[idx] = Object.assign({}, LINHAS[idx], { status: novoStatus });
+          if (decisao === 'ajustes') LINHAS[idx].ciclo = (LINHAS[idx].ciclo || 1) + 1;
+        }
         fecharDetalhe();
-        await carregar();
+        renderFunil();
+        renderLista();
       } catch (e) { msg.style.color = 'var(--danger)'; msg.textContent = 'Erro ao registrar a decisão.'; }
     }
 
