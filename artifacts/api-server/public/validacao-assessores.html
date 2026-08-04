@@ -44,6 +44,7 @@
     }
     .va-tipo--nova { background: var(--icon-bg); color: var(--ink-70); border: 1px solid var(--border-light); }
     .va-tipo--atualizacao { background: #FEF3C7; color: #92400E; border: 1px solid #FCD34D; }
+    .va-tipo--sem-pagina { background: #F3F4F6; color: #6B7280; border: 1px solid #D1D5DB; }
     .va-tipo svg { width: 13px; height: 13px; }
     /* Barra de decisao fixa no rodape do modal: perfis com bio longa exigiam
        rolar ate o fim so para achar os botoes. O bottom negativo compensa o
@@ -87,11 +88,9 @@
     <div class="page-header">
       <div>
         <h1 class="page-title">Validação de Assessores</h1>
-        <p class="page-subtitle">Cadastros e atualizações de perfis de assessores.</p>
+        <p class="page-subtitle">Fluxo unificado de novos cadastros, atualizações e registros sem página.</p>
       </div>
     </div>
-
-    <div class="va-tabs" id="vaTabs"></div>
 
     <div class="va-funil" id="vaFunil"></div>
 
@@ -107,6 +106,10 @@
           Filtros <span class="filter-count-badge" id="vaFilterBadge" style="display:none">1</span>
         </button>
         <div class="filter-panel" id="vaFilterPanel">
+          <div class="filter-panel-row">
+            <span class="filter-panel-label">Tipo</span>
+            <div class="filter-panel-chips" id="vaTipoChips"></div>
+          </div>
           <div class="filter-panel-row">
             <span class="filter-panel-label">Contrato Social</span>
             <div class="filter-panel-chips" id="vaContratoChips"></div>
@@ -140,10 +143,8 @@
   <script src="shell.js"></script>
   <script src="assessor-preview.js"></script>
   <script>
-    /* Mapa derivado de STATUS_SOLICITACAO (config.js) — antes esta tela tinha o
-       proprio, e as cores divergiam do resumo e do painel para o MESMO status.
-       Com uma fonte so, nao ha mais como sair de sincronia.
-       O 'accent' cai no texto quando o status nao define um. */
+    /* STATUS derivado de STATUS_SOLICITACAO (config.js) — fonte única para evitar
+       divergência de cores entre esta tela e o restante do sistema. */
     const STATUS = (function () {
       const m = {};
       const lista = (typeof STATUS_SOLICITACAO !== 'undefined' && Array.isArray(STATUS_SOLICITACAO))
@@ -153,14 +154,17 @@
       });
       return m;
     })();
-    const CATEGORIAS = [
-      { id: 'pagina',      label: 'Página de Assessor', aprovacao: true },
-      { id: 'atualizacao', label: 'Atualização',        aprovacao: true },
-      { id: 'sem-pagina',  label: 'Sem Página',         aprovacao: false },
-    ];
+
+    /* Metadata visual para cada tipo de categoria. */
+    const TIPO_META = {
+      'pagina':      { label: 'Nova Página',  bg: '#D1FAE5', fg: '#065F46' },
+      'atualizacao': { label: 'Atualização',  bg: '#FEF3C7', fg: '#92400E' },
+      'sem-pagina':  { label: 'Sem Página',   bg: '#F3F4F6', fg: '#6B7280' },
+    };
+
     const FUNIL = ['todos', 'aguardando-validacao', 'ajustes-solicitados', 'aprovado', 'publicado', 'reprovado'];
-    // Concluir (= publicado no site) e do marketing: gestor e admin.
-    // Capital Humano valida, mas nao conclui.
+
+    /* Concluir (publicar) é do marketing: gestor e admin. CH valida mas não conclui. */
     function podePublicar() {
       const r = (typeof Auth !== 'undefined' && Auth.getUserRole) ? Auth.getUserRole() : '';
       return r === 'gestor' || r === 'admin';
@@ -169,26 +173,28 @@
     function contratoLabel(c) { return CONTRATO_LABELS[c] || c || '—'; }
 
     let LINHAS = [];
-    let fCategoria = 'pagina';
-    let fStatus = 'todos';
-    let fBusca = '';
+    let fTipo    = '';      // '' = todos os tipos
+    let fStatus  = 'todos';
+    let fBusca   = '';
     let fContrato = '';
-    let fUnidade = '';
+    let fUnidade  = '';
     let detalheId = null;
 
     function fmtData(v) { if (!v) return ''; try { return new Date(v).toLocaleDateString('pt-BR'); } catch (e) { return ''; } }
     function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
     function badge(status) { const s = STATUS[status] || { label: status, bg: '#eee', fg: '#333' }; return '<span class="va-badge" style="background:' + s.bg + ';color:' + s.fg + '">' + esc(s.label) + '</span>'; }
-    function catAtual() { return CATEGORIAS.find(c => c.id === fCategoria) || CATEGORIAS[0]; }
 
     async function carregar() {
       try {
         const r = await fetch('/api/assessor-aprovacoes');
         if (!r.ok) throw new Error('falha');
         const j = await r.json();
-        LINHAS = j.linhas || [];
+        /* Mais recentes primeiro — independente do tipo. */
+        LINHAS = (j.linhas || []).sort(function (a, b) {
+          return new Date(b.criado_em || 0) - new Date(a.criado_em || 0);
+        });
       } catch (e) { LINHAS = []; }
-      renderTabs();
+      renderTipoChips();
       renderContratoChips();
       renderUnidades();
       renderFunil();
@@ -196,83 +202,106 @@
       atualizarFilterUI();
     }
 
-    function porCategoria(cat) { return LINHAS.filter(l => l.categoria === cat); }
-    // base = categoria atual + contrato + unidade + busca (o funil conta sobre isso)
+    /* Registros após aplicar todos os filtros activos (exceto fStatus — o funil
+       filtra em cima deste resultado). */
     function base() {
       const q = fBusca.trim().toLowerCase();
-      return porCategoria(fCategoria).filter(l =>
-        (!fContrato || (l.contrato_social || '') === fContrato) &&
-        (!fUnidade || (l.unidade || '') === fUnidade) &&
-        (!q || (String(l.nome || '').toLowerCase().includes(q) || String(l.codigo_assessor || '').toLowerCase().includes(q))));
+      return LINHAS.filter(function (l) {
+        return (!fTipo    || l.categoria === fTipo) &&
+               (!fContrato || (l.contrato_social || '') === fContrato) &&
+               (!fUnidade  || (l.unidade || '') === fUnidade) &&
+               (!q || String(l.nome || '').toLowerCase().includes(q) ||
+                      String(l.codigo_assessor || '').toLowerCase().includes(q));
+      });
     }
     function distintos(campo) { return [...new Set(LINHAS.map(l => l[campo]).filter(Boolean))].sort(); }
 
-    function renderTabs() {
-      document.getElementById('vaTabs').innerHTML = CATEGORIAS.map(c =>
-        '<button class="va-tab' + (fCategoria === c.id ? ' active' : '') + '" onclick="setCategoria(\'' + c.id + '\')">' +
-          esc(c.label) + ' <span class="cnt">' + porCategoria(c.id).length + '</span></button>'
-      ).join('');
+    function renderTipoChips() {
+      const opcoes = [
+        { id: '',            label: 'Ver todos' },
+        { id: 'pagina',      label: 'Novas Páginas' },
+        { id: 'atualizacao', label: 'Atualizações' },
+        { id: 'sem-pagina',  label: 'Sem Página' },
+      ];
+      document.getElementById('vaTipoChips').innerHTML = opcoes.map(function (t) {
+        return '<button class="filter-chip' + (fTipo === t.id ? ' active' : '') + '" onclick="setTipo(this,\'' + t.id + '\')">' + t.label + '</button>';
+      }).join('');
     }
     function renderContratoChips() {
       const cts = distintos('contrato_social');
       document.getElementById('vaContratoChips').innerHTML =
-        '<button class="filter-chip' + (fContrato === '' ? ' active' : '') + '" onclick="setContrato(this, \'\')">Todos</button>' +
-        cts.map(c => '<button class="filter-chip' + (fContrato === c ? ' active' : '') + '" onclick="setContrato(this, \'' + esc(c) + '\')">' + esc(contratoLabel(c)) + '</button>').join('');
+        '<button class="filter-chip' + (!fContrato ? ' active' : '') + '" onclick="setContrato(this,\'\')">Todos</button>' +
+        cts.map(c => '<button class="filter-chip' + (fContrato === c ? ' active' : '') + '" onclick="setContrato(this,\'' + esc(c) + '\')">' + esc(contratoLabel(c)) + '</button>').join('');
     }
     function renderUnidades() {
       const uns = distintos('unidade');
       document.getElementById('vaUnidadeChips').innerHTML =
-        '<button class="filter-chip' + (fUnidade === '' ? ' active' : '') + '" onclick="setUnidade(this, \'\')">Todas</button>' +
-        uns.map(u => '<button class="filter-chip' + (fUnidade === u ? ' active' : '') + '" onclick="setUnidade(this, \'' + esc(u) + '\')">' + esc(u) + '</button>').join('');
+        '<button class="filter-chip' + (!fUnidade ? ' active' : '') + '" onclick="setUnidade(this,\'\')">Todas</button>' +
+        uns.map(u => '<button class="filter-chip' + (fUnidade === u ? ' active' : '') + '" onclick="setUnidade(this,\'' + esc(u) + '\')">' + esc(u) + '</button>').join('');
     }
+
+    /* Funil sempre visível — contagens somam todos os tipos (ou apenas o tipo
+       filtrado, se fTipo estiver activo). */
     function renderFunil() {
       const el = document.getElementById('vaFunil');
-      if (!catAtual().aprovacao) { el.style.display = 'none'; el.innerHTML = ''; return; }
       el.style.display = '';
       const b = base();
-      el.innerHTML = FUNIL.map(f => {
+      el.innerHTML = FUNIL.map(function (f) {
         const n = f === 'todos' ? b.length : b.filter(l => l.status === f).length;
         const st = STATUS[f] || { label: 'Todos', accent: 'var(--carbon-black)', bg: 'var(--icon-bg)' };
         const active = fStatus === f;
-        const style = 'style="' + (active ? '--etapa:' + (st.accent || 'var(--carbon-black)') + ';--etapa-bg:' + (st.bg || 'var(--icon-bg)') + '33;' : '') + '"';
+        const style = active ? 'style="--etapa:' + (st.accent || 'var(--carbon-black)') + ';--etapa-bg:' + (st.bg || 'var(--icon-bg)') + '33;"' : '';
         return '<div class="stat-card' + (active ? ' active' : '') + '" ' + style + ' onclick="setStatus(\'' + f + '\')">' +
-          '<div class="stat-number">' + n + '</div><div class="stat-label">' + (f === 'todos' ? 'Todos' : esc(st.label)) + '</div></div>';
+          '<div class="stat-number">' + n + '</div>' +
+          '<div class="stat-label">' + (f === 'todos' ? 'Todos' : esc(st.label)) + '</div></div>';
       }).join('');
     }
+
     function renderLista() {
-      const b = base();
-      const arr = (catAtual().aprovacao && fStatus !== 'todos') ? b.filter(l => l.status === fStatus) : b;
+      const b   = base();
+      const arr = fStatus !== 'todos' ? b.filter(l => l.status === fStatus) : b;
       const grid = document.getElementById('vaGrid');
       document.getElementById('vaEmpty').style.display = arr.length ? 'none' : 'block';
       document.getElementById('vaCount').textContent = arr.length + ' registro(s)';
-      grid.innerHTML = arr.map(l => {
-        const foto = l.foto_url ? '<img class="va-thumb" src="' + esc(l.foto_url) + '" alt="">' : '<div class="va-thumb"></div>';
-        const st = catAtual().aprovacao ? (' <div style="margin-top:6px">' + badge(l.status) + (l.ciclo > 1 ? ' <span class="sub">' + l.ciclo + '\u00AA rodada de ajustes</span>' : '') + '</div>') : '';
+      grid.innerHTML = arr.map(function (l) {
+        const foto = l.foto_url
+          ? '<img class="va-thumb" src="' + esc(l.foto_url) + '" alt="">'
+          : '<div class="va-thumb"></div>';
+        const tm = TIPO_META[l.categoria] || { label: l.categoria || '—', bg: '#eee', fg: '#555' };
+        const tipoTag = '<span style="display:inline-block;font-size:0.65rem;font-weight:700;text-transform:uppercase;' +
+          'letter-spacing:.04em;padding:2px 8px;border-radius:20px;background:' + tm.bg + ';color:' + tm.fg + ';margin-bottom:4px">' +
+          tm.label + '</span>';
+        const stBadge = '<div style="margin-top:4px">' + badge(l.status) +
+          (l.ciclo > 1 ? ' <span class="sub">' + l.ciclo + '\u00AA rodada de ajustes</span>' : '') + '</div>';
         return '<div class="va-card" onclick="abrirDetalhe(' + l.solicitacao_id + ')">' + foto +
           '<div style="flex:1;min-width:0">' +
+          tipoTag +
           '<div class="nm">' + esc(l.nome || '—') + '</div>' +
           '<div class="sub">' + esc(l.unidade || '') + (l.codigo_assessor ? ' · ' + esc(l.codigo_assessor) : '') + '</div>' +
-          (l.criado_em ? '<div class="sub" style="opacity:0.7;font-size:0.72rem;margin-top:2px">Solicitado em ' + fmtData(l.criado_em) + '</div>' : '') + st +
+          (l.criado_em ? '<div class="sub" style="opacity:0.7;font-size:0.72rem;margin-top:2px">Solicitado em ' + fmtData(l.criado_em) + '</div>' : '') +
+          stBadge +
           '</div></div>';
       }).join('');
     }
 
-    function setCategoria(c) { fCategoria = c; fStatus = 'todos'; renderTabs(); renderFunil(); renderLista(); }
-    function setStatus(f) { fStatus = f; renderFunil(); renderLista(); }
-    function setBusca(v) { fBusca = v; renderFunil(); renderLista(); }
+    function setTipo(el, t)    { fTipo = t;    fStatus = 'todos'; [...document.querySelectorAll('#vaTipoChips .filter-chip')].forEach(x => x.classList.remove('active')); el.classList.add('active'); renderFunil(); renderLista(); atualizarFilterUI(); }
+    function setStatus(f)       { fStatus = f;  renderFunil(); renderLista(); }
+    function setBusca(v)        { fBusca = v;   renderFunil(); renderLista(); }
     function setContrato(el, c) { fContrato = c; [...document.querySelectorAll('#vaContratoChips .filter-chip')].forEach(x => x.classList.remove('active')); el.classList.add('active'); renderFunil(); renderLista(); atualizarFilterUI(); }
-    function setUnidade(el, u) { fUnidade = u; [...document.querySelectorAll('#vaUnidadeChips .filter-chip')].forEach(x => x.classList.remove('active')); el.classList.add('active'); renderFunil(); renderLista(); atualizarFilterUI(); }
-    function limparFiltros() { fContrato = ''; fUnidade = ''; renderContratoChips(); renderUnidades(); renderFunil(); renderLista(); atualizarFilterUI(); }
+    function setUnidade(el, u)  { fUnidade = u;  [...document.querySelectorAll('#vaUnidadeChips .filter-chip')].forEach(x => x.classList.remove('active')); el.classList.add('active'); renderFunil(); renderLista(); atualizarFilterUI(); }
+    function limparFiltros()    { fTipo = ''; fContrato = ''; fUnidade = ''; renderTipoChips(); renderContratoChips(); renderUnidades(); renderFunil(); renderLista(); atualizarFilterUI(); }
     function atualizarFilterUI() {
-      const ativos = (fContrato ? 1 : 0) + (fUnidade ? 1 : 0);
+      const ativos = (fTipo ? 1 : 0) + (fContrato ? 1 : 0) + (fUnidade ? 1 : 0);
       const badgeEl = document.getElementById('vaFilterBadge'), clear = document.getElementById('vaFilterClear'), toggle = document.getElementById('vaFilterToggle');
       if (ativos > 0) { badgeEl.textContent = ativos; badgeEl.style.display = ''; clear.style.display = ''; toggle.classList.add('has-filters'); }
-      else { badgeEl.style.display = 'none'; clear.style.display = 'none'; toggle.classList.remove('has-filters'); }
+      else            { badgeEl.style.display = 'none'; clear.style.display = 'none'; toggle.classList.remove('has-filters'); }
     }
     function toggleFilterPanel(e) { if (e) e.stopPropagation(); document.getElementById('vaFilterPanel').classList.toggle('open'); }
     document.addEventListener('click', function (e) {
       const panel = document.getElementById('vaFilterPanel');
-      if (panel && panel.classList.contains('open') && !panel.contains(e.target) && !document.getElementById('vaFilterToggle').contains(e.target)) panel.classList.remove('open');
+      if (panel && panel.classList.contains('open') &&
+          !panel.contains(e.target) &&
+          !document.getElementById('vaFilterToggle').contains(e.target)) panel.classList.remove('open');
     });
 
     async function abrirDetalhe(id) {
@@ -282,43 +311,42 @@
       let data;
       try { const r = await fetch('/api/assessor-aprovacoes/' + id); data = await r.json(); }
       catch (e) { document.getElementById('vaDetalhe').innerHTML = '<div style="padding:30px;text-align:center;color:var(--danger)">Erro ao carregar.</div>'; return; }
-      window._vaDados = data;   // guarda para a edição
+      window._vaDados = data;
       const resumo = data.resumo || {};
-      const pub = data.publicacao || {};
-      const dados = data.dados || {};
+      const pub    = data.publicacao || {};
+      const dados  = data.dados || {};
       if (!dados.foto_url && !dados.foto_perfil && pub.foto_url) dados.foto_url = pub.foto_url;
-      const aprovacao = resumo.categoria === 'pagina' || resumo.categoria === 'atualizacao';
-      const ehAtualizacao = resumo.categoria === 'atualizacao';
-      const editavel = aprovacao && (resumo.status === 'aguardando-validacao' || resumo.status === 'ajustes-solicitados');
+
+      /* Todos os tipos seguem o mesmo fluxo de aprovação agora.
+         URL da página é obrigatória apenas para 'pagina' (nova); opcional para
+         'atualizacao' e 'sem-pagina' (não há página nova para publicar). */
+      const editavel   = resumo.status === 'aguardando-validacao' || resumo.status === 'ajustes-solicitados';
+      const urlOpcional = resumo.categoria === 'atualizacao' || resumo.categoria === 'sem-pagina';
+      const ehAdmin    = typeof Auth !== 'undefined' && Auth.getUserRole && Auth.getUserRole() === 'admin';
 
       let rodape;
-      if (!aprovacao) {
-        rodape = '<div class="va-actions"><span class="sub" style="font-size:0.8rem;color:var(--ink-50)">Registro sem página — apenas leitura.</span></div>';
-      } else if (editavel) {
+      if (editavel) {
         rodape =
-          '<div style="margin-top:16px"><div style="font-size:0.72rem;color:var(--ink-50);margin-bottom:4px">Observação interna (para o marketing) <span style="opacity:0.7">— uso interno, não é enviada ao assessor</span></div>' +
-            '<textarea id="vaObs" style="width:100%;box-sizing:border-box;min-height:56px;font:inherit;font-size:0.85rem;padding:8px 10px;border:1px solid var(--border-light);border-radius:var(--radius-md);resize:vertical" placeholder="Direções para o time de marketing. Obrigatória ao solicitar ajustes ou reprovar; opcional ao aprovar."></textarea></div>' +
+          '<div style="margin-top:16px">' +
+            '<div style="font-size:0.72rem;color:var(--ink-50);margin-bottom:4px">Observação interna (para o marketing) <span style="opacity:0.7">— não é enviada ao assessor</span></div>' +
+            '<textarea id="vaObs" style="width:100%;box-sizing:border-box;min-height:56px;font:inherit;font-size:0.85rem;padding:8px 10px;border:1px solid var(--border-light);border-radius:var(--radius-md);resize:vertical" placeholder="Direções para o time de marketing. Obrigatória ao solicitar ajustes ou reprovar; opcional ao aprovar."></textarea>' +
+          '</div>' +
           '<div class="va-actions">' +
             '<button class="btn va-btn-aprovar" onclick="decidir(\'aprovado\')">Aprovar</button>' +
             '<button class="btn btn-secondary" onclick="decidir(\'ajustes\')">Solicitar ajustes</button>' +
             '<button class="btn va-btn-reprovar" onclick="confirmarReprovar()">Reprovar</button>' +
           '</div><div id="vaMsg" style="margin-top:10px;font-size:0.82rem"></div>';
       } else if (resumo.status === 'aprovado' && podePublicar()) {
-        // Aprovado = liberado para o marketing publicar. Concluído = já está no ar.
         rodape =
           '<div class="va-actions" style="align-items:center">' +
             '<div style="width:100%;margin-bottom:10px">' +
-              /* LINK-OPCIONAL-ATUALIZACAO: em atualizacao a pagina ja existe, entao o
-                 link nao e exigido — e o e-mail para o assessor sai SO se ele for
-                 preenchido. Preencher passa a significar "vale avisar". */
               '<label for="vaUrlPublicada" style="display:block;font-size:0.78rem;color:var(--ink-60);margin-bottom:4px">Link da página publicada' +
-                (ehAtualizacao ? ' <span style="font-weight:400;opacity:0.7">(opcional)</span>' : '') + '</label>' +
+                (urlOpcional ? ' <span style="font-weight:400;opacity:0.7">(opcional)</span>' : '') + '</label>' +
               '<input id="vaUrlPublicada" type="url" inputmode="url" placeholder="https://svninvestimentos.com.br/assessores/..." style="width:100%;box-sizing:border-box;font:inherit;font-size:0.85rem;padding:8px 10px;border:1px solid var(--border-light);border-radius:var(--radius-md)">' +
             '</div>' +
             '<span class="sub" style="font-size:0.8rem;color:var(--ink-50);margin-right:auto">' +
-              (ehAtualizacao
-                ? 'Preencha o link só se a mudança merecer um aviso ao assessor — com o campo vazio, conclui sem enviar e-mail.'
-                : 'Assim que a página estiver no ar, cole o link e marque como concluído.') +
+              (urlOpcional ? 'Preencha o link só se a mudança merecer um aviso ao assessor — com o campo vazio, conclui sem enviar e-mail.'
+                           : 'Assim que a página estiver no ar, cole o link e marque como concluído.') +
             '</span>' +
             '<button class="btn btn-primary" onclick="concluirPagina()">Marcar como concluído</button>' +
           '</div><div id="vaMsg" style="margin-top:10px;font-size:0.82rem"></div>';
@@ -326,20 +354,23 @@
         rodape = '<div class="va-actions"><span class="sub" style="font-size:0.8rem;color:var(--ink-50)">Perfil já ' + (STATUS[resumo.status] ? STATUS[resumo.status].label.toLowerCase() : resumo.status) + '.</span></div>';
       }
 
-      // Admin pode corrigir os dados do perfil (ex.: contrato social errado),
-      // independente do status — a correcao reflete nos filtros.
-      const ehAdmin = (typeof Auth !== 'undefined' && Auth.getUserRole && Auth.getUserRole() === 'admin');
-      if (aprovacao && ehAdmin) {
-        rodape =
-          '<div style="text-align:right;margin-bottom:8px">' +
-            '<button class="btn btn-secondary" style="padding:4px 12px;font-size:0.78rem" onclick="abrirEdicao()">Editar dados</button>' +
-          '</div>' + rodape;
+      /* Admin pode corrigir dados do perfil em qualquer status. */
+      if (ehAdmin) {
+        rodape = '<div style="text-align:right;margin-bottom:8px"><button class="btn btn-secondary" style="padding:4px 12px;font-size:0.78rem" onclick="abrirEdicao()">Editar dados</button></div>' + rodape;
       }
 
+      /* Cabeçalho com tag visual do tipo. */
+      const tipoClasse = resumo.categoria === 'atualizacao' ? 'va-tipo--atualizacao'
+                       : resumo.categoria === 'sem-pagina'  ? 'va-tipo--sem-pagina'
+                       : 'va-tipo--nova';
+      const tipoIcone  = resumo.categoria === 'atualizacao'
+        ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>Atualização de página'
+        : resumo.categoria === 'sem-pagina'
+          ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>Sem Página'
+          : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Nova solicitação';
+
       const cabecalho =
-        (resumo.categoria === 'atualizacao'
-          ? '<div class="va-tipo va-tipo--atualizacao"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>Atualização de página</div>'
-          : '<div class="va-tipo va-tipo--nova"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Nova solicitação</div>') +
+        '<div class="va-tipo ' + tipoClasse + '">' + tipoIcone + '</div>' +
         (pub.observacao ? '<div class="alert-card alert-info" style="margin:0 0 12px;font-size:0.82rem"><strong>Observação interna anterior:</strong> ' + esc(pub.observacao) + '</div>' : '') +
         (resumo.ciclo > 1 ? '<div style="text-align:right;font-size:0.74rem;color:var(--ink-50);margin-bottom:6px">' + resumo.ciclo + '\u00AA rodada de ajustes</div>' : '');
 
@@ -349,38 +380,33 @@
         rodape;
 
       const internos = [
-        { label: 'Código', value: dados.codigo_assessor },
-        { label: 'Contrato', value: contratoLabel(dados.contrato_social) },
-        { label: 'Unidade', value: dados.unidade },
+        { label: 'Código',       value: dados.codigo_assessor },
+        { label: 'Contrato',     value: contratoLabel(dados.contrato_social) },
+        { label: 'Unidade',      value: dados.unidade },
         { label: 'Solicitada em', value: fmtData(resumo.criado_em) },
       ];
-      if (window.renderAssessorPreview) window.renderAssessorPreview(document.getElementById('vaPreview'), dados, { internos: internos, statusHtml: aprovacao ? badge(resumo.status) : '' });
+      if (window.renderAssessorPreview) {
+        window.renderAssessorPreview(document.getElementById('vaPreview'), dados, { internos, statusHtml: badge(resumo.status) });
+      }
     }
 
     function abrirEdicao() {
       const d = (window._vaDados && window._vaDados.dados) || {};
       const contratos = (window._svnFormSchemas && window._svnFormSchemas.contratos) || [];
-      const unidades = (typeof UNIDADES_SVN !== 'undefined' ? UNIDADES_SVN : []);
+      const unidades  = typeof UNIDADES_SVN !== 'undefined' ? UNIDADES_SVN : [];
       const optSel = (arr, val, getV, getL) =>
         arr.map(function (o) {
           const vv = getV(o), ll = getL(o);
           return '<option value="' + esc(vv) + '"' + (String(vv) === String(val) ? ' selected' : '') + '>' + esc(ll) + '</option>';
         }).join('');
-
       const contratoOpts = '<option value="">Selecione</option>' +
-        optSel(contratos, d.contrato_social, function (o) { return o.value != null ? o.value : o; }, function (o) { return o.label != null ? o.label : o; });
+        optSel(contratos, d.contrato_social, o => o.value != null ? o.value : o, o => o.label != null ? o.label : o);
       const unidadeOpts = '<option value="">Selecione</option>' +
-        optSel(unidades, d.unidade, function (o) { return o.nome != null ? o.nome : o; }, function (o) { return o.nome != null ? o.nome : o; });
-
-      const campo = (lab, html) =>
-        '<div style="margin-bottom:12px"><label style="display:block;font-size:0.74rem;color:var(--ink-50);margin-bottom:4px">' + lab + '</label>' + html + '</div>';
-      const inp = (id, val) =>
-        '<input id="' + id + '" style="width:100%;box-sizing:border-box;font:inherit;font-size:0.88rem;padding:8px 10px;border:1px solid var(--border-light);border-radius:var(--radius-md)" value="' + esc(val || '') + '">';
-      const sel = (id, opts, extra) =>
-        '<select id="' + id + '"' + (extra || '') + ' style="width:100%;box-sizing:border-box;font:inherit;font-size:0.88rem;padding:8px 10px;border:1px solid var(--border-light);border-radius:var(--radius-md)">' + opts + '</select>';
-
+        optSel(unidades, d.unidade, o => o.nome != null ? o.nome : o, o => o.nome != null ? o.nome : o);
+      const campo = (lab, html) => '<div style="margin-bottom:12px"><label style="display:block;font-size:0.74rem;color:var(--ink-50);margin-bottom:4px">' + lab + '</label>' + html + '</div>';
+      const inp   = (id, val) => '<input id="' + id + '" style="width:100%;box-sizing:border-box;font:inherit;font-size:0.88rem;padding:8px 10px;border:1px solid var(--border-light);border-radius:var(--radius-md)" value="' + esc(val || '') + '">';
+      const sel   = (id, opts) => '<select id="' + id + '" style="width:100%;box-sizing:border-box;font:inherit;font-size:0.88rem;padding:8px 10px;border:1px solid var(--border-light);border-radius:var(--radius-md)">' + opts + '</select>';
       const codAtual = String(d.codigo_assessor || '').replace(/^A/i, '');
-
       document.getElementById('vaDetalhe').innerHTML =
         '<div style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--ruby-red);margin-bottom:12px">Editar dados do perfil</div>' +
         campo('Nome completo', inp('edNome', d.nome_completo || d.nome)) +
@@ -409,45 +435,37 @@
           method: 'PATCH', headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload),
         });
-        const j = await r.json().catch(function () { return {}; });
+        const j = await r.json().catch(() => ({}));
         if (!r.ok) throw new Error(j.error || 'Falha ao salvar.');
-        await abrirDetalhe(detalheId);   // recarrega com os dados novos
-        await carregar();                // atualiza a lista/filtros
+        await abrirDetalhe(detalheId);
+        await carregar();
       } catch (e) {
         msg.style.color = 'var(--danger)'; msg.textContent = e.message || 'Erro ao salvar.';
       }
     }
 
-    /* Reprovar e a unica decisao sem volta: confirma antes. */
     function confirmarReprovar() {
       const obs = (document.getElementById('vaObs') || {}).value || '';
       if (!obs.trim()) {
         const msg = document.getElementById('vaMsg');
-        if (msg) {
-          msg.style.color = 'var(--danger)';
-          msg.textContent = 'Escreva a observação interna explicando o motivo antes de reprovar.';
-        }
+        if (msg) { msg.style.color = 'var(--danger)'; msg.textContent = 'Escreva a observação interna explicando o motivo antes de reprovar.'; }
         return;
       }
-      if (confirm('Reprovar este perfil?\n\nO assessor precisará enviar uma nova solicitação do zero.')) {
-        decidir('reprovado');
-      }
+      if (confirm('Reprovar este perfil?\n\nO assessor precisará enviar uma nova solicitação do zero.')) decidir('reprovado');
     }
 
-    /* Concluir exige o link: sem ele a pagina "no ar" nao fica registrada em
-       lugar nenhum, e o e-mail ao assessor nao teria para onde apontar. */
     function concluirPagina() {
       const campo = document.getElementById('vaUrlPublicada');
-      const msg = document.getElementById('vaMsg');
-      const url = (campo && campo.value || '').trim();
-      const erro = (t) => { if (msg) { msg.style.color = 'var(--danger)'; msg.textContent = t; } if (campo) campo.focus(); };
-      // CONCLUIR-SEM-LINK: atualizacao pode concluir sem link (a pagina ja existe).
-      // Nova solicitacao continua exigindo, porque e o link que vai no e-mail.
-      const _atualizacao = !!(window._vaDados && window._vaDados.resumo && window._vaDados.resumo.categoria === 'atualizacao');
-      if (!url && !_atualizacao) return erro('Cole o link da página publicada antes de concluir.');
-      if (!url && _atualizacao) return decidir('publicado', {});
+      const msg   = document.getElementById('vaMsg');
+      const url   = (campo && campo.value || '').trim();
+      const erro  = t => { if (msg) { msg.style.color = 'var(--danger)'; msg.textContent = t; } if (campo) campo.focus(); };
+      /* URL obrigatória apenas para nova página; opcional para atualização e sem-página. */
+      const cat = window._vaDados && window._vaDados.resumo && window._vaDados.resumo.categoria;
+      const urlOpcional = cat === 'atualizacao' || cat === 'sem-pagina';
+      if (!url && !urlOpcional) return erro('Cole o link da página publicada antes de concluir.');
+      if (!url && urlOpcional)  return decidir('publicado', {});
       let ok = false;
-      try { const u = new URL(url); ok = (u.protocol === 'http:' || u.protocol === 'https:'); } catch (e) { ok = false; }
+      try { const u = new URL(url); ok = u.protocol === 'http:' || u.protocol === 'https:'; } catch (e) { ok = false; }
       if (!ok) return erro('O link precisa ser um endereço válido, começando com https://');
       decidir('publicado', { url_publicada: url });
     }
@@ -457,7 +475,9 @@
       const msg = document.getElementById('vaMsg');
       if ((decisao === 'ajustes' || decisao === 'reprovado') && !obs.trim()) {
         msg.style.color = 'var(--danger)';
-        msg.textContent = decisao === 'ajustes' ? 'Descreva na observação o que precisa ser ajustado (para o marketing encaminhar).' : 'Escreva o motivo da reprovação na observação (uso interno).';
+        msg.textContent = decisao === 'ajustes'
+          ? 'Descreva na observação o que precisa ser ajustado (para o marketing encaminhar).'
+          : 'Escreva o motivo da reprovação na observação (uso interno).';
         return;
       }
       msg.style.color = 'var(--ink-50)'; msg.textContent = 'Salvando…';
