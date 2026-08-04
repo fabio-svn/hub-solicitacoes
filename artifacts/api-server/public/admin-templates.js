@@ -23,8 +23,8 @@
     { value: 'artes-divulgacao',              label: 'Arte de Divulgação' },
     { value: 'divulgacao-nps',                label: 'Arte NPS' },
     { value: 'convite-fp',                    label: 'Convite Financial Planning' },
-    { value: 'pagina-assessores-dados',       label: 'Página de Assessores — Dados' },
-    { value: 'pagina-assessores-atualizacao', label: 'Página de Assessores — Atualização' },
+    { value: 'pagina-assessores-dados',       label: 'Página de Equipe — Dados' },
+    { value: 'pagina-assessores-atualizacao', label: 'Página de Equipe — Atualização' },
   ];
 
   const CANVAS_PRESETS = [

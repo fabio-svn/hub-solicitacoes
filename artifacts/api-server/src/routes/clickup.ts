@@ -1324,8 +1324,11 @@ export interface PrazoCalc {
 
 // Fonte única do cálculo de prazo (usada na criação da task e no endpoint /api/prazo).
 export function calcularPrazo(tipo: string, dados?: Record<string, unknown>, from: Date = new Date()): PrazoCalc {
+  if (tipo === "cartao-visita-fisico") {
+    const d = addBusinessDays(from, 30); d.setHours(12, 0, 0, 0);
+    return { modo: "dias", dias: 30, date: d, regra: "30 dias úteis" };
+  }
   if (
-    tipo === "cartao-visita-fisico" ||
     tipo === "pagina-assessores-dados" ||
     tipo === "pagina-assessores-atualizacao"
   ) {

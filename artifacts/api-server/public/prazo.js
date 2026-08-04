@@ -33,7 +33,7 @@
 
   // Date do prazo a partir de hoje. cartao→próxima quarta; eventos→null (depende da data do evento).
   function dataPrazo(tipo, dados) {
-    if (tipo === 'cartao-visita-fisico') return proximaQuarta(new Date());
+    if (tipo === 'cartao-visita-fisico') return addBusinessDays(new Date(), 30);
     if (tipo === 'eventos') return null;
     const dias = diasUteis(tipo, dados);
     if (dias == null) return null;
@@ -46,7 +46,7 @@
   }
 
   function labelDias(tipo, dados) {
-    if (tipo === 'cartao-visita-fisico') return 'próxima quarta-feira';
+    if (tipo === 'cartao-visita-fisico') return '30 a 45 dias úteis';
     if (tipo === 'eventos') return 'conforme a data do evento';
     const dias = diasUteis(tipo, dados);
     return dias != null ? ('até ' + dias + (dias === 1 ? ' dia útil' : ' dias úteis')) : '';

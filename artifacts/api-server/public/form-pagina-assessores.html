@@ -10,7 +10,7 @@
   <link rel="manifest" href="/site.webmanifest" />
   <meta name="theme-color" content="#AC3631" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Página de Assessores - Hub SVN</title>
+  <title>Página de Equipe - Hub SVN</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap">
@@ -25,7 +25,7 @@
       <div class="svn-stepper" id="formStepper" data-steps="Tipo|Assessor"></div>
       <div class="form-progress" style="display:none"><div class="form-progress-bar" id="progressBar"></div></div>
       <div class="flex-between">
-        <h2 class="text-md-medium" id="formTitle">Página de Assessores</h2>
+        <h2 class="text-md-medium" id="formTitle">Página de Equipe</h2>
         <span style="display:none" id="stepLabel">Etapa 1 de 2</span>
       </div>
       <hr class="sep">
@@ -301,7 +301,7 @@
       document.getElementById('btnPreview').style.display = isAtualizacao ? 'none' : '';
 
       if (isAtualizacao) {
-        document.getElementById('formTitle').textContent = 'Página de Assessores — Atualização';
+        document.getElementById('formTitle').textContent = 'Página de Equipe — Atualização';
         document.getElementById('stepLabel').textContent = 'Etapa 2 de 2';
         document.getElementById('updateCard').style.display = 'block';
         document.getElementById('seletorInline').style.display = 'block';
@@ -312,7 +312,7 @@
           if (el) { el.style.display = 'none'; el.style.maxHeight = '0'; el.style.overflow = 'hidden'; }
         });
       } else {
-        document.getElementById('formTitle').textContent = 'Página de Assessores — Dados';
+        document.getElementById('formTitle').textContent = 'Página de Equipe — Dados';
         document.getElementById('stepLabel').textContent = 'Etapa 2 de 2';
         document.getElementById('updateCard').style.display = 'none';
         document.getElementById('seletorInline').style.display = 'none';

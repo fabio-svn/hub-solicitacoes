@@ -67,7 +67,7 @@ const CATEGORIAS_SOLICITACAO = [
   {
     categoria: "Identidade e materiais pessoais",
     itens: [
-      { id: "pagina-assessores", label: "Página de Assessores", icon: "icon-user", ativo: true },
+      { id: "pagina-assessores", label: "Página de Equipe", icon: "icon-user", ativo: true },
       { id: "assinatura-email", label: "Assinatura de E-mail", icon: "icon-mail", ativo: true },
       { id: "cartao-visita", label: "Cartão de Visita", icon: "icon-credit-card", ativo: true },
       { id: "cartao-boas-vindas", label: "Cartão de Boas-vindas", icon: "icon-user-plus", ativo: true },
@@ -144,9 +144,9 @@ function categoriasVisiveis() {
 
 const TIPO_SOLICITACAO_LABELS = {
   "eventos":                        "Eventos",
-  "pagina-assessores-dados":        "Página de Assessores — Dados",
-  "pagina-assessores-atualizacao":  "Página de Assessores — Atualização",
-  "pagina-assessores":              "Página de Assessores",
+  "pagina-assessores-dados":        "Página de Equipe — Dados",
+  "pagina-assessores-atualizacao":  "Página de Equipe — Atualização",
+  "pagina-assessores":              "Página de Equipe",
   "apresentacao-nova":              "Apresentação — Nova",
   "apresentacao-atualizar":         "Apresentação — Atualização",
   "apresentacao":                   "Apresentação",
