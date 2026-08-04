@@ -1560,7 +1560,7 @@ function assessorCategoria(sol: any, dados: any): string {
 function assessorLinha(sol: any, pub: any) {
   const dados: any = (pub?.dados_publicacao || sol.dados) || {};
   const categoria = assessorCategoria(sol, dados);
-  const status = pub ? pub.status : (categoria === "sem-pagina" ? "registrado" : "aguardando-validacao");
+  const status = pub ? pub.status : "aguardando-validacao";
   return {
     solicitacao_id: sol.id,
     categoria,
@@ -1680,7 +1680,7 @@ router.post("/assessor-aprovacoes/:id/decisao", requireAuth, async (req, res): P
     const [sol] = await db.select().from(solicitacoesTable).where(eq(solicitacoesTable.id, id));
     if (!sol || !ASSESSOR_TIPOS.includes(sol.tipo_solicitacao)) { res.status(404).json({ error: "Não encontrado" }); return; }
     const dados: any = sol.dados || {};
-    if (assessorCategoria(sol, dados) === "sem-pagina") { res.status(400).json({ error: "Registro sem página não passa por aprovação." }); return; }
+
 
     const [pub] = await db.select().from(assessorPublicacoesTable).where(eq(assessorPublicacoesTable.solicitacao_id, id));
     const ajustes = Array.isArray(b.ajustes)
@@ -1720,9 +1720,11 @@ router.post("/assessor-aprovacoes/:id/decisao", requireAuth, async (req, res): P
       // entao o campo e opcional, e preenche-lo passa a ser o gesto de "vale um
       // aviso". Sem link, conclui em silencio e o entrega_links antigo fica intacto
       // (sobrescrever com vazio apagaria o link da publicacao original).
-      const ehAtualizacao = assessorCategoria(sol, dados) === "atualizacao";
+      const cat = assessorCategoria(sol, dados);
+      const ehAtualizacao = cat === "atualizacao";
+      const urlOpcional = cat === "atualizacao" || cat === "sem-pagina";
       const urlPublicada = String((b as any).url_publicada || "").trim();
-      if (!urlPublicada && !ehAtualizacao) {
+      if (!urlPublicada && !urlOpcional) {
         res.status(400).json({ error: "Informe o link da página publicada para concluir." });
         return;
       }
