@@ -244,6 +244,28 @@ function alignedLeft(boxX: number, boxW: number, textWidth: number, align: strin
   return boxX;
 }
 
+// COR-VAR-HELPER: resolve uma cor que PODE conter {{placeholder}}. Aplica os dados
+// e valida que o resultado e uma cor CSS segura (#hex, rgb/rgba, ou 'none'/nome
+// simples). Se a variavel nao vier ou o valor for invalido, cai no fallback (a cor
+// fixa do template) — nunca injeta texto arbitrario no SVG. Isso permite pills/cards
+// com cor vinda do Sistema de Eventos, sem quebrar convites que nao mandam cor e sem
+// abrir vetor de injecao no SVG.
+const COR_SEGURA = /^(#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})|rgb\(\s*\d{1,3}\s*,\s*\d{1,3}\s*,\s*\d{1,3}\s*\)|rgba\(\s*\d{1,3}\s*,\s*\d{1,3}\s*,\s*\d{1,3}\s*,\s*(?:0|1|0?\.\d+)\s*\)|none|transparent|[a-zA-Z]{3,20})$/;
+function resolveCor(
+  valor: string | undefined,
+  data: Record<string, string>,
+  fallback: string
+): string {
+  if (!valor) return fallback;
+  // se tem placeholder, substitui; se a var nao vier, substitute devolve '' -> usa fallback
+  const resolvido = valor.includes('{{')
+    ? valor.replace(/\{\{(\w+)\}\}/g, (_, k) => data[k] ?? '')
+    : valor;
+  const limpo = resolvido.trim();
+  if (!limpo) return fallback;
+  return COR_SEGURA.test(limpo) ? limpo : fallback;
+}
+
 function substitute(
   text: string,
   data: Record<string, string>,
@@ -562,6 +584,7 @@ async function renderShape(
   composites: sharp.OverlayOptions[],
   bgWidth: number,
   bgHeight: number,
+  data: Record<string, string> = {},
 ) {
   if (layer.w <= 0 || layer.h <= 0) {
     logger.warn(`[render] shape ${layer.id} skipped: zero/negative dimensions`);
@@ -592,8 +615,10 @@ async function renderShape(
   const visH = Math.min(fullH - cropTop,  bgHeight - Math.max(oy, 0));
   if (visW <= 0 || visH <= 0) return;
 
-  const fill = layer.fill || 'none';
-  const stroke = layer.stroke || 'none';
+  // COR-VAR-APLICA: fill/stroke podem conter {{cor_x}} vindo dos dados (ex.: Sistema
+  // de Eventos manda cor_pill). resolveCor valida e cai no default se nao vier.
+  const fill = resolveCor(layer.fill, data, layer.fill || 'none');
+  const stroke = resolveCor(layer.stroke, data, layer.stroke || 'none');
   const strokeWidth = layer.stroke_width || 0;
   const inset = strokeWidth / 2;
 
@@ -657,7 +682,16 @@ export async function renderFromTemplate(
   let bgBuf: Buffer;
   try {
     let bgUrl: string;
-    if (template.bg.type === 'static') {
+    // BG-CUSTOM-URL: se os dados trazem um background proprio (upload do Sistema de
+    // Eventos, que chega como URL publica https), ele tem prioridade. So aceitamos
+    // https (nada de data-uri gigante ou http inseguro vindo de fora). Se nao vier
+    // ou for invalido, cai no fluxo normal do template (static/variant) — o uso pela
+    // pagina Corporate e os convites atuais nao mudam.
+    const bgCustom = (dataStr.bg_custom_url || '').trim();
+    const bgCustomOk = /^https:\/\/[^\s"'<>]+$/.test(bgCustom);
+    if (bgCustomOk) {
+      bgUrl = bgCustom;
+    } else if (template.bg.type === 'static') {
       bgUrl = template.bg.url;
     } else {
       const variantKey = variantKeyTolerant(dataStr[template.bg.variant_source], template.bg.variants ?? {});
@@ -692,7 +726,7 @@ export async function renderFromTemplate(
       if (layer.type === 'text-line')  await renderTextLine(layer, dataStr, composites, renderCtx);
       if (layer.type === 'text-block') await renderTextBlock(layer, dataStr, composites, renderCtx);
       if (layer.type === 'image')      await renderImage(layer, dataStr, composites, canvasW, canvasH);
-      if (layer.type === 'shape')      await renderShape(layer as ShapeLayer, composites, canvasW, canvasH);
+      if (layer.type === 'shape')      await renderShape(layer as ShapeLayer, composites, canvasW, canvasH, dataStr);
     } catch (err: any) {
       logger.warn(`[render] layer "${layer.id}" ignorada (${err.message})`);
     }
