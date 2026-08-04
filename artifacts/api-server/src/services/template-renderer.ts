@@ -257,9 +257,18 @@ function resolveCor(
   fallback: string
 ): string {
   if (!valor) return fallback;
-  // se tem placeholder, substitui; se a var nao vier, substitute devolve '' -> usa fallback
+  // COR-DEFAULT-SINTAXE: suporta {{var|#default}} — usa a var se vier, senao o
+  // #default embutido no proprio template. O default embutido tambem vira o fallback
+  // EFETIVO (quando a cor resolvida e invalida), em vez do fill cru — senao um valor
+  // invalido cairia no placeholder literal. Assim "{{cor_pill|#272420}}" sai
+  // personalizado com cor_pill valida, e volta a #272420 quando nao vem OU e invalida.
+  const mDef = valor.match(/\{\{(\w+)(?:\|([^}]*))?\}\}/);
+  if (mDef && mDef[2] !== undefined && mDef[2] !== '') fallback = mDef[2];
   const resolvido = valor.includes('{{')
-    ? valor.replace(/\{\{(\w+)\}\}/g, (_, k) => data[k] ?? '')
+    ? valor.replace(/\{\{(\w+)(?:\|([^}]*))?\}\}/g, (_, k, def) => {
+        const v = data[k];
+        return (v !== undefined && v !== null && v !== '') ? v : (def ?? '');
+      })
     : valor;
   const limpo = resolvido.trim();
   if (!limpo) return fallback;
