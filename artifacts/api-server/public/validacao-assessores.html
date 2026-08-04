@@ -218,8 +218,12 @@
         const r = await fetch('/api/assessor-aprovacoes');
         if (!r.ok) throw new Error('falha');
         const j = await r.json();
-        /* Mais recentes primeiro — independente do tipo. */
+        /* Nível 1: ativos antes de finalizados. Nível 2: mais recentes primeiro. */
+        const FINALIZADOS = new Set(['publicado', 'reprovado']);
         LINHAS = (j.linhas || []).sort(function (a, b) {
+          const pa = FINALIZADOS.has(a.status) ? 1 : 0;
+          const pb = FINALIZADOS.has(b.status) ? 1 : 0;
+          if (pa !== pb) return pa - pb;
           return new Date(b.criado_em || 0) - new Date(a.criado_em || 0);
         });
       } catch (e) { LINHAS = []; }
