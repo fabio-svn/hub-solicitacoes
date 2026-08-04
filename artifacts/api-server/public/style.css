@@ -1140,7 +1140,7 @@ input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
   background: linear-gradient(135deg, var(--ruby-dark) 0%, #b83a35 40%, var(--ruby-dark) 60%, #6e1f1c 100%);
   background-size: 200% 200%;
   animation: redShimmer 1.8s ease infinite;
-  color: var(--paper-white);
+  color: #fff;
   transform: translateY(-2px);
   box-shadow: 0 6px 28px rgba(159,63,55,0.45);
   text-decoration: none;

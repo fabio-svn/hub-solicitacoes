@@ -22,7 +22,7 @@
   <div id="pageContent">
   <div class="page-container page-container--narrow">
     <div class="form-card">
-      <div class="svn-stepper" id="formStepper" data-steps="Tipo|Assessor"></div>
+      <div class="svn-stepper" id="formStepper" data-steps="Tipo|Colaborador"></div>
       <div class="form-progress" style="display:none"><div class="form-progress-bar" id="progressBar"></div></div>
       <div class="flex-between">
         <h2 class="text-md-medium" id="formTitle">Página de Equipe</h2>
@@ -38,7 +38,7 @@
             <div class="card-icon">
               <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
             </div>
-            <div class="card-label">É a primeira vez que preencho meus dados para criação da página de assessor(a)</div>
+            <div class="card-label">É a primeira vez que preencho meus dados para criação da página de colaborador(a)</div>
             <div class="card-desc">Para quando sua página ainda não existe nos sites SVN</div>
           </div>
           <div class="radio-card" onclick="selectSubtipo('atualizacao')" id="cardAtualizacao">
@@ -71,7 +71,7 @@
                repetir a pergunta aqui so duplicava a mesma frase duas vezes na tela. -->
           <div style="display:flex;flex-wrap:wrap;gap:8px" id="camposBtnList">
             <button class="campo-toggle-btn" data-campo="nomeCompleto" onclick="toggleCampoInline(this)">Nome completo</button>
-            <button class="campo-toggle-btn" data-campo="codigoAssessor" onclick="toggleCampoInline(this)">Código do assessor</button>
+            <button class="campo-toggle-btn" data-campo="codigoAssessor" onclick="toggleCampoInline(this)">Código do colaborador</button>
             <button class="campo-toggle-btn" data-campo="unidade" onclick="toggleCampoInline(this)">Unidade</button>
             <button class="campo-toggle-btn" data-campo="contratoSocial" onclick="toggleCampoInline(this)">Contrato social</button>
             <button class="campo-toggle-btn" data-campo="fotoPerfil" onclick="toggleCampoInline(this)">Foto de perfil</button>
@@ -86,14 +86,14 @@
           <div id="camposSelecionadosWrap" style="margin-top:18px"></div>
         </div>
 
-        <h2 class="card-titulo">Informações do assessor</h2>
+        <h2 class="card-titulo">Informações do colaborador</h2>
         <div class="field">
           <label>Telefone <span class="text-ruby">*</span></label>
           <input type="tel" id="telefone" placeholder="(00) 00000-0000 ou +55 11 91234-5678" oninput="mascaraTelefone(this)" required>
         </div>
         <div class="field" id="field_nomeCompleto">
           <label>Nome completo</label>
-          <input type="text" id="nomeCompleto" placeholder="Nome completo do assessor" required>
+          <input type="text" id="nomeCompleto" placeholder="Nome completo do colaborador" required>
         </div>
         <div class="field" id="field_ehAssessor" style="display:none">
           <label>Você é assessor(a) de investimentos? <span class="text-ruby">*</span></label>
@@ -107,7 +107,7 @@
           </div>
         </div>
         <div class="field" id="field_codigoAssessor" style="display:none">
-          <label>Código de assessor</label>
+          <label>Código de colaborador</label>
           <div class="cod-assessor">
             <span class="cod-assessor-prefixo" aria-hidden="true">A</span>
             <input type="text" id="codigoAssessor" inputmode="numeric" autocomplete="off"
@@ -180,7 +180,7 @@
         <div class="field" id="field_depoimentos" style="margin-top:24px">
           <label>Depoimentos de clientes (opcional, até 3)</label>
           <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin:8px 0 10px;padding:9px 14px;background:var(--icon-bg);border:1px solid var(--border-light);border-radius:var(--radius-md);flex-wrap:wrap">
-            <span style="font-size:0.8rem;color:var(--carbon-black);opacity:0.7">Consulte a pesquisa NPS para encontrar depoimentos pelo seu código de assessor.</span>
+            <span style="font-size:0.8rem;color:var(--carbon-black);opacity:0.7">Consulte a pesquisa NPS para encontrar depoimentos pelo seu código de colaborador.</span>
             <a href="https://svninvest-my.sharepoint.com/:x:/g/personal/eduardo_filho_svninvest_com_br/IQBsd2rvk_KKQ44PVtzuxQrSAS6m-YB05OaB0m11B0pvc7k?wdExp=TEAMS-TREATMENT&web=1&isSPOFile=1&ovuser=91608a81-cb4c-4123-8e4f-ffc75f8c4b6c%2Cjoao.sardeto%40svninvest.com.br&clickparams=eyJBcHBOYW1lIjoiVGVhbXMtRGVza3RvcCIsIkFwcFZlcnNpb24iOiI1MC8yNjAzMTIyMzAyMCIsIkhhc0ZlZGVyYXRlZFVzZXIiOmZhbHNlfQ%3D%3D"
                target="_blank"
                class="btn btn-secondary"
@@ -221,7 +221,7 @@
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px" id="previewContent">
         <div class="preview-assessor-left">
           <div id="previewSelos" style="margin-bottom:12px;display:flex;flex-wrap:wrap;gap:6px;justify-content:center"></div>
-          <h2 id="previewName">Nome do Assessor</h2>
+          <h2 id="previewName">Nome do Colaborador</h2>
           <p style="font-size:0.95rem;opacity:0.8;margin-bottom:16px;max-width:440px" id="previewBio">A bio aparecerá aqui...</p>
           <div style="display:flex;gap:8px;margin-bottom:16px" id="previewSocialIcons">
             <a id="previewLinkedin" href="#" target="_blank"
@@ -256,7 +256,7 @@
         <h3 style="font-weight:600;margin-bottom:12px">Depoimentos</h3>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px" id="previewDepoList"></div>
       </div>
-      <p style="text-align:center;margin-top:20px;font-size:0.75rem;opacity:0.35">Esta é uma simulação visual. O layout final pode variar conforme o site institucional do assessor.</p>
+      <p style="text-align:center;margin-top:20px;font-size:0.75rem;opacity:0.35">Esta é uma simulação visual. O layout final pode variar conforme o site institucional do colaborador.</p>
       <div style="text-align:center;margin-top:12px">
         <button class="btn btn-dark" onclick="closePreview()">Fechar</button>
       </div>
@@ -496,7 +496,7 @@
     }
 
     function openPreview() {
-      const name = document.getElementById('nomeCompleto').value || 'Nome do Assessor';
+      const name = document.getElementById('nomeCompleto').value || 'Nome do Colaborador';
       const bio = document.getElementById('miniBio').value || 'A bio aparecerá aqui...';
       const linkedin = document.getElementById('linkedin').value;
 
