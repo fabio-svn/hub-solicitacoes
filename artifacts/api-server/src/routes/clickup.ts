@@ -450,6 +450,9 @@ function buildGeneralTaskName(tipo: string, _subtipo: string, dados: FormDados, 
       return `[Material Impresso] ${tipoMatLabel} - ${setor}`;
     }
 
+    case "sugestao-conteudo":
+      return `[Sugestão de Conteúdo] ${user.name}`;
+
     case "ch-kit-onboarding":      return "[Capital Humano] Kit Onboarding";
     case "ch-atualizacao-pessoas": return "[Capital Humano] Atualização de Pessoas";
     case "ch-conteudo-pdf":        return "[Capital Humano] Conteúdo em PDF";
@@ -666,7 +669,7 @@ function buildDetailsSection(tipo: string, dados: FormDados): string | null {
     items.push(...fb);
   }
   if (items.length === 0) return null;
-  return `📝 DETALHES\n━━━━━━━━━━━━━━━━━━━━━━\n\n${items.join("\n")}`;
+  return `📝 DETALHES\n━━━━━━━━━━━━━━━━━━━━━━\n\n${items.join("\n\n")}`;
 }
 
 function buildArquivosSection(arquivos: ArquivosMap): string | null {

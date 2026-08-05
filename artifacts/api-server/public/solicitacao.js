@@ -133,6 +133,12 @@
       const cellPrazo = document.getElementById('factPrazo');
       const cellPrazoRel = document.getElementById('factPrazoRel');
       const cellPrazoAlt = document.getElementById('factPrazoAlterado');
+      // PRAZO-LABEL-TIPO: sugestões de conteúdo usam "Prazo de resposta" (não "entrega").
+      const prazoLabelSpan = document.getElementById('factPrazoLabelText');
+      if (prazoLabelSpan) {
+        prazoLabelSpan.textContent = item.tipo_solicitacao === 'sugestao-conteudo'
+          ? 'Prazo de resposta' : 'Prazo de entrega';
+      }
       if (item.prazo) {
         const pd = new Date(item.prazo);
         const fmt = String(pd.getDate()).padStart(2,'0') + '/' + String(pd.getMonth()+1).padStart(2,'0') + '/' + pd.getFullYear();
