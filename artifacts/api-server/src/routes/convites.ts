@@ -8,6 +8,40 @@ import { logger } from "../lib/logger";
 
 const router = Router();
 
+const MESES_PT = [
+  "janeiro", "fevereiro", "março", "abril", "maio", "junho",
+  "julho", "agosto", "setembro", "outubro", "novembro", "dezembro",
+];
+
+/**
+ * Normaliza dados.data para o formato por extenso usado nos templates de arte:
+ *   "2026-10-18"  →  "18 de outubro"
+ *   "18/10"       →  "18 de outubro"
+ *   "18/10/2026"  →  "18 de outubro"
+ *   "18 de outubro" → "18 de outubro"  (passthrough)
+ */
+function normalizarDataConvite(raw: unknown): string {
+  const s = String(raw ?? "").trim();
+  if (!s) return s;
+
+  // ISO: YYYY-MM-DD
+  const iso = s.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (iso) {
+    const mes = MESES_PT[parseInt(iso[2], 10) - 1];
+    return mes ? `${parseInt(iso[3], 10)} de ${mes}` : s;
+  }
+
+  // DD/MM ou DD/MM/YYYY
+  const dmy = s.match(/^(\d{1,2})\/(\d{1,2})(?:\/\d{2,4})?$/);
+  if (dmy) {
+    const mes = MESES_PT[parseInt(dmy[2], 10) - 1];
+    return mes ? `${parseInt(dmy[1], 10)} de ${mes}` : s;
+  }
+
+  // Qualquer outro formato (já por extenso, ou desconhecido): passa intacto
+  return s;
+}
+
 /**
  * POST /api/gerar-convite
  * Gera um convite de evento a partir de um template "convite-evento" e retorna a URL no R2.
@@ -42,7 +76,17 @@ router.post("/gerar-convite", async (req, res): Promise<void> => {
       return;
     }
 
-    // 3) Gerar o KIT reusando o motor. Por padrao os 3 formatos; se o request
+    // 3a) Normalizar data para por extenso ("18/10" ou "2026-10-18" → "18 de outubro").
+    // O fluxo Corporate faz isso no frontend; aqui precisamos fazer no backend.
+    if (dados.data !== undefined) {
+      const original = dados.data;
+      dados.data = normalizarDataConvite(dados.data);
+      if (dados.data !== original) {
+        logger.info({ original, normalizado: dados.data }, "[convite] data normalizada para extenso");
+      }
+    }
+
+    // 3b) Gerar o KIT reusando o motor. Por padrao os 3 formatos; se o request
     // passar `formatos` (lista), gera so esses — usado pela previa rapida (1 formato).
     const formatosPedidos = Array.isArray((req.body as any)?.formatos)
       ? ((req.body as any).formatos as unknown[]).filter((x): x is string => typeof x === "string")
