@@ -714,7 +714,9 @@ export async function renderFromTemplate(
       bgBuf = bgRaw;
     } else {
       logger.warn(`[render] bg dimensions mismatch — resizing ${bgMeta.width}x${bgMeta.height} → ${canvasW}x${canvasH}`);
-      bgBuf = await sharp(bgRaw).resize(canvasW, canvasH, { fit: 'fill' }).toBuffer();
+      // BG-COVER: cover + crop central em vez de esticar — o mesmo fundo serve os
+      // 3 formatos do convite (stories/feed/quadrado) sem distorcer.
+      bgBuf = await sharp(bgRaw).resize(canvasW, canvasH, { fit: 'cover', position: 'centre' }).toBuffer();
     }
   } catch (err: any) {
     logger.warn(`[render] bg inválido (${err.message}), usando placeholder cinza`);
