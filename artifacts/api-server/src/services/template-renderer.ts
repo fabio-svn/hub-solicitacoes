@@ -718,6 +718,21 @@ export async function renderFromTemplate(
       // 3 formatos do convite (stories/feed/quadrado) sem distorcer.
       bgBuf = await sharp(bgRaw).resize(canvasW, canvasH, { fit: 'cover', position: 'centre' }).toBuffer();
     }
+    // BG-OVERLAY: fundo customizado (upload ou tema) recebe um scrim preto em
+    // multiply por padrao, para garantir a leitura dos textos sobre qualquer
+    // imagem. dados.bg_overlay (0 a 1) ajusta a intensidade; 0 desliga.
+    // Fundos padrao dos templates (artes ja validadas) nao sao afetados.
+    if (bgCustomOk) {
+      let overlayAlpha = 0.4;
+      const overlayRaw = parseFloat(String((dataStr as any).bg_overlay ?? ''));
+      if (!Number.isNaN(overlayRaw)) overlayAlpha = Math.min(1, Math.max(0, overlayRaw));
+      if (overlayAlpha > 0) {
+        const scrim = await sharp({
+          create: { width: canvasW, height: canvasH, channels: 4, background: { r: 0, g: 0, b: 0, alpha: overlayAlpha } },
+        }).png().toBuffer();
+        bgBuf = await sharp(bgBuf).composite([{ input: scrim, blend: 'multiply' }]).png().toBuffer();
+      }
+    }
   } catch (err: any) {
     logger.warn(`[render] bg inválido (${err.message}), usando placeholder cinza`);
     bgBuf = await sharp({
