@@ -205,6 +205,7 @@ const REQUIRED_FIELDS: Record<string, string[]> = {
   "producao-video":        ["nome", "titulo", "ideia", "formato"],
   "sessao-fotos":          ["nome", "objetivo", "qtdParticipantes", "localSessao"],
   "materiais-impressos":   ["nome", "tipoMaterial"],
+  "sugestao-conteudo":     ["nome", "tema"],
 };
 
 function validateFormDados(tipo: string, dados: Record<string, unknown>): string | null {
@@ -898,6 +899,7 @@ router.get("/solicitacoes/:id/status", requireAuth, async (req, res): Promise<vo
     let prazoMotivoOut: string | null = solicitacao.prazo_motivo || null;
     let prazoAlteradoEmOut: Date | null = solicitacao.prazo_alterado_em ? new Date(solicitacao.prazo_alterado_em) : null;
     let responsavelOut: string | null = solicitacao.responsavel ?? null;
+    let mensagemClickupOut: string | null = null;
 
     if (solicitacao.clickup_task_id) {
       try {
@@ -929,6 +931,11 @@ router.get("/solicitacoes/:id/status", requireAuth, async (req, res): Promise<vo
               // Primeira sincronização (sem prazo salvo) — apenas preenche
               patch.prazo = snap.dueDate; prazoOut = snap.dueDate;
             }
+          }
+          // Campo "Mensagem" do ClickUp (justificativa): só exibido nos status finais.
+          const STATUSES_COM_MENSAGEM = ["aprovado", "reprovado", "concluido"];
+          if (snap.mensagem && STATUSES_COM_MENSAGEM.includes(snap.status ?? "")) {
+            mensagemClickupOut = snap.mensagem;
           }
           if (Object.keys(patch).length) {
             patch.updated_at = new Date();
@@ -967,6 +974,7 @@ router.get("/solicitacoes/:id/status", requireAuth, async (req, res): Promise<vo
       updated,
       responsavel: responsavelOut,
       observacao: observacaoOut,
+      mensagem_clickup: mensagemClickupOut,
       prazo: prazoOut ? prazoOut.toISOString() : null,
       prazo_anterior: prazoAnteriorOut ? prazoAnteriorOut.toISOString() : null,
       prazo_motivo: prazoMotivoOut,

@@ -163,6 +163,7 @@ const CAMPO_LABELS: Record<string, string> = {
   alteracoes:    "Alterações necessárias",
   linkFotos:     "Link da pasta com fotos",
   mes:           "Mês de referência",
+  referencias:   "Referências",
 };
 
 // Campos que o RESUMO (buildGeneralDescription) já mostra, ou que são técnicos /
@@ -1297,6 +1298,7 @@ export const PRAZO_DIAS_UTEIS: Record<string, number> = {
   "materiais-impressos":           5,
   "brindes":                       15,
   "patrocinio":                    30,
+  "sugestao-conteudo":             15,
 };
 
 // Faixas por nº de páginas (campo "tamanho") — apresentação nova.
@@ -1553,6 +1555,9 @@ export interface ClickUpSnapshot {
   dueDate: Date | null;
   motivoPrazo: string | null;
   responsavel: string | null;
+  /** Conteúdo do campo "Mensagem" do ClickUp (id 7f309f68-d822-4df1-a153-c49e8a989e33).
+   *  Usado para exibir justificativa de aprovação/reprovação/conclusão no resumo. */
+  mensagem: string | null;
 }
 
 // Lê status + prazo (due_date) + motivo do prazo de uma task numa única chamada.
@@ -1678,7 +1683,13 @@ export async function getClickUpTaskSnapshot(taskId: string): Promise<ClickUpSna
     const responsavel = Array.isArray(data.assignees) && data.assignees.length
       ? data.assignees.map(a => (a.username || a.email || "").trim()).filter(Boolean).join(", ") || null
       : null;
-    const snap: ClickUpSnapshot = { status, dueDate, motivoPrazo, responsavel };
+    // Campo "Mensagem" (id fixo): justificativa de aprovação/reprovação/conclusão.
+    const CLICKUP_FIELD_MENSAGEM = "7f309f68-d822-4df1-a153-c49e8a989e33";
+    const mfMensagem = fields.find((f) => f.id === CLICKUP_FIELD_MENSAGEM);
+    const mensagem = (mfMensagem?.value != null && String(mfMensagem.value).trim())
+      ? String(mfMensagem.value).trim()
+      : null;
+    const snap: ClickUpSnapshot = { status, dueDate, motivoPrazo, responsavel, mensagem };
     snapshotCache.set(taskId, { value: snap, expiresAt: Date.now() + SNAPSHOT_TTL_MS });
     return snap;
   } catch {

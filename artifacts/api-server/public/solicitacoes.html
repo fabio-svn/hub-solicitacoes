@@ -24,6 +24,25 @@
     <div class="page-header">
       <h1 class="page-title">Que tipo de solicitação você gostaria de realizar?</h1>
     </div>
+    <!-- CANAL-SUGESTOES: destaque para o canal de sugestoes de conteudo -->
+    <style>
+      .sugestao-banner { display: flex; align-items: center; gap: 14px; padding: 16px 18px; margin-bottom: 22px; border: 1px solid rgba(172,54,49,0.25); border-radius: 12px; background: linear-gradient(120deg, rgba(172,54,49,0.07), rgba(193,162,90,0.08)); cursor: pointer; transition: box-shadow 0.15s ease, transform 0.15s ease; }
+      .sugestao-banner:hover { box-shadow: 0 6px 18px rgba(172,54,49,0.12); transform: translateY(-1px); }
+      .sugestao-banner-icone { color: #AC3631; flex: none; display: flex; }
+      .sugestao-banner-texto { display: flex; flex-direction: column; gap: 2px; }
+      .sugestao-banner-texto strong { font-size: 0.98rem; }
+      .sugestao-banner-texto span { font-size: 0.84rem; color: #6b6560; }
+      .sugestao-banner-cta { margin-left: auto; flex: none; font-weight: 600; font-size: 0.86rem; color: #AC3631; white-space: nowrap; }
+      @media (max-width: 640px) { .sugestao-banner-cta { display: none; } }
+    </style>
+    <div class="sugestao-banner" onclick="window.location.href='/form-sugestao-conteudo.html'" data-testid="banner-sugestao-conteudo">
+      <div class="sugestao-banner-icone" id="sugestaoBannerIcone"></div>
+      <div class="sugestao-banner-texto">
+        <strong>Canal de Sugestões de Conteúdo</strong>
+        <span>Tem uma ideia de tema para nossos conteúdos? Conta pra gente — vira pauta para gravações, posts e carrosséis.</span>
+      </div>
+      <span class="sugestao-banner-cta">Enviar sugestão →</span>
+    </div>
     <div id="categoriesContainer"></div>
   </div>
 
@@ -49,6 +68,8 @@
         return;
       }
       Shell.render({ activeRoute: 'nova-solicitacao', contentEl: document.getElementById('pageContent') });
+      var bi = document.getElementById('sugestaoBannerIcone');
+      if (bi) bi.innerHTML = icon('icon-star', { size: 26 });
       renderCategories();
     }
 

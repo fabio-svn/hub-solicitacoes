@@ -94,6 +94,7 @@ const CATEGORIAS_SOLICITACAO = [
       { id: "email-marketing", label: "E-mail Marketing", icon: "icon-send", ativo: true },
       { id: "atualizacao-material", label: "Atualização de material", icon: "icon-refresh", ativo: true },
       { id: "materiais-impressos", label: "Materiais Impressos", icon: "icon-printer", ativo: true },
+      { id: "sugestao-conteudo", label: "Sugestão de Conteúdo", icon: "icon-star", ativo: true },
     ]
   },
   {
@@ -144,6 +145,7 @@ function categoriasVisiveis() {
 
 const TIPO_SOLICITACAO_LABELS = {
   "eventos":                        "Eventos",
+  "sugestao-conteudo":              "Sugestão de Conteúdo",
   "pagina-assessores-dados":        "Página de Equipe — Dados",
   "pagina-assessores-atualizacao":  "Página de Equipe — Atualização",
   "pagina-assessores":              "Página de Equipe",
@@ -597,6 +599,7 @@ const FORM_ROUTES = {
   "convite-fp":            "form-convite-fp.html",
   "pagina-online":         "form-pagina-online.html",
   "outro":                 "form-outro.html",
+  "sugestao-conteudo":     "form-sugestao-conteudo.html",
   "brindes":               "form-brindes.html",
   "patrocinio":            "form-patrocinio.html",
   "email-marketing":       "form-email-marketing.html",
@@ -646,6 +649,13 @@ const FLUXOS_ETAPAS = {
     { id: "envio-grafica",        label: "Envio gráfica",        visivel: true  },
     { id: "envio-assessor",       label: "Envio assessor",       visivel: true  },
     { id: "reprovado",            label: "Reprovado",            visivel: false },
+  ],
+  // Sugestões de conteúdo: time de conteúdo analisa, aprova ou reprova e conclui.
+  "sugestao-conteudo": [
+    { id: "em-analise", label: "Em análise", visivel: true  },
+    { id: "aprovado",   label: "Aprovado",   visivel: true  },
+    { id: "concluido",  label: "Concluído",  visivel: true  },
+    { id: "reprovado",  label: "Reprovado",  visivel: false },
   ],
   // BRINDES-SEM-ETAPAS: brindes segue um fluxo proprio, informado fora do Hub
   // por outra area. Lista vazia => o card de etapas nao aparece (o front esconde

@@ -1,7 +1,7 @@
 export type FormFieldSchema = {
   name: string;
   label: string;
-  type: 'text' | 'email' | 'tel' | 'select' | 'radio' | 'textarea' | 'file';
+  type: 'text' | 'email' | 'tel' | 'select' | 'radio' | 'textarea' | 'file' | 'checkbox';
   options?: { value: string; label: string }[];
   required?: boolean;
 };
@@ -128,6 +128,30 @@ export const SETOR_CODIGO_MAP: Record<string, string> =
   Object.fromEntries(SETORES.map(s => [s.name, s.code]));
 
 export const FORM_SCHEMAS: Record<string, FormSchema> = {
+  // CANAL-SUGESTOES: canal de sugestoes de temas para conteudos da SVN
+  'sugestao-conteudo': {
+    tipo: 'sugestao-conteudo',
+    label: 'Sugestão de Conteúdo',
+    description: 'Canal de sugestões de temas para conteúdos da SVN (gravações, posts, carrosséis).',
+    is_automation: false,
+    has_clickup: true,
+    has_approval_flow: false,
+    has_downloadable_artifact: false,
+    fields: [
+      { name: 'tema',           label: 'Qual tema ou assunto você gostaria de ver em um conteúdo da SVN?', type: 'textarea', required: true },
+      { name: 'origem_duvida',  label: 'Esse tema surgiu a partir de alguma dúvida ou situação real com seus clientes?', type: 'textarea' },
+      {
+        name: 'formatos', label: 'Em qual formato você imagina esse conteúdo?', type: 'checkbox',
+        options: [
+          { value: 'carrossel', label: 'Carrossel' },
+          { value: 'reels',     label: 'Reels' },
+          { value: 'post',      label: 'Post' },
+        ],
+      },
+      { name: 'perfil_cliente', label: 'Para qual perfil de cliente esse conteúdo seria útil?', type: 'text' },
+      { name: 'referencias',    label: 'Referências', type: 'textarea' },
+    ],
+  },
   'cartao-boas-vindas': {
     tipo: 'cartao-boas-vindas',
     label: 'Cartão de Boas-vindas',
@@ -654,6 +678,7 @@ export const VALID_TIPOS: string[] = [
   "ch-linha-do-tempo",
   "ch-aniversariantes",
   "material-tombamento",
+  "sugestao-conteudo",
 ];
 
 /* Tipos que existem no sistema mas nao tem entrada em FORM_SCHEMAS — as paginas
@@ -732,6 +757,7 @@ const TIPOS_COM_CLICKUP_IDS: string[] = [
   "producao-video",
   "sessao-fotos",
   "materiais-impressos",
+  "sugestao-conteudo",
 ];
 
 export const TIPOS_COM_CLICKUP: Array<{ tipo: string; label: string }> =

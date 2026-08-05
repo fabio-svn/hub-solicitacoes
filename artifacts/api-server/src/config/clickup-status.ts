@@ -7,6 +7,7 @@ function normalizeStatusKey(raw: string): string {
 }
 
 /* interno */ const CLICKUP_STATUS_MAP: Record<string, string> = {
+  "backlog":                    "em-analise",
   "to do":                      "recebido",
   "recebido":                   "recebido",
   "in progress":                "em-producao",

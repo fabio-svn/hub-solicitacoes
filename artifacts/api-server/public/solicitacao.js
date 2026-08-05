@@ -84,16 +84,20 @@
         // aparecia. So conta como novidade se havia texto novo e diferente.
         const obsNova = (d.observacao !== undefined && d.observacao !== null && String(d.observacao).trim() !== '');
         const obsChegou = obsNova && d.observacao !== item.observacao;
+        // Mensagem do ClickUp (justificativa de aprovação/reprovação/conclusão)
+        const msgNova = (d.mensagem_clickup !== undefined && d.mensagem_clickup !== null && String(d.mensagem_clickup).trim() !== '');
+        const msgChegou = msgNova && d.mensagem_clickup !== item.mensagem_clickup;
         // sincroniza os campos de prazo silenciosamente
         if (d.prazo) item.prazo = d.prazo;
         if (d.prazo_anterior) item.prazo_anterior = d.prazo_anterior;
         if (d.prazo_motivo !== undefined) item.prazo_motivo = d.prazo_motivo;
         if (d.observacao !== undefined) item.observacao = d.observacao;  // OBS-REPROVACAO-SYNC
+        if (d.mensagem_clickup !== undefined) item.mensagem_clickup = d.mensagem_clickup;
         const respMudou = (d.responsavel !== undefined && d.responsavel !== item.responsavel);  // RESP-SYNC-FRONT
         if (respMudou) item.responsavel = d.responsavel;
         if (d.prazo_alterado_em) item.prazo_alterado_em = d.prazo_alterado_em;
         if (statusMudou) item.status = d.status;
-        if (statusMudou || prazoMudou || obsChegou || respMudou) {
+        if (statusMudou || prazoMudou || obsChegou || msgChegou || respMudou) {
           renderPage(item);
           if (prazoMudou && window.showToast) showToast('O prazo desta solicitação foi atualizado.', 'info');
         }
@@ -427,8 +431,12 @@
         }
         // MOTIVO-NO-CARD: em reprovacao, o motivo (observacao da validacao) aparece
         // abaixo do rotulo. Sem motivo, mostra so o rotulo, como antes.
-        const _motivo = (item.status === 'reprovado' && item.observacao && String(item.observacao).trim())
-          ? String(item.observacao).trim() : '';
+        // mensagem_clickup e usada como fallback quando observacao nao vem.
+        const _motivoBase = (item.status === 'reprovado' && item.observacao && String(item.observacao).trim())
+          ? String(item.observacao).trim()
+          : (item.status === 'reprovado' && item.mensagem_clickup && String(item.mensagem_clickup).trim())
+            ? String(item.mensagem_clickup).trim() : '';
+        const _motivo = _motivoBase;
         card.innerHTML = `
           <div style="display:flex;align-items:${_motivo ? 'flex-start' : 'center'};gap:8px;padding:8px 0">
             <div style="width:10px;height:10px;border-radius:var(--radius-round);background:${sObj.text || 'var(--danger)'};flex-shrink:0;margin-top:${_motivo ? '5px' : '0'}"></div>
@@ -496,10 +504,18 @@
           <svg class="fluxo-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="6 9 12 15 18 9"/></svg>
         </button>`;
 
+      // MSG-CLICKUP: se há mensagem do time (justificativa de aprovação/conclusão),
+      // mostra abaixo do rail quando o status for aprovado ou concluído.
+      const _statusComMsg = ['aprovado', 'concluido'].includes(item.status);
+      const _msgClickup = (_statusComMsg && item.mensagem_clickup && String(item.mensagem_clickup).trim())
+        ? String(item.mensagem_clickup).trim() : '';
+      const _msgBlock = _msgClickup
+        ? `<div style="margin-top:10px;padding:10px 12px;background:var(--ink-03,#f8f9fa);border:1px solid var(--ink-10,#e5e7eb);border-radius:var(--radius-md,6px);font-size:0.82rem;color:var(--ink-70);line-height:1.5"><strong style="font-size:0.7rem;text-transform:uppercase;letter-spacing:0.06em;opacity:0.55;display:block;margin-bottom:4px">Mensagem do time</strong>${esc(_msgClickup)}</div>`
+        : '';
       card.innerHTML = `
         <p class="fluxo-eyebrow" style="font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;opacity:0.38;margin-bottom:14px">Andamento</p>
         ${resumoHtml}
-        <div class="status-rail-scroll"><div class="status-rail">${stepsHtml}</div></div>`;
+        <div class="status-rail-scroll"><div class="status-rail">${stepsHtml}</div></div>${_msgBlock}`;
     }
 
     /* ── Sistema de Aprovação v2 — storage de rodadas ── */
