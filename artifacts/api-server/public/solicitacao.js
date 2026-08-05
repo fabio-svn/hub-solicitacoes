@@ -61,6 +61,9 @@
         }
         renderPage(item);
         syncStatus(item);
+        // SYNC-POLL: re-verifica o ClickUp a cada 45 s para que mudanças de status
+        // apareçam sem precisar recarregar a página.
+        setInterval(() => syncStatus(item), 45000);
       } catch (e) {
         console.error('[Solicitação] erro ao carregar:', e);
         window.location.href = '/dashboard.html';

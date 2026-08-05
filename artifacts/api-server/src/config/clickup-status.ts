@@ -45,6 +45,7 @@ function normalizeStatusKey(raw: string): string {
   "cancelled":                  "cancelado",
   "canceled":                   "cancelado",
   "cancelado":                  "cancelado",
+  "aprovado":                   "aprovado",
   "reprovado":                  "reprovado",
   "reprovado / cancelado":      "reprovado",
 };
