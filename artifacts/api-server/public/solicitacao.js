@@ -428,12 +428,16 @@
       if (excepcional) {
         const sObj = getStatus(item.status);
         if (item.status === 'cancelado') {
+          // MSG-CANCELADO: mensagem do time (campo do ClickUp) tambem aparece no cancelamento.
+          const _msgCanc = (item.mensagem_clickup && String(item.mensagem_clickup).trim())
+            ? String(item.mensagem_clickup).trim() : '';
           card.innerHTML = `
             <div style="display:flex;align-items:flex-start;gap:10px;padding:14px 16px;background:rgba(200,40,40,0.07);border:1px solid rgba(200,40,40,0.22);border-radius:var(--radius-lg)">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#C82828" stroke-width="1.5" style="flex-shrink:0;margin-top:1px"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
               <div>
                 <div style="font-size:0.9rem;font-weight:700;color:#C82828">Solicitação cancelada</div>
                 <div style="font-size:0.8rem;opacity:0.6;margin-top:2px">Esta solicitação foi cancelada e não está mais em andamento.</div>
+                ${_msgCanc ? `<div style="font-size:0.82rem;color:var(--ink-70);margin-top:8px;line-height:1.5"><strong style="font-size:0.7rem;text-transform:uppercase;letter-spacing:0.06em;opacity:0.55;display:block;margin-bottom:2px">Mensagem do time</strong>${esc(_msgCanc)}</div>` : ''}
               </div>
             </div>`;
           return;

@@ -933,7 +933,7 @@ router.get("/solicitacoes/:id/status", requireAuth, async (req, res): Promise<vo
             }
           }
           // Campo "Mensagem" do ClickUp (justificativa): só exibido nos status finais.
-          const STATUSES_COM_MENSAGEM = ["aprovado", "reprovado", "concluido"];
+          const STATUSES_COM_MENSAGEM = ["aprovado", "reprovado", "concluido", "cancelado"];
           if (snap.mensagem && STATUSES_COM_MENSAGEM.includes(snap.status ?? "")) {
             mensagemClickupOut = snap.mensagem;
           }

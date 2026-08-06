@@ -1484,6 +1484,17 @@ export async function createClickUpTask(
     logger.info({ diasAteEvento, priority: taskPayload.priority }, "ClickUp: evento — prioridade definida");
   }
 
+  // PRIORIDADE_POR_TIPO: prioridade fixa na criacao (1=Urgente, 2=Alta, 3=Normal,
+  // 4=Baixa). Eventos continua dinamico (bloco acima); tipos fora do mapa criam
+  // a task sem prioridade, como sempre.
+  const PRIORIDADE_POR_TIPO: Record<string, number> = {
+    "sugestao-conteudo": 3, // Normal
+  };
+  if (taskPayload.priority === undefined && PRIORIDADE_POR_TIPO[tipo] !== undefined) {
+    taskPayload.priority = PRIORIDADE_POR_TIPO[tipo];
+    logger.info({ tipo, priority: taskPayload.priority }, "ClickUp: prioridade fixa por tipo");
+  }
+
   // Responsáveis por tipo (via DB)
   const assignees = await getAssigneesForTipo(tipo);
   if (assignees.length > 0) {
