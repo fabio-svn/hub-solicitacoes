@@ -464,13 +464,14 @@ router.post("/solicitacoes", requireAuth, upload.any(), async (req, res): Promis
     res.json({ success: true, id: solicitacao.id, clickup_task_id: clickupTaskId });
   } catch (err) {
     const user = req.session?.user;
-    logger.error({
+    req.log.error({
       err,
       userEmail:        user?.email,
       tipo_solicitacao: req.body?.tipo_solicitacao,
       step:             "form_submission",
     }, "Form submission error");
-    res.status(500).json({ error: "Erro ao processar solicitação" });
+    if (res.headersSent) return;
+    res.status(500).json({ error: "Erro ao processar solicitação", ref: req.id });
   }
 });
 

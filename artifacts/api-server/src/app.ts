@@ -207,6 +207,24 @@ app.use((err: Error, req: Request, res: Response, _next: NextFunction) => {
     });
     return;
   }
+  /* UPLOAD-TRUNCADO: o busboy (parser do multer) lanca Error comum — nao
+     MulterError — quando a conexao cai no meio do multipart ("Unexpected end
+     of form" e parentes). Sem este ramo, envio interrompido pelo lado do
+     usuario virava 500 "Erro interno" com codigo, assustando quem so perdeu
+     sinal no upload e poluindo o log com falso alarme. */
+  const msgBusboy = String((err as any)?.message || "");
+  if (
+    msgBusboy === "Unexpected end of form" ||
+    msgBusboy === "Unexpected end of multipart data" ||
+    msgBusboy.startsWith("Malformed part header")
+  ) {
+    req.log?.warn({ msg: msgBusboy }, "Upload interrompido pelo cliente (multipart truncado)");
+    res.status(400).json({
+      error: "O envio foi interrompido antes de terminar. Verifique a conex\u00e3o e tente novamente. No celular, prefira Wi-Fi para enviar fotos.",
+      code: "UPLOAD_INTERROMPIDO",
+    });
+    return;
+  }
 
   req.log?.error({ err }, "Unhandled error");
   /* O codigo vai junto na resposta: e o unico fio entre "deu erro na minha tela"
