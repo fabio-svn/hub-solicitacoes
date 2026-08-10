@@ -605,7 +605,8 @@ export const FORM_SCHEMAS: Record<string, FormSchema> = {
       { name: 'plataforma',       label: 'Plataforma (online)',        type: 'select',
         options: [
           { value: 'zoom',    label: 'Zoom' },
-          { value: 'meet',    label: 'Meet' }
+          { value: 'meet',    label: 'Meet' },
+          { value: 'teams',   label: 'Teams' }
         ] },
       { name: 'palestrante_1_nome',  label: 'Palestrante 1 - Nome',  type: 'text' },
       { name: 'palestrante_1_cargo', label: 'Palestrante 1 - Cargo', type: 'text' },
