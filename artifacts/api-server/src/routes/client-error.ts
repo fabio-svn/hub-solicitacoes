@@ -38,6 +38,18 @@ router.post("/client-error", limiteRelato, requireAuth, (req, res): void => {
     const b = (req.body ?? {}) as Record<string, unknown>;
     const mensagem = corta(b.mensagem, 300) || "(sem mensagem)";
     const origem = corta(b.origem, 300) || "";
+
+    // LOG-CATEGORIAS: telemetria de terceiros bloqueada no navegador (adblock,
+    // anti-tracking) e ruido constante sem valor diagnostico — nao vira registro.
+    // Falha de script proprio continua registrando: e sinal real de incidente.
+    const TELEMETRIA_IGNORADA = [
+      "cloudflareinsights.com",
+      "googletagmanager.com",
+      "google-analytics.com",
+      "clarity.ms",
+      "hotjar.com",
+    ];
+    if (TELEMETRIA_IGNORADA.some((d) => origem.includes(d))) return;
     const user = req.session?.user;
 
     logAtividadeBg({

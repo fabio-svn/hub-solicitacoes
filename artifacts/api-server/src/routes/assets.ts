@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { PutObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
 import { getR2Client, R2_BUCKET } from "../lib/r2-client";
+import { logAtividadeBg } from "../services/activity-log";
 import multer from "multer";
 import sharp from "sharp";
 import os from "os";
@@ -195,6 +196,13 @@ router.delete("/:id", requireRole("admin"), async (req, res): Promise<void> => {
     }
 
     await db.delete(artAssetsTable).where(eq(artAssetsTable.id, id));
+    logAtividadeBg({
+      userEmail: (req as any).session?.user?.email || "",
+      userName: (req as any).session?.user?.name || "",
+      tipo: "asset_excluido",
+      nivel: "warn",
+      detalhe: `Asset excluido da biblioteca: ${(asset as any).original_name || asset.storage_key}`,
+    });
     res.json({ ok: true });
   } catch (err) {
     logger.error({ err }, "Erro ao deletar asset");

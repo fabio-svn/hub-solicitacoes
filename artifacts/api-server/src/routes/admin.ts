@@ -993,6 +993,11 @@ router.get("/activity-log", requireAuth, async (req, res): Promise<void> => {
     }
     if (req.query.nivel) conditions.push(eq(activityLogTable.nivel, String(req.query.nivel)));
     if (req.query.tipo) conditions.push(eq(activityLogTable.tipo, String(req.query.tipo)));
+    // LOG-CATEGORIAS: a tela agrupa tipos em categorias e filtra pelo conjunto
+    if (req.query.tipos) {
+      const listaTipos = String(req.query.tipos).split(",").map((t) => t.trim()).filter(Boolean);
+      if (listaTipos.length) conditions.push(inArray(activityLogTable.tipo, listaTipos));
+    }
 
     const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
 
@@ -1495,6 +1500,13 @@ router.put("/clickup-lists/:id/forms", requireRole("admin"), async (req, res): P
           set: { list_id: list.list_id, list_name: list.list_name, updated_at: now }
         });
     }
+    logAtividadeBg({
+      userEmail: req.session?.user?.email || "",
+      userName: req.session?.user?.name || "",
+      tipo: "clickup_lista_alterada",
+      nivel: "warn",
+      detalhe: `Lista "${list.list_name || list.list_id}" agora atende: ${tipos.length ? tipos.join(", ") : "(nenhum tipo)"}`,
+    });
     res.json({ ok: true });
   } catch (err) {
     logger.error({ err, id }, "clickup-lists PUT forms falhou");

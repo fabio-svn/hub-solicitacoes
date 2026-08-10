@@ -55,6 +55,17 @@
               <button class="filter-chip" data-filter="nivel" data-value="error" data-label="Erros" onclick="toggleFilter(this, 'nivel')">Erros</button>
             </div>
           </div>
+          <div class="filter-panel-row">
+            <span class="filter-panel-label">Categoria</span>
+            <div class="filter-panel-chips">
+              <button class="filter-chip active" data-filter="categoria" data-value="" data-label="Todas as categorias" onclick="toggleFilter(this, 'categoria')">Todas</button>
+              <button class="filter-chip" data-filter="categoria" data-value="fluxo" data-label="Fluxo" onclick="toggleFilter(this, 'categoria')">Fluxo</button>
+              <button class="filter-chip" data-filter="categoria" data-value="admin" data-label="Administrativo" onclick="toggleFilter(this, 'categoria')">Administrativo</button>
+              <button class="filter-chip" data-filter="categoria" data-value="prazos" data-label="Prazos" onclick="toggleFilter(this, 'categoria')">Prazos</button>
+              <button class="filter-chip" data-filter="categoria" data-value="integracoes" data-label="Integrações" onclick="toggleFilter(this, 'categoria')">Integrações</button>
+              <button class="filter-chip" data-filter="categoria" data-value="navegador" data-label="Navegador" onclick="toggleFilter(this, 'categoria')">Navegador</button>
+            </div>
+          </div>
         </div>
         </div>
         <div class="search-bar" style="flex:1;margin-bottom:0">
@@ -68,7 +79,7 @@
           <colgroup>
             <col style="width:110px">
             <col style="width:120px">
-            <col style="width:64px">
+            <col style="width:118px">
             <col style="width:140px">
             <col style="width:auto">
           </colgroup>
@@ -76,7 +87,7 @@
             <tr>
               <th>Data/Hora</th>
               <th>Usuário</th>
-              <th>Nível</th>
+              <th>Categoria</th>
               <th>Tipo</th>
               <th>Detalhe</th>
             </tr>
@@ -103,8 +114,8 @@
 
     const LOG_NIVEL_STYLE = {
       info:  { bg: 'rgba(37,99,235,0.1)',  text: '#2563eb', label: 'INFO'  },
-      warn:  { bg: 'rgba(234,88,12,0.1)',  text: '#ea580c', label: 'WARN'  },
-      error: { bg: 'rgba(220,38,38,0.1)',  text: 'var(--danger)', label: 'ERROR' },
+      warn:  { bg: 'rgba(234,88,12,0.1)',  text: '#ea580c', label: 'AVISO' },
+      error: { bg: 'rgba(220,38,38,0.1)',  text: 'var(--danger)', label: 'ERRO' },
     };
 
     const LOG_TIPO_LABEL = {
@@ -127,7 +138,43 @@
       impersonate_inicio:          'Impersonate (início)',
       impersonate_fim:             'Impersonate (fim)',
       corporate_convite_gerado:    'Convite gerado',
+      corporate_foto_enviada:      'Foto enviada (corporate)',
+      corporate_foto_removida:     'Foto removida (corporate)',
+      corporate_foto_renomeada:    'Foto renomeada (corporate)',
+      erro_navegador:              'Erro no navegador',
+      upload_interrompido:         'Envio interrompido',
+      clickup_lista_alterada:      'Lista ClickUp alterada',
+      asset_excluido:              'Asset excluído',
     };
+
+    /* LOG-CATEGORIAS: segundo eixo de leitura. Nivel diz a gravidade; a
+       categoria diz o assunto — exclusao nao briga mais com erro pela mesma
+       cor, atraso tem cara de atraso e vermelho volta a significar falha real. */
+    const LOG_CATEGORIA = {
+      fluxo:       { label: 'FLUXO',        bg: 'rgba(37,99,235,0.10)',  text: '#2563eb' },
+      admin:       { label: 'ADMIN',        bg: 'rgba(126,34,206,0.10)', text: '#7e22ce' },
+      prazos:      { label: 'PRAZOS',       bg: 'rgba(194,65,12,0.10)',  text: '#c2410c' },
+      integracoes: { label: 'INTEGRAÇÕES',  bg: 'rgba(185,28,28,0.10)',  text: '#b91c1c' },
+      navegador:   { label: 'NAVEGADOR',    bg: '#eef2f7',               text: '#475569' },
+    };
+    const LOG_TIPO_CATEGORIA = {
+      solicitacao_criada: 'fluxo', alteracao_solicitada: 'fluxo', aprovacao_registrada: 'fluxo',
+      cancelamento_solicitado: 'fluxo', entrega_registrada: 'fluxo', prazo_alterado: 'fluxo',
+      cartao_validacao_editada: 'fluxo', corporate_convite_gerado: 'fluxo',
+      corporate_foto_enviada: 'fluxo', corporate_foto_renomeada: 'fluxo',
+      solicitacao_excluida: 'admin', solicitacoes_excluidas_massa: 'admin',
+      usuario_criado: 'admin', usuario_papel_alterado: 'admin',
+      impersonate_inicio: 'admin', impersonate_fim: 'admin',
+      corporate_foto_removida: 'admin', clickup_lista_alterada: 'admin', asset_excluido: 'admin',
+      solicitacao_travada: 'prazos', upload_interrompido: 'prazos',
+      automacao_erro: 'integracoes', email_falha: 'integracoes',
+      clickup_erro: 'integracoes', clickup_status_falha: 'integracoes',
+      erro_navegador: 'navegador',
+    };
+    function categoriaDoTipo(tipo) { return LOG_TIPO_CATEGORIA[tipo] || 'fluxo'; }
+    function tiposDaCategoria(cat) {
+      return Object.keys(LOG_TIPO_CATEGORIA).filter(function (t) { return LOG_TIPO_CATEGORIA[t] === cat; });
+    }
 
     /* LINK-DO-CONVITE: o /api/admin/log ja devolve a coluna metadata inteira,
        mas a tabela so montava link quando havia solicitacao_id — e convite do
@@ -155,6 +202,8 @@
       if (busca) params.set('busca', busca);
       const nivel = filterState.nivel || '';
       if (nivel) params.set('nivel', nivel);
+      const categoria = filterState.categoria || '';
+      if (categoria) params.set('tipos', tiposDaCategoria(categoria).join(','));
       try {
         const res = await fetch('/api/admin/activity-log?' + params.toString());
         const data = await res.json();
@@ -176,6 +225,7 @@
         const data_fmt = dt.toLocaleDateString('pt-BR', { day:'2-digit', month:'2-digit', year:'2-digit' });
         const hora_fmt = dt.toLocaleTimeString('pt-BR', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
         const ns = LOG_NIVEL_STYLE[item.nivel] || { bg: '#f1f5f9', text: '#475569', label: item.nivel };
+        const cat = LOG_CATEGORIA[categoriaDoTipo(item.tipo)];
         const tipoLabel = LOG_TIPO_LABEL[item.tipo] || item.tipo;
         const userShort = item.user_email ? item.user_email.split('@')[0] : (item.user_name || '—');
         return `<tr style="border-top:1px solid var(--border-light);transition:background 0.12s" onmouseover="this.style.background='var(--icon-bg)'" onmouseout="this.style.background=''">
@@ -187,7 +237,8 @@
             <div style="font-size:0.78rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${esc(item.user_email || '')}">${esc(userShort)}</div>
           </td>
           <td style="padding:8px 14px">
-            <span style="display:inline-block;padding:2px 7px;border-radius:var(--radius-sm);font-size:0.68rem;font-weight:800;background:${ns.bg};color:${ns.text};letter-spacing:0.04em">${ns.label}</span>
+            <span style="display:inline-block;padding:2px 7px;border-radius:var(--radius-sm);font-size:0.66rem;font-weight:800;background:${cat.bg};color:${cat.text};letter-spacing:0.04em">${cat.label}</span>
+            <div style="font-size:0.62rem;font-weight:700;margin-top:3px;color:${ns.text};opacity:0.8;letter-spacing:0.04em">${ns.label}</div>
           </td>
           <td style="padding:8px 14px;overflow:hidden">
             <span style="font-size:0.76rem;opacity:0.8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block" title="${esc(tipoLabel)}">${esc(tipoLabel)}</span>
@@ -214,7 +265,7 @@
 
     // Filtros: engine compartilhado (filters.js). 'Log' = sufixo do DOM (#filterPanelLog etc).
     // filterState fica como alias vivo do estado do engine (loadLog/export ainda leem .nivel).
-    const filterState = FilterPanel.register('Log', { state: { nivel: '' }, onChange: loadLog }).state;
+    const filterState = FilterPanel.register('Log', { state: { nivel: '', categoria: '' }, onChange: loadLog }).state;
     function toggleFilterPanel() { FilterPanel.toggle('Log'); }
     function toggleFilter(btn, key) { FilterPanel.set('Log', btn, key); }
     function clearAllFilters() { FilterPanel.clear('Log'); }
@@ -230,11 +281,13 @@
       if (busca) params.set('busca', busca);
       const nivel = filterState.nivel || '';
       if (nivel) params.set('nivel', nivel);
+      const categoria = filterState.categoria || '';
+      if (categoria) params.set('tipos', tiposDaCategoria(categoria).join(','));
       fetch('/api/admin/activity-log?' + params.toString())
         .then(r => r.json())
         .then(data => {
           if (!data.data) return;
-          const headers = ['Data', 'Hora', 'Usuário', 'Nível', 'Tipo', 'Detalhe'];
+          const headers = ['Data', 'Hora', 'Usuário', 'Categoria', 'Nível', 'Tipo', 'Detalhe'];
           const rows = data.data.map(item => {
             const dt = new Date(item.created_at);
             const userShort = item.user_email ? item.user_email.split('@')[0] : (item.user_name || '');
@@ -242,6 +295,7 @@
               dt.toLocaleDateString('pt-BR'),
               dt.toLocaleTimeString('pt-BR', { hour:'2-digit', minute:'2-digit', second:'2-digit' }),
               userShort,
+              (LOG_CATEGORIA[categoriaDoTipo(item.tipo)] || {}).label || '',
               item.nivel,
               LOG_TIPO_LABEL[item.tipo] || item.tipo,
               item.detalhe || '',

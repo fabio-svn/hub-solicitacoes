@@ -257,12 +257,24 @@ window.FormCore = (function () {
        enviar. Tente novamente.". Agora a falha de rede se identifica, e quando o
        servidor manda um `ref` (erro 500) o codigo aparece na tela para a pessoa
        repassar. */
+    /* UPLOAD-RESILIENTE: queda de conexao no meio do envio (falha de rede ou
+       multipart truncado no servidor, code UPLOAD_INTERROMPIDO) ganha ate 2
+       novas tentativas automaticas antes de mostrar erro — na maioria dos casos
+       a repeticao passa sem o solicitante fazer nada. Os arquivos vao sempre no
+       original, sem compressao. */
     let res = { ok: false }, d = {}, falhaDeRede = false;
-    try {
-      res = await fetch('/api/solicitacoes', { method: 'POST', body: fd });
-      d = await res.json().catch(function () { return {}; });
-    } catch (_) {
-      falhaDeRede = true;
+    for (let tentativa = 1; tentativa <= 3; tentativa++) {
+      res = { ok: false }; d = {}; falhaDeRede = false;
+      try {
+        res = await fetch('/api/solicitacoes', { method: 'POST', body: fd });
+        d = await res.json().catch(function () { return {}; });
+      } catch (_) {
+        falhaDeRede = true;
+      }
+      const interrompido = falhaDeRede || d.code === 'UPLOAD_INTERROMPIDO';
+      if (!interrompido || tentativa === 3) break;
+      if (btn) btn.textContent = 'Conex\u00e3o inst\u00e1vel, tentando de novo (' + (tentativa + 1) + '/3)...';
+      await new Promise(function (r) { setTimeout(r, 1500 * tentativa); });
     }
 
     if (res.ok) {

@@ -6,6 +6,7 @@ import cors from "cors";
 import session from "express-session";
 import pgSession from "connect-pg-simple";
 import pinoHttp from "pino-http";
+import { logAtividadeBg } from "./services/activity-log";
 import path from "path";
 import { fileURLToPath } from "url";
 import { randomBytes } from "crypto";
@@ -219,6 +220,13 @@ app.use((err: Error, req: Request, res: Response, _next: NextFunction) => {
     msgBusboy.startsWith("Malformed part header")
   ) {
     req.log?.warn({ msg: msgBusboy }, "Upload interrompido pelo cliente (multipart truncado)");
+    logAtividadeBg({
+      userEmail: (req as any).session?.user?.email || "(sem sessao)",
+      userName: (req as any).session?.user?.name || "",
+      tipo: "upload_interrompido",
+      nivel: "warn",
+      detalhe: `Envio interrompido pela conexao em ${req.method} ${req.originalUrl}`,
+    });
     res.status(400).json({
       error: "O envio foi interrompido antes de terminar. Verifique a conex\u00e3o e tente novamente. No celular, prefira Wi-Fi para enviar fotos.",
       code: "UPLOAD_INTERROMPIDO",
