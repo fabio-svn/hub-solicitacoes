@@ -769,6 +769,7 @@ router.get("/users", requireRole("admin"), async (req, res) => {
       clickup_user_id: usersTable.clickup_user_id,
       created_at: usersTable.created_at,
       role: usersTable.role,
+      last_login: usersTable.last_login,
     };
     const sortCol = SORT_COLS[String(req.query.sort || "")] || usersTable.name;
     const sortDir = String(req.query.dir || "asc") === "desc" ? desc(sortCol) : sortCol;
