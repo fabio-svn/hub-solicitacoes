@@ -136,7 +136,7 @@ router.get("/callback", async (req, res) => {
       await db.update(usersTable).set(patch).where(eq(usersTable.email, email));
     }
 
-    req.session.user = { email, name, role };
+    req.session.user = { email, name, role, last_login: new Date().toISOString() };
     req.session.graphToken = tokenResponse.accessToken;
 
     try {
