@@ -1566,6 +1566,67 @@ export async function createClickUpTask(
   return { taskId, taskName, responsavel };
 }
 
+/**
+ * Acrescenta uma seção "📎 ARQUIVOS ADICIONADOS" à descrição de uma task existente.
+ * Usado quando novos arquivos são enviados via chat de alteração — mantém o histórico
+ * completo de arquivos visível na própria task, sem depender apenas de comentários ou
+ * da aba Anexos.
+ *
+ * Best-effort: retorna false em caso de falha sem lançar exceção.
+ */
+export async function appendArquivosToClickUpTask(
+  taskId: string,
+  arquivos: ArquivosMap,
+  autorNome: string,
+): Promise<boolean> {
+  if (!CLICKUP_API_TOKEN || !taskId) return false;
+  if (Object.keys(arquivos).length === 0) return true;
+
+  const novosLinks = buildArquivosSection(arquivos);
+  if (!novosLinks) return true;
+
+  try {
+    // Busca a descrição atual para não sobrescrever o conteúdo existente.
+    // Se o GET falhar (rate-limit, erro transitório, etc.) abortamos imediatamente —
+    // nunca usamos string vazia como fallback, pois o PUT seguinte apagaria a descrição.
+    const getRes = await fetchWithTimeout(`https://api.clickup.com/api/v2/task/${taskId}`, {
+      headers: { "Authorization": CLICKUP_API_TOKEN },
+    });
+    if (!getRes.ok) {
+      const body = await getRes.text().catch(() => "");
+      logger.warn({ taskId, httpStatus: getRes.status, body }, "ClickUp: falha ao obter descrição atual; append de arquivos cancelado para não sobrescrever conteúdo");
+      return false;
+    }
+    const taskData = await getRes.json().catch(() => ({})) as { description?: string };
+    const descricaoAtual = taskData.description ?? "";
+
+    const dataHora = new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" });
+    const separador = `\n\n─────────────────────────────\n✏️ Arquivos adicionados por ${autorNome} em ${dataHora}\n─────────────────────────────\n\n`;
+    const descricaoAtualizada = descricaoAtual
+      ? descricaoAtual + separador + novosLinks
+      : novosLinks;
+
+    const putRes = await fetchWithTimeout(`https://api.clickup.com/api/v2/task/${taskId}`, {
+      method: "PUT",
+      headers: { "Authorization": CLICKUP_API_TOKEN, "Content-Type": "application/json" },
+      body: JSON.stringify({ description: descricaoAtualizada }),
+    });
+
+    if (!putRes.ok) {
+      const body = await putRes.text().catch(() => "");
+      logger.warn({ taskId, httpStatus: putRes.status, body }, "ClickUp: falha ao atualizar descrição com novos arquivos");
+      return false;
+    }
+
+    invalidateSnapshot(taskId);
+    logger.info({ taskId, qtd: Object.keys(arquivos).length }, "ClickUp: descrição atualizada com novos arquivos (alteração)");
+    return true;
+  } catch (err) {
+    logger.warn({ err, taskId }, "ClickUp: erro ao atualizar descrição com novos arquivos");
+    return false;
+  }
+}
+
 export async function getClickUpTaskStatus(taskId: string): Promise<string | null> {
   if (!CLICKUP_API_TOKEN) return null;
   try {

@@ -10,7 +10,7 @@ import { db } from "@workspace/db";
 import { solicitacoesTable, arquivosTable, cartaoAprovacoesTable, usersTable, activityLogTable } from "@workspace/db";
 import { eq, desc, and, ne, sql, inArray, lt, notInArray } from "drizzle-orm";
 import { requireAuth, requireRole } from "../middleware/auth.middleware";
-import { createClickUpTask, extrairEntregaLinks, getClickUpTaskStatus, getClickUpTaskSnapshot, setClickUpTaskStatus, calcularPrazo, getPrazoDiasUteis, PRAZO_DIAS_UTEIS, APRESENTACAO_TIERS, CLICKUP_STATUS_EM_REVISAO, CLICKUP_STATUS_CONCLUIDO, notificarCartaoValidadoChat, type ArquivosMap } from "./clickup";
+import { createClickUpTask, extrairEntregaLinks, getClickUpTaskStatus, getClickUpTaskSnapshot, setClickUpTaskStatus, calcularPrazo, getPrazoDiasUteis, PRAZO_DIAS_UTEIS, APRESENTACAO_TIERS, CLICKUP_STATUS_EM_REVISAO, CLICKUP_STATUS_CONCLUIDO, notificarCartaoValidadoChat, appendArquivosToClickUpTask, type ArquivosMap } from "./clickup";
 import { holidaysList } from "../lib/holidays";
 import { normalizeFormDados } from "../lib/normalize";
 import { FORM_SCHEMAS } from "../config/form-schemas";
@@ -1191,29 +1191,85 @@ router.post("/solicitacoes/:id/alteracao", requireAuth, upload.array("arquivos",
       }
     } catch {}
 
-    // Anexa cada arquivo na própria task (aba Anexos) e captura a URL pública retornada
-    // pela API, para colocar o link clicável dentro do próprio comentário. Best-effort:
-    // loga falha sem abortar; o binário vai via multipart (a API não aceita URL "na nuvem").
+    // Para cada arquivo: (1) anexa na task do ClickUp (aba Anexos) enquanto o temp existe;
+    // (2) faz upload permanente para R2 e registra na tabela arquivos (para aparecer no
+    // resumo da solicitação via item.arquivos). A ordem importa: uploadToR2 apaga o temp
+    // no próprio finally, então o ClickUp precisa ler o arquivo ANTES de chamar uploadToR2.
+    // Ambas as etapas são best-effort; falha em uma não cancela a outra nem aborta o comentário.
     const anexados: Array<{ nome: string; url: string }> = [];
+    const arquivosR2Map: ArquivosMap = {}; // acumula os URLs permanentes para atualizar a descrição
     for (const f of arquivos) {
+      let r2Url: string | null = null;
+      let clickupAttUrl: string | null = null;
+      let clickupAttTitle: string | null = null;
       try {
-        const fd = new FormData();
-        fd.append("attachment", new Blob([fs.readFileSync(f.path)], { type: f.mimetype || "application/octet-stream" }), f.originalname);
-        const attRes = await fetchWithTimeout(`https://api.clickup.com/api/v2/task/${taskId}/attachment`, {
-          method: "POST",
-          headers: { "Authorization": token }, // sem Content-Type: o FormData define o boundary
-          body: fd,
-        }, 30000);
-        if (attRes.ok) {
-          const att = await attRes.json().catch(() => ({})) as { url?: string; title?: string };
-          anexados.push({ nome: att.title || f.originalname, url: att.url || "" });
-        } else {
-          logger.warn({ status: attRes.status, file: f.originalname }, "Falha ao anexar arquivo no ClickUp");
+        // Etapa 1 — anexo nativo no ClickUp (lê o temp antes de qualquer exclusão)
+        try {
+          const fd = new FormData();
+          fd.append("attachment", new Blob([fs.readFileSync(f.path)], { type: f.mimetype || "application/octet-stream" }), f.originalname);
+          const attRes = await fetchWithTimeout(`https://api.clickup.com/api/v2/task/${taskId}/attachment`, {
+            method: "POST",
+            headers: { "Authorization": token }, // sem Content-Type: o FormData define o boundary
+            body: fd,
+          }, 30000);
+          if (attRes.ok) {
+            const att = await attRes.json().catch(() => ({})) as { url?: string; title?: string };
+            clickupAttUrl = att.url || null;
+            clickupAttTitle = att.title || null;
+          } else {
+            logger.warn({ status: attRes.status, file: f.originalname }, "Falha ao anexar arquivo no ClickUp");
+          }
+        } catch (e) {
+          logger.warn({ err: e, file: f.originalname }, "Erro ao anexar arquivo no ClickUp");
         }
-      } catch (e) {
-        logger.warn({ err: e, file: f.originalname }, "Erro ao anexar arquivo no ClickUp");
+
+        // Etapa 2 — upload permanente para R2 e registro no banco
+        // uploadToR2 apaga o temp no próprio finally, então não precisa de cleanup aqui.
+        try {
+          r2Url = await uploadToR2(f, id, f.fieldname);
+          await db.insert(arquivosTable).values({
+            solicitacao_id: id,
+            campo: f.fieldname,
+            url_r2: r2Url,
+            nome_original: f.originalname,
+          });
+          // Acumula para atualizar a descrição da task com links permanentes
+          const prev = arquivosR2Map[f.fieldname];
+          if (prev === undefined) {
+            arquivosR2Map[f.fieldname] = r2Url;
+          } else if (Array.isArray(prev)) {
+            prev.push(r2Url);
+          } else {
+            arquivosR2Map[f.fieldname] = [prev, r2Url];
+          }
+        } catch (e) {
+          logger.warn({ err: e, file: f.originalname }, "Falha ao salvar arquivo no R2 (alteração)");
+          if (r2Url) {
+            await deleteFromR2(r2Url).catch(() => {});
+            r2Url = null;
+          }
+        }
+
+        // Registra no comentário: prefere R2 (permanente), usa ClickUp como fallback
+        const linkUrl = r2Url || clickupAttUrl || "";
+        if (linkUrl) {
+          anexados.push({ nome: clickupAttTitle || f.originalname, url: linkUrl });
+        }
       } finally {
+        // Garante limpeza do temp se uploadToR2 lançou antes do próprio finally (ex: R2 não configurado).
+        // unlink silencioso — não falha se o arquivo já foi removido pelo uploadToR2.
         try { fs.unlinkSync(f.path); } catch {}
+      }
+    }
+
+    // Atualiza a descrição da task no ClickUp com os links permanentes (R2) dos novos arquivos.
+    // Isso mantém o histórico completo visível diretamente na task — sem depender só da aba Anexos
+    // ou de comentários. Aguardado (await) para serializar a operação de leitura-modificação-escrita
+    // e evitar race conditions em alterações concorrentes. Best-effort: falha não cancela o comentário.
+    if (Object.keys(arquivosR2Map).length > 0) {
+      const okDesc = await appendArquivosToClickUpTask(taskId, arquivosR2Map, user.name);
+      if (!okDesc) {
+        logger.warn({ taskId, qtd: Object.keys(arquivosR2Map).length }, "Não foi possível atualizar a descrição da task com os novos arquivos (alteração)");
       }
     }
 
