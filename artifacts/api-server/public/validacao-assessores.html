@@ -74,6 +74,21 @@
       border-color: var(--danger);
       color: var(--danger);
     }
+    /* Confirmacao da reprovacao: solido vermelho, espelho do Aprovar verde. */
+    .va-btn-reprovar--solid {
+      background: var(--danger);
+      border-color: var(--danger);
+      color: #fff;
+    }
+    .va-btn-reprovar--solid:hover { background: #b91c1c; border-color: #b91c1c; color: #fff; }
+    /* Painel de motivo: assume a barra fixa de decisao (va-actions), no lugar
+       dos tres botoes, para nao brigar com o sticky do rodape. */
+    .va-reprovar-painel { width: 100%; }
+    .va-reprovar-painel .titulo { font-size: 0.78rem; font-weight: 700; color: var(--danger); margin-bottom: 6px; }
+    .va-reprovar-painel .titulo span { font-weight: 400; opacity: 0.85; }
+    .va-reprovar-painel textarea { width: 100%; box-sizing: border-box; min-height: 64px; font: inherit; font-size: 0.85rem; padding: 8px 10px; border: 1px solid var(--border-light); border-radius: var(--radius-md); resize: vertical; background: #fff; }
+    .va-reprovar-painel .rodape { display: flex; gap: 8px; align-items: center; margin-top: 10px; flex-wrap: wrap; }
+    .va-reprovar-painel .aviso { font-size: 0.78rem; color: var(--danger); margin-right: auto; }
 
     .va-actions {
       display: flex;
@@ -379,12 +394,12 @@
         rodape =
           '<div style="margin-top:16px">' +
             '<div style="font-size:0.72rem;color:var(--ink-50);margin-bottom:4px">Observação interna (para o marketing) <span style="opacity:0.7">— não é enviada ao assessor</span></div>' +
-            '<textarea id="vaObs" style="width:100%;box-sizing:border-box;min-height:56px;font:inherit;font-size:0.85rem;padding:8px 10px;border:1px solid var(--border-light);border-radius:var(--radius-md);resize:vertical" placeholder="Direções para o time de marketing. Obrigatória ao solicitar ajustes ou reprovar; opcional ao aprovar."></textarea>' +
+            '<textarea id="vaObs" style="width:100%;box-sizing:border-box;min-height:56px;font:inherit;font-size:0.85rem;padding:8px 10px;border:1px solid var(--border-light);border-radius:var(--radius-md);resize:vertical" placeholder="Direções para o time de marketing. Obrigatória ao solicitar ajustes; opcional ao aprovar."></textarea>' +
           '</div>' +
           '<div class="va-actions">' +
             '<button class="btn va-btn-aprovar" onclick="decidir(\'aprovado\')">Aprovar</button>' +
             '<button class="btn btn-secondary" onclick="decidir(\'ajustes\')">Solicitar ajustes</button>' +
-            '<button class="btn va-btn-reprovar" onclick="confirmarReprovar()">Reprovar</button>' +
+            '<button class="btn va-btn-reprovar" onclick="abrirReprovacao()">Reprovar</button>' +
           '</div><div id="vaMsg" style="margin-top:10px;font-size:0.82rem"></div>';
       } else if (resumo.status === 'aprovado' && podePublicar()) {
         rodape =
@@ -495,14 +510,45 @@
       }
     }
 
+    /* REPROVAR-COM-MOTIVO v2: o motivo digitado aqui vai para
+       assessor_publicacoes.observacao e é exatamente o texto que o resumo da
+       solicitação exibe ao solicitante quando o status é reprovado.
+       A va-actions é uma barra sticky no rodapé do modal — inserir qualquer
+       coisa depois dela renderiza por baixo. Então o painel assume a própria
+       barra: os botões saem, o motivo entra no mesmo lugar; Voltar restaura. */
+    function abrirReprovacao() {
+      const acoes = document.querySelector('.va-actions');
+      if (!acoes || document.getElementById('vaReprovar')) return;
+      acoes.dataset.botoes = acoes.innerHTML;
+      acoes.innerHTML =
+        '<div class="va-reprovar-painel" id="vaReprovar">' +
+          '<div class="titulo">Motivo da reprovação <span>— será exibido ao solicitante no resumo da solicitação</span></div>' +
+          '<textarea id="vaMotivo" placeholder="Explique o motivo. O assessor precisará enviar uma nova solicitação do zero."></textarea>' +
+          '<div class="rodape">' +
+            '<span id="vaMotivoMsg" class="aviso"></span>' +
+            '<button class="btn btn-secondary" onclick="fecharReprovacao()">Voltar</button>' +
+            '<button class="btn va-btn-reprovar va-btn-reprovar--solid" onclick="confirmarReprovar()">Confirmar reprovação</button>' +
+          '</div>' +
+        '</div>';
+      document.getElementById('vaMotivo').focus();
+    }
+    function fecharReprovacao() {
+      const acoes = document.querySelector('.va-actions');
+      if (acoes && acoes.dataset.botoes) {
+        acoes.innerHTML = acoes.dataset.botoes;
+        delete acoes.dataset.botoes;
+      }
+    }
     function confirmarReprovar() {
-      const obs = (document.getElementById('vaObs') || {}).value || '';
-      if (!obs.trim()) {
-        const msg = document.getElementById('vaMsg');
-        if (msg) { msg.style.color = 'var(--danger)'; msg.textContent = 'Escreva a observação interna explicando o motivo antes de reprovar.'; }
+      const motivo = ((document.getElementById('vaMotivo') || {}).value || '').trim();
+      const aviso = document.getElementById('vaMotivoMsg');
+      if (!motivo) {
+        if (aviso) aviso.textContent = 'Escreva o motivo antes de confirmar.';
+        const campo = document.getElementById('vaMotivo');
+        if (campo) campo.focus();
         return;
       }
-      if (confirm('Reprovar este perfil?\n\nO assessor precisará enviar uma nova solicitação do zero.')) decidir('reprovado');
+      decidir('reprovado', { observacao: motivo });
     }
 
     function concluirPagina() {
@@ -526,8 +572,9 @@
 
     async function decidir(decisao, extra) {
       const obs = (document.getElementById('vaObs') || {}).value || '';
+      const obsFinal = (extra && typeof extra.observacao === 'string' && extra.observacao.trim()) ? extra.observacao : obs;
       const msg = document.getElementById('vaMsg');
-      if ((decisao === 'ajustes' || decisao === 'reprovado') && !obs.trim()) {
+      if ((decisao === 'ajustes' || decisao === 'reprovado') && !obsFinal.trim()) {
         msg.style.color = 'var(--danger)';
         msg.textContent = decisao === 'ajustes'
           ? 'Descreva na observação o que precisa ser ajustado (para o marketing encaminhar).'
