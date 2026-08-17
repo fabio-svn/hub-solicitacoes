@@ -1835,6 +1835,13 @@
       const pular = new Set();
       const ehImagem = (v) => typeof v === 'string' && /^https?:\/\/\S+\.(jpe?g|png|webp|gif|avif)(\?|$)/i.test(v.trim());
 
+      // MULTI-FILE-FRONT: item.arquivos (tabela no banco) tem TODOS os uploads;
+      // dados[] tem só o último URL por campo. Pula campos de arquivo no loop
+      // principal e renderiza no bloco de Anexos abaixo — evita duplicação e
+      // garante que múltiplos arquivos apareçam.
+      const _FOTO_CAMPOS = new Set(['foto_perfil', 'fotoPerfil', 'fotoPerfilDigital']);
+      const _camposArquivo = new Set((item.arquivos || []).map(function(a) { return a.campo; }));
+
       // Foto + nome viram um bloco so: dois campos a menos e o rosto ancora o topo.
       const kFoto = ['foto_perfil', 'fotoPerfil'].find(k => ehImagem(dados[k]));
       const kNome = ['nome_completo', 'nomeCompleto'].find(k => dados[k] && String(dados[k]).trim());
@@ -1866,6 +1873,10 @@
       for (const [key, value] of _entries) {
         if (value === null || value === undefined || value === '') continue;
         if (pular.has(key)) continue;
+        // Campos de arquivo (exceto fotos de perfil) aparecem no bloco de Anexos
+        // abaixo, construído a partir de item.arquivos — pula aqui para evitar
+        // duplicação e garantir que múltiplos arquivos do mesmo campo sejam exibidos.
+        if (_camposArquivo.has(key) && !_FOTO_CAMPOS.has(key)) continue;
         if (key === 'rateio' && dados.natureza === 'online') continue;
         if (/^palFoto\d$/.test(key)) continue;
         if (typeof DRAWER_FIELD_LABELS !== 'undefined' && DRAWER_FIELD_LABELS[key]?.skip) continue;
@@ -1988,6 +1999,27 @@
         html += `<button type="button" class="dados-mais" id="dadosMaisBtn" onclick="abrirTodosDados()">Ver mais ${restantes} ${restantes === 1 ? 'campo' : 'campos'}</button>`;
       }
       html += '</div>';
+
+      // Bloco de Anexos — todos os arquivos de item.arquivos, exceto fotos de perfil
+      // (que já aparecem no identidadeBlock acima). Renderiza TODOS os uploads,
+      // inclusive quando o usuário enviou mais de um arquivo pelo mesmo campo.
+      var _arquivosAnexo = (item.arquivos || []).filter(function(a) { return !_FOTO_CAMPOS.has(a.campo); });
+      if (_arquivosAnexo.length > 0) {
+        var _fileRows = _arquivosAnexo.map(function(arq) {
+          var lbl = (typeof DRAWER_FIELD_LABELS_FLAT !== 'undefined' && DRAWER_FIELD_LABELS_FLAT[arq.campo])
+            || arq.campo.replace(/([a-z])([A-Z])/g, '$1 $2').replace(/[_-]+/g, ' ').replace(/^./, function(c) { return c.toUpperCase(); });
+          var nome = esc(arq.nome_original || 'Arquivo');
+          var url = esc(arq.url_r2 || '');
+          var icone = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="flex-shrink:0;margin-right:5px;opacity:0.55"><path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48"/></svg>';
+          return '<div class="dados-field dados-field--inline"><div class="dados-label">' + esc(lbl) + '</div>'
+            + '<div class="dados-value" style="display:flex;align-items:center;min-width:0">'
+            + icone
+            + '<a href="' + url + '" target="_blank" rel="noopener noreferrer" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0">' + nome + '</a>'
+            + '</div></div>';
+        }).join('');
+        html += '<div class="dados-grid" style="margin-top:8px">' + _fileRows + '</div>';
+      }
+
       container.innerHTML = html;
     }
 

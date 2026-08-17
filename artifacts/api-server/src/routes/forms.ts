@@ -352,7 +352,17 @@ router.post("/solicitacoes", requireAuth, upload.any(), async (req, res): Promis
             url_r2: uploadedUrl,
             nome_original: file.originalname,
           });
-          arquivosMap[file.fieldname] = uploadedUrl;
+          // MULTI-FILE-ACUMULA: acumula vários arquivos por fieldname em vez de
+          // sobrescrever — quando o usuário seleciona múltiplos arquivos no mesmo
+          // campo, todos ficam registrados no mapa para o ClickUp e o resumo.
+          const _prev = arquivosMap[file.fieldname];
+          if (_prev === undefined) {
+            arquivosMap[file.fieldname] = uploadedUrl;
+          } else if (Array.isArray(_prev)) {
+            _prev.push(uploadedUrl);
+          } else {
+            arquivosMap[file.fieldname] = [_prev, uploadedUrl];
+          }
         } catch (uploadErr) {
           logger.error({ err: uploadErr }, "R2 upload failed, continuing");
           // Se o upload subiu mas o registro no banco falhou, o arquivo ficaria
@@ -368,7 +378,14 @@ router.post("/solicitacoes", requireAuth, upload.any(), async (req, res): Promis
 
     // Merge uploaded file URLs into dados so art-generator can access them by field name
     if (Object.keys(arquivosMap).length > 0) {
-      parsedDados = { ...parsedDados, ...arquivosMap };
+      // MULTI-FILE-FLATTEN: mescla em parsedDados usando apenas o primeiro URL
+      // por campo (string). O ArquivosMap pode ter arrays quando há múltiplos
+      // arquivos num campo, mas o gerador de arte e os normalizadores esperam string.
+      // O mapa completo (com arrays) vai para o ClickUp via createClickUpTask.
+      const _arquivosFlat: Record<string, string> = Object.fromEntries(
+        Object.entries(arquivosMap).map(([k, v]) => [k, Array.isArray(v) ? v[0] : v])
+      );
+      parsedDados = { ...parsedDados, ..._arquivosFlat };
       // Re-normaliza após merge: campos como fotoPerfilDigital agora estão em parsedDados
       // e precisam receber seus aliases snake_case (ex: foto_perfil) antes do generator rodar.
       parsedDados = normalizeFormDados(tipo_solicitacao, parsedDados);

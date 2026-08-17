@@ -320,7 +320,18 @@ interface FormDados {
 }
 
 export interface ArquivosMap {
-  [campo: string]: string;
+  // MULTI-FILE: cada campo pode ter um único URL (string) ou vários (string[])
+  // quando o usuário seleciona mais de um arquivo no mesmo campo de formulário.
+  [campo: string]: string | string[];
+}
+
+/** Normaliza uma entrada de ArquivosMap para o primeiro URL não-vazio (ou null).
+ *  Campos de custom-field do ClickUp aceitam um único URL; a seção de descrição
+ *  retém todos os URLs via buildArquivosSection. */
+export function firstArquivoUrl(v: string | string[] | undefined): string | null {
+  if (!v) return null;
+  if (Array.isArray(v)) return v.find(u => !!u) ?? null;
+  return v || null;
 }
 
 // ─────────────────────────────────────────────
@@ -674,10 +685,15 @@ function buildDetailsSection(tipo: string, dados: FormDados): string | null {
 
 function buildArquivosSection(arquivos: ArquivosMap): string | null {
   const items: string[] = [];
-  for (const [campo, url] of Object.entries(arquivos)) {
-    if (!url) continue;
+  for (const [campo, urlOrUrls] of Object.entries(arquivos)) {
+    if (!urlOrUrls) continue;
     const label = ARQUIVO_LABELS[campo] || campo.replace(/([a-z])([A-Z])/g, "$1 $2").replace(/[_-]+/g, " ").replace(/^./, c => c.toUpperCase());
-    items.push(`• ${label}: ${url}`);
+    const urls = Array.isArray(urlOrUrls) ? urlOrUrls : [urlOrUrls];
+    urls.forEach((u, i) => {
+      if (!u) return;
+      const suffix = urls.length > 1 ? ` (${i + 1}/${urls.length})` : "";
+      items.push(`• ${label}${suffix}: ${u}`);
+    });
   }
   if (items.length === 0) return null;
   return `📎 ARQUIVOS\n━━━━━━━━━━━━━━━━━━━━━━\n\n${items.join("\n")}`;
@@ -1009,7 +1025,10 @@ async function setEventosCustomFields(taskId: string, dados: FormDados, arquivos
     let value: string | null;
 
     if (field.isArquivo) {
-      const url = arquivos[field.dadosKey] || null;
+      // MULTI-FILE: se o campo acumulou vários arquivos, usa o primeiro para o
+      // custom field do ClickUp (que aceita apenas um URL por campo).
+      const raw = arquivos[field.dadosKey];
+      const url = Array.isArray(raw) ? (raw[0] || null) : (raw || null);
       if (!url) { logger.warn({ taskId, label: field.label }, "ClickUp: arquivo sem URL, pulando"); continue; }
       value = url;
     } else {
@@ -1064,8 +1083,8 @@ async function setGeneralCustomFields(
 ): Promise<void> {
   const titulo = str(dados.titulo) || str(dados.nome_completo) || null;
   const publicoAlvo = str(dados.publico as string) || str(dados.publicoAlvo as string) || null;
-  const arquivoPrincipal = arquivos.materialAtual || arquivos.arquivoBase || null;
-  const arquivoApoio = arquivos.arquivoApoio || arquivos.fotoPerfil || null;
+  const arquivoPrincipal = firstArquivoUrl(arquivos.materialAtual) || firstArquivoUrl(arquivos.arquivoBase) || null;
+  const arquivoApoio = firstArquivoUrl(arquivos.arquivoApoio) || firstArquivoUrl(arquivos.fotoPerfil) || null;
 
   // ── Campos short_text e text ───────────────────────────────────────────────
   const textFields: Array<{ id: string; value: unknown; label: string; clickupType: string }> = [
@@ -1154,7 +1173,8 @@ function buildEventosCustomFieldsArray(
   for (const field of EVENTOS_CUSTOM_FIELDS) {
     let value: string | null;
     if (field.isArquivo) {
-      const url = arquivos[field.dadosKey] || null;
+      // MULTI-FILE: normaliza string | string[] → primeiro URL (custom field aceita um só).
+      const url = firstArquivoUrl(arquivos[field.dadosKey]);
       if (!url) continue;
       value = url;
     } else {
@@ -1220,8 +1240,8 @@ function buildGeneralCustomFieldsArray(
 
   const titulo = str(dados.titulo) || str(dados.nome_completo) || null;
   const publicoAlvo = str(dados.publico as string) || str(dados.publicoAlvo as string) || null;
-  const arquivoPrincipal = arquivos.materialAtual || arquivos.arquivoBase || null;
-  const arquivoApoio = arquivos.arquivoApoio || arquivos.fotoPerfil || null;
+  const arquivoPrincipal = firstArquivoUrl(arquivos.materialAtual) || firstArquivoUrl(arquivos.arquivoBase) || null;
+  const arquivoApoio = firstArquivoUrl(arquivos.arquivoApoio) || firstArquivoUrl(arquivos.fotoPerfil) || null;
 
   const textPairs: Array<[string, unknown, string]> = [
     ["6e36326f-2501-4ce2-9894-13d4ddf222d4", str(dados.nome) || null,        "Nome do solicitante"],
