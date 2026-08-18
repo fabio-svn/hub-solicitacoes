@@ -55,14 +55,19 @@ PY
 done
 echo "  (sem ⚠ = nenhum id duplicado no HTML estatico)"
 
-echo; echo "### 4. Tokens CSS usados mas NAO definidos no :root do style.css ###"
-defined=$(grep -oE '\-\-[a-z0-9-]+[[:space:]]*:' "$CSS" | tr -d ' :' | sort -u)
-grep -rhoE 'var\([[:space:]]*--[a-z0-9-]+' "$PUB"/*.html "$PUB"/*.css 2>/dev/null \
-  | sed -E 's/.*var\([[:space:]]*(--[a-z0-9-]+).*/\1/' | sort -u \
+echo; echo "### 4. Tokens CSS usados sem definicao e sem fallback ###"
+# Coleta definicoes em QUALQUER arquivo do public/ (nao so :root do style.css):
+# inclui seletores locais em <style>, style= inline gerados por JS, etc.
+defined=$(grep -rhoE '\-\-[a-z0-9-]+[[:space:]]*:' "$PUB"/*.html "$PUB"/*.css "$PUB"/*.js 2>/dev/null \
+  | tr -d ' :' | sort -u)
+# Apenas usos SEM fallback: var(--nome) termina direto com ')' sem virgula.
+# var(--nome, valor) e var(--nome, var(--outro)) nao sao alertados — ja tem fallback.
+grep -rhoE 'var\([[:space:]]*--[a-z0-9-]+[[:space:]]*\)' "$PUB"/*.html "$PUB"/*.css 2>/dev/null \
+  | sed -E 's/.*var\([[:space:]]*(--[a-z0-9-]+)[[:space:]]*\).*/\1/' | sort -u \
   | while read -r v; do
-      echo "$defined" | grep -qxF -- "$v" || echo "  ⚠ var($v) nao esta no :root global"
+      echo "$defined" | grep -qxF -- "$v" || echo "  ⚠ var($v) sem definicao e sem fallback"
     done
-echo "  (obs: var(--x, #fallback) ainda funciona mesmo sem definicao)"
+echo "  (sem ⚠ = todos os tokens ou estao definidos em algum lugar ou tem fallback)"
 
 echo; echo "### 5. Balanco de <div> por pagina (heuristica) ###"
 for f in "$PUB"/*.html; do
