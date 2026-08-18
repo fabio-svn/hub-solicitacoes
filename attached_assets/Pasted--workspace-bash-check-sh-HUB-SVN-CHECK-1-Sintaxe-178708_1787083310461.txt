@@ -1,0 +1,45 @@
+~/workspace$ bash check.sh
+==================== HUB SVN — CHECK ====================
+
+### 1. Sintaxe do JS inline (cada bloco <script> sem src, separado) ###
+  (sem ⚠ = sintaxe ok em todos os blocos inline)
+
+### 1b. Sintaxe dos JS externos (public/*.js) ###
+  (sem ⚠ = ok nos .js externos)
+
+### 2. Arquivos referenciados que NAO existem (404 em potencial) ###
+  (sem ⚠ = todas as referencias existem)
+
+### 3. IDs duplicados em HTML ESTATICO (ignora ids gerados em JS) ###
+  ⚠ admin-assets.html: id="loadingSkeleton" 
+  ⚠ form-eventos.html: id="camposDinamicos" id="canal" id="cidade" id="convidados" id="dataAvisoMinimo" id="dataEvento" id="descricao" id="estado" id="horario" id="ideaQuando" id="linkTransmissao" id="localConditional" id="localEvento" id="nomeEvento" id="objetivos" id="origem" id="publico" id="tipoEvento" 
+  ⚠ form-materiais-impressos.html: id="conteudoMaterial" id="outroPapel" id="outroPapelField" 
+  ⚠ validacao-assessores.html: id="vaMsg" 
+  (ainda pode pegar campos repetidos em ramos condicionais — conferir contexto)
+
+### 4. Tokens CSS usados mas NAO definidos no :root do style.css ###
+  ⚠ var(--ccu-icon) nao esta no :root global
+  ⚠ var(--current-bg) nao esta no :root global
+  ⚠ var(--current-color) nao esta no :root global
+  ⚠ var(--etapa) nao esta no :root global
+  ⚠ var(--etapa-bg) nao esta no :root global
+  ⚠ var(--sage-border) nao esta no :root global
+  ⚠ var(--sage-soft) nao esta no :root global
+  ⚠ var(--shell-sidebar) nao esta no :root global
+  (obs: var(--x, #fallback) ainda funciona mesmo sem definicao)
+
+### 5. Balanco de <div> por pagina (heuristica) ###
+  (sem ⚠ = balanceado)
+
+### 6. Sobras no backend: TODO/FIXME/console.log ###
+
+### 7. TypeScript — APAGA tsbuildinfo, rebuilda libs e checa ###
+  ✓ tsc verde
+  ⚠ 'tombamentos': no Drizzle e FALTANDO no DDL: ['planilha_key', 'planilha_nome']
+  ⚠ 'users': no Drizzle e FALTANDO no DDL: ['last_login']
+
+### 8. Deriva do <head>: fonte e favicon fora do padrao ###
+  (sem ⚠ = todas as paginas com o <head> padrao)
+
+==================== FIM ====================
+~/workspace$ 
