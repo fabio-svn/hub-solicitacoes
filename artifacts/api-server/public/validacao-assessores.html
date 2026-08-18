@@ -64,10 +64,11 @@
       border-color: var(--state-done, #0A9060);
       color: #fff;
     }
-    .va-btn-aprovar:hover { background: #088a55; border-color: #088a55; color: #fff; }
+    .va-btn-aprovar:hover { background: var(--state-done-dark); border-color: var(--state-done-dark); color: #fff; }
+    /* PADRONIZACAO: .va-btn-reprovar herda o border 1.5px do .btn base;
+       apenas sobrescreve fundo e cor para o estado ghost/outline. */
     .va-btn-reprovar {
       background: transparent;
-      border: 1px solid var(--border-light);
       color: var(--ink-60);
     }
     .va-btn-reprovar:hover {
@@ -80,7 +81,7 @@
       border-color: var(--danger);
       color: #fff;
     }
-    .va-btn-reprovar--solid:hover { background: #b91c1c; border-color: #b91c1c; color: #fff; }
+    .va-btn-reprovar--solid:hover { background: var(--danger-strong); border-color: var(--danger-strong); color: #fff; }
     /* Painel de motivo: assume a barra fixa de decisao (va-actions), no lugar
        dos tres botoes, para nao brigar com o sticky do rodape. */
     .va-reprovar-painel { width: 100%; }
@@ -398,7 +399,7 @@
           '</div>' +
           '<div class="va-actions">' +
             '<button class="btn va-btn-aprovar" onclick="decidir(\'aprovado\')">Aprovar</button>' +
-            '<button class="btn btn-secondary" onclick="decidir(\'ajustes\')">Solicitar ajustes</button>' +
+            '<button class="btn" onclick="decidir(\'ajustes\')">Solicitar ajustes</button>' +
             '<button class="btn va-btn-reprovar" onclick="abrirReprovacao()">Reprovar</button>' +
           '</div><div id="vaMsg" style="margin-top:10px;font-size:0.82rem"></div>';
       } else if (resumo.status === 'aprovado' && podePublicar()) {
@@ -413,7 +414,7 @@
               (urlOpcional ? 'Preencha o link só se a mudança merecer um aviso ao assessor — com o campo vazio, conclui sem enviar e-mail.'
                            : 'Assim que a página estiver no ar, cole o link e marque como concluído.') +
             '</span>' +
-            '<button class="btn btn-primary" onclick="concluirPagina()">Marcar como concluído</button>' +
+            '<button class="btn btn--solid" onclick="concluirPagina()">Marcar como concluído</button>' +
           '</div><div id="vaMsg" style="margin-top:10px;font-size:0.82rem"></div>';
       } else {
         rodape = '<div class="va-actions"><span class="sub" style="font-size:0.8rem;color:var(--ink-50)">Perfil já ' + (STATUS[resumo.status] ? STATUS[resumo.status].label.toLowerCase() : resumo.status) + '.</span></div>';
@@ -421,7 +422,7 @@
 
       /* Admin pode corrigir dados do perfil em qualquer status. */
       if (ehAdmin) {
-        rodape = '<div style="text-align:right;margin-bottom:8px"><button class="btn btn-secondary" style="padding:4px 12px;font-size:0.78rem" onclick="abrirEdicao()">Editar dados</button></div>' + rodape;
+        rodape = '<div style="text-align:right;margin-bottom:8px"><button class="btn" onclick="abrirEdicao()">Editar dados</button></div>' + rodape;
       }
 
       /* Cabeçalho com tag visual do tipo. */
@@ -479,8 +480,8 @@
         campo('Contrato social', sel('edContrato', contratoOpts)) +
         campo('Unidade', sel('edUnidade', unidadeOpts)) +
         '<div class="va-actions">' +
-          '<button class="btn btn-primary" onclick="salvarEdicao()">Salvar correções</button>' +
-          '<button class="btn btn-secondary" onclick="abrirDetalhe(detalheId)">Cancelar</button>' +
+          '<button class="btn btn--solid" onclick="salvarEdicao()">Salvar correções</button>' +
+          '<button class="btn" onclick="abrirDetalhe(detalheId)">Cancelar</button>' +
         '</div><div id="vaEditMsg" style="margin-top:10px;font-size:0.82rem"></div>';
       window._vaEditar = true;
     }
@@ -526,7 +527,7 @@
           '<textarea id="vaMotivo" placeholder="Explique o motivo. O assessor precisará enviar uma nova solicitação do zero."></textarea>' +
           '<div class="rodape">' +
             '<span id="vaMotivoMsg" class="aviso"></span>' +
-            '<button class="btn btn-secondary" onclick="fecharReprovacao()">Voltar</button>' +
+            '<button class="btn" onclick="fecharReprovacao()">Voltar</button>' +
             '<button class="btn va-btn-reprovar va-btn-reprovar--solid" onclick="confirmarReprovar()">Confirmar reprovação</button>' +
           '</div>' +
         '</div>';

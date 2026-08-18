@@ -35,6 +35,7 @@
   --state-neutral-bg:  #eef2f7;   /* sem estado definido        */
   --state-neutral-fg:  #475569;
   --state-done:        #00A862;   /* verde vibrante de "concluido" (missao cumprida) */
+  --state-done-dark:   #008a50;   /* hover/pressed do --state-done */
   --dark-bg-from: #221B19;
   --dark-bg-to: #0d0a09;
   --ruby-dark: #8f2c28;    /* hover do ruby — unifica #7a2e28/#8f2c28/#8e2f2a */
