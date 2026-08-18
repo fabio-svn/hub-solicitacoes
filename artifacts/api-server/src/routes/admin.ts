@@ -216,11 +216,11 @@ router.get("/tombamentos/:id/planilha", requireRole("admin", "capital_humano"), 
   if (isNaN(id)) { res.status(400).json({ error: "ID inválido" }); return; }
   const [tomb] = await db.select().from(tombamentosTable).where(eq(tombamentosTable.id, id));
   if (!tomb) { res.status(404).json({ error: "Tombamento não encontrado" }); return; }
-  const key = (tomb as any).planilha_key as string | null;
+  const key = tomb.planilha_key;
   if (!key) { res.status(404).json({ error: "Este tombamento não tem a planilha guardada para download." }); return; }
   const buf = await tombPlanilhaR2Download(key);
   if (!buf) { res.status(410).json({ error: "Planilha não encontrada no armazenamento." }); return; }
-  const nome = String((tomb as any).planilha_nome || `tombamento-${id}.xlsx`);
+  const nome = String(tomb.planilha_nome || `tombamento-${id}.xlsx`);
   const ext = (nome.match(/\.(xlsx|xls|csv)$/i)?.[1] || "xlsx").toLowerCase();
   const ct = ext === "csv" ? "text/csv" : (ext === "xls" ? "application/vnd.ms-excel" : "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
   res.setHeader("Content-Type", ct);

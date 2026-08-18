@@ -44,6 +44,9 @@ const DB_STATEMENTS = [
   )`,
   `ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "telefone" VARCHAR(30)`,
   `ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "clickup_user_id" VARCHAR(100)`,
+  // last_login: gravado em todo login (auth.ts) e com throttle horario no
+  // middleware (auth.middleware.ts). Estava no schema Drizzle mas faltava aqui.
+  `ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "last_login" TIMESTAMP`,
 
   // Solicitações
   `CREATE TABLE IF NOT EXISTS "solicitacoes" (
@@ -248,6 +251,10 @@ const DB_STATEMENTS = [
   // (arte, e-mail, outros materiais). Essa solicitacao dispara o ClickUp e
   // aparece em "Minhas solicitacoes". O tombamento em si segue na sua tabela.
   `ALTER TABLE "tombamentos" ADD COLUMN IF NOT EXISTS "solicitacao_id" INTEGER`,
+  // planilha_key/planilha_nome: arquivo .xlsx original no R2 para download
+  // posterior (admin.ts). Estavam no schema Drizzle mas faltavam aqui.
+  `ALTER TABLE "tombamentos" ADD COLUMN IF NOT EXISTS "planilha_key" TEXT`,
+  `ALTER TABLE "tombamentos" ADD COLUMN IF NOT EXISTS "planilha_nome" TEXT`,
 ];
 
 async function start() {
