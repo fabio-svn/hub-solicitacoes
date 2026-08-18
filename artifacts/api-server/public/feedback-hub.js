@@ -298,7 +298,7 @@
     elDica.setAttribute('role', 'status');
     elDica.innerHTML =
       '<button type="button" class="svn-fab-dica-x" aria-label="Dispensar">&times;</button>' +
-      '<strong>Agora tem um canal de feedback</strong>' +
+      '<strong>Agora temos um canal de feedback</strong>' +
       '<p>Sugestão, elogio, reclamação ou problema no Hub: é por aqui.</p>' +
       '<span class="svn-fab-dica-cta">Quero ver</span>';
     elFab.appendChild(elDica);
@@ -447,9 +447,7 @@
     // Passo 1: nada escolhido ainda. Nenhum campo, nenhum rodapé — a única coisa
     // a fazer nesta tela é escolher, e é só isso que ela mostra.
     if (!categoriaAtual) {
-      corpo.innerHTML =
-        '<p class="svn-fb-intro">Este é o espaço para você contar como tem sido a sua experiência com o time de marketing. Use o formulário para registrar uma sugestão de melhoria, elogiar algo que funcionou bem ou relatar um problema no Hub, no atendimento, no prazo ou na entrega de uma demanda. Todos os registros são levados em consideração.</p>' +
-        blocoTipo +
+      corpo.innerHTML = blocoTipo +
         '<p class="svn-fb-vazio">Escolha uma opção acima para continuar.</p>';
       ligarPills(corpo);
       return;
