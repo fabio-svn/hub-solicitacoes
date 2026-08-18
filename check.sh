@@ -39,11 +39,21 @@ echo "  (sem ⚠ = todas as referencias existem)"
 
 echo; echo "### 3. IDs duplicados em HTML ESTATICO (ignora ids gerados em JS) ###"
 for f in "$PUB"/*.html; do
-  # so conta id="..." que NAO contem aspas simples/cra/+ (sinais de template string em JS)
-  dup=$(grep -oE 'id="[^"'\''+\`]+"' "$f" | sort | uniq -d)
-  [ -n "$dup" ] && echo "  ⚠ $(basename "$f"): $(echo "$dup" | tr '\n' ' ')"
+  # remove os blocos <script> inteiros antes de contar: id= dentro de JS
+  # (template literals, strings concatenadas) nao e HTML estatico. Ramos
+  # if/else e switch com innerHTML sao mutuamente exclusivos no DOM.
+  dup=$(python3 - "$f" <<'PY'
+import re, sys
+from collections import Counter
+html = open(sys.argv[1], encoding="utf-8", errors="replace").read()
+html = re.sub(r'<script\b.*?</script>', '', html, flags=re.S)
+c = Counter(re.findall(r'id="([^"]+)"', html))
+print(' '.join(f'id="{k}"' for k, v in sorted(c.items()) if v > 1))
+PY
+)
+  [ -n "${dup// /}" ] && echo "  ⚠ $(basename "$f"): $dup"
 done
-echo "  (ainda pode pegar campos repetidos em ramos condicionais — conferir contexto)"
+echo "  (sem ⚠ = nenhum id duplicado no HTML estatico)"
 
 echo; echo "### 4. Tokens CSS usados mas NAO definidos no :root do style.css ###"
 defined=$(grep -oE '\-\-[a-z0-9-]+[[:space:]]*:' "$CSS" | tr -d ' :' | sort -u)
