@@ -519,11 +519,15 @@
 
       // MSG-CLICKUP: se há mensagem do time (justificativa de aprovação/conclusão),
       // mostra abaixo do rail quando o status for aprovado ou concluído.
-      const _statusComMsg = ['aprovado', 'concluido'].includes(item.status);
+      // FEEDBACK-RESPOSTA-SEMPRE: no canal de manifestacao a mensagem e a RESPOSTA
+      // ao que a pessoa escreveu, nao a justificativa de um encerramento — entao
+      // aparece em qualquer status, e com outro titulo.
+      const _ehFeedback = item.tipo_solicitacao === 'feedback-hub';
+      const _statusComMsg = _ehFeedback || ['aprovado', 'concluido'].includes(item.status);
       const _msgClickup = (_statusComMsg && item.mensagem_clickup && String(item.mensagem_clickup).trim())
         ? String(item.mensagem_clickup).trim() : '';
       const _msgBlock = _msgClickup
-        ? `<div style="margin-top:10px;padding:10px 12px;background:var(--ink-03,#f8f9fa);border:1px solid var(--ink-10,#e5e7eb);border-radius:var(--radius-md,6px);font-size:0.82rem;color:var(--ink-70);line-height:1.5"><strong style="font-size:0.7rem;text-transform:uppercase;letter-spacing:0.06em;opacity:0.55;display:block;margin-bottom:4px">Mensagem do time</strong>${esc(_msgClickup)}</div>`
+        ? `<div style="margin-top:10px;padding:10px 12px;background:var(--ink-03,#f8f9fa);border:1px solid var(--ink-10,#e5e7eb);border-radius:var(--radius-md,6px);font-size:0.82rem;color:var(--ink-70);line-height:1.5"><strong style="font-size:0.7rem;text-transform:uppercase;letter-spacing:0.06em;opacity:0.55;display:block;margin-bottom:4px">${_ehFeedback ? 'Resposta do marketing' : 'Mensagem do time'}</strong>${esc(_msgClickup)}</div>`
         : '';
       card.innerHTML = `
         <p class="fluxo-eyebrow" style="font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;opacity:0.38;margin-bottom:14px">Andamento</p>

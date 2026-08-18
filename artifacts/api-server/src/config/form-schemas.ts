@@ -152,6 +152,58 @@ export const FORM_SCHEMAS: Record<string, FormSchema> = {
       { name: 'referencias',    label: 'Referências', type: 'textarea' },
     ],
   },
+  // FALE-COM-O-MARKETING: canal unico de sugestao / elogio / reclamacao /
+  // problema, sobre o servico do time E sobre o Hub. O tipo continua sendo
+  // 'feedback-hub' para nao quebrar a lista do ClickUp ja configurada nem os
+  // registros existentes. Entra pelo modal do FAB, nao por pagina de form.
+  'feedback-hub': {
+    tipo: 'feedback-hub',
+    label: 'Fale com o Marketing',
+    description: 'Sugestão, elogio, reclamação ou problema — sobre o atendimento do marketing ou sobre o Hub.',
+    is_automation: false,
+    has_clickup: true,
+    has_approval_flow: false,
+    has_downloadable_artifact: false,
+    fields: [
+      {
+        name: 'categoria', label: 'Tipo de manifestação', type: 'radio', required: true,
+        options: [
+          { value: 'sugestao',   label: 'Sugestão' },
+          { value: 'elogio',     label: 'Elogio' },
+          { value: 'reclamacao', label: 'Reclamação' },
+          { value: 'problema',   label: 'Erro no sistema' },
+        ],
+      },
+      {
+        name: 'fb_assunto', label: 'Sobre o que é?', type: 'select', required: true,
+        options: [
+          { value: 'atendimento', label: 'Atendimento e comunicação com o time' },
+          { value: 'prazo',       label: 'Prazo de entrega' },
+          { value: 'qualidade',   label: 'Qualidade do material entregue' },
+          { value: 'hub',         label: 'Hub de Solicitações (o sistema)' },
+          { value: 'eventos',     label: 'Eventos' },
+          { value: 'outro',       label: 'Outro' },
+        ],
+      },
+      { name: 'setor',             label: 'Área do solicitante',      type: 'text' },
+      { name: 'descricao',         label: 'Relato',                   type: 'textarea', required: true },
+      { name: 'esperado',          label: 'O que era esperado',       type: 'textarea' },
+      { name: 'sugestao_melhoria', label: 'Sugestão de melhoria',     type: 'textarea' },
+      {
+        name: 'quer_retorno', label: 'Quer retorno?', type: 'radio',
+        options: [
+          { value: 'sim', label: 'Sim, quero que me procurem' },
+          { value: 'nao', label: 'Não, só quero registrar' },
+        ],
+      },
+      { name: 'ctx_url',         label: 'URL onde ocorreu',         type: 'text' },
+      { name: 'ctx_pagina',      label: 'Página',                   type: 'text' },
+      { name: 'ctx_solicitacao', label: 'Solicitação relacionada',  type: 'text' },
+      { name: 'ctx_navegador',   label: 'Navegador',                type: 'text' },
+      { name: 'ctx_tela',        label: 'Tamanho da tela',          type: 'text' },
+      { name: 'ctx_erros',       label: 'Erros técnicos na sessão', type: 'textarea' },
+    ],
+  },
   'cartao-boas-vindas': {
     tipo: 'cartao-boas-vindas',
     label: 'Cartão de Boas-vindas',
@@ -680,6 +732,7 @@ export const VALID_TIPOS: string[] = [
   "ch-aniversariantes",
   "material-tombamento",
   "sugestao-conteudo",
+  "feedback-hub",
 ];
 
 /* Tipos que existem no sistema mas nao tem entrada em FORM_SCHEMAS — as paginas
@@ -759,6 +812,7 @@ const TIPOS_COM_CLICKUP_IDS: string[] = [
   "sessao-fotos",
   "materiais-impressos",
   "sugestao-conteudo",
+  "feedback-hub",
 ];
 
 export const TIPOS_COM_CLICKUP: Array<{ tipo: string; label: string }> =

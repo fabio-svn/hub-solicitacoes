@@ -2300,3 +2300,461 @@ input[type="checkbox"] {
 @media (max-width: 359px) {
   .selection-grid { grid-template-columns: 1fr; }
 }
+
+
+/* ══════════════════════════════════════════════════════════════════════════
+   FALE COM O MARKETING — FAB em leque + ajustes do modal
+
+   O modal usa as convenções globais (.modal-overlay/.modal-card, .field,
+   label/select/textarea, .pill/.pills-wrap, .file-input-*, .alert-card,
+   .field-invalid/.field-error, .btn). O que sobrou aqui é só o que não existe
+   globalmente. As antigas ~200 linhas de .svn-fb-* que duplicavam o sistema de
+   formulários saíram: divergiam do resto do Hub a cada ajuste de tema.
+
+   As regras de .float-whatsapp continuam onde estão: a thankyou.html não
+   carrega o shell.js e segue com o botão simples do WhatsApp.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* ── FAB em leque ─────────────────────────────────────────────────────────── */
+.svn-fab {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 10px;
+}
+
+.svn-fab-acoes {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(8px);
+  transition: opacity 0.18s ease, transform 0.18s ease, visibility 0.18s;
+}
+
+.svn-fab.is-aberto .svn-fab-acoes {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.svn-fab-acao {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  text-decoration: none;
+  font-family: 'Nunito Sans', sans-serif;
+}
+
+.svn-fab-acao-txt {
+  background: var(--card-white);
+  color: var(--carbon-black);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  padding: 7px 12px;
+  border-radius: var(--radius-pill);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.14);
+  white-space: nowrap;
+}
+
+.svn-fab-acao-ico {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-round);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.18);
+  transition: transform 0.15s ease;
+}
+
+.svn-fab-acao-ico.is-whats    { background: #25D366; }
+.svn-fab-acao-ico.is-feedback { background: var(--ruby-red); }
+.svn-fab-acao:hover .svn-fab-acao-ico { transform: scale(1.08); }
+
+.svn-fab-btn {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-round);
+  border: none;
+  background: var(--carbon-black);
+  color: var(--paper-white);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 3px 14px rgba(0, 0, 0, 0.28);
+  transition: transform 0.18s ease, background 0.18s ease;
+}
+
+.svn-fab-btn:hover { background: var(--carbon-hover); transform: translateY(-2px); }
+.svn-fab.is-aberto .svn-fab-btn { transform: rotate(90deg); }
+
+.svn-fab-ico-fechar { display: none; }
+.svn-fab.is-aberto .svn-fab-ico-ajuda  { display: none; }
+.svn-fab.is-aberto .svn-fab-ico-fechar { display: flex; transform: rotate(-90deg); }
+
+/* FAB-MOBILE-COMPACTO: no celular ele passa por cima do conteúdo ao rolar. */
+@media (max-width: 768px) {
+  .svn-fab { right: 14px; bottom: 14px; }
+  .svn-fab-btn { width: 44px; height: 44px; }
+  .svn-fab-acao-ico { width: 36px; height: 36px; }
+  .svn-fab-acao-txt { font-size: var(--fs-xs); padding: 6px 10px; }
+}
+
+/* ── Ajustes do modal ─────────────────────────────────────────────────────── */
+body.svn-fb-travado { overflow: hidden; }
+
+/* O .modal-card padrão vai até 760px; aqui um pouco menos, porque o conteúdo é
+   uma coluna de campos e linha longa demais cansa a leitura. */
+.svn-fb-card { max-width: 680px; }
+
+/* .modal-close é float:right por herança das telas antigas; dentro do
+   .modal-header (flex) o float atrapalha o alinhamento. */
+.svn-fb-card .modal-close {
+  float: none;
+  line-height: 1;
+  padding: 0 4px;
+  align-self: flex-start;
+}
+
+/* Assunto e área lado a lado: são dois selects curtos, empilhá-los alongaria o
+   modal sem ganho nenhum. */
+.svn-fb-duo { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+@media (max-width: 560px) {
+  .svn-fb-duo { grid-template-columns: 1fr; gap: 0; }
+  .svn-fb-card { width: 100%; max-width: none; border-radius: var(--radius-2xl) var(--radius-2xl) 0 0; padding: 24px 20px; }
+  .svn-fb-overlay { align-items: flex-end; }
+  .svn-fb-card .modal-footer { flex-direction: column-reverse; }
+  .svn-fb-card .modal-footer .btn { width: 100%; }
+}
+
+/* textarea global tem min-height 120px, que é certo para o campo principal e
+   exagerado para os complementares de duas linhas. */
+.svn-fb-card textarea.svn-fb-curto { min-height: 68px; }
+
+.svn-fb-opc { font-weight: 400; font-size: var(--fs-xs); }
+
+.svn-fb-remover {
+  border: none;
+  background: none;
+  color: var(--ink-50);
+  font-family: inherit;
+  font-size: var(--fs-xs);
+  text-decoration: underline;
+  cursor: pointer;
+  padding: 0 2px;
+}
+.svn-fb-remover:hover { color: var(--ruby-red); }
+
+/* ── Tela de sucesso ──────────────────────────────────────────────────────── */
+.svn-fb-ok { text-align: center; padding: 10px 0 0; }
+
+.svn-fb-ok-ico {
+  width: 54px;
+  height: 54px;
+  margin: 0 auto 14px;
+  border-radius: var(--radius-round);
+  background: var(--success-soft);
+  color: var(--success);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.svn-fb-ok h4 {
+  font-family: 'Taviraj', serif;
+  font-weight: 300;
+  font-size: 1.2rem;
+  color: var(--carbon-black);
+  margin: 0 0 8px;
+}
+
+.svn-fb-ok p {
+  font-size: var(--fs-sm);
+  color: var(--ink-60);
+  margin: 0;
+  line-height: 1.55;
+}
+
+.svn-fb-ok-acoes { justify-content: center; }
+
+/* ── Dica de estreia do canal (balão único, ancorado no FAB) ──────────────── */
+.svn-fab-dica {
+  position: absolute;
+  bottom: 62px;
+  right: 0;
+  width: 268px;
+  background: var(--carbon-black);
+  color: var(--paper-white);
+  border-radius: var(--radius-lg);
+  padding: 14px 16px 13px;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.3);
+  text-align: left;
+  cursor: pointer;
+  opacity: 0;
+  transform: translateY(6px);
+  transition: opacity 0.22s ease, transform 0.22s ease;
+  font-family: 'Nunito Sans', sans-serif;
+}
+
+.svn-fab-dica.is-visivel { opacity: 1; transform: translateY(0); }
+
+/* Seta apontando para o botão — sem ela o balão parece um toast solto e a
+   pessoa não liga o aviso ao lugar onde precisa clicar. */
+.svn-fab-dica::after {
+  content: '';
+  position: absolute;
+  bottom: -5px;
+  right: 18px;
+  width: 12px;
+  height: 12px;
+  background: var(--carbon-black);
+  transform: rotate(45deg);
+  border-radius: 2px;
+}
+
+.svn-fab-dica strong {
+  display: block;
+  font-size: var(--fs-base);
+  font-weight: 700;
+  margin-bottom: 4px;
+  padding-right: 18px;   /* espaço do × */
+}
+
+.svn-fab-dica p {
+  margin: 0 0 10px;
+  font-size: var(--fs-xs);
+  line-height: 1.5;
+  color: rgba(255, 248, 243, 0.78);
+}
+
+.svn-fab-dica-cta {
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  color: var(--gold-soft);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.svn-fab-dica-x {
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  border: none;
+  background: none;
+  color: rgba(255, 248, 243, 0.5);
+  font-size: 1.1rem;
+  line-height: 1;
+  padding: 2px 4px;
+  cursor: pointer;
+}
+.svn-fab-dica-x:hover { color: var(--paper-white); }
+
+/* Anel pulsante enquanto a dica está na tela: o balão diz o quê, o anel diz
+   onde. Para quando a dica sai. */
+.svn-fab.tem-dica .svn-fab-btn { animation: svnFabPulso 1.9s ease-out infinite; }
+
+@keyframes svnFabPulso {
+  0%   { box-shadow: 0 3px 14px rgba(0,0,0,0.28), 0 0 0 0 rgba(172, 54, 49, 0.55); }
+  70%  { box-shadow: 0 3px 14px rgba(0,0,0,0.28), 0 0 0 12px rgba(172, 54, 49, 0); }
+  100% { box-shadow: 0 3px 14px rgba(0,0,0,0.28), 0 0 0 0 rgba(172, 54, 49, 0); }
+}
+
+/* Quem pediu menos movimento no sistema não recebe o pulso. */
+@media (prefers-reduced-motion: reduce) {
+  .svn-fab.tem-dica .svn-fab-btn { animation: none; }
+  .svn-fab-dica { transition: opacity 0.22s ease; transform: none; }
+}
+
+@media (max-width: 480px) {
+  .svn-fab-dica { width: calc(100vw - 40px); max-width: 268px; bottom: 56px; }
+}
+
+/* ── Fale com o Marketing — ajustes v6 ────────────────────────────────────── */
+
+/* O textarea global tem min-height 120px; somado ao rows=4 o campo principal
+   passava de 200px e empurrava o botão Enviar para fora da primeira tela. */
+.svn-fb-card textarea.svn-fb-principal { min-height: 112px; }
+
+/* RODAPE-GRUDADO: o .modal-card rola por dentro (max-height 90vh), então em
+   telas menores o Enviar só aparecia depois de rolar até o fim — e quem não
+   rolava achava que o formulário estava incompleto. Os valores negativos
+   cancelam o padding de 32px do card para a barra encostar nas bordas. */
+.svn-fb-card .modal-footer {
+  position: sticky;
+  bottom: -32px;
+  margin: 24px -32px -32px;
+  padding: 16px 32px;
+  background: var(--paper-white);
+  border-top: 1px solid var(--border-light);
+}
+
+/* O .field label global é block, 600 e com margem — o que quebraria o checkbox
+   de "quero retorno", que precisa ficar em linha com a caixinha. */
+.svn-fb-card .field label.checkbox-option {
+  display: flex;
+  font-weight: 400;
+  margin-bottom: 0;
+  color: var(--carbon-black);
+}
+
+@media (max-width: 560px) {
+  .svn-fb-card .modal-footer {
+    bottom: -24px;
+    margin: 20px -20px -24px;
+    padding: 14px 20px;
+  }
+}
+
+/* ── Fale com o Marketing — ajustes v7 ────────────────────────────────────── */
+
+/* GRADIENTE-CARBON: em vez do preto chapado, um degradê que passeia entre o
+   carbon e dois grafites um pouco mais claros. A amplitude é curta de propósito
+   — o botão fica vivo sem virar enfeite, e não disputa com o dourado, que no
+   Hub carrega outro significado. */
+.svn-fab-btn,
+.svn-fab-btn:hover {
+  background-image: linear-gradient(
+    125deg,
+    var(--carbon-black) 0%,
+    #3d3330 30%,
+    var(--carbon-hover) 55%,
+    #2a2220 78%,
+    var(--carbon-black) 100%
+  );
+  background-size: 240% 240%;
+}
+
+.svn-fab-btn { animation: svnFabGradiente 8s ease-in-out infinite; }
+.svn-fab-btn:hover { animation-duration: 4s; }
+
+/* Com a dica na tela o botão roda as duas animações: o degradê continua e o
+   anel entra por cima. Declarar aqui é o que impede o pulso de sobrescrever o
+   degradê (a regra da v5 define `animation` inteiro). */
+.svn-fab.tem-dica .svn-fab-btn {
+  animation: svnFabGradiente 8s ease-in-out infinite, svnFabPulso 1.9s ease-out infinite;
+}
+
+@keyframes svnFabGradiente {
+  0%, 100% { background-position: 0% 50%; }
+  50%      { background-position: 100% 50%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .svn-fab-btn,
+  .svn-fab.tem-dica .svn-fab-btn { animation: none; }
+}
+
+/* ICONE-CENTRADO: o span do ícone era inline, então o SVG assentava na linha de
+   base do texto e ficava alguns pixels acima do centro do círculo. Flex resolve.
+   A regra do estado aberto precisa de especificidade maior para continuar
+   escondendo o "?" quando o leque abre. */
+.svn-fab-btn .svn-fab-ico-ajuda {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.svn-fab.is-aberto .svn-fab-btn .svn-fab-ico-ajuda { display: none; }
+.svn-fab-btn .svn-fab-ico-fechar { line-height: 0; }
+.svn-fab-btn svg { width: 26px; height: 26px; }
+
+@media (max-width: 768px) {
+  .svn-fab-btn svg { width: 24px; height: 24px; }
+}
+
+/* Estado vazio do modal, antes de escolher o tipo. */
+.svn-fb-intro {
+  margin: 0 0 16px;
+  padding: 10px 14px;
+  font-size: var(--fs-sm);
+  color: var(--ink-70);
+  line-height: 1.55;
+  background: var(--icon-bg);
+  border-left: 3px solid var(--ruby-red);
+  border-radius: var(--radius-sm);
+}
+
+.svn-fb-vazio {
+  margin: 2px 0 4px;
+  font-size: var(--fs-sm);
+  color: var(--ink-50);
+}
+
+/* ── Fale com o Marketing — botão flutuante v8 ────────────────────────────── */
+
+/* GRADIENTE-VISIVEL: a v7 usava carbon com grafites quase idênticos (#2a2220,
+   #332a27, #3d3330) — a diferença de luminosidade era de poucos pontos e, num
+   círculo de 48px, simplesmente não dava para ver. A configuração aqui é a
+   mesma do .btn-submit-gold (200% de background-size + sweep do
+   background-position), que funciona lá porque o dourado vai de #a07830 a
+   #f0d080. Refiz os stops com essa amplitude: do carbon a um grafite bem mais
+   claro, com um stop levemente arruivado dando um brilho quente na passagem. */
+.svn-fab-btn,
+.svn-fab-btn:hover {
+  background-image: linear-gradient(
+    135deg,
+    var(--carbon-black) 0%,
+    #4f423c 30%,
+    #2b2320 52%,
+    #4a332f 74%,
+    var(--carbon-black) 100%
+  );
+  background-size: 200% 200%;
+}
+
+.svn-fab-btn { animation: svnFabGradiente 6s ease infinite; }
+.svn-fab-btn:hover { animation-duration: 3s; }
+
+.svn-fab.tem-dica .svn-fab-btn {
+  animation: svnFabGradiente 6s ease infinite, svnFabPulso 1.9s ease-out infinite;
+}
+
+@keyframes svnFabGradiente {
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* BRILHO-QUE-CRUZA: num disco escuro de 48px, mudança de matiz rende pouco por
+   mais amplitude que se dê. O que o olho pega é a faixa de luz atravessando.
+   Ela some por 4 s a cada ciclo, então é um lampejo ocasional — não um brilho
+   piscando o tempo todo no canto da tela de quem está trabalhando. */
+.svn-fab-btn { position: relative; overflow: hidden; }
+.svn-fab-btn > span { position: relative; z-index: 1; }
+
+.svn-fab-btn::after {
+  content: '';
+  position: absolute;
+  inset: -40%;
+  background: linear-gradient(72deg,
+    transparent 42%,
+    rgba(255, 248, 243, 0.22) 50%,
+    transparent 58%);
+  transform: translateX(-100%);
+  animation: svnFabBrilho 5.5s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes svnFabBrilho {
+  0%, 62%  { transform: translateX(-100%); }
+  100%     { transform: translateX(100%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .svn-fab-btn,
+  .svn-fab.tem-dica .svn-fab-btn { animation: none; }
+  .svn-fab-btn::after { display: none; }
+}

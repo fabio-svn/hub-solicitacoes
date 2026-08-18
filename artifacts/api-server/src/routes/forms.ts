@@ -10,7 +10,7 @@ import { db } from "@workspace/db";
 import { solicitacoesTable, arquivosTable, cartaoAprovacoesTable, usersTable, activityLogTable } from "@workspace/db";
 import { eq, desc, and, ne, sql, inArray, lt, notInArray } from "drizzle-orm";
 import { requireAuth, requireRole } from "../middleware/auth.middleware";
-import { createClickUpTask, extrairEntregaLinks, getClickUpTaskStatus, getClickUpTaskSnapshot, setClickUpTaskStatus, calcularPrazo, getPrazoDiasUteis, PRAZO_DIAS_UTEIS, APRESENTACAO_TIERS, CLICKUP_STATUS_EM_REVISAO, CLICKUP_STATUS_CONCLUIDO, notificarCartaoValidadoChat, appendArquivosToClickUpTask, type ArquivosMap } from "./clickup";
+import { createClickUpTask, extrairEntregaLinks, getClickUpTaskStatus, getClickUpTaskSnapshot, setClickUpTaskStatus, calcularPrazo, getPrazoDiasUteis, PRAZO_DIAS_UTEIS, APRESENTACAO_TIERS, CLICKUP_STATUS_EM_REVISAO, CLICKUP_STATUS_CONCLUIDO, notificarCartaoValidadoChat, appendArquivosToClickUpTask, prefixoFeedback, resumirFeedback, type ArquivosMap } from "./clickup";
 import { holidaysList } from "../lib/holidays";
 import { normalizeFormDados } from "../lib/normalize";
 import { FORM_SCHEMAS } from "../config/form-schemas";
@@ -206,6 +206,10 @@ const REQUIRED_FIELDS: Record<string, string[]> = {
   "sessao-fotos":          ["nome", "objetivo", "qtdParticipantes", "localSessao"],
   "materiais-impressos":   ["nome", "tipoMaterial"],
   "sugestao-conteudo":     ["nome", "tema"],
+  // NOME-NAO-OBRIGATORIO: o nome de quem relata vem da sessao (user.name), nao
+  // deste campo. Exigi-lo aqui derrubava o envio quando o Auth do navegador
+  // ainda nao tinha terminado de carregar.
+  "feedback-hub":          ["categoria", "fb_assunto", "descricao"],
 };
 
 function validateFormDados(tipo: string, dados: Record<string, unknown>): string | null {
@@ -268,6 +272,9 @@ function gerarTituloSolicitacao(tipo: string, dados: Record<string, unknown>, us
     case "email-marketing":      return `[E-mail Marketing] ${s(dados.assunto)}`;
     case "producao-video":       return `[Produção de Vídeo] ${s(dados.titulo) || s(dados.tituloFotos) || userName}`;
     case "sessao-fotos":         return `[Sessão de Fotos] ${s(dados.tituloFotos) || userName}`;
+    // FEEDBACK-PREFIXO-POR-CATEGORIA: mesmo titulo que o clickup.ts gera, para
+    // o registro no Hub e a task no ClickUp nao divergirem.
+    case "feedback-hub":         return `${prefixoFeedback(s(dados.categoria), s(dados.fb_assunto))} ${resumirFeedback(s(dados.descricao))}`;
     case "materiais-impressos": {
       const tipoMat = s(dados.tipoMaterial) || s(dados.tipoImpresso) || "Material";
       const label = tipoMat
@@ -328,7 +335,11 @@ router.post("/solicitacoes", requireAuth, upload.any(), async (req, res): Promis
       ["pagina-assessores-dados", "pagina-assessores-atualizacao"].includes(tipo_solicitacao) &&
       String((parsedDados as any).quer_pagina || "").toLowerCase() === "nao";
 
-    const prazoInicial = ehRegistroSemPagina ? null : calcularPrazo(tipo_solicitacao, parsedDados).date;
+    // FEEDBACK-SEM-PRAZO: bug pode levar semanas, elogio nao tem entrega. Um
+    // prazo aqui so criaria atraso ficticio no painel e no card do detalhe
+    // (que some sozinho quando nao ha prazo).
+    const ehSemPrazo = ehRegistroSemPagina || tipo_solicitacao === "feedback-hub";
+    const prazoInicial = ehSemPrazo ? null : calcularPrazo(tipo_solicitacao, parsedDados).date;
     const [solicitacao] = await db.insert(solicitacoesTable).values({
       user_email: user.email,
       tipo_solicitacao,
@@ -443,6 +454,15 @@ router.post("/solicitacoes", requireAuth, upload.any(), async (req, res): Promis
         titulo: tituloGerado,
         detalhe: `Falha ao criar task no ClickUp para solicitação #${solicitacao.id}`,
       });
+    }
+
+    /* FEEDBACK-SEM-TELEFONE: o createClickUpTask injeta o telefone do solicitante
+       em `dados` para montar o link de WhatsApp na descricao da task. Na task isso
+       serve (e como o time devolve o retorno); no resumo da solicitacao a pessoa
+       fica vendo o proprio telefone no meio de um elogio. A task ja foi criada
+       acima com o link — aqui so nao persistimos o campo. */
+    if (tipo_solicitacao === "feedback-hub") {
+      delete (parsedDados as Record<string, unknown>).telefone;
     }
 
     // Update único: dados (com URLs de arquivo), título final e campos do ClickUp num só round-trip.
@@ -951,8 +971,13 @@ router.get("/solicitacoes/:id/status", requireAuth, async (req, res): Promise<vo
             }
           }
           // Campo "Mensagem" do ClickUp (justificativa): só exibido nos status finais.
+          // FEEDBACK-RESPOSTA-SEMPRE: no canal de manifestacao a mensagem NAO e uma
+          // justificativa de encerramento — e a resposta ao que a pessoa escreveu, e
+          // costuma vir com a coisa ainda em andamento. Travar nos status finais
+          // faria o retorno so aparecer quando ja nao interessa.
           const STATUSES_COM_MENSAGEM = ["aprovado", "reprovado", "concluido", "cancelado"];
-          if (snap.mensagem && STATUSES_COM_MENSAGEM.includes(snap.status ?? "")) {
+          const ehFeedback = solicitacao.tipo_solicitacao === "feedback-hub";
+          if (snap.mensagem && (ehFeedback || STATUSES_COM_MENSAGEM.includes(snap.status ?? ""))) {
             mensagemClickupOut = snap.mensagem;
           }
           if (Object.keys(patch).length) {

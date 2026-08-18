@@ -149,6 +149,7 @@ const ARQUIVO_LABELS: Record<string, string> = {
   palFoto2:        "Foto — Palestrante 2",
   palFoto3:        "Foto — Palestrante 3",
   palFoto4:        "Foto — Palestrante 4",
+  printFeedback:   "Anexo do relato",
 };
 
 // CAMPO_LABELS: rótulos "bonitos" para campos de texto que não têm bloco
@@ -436,6 +437,97 @@ function buildClickUpEventTaskName(dados: FormDados): string {
     : `[Evento ${natureza}] ${titulo}`;
 }
 
+/* PREFIXO-POR-CATEGORIA: tudo cai numa lista so no ClickUp, entao o prefixo do
+   titulo e o que permite triar sem abrir a task. "Problema" sobre o Hub vira
+   [Bug] porque quem resolve e outra pessoa — e um problema de software, nao de
+   atendimento. Se um dia virarem listas separadas, isto continua valido. */
+export function prefixoFeedback(categoria: string, assunto?: string): string {
+  if (categoria === "sugestao")   return "[Sugestão]";
+  if (categoria === "elogio")     return "[Elogio]";
+  if (categoria === "reclamacao") return "[Reclamação]";
+  if (categoria === "problema")   return assunto === "hub" ? "[Bug]" : "[Erro]";
+  return "[Registro]";
+}
+
+export function resumirFeedback(descricao: string, max = 70): string {
+  const linha = String(descricao || "").replace(/\s+/g, " ").trim();
+  if (!linha) return "(sem descrição)";
+  return linha.length <= max ? linha : linha.slice(0, max - 1).trimEnd() + "…";
+}
+
+const FEEDBACK_CATEGORIA_LABEL: Record<string, string> = {
+  sugestao:   "Sugestão",
+  elogio:     "Elogio",
+  reclamacao: "Reclamação",
+  problema:   "Erro no sistema",
+};
+
+const FEEDBACK_ASSUNTO_LABEL: Record<string, string> = {
+  atendimento: "Atendimento e comunicação com o time",
+  prazo:       "Prazo de entrega",
+  qualidade:   "Qualidade do material entregue",
+  hub:         "Hub de Solicitações (o sistema)",
+  eventos:     "Eventos",
+  outro:       "Outro",
+};
+
+/* Descricao propria em vez de cair no buildGeneralDescription: o fallback
+   generico despejaria os campos soltos, sem separar o que a pessoa escreveu do
+   que o navegador informou — e o bloco tecnico so existe em parte das
+   manifestacoes. O RETORNO fica no topo do resumo de proposito: e a primeira
+   coisa que quem tria precisa saber. */
+function buildFeedbackDescription(dados: FormDados, user: UserData, arquivos: ArquivosMap): string {
+  const blocks: string[] = [];
+  blocks.push(buildRequesterSection(user, dados));
+
+  const categoria = str(dados.categoria as string);
+  const assunto = str(dados.fb_assunto as string);
+  const querRetorno = str(dados.quer_retorno as string) === "sim";
+
+  const resumo: string[] = [];
+  addLine(resumo, "Tipo", FEEDBACK_CATEGORIA_LABEL[categoria] || categoria || "(não informado)");
+  addLine(resumo, "Assunto", FEEDBACK_ASSUNTO_LABEL[assunto] || str(dados.fb_assunto_label as string) || assunto);
+  addLine(resumo, "Área", str(dados.setor as string));
+  resumo.push(querRetorno
+    ? "• Retorno: SIM — a pessoa pediu que o time a procure"
+    : "• Retorno: não solicitado (registro apenas)");
+  blocks.push(`📋 RESUMO\n━━━━━━━━━━━━━━━━━━━━━━\n\n${resumo.join("\n")}`);
+
+  const relato = str(dados.descricao as string);
+  if (relato)
+    blocks.push(`📝 RELATO\n━━━━━━━━━━━━━━━━━━━━━━\n\n${relato}`);
+
+  const esperado = str(dados.esperado as string);
+  if (esperado)
+    blocks.push(`🎯 COMPORTAMENTO ESPERADO\n━━━━━━━━━━━━━━━━━━━━━━\n\n${esperado}`);
+
+  const melhoria = str(dados.sugestao_melhoria as string);
+  if (melhoria)
+    blocks.push(`💡 SUGESTÃO DE MELHORIA\n━━━━━━━━━━━━━━━━━━━━━━\n\n${melhoria}`);
+
+  // Bloco tecnico: coletado pelo navegador, nao digitado por quem relata. So
+  // aparece quando o assunto e o Hub ou o tipo e problema — o front nem coleta
+  // nos outros casos, entao aqui os campos chegam vazios e a secao some.
+  const ctx: string[] = [];
+  addLine(ctx, "URL", str(dados.ctx_url as string));
+  addLine(ctx, "Página", str(dados.ctx_pagina as string));
+  const solic = str(dados.ctx_solicitacao as string);
+  if (solic) ctx.push(`• Solicitação relacionada: #${solic} — ${HUB_URL}/solicitacao.html?id=${solic}`);
+  addLine(ctx, "Navegador", str(dados.ctx_navegador as string));
+  addLine(ctx, "Tela", str(dados.ctx_tela as string));
+  if (ctx.length > 0)
+    blocks.push(`🖥️ CONTEXTO TÉCNICO\n━━━━━━━━━━━━━━━━━━━━━━\n\n${ctx.join("\n")}`);
+
+  const erros = str(dados.ctx_erros as string);
+  if (erros)
+    blocks.push(`🐞 ERROS DE JAVASCRIPT NA SESSÃO\n━━━━━━━━━━━━━━━━━━━━━━\n\n${erros}\n\n(capturados automaticamente pelo Hub; confira também o log de atividades por "erro_navegador" no mesmo horário)`);
+
+  const arquivosSection = buildArquivosSection(arquivos);
+  if (arquivosSection) blocks.push(arquivosSection);
+
+  return blocks.join("\n\n");
+}
+
 function buildGeneralTaskName(tipo: string, _subtipo: string, dados: FormDados, user: UserData): string {
   const setor = getUserDepartment(user, dados);
 
@@ -463,6 +555,11 @@ function buildGeneralTaskName(tipo: string, _subtipo: string, dados: FormDados, 
 
     case "sugestao-conteudo":
       return `[Sugestão de Conteúdo] ${user.name}`;
+
+    // FEEDBACK-PREFIXO-POR-CATEGORIA: uma lista so no ClickUp, tres naturezas
+    // diferentes. O prefixo e o que permite triar sem abrir a task.
+    case "feedback-hub":
+      return `${prefixoFeedback(str(dados.categoria), str(dados.fb_assunto))} ${resumirFeedback(str(dados.descricao))}`;
 
     case "ch-kit-onboarding":      return "[Capital Humano] Kit Onboarding";
     case "ch-atualizacao-pessoas": return "[Capital Humano] Atualização de Pessoas";
@@ -1472,6 +1569,9 @@ export async function createClickUpTask(
   } else if (tipo === "producao-video" || tipo === "sessao-fotos") {
     taskName = buildGeneralTaskName(tipo, subtipo, dados, user);
     description = buildProducaoAudiovisualDescription(dados, user, safeArquivos, tipo);
+  } else if (tipo === "feedback-hub") {
+    taskName = buildGeneralTaskName(tipo, subtipo, dados, user);
+    description = buildFeedbackDescription(dados, user, safeArquivos);
   } else if (tipo === "outro") {
     taskName = buildGeneralTaskName(tipo, subtipo, dados, user);
     description = buildOutroDescription(dados, user, safeArquivos);
@@ -1492,10 +1592,16 @@ export async function createClickUpTask(
   taskPayload.start_date_time = false;
 
   const prazoCalc = calcularPrazo(tipo, dados as Record<string, unknown>, hoje);
-  let prazoDate: Date = prazoCalc.date || addBusinessDays(hoje, getPrazoDiasUteis(tipo, dados as Record<string, unknown>));
-  taskPayload.due_date = prazoDate.getTime();
-  taskPayload.due_date_time = false;
-  logger.info({ tipo, prazo: prazoDate.toISOString(), regra: prazoCalc.regra }, "ClickUp: prazo calculado");
+  // FEEDBACK-SEM-PRAZO: a task nasce sem due_date. Espelha o Hub, e evita que
+  // um bug de investigacao longa apareca como atrasado no board do time.
+  if (tipo === "feedback-hub") {
+    logger.info({ tipo }, "ClickUp: tipo sem prazo, task criada sem due_date");
+  } else {
+    const prazoDate: Date = prazoCalc.date || addBusinessDays(hoje, getPrazoDiasUteis(tipo, dados as Record<string, unknown>));
+    taskPayload.due_date = prazoDate.getTime();
+    taskPayload.due_date_time = false;
+    logger.info({ tipo, prazo: prazoDate.toISOString(), regra: prazoCalc.regra }, "ClickUp: prazo calculado");
+  }
 
   // Eventos: prioridade pela proximidade (due_date já é a data do evento via calcularPrazo)
   if (tipo === "eventos" && prazoCalc.date) {
@@ -1509,7 +1615,13 @@ export async function createClickUpTask(
   // a task sem prioridade, como sempre.
   const PRIORIDADE_POR_TIPO: Record<string, number> = {
     "sugestao-conteudo": 3, // Normal
+    "feedback-hub":      3, // Normal — sugestao e reclamacao
   };
+  // Bug quebra o uso agora; sobe para Alta antes do fallback do mapa.
+  if (taskPayload.priority === undefined && tipo === "feedback-hub" && str(dados.categoria) === "problema") {
+    taskPayload.priority = 2; // Alta
+    logger.info({ tipo }, "ClickUp: feedback do tipo problema — prioridade Alta");
+  }
   if (taskPayload.priority === undefined && PRIORIDADE_POR_TIPO[tipo] !== undefined) {
     taskPayload.priority = PRIORIDADE_POR_TIPO[tipo];
     logger.info({ tipo, priority: taskPayload.priority }, "ClickUp: prioridade fixa por tipo");

@@ -267,9 +267,14 @@
         const usedTipos = new Set();
         Object.values(formsByCategory).forEach(function(arr) { arr.forEach(function(f) { usedTipos.add(f.tipo); }); });
         const outrosForms = STATE.forms.filter(function(f) { return !usedTipos.has(f.tipo); });
+        /* CHAVE-UNICA-DO-BALDE: o balde de tipos sem categoria usava a chave
+           'Outros', que ja e o nome de uma categoria real do CATEGORIAS_SOLICITACAO.
+           O resultado era a categoria real ser sobrescrita — "Outro" e agora
+           "Feedback do Hub" simplesmente nao apareciam nesta tela — e o titulo
+           OUTROS sair duas vezes com o mesmo conteudo. */
         if (outrosForms.length > 0) {
-          formsByCategory['Outros'] = outrosForms;
-          categoryOrder.push('Outros');
+          formsByCategory['Sem categoria'] = outrosForms;
+          categoryOrder.push('Sem categoria');
         }
 
         const chips = categoryOrder.map(function(catName) {

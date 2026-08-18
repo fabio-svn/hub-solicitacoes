@@ -431,13 +431,33 @@ function statusBadgeHtml(status, opts) {
      - a mesma falha (mensagem + origem) so e relatada uma vez
      - o envio nunca lanca; se falhar, falha calado
 
+   BUFFER-PARA-O-FEEDBACK: alem de enviar, guarda os ultimos erros em memoria.
+   Quando alguem abre o Feedback do Hub para dizer "travou", o relato ja sai com
+   o erro tecnico anexado — e o que a pessoa nao teria como descrever. O buffer
+   nao respeita o LIMITE_POR_SESSAO de proposito: guardar em memoria nao custa
+   requisicao, e o quinto erro costuma ser o mais util.
+
    Ele NAO substitui try/catch: serve para o que ninguem previu. */
 (function () {
   var LIMITE_POR_SESSAO = 5;
+  var LIMITE_BUFFER = 10;
   var enviados = 0;
   var vistos = {};
 
+  window._svnErrosRecentes = [];
+
   function relatar(dados) {
+    // Buffer primeiro: mesmo o erro repetido (que nao vira novo relato) importa
+    // para quem esta descrevendo um problema recorrente.
+    try {
+      window._svnErrosRecentes.push({
+        mensagem: String(dados.mensagem || '').slice(0, 240),
+        origem: String(dados.origem || '').slice(0, 200),
+        quando: new Date().toISOString(),
+      });
+      if (window._svnErrosRecentes.length > LIMITE_BUFFER) window._svnErrosRecentes.shift();
+    } catch (e) { /* buffer e bonus */ }
+
     if (enviados >= LIMITE_POR_SESSAO) return;
     var chave = (dados.mensagem || '') + '|' + (dados.origem || '');
     if (vistos[chave]) return;

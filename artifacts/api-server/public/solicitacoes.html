@@ -200,7 +200,16 @@
       }
     }
 
+    /* ACAO-SEM-ROTA: o Feedback do Hub nao tem pagina propria — e um modal. Sem
+       este desvio o card cairia no FORM_ROUTES, recarregaria a home inteira so
+       para abrir uma caixa de texto. Qualquer item com `acao` definida pode
+       seguir o mesmo caminho no futuro. */
     function handleItemClick(item) {
+      if (item.acao === 'feedback') {
+        if (typeof window.abrirFeedbackHub === 'function') { window.abrirFeedbackHub(); return; }
+        window.location.href = '/solicitacoes.html?feedback=1';  // fallback: script ainda carregando
+        return;
+      }
       const route = FORM_ROUTES[item.id];
       if (route) window.location.href = '/' + route;
     }

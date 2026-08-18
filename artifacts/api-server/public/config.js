@@ -105,9 +105,13 @@ const CATEGORIAS_SOLICITACAO = [
   },
   {
     categoria: "Outros",
-    layout: "single",
     itens: [
       { id: "outro", label: "Outro", icon: "icon-edit", ativo: true },
+      /* FEEDBACK-DO-HUB: o FAB resolve o uso recorrente, mas ninguem encontra
+         na primeira vez — o card existe para a descoberta. `acao` faz o clique
+         abrir o modal na propria pagina em vez de navegar. */
+      { id: "feedback-hub", label: "Fale com o Marketing", icon: "icon-tool", ativo: true,
+        acao: "feedback", busca: ["bug", "erro", "problema", "sugestão", "elogio", "reclamação", "melhoria", "feedback", "prazo", "atendimento"] },
     ]
   },
   {
@@ -174,6 +178,7 @@ const TIPO_SOLICITACAO_LABELS = {
   "materiais-impressos":            "Materiais Impressos",
   "outro":                          "Outro",
   "material-tombamento":            "Materiais de Tombamento",
+  "feedback-hub":                   "Fale com o Marketing",
   // Capital Humano
   "ch-kit-onboarding":              "Kit Onboarding",
   "ch-atualizacao-pessoas":         "Atualização de Pessoas nos Sites",
@@ -203,6 +208,28 @@ let CARGOS_ASSESSOR = [
 // Chaves canônicas em snake_case. As chaves camelCase do KEY_MAP foram removidas (8.3)
 // após a normalização dos dados legados no banco.
 const DRAWER_FIELD_LABELS = {
+  // FEEDBACK-DO-HUB: contexto tecnico com nome legivel no detalhe da solicitacao.
+  categoria:           { label: "Categoria",                skip: true },
+  categoria_label:     { label: "Tipo de manifestação" },
+  /* PREFIXO-FB: nao dava para usar a chave `assunto` — ela ja existe mais
+     abaixo neste mesmo objeto como "Assunto do e-mail". Chave repetida em
+     objeto JS: a ultima vence, entao o skip era ignorado e o assunto saia
+     duas vezes no resumo, uma delas com o rotulo do e-mail marketing. */
+  fb_assunto:          { label: "Assunto",                  skip: true },
+  fb_assunto_label:    { label: "Assunto" },
+  sugestao_melhoria:   { label: "Sugestão de melhoria",     wide: true },
+  quer_retorno:        { label: "Quer retorno?" },
+  esperado:            { label: "O que era esperado",       wide: true },
+  /* CONTEXTO-OCULTO: URL, navegador, resolucao e stack nao dizem nada para
+     quem relatou — e o renderDados os transformava em badges de link, o que
+     confundia mais do que informava. Quem investiga le na descricao da task
+     do ClickUp, que e onde isso serve para alguma coisa. */
+  ctx_url:             { label: "URL onde ocorreu",         skip: true },
+  ctx_pagina:          { label: "Página",                   skip: true },
+  ctx_solicitacao:     { label: "Solicitação relacionada",  skip: true },
+  ctx_navegador:       { label: "Navegador",                skip: true },
+  ctx_tela:            { label: "Tamanho da tela",          skip: true },
+  ctx_erros:           { label: "Erros técnicos na sessão", skip: true },
   mes:                 { label: "Mês" },
   objetivo:            { label: "Objetivo da sessão",          wide: true },
   qtdParticipantes:    { label: "Quantidade de participantes" },
@@ -600,6 +627,7 @@ const FORM_ROUTES = {
   "pagina-online":         "form-pagina-online.html",
   "outro":                 "form-outro.html",
   "sugestao-conteudo":     "form-sugestao-conteudo.html",
+  "feedback-hub":          "solicitacoes.html?feedback=1",
   "brindes":               "form-brindes.html",
   "patrocinio":            "form-patrocinio.html",
   "email-marketing":       "form-email-marketing.html",
@@ -661,6 +689,17 @@ const FLUXOS_ETAPAS = {
   // por outra area. Lista vazia => o card de etapas nao aparece (o front esconde
   // quando nao ha etapas visiveis).
   "brindes": [],
+  /* FEEDBACK-ETAPAS: manifestacao nao tem producao, revisao nem aprovacao —
+     as sete etapas do fluxo padrao davam a entender que existe uma esteira de
+     entrega por tras de um elogio. Os ids sao os que o mapa do ClickUp
+     realmente produz (ver src/config/clickup-status.ts): "Em andamento" no
+     ClickUp chega aqui como "em-producao", entao o rotulo e que muda. */
+  "feedback-hub": [
+    { id: "recebido",    label: "Recebido",     visivel: true  },
+    { id: "em-producao", label: "Em andamento", visivel: true  },
+    { id: "concluido",   label: "Concluído",    visivel: true  },
+    { id: "cancelado",   label: "Cancelado",    visivel: false },
+  ],
   "_default": [
     { id: "recebido",     label: "Recebido",              visivel: true  },
     { id: "em-analise",   label: "Em análise",            visivel: true  },
