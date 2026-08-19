@@ -418,6 +418,9 @@ const STATUS_SOLICITACAO = [
   { id: "em-revisao",             label: "Em revisão",                 bg: "#e7ddff", text: "#6528d4" },
   { id: "em-aprovacao",           label: "Em aprovação",               bg: "#dbe9fe", text: "#1656c4"    },
   { id: "cotacao-aprovacao",      label: "Em cotação / aprovação",     bg: "#dbe9fe", text: "#1656c4" },
+  // orcamento e uma etapa propria do fluxo de patrocinio; antes caia junto com
+  // "aprovacao" em cotacao-aprovacao e as duas viravam um passo so na timeline.
+  { id: "em-orcamento",           label: "Orçamento",                  bg: "#ffe4c7", text: "#b8460a" },
   { id: "aguardando",             label: "Aguardando informação",      bg: "#fce7cf", text: "#9a5216" },
   { id: "aguardando-rh",          label: "Aguardando aprovação do RH", bg: "#fce7cf", text: "#9a5216" },
   { id: "aguardando-pagamento",   label: "Aguardando pagamento",       bg: "#fce7cf", text: "#9a5216" },
@@ -639,92 +642,94 @@ const FORM_ROUTES = {
   "ch-aniversariantes":     "form-ch-aniversariantes.html",
 };
 
+/* FLUXO-SEM-ROTULO: cada etapa carrega so o id. O rotulo sai de
+   STATUS_SOLICITACAO (getStatus) na hora de renderizar. Enquanto o rotulo
+   tambem morava aqui, ele podia divergir do header — e divergia. Para mudar
+   o texto de uma etapa, mude o label do status em STATUS_SOLICITACAO. */
 const FLUXOS_ETAPAS = {
   // Paginas de assessor NAO seguem o ClickUp. Ha dois casos:
   //  - quer pagina  -> passa por validacao do RH e publicacao do marketing
   //  - so registro  -> nao ha aprovacao, ja entra como concluido
   "pagina-assessores-dados": [
-    { id: "aguardando-validacao", label: "Aguardando validação", visivel: true  },
-    { id: "aprovado",             label: "Aprovado",             visivel: true  },
-    { id: "publicado",            label: "Concluído",            visivel: true  },
-    { id: "ajustes-solicitados",  label: "Ajustes solicitados",  visivel: false },
-    { id: "reprovado",            label: "Reprovado",            visivel: false },
+    { id: "aguardando-validacao", visivel: true  },
+    { id: "aprovado",             visivel: true  },
+    { id: "publicado",            visivel: true  },
+    { id: "ajustes-solicitados",  visivel: false },
+    { id: "reprovado",            visivel: false },
   ],
   "pagina-assessores-dados--registro": [],
   "pagina-assessores-atualizacao": [
-    { id: "aguardando-validacao", label: "Aguardando validação", visivel: true  },
-    { id: "aprovado",             label: "Aprovado",             visivel: true  },
-    { id: "publicado",            label: "Concluído",            visivel: true  },
-    { id: "ajustes-solicitados",  label: "Ajustes solicitados",  visivel: false },
-    { id: "reprovado",            label: "Reprovado",            visivel: false },
+    { id: "aguardando-validacao", visivel: true  },
+    { id: "aprovado",             visivel: true  },
+    { id: "publicado",            visivel: true  },
+    { id: "ajustes-solicitados",  visivel: false },
+    { id: "reprovado",            visivel: false },
   ],
   "pagina-assessores-atualizacao--registro": [],
   "eventos": [
-    { id: "recebido",               label: "Recebido",                  visivel: true  },
-    { id: "alinhamentos",           label: "Alinhamentos",              visivel: true  },
-    { id: "em-andamento",           label: "Em andamento",              visivel: true  },
-    { id: "cotacao-aprovacao",      label: "Em cotação / aprovação",    visivel: true  },
-    { id: "aguardando-pagamento",   label: "Aguardando pagamento",      visivel: true  },
-    { id: "aguardando-finalizacao", label: "Aguardando finalização",    visivel: true  },
-    { id: "concluido",              label: "Concluído",                 visivel: true  },
-    { id: "em-espera",              label: "Em espera",                 visivel: false },
-    { id: "cancelado",              label: "Cancelado",                 visivel: false },
+    { id: "recebido",               visivel: true  },
+    { id: "alinhamentos",           visivel: true  },
+    { id: "em-andamento",           visivel: true  },
+    { id: "cotacao-aprovacao",      visivel: true  },
+    { id: "aguardando-pagamento",   visivel: true  },
+    { id: "aguardando-finalizacao", visivel: true  },
+    { id: "concluido",              visivel: true  },
+    { id: "em-espera",              visivel: false },
+    { id: "cancelado",              visivel: false },
+  ],
+  /* PATROCINIO-ETAPAS: as 8 etapas da lista do ClickUp. Sem esta entrada o
+     tipo caia no "_default", que nao tem "cotacao-aprovacao" — nenhuma etapa
+     casava e a timeline aparecia inteira apagada. */
+  "patrocinio": [
+    { id: "recebido",               visivel: true  },
+    { id: "alinhamentos",           visivel: true  },
+    { id: "em-orcamento",           visivel: true  },
+    { id: "cotacao-aprovacao",      visivel: true  },
+    { id: "em-producao",            visivel: true  },
+    { id: "aguardando-finalizacao", visivel: true  },
+    { id: "aguardando-validacao",   visivel: true  },
+    { id: "concluido",              visivel: true  },
+    { id: "cancelado",              visivel: false },
+    { id: "reprovado",              visivel: false },
   ],
   "cartao-visita-fisico": [
-    { id: "aguardando-validacao", label: "Aguardando validação", visivel: true  },
-    { id: "aguardando-contrato",  label: "Aguardando contrato",  visivel: true  },
-    { id: "validado",             label: "Validado",             visivel: true  },
-    { id: "envio-grafica",        label: "Envio gráfica",        visivel: true  },
-    { id: "envio-assessor",       label: "Envio assessor",       visivel: true  },
-    { id: "reprovado",            label: "Reprovado",            visivel: false },
+    { id: "aguardando-validacao", visivel: true  },
+    { id: "aguardando-contrato",  visivel: true  },
+    { id: "validado",             visivel: true  },
+    { id: "envio-grafica",        visivel: true  },
+    { id: "envio-assessor",       visivel: true  },
+    { id: "reprovado",            visivel: false },
   ],
   // Sugestões de conteúdo: time de conteúdo analisa, aprova ou reprova e conclui.
   "sugestao-conteudo": [
-    { id: "em-analise", label: "Em análise", visivel: true  },
-    { id: "aprovado",   label: "Aprovado",   visivel: true  },
-    { id: "concluido",  label: "Concluído",  visivel: true  },
-    { id: "reprovado",  label: "Reprovado",  visivel: false },
+    { id: "em-analise", visivel: true  },
+    { id: "aprovado",   visivel: true  },
+    { id: "concluido",  visivel: true  },
+    { id: "reprovado",  visivel: false },
   ],
   // BRINDES-SEM-ETAPAS: brindes segue um fluxo proprio, informado fora do Hub
-  // por outra area. Lista vazia => o card de etapas nao aparece (o front esconde
-  // quando nao ha etapas visiveis).
+  // por outra area. Lista vazia => o card de etapas nao aparece.
   "brindes": [],
   /* FEEDBACK-ETAPAS: manifestacao nao tem producao, revisao nem aprovacao —
      as sete etapas do fluxo padrao davam a entender que existe uma esteira de
-     entrega por tras de um elogio. Os ids sao os que o mapa do ClickUp
-     realmente produz (ver src/config/clickup-status.ts): "Em andamento" no
-     ClickUp chega aqui como "em-producao", entao o rotulo e que muda. */
+     entrega por tras de um elogio. "Em andamento" no ClickUp agora chega aqui
+     como "em-andamento" (antes virava "em-producao", e por isso esta etapa
+     precisava de um rotulo proprio para nao dizer "Em produção"). */
   "feedback-hub": [
-    { id: "recebido",    label: "Recebido",     visivel: true  },
-    { id: "em-producao", label: "Em andamento", visivel: true  },
-    { id: "concluido",   label: "Concluído",    visivel: true  },
-    { id: "cancelado",   label: "Cancelado",    visivel: false },
-  ],
-  /* PATROCINIO-ETAPAS: sem esta entrada o tipo caia no "_default", que nao tem
-     "cotacao-aprovacao" — o status atual nao batia com nenhuma etapa, o
-     findIndex devolvia -1 e a timeline aparecia inteira apagada enquanto o
-     header mostrava "Em cotação / aprovação". Os ids sao os que o mapa do
-     ClickUp produz a partir dos status da lista de patrocinio. */
-  "patrocinio": [
-    { id: "recebido",               label: "Recebido",              visivel: true  },
-    { id: "alinhamentos",           label: "Alinhamento",           visivel: true  },
-    { id: "cotacao-aprovacao",      label: "Orçamento / aprovação", visivel: true  },
-    { id: "em-producao",            label: "Produção",              visivel: true  },
-    { id: "aguardando-finalizacao", label: "Confirmação",           visivel: true  },
-    { id: "aguardando-validacao",   label: "Validação de dados",    visivel: true  },
-    { id: "concluido",              label: "Concluído",             visivel: true  },
-    { id: "cancelado",              label: "Cancelado",             visivel: false },
-    { id: "reprovado",              label: "Reprovado",             visivel: false },
+    { id: "recebido",     visivel: true  },
+    { id: "em-andamento", visivel: true  },
+    { id: "concluido",    visivel: true  },
+    { id: "cancelado",    visivel: false },
   ],
   "_default": [
-    { id: "recebido",     label: "Recebido",              visivel: true  },
-    { id: "em-analise",   label: "Em análise",            visivel: true  },
-    { id: "aguardando",   label: "Aguardando informação", visivel: true  },
-    { id: "em-producao",  label: "Em produção",           visivel: true  },
-    { id: "em-revisao",   label: "Em revisão",            visivel: true  },
-    { id: "em-aprovacao", label: "Em aprovação",          visivel: true  },
-    { id: "concluido",    label: "Concluído",             visivel: true  },
-    { id: "cancelado",    label: "Cancelado",             visivel: false },
-    { id: "em-espera",    label: "Em espera",             visivel: false },
+    { id: "recebido",     visivel: true  },
+    { id: "em-analise",   visivel: true  },
+    { id: "aguardando",   visivel: true  },
+    { id: "em-producao",  visivel: true  },
+    { id: "em-revisao",   visivel: true  },
+    { id: "em-aprovacao", visivel: true  },
+    { id: "concluido",    visivel: true  },
+    { id: "cancelado",    visivel: false },
+    { id: "em-espera",    visivel: false },
   ],
 };

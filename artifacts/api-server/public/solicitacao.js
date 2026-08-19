@@ -454,7 +454,7 @@
           <div style="display:flex;align-items:${_motivo ? 'flex-start' : 'center'};gap:8px;padding:8px 0">
             <div style="width:10px;height:10px;border-radius:var(--radius-round);background:${sObj.text || 'var(--danger)'};flex-shrink:0;margin-top:${_motivo ? '5px' : '0'}"></div>
             <div>
-              <span style="font-size:0.875rem;font-weight:700;color:${sObj.text || 'var(--danger)'}">${excepcional.label}</span>
+              <span style="font-size:0.875rem;font-weight:700;color:${sObj.text || 'var(--danger)'}">${esc(getStatus(item.status).label || item.status)}</span>
               ${_motivo ? `<div style="font-size:0.82rem;color:var(--ink-70);margin-top:4px;line-height:1.5">${esc(_motivo)}</div>` : ''}
             </div>
           </div>`;
@@ -476,6 +476,9 @@
         return;
       }
 
+      /* ROTULO-DO-STATUS: o texto da etapa vem de STATUS_SOLICITACAO
+         (getStatus), nunca do fluxo. Header e timeline passam a ler do
+         mesmo lugar, entao nao ha como divergirem. */
       const stepsHtml = etapasVis.map((etapa, idx) => {
         const isConcluida = idx < idxAtual || idxAtual < 0 && item.status === 'concluido';
         const isAtual = idx === idxAtual;
@@ -507,7 +510,7 @@
               <div class="status-step-circle ${circClass}" ${circStyle}>${iconInner}</div>
               <div class="status-step-line ${lineRightClass}"></div>
             </div>
-            <div class="status-step-label ${lblClass}" ${lblStyle}>${esc(etapa.label)}</div>
+            <div class="status-step-label ${lblClass}" ${lblStyle}>${esc(sObj.label || etapa.id)}</div>
           </div>`;
       }).join('');
 

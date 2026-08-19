@@ -21,7 +21,7 @@ function normalizeStatusKey(raw: string): string {
 
   // execucao
   "in progress":                "em-producao",
-  "em andamento":               "em-producao",
+  "em andamento":               "em-andamento",
   "fazendo":                    "em-producao",
   "producao":                   "em-producao",
   "em producao":                "em-producao",
@@ -37,7 +37,7 @@ function normalizeStatusKey(raw: string): string {
   "em cotacao":                 "cotacao-aprovacao",
   "em cotacao / aprovacao":     "cotacao-aprovacao",
   "em cotacao/aprovacao":       "cotacao-aprovacao",
-  "orcamento":                  "cotacao-aprovacao",
+  "orcamento":                  "em-orcamento",
   "aprovacao":                  "cotacao-aprovacao",
   "aguardando aprovacao":       "cotacao-aprovacao",
   "aprovacao juridico":         "cotacao-aprovacao",
