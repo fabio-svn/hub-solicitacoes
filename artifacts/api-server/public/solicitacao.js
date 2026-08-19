@@ -1948,7 +1948,10 @@
         }
         if (typeof value === 'object') continue;
         // rede social vai para o bloco agrupado do fim, sem rotulo
-        if (CAMPOS_SOCIAIS.some(s => String(key).toLowerCase().includes(s))) {
+        // FIX-SOCIAL-KEY: split por _ - e camelCase para evitar falso positivo
+        // em campos como 'explicacao' (contem 'x') ou 'contexto' (contem 'x').
+        const _keySegs = String(key).replace(/([a-z])([A-Z])/g, '$1_$2').toLowerCase().split(/[_\-]+/).filter(Boolean);
+        if (CAMPOS_SOCIAIS.some(s => _keySegs.includes(s))) {
           const bruto = String(value).trim();
           if (bruto) {
             const href = /^https?:\/\//i.test(bruto)

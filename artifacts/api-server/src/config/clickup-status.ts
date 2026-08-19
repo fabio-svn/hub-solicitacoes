@@ -7,21 +7,42 @@ function normalizeStatusKey(raw: string): string {
 }
 
 /* interno */ const CLICKUP_STATUS_MAP: Record<string, string> = {
+  // entrada
   "backlog":                    "em-analise",
   "to do":                      "recebido",
+  "para fazer":                 "recebido",
   "recebido":                   "recebido",
-  "in progress":                "em-producao",
+  "solicitacoes":               "recebido",
+
+  // analise e alinhamento
   "em analise":                 "em-analise",
+  "alinhamento":                "alinhamentos",
+  "alinhamentos":               "alinhamentos",
+
+  // execucao
+  "in progress":                "em-producao",
   "em andamento":               "em-producao",
+  "fazendo":                    "em-producao",
+  "producao":                   "em-producao",
   "em producao":                "em-producao",
   "em producao.":               "em-producao",
   "em revisao":                 "em-revisao",
+
+  // aprovacao do solicitante (dispara notificacao e libera a aprovacao no Hub)
   "em aprovacao":               "em-aprovacao",
-  "alinhamentos":               "alinhamentos",
+
+  // aprovacao interna, cotacao e orcamento (nao dispara nada ao solicitante)
   "cotacao-aprovacao":          "cotacao-aprovacao",
   "cotacao aprovacao":          "cotacao-aprovacao",
-  "em cotacao / aprovacao":     "cotacao-aprovacao",
   "em cotacao":                 "cotacao-aprovacao",
+  "em cotacao / aprovacao":     "cotacao-aprovacao",
+  "em cotacao/aprovacao":       "cotacao-aprovacao",
+  "orcamento":                  "cotacao-aprovacao",
+  "aprovacao":                  "cotacao-aprovacao",
+  "aguardando aprovacao":       "cotacao-aprovacao",
+  "aprovacao juridico":         "cotacao-aprovacao",
+
+  // esperas
   "aguardando":                 "aguardando",
   "aguardando informacao":      "aguardando",
   "aguardando informacao.":     "aguardando",
@@ -29,28 +50,41 @@ function normalizeStatusKey(raw: string): string {
   "waiting on rh":              "aguardando",
   "aguardando rh":              "aguardando-rh",
   "aguardando pagamento":       "aguardando-pagamento",
+  "solicitacao de pagamento":   "aguardando-pagamento",
   "aguardando finalizacao":     "aguardando-finalizacao",
+  "confirmacao":                "aguardando-finalizacao",
   "em espera":                  "em-espera",
+
+  // validacao e contrato
   "aguardando validacao":       "aguardando-validacao",
   "em validacao":               "aguardando-validacao",
+  "validacao de dados":         "aguardando-validacao",
+  "validado":                   "validado",
   "aguardando contrato":        "aguardando-contrato",
   "em contrato":                "aguardando-contrato",
-  "validado":                   "validado",
+
+  // envio
   "envio grafica":              "envio-grafica",
   "envio assessor":             "envio-assessor",
+
+  // encerramento
   "complete":                   "concluido",
   "concluido":                  "concluido",
   "done":                       "concluido",
   "closed":                     "concluido",
+  "fechado":                    "concluido",
   "cancelled":                  "cancelado",
   "canceled":                   "cancelado",
   "cancelado":                  "cancelado",
   "cancelado/parado":           "cancelado",
   "cancelado / parado":         "cancelado",
   "parado":                     "cancelado",
+  "cancelado / reprovado":      "cancelado",
+  "cancelado/reprovado":        "cancelado",
+  "reprovado/cancelado":        "cancelado",
+  "reprovado / cancelado":      "cancelado",
   "aprovado":                   "aprovado",
   "reprovado":                  "reprovado",
-  "reprovado / cancelado":      "reprovado",
 };
 
 // STATUS-DESCONHECIDO-ALERTA: quando o ClickUp manda um status que o mapa nao
