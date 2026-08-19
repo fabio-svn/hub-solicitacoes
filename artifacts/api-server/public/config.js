@@ -700,6 +700,22 @@ const FLUXOS_ETAPAS = {
     { id: "concluido",   label: "Concluído",    visivel: true  },
     { id: "cancelado",   label: "Cancelado",    visivel: false },
   ],
+  /* PATROCINIO-ETAPAS: sem esta entrada o tipo caia no "_default", que nao tem
+     "cotacao-aprovacao" — o status atual nao batia com nenhuma etapa, o
+     findIndex devolvia -1 e a timeline aparecia inteira apagada enquanto o
+     header mostrava "Em cotação / aprovação". Os ids sao os que o mapa do
+     ClickUp produz a partir dos status da lista de patrocinio. */
+  "patrocinio": [
+    { id: "recebido",               label: "Recebido",              visivel: true  },
+    { id: "alinhamentos",           label: "Alinhamento",           visivel: true  },
+    { id: "cotacao-aprovacao",      label: "Orçamento / aprovação", visivel: true  },
+    { id: "em-producao",            label: "Produção",              visivel: true  },
+    { id: "aguardando-finalizacao", label: "Confirmação",           visivel: true  },
+    { id: "aguardando-validacao",   label: "Validação de dados",    visivel: true  },
+    { id: "concluido",              label: "Concluído",             visivel: true  },
+    { id: "cancelado",              label: "Cancelado",             visivel: false },
+    { id: "reprovado",              label: "Reprovado",             visivel: false },
+  ],
   "_default": [
     { id: "recebido",     label: "Recebido",              visivel: true  },
     { id: "em-analise",   label: "Em análise",            visivel: true  },

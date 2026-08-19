@@ -461,6 +461,21 @@
         return;
       }
 
+      /* ETAPA-DESCONHECIDA: se o status atual nao existe no fluxo do tipo,
+         idxAtual fica -1 e nenhuma etapa era marcada — a timeline renderizava
+         inteira apagada, sem dizer que algo estava errado. Agora mostra o
+         status solto, do mesmo jeito que os casos excepcionais. Assim um fluxo
+         novo nao mapeado aparece na tela em vez de sumir em silencio. */
+      if (idxAtual < 0 && item.status !== 'concluido') {
+        const sDesc = getStatus(item.status);
+        card.innerHTML = `
+          <div style="display:flex;align-items:center;gap:8px;padding:8px 0">
+            <div style="width:10px;height:10px;border-radius:var(--radius-round);background:${sDesc.bg || 'var(--ink-30)'};flex-shrink:0"></div>
+            <span style="font-size:0.875rem;font-weight:700">${esc(sDesc.label || item.status)}</span>
+          </div>`;
+        return;
+      }
+
       const stepsHtml = etapasVis.map((etapa, idx) => {
         const isConcluida = idx < idxAtual || idxAtual < 0 && item.status === 'concluido';
         const isAtual = idx === idxAtual;
