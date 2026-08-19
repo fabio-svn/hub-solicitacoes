@@ -3,6 +3,7 @@ import { logger } from "./lib/logger";
 import { pool } from "@workspace/db";
 import { startStuckMonitor } from "./services/stuck-monitor";
 import { startHealthMonitor } from "./services/health-monitor";
+import { startRespostaMonitor } from "./services/resposta-monitor";
 import { sendAlert } from "./services/alert";
 import { marcarDesligando } from "./routes/health";
 import type { Server } from "http";
@@ -272,6 +273,7 @@ async function start() {
     logger.info({ port }, "Server listening");
     startStuckMonitor();
     startHealthMonitor();
+    startRespostaMonitor();
   });
 
   servidor.on('error', (err) => {

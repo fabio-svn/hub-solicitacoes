@@ -5,7 +5,7 @@ import { solicitacoesTable } from "@workspace/db";
 import { eq, sql } from "drizzle-orm";
 import { logger } from "../lib/logger";
 import { mapClickUpStatus } from "../config/clickup-status";
-import { extrairEntregaLinks } from "./clickup";
+import { extrairEntregaLinks, getClickUpTaskSnapshot } from "./clickup";
 import { notificarMarcoBg } from "../services/notifications";
 import { logEventoBg } from "../services/activity-log";
 
@@ -170,6 +170,16 @@ router.post(
         }
         if (hubStatus === "concluido" && solicitacao.tipo_solicitacao !== "cartao-visita-fisico") {
           notificarMarcoBg(solicitacao.id, "concluida");
+        }
+        /* AVISOS-DE-PARADA: os dois casos em que a solicitacao deixa de andar sem
+           que ninguem seja avisado. O campo Mensagem da task e onde o time escreve
+           o que falta ou por que encerrou, entao ele viaja junto — o e-mail sem o
+           motivo obriga a pessoa a abrir o Hub so para descobrir o obvio. */
+        if (hubStatus === "aguardando" || hubStatus === "cancelado" || hubStatus === "reprovado") {
+          const marco = hubStatus === "aguardando" ? "aguardando_info" : "cancelada";
+          getClickUpTaskSnapshot(taskId)
+            .then((snap) => notificarMarcoBg(solicitacao.id, marco, { mensagem: snap?.mensagem || "" }))
+            .catch(() => notificarMarcoBg(solicitacao.id, marco));
         }
       }
     } catch (err) {
