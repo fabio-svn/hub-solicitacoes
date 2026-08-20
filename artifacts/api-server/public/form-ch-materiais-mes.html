@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <script>(function(){try{const s=JSON.parse(localStorage.getItem('svn_layout_state')||'{}');if(s.isAdmin)document.documentElement.dataset.preShell='admin';}catch(e){}})()</script>
+  <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+  <link rel="manifest" href="/site.webmanifest" />
+  <meta name="theme-color" content="#AC3631" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aniversariantes e Linha do Tempo &mdash; Hub SVN</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap" media="print" onload="this.media='all'">
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Taviraj:wght@300;400&display=swap"></noscript>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="page-light">
+  <div id="pageContent">
+  <div class="page-container page-container--narrow">
+    <div class="form-card">
+      <div class="form-progress"><div class="form-progress-bar" style="width:100%"></div></div>
+      <div class="flex-between">
+        <h2 class="text-md-medium">Aniversariantes e Linha do Tempo</h2>
+      </div>
+      <hr class="sep">
+
+      <div class="alert-card alert-info">
+        <div class="alert-title">Um envio, duas solicitações</div>
+        <div class="alert-text">Aniversariantes do Mês tem prazo de 5 dias e Linha do Tempo tem prazo de 20 dias úteis. Você acompanha as duas separadamente em Minhas solicitações.</div>
+      </div>
+
+      <div class="field">
+        <label>Mês de referência <span class="text-ruby">*</span></label>
+        <select id="mes" required></select>
+      </div>
+
+      <div class="field">
+        <label>Planilha dos aniversariantes do mês <span class="text-ruby">*</span></label>
+        <div class="file-input-wrapper">
+          <label class="file-input-btn" for="arqAniversariantes">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            Escolher arquivo
+          </label>
+          <input type="file" id="arqAniversariantes" accept=".xlsx,.xls,.csv" required>
+          <div class="file-name" id="arqAniversariantesName"></div>
+        </div>
+        <div class="field-hint">A lista com data de nascimento de quem faz aniversário no mês.</div>
+      </div>
+
+      <div class="field">
+        <label>Planilha do tempo de casa <span class="text-ruby">*</span></label>
+        <div class="file-input-wrapper">
+          <label class="file-input-btn" for="arqLinhaTempo">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            Escolher arquivo
+          </label>
+          <input type="file" id="arqLinhaTempo" accept=".xlsx,.xls,.csv" required>
+          <div class="file-name" id="arqLinhaTempoName"></div>
+        </div>
+        <div class="field-hint">A lista com data de entrada e anos de empresa, com os elegíveis marcados.</div>
+      </div>
+
+      <div class="field">
+        <label>Deixe aqui suas observações finais (opcional)</label>
+        <textarea id="observacoes" placeholder="Observações…"></textarea>
+      </div>
+
+      <div class="section-divider">
+        <div id="submitError" class="alert-card alert-danger" style="display:none;margin-bottom:16px"></div>
+        <div class="form-nav">
+          <button class="btn btn-primary btn-submit-gold" id="btnSubmit" onclick="submitForm()">Enviar as duas solicitações</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  </div>
+
+  <script src="config.js"></script>
+  <script src="auth.js"></script>
+  <script src="utils.js"></script>
+  <script src="shell.js"></script>
+  <script src="form-core.js"></script>
+  <script src="upload-feedback.js"></script>
+  <script>
+
+    var MESES = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+
+    /* DOIS-ENVIOS: cada item vira uma solicitacao propria no backend, com o
+       tipo que ja existe. Assim SLA, titulo da task no ClickUp, e-mails e
+       ciclo de aprovacao continuam exatamente como eram nos forms separados.
+       A ordem importa: o de prazo mais curto vai primeiro. */
+    var ENVIOS = [
+      { tipo: 'ch-aniversariantes', label: 'Aniversariantes do Mês', inputId: 'arqAniversariantes' },
+      { tipo: 'ch-linha-do-tempo',  label: 'Linha do Tempo',         inputId: 'arqLinhaTempo' }
+    ];
+
+    /* RETRY-SEM-DUPLICAR: se a segunda falhar depois da primeira ter entrado,
+       o botao volta a ficar clicavel e o reenvio pula o que ja foi criado.
+       Sem isso, tentar de novo geraria uma solicitacao duplicada. */
+    var criadas = {};
+
+    async function init() {
+      await FormCore.initForm({
+        tipo: 'ch-materiais-mes',
+        draft: false,
+        activeRoute: 'capital-humano',
+        onReady: function() {
+          var role = Auth.getUserRole();
+          if (role !== 'capital_humano' && role !== 'admin') { window.location.href = '/dashboard.html'; return; }
+          var sel = document.getElementById('mes');
+          var prox = (new Date().getMonth() + 1) % 12;
+          MESES.forEach(function(m, i) {
+            var o = document.createElement('option'); o.value = m; o.textContent = m;
+            if (i === prox) o.selected = true; sel.appendChild(o);
+          });
+          if (window.FileUpload && FileUpload.bind) {
+            FileUpload.bind('arqAniversariantes', 'arqAniversariantesName', { accept: '.xlsx,.xls,.csv' });
+            FileUpload.bind('arqLinhaTempo', 'arqLinhaTempoName', { accept: '.xlsx,.xls,.csv' });
+          }
+        }
+      });
+    }
+
+    async function enviarUm(env, dados) {
+      var el = document.getElementById(env.inputId);
+      var fd = new FormData();
+      fd.append('tipo_solicitacao', env.tipo);
+      fd.append('dados', JSON.stringify(dados));
+      fd.append('arquivo', el.files[0]);
+      var res = await fetch('/api/solicitacoes', { method: 'POST', body: fd });
+      var d = await res.json().catch(function() { return {}; });
+      if (!res.ok) {
+        var msg = d.error || 'Não foi possível criar a solicitação de ' + env.label + '.';
+        if (d.ref) msg += ' (código ' + d.ref + ')';
+        throw new Error(msg);
+      }
+      return d.id;
+    }
+
+    async function submitForm() {
+      var ok = FormCore.validateRequired(function(invalidFields) {
+        ENVIOS.forEach(function(env) {
+          var file = document.getElementById(env.inputId);
+          if (file && !file.files.length) {
+            FormCore.markInvalid(invalidFields, file.closest('.field'), 'Anexe a planilha.');
+          }
+        });
+      });
+      if (!ok) return;
+
+      var errEl = document.getElementById('submitError');
+      var btn = document.getElementById('btnSubmit');
+      errEl.style.display = 'none';
+      btn.disabled = true;
+      btn.textContent = 'Enviando...';
+      if (window.formLockUI) window.formLockUI(btn);
+
+      var dados = {
+        nome: Auth.getUserName(),
+        mes: document.getElementById('mes').value,
+        observacoes: document.getElementById('observacoes').value
+      };
+
+      var falhou = null;
+      for (var i = 0; i < ENVIOS.length; i++) {
+        var env = ENVIOS[i];
+        if (criadas[env.tipo]) continue;
+        try {
+          criadas[env.tipo] = await enviarUm(env, dados);
+        } catch (e) {
+          falhou = { env: env, msg: e && e.message ? e.message : 'Falha no envio.' };
+          break;
+        }
+      }
+
+      if (falhou) {
+        var jaCriadas = ENVIOS.filter(function(e) { return criadas[e.tipo]; })
+                              .map(function(e) { return e.label; });
+        var texto = falhou.msg;
+        if (jaCriadas.length) {
+          texto += ' A solicitação de ' + jaCriadas.join(' e ') + ' já foi criada. '
+                 + 'Clique em Enviar de novo para criar só a que faltou, sem duplicar.';
+        }
+        errEl.style.display = 'block';
+        errEl.textContent = texto;
+        if (window.formUnlockUI) window.formUnlockUI(btn);
+        else { btn.disabled = false; }
+        btn.textContent = jaCriadas.length ? 'Enviar a solicitação que faltou' : 'Enviar as duas solicitações';
+        return;
+      }
+
+      /* RESUMO-SEM-ID: o thankyou mostra "Ver solicitacao" quando recebe um id
+         unico. Aqui sao duas, entao o id fica de fora de proposito e o botao
+         volta a ser "Ver minhas solicitacoes", que e para onde a pessoa precisa
+         ir para acompanhar as duas. */
+      try {
+        sessionStorage.setItem('svn_ultimo_resumo', JSON.stringify({
+          tipo: 'Aniversariantes do Mês e Linha do Tempo',
+          titulo: 'Duas solicitações criadas, com prazos diferentes',
+          solicitante: Auth.getUserName ? Auth.getUserName() : '',
+          data: new Date().toLocaleDateString('pt-BR'),
+          hora: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+        }));
+      } catch (_) {}
+      window.location.replace('/thankyou.html');
+    }
+
+    init();
+  </script>
+</body>
+</html>
