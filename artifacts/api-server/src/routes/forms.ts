@@ -335,10 +335,9 @@ router.post("/solicitacoes", requireAuth, upload.any(), async (req, res): Promis
       ["pagina-assessores-dados", "pagina-assessores-atualizacao"].includes(tipo_solicitacao) &&
       String((parsedDados as any).quer_pagina || "").toLowerCase() === "nao";
 
-    // FEEDBACK-SEM-PRAZO: bug pode levar semanas, elogio nao tem entrega. Um
-    // prazo aqui so criaria atraso ficticio no painel e no card do detalhe
-    // (que some sozinho quando nao ha prazo).
-    const ehSemPrazo = ehRegistroSemPagina || tipo_solicitacao === "feedback-hub";
+    // Registros de assessor sem página não têm entrega. Os demais tipos,
+    // inclusive Feedback, recebem o prazo calculado pelo SLA configurado.
+    const ehSemPrazo = ehRegistroSemPagina;
     const prazoInicial = ehSemPrazo ? null : calcularPrazo(tipo_solicitacao, parsedDados).date;
     const [solicitacao] = await db.insert(solicitacoesTable).values({
       user_email: user.email,

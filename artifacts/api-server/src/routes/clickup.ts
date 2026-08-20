@@ -1419,6 +1419,10 @@ export const PRAZO_DIAS_UTEIS: Record<string, number> = {
   "brindes":                       15,
   "patrocinio":                    30,
   "sugestao-conteudo":             15,
+  // Prazos específicos de Capital Humano e do canal de feedback.
+  "ch-aniversariantes":            5,
+  "ch-linha-do-tempo":             20,
+  "feedback-hub":                  5,
 };
 
 // Faixas por nº de páginas (campo "tamanho") — apresentação nova.
@@ -1592,16 +1596,10 @@ export async function createClickUpTask(
   taskPayload.start_date_time = false;
 
   const prazoCalc = calcularPrazo(tipo, dados as Record<string, unknown>, hoje);
-  // FEEDBACK-SEM-PRAZO: a task nasce sem due_date. Espelha o Hub, e evita que
-  // um bug de investigacao longa apareca como atrasado no board do time.
-  if (tipo === "feedback-hub") {
-    logger.info({ tipo }, "ClickUp: tipo sem prazo, task criada sem due_date");
-  } else {
-    const prazoDate: Date = prazoCalc.date || addBusinessDays(hoje, getPrazoDiasUteis(tipo, dados as Record<string, unknown>));
-    taskPayload.due_date = prazoDate.getTime();
-    taskPayload.due_date_time = false;
-    logger.info({ tipo, prazo: prazoDate.toISOString(), regra: prazoCalc.regra }, "ClickUp: prazo calculado");
-  }
+  const prazoDate: Date = prazoCalc.date || addBusinessDays(hoje, getPrazoDiasUteis(tipo, dados as Record<string, unknown>));
+  taskPayload.due_date = prazoDate.getTime();
+  taskPayload.due_date_time = false;
+  logger.info({ tipo, prazo: prazoDate.toISOString(), regra: prazoCalc.regra }, "ClickUp: prazo calculado");
 
   // Eventos: prioridade pela proximidade (due_date já é a data do evento via calcularPrazo)
   if (tipo === "eventos" && prazoCalc.date) {

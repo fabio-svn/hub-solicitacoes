@@ -530,7 +530,7 @@
         : `<b>Etapa ${passo} de ${etapasVis.length}</b><span class="fluxo-resumo-sep">\u00b7</span>`;
       const resumoHtml = `
         <button type="button" class="fluxo-resumo" id="fluxoResumo" onclick="toggleFluxo()" aria-expanded="false" aria-controls="fluxoCard">
-          <span class="fluxo-resumo-txt">${contadorHtml}<span style="color:${corAtual};font-weight:700">${esc(etapaAtual ? etapaAtual.label : (sObjAtual.label || 'Em andamento'))}</span></span>
+          <span class="fluxo-resumo-txt">${contadorHtml}<span style="color:${corAtual};font-weight:700">${esc(sObjAtual.label || etapaAtual?.id || 'Em andamento')}</span></span>
           <span class="fluxo-bar"><span class="fluxo-bar-fill" style="width:${pct}%;background:${corAtual}"></span></span>
           <svg class="fluxo-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="6 9 12 15 18 9"/></svg>
         </button>`;
