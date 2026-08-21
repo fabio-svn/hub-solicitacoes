@@ -24,6 +24,13 @@ const __dirname = path.dirname(__filename);
 
 const app: Express = express();
 
+/* Carimbo de chegada: permite medir quanto tempo um upload durou ate cair
+   (triagem servidor vs conexao do solicitante no log de atividade). */
+app.use((req, _res, next) => {
+  (req as any).chegouEm = Date.now();
+  next();
+});
+
 // Security headers
 app.use(helmet({
   contentSecurityPolicy: false,
@@ -225,7 +232,24 @@ app.use((err: Error, req: Request, res: Response, _next: NextFunction) => {
       userName: (req as any).session?.user?.name || "",
       tipo: "upload_interrompido",
       nivel: "warn",
-      detalhe: `Envio interrompido pela conexao em ${req.method} ${req.originalUrl}`,
+      detalhe: (() => {
+        /* Discriminadores de causa: recebidos vs declarados (fluxo morreu no
+           caminho = rede do cliente), duracao ate a queda (morte instantanea
+           em massa = borda/servidor; tempos variados = rede oscilante) e o
+           navegador (padrao concentrado em celular conta a historia). */
+        const mb = (b: number) => (b / (1024 * 1024)).toFixed(1).replace(".", ",") + "MB";
+        const recebidos = Number((req.socket as any)?.bytesRead) || 0;
+        const declarado = Number(req.headers["content-length"]) || 0;
+        const chegouEm = (req as any).chegouEm as number | undefined;
+        const duracao = chegouEm ? ((Date.now() - chegouEm) / 1000).toFixed(1).replace(".", ",") : null;
+        const navegador = String(req.headers["user-agent"] || "").slice(0, 90);
+        let texto = `Envio interrompido pela conexao em ${req.method} ${req.originalUrl}`;
+        texto += ` — recebidos ~${mb(recebidos)}`;
+        if (declarado) texto += ` de ${mb(declarado)} declarados`;
+        if (duracao) texto += ` em ${duracao}s`;
+        if (navegador) texto += ` · ${navegador}`;
+        return texto;
+      })(),
     });
     res.status(400).json({
       error: "O envio foi interrompido antes de terminar. Verifique a conex\u00e3o e tente novamente. No celular, prefira Wi-Fi para enviar fotos.",
